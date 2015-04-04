@@ -117,7 +117,9 @@ class OUG(object):
             #: TYPE (str)
             grid_type = line[14:24].strip()
 
-            if grid_type == 'G':
+            if grid_type in ['G', 'L']:
+                # .. todo:: are L points single DOFs?
+                # we do know they're greater than the max value...
                 sline = [node_id, grid_type]
                 fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
                 if allow_blanks:
@@ -169,7 +171,7 @@ class OUG(object):
                     'table_name': 'OUG', 'nonlinear_factor': dt,
                     'lsdvmn': 1, 'format_code': 3,
                     'dataNames':['lsdvmn']}
-        #print "headers = %s" %(headers)
+        #print "headers = %s" % (headers)
         #print "transient =", transient
 
         data = self._real_f06_table_data(allow_blanks=False)

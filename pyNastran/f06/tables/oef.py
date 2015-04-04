@@ -1,5 +1,5 @@
 from six.moves import zip
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateForce, RealPlateBilinearForce, RealRodForce
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForce, RealRodForce # RealPlateForce
 
 class OEF(object):
     def __init__(self):
@@ -41,7 +41,17 @@ class OEF(object):
                 out.append(entry2)
         return out
 
+
     def _forces_in_crod_elements(self):
+        self._forces_in_rod_elements('CROD', 1, 'crod_force')
+
+    def _forces_in_ctube_elements(self):
+        self._forces_in_rod_elements('CTUBE', 3, 'ctube_force')
+
+    def _forces_in_conrod_elements(self):
+        self._forces_in_rod_elements('CONROD', 10, 'conrod_force')
+
+    def _forces_in_rod_elements(self, element_name, element_type, result_name):
         """
             # 1-CROD
             # 3-CTUBE
@@ -53,8 +63,7 @@ class OEF(object):
              1       -7.007184E+02   0.0                                 2       -4.900904E+04   0.0
              3       -7.141140E+04   0.0
         """
-        element_name = 'CROD'
-        element_type = 1
+        slot = getattr(self, result_name)
         #print(self.stored_lines)
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(3)
@@ -87,32 +96,33 @@ class OEF(object):
                 except ValueError:
                     raise ValueError('line=%r' % line[35:])
                 data.append([eid, axial, torque])
-            if line[101:]:
-                asdf
+            #if line[101:]:
+                #asdf
 
-        data_code = {'analysis_code': analysis_code,
-                    'device_code': 1,
-                    'sort_code': 0,
-                    'sort_bits': [0, 0, 0],
+        data_code = {
+            'analysis_code': analysis_code,
+            'device_code': 1,
+            'sort_code': 0,
+            'sort_bits': [0, 0, 0],
 
-                    'table_name': 'OEF1X', # probably wrong
-                    'table_code': 5, # wrong
-                    'num_wide': 3,
+            'table_name': 'OEF1X', # probably wrong
+            'table_code': 5, # wrong
+            'num_wide': 3,
 
-                    'format_code': 1,
-                    'element_name': element_name, 'element_type': element_type,
-                    'nonlinear_factor': dt,
-                    'dataNames':['lsdvmn'],
-                    'lsdvmn': 1,
-                    }
+            'format_code': 1,
+            'element_name': element_name, 'element_type': element_type,
+            'nonlinear_factor': dt,
+            'dataNames':['lsdvmn'],
+            'lsdvmn': 1,
+            }
 
         is_sort1 = True
         #ngrids = 4
         #print('isubcase =', isubcase)
-        if isubcase not in self.crod_force:
+        if isubcase not in slot:
             assert 'nonlinear_factor' in data_code
-            self.crod_force[isubcase] = RealRodForce(data_code, is_sort1, isubcase, transient)
-        self.crod_force[isubcase].add_f06_data(data, transient)
+            slot[isubcase] = RealRodForce(data_code, is_sort1, isubcase, transient)
+        slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
     def _forces_in_cquad4s_bilinear(self):

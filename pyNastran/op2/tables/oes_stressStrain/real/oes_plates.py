@@ -459,29 +459,28 @@ class RealPlateStress(StressObject):
                             nid = 0
                         assert isinstance(nid, int), nid
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
-                        self.oxx[eid] = {nid: [ox1, ox2]}
-                        self.oyy[eid] = {nid: [oy1, oy2]}
-                        self.txy[eid] = {nid: [txy1, txy2]}
-                        self.angle[eid] = {nid: [angle1, angle2]}
-                        self.majorP[eid] = {nid: [o11, o12]}
-                        self.minorP[eid] = {nid: [o21, o22]}
-                        self.ovmShear[eid] = {nid: [ovm1, ovm2]}
+                        self.fiberCurvature[eid] = {nid : [fiber_dist1, fiber_dist2]}
+                        self.oxx[eid] = {nid : [ox1, ox2]}
+                        self.oyy[eid] = {nid : [oy1, oy2]}
+                        self.txy[eid] = {nid : [txy1, txy2]}
+                        self.angle[eid] = {nid : [angle1, angle2]}
+                        self.majorP[eid] = {nid : [o11, o12]}
+                        self.minorP[eid] = {nid : [o21, o22]}
+                        self.ovmShear[eid] = {nid : [ovm1, ovm2]}
                     elif len(line) == 18:  # Centroid
                         (etype, eid,
                          fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                          fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                        assert isinstance(nid, int), nid
                         nid = 0 # CEN/4
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
-                        self.oxx[eid] = {nid: [ox1, ox2]}
-                        self.oyy[eid] = {nid: [oy1, oy2]}
-                        self.txy[eid] = {nid: [txy1, txy2]}
-                        self.angle[eid] = {nid: [angle1, angle2]}
-                        self.majorP[eid] = {nid: [o11, o12]}
-                        self.minorP[eid] = {nid: [o21, o22]}
-                        self.ovmShear[eid] = {nid: [ovm1, ovm2]}
+                        self.fiberCurvature[eid] = {nid : [fiber_dist1, fiber_dist2]}
+                        self.oxx[eid] = {nid : [ox1, ox2]}
+                        self.oyy[eid] = {nid : [oy1, oy2]}
+                        self.txy[eid] = {nid : [txy1, txy2]}
+                        self.angle[eid] = {nid : [angle1, angle2]}
+                        self.majorP[eid] = {nid : [o11, o12]}
+                        self.minorP[eid] = {nid : [o21, o22]}
+                        self.ovmShear[eid] = {nid : [ovm1, ovm2]}
                     elif len(line) == 17:  # Bilinear
                         (nid,
                          fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
@@ -985,29 +984,29 @@ class RealPlateStrain(StrainObject):
                             nid = 0
                         #assert isinstance(nid, int), nid
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
-                        self.exx[eid] = {nid: [ex1, ex2]}
-                        self.eyy[eid] = {nid: [ey1, ey2]}
-                        self.exy[eid] = {nid: [exy1, exy2]}
-                        self.angle[eid] = {nid: [angle1, angle2]}
-                        self.majorP[eid] = {nid: [e11, e12]}
-                        self.minorP[eid] = {nid: [e21, e22]}
-                        self.evmShear[eid] = {nid: [evm1, evm2]}
+                        self.fiberCurvature[eid] = {nid : [fiber_dist1, fiber_dist2]}
+                        self.exx[eid] = {nid : [ex1, ex2]}
+                        self.eyy[eid] = {nid : [ey1, ey2]}
+                        self.exy[eid] = {nid : [exy1, exy2]}
+                        self.angle[eid] = {nid : [angle1, angle2]}
+                        self.majorP[eid] = {nid : [e11, e12]}
+                        self.minorP[eid] = {nid : [e21, e22]}
+                        self.evmShear[eid] = {nid : [evm1, evm2]}
                     elif len(line) == 18:  # Centroid
                         (etype, eid,
                          fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                          fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         nid = 0 # CEN/4
-                        assert isinstance(nid, cen), nid
+                        #assert isinstance(nid, cen), nid
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
-                        self.exx[eid] = {nid: [ex1, ex2]}
-                        self.eyy[eid] = {nid: [ey1, ey2]}
-                        self.exy[eid] = {nid: [exy1, exy2]}
-                        self.angle[eid] = {nid: [angle1, angle2]}
-                        self.majorP[eid] = {nid: [e11, e12]}
-                        self.minorP[eid] = {nid: [e21, e22]}
-                        self.evmShear[eid] = {nid: [evm1, evm2]}
+                        self.fiberCurvature[eid] = {nid : [fiber_dist1, fiber_dist2]}
+                        self.exx[eid] = {nid : [ex1, ex2]}
+                        self.eyy[eid] = {nid : [ey1, ey2]}
+                        self.exy[eid] = {nid : [exy1, exy2]}
+                        self.angle[eid] = {nid : [angle1, angle2]}
+                        self.majorP[eid] = {nid : [e11, e12]}
+                        self.minorP[eid] = {nid : [e21, e22]}
+                        self.evmShear[eid] = {nid : [evm1, evm2]}
                     elif len(line) == 17:  # Bilinear node
                         (nid,
                          fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
@@ -1081,15 +1080,16 @@ class RealPlateStrain(StrainObject):
                      fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                      fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                     self.eType[eid] = etype
-                    assert isinstance(nid, int), nid
-                    self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
-                    self.exx[dt][eid] = {nid: [ex1, ex2]}
-                    self.eyy[dt][eid] = {nid: [ey1, ey2]}
-                    self.exy[dt][eid] = {nid: [exy1, exy2]}
-                    self.angle[dt][eid] = {nid: [angle1, angle2]}
-                    self.majorP[dt][eid] = {nid: [e11, e12]}
-                    self.minorP[dt][eid] = {nid: [e21, e22]}
-                    self.evmShear[dt][eid] = {nid: [evm1, evm2]}
+                    #assert isinstance(nid, int), nid
+                    nid = 0
+                    self.fiberCurvature[eid] = {nid : [fiber_dist1, fiber_dist2]}
+                    self.exx[dt][eid] = {nid : [ex1, ex2]}
+                    self.eyy[dt][eid] = {nid : [ey1, ey2]}
+                    self.exy[dt][eid] = {nid : [exy1, exy2]}
+                    self.angle[dt][eid] = {nid : [angle1, angle2]}
+                    self.majorP[dt][eid] = {nid : [e11, e12]}
+                    self.minorP[dt][eid] = {nid : [e21, e22]}
+                    self.evmShear[dt][eid] = {nid : [evm1, evm2]}
                 elif len(line) == 17:  # Bilinear node
                     (nid,
                      fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,

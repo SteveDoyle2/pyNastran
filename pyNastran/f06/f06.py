@@ -3,6 +3,7 @@ from __future__ import print_function
 from six import iteritems
 from six.moves import zip, range
 import os
+from codecs import open
 
 from pyNastran import is_release
 from pyNastran.utils import print_bad_path
@@ -53,8 +54,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         OUG.__init__(self)
         LAMA.__init__(self)
         MAX_MIN.__init__(self)
-        #F06Writer.__init__(self)
-        #F06Writer.__init__(self)
+        F06Writer.__init__(self)
 
         self.f06_filename = None
         self._subtitle = None
@@ -88,6 +88,11 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._grid_point_singularity_table,
             'G R I D   P O I N T   F O R C E   B A L A N C E' : self._grid_point_force_balance,
             'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N             SUBDMAP  =  SESTATIC' : self._executive_control_echo,
+
+            'U S E T   D E F I N I T I O N   T A B L E   ( I N T E R N A L   S E Q U E N C E ,   C O L U M N   S O R T )' : self._executive_control_echo,
+            'N O N - L I N E A R   I T E R A T I O N   M O D U L E   O U T P U T' : self._executive_control_echo,
+            'N A S T R A N   D M A P / N D D L   L I N K A G E   E D I T O R' : self._executive_control_echo,
+            'N O N - L I N E A R   I T E R A T I O N   M O D U L E   S O L U T I O N   C O N T R O L   D A T A' : self._executive_control_echo,
             #====================================================================
             # useful info
             #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
@@ -105,23 +110,29 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
             #====================================================================
             # F06 specific tables
+            'S O R T E D   B U L K   D A T A   E C H O' : self._executive_control_echo,
+            'I N P U T   B U L K   D A T A   E C H O' : self._executive_control_echo,
             #'N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S' : self._nondimensional_stability_and_control_deriv_coeffs,
-            #'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S':  self._nondimensional_hinge_moment_derivative_coeffs,
-            #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S': self._aerostatic_data_recovery_output_tables,
-            #'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S': self._structural_monitor_point_integrated_loads,
+            #'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S' : self._nondimensional_hinge_moment_derivative_coeffs,
+            #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S' : self._aerostatic_data_recovery_output_tables,
+            #'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S' : self._structural_monitor_point_integrated_loads,
 
             'N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S' : self._executive_control_echo,
-            'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S':  self._executive_control_echo,
-            'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S': self._executive_control_echo,
-            'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S': self._executive_control_echo,
+            'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S' :  self._executive_control_echo,
+            'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S' : self._executive_control_echo,
+            'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S' : self._executive_control_echo,
+
+            #'A E R O D Y N A M I C   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S' : self._executive_control_echo,  # uncommmented => crash
             'FLUTTER  SUMMARY' : self._executive_control_echo,
             #------------------------
-            #'R O T O R   D Y N A M I C S   S U M M A R Y'
-            #'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y'
+            #'R O T O R   D Y N A M I C S   S U M M A R Y' : self._executive_control_echo,
+            #'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y' : self._executive_control_echo,
 
-            'R O T O R   D Y N A M I C S   S U M M A R Y': self._executive_control_echo,
-            'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y': self._executive_control_echo,
-            'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)': self._executive_control_echo,
+
+            #'R O T O R   D Y N A M I C S   S U M M A R Y' : self._executive_control_echo,  # uncommmented => crash
+            #'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y' : self._executive_control_echo,  # uncommmented => crash
+            'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)' : self._executive_control_echo,
+            #'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE)' : self._executive_control_echo,
 
             #------------------------
             #====================================================================
@@ -141,83 +152,414 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
             #====================================================================
             # OES O-D
-            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )' : self._stress_in_cbar_elements,
-            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )' : self._strain_in_cbar_elements,
 
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )' : self._stress_in_crod_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )' : self._strain_in_crod_elements,
 
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stress_in_conrod_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._strain_in_conrod_elements,
-            #====================================================================
-            # OES 1-D
+            # stress - good
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._stress_in_celas1_elements,
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._stress_in_celas2_elements,
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._stress_in_celas3_elements,
             'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._stress_in_celas4_elements,
 
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._strain_in_celas1_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._strain_in_celas2_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._strain_in_celas3_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._strain_in_celas4_elements,
-            #====================================================================
-            # OES 2-D (no support for CQUAD8, CQUAD, CQUADR, CTRIAR, CTRAI6, CTRIAX, CTRIAX6)
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )' : self._stress_in_crod_elements,
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )' : self._stress_in_ctube_elements,
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stress_in_conrod_elements,
+            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )' : self._stress_in_cbar_elements,
+
             'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._stress_in_ctria3_elements,
-            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._strain_in_ctria3_elements,
-
             'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._stress_in_cquad4_elements,
-            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._strain_in_cquad4_elements,
-
             'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._stress_in_cquad4_bilinear_elements,
-            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._strain_in_cquad4_bilinear_elements,
 
-            #==
-            # composite partial ??? (e.g. bilinear quad)
             'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )': self._stress_in_composite_ctria3_elements,
             'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stress_in_composite_cquad4_elements,
 
-            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._strain_in_composite_ctria3_elements,
-            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._strain_in_composite_cquad4_elements,
-
-            #===
-            # .. todo:: not implemented
-            'S T R E S S E S   I N   T R I A X 6   E L E M E N T S' : self._executive_control_echo,
-            #====================================================================
-            # OES 3-D
             'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._stress_in_ctetra_elements,
             'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._stress_in_chexa_elements,
             'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._stress_in_cpenta_elements,
 
+            # strain - good
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._strain_in_celas1_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._strain_in_celas2_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._strain_in_celas3_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._strain_in_celas4_elements,
+
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )' : self._strain_in_crod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._strain_in_conrod_elements,
+            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )' : self._strain_in_cbar_elements,
+
+            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._strain_in_ctria3_elements,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._strain_in_cquad4_elements,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._strain_in_cquad4_bilinear_elements,
+
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._strain_in_composite_ctria3_elements,
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._strain_in_composite_cquad4_elements,
+
             'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._strain_in_ctetra_elements,
             'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._strain_in_chexa_elements,
             'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._strain_in_cpenta_elements,
+
+            # energy - good
+            'E L E M E N T   S T R A I N   E N E R G I E S' : self._element_strain_energies,
+
             #====================================================================
-            # more not implemented...
 
-            # STRESS
-            'S T R E S S E S   I N   H Y P E R E L A S T I C   H E X A H E D R O N   E L E M E N T S  ( HEXA8FD )' : self._executive_control_echo,
-            'N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )' : self._executive_control_echo,
-            'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
-            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )' : self._executive_control_echo,
-            'N O N L I N E A R   S T R E S S E S  IN  H Y P E R E L A S T I C   A X I S Y M M.  Q U A D R I L A T E R A L  ELEMENTS (QUADXFD)' : self._executive_control_echo,
+            # stress - not implemented
+            'S T R E S S   D I S T R I B U T I O N   I N   B A R   E L E M E N T S       ( C B A R )' : self._executive_control_echo,
+            'S T R E S S E S   I N   B E N D   E L E M E N T S        ( C B E N D )' : self._executive_control_echo,
+            'S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )' : self._executive_control_echo,
 
-            # FORCE
-            'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )': self._forces_in_crod_elements,
-            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._forces_in_cquad4s_bilinear,
+            'S T R E S S E S   ( F O R C E S )   I N   B U S H 1 D   E L E M E N T S   ( C B U S H 1 D )' : self._executive_control_echo,
+            'S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )' : self._executive_control_echo,
 
-            'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
-            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' :  self._executive_control_echo,
+            'S T R E S S E S   I N   T R I A X 6   E L E M E N T S' : self._executive_control_echo,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )' : self._executive_control_echo,
+
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = CENTER' : self._executive_control_echo,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = CUBIC' : self._executive_control_echo,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = SGAGE' : self._executive_control_echo,
+
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )' : self._executive_control_echo,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+
+            # strain - not implemented
+            'S T R A I N S   I N   B U S H   E L E M E N T S        ( C B U S H )' : self._executive_control_echo,
+
+            'S T R A I N   D I S T R I B U T I O N   I N   B A R   E L E M E N T S       ( C B A R )' : self._executive_control_echo,
+            'S T R A I N S    I N   B E A M   E L E M E N T S        ( C B E A M )' : self._executive_control_echo,
+            'S T R A I N S    I N   B E N D   E L E M E N T S        ( C B E N D )' : self._executive_control_echo,
+
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = CENTER' : self._executive_control_echo,
+            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+
+            # other real - not implemented
+            'S T R E S S E S   I N   U S E R   E L E M E N T S (CDUM8)' : self._executive_control_echo,
+            'S T R E S S E S   I N   U S E R   E L E M E N T S (CDUM9)' : self._executive_control_echo,
+            'E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )' : self._executive_control_echo,
+            'E L E M E N T   S T R E S S   D I S C O N T I N U I T I E S  - -     S U R F A C E      99' : self._executive_control_echo,
+
+            # FORCE - not implemented
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._executive_control_echo,
 
-            # energy
-            'E L E M E N T   S T R A I N   E N E R G I E S' : self._element_strain_energies,
-            'E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )' : self._executive_control_echo,
+            'F O R C E S   I N   G A P   E L E M E N T S   ( C G A P )' : self._executive_control_echo,
 
-            # complex stress
+            'F O R C E   D I S T R I B U T I O N   I N   B A R   E L E M E N T S          ( C B A R )' : self._executive_control_echo,
+            'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
+            'F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )' : self._executive_control_echo,
+            'F O R C E S   I N   B E N D   E L E M E N T S        ( C B E N D )' : self._executive_control_echo,
+            'F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )' : self._executive_control_echo,
+
+            'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )' : self._forces_in_crod_elements,
+            'F O R C E S   I N   R O D   E L E M E N T S     ( C T U B E )' : self._forces_in_ctube_elements,
+            'F O R C E S   I N   R O D   E L E M E N T S     ( C O N R O D )' : self._forces_in_conrod_elements,
+
+
+            'F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)' : self._executive_control_echo,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._forces_in_cquad4s_bilinear,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = CUBIC' : self._executive_control_echo,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = CENTER' : self._executive_control_echo,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = SGAGE' : self._executive_control_echo,
+            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' :  self._executive_control_echo,
+            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )' : self._executive_control_echo,
+
+            # thermal forces
+            'H E A T   F L O W   I N   R O D   E L E M E N T S      ( C R O D )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   R O D   E L E M E N T S      ( C T U B E )' : self._executive_control_echo,
+
+            'H E A T   F L O W   I N   B A R   E L E M E N T S          ( C B A R )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   B E A M   E L E M E N T S        ( C B E A M )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   B E N D   E L E M E N T S        ( C B E N D )' : self._executive_control_echo,
+
+            'H E A T   F L O W   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   A X I S Y M M E T R I C   T R I A N G U L A R   E L E M E N T S   ( C T R I A X 6 )' : self._executive_control_echo,
+
+            'H E A T   F L O W   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'H E A T   F L O W   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
+
+            'H E A T   F L O W   I N T O   H B D Y   E L E M E N T S   (CHBDY)' : self._executive_control_echo,
+            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   T E T R A H E D R O N   P - E L E M E N T S' : self._executive_control_echo,
+
+            # b-list outputs
+            'S T R E N G T H   R A T I O S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'S T R E N G T H   R A T I O S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            ## ===========================================
+            # complex
+
+            # complex stress - not implemented
+            'C O M P L E X   S T R E S S E S   I N   S C A L A R   S P R I N G S   ( C E L A S 1 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   S C A L A R   S P R I N G S   ( C E L A S 2 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   S C A L A R   S P R I N G S   ( C E L A S 3 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )' : self._executive_control_echo,
+
+            'C O M P L E X   S T R E S S E S   I N   B U S H   E L E M E N T S   ( C B U S H )' : self._executive_control_echo,
+
+            'C O M P L E X   S T R E S S E S   I N   R O D   E L E M E N T S   ( C R O D )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   R O D   E L E M E N T S   ( C T U B E )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   R O D   E L E M E N T S   ( C O N R O D )' : self._executive_control_echo,
+
+            'C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   B E A M   E L E M E N T S   ( C B E A M )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   B E N D   E L E M E N T S   ( C B E N D )' : self._executive_control_echo,
+
+            'C O M P L E X   S T R E S S E S   I N   S H E A R   P A N E L S   ( C S H E A R )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = CENTER' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )' : self._executive_control_echo,
+
             'C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   H E X A H E D R O N   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
+
+            # complex strain - not implemented
+            'C O M P L E X    S T R A I N S    I N   S C A L A R   S P R I N G S   ( C E L A S 1 )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   S C A L A R   S P R I N G S   ( C E L A S 2 )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   S C A L A R   S P R I N G S   ( C E L A S 3 )' : self._executive_control_echo,
+
+            'C O M P L E X     S T R A I N S   I N   B U S H   E L E M E N T S   ( C B U S H )' : self._executive_control_echo,
+
+            'C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C R O D )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C T U B E )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C O N R O D )' : self._executive_control_echo,
+
+            'C O M P L E X    S T R A I N S    I N   B A R   E L E M E N T S   ( C B A R )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   B E A M   E L E M E N T S   ( C B E A M )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   B E N D   E L E M E N T S   ( C B E N D )' : self._executive_control_echo,
+
+
+            'C O M P L E X     S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'C O M P L E X     S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'C O M P L E X     S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+            'C O M P L E X     S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = CENTER' : self._executive_control_echo,
+            'C O M P L E X     S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )' : self._executive_control_echo,
+            'C O M P L E X     S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'C O M P L E X     S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+
+            'C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
+
+            # complex force - not implemented
+            'C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 1 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 2 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 3 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )' : self._executive_control_echo,
+
+            'C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 1 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 2 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 3 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 4 )' : self._executive_control_echo,
+
+            'C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )' : self._executive_control_echo,
+
+            'C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C R O D )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C T U B E )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C O N R O D )' : self._executive_control_echo,
+
+            'C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   B E A M   E L E M E N T S   ( C B E A M )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   B E N D   E L E M E N T S   ( C B E N D )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   B E N D    E L E M E N T S   ( C B E N D )' : self._executive_control_echo,  # why are there different writers for the same table!!!
+
+
+            'C O M P L E X   F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = CENTER' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )' : self._executive_control_echo,
+
+            # thermal force - not implemented
+            'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S' : self._executive_control_echo,
+            'S T R E S S E S   ( F O R C E S )   I N   G A P   E L E M E N T S      ( C G A P )' : self._executive_control_echo,
+            ## ===========================================
+            # hyperelastic - not implemented
+            'S T R E S S E S   I N   H Y P E R E L A S T I C   T R I A N G L E   E L E M E N T S  ( T R I A F D )' : self._executive_control_echo,
+
+            'S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )' : self._executive_control_echo,
+            'S T R E S S E S   I N   H Y P E R E L A S T I C   H E X A H E D R O N   E L E M E N T S  ( HEXA8FD )' : self._executive_control_echo,
+
+            # oug nonlinear - not implemented
+            'N O N - L I N E A R - F O R C E   V E C T O R' : self._executive_control_echo,
+
+            # stress nonlinear - not implemented
+            'N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._executive_control_echo,
+
+            'N O N L I N E A R   S T R E S S E S   I N   B E A M   E L E M E N T S     ( C B E A M )' : self._executive_control_echo,
+
+            'N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D R )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S      ( T R I A 3 )' : self._executive_control_echo,
+
+            'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S     ( H E X A )' : self._executive_control_echo,
+
+
+
+            # nonlinear hyperelastic stress - not implemented
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   T R I A N G L E   E L E M E N T S  ( TRIA3FD )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUADFD )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S  IN  H Y P E R E L A S T I C   A X I S Y M M.  Q U A D R I L A T E R A L  ELEMENTS (QUADXFD)' : self._executive_control_echo,
+
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   T R I A N G L E   E L E M E N T S  ( T R I A F D )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   A X I S Y M M.  T R I A N G L E   E L E M E N T S  (TRIAXFD)' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   A X I S Y M M.  T R I A N G L E   ELEMENTS  (TRIAX3FD)' : self._executive_control_echo,
+
+
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   T E T R A H E D R O N   E L E M E N T S  ( T E T R A F D )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   P E N T A   E L E M E N T S  ( P E N T A F D )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   H E X A H E D R O N   E L E M E N T S  ( H E X A F D )' : self._executive_control_echo,
+
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   T E T R A H E D R O N   E L E M E N T S  ( TETRA4FD )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   P E N T A   E L E M E N T S  ( PENTA6FD )' : self._executive_control_echo,
+            'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   H E X A H E D R O N   E L E M E N T S  ( HEXA8FD )' : self._executive_control_echo,
+
+            # nonlinear forces
+            'N O N L I N E A R   F O R C E S  A N D  S T R E S S E S  I N   B U S H   E L E M E N T S    ( C B U S H )' : self._executive_control_echo,
+
+            ## ===========================================
+            # complex oug - not implemented
+            'C O M P L E X   V E L O C I T Y   V E C T O R' : self._executive_control_echo,
+            'C O M P L E X   A C C E L E R A T I O N   V E C T O R' : self._executive_control_echo,
+            'C O M P L E X   L O A D   V E C T O R' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T' : self._executive_control_echo,
+
+            # solution set - not implemented
+            'D I S P L A C E M E N T   V E C T O R   (SOLUTION SET)' : self._executive_control_echo,
+
+            # complex solution set - not implemented
+            'C O M P L E X   D I S P L A C E M E N T   V E C T O R  (SOLUTION SET)' : self._executive_control_echo,
+
+            # complex weirdness - not implemented
+            'C O M P L E X   V E L O C I T I E S   I N   S L O T   E L E M E N T S   ( C S L O T 3 - S T R E S S )' : self._executive_control_echo,
+            'C O M P L E X   V E L O C I T I E S   I N   S L O T   E L E M E N T S   ( C S L O T 4 - S T R E S S )' : self._executive_control_echo,
+            'C O M P L E X   V E L O C I T I E S   I N   A X I S Y M M E T R I C   F L U I D   E L E M E N T S   ( C A X I F 2 - S T R E S S )' : self._executive_control_echo,
+            'C O M P L E X   V E L O C I T I E S   I N   A X I S Y M M E T R I C   F L U I D   E L E M E N T S   ( C A X I F 3 - S T R E S S )' : self._executive_control_echo,
+            'C O M P L E X   A C O U S T I C   P R E S S U R E   R E S U L T S' : self._executive_control_echo,
+
+            ## ===========================================
+            # p-element stress - not implemented
+            'S T R E S S E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )' : self._executive_control_echo,
+
+            'S T R E S S E S   I N   P - V E R S I O N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'S T R E S S E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+
+            'S T R E S S E S   I N   P - V E R S I O N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+            'S T R E S S E S   I N   P - V E R S I O N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'S T R E S S E S   I N   P - V E R S I O N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
+
+            # p-element strain - not implemented
+            'S T R A I N S    I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )' : self._executive_control_echo,
+            'S T R A I N S    I N   P - V E R S I O N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'S T R A I N S    I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+
+            'S T R A I N S    I N   P - V E R S I O N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
+            'S T R A I N S    I N   P - V E R S I O N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'S T R A I N S    I N   P - V E R S I O N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+
+            # p-element force - not implemented
+            'F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )' : self._executive_control_echo,
+            'F O R C E S   I N   P - V E R S I O N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+
+            # p-element temperature
+            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   B E A M   P - E L E M E N T S' : self._executive_control_echo,
+
+            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   T R I A N G U L A R   P - E L E M E N T S' : self._executive_control_echo,
+            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   Q U A D R I L A T E R A L   P - E L E M E N T S' : self._executive_control_echo,
+
+            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   T E T R A H E D R O N   P - E L E M E N T S' : self._executive_control_echo,
+            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   P E N T A H E D R O N   P - E L E M E N T S' : self._executive_control_echo,
+            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   H E X A H E D R O N   P - E L E M E N T S' : self._executive_control_echo,
+
+            ## ===========================================
+            # complex p-element stress - not implemented
+            'C O M P L E X   S T R E S S E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )' : self._executive_control_echo,
+
+            'C O M P L E X   S T R E S S E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   P - V E R S I O N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+
+            'C O M P L E X   S T R E S S E S   I N   P - V E R S I O N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   P - V E R S I O N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'C O M P L E X   S T R E S S E S   I N   P - V E R S I O N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+
+            # complex p-element strain - not implemented
+            'C O M P L E X    S T R A I N S    I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )' : self._executive_control_echo,
+
+            'C O M P L E X    S T R A I N S    I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   P - V E R S I O N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+
+            'C O M P L E X    S T R A I N S    I N   P - V E R S I O N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   P - V E R S I O N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
+            'C O M P L E X    S T R A I N S    I N   P - V E R S I O N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
+
+            # complex p-element force - not implemented
+            'C O M P L E X   F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'C O M P L E X   F O R C E S   I N   P - V E R S I O N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            ## ===========================================
+            # ???
+            # peak/rms not included
+            'A C C E L E R A T I O N S   V E L O C I T I E S   A N D   P R E S S U R E   L E V E L S' : self._executive_control_echo,
+
+            'F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._executive_control_echo,
+            'F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )' : self._executive_control_echo,
+            'F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )' : self._executive_control_echo,
+            'F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,
+            'F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )' : self._executive_control_echo,
+
+
+            # more weirdness - not implemented
+            'C O M P L E X   F I E L D S   I N   A A B S F   E L E M E N T S   ( C A A B S F )' : self._executive_control_echo,
+            'S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       1' : self._executive_control_echo,
+            'S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       2' : self._executive_control_echo,
+            'S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       3' : self._executive_control_echo,
+            'S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       4' : self._executive_control_echo,
+            'S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5' : self._executive_control_echo,
+            'R E S U L T S   F O R   S L I D E   L I N E   E L E M E N T S   (IN ELEMENT SYSTEM)' : self._executive_control_echo,
+            'P - E L E M E N T    E R R O R    E S T I M A T E    T A B L E' : self._executive_control_echo,
+            'P - E L E M E N T    E R R O R    E S T I M A T E    S U M M A R Y    T A B L E' : self._executive_control_echo,
+            'S U P E R E L E M E N T   T R E E' : self._executive_control_echo,
+            'D E S I G N   C Y C L E =       1    S U B C A S E =       1' : self._executive_control_echo,
+            'E L E M E N T   I N T E R N A L   F O R C E S   A N D   M O M E N T S' : self._executive_control_echo,
+            'E L E M E N T   S T R E S S   D I S C O N T I N U I T I E S  - -     S U R F A C E       1' : self._executive_control_echo,
+            'E L E M E N T   S T R E S S   D I S C O N T I N U I T I E S  - -     S U R F A C E      91' : self._executive_control_echo,
+            'P R I N C I P A L   E L E M E N T   S T R E S S   D I S C O N T I N U I T I E S  - -       V O L U M E       92' : self._executive_control_echo,
+            'U S E T   D E F I N I T I O N   T A B L E   ( I N T E R N A L   S E Q U E N C E ,   R O W   S O R T )' : self._executive_control_echo,
+            'S U M M A T I O N   O F   E L E M E N T   O R I E N T E D   F O R C E S   O N   A D J A C E N T   E L E M E N T S' : self._executive_control_echo,
+            '*                  E L E M E N T   P R O P E R T Y   S U M M A R Y     (BY ELEMENT TYPE / ID)              *' : self._executive_control_echo,
+            'N O N - L I N E A R   I T E R A T I O N   M O D U L E   S O L U T I O N   D A T A' : self._executive_control_echo,
+
             #'* * * END OF JOB * * *': self.end(),
         }
         self.markers = self._marker_map.keys()
@@ -258,21 +600,44 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def _case_control_echo(self):
         line = ''
         lines = []
-        while 'PAGE' not in line:
+        i = 0
+        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line:
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
             self.fatal_check(line)
+            if not line:
+                i += 1
+            else:
+                i = 0
+            if i >= 1000:  # if there are 1000 blank lines, stop
+                #print('i=%s line=%r' % (i, line))
+                if is_release:
+                    break
+                else:
+                    raise RuntimeError('infinite loop')
         #self.grid_point_weight.read_grid_point_weight(lines)
 
     def _executive_control_echo(self):
         line = ''
         lines = []
-        while 'PAGE' not in line:
+        i = 0
+        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line:
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
             self.fatal_check(line)
+            if not line:
+                i += 1
+            else:
+                i = 0
+            if i >= 1000:  # if there are 1000 blank lines, stop
+                #print('i=%s line=%r' % (i, line))
+                if is_release:
+                    break
+                else:
+                    raise RuntimeError('infinite loop')
+
         #self.grid_point_weight.read_grid_point_weight(lines)
 
     def fatal_check(self, line):
@@ -376,13 +741,13 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self._subtitle = subtitle
         self.iSubcaseNameMap[isubcase] = [subtitle, label]
         transient = self.stored_lines[-1].strip()
-        is_sort1 = False
+        is_sort1 = True
         if transient:
             try:
                 trans_word, trans_value = transient.split('=')
             except ValueError:
-                msg = 'transient = %r' % transient
-                msg += 'stored lines = [%r]' % '\n'.join(self.stored_lines)
+                msg = 'transient = %r\n' % transient
+                msg += 'stored lines = [%s]' % ''.join(self.stored_lines)
                 #print(msg)
                 raise ValueError(msg)
             trans_word = trans_word.strip()
@@ -391,21 +756,24 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
             if trans_word == 'LOAD STEP':  # nonlinear statics
                 analysis_code = 10
-            elif trans_word == 'TIME STEP':  # TODO check name
+                is_sort1 = True
+            elif trans_word in ['TIME', 'TIME STEP']:  # TODO check name
                 analysis_code = 6
+                is_sort1 = True
             elif trans_word == 'EIGENVALUE':  # normal modes
                 analysis_code = 2
+                is_sort1 = True
             elif trans_word == 'FREQ':  # TODO check name
                 analysis_code = 5
+                is_sort1 = True
             elif trans_word == 'FREQUENCY':
                 analysis_code = 5
-            elif trans_word == 'POINT-ID':
                 is_sort1 = True
+            elif trans_word == 'POINT-ID':
+                is_sort1 = False
                 analysis_code = None
             elif trans_word == 'ELEMENT-ID':
-                is_sort1 = True
-                #is_sort1 = False
-                #is_sort2 = True
+                is_sort1 = False
                 analysis_code = None
             else:
                 raise NotImplementedError('transientWord=%r is not supported...' % trans_word)
@@ -416,6 +784,13 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         dt = None
         if transient is not None:
             dt = transient[1]
+
+        if not is_sort1:
+            msg = 'trans_word=%r\n' % trans_word
+            msg += self.infile.readline().rstrip()
+            msg += self.infile.readline().rstrip()
+            #msg += self.stored_lines[-1].strip()
+            raise RuntimeError(msg)
         return (subcase_name, isubcase, transient, dt, analysis_code, is_sort1)
 
     def _element_strain_energies(self):
@@ -590,14 +965,14 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             data.append(sline)
         return data
 
-    def parseLine(self, sline, Format):
+    def parseLine(self, sline, formats):
         """
-        :param self:   the object pointer
-        :param sline:  list of strings (split line)
-        :param Format: list of types [int,str,float,float,float] that maps to sline
+        :param self:    the object pointer
+        :param sline:   list of strings (split line)
+        :param formats: list of types [int,str,float,float,float] that maps to sline
         """
         out = []
-        for entry, iformat in zip(sline, Format):
+        for entry, iformat in zip(sline, formats):
             try:
                 entry2 = iformat(entry)
             except:
@@ -607,16 +982,16 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             out.append(entry2)
         return out
 
-    def _parse_line_blanks(self, sline, Format):
+    def _parse_line_blanks(self, sline, formats):
         """allows blanks"""
         out = []
 
-        for entry, iformat in zip(sline, Format):
+        for entry, iformat in zip(sline, formats):
             if entry.strip():
                 try:
                     entry2 = iformat(entry)
                 except:
-                    print("sline=%r\n entry=%r format=%s" % (sline, entry, Format))
+                    print("sline=%r\n entry=%r format=%s" % (sline, entry, formats))
                     raise
             else:
                 entry2 = None
@@ -647,8 +1022,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                     % (f06_filename, print_bad_path(f06_filename))
                 raise RuntimeError(msg)
 
-        if is_binary(f06_filename):
-            raise IOError('f06_filename=%r is not a binary F06.' % f06_filename)
+        #if is_binary(f06_filename):
+            #raise IOError('f06_filename=%r is a binary file.' % f06_filename)
         if os.path.getsize(f06_filename) == 0:
             raise IOError('f06_filename=%r is empty.' % f06_filename)
 
@@ -681,7 +1056,10 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             if(marker != '' and 'SUBCASE' not in marker and 'PAGE' not in marker and 'FORTRAN' not in marker
                and 'USER INFORMATION MESSAGE' not in marker and 'TOTAL DATA WRITTEN FOR DATA BLOCK' not in marker
                and marker not in self.markers and marker != self._subtitle):
-                print("marker = %r" % marker)
+                if '  ' in marker and '   ' not in marker and '=' not in marker:
+                    # markers have multiple words in "stupid" format ('CAT' -> 'C A T'),
+                    # so spaced tables 'CAT DOG' -> 'C A T  D O G')
+                    print("marker = %r" % marker)
                 pass
                 #print('Title  = %r' % self.subtitle)
 

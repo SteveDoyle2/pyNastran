@@ -58,7 +58,8 @@ class OES(object):
             slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strain_in_crod_elements(self, element_name, element_type, slot):
+    def _strain_in_rod_elements(self, element_name, element_type, result_name):
+        slot = getattr(self, result_name)
         (isubcase, transient, dt, data_code) = self._get_rod_header(element_name, element_type, False)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_rod_stress()
@@ -83,7 +84,8 @@ class OES(object):
     def _stress_in_celas4_elements(self):
         self._stress_in_celas_elements('CELAS4', 14, 'celas4_stress')
 
-    def _stress_in_celas_elements(self, element_name, element_type, slot):
+    def _stress_in_celas_elements(self, element_name, element_type, result_name):
+        slot = getattr(self, result_name)
         (isubcase, transient, dt, data_code) = self._get_spring_header(element_name, element_type, False)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_spring_stress()
@@ -107,7 +109,8 @@ class OES(object):
     def _strain_in_celas4_elements(self):
         self._strain_in_celas_elements('CELAS4', 14, 'celas4_strain')
 
-    def _strain_in_celas_elements(self, element_name, element_type, slot):
+    def _strain_in_celas_elements(self, element_name, element_type, result_name):
+        slot = getattr(self, result_name)
         (isubcase, transient, dt, data_code) = self._get_spring_header(element_name, element_type, True)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_spring_stress()
@@ -292,7 +295,7 @@ class OES(object):
             line = self.infile.readline()[1:].rstrip('\r\n ')
             if 'PAGE' in line:
                 break
-            sline = [line[0:11], line[11:26], line[26:41], line[41:56], line[56:69], line[69:86], line[86:101], line[101:116], line[116:131]]
+            sline = [line[0:11], line[11:26], line[26:41], line[41:56], line[56:69], line[69:86], line[86:101], line[101:115], line[115:131]]
             data_types = [int, float, float, float, float, float, float, float, float]
             out = self._parse_line_blanks(sline, data_types)  # line 1
             out = ['CBAR'] + out
@@ -300,7 +303,7 @@ class OES(object):
 
             # line 2
             line = self.infile.readline()[1:].rstrip('\r\n ')
-            sline = [line[11:26], line[26:41], line[41:56], line[56:69], line[86:101], line[101:116], line[116:131]]
+            sline = [line[11:26], line[26:41], line[41:56], line[56:69], line[86:101], line[101:115], line[115:131]]
             data_types = [float, float, float, float, float, float, float]
             out += self._parse_line_blanks(sline, data_types)  # line 2
             #print "*",out

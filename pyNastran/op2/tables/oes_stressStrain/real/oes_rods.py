@@ -76,10 +76,11 @@ class RealRodArray(OES_Object):
 
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         ntimes, nelements, _ = self.data.shape
         assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)

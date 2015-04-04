@@ -383,7 +383,17 @@ class RealTableObject(ScalarObject):  # displacement style table
                     self.gridTypes[node_id] = grid_type
                     self.translations[node_id] = array([t1, t2, t3], dtype='float32')
                     self.rotations[node_id] = array([r1, r2, r3], dtype='float32')
-
+                elif grid_type == 'L':
+                    # .. todo:: are L points single DOFs?
+                    # we do know they're greater than the max value...
+                    try:
+                        (node_id, grid_type, t1, t2, t3, r1, r2, r3) = line
+                    except ValueError:
+                        print('L point line=%r' % line)
+                        raise
+                    self.gridTypes[node_id] = grid_type
+                    self.translations[node_id] = array([t1, t2, t3], dtype='float32')
+                    self.rotations[node_id] = array([r1, r2, r3], dtype='float32')
                 elif grid_type == 'S':
                     t2 = t3 = r1 = r2 = r3 = 0.0
                     self.gridTypes[node_id] = grid_type
