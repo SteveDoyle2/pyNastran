@@ -1,13 +1,15 @@
 #pylint: disable=C0301,C0111
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip, range
 import os
 
+from pyNastran import is_release
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
 
 #strainEnergyDensity,TemperatureGradientObject
-
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy
 
 from pyNastran.f06.tables.oes import OES
 from pyNastran.f06.tables.oug import OUG
@@ -26,9 +28,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
-    def set_vectorization(self, is_vectorized):
-        self.is_vectorized = is_vectorized
-
     def build_vectorization(self):
         if self.is_vectorized:
             table_types = self.get_table_types()
@@ -42,9 +41,9 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Initializes the F06 object
 
-        :makeGeom:    reads the BDF tables (default=False)
-        :debug:       prints data about how the F06 was parsed (default=False)
-        :log:         a logging object to write debug messages to
+        :param makeGeom:    reads the BDF tables (default=False)
+        :param debug:       prints data about how the F06 was parsed (default=False)
+        :param log:         a logging object to write debug messages to
 
         .. seealso:: import logging
         """
@@ -55,7 +54,9 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         LAMA.__init__(self)
         MAX_MIN.__init__(self)
         #F06Writer.__init__(self)
+        #F06Writer.__init__(self)
 
+        self.f06_filename = None
         self._subtitle = None
         self.card_count = {}
         self._stop_after_reading_mass = False
@@ -63,7 +64,9 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self.i = 0
         self.is_vectorized = False
 
-        self.__init_data__(debug, log)
+        #: the TITLE in the Case Control Deck
+        self.Title = ''
+        self._start_log(log, debug)
 
         self._line_marker_map = {
             'R E A L   E I G E N V E C T O R   N O' : self._real_eigenvectors,
@@ -115,7 +118,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             #------------------------
             #'R O T O R   D Y N A M I C S   S U M M A R Y'
             #'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y'
-            #'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD)'
 
             'R O T O R   D Y N A M I C S   S U M M A R Y': self._executive_control_echo,
             'R O T O R   D Y N A M I C S   M A S S   S U M M A R Y': self._executive_control_echo,
@@ -139,56 +141,56 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
             #====================================================================
             # OES O-D
-            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )' : self._stresses_in_cbar_elements,
-            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )'  : self._strains_in_cbar_elements,
+            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )' : self._stress_in_cbar_elements,
+            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )' : self._strain_in_cbar_elements,
 
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )' : self._stresses_in_crod_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )'   : self._strains_in_crod_elements,
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )' : self._stress_in_crod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )' : self._strain_in_crod_elements,
 
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stresses_in_crod_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )'   : self._strains_in_crod_elements,
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stress_in_conrod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._strain_in_conrod_elements,
             #====================================================================
             # OES 1-D
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._stresses_in_celas1_elements,
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._stresses_in_celas2_elements,
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._stresses_in_celas3_elements,
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._stresses_in_celas4_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._stress_in_celas1_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._stress_in_celas2_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._stress_in_celas3_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._stress_in_celas4_elements,
 
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._strains_in_celas1_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._strains_in_celas2_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._strains_in_celas3_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._strains_in_celas4_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._strain_in_celas1_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._strain_in_celas2_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._strain_in_celas3_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._strain_in_celas4_elements,
             #====================================================================
             # OES 2-D (no support for CQUAD8, CQUAD, CQUADR, CTRIAR, CTRAI6, CTRIAX, CTRIAX6)
-            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._stresses_in_ctria3_elements,
-            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._strains_in_ctria3_elements,
+            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._stress_in_ctria3_elements,
+            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._strain_in_ctria3_elements,
 
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._stresses_in_cquad4_elements,
-            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._strains_in_cquad4_elements,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._stress_in_cquad4_elements,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._strain_in_cquad4_elements,
 
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._stresses_in_cquad4_bilinear_elements,
-            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._strains_in_cquad4_bilinear_elements,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._stress_in_cquad4_bilinear_elements,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._strain_in_cquad4_bilinear_elements,
 
             #==
             # composite partial ??? (e.g. bilinear quad)
-            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )': self._stresses_in_composite_ctria3_elements,
-            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_composite_cquad4_elements,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )': self._stress_in_composite_ctria3_elements,
+            'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self._stress_in_composite_cquad4_elements,
 
-            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._strains_in_composite_ctria3_elements,
-            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._strains_in_composite_cquad4_elements,
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )' : self._strain_in_composite_ctria3_elements,
+            'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._strain_in_composite_cquad4_elements,
 
             #===
             # .. todo:: not implemented
             'S T R E S S E S   I N   T R I A X 6   E L E M E N T S' : self._executive_control_echo,
             #====================================================================
             # OES 3-D
-            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._stresses_in_ctetra_elements,
-            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._stresses_in_chexa_elements,
-            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._stresses_in_cpenta_elements,
+            'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._stress_in_ctetra_elements,
+            'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._stress_in_chexa_elements,
+            'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._stress_in_cpenta_elements,
 
-            'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._strains_in_ctetra_elements,
-            'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._strains_in_chexa_elements,
-            'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._strains_in_cpenta_elements,
+            'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )' : self._strain_in_ctetra_elements,
+            'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._strain_in_chexa_elements,
+            'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )' : self._strain_in_cpenta_elements,
             #====================================================================
             # more not implemented...
 
@@ -201,14 +203,14 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
             # FORCE
             'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )': self._forces_in_crod_elements,
-            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN':  self._forces_in_cquad4s_bilinear,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._forces_in_cquad4s_bilinear,
 
             'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
-            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )':  self._executive_control_echo,
-            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._executive_control_echo,
-            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._executive_control_echo,
-            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._executive_control_echo,
-            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._executive_control_echo,
+            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' :  self._executive_control_echo,
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._executive_control_echo,
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._executive_control_echo,
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._executive_control_echo,
+            'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._executive_control_echo,
 
             # energy
             'E L E M E N T   S T R A I N   E N E R G I E S' : self._element_strain_energies,
@@ -219,16 +221,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             #'* * * END OF JOB * * *': self.end(),
         }
         self.markers = self._marker_map.keys()
-
-    def __init_data__(self, debug=False, log=None):
-        OES.__init__(self)
-        OQG.__init__(self)
-        OUG.__init__(self)
-        F06Writer.__init__(self)
-
-        #: the TITLE in the Case Control Deck
-        self.Title = ''
-        self._start_log(log, debug)
 
     def _start_log(self, log=None, debug=False):
         """
@@ -453,12 +445,12 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         #print("eigenvalue=%s cycle=%s" % (eigenvalue, cycles))
 
         eTypeLine = self.skip(2)[1:]
-        eType = eTypeLine[30:40]
-        totalEnergy1 = eTypeLine[99:114]
+        #eType = eTypeLine[30:40]
+        #totalEnergy1 = eTypeLine[99:114]
 
         mode_line = self.skip(1)[1:]
         iMode = mode_line[24:40]
-        totalEnergy2 = mode_line[99:114]
+        #totalEnergy2 = mode_line[99:114]
         #print("eType=%r totalEnergy1=%r" % (eType, totalEnergy1))
         #print("iMode=%r totalEnergy2=%r" % (iMode, totalEnergy2))
         headers = self.skip(2)
@@ -483,13 +475,13 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             line = self.infile.readline()[1:].rstrip('\r\n ')
             self.i += 1
 
-        return
-        if isubcase in self.iSubcases:
-            self.strainEnergyDensity[isubcase].readF06Data(data, transient)
-        else:
-            sed = strain_energy_density(data, transient)
-            sed.readF06Data(data, transient)
-            self.strainEnergyDensity[isubcase] = sed
+        if not is_release:
+            if isubcase in self.iSubcases:
+                self.strain_energy[isubcase].readF06Data(data, transient)
+            else:
+                sed = RealStrainEnergy(data, transient)
+                sed.readF06Data(data, transient)
+                self.strain_energy[isubcase] = sed
 
     def _grid_point_force_balance(self):
         try:
@@ -536,22 +528,23 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
             data.append([point_id, element_id, source, t1, t2, t3, r1, r2, r3])
 
-            data_code = {'analysis_code': analysis_code,
-                        'device_code': 1, 'sort_code': 0,
-                        'sort_bits': [0, 0, 0], 'num_wide': 9,
+            data_code = {
+                'analysis_code': analysis_code,
+                'device_code': 1, 'sort_code': 0,
+                'sort_bits': [0, 0, 0], 'num_wide': 9,
 
-                        'table_code': 1,
-                        'table_name': 'OES1X',
+                'table_code': 1,
+                'table_name': 'OES1X',
 
-                        #'s_code': s_code,
-                        #'stress_bits': stress_bits,
-                        #'element_name': element_name, 'element_type': element_type,
+                #'s_code': s_code,
+                #'stress_bits': stress_bits,
+                #'element_name': element_name, 'element_type': element_type,
 
-                        'format_code': 1,
-                        'nonlinear_factor': dt,
-                        'dataNames':['lsdvmn'],
-                        'lsdvmn': 1,
-                        }
+                'format_code': 1,
+                'nonlinear_factor': dt,
+                'dataNames':['lsdvmn'],
+                'lsdvmn': 1,
+                }
         is_sort1 = True
         if isubcase not in self.grid_point_forces:
             self.grid_point_forces[isubcase] = RealGridPointForces(data_code, is_sort1, isubcase, dt)
@@ -562,8 +555,10 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Reads displacement, spc/mpc forces
 
-        :self:   the object pointer
-        :Format: .. seealso:: self.parseLine
+        :param self:   the object pointer
+        :param Format: list of types [int,str,float,float,float] that maps to sline
+
+        .. seealso:: self.parseLine
         """
         sline = True
         data = []
@@ -597,16 +592,16 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
     def parseLine(self, sline, Format):
         """
-        :self:   the object pointer
-        :sline:  list of strings (split line)
-        :Format: list of types [int,str,float,float,float] that maps to sline
+        :param self:   the object pointer
+        :param sline:  list of strings (split line)
+        :param Format: list of types [int,str,float,float,float] that maps to sline
         """
         out = []
-        for entry, iFormat in zip(sline, Format):
+        for entry, iformat in zip(sline, Format):
             try:
-                entry2 = iFormat(entry)
+                entry2 = iformat(entry)
             except:
-                #print("sline=%r\n entry=%r format=%s" % (sline, entry, iFormat))
+                #print("sline=%r\n entry=%r format=%s" % (sline, entry, iformat))
                 #raise
                 return None
             out.append(entry2)
@@ -616,20 +611,20 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """allows blanks"""
         out = []
 
-        for entry, iFormat in zip(sline, Format):
+        for entry, iformat in zip(sline, Format):
             if entry.strip():
                 try:
-                    entry2 = iFormat(entry)
+                    entry2 = iformat(entry)
                 except:
                     print("sline=%r\n entry=%r format=%s" % (sline, entry, Format))
                     raise
             else:
                 entry2 = None
-                #print("sline=%r\n entry=%r format=%s" % (sline, entry, iFormat))
+                #print("sline=%r\n entry=%r format=%s" % (sline, entry, iformat))
             out.append(entry2)
         return out
 
-    def read_f06(self, f06_filename=None):
+    def read_f06(self, f06_filename=None, vectorized=False):
         """
         Reads the F06 file
 
@@ -637,6 +632,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
         :f06FileName: the file to be parsed (None -> GUI)
         """
+        self.is_vectorized = vectorized
         if f06_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran F06 (*.f06)|*.f06|" \
@@ -685,7 +681,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             if(marker != '' and 'SUBCASE' not in marker and 'PAGE' not in marker and 'FORTRAN' not in marker
                and 'USER INFORMATION MESSAGE' not in marker and 'TOTAL DATA WRITTEN FOR DATA BLOCK' not in marker
                and marker not in self.markers and marker != self._subtitle):
-                #print("marker = %r" % marker)
+                print("marker = %r" % marker)
                 pass
                 #print('Title  = %r' % self.subtitle)
 
@@ -693,8 +689,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                 blank = 0
                 #print("\n1*marker = %r" % marker)
                 self._marker_map[marker]()
-                if(self._stop_after_reading_mass and
-                   marker in 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R'):
+                if self._stop_after_reading_mass and marker in 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':
+                    print('breaking')
                     break
                 self.stored_lines = []
             elif 'R E A L   E I G E N V E C T O R   N O' in marker:
@@ -716,6 +712,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             elif marker == '':
                 blank += 1
                 if blank == 20:
+                    print('breaking')
                     break
             elif self._is_marker(marker):  # marker with space in it (e.g. Model Summary)
                 print("***marker = %r" % marker)

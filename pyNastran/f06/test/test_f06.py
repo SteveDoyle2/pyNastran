@@ -26,13 +26,13 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
         if base_name not in skipFiles:
             print("%" * 80)
             print('file=%s\n' % f06file)
-            n = '%s ' % (i)
+            n = '%s ' % i
             sys.stderr.write('%sfile=%s\n' % (n, f06file))
             nTotal += 1
             is_passed = run_f06(f06file, iSubcases=iSubcases, debug=debug,
                                 stopOnFailure=stopOnFailure)  # True/False
             if not is_passed:
-                sys.stderr.write('**file=%s\n' % (f06file))
+                sys.stderr.write('**file=%s\n' % f06file)
                 failedCases.append(f06file)
                 nFailed += 1
             else:
@@ -59,16 +59,15 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, is_vector=False,
     #debug = True
     try:
         f06 = F06(debug=debug)
-        f06.set_vectorization(is_vector)
         #f06.set_subcases(iSubcases)  # TODO not supported
 
-        #f06.readBDF(f06.bdf_filename,includeDir=None,xref=False)
-        f06.read_f06(f06_filename)
+        #f06.read_bdf(f06.bdf_filename, includeDir=None, xref=False)
+        f06.read_f06(f06_filename, vectorized=is_vector)
         #tableNamesF06 = parseTableNamesFromF06(f06.f06FileName)
         #tableNamesF06 = f06.getTableNamesFromF06()
-        assert write_f06 == True, write_f06
+        #assert write_f06 == True, write_f06
         if write_f06:
-            (model, ext) = os.path.splitext(f06_filename)
+            model = os.path.splitext(f06_filename)[0]
             f06.write_f06(model + '.test_f06.f06')
 
         #print "subcases = ",f06.subcases

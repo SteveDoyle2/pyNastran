@@ -19,7 +19,25 @@ class OES(object):
         self.log = None
         self.iSubcases = []
 
-    def _stresses_in_crod_elements(self):
+    def _stress_in_crod_elements(self):
+        self._stress_in_rod_elements('CROD', 1, 'crod_stress')
+
+    def _stress_in_ctube_elements(self):
+        self._stress_in_rod_elements('CTUBE', 3, 'ctube_stress')
+
+    def _stress_in_conrod_elements(self):
+        self._stress_in_rod_elements('CONROD', 10, 'crod_stress')
+
+    def _strain_in_crod_elements(self):
+        self._strain_in_rod_elements('CROD', 1, 'crod_strain')
+
+    def _strain_in_ctube_elements(self):
+        self._strain_in_rod_elements('CTUBE', 3, 'ctube_strain')
+
+    def _strain_in_conrod_elements(self):
+        self._strain_in_rod_elements('CONROD', 10, 'crod_stress')
+
+    def _stress_in_rod_elements(self, element_name, element_type, result_type):
         """
         ::
 
@@ -28,72 +46,80 @@ class OES(object):
             ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
                14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01
         """
-        (isubcase, transient, dt, data_code) = self._get_rod_header(False)
+        (isubcase, transient, dt, data_code) = self._get_rod_header(element_name, element_type, False)
         data_code['table_name'] = 'OES1X'
         data = self._read_rod_stress()
-        if isubcase in self.crod_stress:
-            self.crod_stress[isubcase].add_f06_data(data, transient)
+        slot = getattr(self, result_type)
+        if isubcase in slot:
+            slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.crod_stress[isubcase] = RealRodStress(data_code, is_sort1, isubcase, transient)
-            self.crod_stress[isubcase].add_f06_data(data, transient)
+            slot[isubcase] = RealRodStress(data_code, is_sort1, isubcase, transient)
+            slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strains_in_crod_elements(self):
-        (isubcase, transient, dt, data_code) = self._get_rod_header(False)
+    def _strain_in_crod_elements(self, element_name, element_type, slot):
+        (isubcase, transient, dt, data_code) = self._get_rod_header(element_name, element_type, False)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_rod_stress()
-        if isubcase in self.crod_strain:
-            self.crod_strain[isubcase].add_f06_data(data, transient)
+        if isubcase in slot:
+            slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.crod_strain[isubcase] = RealRodStrain(data_code, is_sort1, isubcase, transient)
-            self.crod_strain[isubcase].add_f06_data(data, transient)
+            slot[isubcase] = RealRodStrain(data_code, is_sort1, isubcase, transient)
+            slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _stresses_in_celas1_elements(self):
-        (isubcase, transient, dt, data_code) = self._get_spring_header(False)
+
+    def _stress_in_celas1_elements(self):
+        self._stress_in_celas_elements('CELAS2', 11, 'celas1_stress')
+
+    def _stress_in_celas2_elements(self):
+        self._stress_in_celas_elements('CELAS2', 12, 'celas2_stress')
+
+    def _stress_in_celas3_elements(self):
+        self._stress_in_celas_elements('CELAS3', 13, 'celas3_stress')
+
+    def _stress_in_celas4_elements(self):
+        self._stress_in_celas_elements('CELAS4', 14, 'celas4_stress')
+
+    def _stress_in_celas_elements(self, element_name, element_type, slot):
+        (isubcase, transient, dt, data_code) = self._get_spring_header(element_name, element_type, False)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_spring_stress()
-        if isubcase in self.celasStrain:
-            self.celasStrain[isubcase].add_f06_data(data, transient)
+        if isubcase in slot:
+            slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.celasStrain[isubcase] = RealCelasStress(data_code, is_sort1, isubcase, transient)
-            self.celasStrain[isubcase].add_f06_data(data, transient)
+            slot[isubcase] = RealCelasStress(data_code, is_sort1, isubcase, transient)
+            slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _stresses_in_celas2_elements(self):
-        self._stress_in_celas1_elements()
+    def _strain_in_celas1_elements(self):
+        self._strain_in_celas_elements('CELAS2', 11, 'celas1_strain')
 
-    def _stresses_in_celas3_elements(self):
-        self._stress_in_celas1_elements()
+    def _strain_in_celas2_elements(self):
+        self._strain_in_celas_elements('CELAS2', 12, 'celas2_strain')
 
-    def _stresses_in_celas4_elements(self):
-        self._stress_in_celas1_elements()
+    def _strain_in_celas3_elements(self):
+        self._strain_in_celas_elements('CELAS3', 13, 'celas3_strain')
 
-    def _strains_in_celas1_elements(self):
-        (isubcase, transient, dt, data_code) = self._get_spring_header(False)
+    def _strain_in_celas4_elements(self):
+        self._strain_in_celas_elements('CELAS4', 14, 'celas4_strain')
+
+    def _strain_in_celas_elements(self, element_name, element_type, slot):
+        (isubcase, transient, dt, data_code) = self._get_spring_header(element_name, element_type, True)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_spring_stress()
-        if isubcase in self.celasStrain:
-            self.celasStrain[isubcase].add_f06_data(data, transient)
+        if isubcase in slot:
+            slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.celasStrain[isubcase] = RealCelasStrain(data_code, is_sort1, isubcase, transient)
-            self.celasStrain[isubcase].add_f06_data(data, transient)
+            slot[isubcase] = RealCelasStrain(data_code, is_sort1, isubcase, transient)
+            slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strains_in_celas2_elements(self):
-        self._strains_in_celas1_elements()
-
-    def _strains_in_celas3_elements(self):
-        self._strains_in_celas1_elements()
-
-    def _strains_in_celas4_elements(self):
-        self._strains_in_celas1_elements()
-
-    def _get_rod_header(self, isStrain):
+    def _get_rod_header(self, element_name, element_type, is_strain):
         """
         * analysis_code = 1 (Statics)
         * device_code   = 1 (Print)
@@ -105,7 +131,6 @@ class OES(object):
         """
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
-        #print "headers = %s" %(headers)
 
         (stress_bits, s_code) = self.make_stress_bits(
             isStrain=False, isRodOrSolid=True)
@@ -113,7 +138,7 @@ class OES(object):
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
                     'stress_bits': stress_bits, 'format_code': 1,
-                    'element_name': 'ROD', 'element_type': 1, 'nonlinear_factor': dt,
+                    'element_name': element_name, 'element_type': element_type, 'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
 
         return (isubcase, transient, dt, data_code)
@@ -176,7 +201,7 @@ class OES(object):
 
         return data
 
-    def _stresses_in_cbar_elements(self):
+    def _stress_in_cbar_elements(self):
         """
         ::
 
@@ -206,7 +231,7 @@ class OES(object):
             self.cbar_stress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strains_in_cbar_elements(self):
+    def _strain_in_cbar_elements(self):
         (isubcase, transient, dt, data_code) = self._get_bar_header(False)
         data_code['table_name'] = 'OSTR1X'
 
@@ -236,7 +261,7 @@ class OES(object):
 
         return (isubcase, transient, dt, data_code)
 
-    def _get_spring_header(self, isStrain):
+    def _get_spring_header(self, element_name, element_type, isStrain):
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
@@ -247,7 +272,7 @@ class OES(object):
                     'sort_bits': [0, 0, 0], 'num_wide': 2, 's_code': s_code,
                     'thermal': 0,
                     'stress_bits': stress_bits, 'format_code': 1,
-                    'element_name': 'ELAS2', 'element_type': 12,
+                    'element_name': element_name, 'element_type': element_type,
                     'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
         return (isubcase, transient, dt, data_code)
@@ -286,19 +311,19 @@ class OES(object):
 
     #==========================================================================
     # COMPOSITE
-    def _stresses_in_composite_ctria3_elements(self):
+    def _stress_in_composite_ctria3_elements(self):
         element_name = 'CTRIA3'
         element_type = 97
         is_strain = False
         self._composites_helper(element_name, element_type, is_strain, self.ctria3_composite_stress)
 
-    def _strains_in_composite_ctria3_elements(self):
+    def _strain_in_composite_ctria3_elements(self):
         element_name = 'CTRIA3'
         element_type = 97
         is_strain = True
         self._composites_helper(element_name, element_type, is_strain, self.ctria3_composite_strain)
 
-    def _stresses_in_composite_cquad4_elements(self):
+    def _stress_in_composite_cquad4_elements(self):
         """
         ::
 
@@ -315,7 +340,7 @@ class OES(object):
         is_strain = False
         self._composites_helper(element_name, element_type, is_strain, self.cquad4_composite_stress)
 
-    def _strains_in_composite_cquad4_elements(self):
+    def _strain_in_composite_cquad4_elements(self):
         """
         ::
 
@@ -374,7 +399,7 @@ class OES(object):
         self.iSubcases.append(isubcase)
     #==========================================================================
 
-    def _stresses_in_ctria3_elements(self):
+    def _stress_in_ctria3_elements(self):
         """
         ::
 
@@ -403,7 +428,7 @@ class OES(object):
             self.ctria3_stress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strains_in_ctria3_elements(self):
+    def _strain_in_ctria3_elements(self):
         (isubcase, transient, data_code) = self._get_tri_header(True)
         data_code['table_name'] = 'OST1X'
         data = self._read_tri_stress(['CTRIA3'])
@@ -492,11 +517,8 @@ class OES(object):
 
     #==========================================================================
     # CQUAD4
-    def _stresses_in_cquad4_elements(self):
-        elementType = 'CQUAD4'
-        elementNumber = 33
-        is_strain = False
-        (isubcase, transient, data_code) = self._get_quad_header(2, elementType, elementNumber, is_strain)
+    def _stress_in_cquad4_elements(self):
+        (isubcase, transient, data_code) = self._get_quad_header(2, 'CQUAD4', 33, is_strain=False)
         data_code['table_name'] = 'OES1X'
         data = self._read_tri_stress(['CQUAD4'])
         if isubcase in self.cquad4_stress:
@@ -508,11 +530,8 @@ class OES(object):
             self.cquad4_stress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strains_in_cquad4_elements(self):
-        elementType = 'CQUAD4'
-        elementNumber = 33
-        is_strain = True
-        (isubcase, transient, data_code) = self._get_quad_header(2, elementType, elementNumber, is_strain)
+    def _strain_in_cquad4_elements(self):
+        (isubcase, transient, data_code) = self._get_quad_header(2, 'CQUAD4', 33, is_strain=True)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_tri_stress(['CQUAD4'])
         if isubcase in self.cquad4_strain:
@@ -523,19 +542,13 @@ class OES(object):
             self.cquad4_strain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strains_in_cquad4_bilinear_elements(self):
-        is_strain = True
-        element_type = 'CQUAD4'
-        element_num = 144
-        self._stress_strain_cquad4_bilinear_helper(element_type, element_num, is_strain)
+    def _strain_in_cquad4_bilinear_elements(self):
+        self._stress_strain_cquad4_bilinear_helper('CQUAD4', 144, is_strain=True)
 
-    def _stresses_in_cquad4_bilinear_elements(self):
-        is_strain = False
-        element_type = 'CQUAD4'
-        element_num = 144
-        self._stress_strain_cquad4_bilinear_helper(element_type, element_num, is_strain)
+    def _stress_in_cquad4_bilinear_elements(self):
+        self._stress_strain_cquad4_bilinear_helper('CQUAD4', 144, is_strain=False)
 
-    def _stress_strain_cquad4_bilinear_helper(self, element_type, element_num, is_strain):
+    def _stress_strain_cquad4_bilinear_helper(self, element_type, element_num, is_strain=None):
         """
         ::
 
@@ -557,19 +570,19 @@ class OES(object):
         data = self._read_quad_bilinear()
 
         if is_strain:
-            dictA = self.cquad4_strain
+            slot = self.cquad4_strain
             class_obj = RealPlateStrain
         else:
-            dictA = self.cquad4_stress
+            slot = self.cquad4_stress
             class_obj = RealPlateStress
 
-        if isubcase in dictA:
-            dictA[isubcase].add_f06_data(data, transient)
+        if isubcase in slot:
+            slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
             assert 'nonlinear_factor' in data_code
-            dictA[isubcase] = class_obj(data_code, is_sort1, isubcase, transient)
-            dictA[isubcase].add_f06_data(data, transient)
+            slot[isubcase] = class_obj(data_code, is_sort1, isubcase, transient)
+            slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
     def _get_quad_header(self, nHeaderLines, elementType, elementNumber, is_strain):
@@ -644,22 +657,22 @@ class OES(object):
         return data
 
     #==========================================================================
-    def _stresses_in_chexa_elements(self):
+    def _stress_in_chexa_elements(self):
         return self._read_solid_stress('CHEXA', 8, self.chexa_stress)
 
-    def _stresses_in_cpenta_elements(self):
+    def _stress_in_cpenta_elements(self):
         return self._read_solid_stress('CPENTA', 6, self.cpenta_stress)
 
-    def _stresses_in_ctetra_elements(self):
+    def _stress_in_ctetra_elements(self):
         return self._read_solid_stress('CTETRA', 4, self.ctetra_stress)
 
-    def _strains_in_chexa_elements(self):
+    def _strain_in_chexa_elements(self):
         return self._read_solid_strain('CHEXA', 8, self.chexa_strain)
 
-    def _strains_in_cpenta_elements(self):
+    def _strain_in_cpenta_elements(self):
         return self._read_solid_strain('CPENTA', 6, self.cpenta_strain)
 
-    def _strains_in_ctetra_elements(self):
+    def _strain_in_ctetra_elements(self):
         return self._read_solid_strain('CTETRA', 4, self.ctetra_strain)
 
     def _read_solid_stress(self, eType, n, slot):
