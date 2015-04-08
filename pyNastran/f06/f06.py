@@ -76,6 +76,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self._marker_map = {
             #====================================================================
             # debug info
+            'THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF MSC.SOFTWARE CORPORATION.  THE RECEIPT OR' : self._executive_control_echo,
             'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O' : self._nastran_file_and_system_parameter_echo,
             'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O' : self._executive_control_echo,
             'C A S E    C O N T R O L    E C H O' : self._case_control_echo,
@@ -647,7 +648,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def _nastran_file_and_system_parameter_echo(self):
         line = ''
         lines = []
-        while 'PAGE' not in line:
+        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line::
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
@@ -657,7 +658,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def _grid_point_singularity_table(self):
         line = ''
         lines = []
-        while 'PAGE' not in line:
+        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line::
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
@@ -721,6 +722,17 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             label_isubcase = self.stored_lines[-2]
         label, isubcase = _parse_label_isubcase(label_isubcase)
 
+        # TODO: this hardcodes the subtitle, but with bad splitting
+        #key = (isubcase, subtitle)
+        subtitle = 'subtitle'
+        if (isubcase, subtitle) not in self.labels:
+            self.subtitles[isubcase].append(subtitle)
+            self.labels[(isubcase, subtitle)] = label
+
+        #if isubcase not in self.labels:
+            #self.subtitles[isubcase].append(subtitle)
+            #self.labels[isubcase] = label
+
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
 
@@ -776,7 +788,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                 is_sort1 = False
                 analysis_code = None
             else:
-                raise NotImplementedError('transientWord=%r is not supported...' % trans_word)
+                raise NotImplementedError('transient_word=%r is not supported...' % trans_word)
         else:
             transient = None
             analysis_code = 1
@@ -1068,7 +1080,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                 #print("\n1*marker = %r" % marker)
                 self._marker_map[marker]()
                 if self._stop_after_reading_mass and marker in 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':
-                    print('breaking')
+                    #print('breaking opgwg')
                     break
                 self.stored_lines = []
             elif 'R E A L   E I G E N V E C T O R   N O' in marker:
@@ -1090,7 +1102,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             elif marker == '':
                 blank += 1
                 if blank == 20:
-                    print('breaking')
+                    #print('breaking blank lines')
                     break
             elif self._is_marker(marker):  # marker with space in it (e.g. Model Summary)
                 print("***marker = %r" % marker)
@@ -1113,6 +1125,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                      self.ctetra_strain, self.cpenta_strain, self.chexa_strain,]
         for data_set in data_pack:
             for key, data in iteritems(data_set):
+                #print('key=%s class=%s' % (key, type(data)))
                 data.processF06Data()
 
     def _is_marker(self, marker):

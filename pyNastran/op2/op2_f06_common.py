@@ -612,7 +612,7 @@ class OP2_F06_Common(object):
                         msg.append('\n')
                     else:
                         msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-                        #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+                        raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
             except:
                 print(table)
                 raise

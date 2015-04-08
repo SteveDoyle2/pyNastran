@@ -18,11 +18,6 @@ class OES_Object_Deprecated(object):
     def isFiberDistance(self):
         return self.is_fiber_distance()
 
-    def isCurvatureOld(self):
-        if self.stress_bits[2] == 0:
-            return True
-        return False
-
     def isCurvature(self):
         return self.is_curvature()
 
@@ -38,28 +33,16 @@ class OES_Object(OES_Object_Deprecated, ScalarObject):
         #print self.data_code
 
     def is_curvature(self):
-        if self.s_code in [0, 1, 14, 15, 16, 17, 27, 30, 31]:  # fiber distance
-            return False
-        elif self.s_code in [10, 11, 26, ]:  # fiber curvature
-            return True
-        raise NotImplementedError('add s_code=%s' % self.s_code)
+        return True if self.stress_bits[2] == 1 else False
 
     def is_fiber_distance(self):
         return not self.is_curvature()
 
     def is_von_mises(self):
-        #print self.stress_bits
-        #iMs = not(self.is_max_shear())
-        #print 'is_von_mises = ', iMs
         return not self.is_max_shear()
 
     def is_max_shear(self):
-        #print self.stress_bits
-        if self.stress_bits[4] == 0:
-            #print 'is_max_shear = True'
-            return True
-        #print 'is_max_shear = False'
-        return False
+        return True if self.stress_bits[4] == 0 else False
 
     def getOrderedETypes(self, valid_types):
         """
@@ -99,10 +82,10 @@ class StressObject_Deprecated(object):
         pass
 
     def isStrain(self):
-        return self.is_stress()
+        return self.is_strain()
 
     def isStress(self):
-        return self.is_strain()
+        return self.is_stress()
 
 
 class StressObject(StressObject_Deprecated, OES_Object):
@@ -122,20 +105,24 @@ class StressObject(StressObject_Deprecated, OES_Object):
             self.add_new_transient(dt)
 
     def is_strain(self):
-        return True
+        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        assert self.stress_bits[1] == 0, 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        return False
 
     def is_stress(self):
-        return False
+        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        assert self.stress_bits[1] == 0, 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        return True
 
 class StrainObject_Deprecated(object):
     def __init__(self):
         pass
 
     def isStrain(self):
-        return self.is_stress()
+        return self.is_strain()
 
     def isStress(self):
-        return self.is_strain()
+        return self.is_stress()
 
 class StrainObject(StrainObject_Deprecated, OES_Object):
     def __init__(self, data_code, isubcase):
@@ -153,7 +140,11 @@ class StrainObject(StrainObject_Deprecated, OES_Object):
             self.add_new_transient(dt)
 
     def is_strain(self):
-        return False
+        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        assert self.stress_bits[1] == 1, 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        return True
 
     def is_stress(self):
-        return True
+        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        assert self.stress_bits[1] == 1, 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        return False

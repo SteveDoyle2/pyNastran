@@ -1011,7 +1011,7 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(slot, ComplexPlateStress)
                 else:
-                    self.create_transient_object(slot, ComplexPlateStress)
+                    self.create_transient_object(slot, ComplexPlateStrain)
                 s1 = Struct(b'i14f')
                 s2 = Struct(b'i14f')
                 nnodes = 0  # centroid + 4 corner points

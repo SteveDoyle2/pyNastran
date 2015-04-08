@@ -645,9 +645,9 @@ class RealCompositePlateStrain(StrainObject):
 
         if self.code == [1, 0, 14]:
             self.evmShear = {}
-            assert self.is_von_mises() == False
+            assert self.is_von_mises() == False, 'format/sort/stressCode=%s bits=%s' % (self.code, self.stress_bits)
         else:
-            raise RuntimeError("Invalid Code: compositePlateStrain - get the format/sort/stressCode=%s" % (self.code))
+            raise RuntimeError('Invalid Code: compositePlateStrain - get the format/sort/stressCode=%s bits=%s' % (self.code, self.stress_bits))
 
         self.dt = dt
         if is_sort1:

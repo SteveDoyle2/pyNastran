@@ -234,12 +234,6 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def is_stress(self):
-        return True
-
-    def is_strain(self):
-        return False
-
     def get_headers(self):
         if self.is_fiber_distance():
             fiber_dist = 'fiber_distance'
@@ -258,11 +252,6 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
-
-    def is_stress(self):
-        return False
-    def is_strain(self):
-        return True
 
     def get_headers(self):
         if self.is_fiber_distance():
@@ -430,6 +419,8 @@ class RealPlateStress(StressObject):
                                                      nelements))
         msg.append('  eType, fiberCurvature, oxx, oyy, txy, angle, '
                    'majorP, minorP, ovmShear\n')
+        msg.append('  scode=%s stress_bits=%s is_stress=%s dist=%s vm=%s\n' % (
+            self.s_code, self.stress_bits, self.is_stress(), self.is_fiber_distance(), self.is_von_mises()))
         return msg
 
     def add_f06_data(self, data, transient):
@@ -955,6 +946,8 @@ class RealPlateStrain(StrainObject):
                                                      nelements))
         msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
                    'majorP, minorP, evmShear\n')
+        msg.append('  scode=%s stress_bits=%s is_stress=%s dist=%s vm=%s\n' % (
+            self.s_code, self.stress_bits, self.is_stress(), self.is_fiber_distance(), self.is_von_mises()))
         return msg
 
     def add_f06_data(self, data, transient, data_code=None):

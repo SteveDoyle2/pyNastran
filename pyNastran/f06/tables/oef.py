@@ -65,7 +65,7 @@ class OEF(object):
         """
         slot = getattr(self, result_name)
         #print(self.stored_lines)
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(3)
 
         lines = []
@@ -145,7 +145,7 @@ class OEF(object):
         element_name = 'CQUAD4'
         element_type = 144   # was listed as 95; has to be 144...i think...
         #print(self.stored_lines)
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(3)
 
         lines = []

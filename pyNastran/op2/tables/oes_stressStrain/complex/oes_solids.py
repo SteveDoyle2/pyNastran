@@ -275,7 +275,7 @@ def get_f06_header(self, is_mag_phase=True):
         raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
 
 
-class ComplexSolidStrainArray(ComplexSolidArray, StressObject):
+class ComplexSolidStrainArray(ComplexSolidArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)

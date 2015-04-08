@@ -1,4 +1,4 @@
-#pylint: disable=C0301,C0103,W0612
+#pylint: disable=C0301
 from six.moves import zip
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement, ComplexDisplacement
@@ -48,12 +48,12 @@ class OUG(object):
         cycle = float(cycles[1])
 
         #print "marker = |%s|" %(marker)
-        #subcaseName = '???'
+        #subcase_name = '???'
         #print self.storedLines
         #isubcase = self.storedLines[-2].strip()[1:]
         #isubcase = int(isubcase.strip('SUBCASE '))
-        #print "subcaseName=%s isubcase=%s" %(subcaseName,isubcase)
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
+        #print "subcase_name=%s isubcase=%s" %(subcase_name, isubcase)
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         eigenvalue_real = transient[1]
         headers = self.skip(2)
 
@@ -128,7 +128,7 @@ class OUG(object):
                     sline += [float(val) for val in fields]
                 data.append(sline)
             elif grid_type == 'S':
-                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99],  line[99:114]]
+                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
                 fields = [float(val) if val.strip() != '' else None for val in fields]
                 for ioffset, field in enumerate(fields):
                     if field is None:
@@ -160,17 +160,18 @@ class OUG(object):
         * sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
         * num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
-        #print "subcaseName=%r isubcase=%s"  % (subcaseName, isubcase)
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #raise RuntimeError(headers)
 
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 1,
-                    'sort_code': 0, 'sort_bits': [0, 0, 0], 'num_wide': 8,
-                    'table_name': 'OUG', 'nonlinear_factor': dt,
-                    'lsdvmn': 1, 'format_code': 3,
-                    'dataNames':['lsdvmn']}
+        data_code = {
+            'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 1,
+            'sort_code': 0, 'sort_bits': [0, 0, 0], 'num_wide': 8,
+            'table_name': 'OUG', 'nonlinear_factor': dt,
+            'lsdvmn': 1, 'format_code': 3,
+            'dataNames':['lsdvmn']
+        }
         #print "headers = %s" % (headers)
         #print "transient =", transient
 
@@ -205,7 +206,7 @@ class OUG(object):
         * analysis_code = 5 (Frequency)
         * sort_code     = 2 (Random Response)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         #print("transient =", transient)
         #print("dt =", dt)
         name = transient[0]
@@ -213,15 +214,16 @@ class OUG(object):
         headers = self.skip(3)
         data = []
 
-        data_code = {'log': self.log, 'analysis_code': 5, 'device_code': 1,
-                    'table_code': 1, 'sort_code': 2, 'sort_bits': [0, 1, 1],
-                    'num_wide': 14, 'format_code': 3, 'table_name': 'OUGV1',
-                    'nonlinear_factor': dt,
-                    #'mode':iMode,'eigr':transient[1], 'mode_cycle':cycle,
-                    'dataNames': data_names,
-                    'name': name,
-                    #'s_code':0,
-                    }
+        data_code = {
+            'analysis_code': 5, 'device_code': 1,
+            'table_code': 1, 'sort_code': 2, 'sort_bits': [0, 1, 1],
+            'num_wide': 14, 'format_code': 3, 'table_name': 'OUGV1',
+            'nonlinear_factor': dt,
+            #'mode':iMode,'eigr':transient[1], 'mode_cycle':cycle,
+            'dataNames': data_names,
+            'name': name,
+            #'s_code':0,
+        }
         while 1:
             line = self.infile.readline()[1:].rstrip('\r\n ')
             if 'PAGE' in line:
@@ -277,8 +279,7 @@ class OUG(object):
           s_code        = 0 (Stress)
           num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
-        #print transient
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
 
         headers = self.skip(2)
         #print "headers = %s" % headers
@@ -320,12 +321,12 @@ class OUG(object):
             data.append(sline)
         return data
 
-    def _parse_line_temperature(self, sline, Format):
+    def _parse_line_temperature(self, sline, formats):
         out = []
-        for (entry, iFormat) in zip(sline, Format):
+        for (entry, iformat) in zip(sline, formats):
             if entry is '':
                 return out
-            #print "sline=|%r|\n entry=|%r| format=%r" %(sline, entry, iFormat)
-            entry2 = iFormat(entry)
+            #print "sline=%r\n entry=%r iformat=%r" % (sline, entry, iformat)
+            entry2 = iformat(entry)
             out.append(entry2)
         return out

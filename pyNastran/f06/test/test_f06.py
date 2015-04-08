@@ -68,6 +68,7 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, is_vector=False,
         #assert write_f06 == True, write_f06
         if write_f06:
             model = os.path.splitext(f06_filename)[0]
+            #print(f06.get_f06_stats())
             f06.write_f06(model + '.test_f06.f06')
 
         #print "subcases = ",f06.subcases

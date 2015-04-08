@@ -2,14 +2,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, PY2
-import sys
 import copy
 from datetime import date
-from collections import defaultdict
 
 import pyNastran
-from pyNastran.f06.tables.grid_point_weight import GridPointWeight
-from pyNastran.f06.f06_formatting import get_key0_compare
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
 
 
@@ -107,11 +103,12 @@ def make_end(end_flag=False):
     lines = []
     lines2 = []
     if end_flag:
-        lines = ['', '',
-        '0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
-        '0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY',
-        ' --------------------------------------------------------------------------------------------------------------------------']
-         #0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+        lines = [
+            '', '',
+            '0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
+            '0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY',
+            ' --------------------------------------------------------------------------------------------------------------------------']
+        #0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
 
         seid = 0
         peid = 0
@@ -139,32 +136,36 @@ def make_end(end_flag=False):
             LOOPID, CYCLE, SENSITIVITY)
         lines.append(msg)
 
-        lines2 = ['0SEID = SUPERELEMENT ID.',
-        ' PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.',
-        ' PROJ = PROJECT ID NUMBER.',
-        ' VERS = VERSION ID.',
-        ' APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.',
-        ' SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.',
-        ' SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).',
-        ' SEKR = STIFFNESS MATRIX REDUCTION STEP.',
-        ' SELG = LOAD MATRIX GENERATION STEP.',
-        ' SELR = LOAD MATRIX REDUCTION STEP. ',
-        ' MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.',
-        ' DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.',
-        ' SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.',
-        ' PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS',
-        ' LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.',
-        ' SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.',
-        ' DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).',
-        ' SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.',
-        ' ',
-        ' No PARAM values were set in the Control File.']
+        lines2 = [
+            '0SEID = SUPERELEMENT ID.',
+            ' PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.',
+            ' PROJ = PROJECT ID NUMBER.',
+            ' VERS = VERSION ID.',
+            ' APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.',
+            ' SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.',
+            ' SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).',
+            ' SEKR = STIFFNESS MATRIX REDUCTION STEP.',
+            ' SELG = LOAD MATRIX GENERATION STEP.',
+            ' SELR = LOAD MATRIX REDUCTION STEP. ',
+            ' MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.',
+            ' DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.',
+            ' SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.',
+            ' PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS',
+            ' LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.',
+            ' SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.',
+            ' DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).',
+            ' SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.',
+            ' ',
+            ' No PARAM values were set in the Control File.'
+        ]
 
-    lines3 = [' ',
-             '1                                        * * * END OF JOB * * *',
-             ' ',
-             ' ']
-    return '\n'.join(lines+lines2+lines3)
+    lines3 = [
+        ' ',
+        '1                                        * * * END OF JOB * * *',
+        ' ',
+        ' '
+    ]
+    return '\n'.join(lines + lines2 + lines3)
 
 
 class F06Writer(OP2_F06_Common):
@@ -285,39 +286,40 @@ class F06Writer(OP2_F06_Common):
             ['POINTS', ['GRID', 'GRDSET', ]],
             ['ENTRIES', ['SPOINT']],
 
-            ['ELEMENTS', [# these are sorted
-                        # elements
-                        'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+            ['ELEMENTS',
+             [
+                 # these are sorted
+                 # elements
+                 'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
 
-                        # springs
-                        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CELAS5',
+                 # springs
+                 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CELAS5',
 
-                        # bushings
-                        'CBUSH', 'CBUSH1D', 'CBUSH2D',
+                 # bushings
+                 'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
-                        # dampers
-                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                 # dampers
+                 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
 
-                        # bar flags
-                        'BAROR', 'CBARAO',
-                        # bars
-                        'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+                 # bar flags
+                 'BAROR', 'CBARAO',
+                 # bars
+                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
 
-                        # shells
-                        'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-                        'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+                 # shells
+                 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+                 'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
 
-                        # solids
-                        'CTETRA', 'CPENTA', 'CHEXA',
+                 # solids
+                 'CTETRA', 'CPENTA', 'CHEXA',
 
-                        # other
-                        'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
-                        'CGAP', 'CFAST',
+                 # other
+                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
+                 'CGAP', 'CFAST', 'RBE2', 'RBE3',
 
-                        # thermal
-                        'CHBDYP', 'CHBDYG', 'CONV',
-                          ]],
-            ['ELEMENTS', ['RBE2', 'RBE3']],
+                 # thermal
+                 'CHBDYP', 'CHBDYG', 'CONV',
+             ]],
         ]
         #print("self.card_count", self.card_count)
         if card_count is None:
@@ -389,10 +391,9 @@ class F06Writer(OP2_F06_Common):
 
         # eigenvalues are written first
         for ikey, result in sorted(iteritems(self.eigenvalues)):
-            header
             print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
-                                            page_num=self.page_num)
+                                             page_num=self.page_num)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
             if delete_objects:
                 del result
@@ -407,6 +408,7 @@ class F06Writer(OP2_F06_Common):
             for subtitle in self.subtitles[isubcase]:
                 res_keys.append((isubcase, subtitle))
 
+        #print('res_keys=%s' % res_keys)
         for res_key in res_keys:
             isubcase = res_key[0]
             subtitle = res_key[1]
@@ -435,7 +437,7 @@ class F06Writer(OP2_F06_Common):
                 print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle))
 
             self.page_num = result.write_f06(header, page_stamp,
-                                            self.page_num, f=f06, is_mag_phase=is_mag_phase)
+                                             self.page_num, f=f06, is_mag_phase=is_mag_phase)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
             if delete_objects:
                 del result
@@ -447,7 +449,7 @@ class F06Writer(OP2_F06_Common):
 
         # subcase name, subcase ID, transient word & value
         header_old = ['     DEFAULT                                                                                                                        \n',
-                     '\n', ' \n']
+                      '\n', ' \n']
         header = copy.deepcopy(header_old)
         res_types = [
             self.accelerations,
@@ -627,13 +629,14 @@ class F06Writer(OP2_F06_Common):
         ]
 
         for res_key in res_keys:
-            title = self.Title
+            #title = self.Title
 
             isubcase = res_key[0]
             subtitle = res_key[1]
             label = self.labels[(isubcase, subtitle)]
 
             is_compressed = len(self.subtitles[isubcase]) == 1
+            #print(self.subtitles[isubcase])
             if is_compressed:
                 res_key = isubcase
 
