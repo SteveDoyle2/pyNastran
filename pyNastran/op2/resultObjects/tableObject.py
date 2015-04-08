@@ -256,7 +256,6 @@ class RealTableArray(TableArray):  # displacement style table
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        #print("nodes =", node)
         for itime in range(self.ntimes):
             dt = self._times[itime]
             t1 = self.data[itime, :, 0]
