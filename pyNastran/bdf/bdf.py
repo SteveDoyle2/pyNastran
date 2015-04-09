@@ -430,13 +430,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         }
 
         # ------------------------ bad duplicates ----------------------------
-        self.duplicate_nodes = []
-        self.duplicate_elements = []
-        self.duplicate_properties = []
-        self.duplicate_materials = []
-        self.duplicate_masses = []
-        self.duplicate_thermal_materials = []
-        self.duplicate_coords = []
+        self._store_errors = True
+        self._stored_errors = []
+        self._duplicate_nodes = []
+        self._duplicate_elements = []
+        self._duplicate_properties = []
+        self._duplicate_materials = []
+        self._duplicate_masses = []
+        self._duplicate_thermal_materials = []
+        self._duplicate_coords = []
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type
@@ -685,7 +687,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 raise
 
     def read_bdf(self, bdf_filename=None, include_dir=None,
-                 xref=True, punch=False):
+                 xref=True, punch=False, store_errors=True):
         """
         Read method for the bdf files
 
@@ -695,6 +697,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                              (default=None if no include files)
         :param xref:  should the bdf be cross referenced (default=True)
         :param punch: indicates whether the file is a punch file (default=False)
+        :param store_errors: catch parsing errors and store them up to
+                             print them out all at once
+                             (not all errors are caught)
 
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename, xref=True)
@@ -710,6 +715,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         etc.
         """
         #self._encoding = encoding
+        self._store_errors = store_errors
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
@@ -757,89 +763,93 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def pop_errors(self):
         is_error = False
         msg = ''
-        if self.duplicate_elements:
-            duplicate_eids = [elem.eid for elem in self.duplicate_elements]
+        if self._duplicate_elements:
+            duplicate_eids = [elem.eid for elem in self._duplicate_elements]
             uduplicate_eids = unique(duplicate_eids)
             uduplicate_eids.sort()
             msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
             for eid in uduplicate_eids:
                 msg += 'old_element=\n%s\n' % self.elements[eid].repr_card()
                 msg += 'new_elements=\n'
-                for elem, eidi in zip(self.duplicate_elements, duplicate_eids):
+                for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
                     if eidi == eid:
                         msg += elem.repr_card()
                 msg += '\n'
                 is_error = True
 
-        if self.duplicate_properties:
-            duplicate_pids = [prop.pid for prop in self.duplicate_properties]
+        if self._duplicate_properties:
+            duplicate_pids = [prop.pid for prop in self._duplicate_properties]
             uduplicate_pids = unique(duplicate_pids)
             uduplicate_pids.sort()
             msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
             for pid in duplicate_pids:
                 msg += 'old_property=\n%s\n' % self.properties[pid].repr_card()
                 msg += 'new_properties=\n'
-                for prop, pidi in zip(self.duplicate_properties, duplicate_pids):
+                for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
                     if pidi == pid:
                         msg += prop.repr_card()
                 msg += '\n'
                 is_error = True
 
-        if self.duplicate_masses:
-            duplicate_eids = [elem.eid for elem in self.duplicate_masses]
+        if self._duplicate_masses:
+            duplicate_eids = [elem.eid for elem in self._duplicate_masses]
             uduplicate_eids = unique(duplicate_eids)
             uduplicate_eids.sort()
             msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
             for eid in uduplicate_eids:
                 msg += 'old_mass=\n%s\n' % self.masses[eid].repr_card()
                 msg += 'new_masses=\n'
-                for elem, eidi in zip(self.duplicate_masses, duplicate_eids):
+                for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
                     if eidi == eid:
                         msg += elem.repr_card()
                 msg += '\n'
                 is_error = True
 
-        if self.duplicate_materials:
-            duplicate_mids = [mat.mid for mat in self.duplicate_materials]
+        if self._duplicate_materials:
+            duplicate_mids = [mat.mid for mat in self._duplicate_materials]
             uduplicate_mids = unique(duplicate_mids)
             uduplicate_mids.sort()
             msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
             for mid in uduplicate_mids:
                 msg += 'old_material=\n%s\n' % self.materials[mid].repr_card()
                 msg += 'new_materials=\n'
-                for mat, midi in zip(self.duplicate_materials, duplicate_mids):
+                for mat, midi in zip(self._duplicate_materials, duplicate_mids):
                     if midi == mid:
                         msg += mat.repr_card()
                 msg += '\n'
                 is_error = True
 
-        if self.duplicate_thermal_materials:
-            duplicate_mids = [mat.mid for mat in self.duplicate_thermal_materials]
+        if self._duplicate_thermal_materials:
+            duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
             uduplicate_mids = unique(duplicate_mids)
             uduplicate_mids.sort()
             msg += 'self.thermalMaterials IDs are not unique=%s\n' % uduplicate_mids
             for mid in uduplicate_mids:
                 msg += 'old_thermal_material=\n%s\n' % self.thermalMaterials[mid].repr_card()
                 msg += 'new_thermal_materials=\n'
-                for mat, midi in zip(self.duplicate_thermal_materials, duplicate_mids):
+                for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
                     if midi == mid:
                         msg += mat.repr_card()
                 msg += '\n'
                 is_error = True
 
-        if self.duplicate_coords:
-            duplicate_cids = [coord.cid for coord in self.duplicate_coords]
+        if self._duplicate_coords:
+            duplicate_cids = [coord.cid for coord in self._duplicate_coords]
             uduplicate_cids = unique(duplicate_cids)
             uduplicate_cids.sort()
             msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
             for cid in uduplicate_cids:
                 msg += 'old_coord=\n%s\n' % self.coords[cid].repr_card()
                 msg += 'new_coords=\n'
-                for coord, cidi in zip(self.duplicate_coords, duplicate_cids):
+                for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
                     if midi == mid:
                         msg += coord.repr_card()
                 msg += '\n'
                 is_error = True
+
+        if self._stored_errors:
+            for an_error in self._stored_errors:
+                msg += '%s\n\n' % an_error[0]
 
         if is_error:
             raise RuntimeError(msg)
@@ -1645,11 +1655,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
         except Exception as e:
-            print(str(e))
-            self.log.debug("card_name = %r" % card_name)
-            self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
-            self.log.debug("filename = %r\n" % self.bdf_filename)
-            raise
+            if self._store_errors:
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_errors.append(var)
+            else:
+                print(str(e))
+                self.log.debug("card_name = %r" % card_name)
+                self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
+                self.log.debug("filename = %r\n" % self.bdf_filename)
+                raise
         return card_obj
 
     def get_bdf_stats(self, return_type='string'):
