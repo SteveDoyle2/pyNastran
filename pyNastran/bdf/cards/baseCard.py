@@ -92,9 +92,13 @@ class BaseCard(BaseCardDeprecated):
             return self.comment() + print_card_double(list_fields)
         return self.comment() + print_card_16(list_fields)
 
-    #def repr_card(self, size=8):
-        #list_fields = self.repr_fields()
-        #return print_card_8(list_fields, size=size)
+    def repr_card(self, size=8):
+        list_fields = self.repr_fields()
+        if size == 16:
+            if is_double:
+                return print_card_double(list_fields)
+            return print_card_16(list_fields)
+        return print_card_8(list_fields)
 
     def __repr__(self):
         """

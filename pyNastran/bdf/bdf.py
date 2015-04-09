@@ -7,17 +7,20 @@ Main BDF class.  Defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, itervalues, next
-from pyNastran.bdf.utils import (to_fields, get_include_filename,
-                                 parse_executive_control_deck,
-                                 clean_empty_lines, _clean_comment, CardParseSyntaxError)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 #from codecs import open as codec_open
 import io
 import os
 import sys
 import traceback
+
+from numpy import unique
+
+from pyNastran.bdf.utils import (to_fields, get_include_filename,
+                                 parse_executive_control_deck,
+                                 clean_empty_lines, _clean_comment, CardParseSyntaxError)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 from pyNastran.utils import (object_attributes, print_bad_path)
 from pyNastran.utils.dev import list_print
@@ -426,6 +429,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             200: 'DESOPT',  # optimization
         }
 
+        # ------------------------ bad duplicates ----------------------------
+        self.duplicate_nodes = []
+        self.duplicate_elements = []
+        self.duplicate_properties = []
+        self.duplicate_materials = []
+        self.duplicate_masses = []
+        self.duplicate_thermal_materials = []
+        self.duplicate_coords = []
+
         # ------------------------ structural defaults -----------------------
         #: the analysis type
         self.sol = None
@@ -740,6 +752,97 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self._cleanup_file_streams()
             raise
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+        self.pop_errors()
+
+    def pop_errors(self):
+        is_error = False
+        msg = ''
+        if self.duplicate_elements:
+            duplicate_eids = [elem.eid for elem in self.duplicate_elements]
+            uduplicate_eids = unique(duplicate_eids)
+            uduplicate_eids.sort()
+            msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
+            for eid in uduplicate_eids:
+                msg += 'old_element=\n%s\n' % self.elements[eid].repr_card()
+                msg += 'new_elements=\n'
+                for elem, eidi in zip(self.duplicate_elements, duplicate_eids):
+                    if eidi == eid:
+                        msg += elem.repr_card()
+                msg += '\n'
+                is_error = True
+
+        if self.duplicate_properties:
+            duplicate_pids = [prop.pid for prop in self.duplicate_properties]
+            uduplicate_pids = unique(duplicate_pids)
+            uduplicate_pids.sort()
+            msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
+            for pid in duplicate_pids:
+                msg += 'old_property=\n%s\n' % self.properties[pid].repr_card()
+                msg += 'new_properties=\n'
+                for prop, pidi in zip(self.duplicate_properties, duplicate_pids):
+                    if pidi == pid:
+                        msg += prop.repr_card()
+                msg += '\n'
+                is_error = True
+
+        if self.duplicate_masses:
+            duplicate_eids = [elem.eid for elem in self.duplicate_masses]
+            uduplicate_eids = unique(duplicate_eids)
+            uduplicate_eids.sort()
+            msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
+            for eid in uduplicate_eids:
+                msg += 'old_mass=\n%s\n' % self.masses[eid].repr_card()
+                msg += 'new_masses=\n'
+                for elem, eidi in zip(self.duplicate_masses, duplicate_eids):
+                    if eidi == eid:
+                        msg += elem.repr_card()
+                msg += '\n'
+                is_error = True
+
+        if self.duplicate_materials:
+            duplicate_mids = [mat.mid for mat in self.duplicate_materials]
+            uduplicate_mids = unique(duplicate_mids)
+            uduplicate_mids.sort()
+            msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
+            for mid in uduplicate_mids:
+                msg += 'old_material=\n%s\n' % self.materials[mid].repr_card()
+                msg += 'new_materials=\n'
+                for mat, midi in zip(self.duplicate_materials, duplicate_mids):
+                    if midi == mid:
+                        msg += mat.repr_card()
+                msg += '\n'
+                is_error = True
+
+        if self.duplicate_thermal_materials:
+            duplicate_mids = [mat.mid for mat in self.duplicate_thermal_materials]
+            uduplicate_mids = unique(duplicate_mids)
+            uduplicate_mids.sort()
+            msg += 'self.thermalMaterials IDs are not unique=%s\n' % uduplicate_mids
+            for mid in uduplicate_mids:
+                msg += 'old_thermal_material=\n%s\n' % self.thermalMaterials[mid].repr_card()
+                msg += 'new_thermal_materials=\n'
+                for mat, midi in zip(self.duplicate_thermal_materials, duplicate_mids):
+                    if midi == mid:
+                        msg += mat.repr_card()
+                msg += '\n'
+                is_error = True
+
+        if self.duplicate_coords:
+            duplicate_cids = [coord.cid for coord in self.duplicate_coords]
+            uduplicate_cids = unique(duplicate_cids)
+            uduplicate_cids.sort()
+            msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
+            for cid in uduplicate_cids:
+                msg += 'old_coord=\n%s\n' % self.coords[cid].repr_card()
+                msg += 'new_coords=\n'
+                for coord, cidi in zip(self.duplicate_coords, duplicate_cids):
+                    if midi == mid:
+                        msg += coord.repr_card()
+                msg += '\n'
+                is_error = True
+
+        if is_error:
+            raise RuntimeError(msg)
 
     def _cleanup_file_streams(self):
         """
