@@ -6,7 +6,7 @@ Links up the various cards in the BDF.
 from __future__ import print_function
 from six import iteritems, itervalues
 import warnings
-#from pyNastran.bdf.cards.constraints import constraintObject2
+import traceback
 
 
 class XrefMesh(object):
@@ -112,10 +112,14 @@ class XrefMesh(object):
         for elem in itervalues(self.elements):
             try:
                 elem.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Element.\n%s" % str(elem)
-                self.log.error(msg)
-                raise
+            except Exception as e:
+                if self._store_errors:
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_errors.append(var)
+                else:
+                    msg = "Couldn't cross reference Element.\n%s" % str(elem)
+                    self.log.error(msg)
+                    raise
 
     def _cross_reference_masses(self):
         """
@@ -125,18 +129,26 @@ class XrefMesh(object):
         for mass in itervalues(self.masses):
             try:
                 mass.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Mass.\n%s" % str(mass)
-                self.log.error(msg)
-                raise
+            except Exception as e:
+                if self._store_errors:
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_errors.append(var)
+                else:
+                    msg = "Couldn't cross reference Mass.\n%s" % str(mass)
+                    self.log.error(msg)
+                    raise
 
         for prop in itervalues(self.properties_mass):
             try:
                 prop.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference PropertyMass.\n%s" % (str(prop))
-                self.log.error(msg)
-                raise
+            except Exception as e:
+                if self._store_errors:
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_errors.append(var)
+                else:
+                    msg = "Couldn't cross reference PropertyMass.\n%s" % (str(prop))
+                    self.log.error(msg)
+                    raise
 
     def _cross_reference_properties(self):
         """
@@ -145,10 +157,14 @@ class XrefMesh(object):
         for prop in itervalues(self.properties):
             try:
                 prop.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Property.\n%s" % (str(prop))
-                self.log.error(msg)
-                raise
+            except Exception as e:
+                if self._store_errors:
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_errors.append(var)
+                else:
+                    msg = "Couldn't cross reference Property.\n%s" % (str(prop))
+                    self.log.error(msg)
+                    raise
 
     def _cross_reference_materials(self):
         """
@@ -158,10 +174,14 @@ class XrefMesh(object):
         for mat in itervalues(self.materials):  # MAT1
             try:
                 mat.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Material\n%s" % (str(mat))
-                self.log.error(msg)
-                raise
+            except Exception as e:
+                if self._store_errors:
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_errors.append(var)
+                else:
+                    msg = "Couldn't cross reference Material\n%s" % (str(mat))
+                    self.log.error(msg)
+                    raise
 
         # CREEP - depends on MAT1
         data = [self.MATS1, self.MATS3, self.MATS8,
@@ -171,10 +191,14 @@ class XrefMesh(object):
             for mat in itervalues(material_deps):
                 try:
                     mat.cross_reference(self)
-                except:
-                    msg = "Couldn't cross reference Material\n%s" % (str(mat))
-                    self.log.error(msg)
-                    raise
+                except Exception as e:
+                    if self._store_errors:
+                        var = traceback.format_exception_only(type(e), e)
+                        self._stored_errors.append(var)
+                    else:
+                        msg = "Couldn't cross reference Material\n%s" % (str(mat))
+                        self.log.error(msg)
+                        raise
 
     def _cross_reference_loads(self):
         """
@@ -185,8 +209,12 @@ class XrefMesh(object):
             for load in sid:
                 try:
                     load.cross_reference(self)
-                except:
-                    self.log.error("lid=%s sid=%s" % (lid, sid))
-                    msg = "Couldn't cross reference Load\n%s" % (str(load))
-                    self.log.error(msg)
-                    raise
+                except Exception as e:
+                    if self._store_errors:
+                        var = traceback.format_exception_only(type(e), e)
+                        self._stored_errors.append(var)
+                    else:
+                        self.log.error("lid=%s sid=%s" % (lid, sid))
+                        msg = "Couldn't cross reference Load\n%s" % (str(load))
+                        self.log.error(msg)
+                        raise

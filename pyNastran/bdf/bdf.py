@@ -851,7 +851,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             for an_error in self._stored_errors:
                 msg += '%s\n\n' % an_error[0]
 
-        if is_error:
+        if msg:
             raise RuntimeError(msg)
 
     def _cleanup_file_streams(self):

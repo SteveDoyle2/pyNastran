@@ -700,7 +700,7 @@ class CTRIAR(TriShell):
 
         if xref:
             # PSHELL/PCOMP
-            assert self.pid.type in ['PSHELL'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -1679,7 +1679,7 @@ class CQUAD8(QuadShell):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
