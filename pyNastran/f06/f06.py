@@ -648,7 +648,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def _nastran_file_and_system_parameter_echo(self):
         line = ''
         lines = []
-        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line::
+        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line:
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
@@ -658,7 +658,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def _grid_point_singularity_table(self):
         line = ''
         lines = []
-        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line::
+        while 'PAGE' not in line and '* * * END OF JOB * * *' not in line:
             line = self.infile.readline()[1:].strip()
             lines.append(line)
             self.i += 1
