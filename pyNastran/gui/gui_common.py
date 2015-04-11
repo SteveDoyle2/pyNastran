@@ -1188,7 +1188,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if fname:
             renderLarge = vtk.vtkRenderLargeImage()
             if self.vtk_version[0] >= 6:
-                renderLarge.SetInputData(self.rend)
+                renderLarge.SetInput(self.rend)
             else:
                 renderLarge.SetInput(self.rend)
             renderLarge.SetMagnification(self.magnify)

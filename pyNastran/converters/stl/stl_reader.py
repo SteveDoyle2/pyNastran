@@ -14,7 +14,7 @@ import scipy
 
 from struct import unpack, Struct, pack
 import pyNastran
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.utils import is_binary as is_file_binary
 from pyNastran.utils.log import get_logger
 
@@ -409,7 +409,7 @@ class STLReader(object):
         bdf.write('$NODES in Layer=0\n')
         for (x, y, z) in nodes:
             card = ['GRID', nid, cid, x, y, z]
-            bdf.write(print_card(card))
+            bdf.write(print_card_8(card))
             nid += 1
 
         for deltaN in deltaNs:
@@ -430,7 +430,7 @@ class STLReader(object):
             bdf.write('$NODES in Layer=%i\n' % (ni + 1))
             for (x, y, z) in outer_points:
                 card = ['GRID', nid, cid, x, y, z]
-                bdf.write(print_card(card))
+                bdf.write(print_card_8(card))
                 nid += 1
 
             bdf.flush()
@@ -439,18 +439,18 @@ class STLReader(object):
                 (n1, n2, n3) = elements2[nebase  + eid] + 1
                 (n4, n5, n6) = elements2[neshift + eid] + 1
                 card = ['CPENTA', eid2, pid, n1, n2, n3, n4, n5, n6]
-                bdf.write(print_card(card))
+                bdf.write(print_card_8(card))
                 eid2 += 1
                 bdf.flush()
 
             card = ['PSOLID', pid, mid]
-            bdf.write(print_card(card))
+            bdf.write(print_card_8(card))
 
             E = 1e7
             G = None
             nu = 0.3
             card = ['MAT1', mid, E, G, nu]
-            bdf.write(print_card(card))
+            bdf.write(print_card_8(card))
 
             pid += 1
             mid += 1
