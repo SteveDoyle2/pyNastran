@@ -100,33 +100,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
         else:
             raise NotImplementedError(lid)
 
-    #def Sid(self):
-    #    try:
-    #        if isinstance(self.sid, int):
-    #            return self.sid
-    #        elif isinstance(self.sid, list):
-    #            #sys.stderr.write('type(lid[0]) = %s' %(type(self.lid[0])))
-    #            #sys.stderr.write("the offending load...%s" %(self.lid[0]))
-    #            return self.sid[0].sid
-    #        #elif isinstance(self.lid,load)
-    #        else:
-    #            #sys.stderr.write("the offending load...%s" %(self.lid))
-    #            return self.sid.sid
-    #    except:
-    #        msg = "error in loads.py - self.lid=\n %s\n" % (str(self.sid))
-    #        sys.stderr.write(msg)
-    #        raise
-
-    #def LoadID(self, loadID):
-        #print("load = ",loadID)
-        #if isinstance(loadID, int):
-        #    return loadID
-        #elif isinstance(loadID, list):
-        #    return loadID[0].LoadID()
-        ##print("self.lid = ",load.lid)
-        #asdf
-        #return load.lid
-
     def getLoads(self):
         """
         .. note:: requires a cross referenced load
@@ -163,15 +136,6 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             self.tid = data[3]
             raise NotImplementedError()
 
-    #def nodeIDs(self, nodes=None):
-        #"""returns nodeIDs for repr functions"""
-        #if not nodes:
-        #    nodes = self.nodes
-        #if isinstance(nodes[0], int):
-        #    return [node for node in nodes]
-        #else:
-        #    return [node.nid for node in nodes]
-
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
@@ -185,7 +149,6 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             return self.LoadID(lid[0])
         else:
             return lid.sid
-        #raise RuntimeError(lid)
 
     def getLoads(self):
         return self.lid
@@ -195,8 +158,6 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             return self.lid
         else:
             return self.LoadID(self.lid)
-            #raise NotImplementedError('LSEQ ' + str(self.lid) +
-            #                          '\n%s' % (type(self.lid)))
 
     def Tid(self):
         if self.tid is None:
@@ -244,10 +205,12 @@ class DAREA(BaseCard):
     Defines scale (area) factors for static and dynamic loads. In dynamic
     analysis, DAREA is used in conjunction with ACSRCE, RLOADi and TLOADi
     entries.
-    ::
 
-      DAREA SID P1 C1 A1  P2 C2 A2
-      DAREA 3   6   2 8.2 15 1  10.1
+     +-------+-----+----+----+-----+----+----+------+
+     | DAREA | SID | P1 | C1 |A1   | P2 | C2 | A2   |
+     +-------+-----+----+----+-----+----+----+------+
+     | DAREA | 3   | 6  | 2  | 8.2 | 15 | 1  | 10.1 |
+     +-------+-----+----+----+-----+----+----+------+
     """
     type = 'DAREA'
 
@@ -623,10 +586,11 @@ class RLOAD1(TabularLoad):
       \left\{ P(f)  \right\}  = \left\{A\right\} [ C(f)+iD(f)]
          e^{  i \left\{\theta - 2 \pi f \tau \right\} }
 
-    ::
-
-      RLOAD1 SID EXCITEID DELAY DPHASE TC TD TYPE
-      RLOAD1 5   3                     1
+    +--------+-----+----------+-------+--------+----+----+------+
+    | RLOAD1 | SID | EXCITEID | DELAY | DPHASE | TC | TD | TYPE |
+    +--------+-----+----------+-------+--------+----+----+------+
+    | RLOAD1 | 5   | 3        |       |        | 1  |    |      |
+    +--------+-----+----------+-------+--------+----+----+------+
     """
     type = 'RLOAD1'
 
@@ -664,9 +628,6 @@ class RLOAD1(TabularLoad):
             self.tc = model.Table(self.tc, msg=msg)
         if self.td:
             self.td = model.Table(self.td, msg=msg)
-
-    #def LoadID(self, lid):
-        #return self.Lid()
 
     def getLoads(self):
         return [self]
@@ -713,10 +674,11 @@ class RLOAD2(TabularLoad):
     .. math:: \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
         e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} }
 
-    ::
-
-      RLOAD2 SID EXCITEID DELAY DPHASE TB TP TYPE
-      RLOAD2 5   3                     1
+    +--------+-----+----------+-------+--------+----+----+------+
+    | RLOAD2 | SID | EXCITEID | DELAY | DPHASE | TB | TP | TYPE |
+    +--------+-----+----------+-------+--------+----+----+------+
+    | RLOAD2 | 5   | 3        |       |        | 1  |    |      |
+    +--------+-----+----------+-------+--------+----+----+------+
     """
     type = 'RLOAD2'
 
@@ -757,9 +719,6 @@ class RLOAD2(TabularLoad):
 
     def getLoads(self):
         return [self]
-
-    #def Lid(self):
-        #return self.lid
 
     def LoadID(self):
         return self.sid

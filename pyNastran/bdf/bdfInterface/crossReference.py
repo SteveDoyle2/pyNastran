@@ -205,7 +205,7 @@ class XrefMesh(object):
         Links the loads to nodes, coordinate systems, and other loads.
         """
         for (lid, sid) in iteritems(self.loads):
-            #self.log.debug("lid=%s sid=%s" %(lid,sid))
+            #self.log.debug("lid=%s sid=%s" %(lid, sid))
             for load in sid:
                 try:
                     load.cross_reference(self)
@@ -218,3 +218,4 @@ class XrefMesh(object):
                         msg = "Couldn't cross reference Load\n%s" % (str(load))
                         self.log.error(msg)
                         raise
+        self.log.debug("done with xref_loads")

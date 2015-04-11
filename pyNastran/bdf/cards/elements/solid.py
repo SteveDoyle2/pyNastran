@@ -141,10 +141,11 @@ class SolidElement(Element):
 
 class CHEXA8(SolidElement):
     """
-    ::
-
-      CHEXA EID PID G1 G2 G3 G4 G5 G6
-      G7 G8
+    +-------+-----+-----+----+----+----+----+----+----+
+    | CHEXA | EID | PID | G1 | G2 | G3 | G4 | G5 | G6 |
+    +-------+-----+-----+----+----+----+----+----+----+
+    |       | G7  | G8  |    |    |    |    |    |    |
+    +-------+-----+-----+----+----+----+----+----+----+
     """
     type = 'CHEXA'
     asterType = 'HEXA8'
@@ -233,8 +234,8 @@ class CHEXA20(SolidElement):
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     |       | G7  | G8  | G9  | G10 | G11 | G12 | G13 | G14 |
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
-    |       | G15 | G16 | G17 | G18 | G19 | G20 |
-    +-------+-----+-----+-----+-----+-----+-----+
+    |       | G15 | G16 | G17 | G18 | G19 | G20 |     |     |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CHEXA'
     asterType = 'HEXA20'
@@ -337,9 +338,12 @@ class CHEXA20(SolidElement):
 
 class CPENTA6(SolidElement):
     """
+    +--------+-----+-----+----+----+----+----+----+----+
+    | CPENTA | EID | PID | G1 | G2 | G3 | G4 | G5 | G6 |
+    +--------+-----+-----+----+----+----+----+----+----+
+
     ::
 
-      CPENTA EID PID G1 G2 G3 G4 G5 G6
         *----------*
        / \        / \
       / A \      / c \
@@ -544,11 +548,13 @@ class CPENTA6(SolidElement):
 
 class CPENTA15(SolidElement):
     """
-    ::
-
-      CPENTA EID PID G1 G2  G3  G4  G5  G6
-             G7  G8  G9 G10 G11 G12 G13 G14
-             G15
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |  CPENTA | EID | PID | G1 | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |         | G7  | G8  | G9 | G10 | G11 | G12 | G13 | G14 |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |         | G15 |     |    |     |     |     |     |     |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
     """
     type = 'CPENTA'
     asterType = 'PENTA15'
@@ -650,11 +656,188 @@ class CPENTA15(SolidElement):
         return self._nodeIDs(allowEmptyNodes=True)
 
 
+class CPYRAM5(SolidElement):
+    """
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    | CPYRAM | EID | PID | G1  | G2  | G3  | G4  | G5  |     |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    """
+    type = 'CPYRAM'
+    #asterType = 'CPYRAM5'
+    #calculixType = 'C3D5'
+
+    def write_bdf(self, size=8, is_double=False):
+        nodes = self.nodeIDs()
+        data = [self.eid, self.Pid()] + nodes
+        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
+
+    def __init__(self, card=None, data=None, comment=''):
+        SolidElement.__init__(self, card, data)
+
+        if comment:
+            self._comment = comment
+        if card:
+            #: Element ID
+            self.eid = integer(card, 1, 'eid')
+            #: Property ID
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                    integer(card, 7, 'nid5')]
+            assert len(card) <= 7, 'len(CPYRAM5 1card) = %i' % len(card)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = [d if d > 0 else None for d in data[2:]]
+        self.prepareNodeIDs(nids, allowEmptyNodes=False)
+        msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
+        assert len(self.nodes) <= 20, msg
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
+    def Centroid(self):
+        """
+        .. seealso:: CPYRAM5.Centroid
+        """
+        (n1, n2, n3, n4, n5) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        c = (c1 + n5) / 2.
+        return c
+
+    def Volume(self):
+        """
+        .. seealso:: CPYRAM5.Volume
+        """
+        (n1, n2, n3, n4, n5) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        V = A1 / 3. * norm(c1 - n5)
+        return abs(V)
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=False)
+
+
+class CPYRAM13(SolidElement):
+    """
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    | CPYRAM | EID | PID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |        | G7  | G8  | G9  | G10 | G11 | G12 |     |     |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    """
+    type = 'CPYRAM'
+    #asterType = 'CPYRAM13'
+    #calculixType = 'C3D13'
+
+    def write_bdf(self, size=8, is_double=False):
+        nodes = self.nodeIDs()
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
+
+        data = [self.eid, self.Pid()] + nodes[:5] + nodes2
+        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8i%8i%8s%8s%8s%8s%' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
+
+    def __init__(self, card=None, data=None, comment=''):
+        SolidElement.__init__(self, card, data)
+
+        if comment:
+            self._comment = comment
+        if card:
+            #: Element ID
+            self.eid = integer(card, 1, 'eid')
+            #: Property ID
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                    integer(card, 7, 'nid5'),
+                    integer_or_blank(card, 8, 'nid6'),
+                    integer_or_blank(card, 9, 'nid7'),
+                    integer_or_blank(card, 10, 'nid8'),
+                    integer_or_blank(card, 11, 'nid9'),
+                    integer_or_blank(card, 12, 'nid10'),
+                    integer_or_blank(card, 13, 'nid11'),
+                    integer_or_blank(card, 14, 'nid12'),
+                    integer_or_blank(card, 15, 'nid13')]
+            assert len(card) <= 15, 'len(CPYRAM13 1card) = %i' % len(card)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = [d if d > 0 else None for d in data[2:]]
+        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
+        assert len(self.nodes) <= 20, msg
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
+    def Centroid(self):
+        """
+        .. seealso:: CPYRAM5.Centroid
+        """
+        (n1, n2, n3, n4, n5,
+         n6, n7, n8, n9, n10,
+         n11, n12, n13) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        c = (c1 + n5) / 2.
+        return c
+
+    def Volume(self):
+        """
+        .. seealso:: CPYRAM5.Volume
+        """
+        (n1, n2, n3, n4, n5,
+         n6, n7, n8, n9, n10,
+         n11, n12, n13) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        V = A1 / 2. * norm(c1 - n5)
+        return abs(V)
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
+
 class CTETRA4(SolidElement):
     """
-    ::
-
-      CTETRA EID PID G1 G2 G3 G4
+    +--------+-----+-----+----+----+----+----+
+    | CTETRA | EID | PID | G1 | G2 | G3 | G4 |
+    +--------+-----+-----+----+----+----+----+
     """
     type = 'CTETRA'
     asterType = 'TETRA4'
@@ -816,12 +999,17 @@ class CTETRA4(SolidElement):
 
 class CTETRA10(SolidElement):
     """
-    ::
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    | CTETRA | EID | PID | G1  | G2  | G3  | G4 | G5  | G6  |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    |        | G7  |  G8 | G9  | G10 |     |    |     |     |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
 
-      CTETRA EID PID G1 G2  G3 G4 G5 G6
-             G7   G8 G9 G10
-      CTETRA   1       1       239     229     516     99      335     103
-               265     334     101     102
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    | CTETRA | 1   | 1   | 239 | 229 | 516 | 99 | 335 | 103 |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    |        | 265 | 334 | 101 | 102 |     |    |     |     |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
     """
     type = 'CTETRA'
     asterType = 'TETRA10'

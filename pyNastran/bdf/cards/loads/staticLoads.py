@@ -96,12 +96,12 @@ class LOAD(LoadCombination):
         #print "loadTypes = ",loadTypes
         return loadTypes
 
-    def writeCalculixGRAV(self, gx, gy, gz):
+    def write_calculix_GRAV(self, gx, gy, gz):
         msg = '*DLOAD\n'
         msg += 'AllElements,GRAV,%s,%s,%s\n' % (gx, gy, gz)
         return msg
 
-    def writeCodeAsterLoad(self, model, gridWord='node'):
+    def write_code_aster_load(self, model, grid_word='node'):
         loadIDs = self.getLoadIDs()
         loadTypes = self.getLoadTypes()
 
@@ -183,6 +183,9 @@ class LOAD(LoadCombination):
         load_scale = self.scale # global
         for (loadsPack, i_scale) in zip(self.loadIDs, self.scaleFactors):
             scale = i_scale * load_scale # actual scale = global * local
+            if isinstance(loadsPack, int):
+                raise RuntimeError('the load have not been cross-referenced')
+
             for load in loadsPack:
                 if (isinstance(load, Force) or isinstance(load, Moment) or
                     isinstance(load, PLOAD4) or isinstance(load, GRAV)):
