@@ -5,6 +5,7 @@ from six import string_types, integer_types
 from six.moves import zip, range
 
 from pyNastran.bdf.fieldWriter import print_card_8, is_same
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
 
@@ -46,10 +47,6 @@ class BaseCard(BaseCardDeprecated):
     def write_code_aster(self):
         return ('# skipping %s  because write_code_aster is not implemented\n'
                 % self.type)
-
-    #def write_code_asterLoad(self, model, gridWord='node'):
-        #return ('# skipping %s (lid=%s) because write_code_asterLoad is '
-                #'not implemented\n' % (self.type, self.lid))
 
     def _verify(self, xref):
         """
@@ -106,12 +103,15 @@ class BaseCard(BaseCardDeprecated):
         (default values are left blank).
         """
         try:
-            return self.print_card()
+            return self.print_card(size=8)
         except:
-            print('problem printing %s card' % self.type)
-            fields = self.repr_fields()
-            print("fields = ", fields)
-            raise
+            try:
+                return self.print_card(size=16)
+            except:
+                print('problem printing %s card' % self.type)
+                fields = self.repr_fields()
+                print("fields = ", fields)
+                raise
 
 
 class Property(BaseCard):
@@ -232,13 +232,13 @@ class Element(BaseCard, ElementDeprecated):
                         #nodeIDs = [node.nid for node in nodes]
                 except:
                     print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                          self.type, nodes, allowEmptyNodes, msg))
+                        self.type, nodes, allowEmptyNodes, msg))
                     raise
                 assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
                 return nodeIDs
         except:
             print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                  self.type, nodes, allowEmptyNodes, msg))
+                self.type, nodes, allowEmptyNodes, msg))
             raise
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):

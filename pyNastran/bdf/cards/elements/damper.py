@@ -69,7 +69,7 @@ class CDAMP1(LineDamper):
             self.c1 = data[3]
             self.c2 = data[5]
 
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
@@ -168,7 +168,7 @@ class CDAMP2(LineDamper):
             self.c1 = data[3]
             self.c2 = data[5]
 
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
@@ -235,7 +235,7 @@ class CDAMP3(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = [data[2], data[3]]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
 
     def _verify(self, xref=True):
@@ -304,7 +304,7 @@ class CDAMP4(LineDamper):
             self.eid = data[0]
             self.b = data[1]
             nids = [data[2], data[3]]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
 
     def _verify(self, xref=True):
@@ -368,7 +368,7 @@ class CDAMP5(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = [data[2], data[3]]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
 
     def _verify(self, xref=True):
@@ -436,7 +436,7 @@ class CVISC(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:4]
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
 
     def _verify(self, xref=True):

@@ -49,7 +49,7 @@ class DLOAD(LoadCombination):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        if self.size == 16:
+        if size == 16:
             return self.comment() + print_card_16(card)
         return self.comment() + print_card_8(card)
 

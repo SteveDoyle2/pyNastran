@@ -37,7 +37,8 @@ from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4
                                                   SpringElement)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
+from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPYRAM5, CPYRAM13,
+                                                CPENTA6, CPENTA15,
                                                 CHEXA8, CHEXA20, SolidElement)
 from pyNastran.bdf.cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
 
@@ -51,7 +52,7 @@ from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, 
                                                  CDAMP5, DamperElement)
 from pyNastran.bdf.cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE, RodElement
-from pyNastran.bdf.cards.elements.bars import CBAR, CBEND, LineElement, CBEAM3
+from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, CBEAM3 # CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import (PBAR, PBARL, )  # PBEND
@@ -212,7 +213,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
-            'CTETRA', 'CPENTA', 'CHEXA',
+            'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
 
@@ -789,7 +790,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.pop_xref_errors()
 
     def pop_parse_errors(self):
-        print('pop parse; stop=%s' % self._stop_on_parsing_error)
         if self._stop_on_parsing_error:
             is_error = False
             msg = ''
@@ -872,7 +872,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     msg += 'old_coord=\n%s\n' % self.coords[cid].repr_card()
                     msg += 'new_coords=\n'
                     for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
-                        if midi == mid:
+                        if cidi == cid:
                             msg += coord.repr_card()
                     msg += '\n'
                     is_error = True
@@ -1514,7 +1514,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 'add_element' : ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
                                  'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                                  'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
-                                 'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
+                                 'CTUBE', 'CELAS1', 'CELAS2', 'CELAS3', # 'CBEND',
                                  'CELAS4', 'CVISC', 'CSHEAR', 'CGAP',
                                  'CRAC2D', 'CRAC3D'],
                 'add_damper' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
@@ -1584,12 +1584,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # card that requires more careful processing, elements
             _dct = {'CTETRA' : (7, CTETRA4, CTETRA10),
+                    'CPYRAM' : (8, CPYRAM5, CPYRAM13),
+                    'CPENTA' : (9, CPENTA6, CPENTA15),
                     'CHEXA' : (11, CHEXA8, CHEXA20),
-                    'CPENTA' : (9, CPENTA6, CPENTA15)}
+                    }
             if card_name in _dct:
                 d = _dct[card_name]
                 self.add_element((d[1] if card_obj.nFields() == d[0]
-                                       else d[2])(card_obj, comment=comment))
+                                  else d[2])(card_obj, comment=comment))
                 return card_obj
 
             # dampers
@@ -1704,9 +1706,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 if '=' not in card[0]:
                     self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
-        except Exception as e:
+        except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            # NameErrors should be caught
             self._iparse_errors += 1
-            #print('self._iparse_errors=%s self._nparse_errors=%s' % (self._iparse_errors, self._nparse_errors))
             var = traceback.format_exception_only(type(e), e)
             self._stored_parse_errors.append((card, var))
             if self._iparse_errors > self._nparse_errors:

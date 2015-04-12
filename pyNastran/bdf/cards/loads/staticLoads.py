@@ -1250,7 +1250,8 @@ class PLOAD1(Load):
         """
         .. todo:: cross reference and fix repr function
         """
-        self.eid = model.elements[self.eid]
+        msg = ' which is required by PLOAD1 sid=%s' % self.sid
+        self.eid = model.Element(self.eid, msg=msg)
 
     def transformLoad(self):
         p1 = self.eid.ga.Position()

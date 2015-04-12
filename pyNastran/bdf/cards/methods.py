@@ -61,7 +61,7 @@ class EIGB(Method):
             #: Eigenvalue range of interest. (Real, L1 < L2)
             self.L1 = double(card, 3, 'L1')
             self.L2 = double(card, 4, 'L2')
-            if not(self.L1 < self.L2):
+            if not self.L1 < self.L2:
                 msg = 'L1=%s L2=%s; L1<L2 is requried' % (self.L1, self.L2)
                 raise RuntimeError(msg)
 
@@ -92,7 +92,7 @@ class EIGB(Method):
 
     def raw_fields(self):
         list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, self.nep,
-                  self.ndp, self.ndn, None, self.norm, self.G, self.C]
+                       self.ndp, self.ndn, None, self.norm, self.G, self.C]
         return list_fields
 
     def repr_fields(self):
@@ -103,7 +103,7 @@ class EIGB(Method):
 
         norm = set_blank_if_default(self.norm, 'MAX')
         list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp,
-                  ndn, None, norm, self.G, self.C]
+                       ndn, None, norm, self.G, self.C]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -142,8 +142,8 @@ class EIGC(Method):
             self.sid = integer(card, 1, 'sid')
             #: Method of complex eigenvalue extraction
             self.method = string(card, 2, 'method')
-            assert self.method in ['INV', 'HESS', 'CLAN'],(
-                    'method=%s is not INV, HESS, CLAN' % (self.method))
+            assert self.method in ['INV', 'HESS', 'CLAN'], (
+                'method=%s is not INV, HESS, CLAN' % (self.method))
             #: Method for normalizing eigenvectors
             self.norm = string_or_blank(card, 3, 'norm')
             if self.norm == 'POINT':
@@ -166,7 +166,7 @@ class EIGC(Method):
             self.ndo = integer_double_string_or_blank(card, 7, 'ND0')
 
             # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
-            fields = [interpret_value(field) for field in card[9:] ]
+            fields = [interpret_value(field) for field in card[9:]]
             self.alphaAjs = []
             self.omegaAjs = []
             nfields = len(fields)
@@ -213,14 +213,14 @@ class EIGC(Method):
             LJ_default = 1.0
 
         for iRow in range(nRows):
-            NEj = integer(card, 9 + 7 * iRow + 5, 'NE%s' + str(iRow))
+            NEj = integer(card, 9 + 7 * iRow + 5, 'NE%s' % str(iRow))
             NDJ_default = None
             if self.method == 'INV':
                 NDJ_default = 3 * NEj
 
             i = 9 + 8 * iRow
             self.alphaAjs.append(
-                double_or_blank(card, i,     'alphaA' + str(iRow), alphaOmega_default))
+                double_or_blank(card, i, 'alphaA' + str(iRow), alphaOmega_default))
             self.omegaAjs.append(
                 double_or_blank(card, i + 1, 'omegaA' + str(iRow), alphaOmega_default))
             self.alphaBjs.append(
@@ -265,7 +265,7 @@ class EIGC(Method):
                 kstep = set_blank_if_default(kstep, 5)
 
                 list_fields += [alphaA, omegaA, mblksz, iblksz,
-                           kstep, None, Nj, None]
+                                kstep, None, Nj, None]
         else:
             msg = 'invalid EIGC method...method=%r' % self.method
             raise RuntimeError(msg)
@@ -276,7 +276,7 @@ class EIGC(Method):
 
     def raw_fields(self):
         list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
-                  self.E, self.ndo, None]
+                       self.E, self.ndo, None]
         list_fields += self.rawMethod()
         return list_fields
 
@@ -286,7 +286,7 @@ class EIGC(Method):
         else:
             E = str(self.E)
         list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
-                  E, self.ndo, None]
+                       E, self.ndo, None]
         list_fields += self.reprMethod()
         return list_fields
 
@@ -336,7 +336,7 @@ class EIGP(Method):
 
     def raw_fields(self):
         list_fields = ['EIGP', self.alpha1, self.omega1, self.m1,
-                  self.alpha2, self.omega2, self.m2]
+                       self.alpha2, self.omega2, self.m2]
         return list_fields
 
     def repr_fields(self):
@@ -410,14 +410,14 @@ class EIGR(Method):
 
     def raw_fields(self):
         list_fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
-                  self.nd, None, None, self.norm, self.G, self.C]
+                       self.nd, None, None, self.norm, self.G, self.C]
         return list_fields
 
     def repr_fields(self):
         method = set_blank_if_default(self.method, 'LAN')
         norm = set_blank_if_default(self.norm, 'MASS')
         list_fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
-                  self.nd, None, None, norm, self.G, self.C]
+                       self.nd, None, None, norm, self.G, self.C]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -458,7 +458,7 @@ class EIGRL(Method):
             #: Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
             self.norm = string_or_blank(card, 8, 'norm')
 
-            optionValues = [interpret_value(field) for field in card[9:] ]
+            optionValues = [interpret_value(field) for field in card[9:]]
             self.options = []
             self.values = []
             #print "optionValues = ",optionValues
@@ -506,7 +506,7 @@ class EIGRL(Method):
     def repr_fields(self):
         msglvl = set_blank_if_default(self.msglvl, 0)
         list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, msglvl,
-                  self.maxset, self.shfscl, self.norm]
+                       self.maxset, self.shfscl, self.norm]
         for (option, value) in zip(self.options, self.values):
             list_fields += [option + '=' + str(value)]
         return list_fields

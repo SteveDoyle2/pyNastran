@@ -253,7 +253,7 @@ class CTRIA3(TriShell):
             #: Element ID
             self.eid = integer(card, 1, 'eid')
             #: Property ID
-            self.pid = integer(card, 2, 'pid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
 
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2'),
@@ -287,7 +287,7 @@ class CTRIA3(TriShell):
             if self.T3 == -1.0:
                 self.T3 = 1.0
 
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
     def cross_reference(self, model):
@@ -473,7 +473,7 @@ class CTRIA6(TriShell):
             self.T2 = data[10]
             self.T3 = data[11]
             self.TFlag = data[12]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
 
         #print self.thetaMcid
@@ -622,7 +622,7 @@ class CTRIAR(TriShell):
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3')]
 
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
         self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
@@ -631,7 +631,7 @@ class CTRIAR(TriShell):
         blank(card, 9, 'blank')
         blank(card, 10, 'blank')
 
-        self.TFlag = integer_or_blank(card, 11, 'TFlag', 0)
+        self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
         self.T1 = double_or_blank(card, 11, 'T1', 1.0)
         self.T2 = double_or_blank(card, 12, 'T2', 1.0)
         self.T3 = double_or_blank(card, 13, 'T3', 1.0)
@@ -759,7 +759,7 @@ class CTRIAX(TriShell):
             assert len(card) <= 10, 'len(CTRIAX card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX'
 
     def _verify(self, xref=True):
@@ -872,7 +872,7 @@ class CTRIAX6(TriShell):
             assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
 
     def cross_reference(self, model):
@@ -1143,7 +1143,7 @@ class CSHEAR(QuadShell):
             #: Element ID
             self.eid = integer(card, 1, 'eid')
             #: Property ID
-            self.pid = integer(card, 2, 'pid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer_or_blank(card, 3, 'n1'),
                     integer_or_blank(card, 4, 'n2'),
                     integer_or_blank(card, 5, 'n3'),
@@ -1153,7 +1153,7 @@ class CSHEAR(QuadShell):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:]
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
     def cross_reference(self, model):
@@ -1301,7 +1301,7 @@ class CQUAD4(QuadShell):
             #: Element ID
             self.eid = integer(card, 1, 'eid')
             #: Property ID
-            self.pid = integer(card, 2, 'pid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2'),
                     integer(card, 5, 'n3'),
@@ -1336,7 +1336,7 @@ class CQUAD4(QuadShell):
             if self.T4 == -1.0:
                 self.T4 = 1.0
 
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
 
     def cross_reference(self, model):
@@ -1484,7 +1484,7 @@ class CQUADR(QuadShell):
                 self.T3 = 1.0
             if self.T4 == -1.0:
                 self.T4 = 1.0
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUADR'
 
     def cross_reference(self, model):
@@ -1579,7 +1579,7 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9')]
         assert len(card) <= 12, 'len(CQUAD card) = %i' % len(card)
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 9
 
     def cross_reference(self, model):
@@ -1680,7 +1680,7 @@ class CQUAD8(QuadShell):
             self.zOffset = data[14]
             self.TFlag = data[15]
 
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
 
     def cross_reference(self, model):
@@ -1823,7 +1823,7 @@ class CQUADX(QuadShell):
             assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 9
 
     def cross_reference(self, model):

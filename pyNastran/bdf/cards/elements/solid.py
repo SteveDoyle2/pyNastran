@@ -183,7 +183,7 @@ class CHEXA8(SolidElement):
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 8
 
     def cross_reference(self, model):
@@ -282,7 +282,7 @@ class CHEXA20(SolidElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
 
@@ -385,7 +385,7 @@ class CPENTA6(SolidElement):
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 8, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 6
 
     def cross_reference(self, model):
@@ -602,7 +602,7 @@ class CPENTA15(SolidElement):
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
             assert len(data) == 17, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) <= 15
 
     def cross_reference(self, model):
@@ -685,12 +685,12 @@ class CPYRAM5(SolidElement):
             nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
                     integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
                     integer(card, 7, 'nid5')]
-            assert len(card) <= 7, 'len(CPYRAM5 1card) = %i' % len(card)
+            assert len(card) == 8, 'len(CPYRAM5 1card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
-        self.prepareNodeIDs(nids, allowEmptyNodes=False)
+        self.prepare_node_ids(nids)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
 
@@ -751,10 +751,9 @@ class CPYRAM13(SolidElement):
     def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
-
         data = [self.eid, self.Pid()] + nodes[:5] + nodes2
-        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8i\n'
-               '        %8i%8i%8s%8s%8s%8s%' % tuple(data))
+        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
+               '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -778,14 +777,14 @@ class CPYRAM13(SolidElement):
                     integer_or_blank(card, 13, 'nid11'),
                     integer_or_blank(card, 14, 'nid12'),
                     integer_or_blank(card, 15, 'nid13')]
-            assert len(card) <= 15, 'len(CPYRAM13 1card) = %i' % len(card)
+            assert len(card) <= 16, 'len(CPYRAM13 1card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
-        assert len(self.nodes) <= 20, msg
+        assert len(self.nodes) <= 13, msg
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -868,7 +867,7 @@ class CTETRA4(SolidElement):
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 6, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
     def cross_reference(self, model):
@@ -1049,7 +1048,7 @@ class CTETRA10(SolidElement):
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
             assert len(data) == 12, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) <= 10
 
     def cross_reference(self, model):

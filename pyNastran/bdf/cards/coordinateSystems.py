@@ -108,7 +108,7 @@ class Coord(BaseCard, CoordDeprecated):
             self.k = array([0., 0., 1.], dtype='float64')
             return
 
-        if not self.isResolved:
+        if not self.isResolved and self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
             self.rid.setup()
 
         if self.Rid() == 0:
@@ -242,7 +242,10 @@ class Coord(BaseCard, CoordDeprecated):
         if not self.isResolved:
             if isinstance(self.rid, int) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
-            self.rid.setup()
+            if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                self.rid.setup()
+            else:
+                self.setup()
 
         # the ijk axes arent resolved as R-theta-z, only points
         p2 = self.coordToXYZ(p)
@@ -957,7 +960,7 @@ class Cord1x(Coord):
         self.e3 = self.g3.get_position()
 
         # rid is resolved b/c e1, e2, & e3 are in global coordinates
-        self.isResolved = True
+        self.isResolved = False
 
         # call the Coord class' setup method
         super(Cord1x, self).setup()

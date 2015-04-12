@@ -105,7 +105,7 @@ class CELAS1(SpringElement):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
 
     def nodeIDs(self):
@@ -208,7 +208,7 @@ class CELAS2(SpringElement):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
     def cross_reference(self, model):

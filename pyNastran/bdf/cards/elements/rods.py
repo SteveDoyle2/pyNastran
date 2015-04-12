@@ -348,7 +348,7 @@ class CROD(RodElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:4]
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
 
     def _verify(self, xref=False):
@@ -460,7 +460,7 @@ class CTUBE(RodElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:4]
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
 
     def _verify(self, xref=False):
@@ -568,7 +568,7 @@ class CONROD(RodElement):
             self.j = data[5]
             self.c = data[6]
             self.nsm = data[7]
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
         #print self.nodes
 

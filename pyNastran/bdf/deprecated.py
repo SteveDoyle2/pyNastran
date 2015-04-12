@@ -157,20 +157,6 @@ class BDFMethodsDeprecated(object):
         """
         return self.unresolve_grids(femOld)
 
-    #def sumForces(self):
-        #"""
-        #.. seealso:: sum_forces
-        #.. deprecated: will be replaced in version 0.7 with sum_forces
-        #"""
-        #return self.sum_forces()
-
-    #def sumMoments(self, p0):
-        #"""
-        #.. seealso:: sum_moments
-        #.. deprecated: will be replaced in version 0.7 with sum_moments
-        #"""
-        #return self.sum_moments(p0)
-
 
 class GetMethodsDeprecated(object):
 
