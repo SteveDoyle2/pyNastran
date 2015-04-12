@@ -41,8 +41,7 @@ class AddMethods(object):
         key = node.nid
         if key in self.nodes and not allowOverwrites:
             if not node._is_same_card(self.nodes[key]):
-                print('nid=%s\noldNode=\n%snewNode=\n%s' %
-                     (key, self.nodes[key], node))
+                print('nid=%s\noldNode=\n%snewNode=\n%s' % (key, self.nodes[key], node))
                 assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
             else:
                 #print('Node was duplicated...nid=%s; node=\n%s' % (key, node))

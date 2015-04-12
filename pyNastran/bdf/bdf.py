@@ -658,46 +658,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.bsurf = {}
         self.bsurfs = {}
 
-    def _verify_bdf(self):
-        """
-        Cross reference verification method.
-        """
-        xref = self._xref
-        #for key, card in sorted(iteritems(self.params)):
-            #card._verify(xref)
-        for key, card in sorted(iteritems(self.nodes)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for key, card in sorted(iteritems(self.coords)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for key, card in sorted(iteritems(self.elements)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for key, card in sorted(iteritems(self.properties)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for key, card in sorted(iteritems(self.materials)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-
-    def set_error_storage(self, nparse_errors=0, stop_on_parsing_error=True,
-                          nxref_errors=0, stop_on_xref_error=True):
+    def set_error_storage(self, nparse_errors=100, stop_on_parsing_error=True,
+                          nxref_errors=100, stop_on_xref_error=True):
         """
         Catch parsing errors and store them up to print them out all at once
         (not all errors are caught).
@@ -718,7 +680,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._stop_on_xref_error = stop_on_xref_error
 
     def read_bdf(self, bdf_filename=None, include_dir=None,
-                 xref=True, punch=False, store_errors=True):
+                 xref=True, punch=False):
         """
         Read method for the bdf files
 
@@ -742,8 +704,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         bdf.elements = 10
         etc.
         """
+        #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
+        #                       nxref_errors=None, stop_on_xref_error=True)
         #self._encoding = encoding
-        self._store_errors = store_errors
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
@@ -906,21 +869,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 if is_error and self._stop_on_xref_error:
                     raise RuntimeError(msg.rstrip())
 
-    def _cleanup_file_streams(self):
-        """
-        This function is required to prevent too many files being opened.
-        The while loop closes them.
-        """
-        self._break_comment = False  # speeds up self._get_line()
-        while self._get_line():
-            pass
-        self._stored_Is = {}
-        self._stored_lines = {}
-        self._stored_comments = {}
-        self._line_streams = {}
-        self._card_streams = {}
-        #del self._break_comment
-
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
         self._break_comment = False
@@ -1010,23 +958,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 raise TypeError(msg)
             self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
-
-    def _parse_dynamic_syntax(self, key):
-        """
-        Applies the dynamic syntax for %varName
-
-        :param self: the BDF object
-        :param key:  the uppercased key
-        :returns value: the dynamic value defined by dict_of_vars
-        .. seealso:: :func: `set_dynamic_syntax`
-        """
-        key = key[1:].strip()
-        self.log.debug("dynamic key = %r" % key)
-        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
-        if key not in self.dict_of_vars:
-            msg = "key=%r not found in keys=%s" % (key, self.dict_of_vars.keys())
-            raise KeyError(msg)
-        return self.dict_of_vars[key]
 
     def _is_case_control_deck(self, line):
         """
@@ -1167,244 +1098,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         self.active_filenames.pop()
         self.active_filename = self.active_filenames[-1]
-
-    def _stream_card(self, line_stream):
-        """
-        Returns the next Bulk Data Card in the BDF
-
-        :param self:        the BDF object
-        :param line_stream: the generator for the file
-        :returns lines:    the lines of the card
-        :returns comment:  the comment for the card
-        :returns cardname: the name of the card
-        """
-        for (i, line, comment) in line_stream:
-            #-----------------------------------------------------------------
-            # get the first line of the card
-            Is = []
-            lines = []
-            comments = []
-
-            comment = _clean_comment(comment)
-            if comment:
-                comments.append(comment)
-
-            # If the first line is valid, continue.
-            # Otherwise, keep getting lines until one isn't blank.
-            if line:
-                Is.append(i)
-                lines.append(line)
-            else:
-                while len(line) == 0:
-                    # you cant have an empty first line
-                    (i, line, comment) = self._get_line()
-                    if line:
-                        break
-
-                    comment = _clean_comment(comment)
-                    if comment:
-                        comments.append(comment)
-                Is.append(i)
-                lines.append(line)
-                if comment:
-                    comments.append(comment)
-            assert len(lines) == 1, lines
-
-            #-----------------------------------------------------------------
-            # get another line
-            try:
-                (i, line, comment) = self._get_line()
-            except TypeError:
-                lines2 = clean_empty_lines(lines)
-                yield lines2, ''.join(comments)
-
-            #-----------------------------------------------------------------
-            # We define a continuation by either a regular,
-            # large field, small field, tab, or CSV formatted line.
-            # Large field - a * is in the first character
-            # Small field - a + or ' ' is in the first character
-            #               or the line is blank
-            # Tab - tab separated value; large or small formatted line
-            # CSV - comma separated value; large or small formatted line
-
-            # If the line is a continuation line, keep going.
-            #in_loop = False
-
-            Is2 = []
-            lines2 = []
-            comments2 = []
-            while len(line) == 0 or line[0] in [' ', '*', '+', ',', '\t']:
-                if len(line):
-                    if Is2:
-                        Is += Is2
-                        lines += lines2
-                        comments += comments2
-                    Is.append(i)
-                    lines.append(line)
-
-                    Is2 = []
-                    lines2 = []
-                    comments2 = []
-                    comment = _clean_comment(comment)
-                    if comment:
-                        comments.append(comment)
-                else:
-                    Is2.append(i)
-                    lines2.append(line)
-                    comment = _clean_comment(comment)
-                    if comment:
-                        comments2.append(comment)
-
-                try:
-                    (i, line, comment) = self._get_line()
-                except TypeError:
-                    lines2 = clean_empty_lines(lines)
-                    comment = ''.join(comments+comments2)
-                    yield lines2, comment
-
-            # the extra lines we grabbed in the while loop should go on the
-            # next card
-            if Is2:
-                self._stored_Is[self._ifile] = Is2
-                self._stored_lines[self._ifile] = lines2
-                self._stored_comments[self._ifile] = comments2
-
-            #-----------------------------------------------------------------
-            # We maybe got one too many lines
-            if line[0] not in [' ', '*', '+', ',', '\t']:
-                self._stored_Is[self._ifile].append(i)
-                self._stored_lines[self._ifile].append(line)
-                comment = _clean_comment(comment)
-                if comment:
-                    self._stored_comments[self._ifile].append(comment)
-
-            lines2 = clean_empty_lines(lines)
-            comment = ''.join(comments)
-            yield lines2, comment
-        return
-
-    def _get_card_name(self, lines):
-        """
-        Returns the name of the card defined by the provided lines
-
-        :param self:  the BDF object
-        :param lines: the lines of the card
-        :returns cardname: the name of the card
-        """
-        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
-        if len(card_name) == 0:
-            return None
-        if ' ' in card_name or len(card_name) == 0:
-            msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
-                  % (card_name, lines[0], self.active_filename)
-            raise CardParseSyntaxError(msg)
-        return card_name.upper()
-
-    def _read_bulk_data_deck(self):
-        """
-        Parses the Bulk Data Deck
-
-        :param self: the BDF object
-        """
-        self.log.debug("reading Bulk Data Deck...")
-        self._break_comment = True
-        while self.active_filename:
-            try:
-                (lines, comment) = next(self._card_streams[self._ifile])
-            except StopIteration:
-                self._close_file()
-                continue
-            assert len(lines) > 0
-
-            card_name = self._get_card_name(lines)
-            if not isinstance(comment, string_types):
-                raise TypeError('comment=%s type=%s' % (comment, type(comment)))
-
-            if card_name == 'INCLUDE':
-                bdf_filename = get_include_filename(lines, include_dir=self.include_dir)
-                self._open_file(bdf_filename)
-                reject = '$ INCLUDE processed:  %s\n' % bdf_filename
-                if comment:
-                    self.rejects.append([comment])
-                self.rejects.append([reject])
-                continue
-            elif 'ENDDATA' in card_name:
-                self._increase_card_count(card_name)
-                #isEndData = True  # exits while loop
-                break
-
-            if not self.is_reject(card_name):
-                # card_count is increased in add_card function
-                self.add_card(lines, card_name, comment, is_list=False)
-            else:
-                if self.echo:
-                    self.log.info('Rejecting %s:\n' % card_name + ''.join(lines))
-                else:
-                    if card_name not in self.card_count:
-                        # don't print 1000 copies of reject card X
-                        self.log.info("reject card_name = %s" % card_name)
-
-                self._increase_card_count(card_name)
-                if comment:
-                    self.rejects.append([comment])
-                self.rejects.append(lines)
-
-    def _increase_card_count(self, card_name, n=1):
-        """
-        Used for testing to check that the number of cards going in is the
-        same as each time the model is read verifies proper writing of cards
-
-        :param self:      the BDF object
-        :param card_name: the card_name -> 'GRID'
-        :param n:         the amount to increment by (default=1)
-
-        >>> bdf.read_bdf(bdf_filename)
-        >>> bdf.card_count['GRID']
-        50
-        """
-        if card_name == '':  # stupid null case
-            return
-
-        if card_name in self.card_count:
-            self.card_count[card_name] += n
-        else:
-            self.card_count[card_name] = n
-
-    def _get_line(self):
-        """
-        Gets the next line in the BDF from the current or sub-BDF
-        """
-        try:
-            return next(self._line_streams[self._ifile])
-        except StopIteration:
-            self._close_file()
-            return self._get_line()
-        except KeyError:
-            return
-
-    def _stream_line(self):
-        """
-        Uses generators to open the file and stream the next line into
-        a (line_number, comment, and line).
-        """
-        with open(self.active_filename, 'r') as f:
-            for n, line in enumerate(f):
-                line = line.rstrip('\t\r\n ')
-                comment = ''
-                if self._break_comment and '$' in line:
-                    i = line.index('$')
-                    comment = line[i:] + '\n'
-                    line = line[:i].rstrip('\t ')
-                yield n, line, comment
-
-                while self._stored_lines[self._ifile]:
-                    comment = ''
-                    i2 = self._stored_Is[self._ifile].pop(0)
-                    line2 = self._stored_lines[self._ifile].pop(0)
-                    if self._stored_comments:
-                        comment = ''.join(self._stored_comments[self._ifile])
-                        self._stored_comments[self._ifile] = []
-                    yield i2, line2, comment
 
     def process_card(self, card_lines):
         """
@@ -1885,6 +1578,314 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             return '\n'.join(msg)
         else:
             return msg
+
+    def _cleanup_file_streams(self):
+        """
+        This function is required to prevent too many files being opened.
+        The while loop closes them.
+        """
+        self._break_comment = False  # speeds up self._get_line()
+        while self._get_line():
+            pass
+        self._stored_Is = {}
+        self._stored_lines = {}
+        self._stored_comments = {}
+        self._line_streams = {}
+        self._card_streams = {}
+        #del self._break_comment
+
+    def _get_card_name(self, lines):
+        """
+        Returns the name of the card defined by the provided lines
+
+        :param self:  the BDF object
+        :param lines: the lines of the card
+        :returns cardname: the name of the card
+        """
+        card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
+        if len(card_name) == 0:
+            return None
+        if ' ' in card_name or len(card_name) == 0:
+            msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
+                  % (card_name, lines[0], self.active_filename)
+            raise CardParseSyntaxError(msg)
+        return card_name.upper()
+
+    def _get_line(self):
+        """
+        Gets the next line in the BDF from the current or sub-BDF
+        """
+        try:
+            return next(self._line_streams[self._ifile])
+        except StopIteration:
+            self._close_file()
+            return self._get_line()
+        except KeyError:
+            return
+
+    def _increase_card_count(self, card_name, n=1):
+        """
+        Used for testing to check that the number of cards going in is the
+        same as each time the model is read verifies proper writing of cards
+
+        :param self:      the BDF object
+        :param card_name: the card_name -> 'GRID'
+        :param n:         the amount to increment by (default=1)
+
+        >>> bdf.read_bdf(bdf_filename)
+        >>> bdf.card_count['GRID']
+        50
+        """
+        if card_name == '':  # stupid null case
+            return
+
+        if card_name in self.card_count:
+            self.card_count[card_name] += n
+        else:
+            self.card_count[card_name] = n
+
+    def _parse_dynamic_syntax(self, key):
+        """
+        Applies the dynamic syntax for %varName
+
+        :param self: the BDF object
+        :param key:  the uppercased key
+        :returns value: the dynamic value defined by dict_of_vars
+        .. seealso:: :func: `set_dynamic_syntax`
+        """
+        key = key[1:].strip()
+        self.log.debug("dynamic key = %r" % key)
+        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
+        if key not in self.dict_of_vars:
+            msg = "key=%r not found in keys=%s" % (key, self.dict_of_vars.keys())
+            raise KeyError(msg)
+        return self.dict_of_vars[key]
+
+    def _read_bulk_data_deck(self):
+        """
+        Parses the Bulk Data Deck
+
+        :param self: the BDF object
+        """
+        self.log.debug("reading Bulk Data Deck...")
+        self._break_comment = True
+        while self.active_filename:
+            try:
+                (lines, comment) = next(self._card_streams[self._ifile])
+            except StopIteration:
+                self._close_file()
+                continue
+            assert len(lines) > 0
+
+            card_name = self._get_card_name(lines)
+            if not isinstance(comment, string_types):
+                raise TypeError('comment=%s type=%s' % (comment, type(comment)))
+
+            if card_name == 'INCLUDE':
+                bdf_filename = get_include_filename(lines, include_dir=self.include_dir)
+                self._open_file(bdf_filename)
+                reject = '$ INCLUDE processed:  %s\n' % bdf_filename
+                if comment:
+                    self.rejects.append([comment])
+                self.rejects.append([reject])
+                continue
+            elif 'ENDDATA' in card_name:
+                self._increase_card_count(card_name)
+                #isEndData = True  # exits while loop
+                break
+
+            if not self.is_reject(card_name):
+                # card_count is increased in add_card function
+                self.add_card(lines, card_name, comment, is_list=False)
+            else:
+                if self.echo:
+                    self.log.info('Rejecting %s:\n' % card_name + ''.join(lines))
+                else:
+                    if card_name not in self.card_count:
+                        # don't print 1000 copies of reject card X
+                        self.log.info("reject card_name = %s" % card_name)
+
+                self._increase_card_count(card_name)
+                if comment:
+                    self.rejects.append([comment])
+                self.rejects.append(lines)
+
+    def _stream_card(self, line_stream):
+        """
+        Returns the next Bulk Data Card in the BDF
+
+        :param self:        the BDF object
+        :param line_stream: the generator for the file
+        :returns lines:    the lines of the card
+        :returns comment:  the comment for the card
+        :returns cardname: the name of the card
+        """
+        for (i, line, comment) in line_stream:
+            #-----------------------------------------------------------------
+            # get the first line of the card
+            Is = []
+            lines = []
+            comments = []
+
+            comment = _clean_comment(comment)
+            if comment:
+                comments.append(comment)
+
+            # If the first line is valid, continue.
+            # Otherwise, keep getting lines until one isn't blank.
+            if line:
+                Is.append(i)
+                lines.append(line)
+            else:
+                while len(line) == 0:
+                    # you cant have an empty first line
+                    (i, line, comment) = self._get_line()
+                    if line:
+                        break
+
+                    comment = _clean_comment(comment)
+                    if comment:
+                        comments.append(comment)
+                Is.append(i)
+                lines.append(line)
+                if comment:
+                    comments.append(comment)
+            assert len(lines) == 1, lines
+
+            #-----------------------------------------------------------------
+            # get another line
+            try:
+                (i, line, comment) = self._get_line()
+            except TypeError:
+                lines2 = clean_empty_lines(lines)
+                yield lines2, ''.join(comments)
+
+            #-----------------------------------------------------------------
+            # We define a continuation by either a regular,
+            # large field, small field, tab, or CSV formatted line.
+            # Large field - a * is in the first character
+            # Small field - a + or ' ' is in the first character
+            #               or the line is blank
+            # Tab - tab separated value; large or small formatted line
+            # CSV - comma separated value; large or small formatted line
+
+            # If the line is a continuation line, keep going.
+            #in_loop = False
+
+            Is2 = []
+            lines2 = []
+            comments2 = []
+            while len(line) == 0 or line[0] in [' ', '*', '+', ',', '\t']:
+                if len(line):
+                    if Is2:
+                        Is += Is2
+                        lines += lines2
+                        comments += comments2
+                    Is.append(i)
+                    lines.append(line)
+
+                    Is2 = []
+                    lines2 = []
+                    comments2 = []
+                    comment = _clean_comment(comment)
+                    if comment:
+                        comments.append(comment)
+                else:
+                    Is2.append(i)
+                    lines2.append(line)
+                    comment = _clean_comment(comment)
+                    if comment:
+                        comments2.append(comment)
+
+                try:
+                    (i, line, comment) = self._get_line()
+                except TypeError:
+                    lines2 = clean_empty_lines(lines)
+                    comment = ''.join(comments+comments2)
+                    yield lines2, comment
+
+            # the extra lines we grabbed in the while loop should go on the
+            # next card
+            if Is2:
+                self._stored_Is[self._ifile] = Is2
+                self._stored_lines[self._ifile] = lines2
+                self._stored_comments[self._ifile] = comments2
+
+            #-----------------------------------------------------------------
+            # We maybe got one too many lines
+            if line[0] not in [' ', '*', '+', ',', '\t']:
+                self._stored_Is[self._ifile].append(i)
+                self._stored_lines[self._ifile].append(line)
+                comment = _clean_comment(comment)
+                if comment:
+                    self._stored_comments[self._ifile].append(comment)
+
+            lines2 = clean_empty_lines(lines)
+            comment = ''.join(comments)
+            yield lines2, comment
+        return
+
+    def _stream_line(self):
+        """
+        Uses generators to open the file and stream the next line into
+        a (line_number, comment, and line).
+        """
+        with open(self.active_filename, 'r') as f:
+            for n, line in enumerate(f):
+                line = line.rstrip('\t\r\n ')
+                comment = ''
+                if self._break_comment and '$' in line:
+                    i = line.index('$')
+                    comment = line[i:] + '\n'
+                    line = line[:i].rstrip('\t ')
+                yield n, line, comment
+
+                while self._stored_lines[self._ifile]:
+                    comment = ''
+                    i2 = self._stored_Is[self._ifile].pop(0)
+                    line2 = self._stored_lines[self._ifile].pop(0)
+                    if self._stored_comments:
+                        comment = ''.join(self._stored_comments[self._ifile])
+                        self._stored_comments[self._ifile] = []
+                    yield i2, line2, comment
+
+    def _verify_bdf(self):
+        """
+        Cross reference verification method.
+        """
+        xref = self._xref
+        #for key, card in sorted(iteritems(self.params)):
+            #card._verify(xref)
+        for key, card in sorted(iteritems(self.nodes)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.coords)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.elements)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.properties)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.materials)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
 
 
 if __name__ == '__main__':  # pragma: no cover

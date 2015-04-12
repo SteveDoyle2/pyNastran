@@ -119,6 +119,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         fem1 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
     else:
         fem1 = BDF(debug=debug, log=None)
+    fem1.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
+                           nxref_errors=100, stop_on_xref_error=True)
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
@@ -129,7 +131,7 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
 
     try:
         outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
-        fem2 =     run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
+        fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
         diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
         nastran = 'nastran scr=yes bat=no old=no '
         if nastran and 0:
