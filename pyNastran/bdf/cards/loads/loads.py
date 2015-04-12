@@ -107,7 +107,10 @@ class LoadCombination(Load):  # LOAD, DLOAD
         loads = []
         for allLoads in self.loadIDs:
             for load in allLoads:
-                loads += load.getLoads()
+                try:
+                    loads += load.getLoads()
+                except RuntimeError:
+                    raise RuntimeError('recursion error on load=\n%s' % str(load)))
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
         return loads
 
