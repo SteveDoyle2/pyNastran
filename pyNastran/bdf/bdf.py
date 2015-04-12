@@ -432,7 +432,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         # ------------------------ bad duplicates ----------------------------
         self._iparse_errors = 0
-        self._nparse_errors = 100
+        self._nparse_errors = 0
         self._stop_on_parsing_error = True
         self._stored_parse_errors = []
 
@@ -696,19 +696,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 print(str(card))
                 raise
 
-    def set_error_storage(self, nparse_errors=100, stop_on_parsing_error=True,
-                          nxref_errors=100, stop_on_xref_error=True):
+    def set_error_storage(self, nparse_errors=0, stop_on_parsing_error=True,
+                          nxref_errors=0, stop_on_xref_error=True):
         """
         Catch parsing errors and store them up to print them out all at once
         (not all errors are caught).
 
         :param self:                  the BDF object
         :param nparse_errors:         how many parse errors should be stored
-                                      (default=100; all=None; no storage=0)
+                                      (default=0; all=None; no storage=0)
         :param stop_on_parsing_error: should an error be raised if there
                                       are parsing errors (default=True)
         :param nxref_errors:          how many cross-reference errors
-                                      should be stored (default=100; all=None; no storage=0)
+                                      should be stored (default=0; all=None; no storage=0)
         :param stop_on_xref_error:    should an error be raised if there
                                       are cross-reference errors (default=True)
         """
@@ -791,6 +791,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def pop_parse_errors(self):
         if self._stop_on_parsing_error:
+            if self._iparse_errors == 1 and self._nparse_errors == 0:
+                raise
             is_error = False
             msg = ''
             if self._duplicate_elements:
@@ -892,6 +894,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def pop_xref_errors(self):
         if self._stop_on_xref_error:
+            if self._ixref_errors == 1 and self._nxref_errors == 0:
+                raise
             is_error = False
             if self._stored_xref_errors:
                 msg = 'There are cross-reference errors.\n\n'

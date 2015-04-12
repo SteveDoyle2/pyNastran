@@ -88,13 +88,13 @@ class TestMaterials(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_mat11_01(self):
-        lines = [  # fails
+        lines = [
             'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.+',
             '+       9000000.3000000.      .1    1.-5    7.-6    8.-6     50.',
         ]
         lines_expected = [
-            'MAT11          1    1.+75000000. 700000.      .1     .137000000.9000000.',
-            '        3000000.      .1  .00001 .000007 .000008     50.'
+            'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.',
+            '        9000000.3000000.      .1  .00001 .000007 .000008     50.'
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
@@ -114,8 +114,8 @@ class TestMaterials(unittest.TestCase):
         #print(msg)
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            msg =  'actual   = %r\n' % actual
-            msg += 'expected = %r' % expected
+            msg =  '\nactual   = %r\n' % actual
+            msg += 'expected =  %r' % expected
             self.assertEqual(actual, expected, msg)
 
 if __name__ == '__main__':  # pragma: no cover
