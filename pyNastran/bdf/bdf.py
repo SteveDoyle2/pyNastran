@@ -430,8 +430,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         }
 
         # ------------------------ bad duplicates ----------------------------
-        self._store_errors = True
-        self._stored_errors = []
+        self._iparse_errors = 0
+        self._nparse_errors = 100
+        self._stop_on_parsing_error = True
+        self._stored_parse_errors = []
+
         self._duplicate_nodes = []
         self._duplicate_elements = []
         self._duplicate_properties = []
@@ -686,6 +689,27 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 print(str(card))
                 raise
 
+    def set_error_storage(self, nparse_errors=100, stop_on_parsing_error=True,
+                          nxref_errors=100, stop_on_xref_error=True):
+        """
+        Catch parsing errors and store them up to print them out all at once
+        (not all errors are caught).
+
+        :param self:                  the BDF object
+        :param nparse_errors:         how many parse errors should be stored
+                                      (default=100; all=None; no storage=0)
+        :param stop_on_parsing_error: should an error be raised if there
+                                      are parsing errors (default=True)
+        :param nxref_errors:          how many cross-reference errors
+                                      should be stored (default=100; all=None; no storage=0)
+        :param stop_on_xref_error:    should an error be raised if there
+                                      are cross-reference errors (default=True)
+        """
+        self._nparse_errors = nparse_errors
+        self._nxref_errors = nxref_errors
+        self._stop_on_parsing_error = stop_on_parsing_error
+        self._stop_on_xref_error = stop_on_xref_error
+
     def read_bdf(self, bdf_filename=None, include_dir=None,
                  xref=True, punch=False, store_errors=True):
         """
@@ -697,9 +721,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                              (default=None if no include files)
         :param xref:  should the bdf be cross referenced (default=True)
         :param punch: indicates whether the file is a punch file (default=False)
-        :param store_errors: catch parsing errors and store them up to
-                             print them out all at once
-                             (not all errors are caught)
 
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename, xref=True)
@@ -751,6 +772,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 self.log.debug('---skipping executive & case control decks---')
 
             self._read_bulk_data_deck()
+            self.pop_parse_errors()
             self.cross_reference(xref=xref)
             self._xref = xref
             self._cleanup_file_streams()
@@ -758,101 +780,119 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self._cleanup_file_streams()
             raise
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
-        self.pop_errors()
+        self.pop_xref_errors()
 
-    def pop_errors(self):
-        is_error = False
-        msg = ''
-        if self._duplicate_elements:
-            duplicate_eids = [elem.eid for elem in self._duplicate_elements]
-            uduplicate_eids = unique(duplicate_eids)
-            uduplicate_eids.sort()
-            msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
-            for eid in uduplicate_eids:
-                msg += 'old_element=\n%s\n' % self.elements[eid].repr_card()
-                msg += 'new_elements=\n'
-                for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
-                    if eidi == eid:
-                        msg += elem.repr_card()
-                msg += '\n'
-                is_error = True
+    def pop_parse_errors(self):
+        print('pop parse; stop=%s' % self._stop_on_parsing_error)
+        if self._stop_on_parsing_error:
+            is_error = False
+            msg = ''
+            if self._duplicate_elements:
+                duplicate_eids = [elem.eid for elem in self._duplicate_elements]
+                uduplicate_eids = unique(duplicate_eids)
+                uduplicate_eids.sort()
+                msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
+                for eid in uduplicate_eids:
+                    msg += 'old_element=\n%s\n' % self.elements[eid].repr_card()
+                    msg += 'new_elements=\n'
+                    for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
+                        if eidi == eid:
+                            msg += elem.repr_card()
+                    msg += '\n'
+                    is_error = True
 
-        if self._duplicate_properties:
-            duplicate_pids = [prop.pid for prop in self._duplicate_properties]
-            uduplicate_pids = unique(duplicate_pids)
-            uduplicate_pids.sort()
-            msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
-            for pid in duplicate_pids:
-                msg += 'old_property=\n%s\n' % self.properties[pid].repr_card()
-                msg += 'new_properties=\n'
-                for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
-                    if pidi == pid:
-                        msg += prop.repr_card()
-                msg += '\n'
-                is_error = True
+            if self._duplicate_properties:
+                duplicate_pids = [prop.pid for prop in self._duplicate_properties]
+                uduplicate_pids = unique(duplicate_pids)
+                uduplicate_pids.sort()
+                msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
+                for pid in duplicate_pids:
+                    msg += 'old_property=\n%s\n' % self.properties[pid].repr_card()
+                    msg += 'new_properties=\n'
+                    for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
+                        if pidi == pid:
+                            msg += prop.repr_card()
+                    msg += '\n'
+                    is_error = True
 
-        if self._duplicate_masses:
-            duplicate_eids = [elem.eid for elem in self._duplicate_masses]
-            uduplicate_eids = unique(duplicate_eids)
-            uduplicate_eids.sort()
-            msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
-            for eid in uduplicate_eids:
-                msg += 'old_mass=\n%s\n' % self.masses[eid].repr_card()
-                msg += 'new_masses=\n'
-                for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
-                    if eidi == eid:
-                        msg += elem.repr_card()
-                msg += '\n'
-                is_error = True
+            if self._duplicate_masses:
+                duplicate_eids = [elem.eid for elem in self._duplicate_masses]
+                uduplicate_eids = unique(duplicate_eids)
+                uduplicate_eids.sort()
+                msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
+                for eid in uduplicate_eids:
+                    msg += 'old_mass=\n%s\n' % self.masses[eid].repr_card()
+                    msg += 'new_masses=\n'
+                    for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
+                        if eidi == eid:
+                            msg += elem.repr_card()
+                    msg += '\n'
+                    is_error = True
 
-        if self._duplicate_materials:
-            duplicate_mids = [mat.mid for mat in self._duplicate_materials]
-            uduplicate_mids = unique(duplicate_mids)
-            uduplicate_mids.sort()
-            msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
-            for mid in uduplicate_mids:
-                msg += 'old_material=\n%s\n' % self.materials[mid].repr_card()
-                msg += 'new_materials=\n'
-                for mat, midi in zip(self._duplicate_materials, duplicate_mids):
-                    if midi == mid:
-                        msg += mat.repr_card()
-                msg += '\n'
-                is_error = True
+            if self._duplicate_materials:
+                duplicate_mids = [mat.mid for mat in self._duplicate_materials]
+                uduplicate_mids = unique(duplicate_mids)
+                uduplicate_mids.sort()
+                msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
+                for mid in uduplicate_mids:
+                    msg += 'old_material=\n%s\n' % self.materials[mid].repr_card()
+                    msg += 'new_materials=\n'
+                    for mat, midi in zip(self._duplicate_materials, duplicate_mids):
+                        if midi == mid:
+                            msg += mat.repr_card()
+                    msg += '\n'
+                    is_error = True
 
-        if self._duplicate_thermal_materials:
-            duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
-            uduplicate_mids = unique(duplicate_mids)
-            uduplicate_mids.sort()
-            msg += 'self.thermalMaterials IDs are not unique=%s\n' % uduplicate_mids
-            for mid in uduplicate_mids:
-                msg += 'old_thermal_material=\n%s\n' % self.thermalMaterials[mid].repr_card()
-                msg += 'new_thermal_materials=\n'
-                for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
-                    if midi == mid:
-                        msg += mat.repr_card()
-                msg += '\n'
-                is_error = True
+            if self._duplicate_thermal_materials:
+                duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
+                uduplicate_mids = unique(duplicate_mids)
+                uduplicate_mids.sort()
+                msg += 'self.thermalMaterials IDs are not unique=%s\n' % uduplicate_mids
+                for mid in uduplicate_mids:
+                    msg += 'old_thermal_material=\n%s\n' % self.thermalMaterials[mid].repr_card()
+                    msg += 'new_thermal_materials=\n'
+                    for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
+                        if midi == mid:
+                            msg += mat.repr_card()
+                    msg += '\n'
+                    is_error = True
 
-        if self._duplicate_coords:
-            duplicate_cids = [coord.cid for coord in self._duplicate_coords]
-            uduplicate_cids = unique(duplicate_cids)
-            uduplicate_cids.sort()
-            msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
-            for cid in uduplicate_cids:
-                msg += 'old_coord=\n%s\n' % self.coords[cid].repr_card()
-                msg += 'new_coords=\n'
-                for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
-                    if midi == mid:
-                        msg += coord.repr_card()
-                msg += '\n'
-                is_error = True
+            if self._duplicate_coords:
+                duplicate_cids = [coord.cid for coord in self._duplicate_coords]
+                uduplicate_cids = unique(duplicate_cids)
+                uduplicate_cids.sort()
+                msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
+                for cid in uduplicate_cids:
+                    msg += 'old_coord=\n%s\n' % self.coords[cid].repr_card()
+                    msg += 'new_coords=\n'
+                    for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
+                        if midi == mid:
+                            msg += coord.repr_card()
+                    msg += '\n'
+                    is_error = True
+            if is_error:
+                msg = 'There are dupliate cards.\n\n' + msg
 
-        if self._stored_errors:
-            for an_error in self._stored_errors:
-                msg += '%s\n\n' % an_error[0]
+            if self._stop_on_xref_error:
+                msg += 'There are parsing errors.\n\n'
 
-        if msg:
-            raise RuntimeError(msg)
+                for (card, an_error) in self._stored_parse_errors:
+                    #msg += '%scard=%s\n' % (an_error[0], card)
+                    msg += '%s\n\n'% an_error[0]
+
+            if msg:
+                raise RuntimeError(msg.rstrip())
+
+    def pop_xref_errors(self):
+        if self._stop_on_xref_error:
+            is_error = False
+            if self._stored_xref_errors:
+                msg = 'There are cross-reference errors.\n\n'
+                for (card, an_error) in self._stored_xref_errors:
+                    msg += '%scard=%s\n' % (an_error[0], card)
+
+                if msg and self._stop_on_xref_error:
+                    raise RuntimeError(msg.rstrip())
 
     def _cleanup_file_streams(self):
         """
@@ -1256,7 +1296,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         self.log.debug("reading Bulk Data Deck...")
         self._break_comment = True
-        #isEndData = False
         while self.active_filename:
             try:
                 (lines, comment) = next(self._card_streams[self._ifile])
@@ -1655,15 +1694,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
         except Exception as e:
-            if self._store_errors:
-                var = traceback.format_exception_only(type(e), e)
-                self._stored_errors.append(var)
-            else:
-                print(str(e))
-                self.log.debug("card_name = %r" % card_name)
-                self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
-                self.log.debug("filename = %r\n" % self.bdf_filename)
-                raise
+            self._iparse_errors += 1
+            #print('self._iparse_errors=%s self._nparse_errors=%s' % (self._iparse_errors, self._nparse_errors))
+            var = traceback.format_exception_only(type(e), e)
+            self._stored_parse_errors.append((card, var))
+            if self._iparse_errors > self._nparse_errors:
+                self.pop_parse_errors()
+                #print(str(e))
+                #self.log.debug("card_name = %r" % card_name)
+                #self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
+                #self.log.debug("filename = %r\n" % self.bdf_filename)
+                #raise
         return card_obj
 
     def get_bdf_stats(self, return_type='string'):
