@@ -18,7 +18,7 @@ class XrefMesh(object):
         The main BDF class defines all the parameters that are used.
         """
         self._ixref_errors = 0
-        self._nxref_errors = 500
+        self._nxref_errors = 100
         self._stop_on_xref_error = True
         self._stored_xref_errors = []
 
