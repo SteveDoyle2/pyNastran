@@ -249,6 +249,21 @@ class AddMethods(object):
         else:
             self.loads[key] = [load]
 
+    def add_dload(self, dload):
+        key = dload.sid
+        if key in self.dloads:
+            self.dloads[key].append(dload)
+        else:
+            self.dloads[key] = [dload]
+
+    def add_dload_entry(self, dload):
+        print(dload)
+        key = dload.sid
+        if key in self.dload_entries:
+            self.dload_entries[key].append(dload)
+        else:
+            self.dload_entries[key] = [dload]
+
     def add_LSEQ(self, load):
         key = load.sid
         if key in self.loads:

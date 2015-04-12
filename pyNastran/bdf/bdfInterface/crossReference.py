@@ -228,4 +228,29 @@ class XrefMesh(object):
                         #msg = "Couldn't cross reference Load\n%s" % (str(load))
                         #self.log.error(msg)
                         #raise
+
+        for (lid, sid) in iteritems(self.dloads):
+            #self.log.debug("lid=%s sid=%s" %(lid, sid))
+            for load in sid:
+                try:
+                    load.cross_reference(self)
+                except Exception as e:
+                    self._ixref_errors += 1
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_xref_errors.append((load, var))
+                    if self._ixref_errors > self._nxref_errors:
+                        self.pop_xref_errors()
+
+        for (lid, sid) in iteritems(self.dload_entries):
+            #self.log.debug("lid=%s sid=%s" %(lid, sid))
+            for load in sid:
+                try:
+                    load.cross_reference(self)
+                except Exception as e:
+                    self._ixref_errors += 1
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_xref_errors.append((load, var))
+                    if self._ixref_errors > self._nxref_errors:
+                        self.pop_xref_errors()
+
         self.log.debug("done with xref_loads")

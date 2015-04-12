@@ -1412,7 +1412,7 @@ class MAT11(Material):
 
     def raw_fields(self):
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
-                  self.nu13, self.g12, self.g13, self.g23, self.rho, self.a1,
+                  self.nu13, self.nu23, self.g12, self.g13, self.g23, self.rho, self.a1,
                   self.a2, self.a3, self.TRef, self.ge]
         return list_fields
 
@@ -1436,7 +1436,7 @@ class MAT11(Material):
         ge = set_blank_if_default(self.ge, 0.0)
 
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
-                  self.nu13, self.g12, self.g13, self.g23, rho, a1,
+                  self.nu13, self.nu23, self.g12, self.g13, self.g23, rho, a1,
                   a2, a3, TRef, ge]
         return list_fields
 

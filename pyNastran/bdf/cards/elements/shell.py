@@ -788,6 +788,26 @@ class CTRIAX(TriShell):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
 
+    def AreaCentroidNormal(self):
+        """
+        Returns area, centroid, normal as it's more efficient to do them
+        together
+        """
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        return _triangle_area_centroid_normal([n1, n2, n3])
+
+    def Area(self):
+        r"""
+        Get the area, :math:`A`.
+
+        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
+        """
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        a = n1 - n2
+        b = n1 - n3
+        area = Area(a, b)
+        return area
+
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
@@ -1844,13 +1864,7 @@ class CQUADX(QuadShell):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes[:4]
         row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]]
-        msg = ('CQUADX  %8i%8i %8i%8i%8i%8i%8s%8s\n'
-               '        %8s%8s' % tuple(data + row2))
+        msg = ('CQUADX  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+               '        %8s%8s%8s' % tuple(data + row2))
         return self.comment() + msg.rstrip() + '\n'
 
-    #def write_bdf(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #msg = self.comment() + print_card_8(card)
-        #msg2 = self.write_bdf(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
-        #return msg

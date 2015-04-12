@@ -436,6 +436,27 @@ class WriteMesh(object):
                               % (load.type, key))
                         raise
             outfile.write(''.join(msg))
+        if self.dloads or self.dload_entries:
+            msg = ['$DLOADS\n']
+            for (key, loadcase) in sorted(iteritems(self.dloads)):
+                for load in loadcase:
+                    try:
+                        msg.append(load.write_bdf(size, is_double))
+                    except:
+                        print('failed printing load...type=%s key=%r'
+                              % (load.type, key))
+                        raise
+
+            for (key, loadcase) in sorted(iteritems(self.dload_entries)):
+                for load in loadcase:
+                    try:
+                        msg.append(load.write_bdf(size, is_double))
+                    except:
+                        print('failed printing load...type=%s key=%r'
+                              % (load.type, key))
+                        raise
+            outfile.write(''.join(msg))
+
 
     def _write_masses(self, outfile, size=8, is_double=False):
         if self.properties_mass:

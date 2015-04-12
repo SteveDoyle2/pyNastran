@@ -425,6 +425,22 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (sid, msg, sorted(self.loads.keys())))
         return load
 
+    def DLoad(self, sid, msg=''):
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        if sid in self.dloads:
+            load = self.dloads[sid]
+        else:
+            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (sid, msg, sorted(self.dloads.keys())))
+        return load
+
+    def get_dload_entries(self, sid, msg=''):
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        if sid in self.dload_entries:
+            load = self.dload_entries[sid]
+        else:
+            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (sid, msg, sorted(self.dload_entries.keys())))
+        return load
+
     #--------------------
     # SPCs
 

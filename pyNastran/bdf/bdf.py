@@ -74,8 +74,8 @@ from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
 from pyNastran.bdf.cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 from pyNastran.bdf.cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
                                          NLPCI)
-from pyNastran.bdf.cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
-                                             RLOAD1, RLOAD2, RANDPS, RFORCE)
+from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE
+from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                    FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
@@ -510,6 +510,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # loads
         #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = {}
+
+        # stores DLOAD entries.
+        self.dloads = {}
+        # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
+        self.dload_entries = {}
+
         #self.gusts  = {} # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
 
@@ -879,8 +885,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 for (card, an_error) in self._stored_parse_errors:
                     #msg += '%scard=%s\n' % (an_error[0], card)
                     msg += '%s\n\n'% an_error[0]
+                    is_error = True
 
-            if msg:
+            if is_error:
                 raise RuntimeError(msg.rstrip())
 
     def pop_xref_errors(self):
@@ -890,8 +897,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 msg = 'There are cross-reference errors.\n\n'
                 for (card, an_error) in self._stored_xref_errors:
                     msg += '%scard=%s\n' % (an_error[0], card)
+                    is_error = True
 
-                if msg and self._stop_on_xref_error:
+                if is_error and self._stop_on_xref_error:
                     raise RuntimeError(msg.rstrip())
 
     def _cleanup_file_streams(self):
@@ -1528,11 +1536,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 'add_material_dependence' : ['MATS1', 'MATS3', 'MATS8',
                                              'MATT1', 'MATT2', 'MATT3', 'MATT4',
                                              'MATT5', 'MATT8', 'MATT9'],
+
                 'add_load' : ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
                               'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
                               'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
-                              'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2',
-                              'RLOAD1', 'RLOAD2', 'RANDPS'],
+                              'RFORCE', 'SLOAD', 'RANDPS'],
+                'add_dload' : ['DLOAD'],
+                'add_dload_entry' : ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
+
                 'add_thermal_load' : ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
                 'add_thermal_element' : ['CHBDYE', 'CHBDYG', 'CHBDYP'],
                 'add_convection_property' : ['PCONV', 'PCONVM'],
@@ -1802,6 +1813,25 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # loads
         for (lid, loads) in sorted(iteritems(self.loads)):
             msg.append('bdf.loads[%s]' % lid)
+            groups = {}
+            for load in loads:
+                groups[load.type] = groups.get(load.type, 0) + 1
+            for name, n in sorted(iteritems(groups)):
+                msg.append('  %-8s %s' % (name + ':', n))
+            msg.append('')
+
+        # dloads
+        for (lid, loads) in sorted(iteritems(self.dloads)):
+            msg.append('bdf.dloads[%s]' % lid)
+            groups = {}
+            for load in loads:
+                groups[load.type] = groups.get(load.type, 0) + 1
+            for name, n in sorted(iteritems(groups)):
+                msg.append('  %-8s %s' % (name + ':', n))
+            msg.append('')
+
+        for (lid, loads) in sorted(iteritems(self.dload_entries)):
+            msg.append('bdf.dload_entries[%s]' % lid)
             groups = {}
             for load in loads:
                 groups[load.type] = groups.get(load.type, 0) + 1

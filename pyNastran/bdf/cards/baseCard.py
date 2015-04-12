@@ -1,7 +1,7 @@
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, integer_types
 from six.moves import zip, range
 
 from pyNastran.bdf.fieldWriter import print_card_8, is_same
@@ -245,15 +245,15 @@ class Element(BaseCard, ElementDeprecated):
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = []
         for nid in nids:
-            if isinstance(nid, int):
+            if isinstance(nid, integer_types):
                 self.nodes.append(nid)
             elif nid is None and allow_empty_nodes:
                 self.nodes.append(None)
             else:  # string???
                 #self.nodes.append(int(nid))
-                raise RuntimeError('this element may not have missing '
-                                   'nodes...nids=%s allow_empty_nodes=False'
-                                   % nids)
+                msg = 'this element may have missing nodes...\n'
+                msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (nids, type(nid))
+                raise RuntimeError(msg)
 
     @property  # I think this means you can just call it as an attribute...
     def faces(self):

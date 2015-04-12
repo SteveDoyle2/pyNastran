@@ -309,7 +309,7 @@ class PSOLID(SolidProperty):
         assert isinstance(mid, int), 'mid=%r' % mid
 
         if xref:
-            if self.mid.type not in ['MAT1', 'MAT4', 'MAT9', 'MAT10']:
+            if self.mid.type not in ['MAT1', 'MAT4', 'MAT9', 'MAT10', 'MAT11']:
                 msg = 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
                 raise TypeError(msg)
 
