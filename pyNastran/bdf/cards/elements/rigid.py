@@ -95,13 +95,13 @@ class RBAR(RigidElement):
 
     def raw_fields(self):
         list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna,
-                  self.cnb, self.cma, self.cmb, self.alpha]
+                       self.cnb, self.cma, self.cmb, self.alpha]
         return list_fields
 
     def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
         list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb,
-                  self.cma, self.cmb, alpha]
+                       self.cma, self.cmb, alpha]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -269,7 +269,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 class RBE2(RigidElement):
     type = 'RBE2'
-    _field_map = {1: 'eid', 2:'gn',3:'cm'}
+    _field_map = {1: 'eid', 2:'gn', 3:'cm'}
 
     def _update_field_helper(self, n, value):
         """

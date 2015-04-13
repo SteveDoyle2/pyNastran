@@ -618,21 +618,22 @@ def verify_card2(key, value, options, line):
             raise
 
     # these may only be integers greater than 0
-    elif key in ['SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
-               'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)',
-               'DLOAD', 'MFLUID', 'CLOAD', 'NLPARM', 'CMETHOD',
-               'FREQUENCY', 'TSTEP', 'TSTEPNL', 'SDAMPING', 'DESOBJ',
-               'TEMPERATURE(INIT)', 'RANDOM', 'DESSUB', 'ADAPT', 'MAXLINES',
-               'TFL','DESGLB', 'SMETHOD', 'DYNRED', 'GUST', 'TEMPERATURE(MATE)',
-               'OTIME', 'NONLINEAR', 'AUXM', 'IC', 'BC', 'OUTRCV', 'DIVERG',
-               'DATAREC', 'TEMPERATURE(BOTH)', 'DEFORM', 'MODES', 'CASE',
-               'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
-               'GPSDCON', 'AUXMODEL',
-               'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
-               'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
-               'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
-               '', '', '', '', '', '', '', '', '', '',
-               '']:
+    elif key in [
+        'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
+        'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)',
+        'DLOAD', 'MFLUID', 'CLOAD', 'NLPARM', 'CMETHOD',
+        'FREQUENCY', 'TSTEP', 'TSTEPNL', 'SDAMPING', 'DESOBJ',
+        'TEMPERATURE(INIT)', 'RANDOM', 'DESSUB', 'ADAPT', 'MAXLINES',
+        'TFL','DESGLB', 'SMETHOD', 'DYNRED', 'GUST', 'TEMPERATURE(MATE)',
+        'OTIME', 'NONLINEAR', 'AUXM', 'IC', 'BC', 'OUTRCV', 'DIVERG',
+        'DATAREC', 'TEMPERATURE(BOTH)', 'DEFORM', 'MODES', 'CASE',
+        'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
+        'GPSDCON', 'AUXMODEL',
+        'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
+        'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
+        'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
+        '', '', '', '', '', '', '', '', '', '',
+        '']:
         try:
             value2 = int(value)
         except:
@@ -677,36 +678,37 @@ def verify_card2(key, value, options, line):
 
     # weird cards
     elif key in ['SUBTITLE', 'TITLE',
-        'A2GG',  'M2GG', 'K2GG',
-        'K2PP', 'M2PP',
-        'K42GG',
+                 'A2GG',  'M2GG', 'K2GG',
+                 'K2PP', 'M2PP',
+                 'K42GG',
 
-        'XMIN', 'XMAX', 'XTITLE','XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
-        'YMIN', 'YMAX', 'YTITLE','YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
-        'XTMIN','XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
-        'YTMIN','YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
-        'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
-        'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
+                 'XMIN', 'XMAX', 'XTITLE','XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
+                 'YMIN', 'YMAX', 'YTITLE','YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
+                 'XTMIN','XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
+                 'YTMIN','YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
+                 'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
+                 'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
 
-         'RIGHT TICS','UPPER TICS',
-        'TRIGHT TICS',
-        'BRIGHT TICS',
+                 'RIGHT TICS','UPPER TICS',
+                 'TRIGHT TICS',
+                 'BRIGHT TICS',
 
-        'PLOTTER', 'XYPLOT',
+                 'PLOTTER', 'XYPLOT',
 
-        'PTITLE',
-        'HOUTPUT', 'PLOTID', '', '', '', '', '',
-        'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
-        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
-        'MAXMIN', 'RESVEC',  'MODESELECT', 'RIGID', 'TCURVE',
-        'SUPER',  'MAXI DEFO', 'P2G',
-        'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
-        'DSYM', '', '', '']:
+                 'PTITLE',
+                 'HOUTPUT', 'PLOTID', '', '', '', '', '',
+                 'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
+                 'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
+                 'MAXMIN', 'RESVEC',  'MODESELECT', 'RIGID', 'TCURVE',
+                 'SUPER',  'MAXI DEFO', 'P2G',
+                 'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
+                 'DSYM', '', '', '']:
         pass
     elif key == 'ANALYSIS':
         assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
-            'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
-            'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN', 'FLUT', '', '', '', '', ''], 'line=%r is invalid; value=%r' % (line, value)
+                         'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
+                         'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN', 'FLUT',
+                         '', '', '', '', ''], 'line=%r is invalid; value=%r' % (line, value)
     elif key == 'AUTOSPC':
         assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)
     else:
@@ -730,9 +732,6 @@ def _clean_lines(case_control, lines):
     lines_pack = []
     for line in lines2:
         #print(line)
-        #if 'ECHO' in line:
-            #asdf
-
         if len(lines_pack) == 0:
             #print('0--', line)
             lines_pack.append(line)
@@ -775,7 +774,7 @@ if __name__ == '__main__':  # pragma: no cover
         '    TSTEPNL = 22',
         '    VELOCITY(PLOT,PRINT,PHASE) = ALL',
         'BEGIN BULK',
-        ]
+    ]
     deck = CaseControlDeck(lines)
     #deck.create_new_subcase(2)
     #deck.add_parameter_to_local_subcase(0, 'SET 2 = 11,12,13,14,15,16,17,18,'

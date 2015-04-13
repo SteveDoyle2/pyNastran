@@ -115,7 +115,7 @@ class XrefMesh(object):
         for elem in itervalues(self.elements):
             try:
                 elem.cross_reference(self)
-            except Exception as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
                 self._stored_xref_errors.append((elem, var))
@@ -133,7 +133,7 @@ class XrefMesh(object):
         for mass in itervalues(self.masses):
             try:
                 mass.cross_reference(self)
-            except Exception as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
                 self._stored_xref_errors.append((mass, var))
@@ -146,7 +146,7 @@ class XrefMesh(object):
         for prop in itervalues(self.properties_mass):
             try:
                 prop.cross_reference(self)
-            except Exception as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
                 self._stored_xref_errors.append((prop, var))
@@ -163,7 +163,7 @@ class XrefMesh(object):
         for prop in itervalues(self.properties):
             try:
                 prop.cross_reference(self)
-            except Exception as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
                 self._stored_xref_errors.append((prop, var))
@@ -181,7 +181,7 @@ class XrefMesh(object):
         for mat in itervalues(self.materials):  # MAT1
             try:
                 mat.cross_reference(self)
-            except Exception as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
                 self._stored_xref_errors.append((mat, var))
@@ -199,7 +199,7 @@ class XrefMesh(object):
             for mat in itervalues(material_deps):
                 try:
                     mat.cross_reference(self)
-                except Exception as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((mat, var))
@@ -218,7 +218,7 @@ class XrefMesh(object):
             for load in sid:
                 try:
                     load.cross_reference(self)
-                except Exception as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))
@@ -234,7 +234,7 @@ class XrefMesh(object):
             for load in sid:
                 try:
                     load.cross_reference(self)
-                except Exception as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))
@@ -246,7 +246,7 @@ class XrefMesh(object):
             for load in sid:
                 try:
                     load.cross_reference(self)
-                except Exception as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))

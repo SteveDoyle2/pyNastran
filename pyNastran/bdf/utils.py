@@ -302,7 +302,7 @@ def parse_patran_syntax_dict(node_sets):
             else:
                 key = snode
                 if key is None:
-                    msg =  'data must be of the form "Node 10:13", not "10:13"'
+                    msg = 'data must be of the form "Node 10:13", not "10:13"'
                     raise SyntaxError(msg)
                 if key not in data:
                     data[key] = []
@@ -384,7 +384,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     # Fglobal = Flocal1 * beta1
     # Flocal2 = (Flocal1 * beta1) * beta2.T
 
-    Fxyz_global  = dot(Fxyz_local_1, cp.beta())
+    Fxyz_global = dot(Fxyz_local_1, cp.beta())
     Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coordB.beta().T)
 
     # find the moment about the new origin due to the force

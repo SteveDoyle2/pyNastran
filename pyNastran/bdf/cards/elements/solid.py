@@ -20,7 +20,6 @@ from numpy.linalg import solve, norm
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area, gauss
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, fields)
-from pyNastran.bdf.fieldWriter import print_card_8
 
 
 def volume4(n1, n2, n3, n4):
@@ -459,23 +458,25 @@ class CPENTA6(SolidElement):
         #  offset so it's easier to map the nodes with the QRG
         pack = [indx1 + 1, indx2 + 1]
         pack.sort()
-        mapper = {  # reverse points away from the element
-                    [1, 2]: [1, 2, 3],  # close
-                    [2, 3]: [1, 2, 3],
-                    [1, 3]: [1, 2, 3],
+        mapper = {
+            # reverse points away from the element
+            [1, 2]: [1, 2, 3],  # close
+            [2, 3]: [1, 2, 3],
+            [1, 3]: [1, 2, 3],
 
-                    [4, 5]: [4, 5, 6],  # far-reverse
-                    [5, 6]: [4, 5, 6],
-                    [4, 6]: [4, 5, 6],
+            [4, 5]: [4, 5, 6],  # far-reverse
+            [5, 6]: [4, 5, 6],
+            [4, 6]: [4, 5, 6],
 
-                    [1, 5]: [1, 2, 5, 4],  # bottom
-                    [2, 4]: [1, 2, 5, 4],
+            [1, 5]: [1, 2, 5, 4],  # bottom
+            [2, 4]: [1, 2, 5, 4],
 
-                    [1, 6]: [1, 3, 6, 4],  # left-reverse
-                    [3, 4]: [1, 3, 6, 4],
+            [1, 6]: [1, 3, 6, 4],  # left-reverse
+            [3, 4]: [1, 3, 6, 4],
 
-                    [2, 6]: [2, 5, 6, 3],  # right
-                    [3, 5]: [2, 3, 6, 5], }
+            [2, 6]: [2, 5, 6, 3],  # right
+            [3, 5]: [2, 3, 6, 5],
+        }
 
         pack2 = mapper[pack]
         if len(pack2) == 3:
@@ -512,7 +513,7 @@ class CPENTA6(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -616,7 +617,7 @@ class CPENTA15(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -705,7 +706,7 @@ class CPYRAM5(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -797,7 +798,7 @@ class CPYRAM13(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -906,7 +907,7 @@ class CTETRA4(SolidElement):
         return nids
 
     def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
-        n1, n2, n3 = getFaceNodes(nid_opposite)
+        n1, n2, n3 = self.getFaceNodes(nid_opposite)
         faceNodeIDs = [n1, n2, n3]
         p1 = self.nodes[n1].Position()
         p2 = self.nodes[n2].Position()
@@ -918,79 +919,6 @@ class CTETRA4(SolidElement):
         A = 0.5 * n
         centroid = (p1 + p2 + p3) / 3.
         return A, centroid, normal / n
-
-    def Stiffness(self):
-        ng = 1
-        (P, W) = gauss(1)
-
-        K = zeros((6, 6))
-        for i in range(ng):
-            for j in range(ng):
-                for k in range(ng):
-                    p = [P[i], P[j], P[k]]
-                    w = W[i] * W[j] * W[k]
-                    pz = self.zeta(p)
-                    J = self.Jacobian(p)
-                    #N = self.N()
-                    #B = self.B()
-                    K += w * J * self.BtEB(pz)
-                    #K += w*J*B.T*E*B
-        return K
-
-    def BtEB(self, pz):
-        #E = self.Dsolid()
-
-        #o = E * e
-        #e = [exx,eyy,ezz,2exy,2eyz,2ezx]
-        #C = array([[Bxi*E11+Byi*E14+Bzi*E16, Byi*E12+Bxi*E14+Bzi*E15, Bzi*E13+Byi*E15+Bxi*E16]
-        #           [Bxi*E12+Byi*E24+Bzi*E26, Byi*E22+Bxi*E24+Bzi*E25, Bzi*E23+Byi*E25+Bxi*E26]
-        #           [Bxi*E13+Byi*E34+Bzi*E36, Byi*E23+Bxi*E34+Bzi*E35, Bzi*E33+Byi*E35+Bxi*E36]
-        #           [Bxi*E14+Byi*E44+Bzi*E46, Byi*E24+Bxi*E44+Bzi*E45, Bzi*E34+Byi*E45+Bxi*E46]
-        #           [Bxi*E15+Byi*E45+Bzi*E56, Byi*E25+Bxi*E45+Bzi*E55, Bzi*E35+Byi*E55+Bxi*E56]
-        #           [Bxi*E16+Byi*E46+Bzi*E16, Byi*E26+Bxi*E46+Bzi*E56, Bzi*E36+Byi*E56+Bxi*E66]])
-
-        #Qij = array([[Bxj*C11+ Byj*C41+Bzj+Bzj*C61, Bxj*C12+Byj*C42+Bzj*C62, Bxj*C13+Byj*C43+Bzj*C63],
-        #             [Byj*C21+ Bxj*C41+Bzj+Bzj*C51, Byj*C22+Bxj*C42+Bzj*C52, Byj*C23+Bxj*C43+Bzj*C53],
-        #             [Bzj*C31+ Byj*C51+Bzj+Bxj*C61, Bzj*C32+Byj*C52+Bxj*C62, Bzj*C33+Byj*C53+Bxj*C63]])
-        Qij = None
-        return Qij
-
-    def zeta(self, p):
-        p2 = array([1, p[0], p[1], p[2]])
-        J = self.Jacobian()
-        zeta = solve(J, p2)
-        return zeta
-
-    def Jacobian(self):
-        r"""
-        .. math::
-              [J] = \left[
-              \begin{array}{ccc}
-                1   & 1   & 1   \\
-                x_1 & y_1 & z_1 \\
-                x_2 & y_2 & z_2 \\
-                x_3 & y_3 & z_3 \\
-                x_4 & y_4 & z_4 \\
-              \end{array} \right]
-
-         .. warning:: this has got to be wrong
-        """
-        m = matrix((6, 6), 'd')
-        (n1, n2, n3, n4) = self.nodePositions()
-        m[0][0] = m[0][1] = m[0][2] = m[0][2] = 1.
-        m[1][0] = n1[0]
-        m[2][0] = n1[1]
-        m[3][0] = n1[2]
-        m[1][1] = n2[0]
-        m[2][1] = n2[1]
-        m[3][1] = n2[2]
-        m[1][2] = n3[0]
-        m[2][2] = n3[1]
-        m[3][2] = n3[2]
-        m[1][3] = n4[0]
-        m[2][3] = n4[1]
-        m[3][3] = n4[2]
-        return m
 
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=False)

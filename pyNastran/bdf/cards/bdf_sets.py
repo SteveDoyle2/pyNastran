@@ -517,7 +517,7 @@ class SEBSET(Set):
         self.IDs = []
 
         #fields = str(card.fields(1))
-        nsets = (len(card) - 1 ) // 2
+        nsets = (len(card) - 1) // 2
         for n in range(nsets):
             i = n * 2 + 1
             component = components(card, i, 'component' + str(n))

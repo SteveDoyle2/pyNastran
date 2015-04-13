@@ -33,7 +33,7 @@ class DCONSTR(OptConstraint):
             self.oid = integer(card, 1, 'oid')
             self.rid = integer(card, 2, 'rid')
             self.lid = double_or_blank(card, 3, 'lid', -1e20)
-            self.uid = double_or_blank(card, 4, 'uid',  1e20)
+            self.uid = double_or_blank(card, 4, 'uid', 1e20)
             self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
             self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
             assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
@@ -316,7 +316,7 @@ class DRESP1(OptConstraint):
         self.atta = integer_double_string_or_blank(card, 6, 'atta')
         self.attb = integer_double_string_or_blank(card, 7, 'attb')
         self.atti = integer_double_string_or_blank(card, 8, 'atti')
-        self.others = [interpret_value(field) for field in card[9:] ]
+        self.others = [interpret_value(field) for field in card[9:]]
         #if self.others:
             #print("self.others = %s" %(self.others))
             #print(str(self))
@@ -324,7 +324,7 @@ class DRESP1(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
-                  self.region, self.atta, self.attb, self.atti] + self.others
+                       self.region, self.atta, self.attb, self.atti] + self.others
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -357,7 +357,7 @@ class DRESP2(OptConstraint):
         self.c3 = double_or_blank(card, 8, 'c3') #: .. todo:: or blank?
 
         i = 0
-        fields = [interpret_value(field) for field in card[9:] ]
+        fields = [interpret_value(field) for field in card[9:]]
         key = '$NULL$'  # dummy key
         self.params = {key: []}
         valueList = []
@@ -383,21 +383,21 @@ class DRESP2(OptConstraint):
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
         packLength = {
-             'DESVAR':  [1, 0],
-             'DTABLE':  [1, 0],
-             'DRESP1':  [1, 0],
-             'DNODE':   [1, 1],  # unique entry
-             'DVPREL1': [1, 0],
-             'DVCREL1': [1, 0],
-             'DVMREL1': [1, 0],
-             'DVPREL2': [1, 0],
-             'DVCREL2': [1, 0],
-             'DVMREL2': [1, 0],
-             'DRESP2':  [1, 0],
-             'DESVAR':  [1, 0],
-             'DESVAR':  [1, 0],
-             'DESVAR':  [1, 0],
-             'DESVAR':  [1, 0],
+             'DESVAR' : [1, 0],
+             'DTABLE' : [1, 0],
+             'DRESP1' : [1, 0],
+             'DNODE' : [1, 1],  # unique entry
+             'DVPREL1' : [1, 0],
+             'DVCREL1' : [1, 0],
+             'DVMREL1' : [1, 0],
+             'DVPREL2' : [1, 0],
+             'DVCREL2' : [1, 0],
+             'DVMREL2' : [1, 0],
+             'DRESP2' : [1, 0],
+             'DESVAR' : [1, 0],
+             'DESVAR' : [1, 0],
+             'DESVAR' : [1, 0],
+             'DESVAR' : [1, 0],
         }
         list_fields = []
         for key, valueList in sorted(iteritems(self.params)):
@@ -496,7 +496,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = [interpret_value(field) for field in card[9:] ]
+        endFields = [interpret_value(field) for field in card[9:]]
         #print "endFields = ",endFields
         nfields = len(endFields) - 1
         if nfields % 2 == 1:
@@ -524,7 +524,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def raw_fields(self):
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
-                  self.mpName, self.mpMin, self.mpMax, self.c0, None]
+                       self.mpName, self.mpMin, self.mpMax, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -534,7 +534,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         mpMax = set_blank_if_default(self.mpMax, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
-                  self.mpName, self.mpMin, mpMax, c0, None]
+                       self.mpName, self.mpMin, mpMax, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -574,7 +574,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = [interpret_value(field) for field in card[9:] ]
+        endFields = [interpret_value(field) for field in card[9:]]
 
         nfields = len(endFields) - 1
         if nfields % 2 == 1:
@@ -601,7 +601,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
-                  self.pNameFid, self.pMin, self.pMax, self.c0, None]
+                       self.pNameFid, self.pMin, self.pMax, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -611,7 +611,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         pMax = set_blank_if_default(self.pMax, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
-                  self.pNameFid, self.pMin, pMax, c0, None]
+                       self.pNameFid, self.pMin, pMax, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -728,7 +728,7 @@ class DVPREL2(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
-                  self.pNameFid, self.pMin, self.pMax, self.eqID, None]
+                       self.pNameFid, self.pMin, self.pMax, self.eqID, None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
             list_fields += build_table_lines(fields2, nStart=1, nEnd=0)

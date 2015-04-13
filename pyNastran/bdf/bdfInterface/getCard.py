@@ -105,7 +105,7 @@ class GetMethods(GetMethodsDeprecated):
             _getattr(out_set, xi, ykeys, len(ykeys)-1, stop_on_failure)
         return out_set
 
-    def test_method(self):
+    def __test_method(self):
         # getElementsAssociatedWithMaterialIDs(self):
         #getElementIDsAssociatedWithPropertyIDs
         #getPropertyIDsAssociatedWithMaterialIDs
@@ -117,16 +117,16 @@ class GetMethods(GetMethodsDeprecated):
         #nids 7 8 13 33 45 58 59 62 66 67
 
         cps = self.get_x_associated_with_y(
-            self.elements, [1,2,3], ['nodes', 'cp', 'cast'], stop_on_failure=False)
+            self.elements, [1, 2, 3], ['nodes', 'cp', 'cast'], stop_on_failure=False)
         #print('*cps', cps)
 
-        nids2 = self.get_x_associated_with_y(self.elements, [1,2,3], ['nodes', 'nid'])
+        nids2 = self.get_x_associated_with_y(self.elements, [1, 2, 3], ['nodes', 'nid'])
         nids2 = list(nids2)
         nids2.sort()
         #print('*nids2', nids2)
 
         mids = self.get_x_associated_with_y(
-            self.elements, [1,2,3,4,5], ['pid', 'mid'])
+            self.elements, [1, 2, 3, 4, 5], ['pid', 'mid'])
         #print('*mids', mids)
 
         mids2 = self.get_x_associated_with_y(
@@ -301,7 +301,7 @@ class GetMethods(GetMethodsDeprecated):
                 if hasattr(prop, 'mid') and prop.Mid() in mids:
                     if pid not in midToPidsMap[mid]:
                         midToPidsMap[mid].append(pid)
-        return (midToPidsMap)
+        return midToPidsMap
 
     def Element(self, eid, msg=''):
         try:

@@ -168,30 +168,33 @@ class TestBeams(unittest.TestCase):
         self.assertEqual(cbeam.J(), 3.14)
 
     def test_pbeam_06(self):
-        lines =['PBEAM   1       1       1.      60.     1.                              PBEAM1',
-                '+BEAM1  5.              -5.                                             PBEAM2',
-                '+BEAM2  YES     1.      2.      240.                                    PBEAM3',
-                '+BEAM3  10.             -10.                                            PBEAM4',
-                '+BEAM4                  -.666667',]
+        lines =[
+            'PBEAM   1       1       1.      60.     1.                              PBEAM1',
+            '+BEAM1  5.              -5.                                             PBEAM2',
+            '+BEAM2  YES     1.      2.      240.                                    PBEAM3',
+            '+BEAM3  10.             -10.                                            PBEAM4',
+            '+BEAM4                  -.666667',]
 
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
         fields = card2.raw_fields()
 
-        lines_expected = ['PBEAM          1       1      1.     60.      1.      0.      0.      0.',
-                          '              5.      0.     -5.      0.      0.      0.      0.      0.',
-                          '             YES      1.      2.    240.      0.      0.      0.      0.',
-                          '             10.      0.    -10.      0.      0.      0.      0.      0.',
-                          '              1.      1.-.666667      0.      0.      0.      0.      0.',
-                          '              0.      0.      0.      0.      0.      0.      0.      0.',
+        lines_expected = [
+            'PBEAM          1       1      1.     60.      1.      0.      0.      0.',
+            '              5.      0.     -5.      0.      0.      0.      0.      0.',
+            '             YES      1.      2.    240.      0.      0.      0.      0.',
+            '             10.      0.    -10.      0.      0.      0.      0.      0.',
+            '              1.      1.-.666667      0.      0.      0.      0.      0.',
+            '              0.      0.      0.      0.      0.      0.      0.      0.',
         ]
         self._compare(fields, lines_expected)
 
     def test_pbeam_07(self):
-        lines = ['PBEAM   100     100     1.00    10.     1.0                             +Z1',
-                 '+Z1     NO      1.0                                                     +Z4',
-                 '+Z4     0.0     0.0',]
+        lines = [
+            'PBEAM   100     100     1.00    10.     1.0                             +Z1',
+            '+Z1     NO      1.0                                                     +Z4',
+            '+Z4     0.0     0.0',]
         card = bdf.process_card(lines)
         card = BDFCard(card)
         with self.assertRaises(SyntaxError):  # .. todo:: is this correct?

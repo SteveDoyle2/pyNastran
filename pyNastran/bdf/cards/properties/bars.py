@@ -1037,19 +1037,19 @@ class PBARL(LineProperty):
     def J(self):
         if self.Type in ['ROD']:
             r = self.dim[0]
-            Ixx = pi*r**4/4
+            Ixx = pi * r**4 / 4.
             Iyy = Ixx
             Ixy = 0.
         elif self.Type in ['TUBE']:
             rout, rin = self.dim
             #rin = rout - 2*t
-            Ixx = pi*(rout**4 - rin**4)/4
+            Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
             Ixy = 0.
         elif self.Type in ['TUBE2']:
             rout, t = self.dim
             rin = rout - 2*t
-            Ixx = pi*(rout**4 - rin**4)/4
+            Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
             Ixy = 0.
         elif self.Type in ['BOX']:
@@ -1059,22 +1059,22 @@ class PBARL(LineProperty):
             hin = d2 - 2. * d3
             win = d1 - 2. * d4
             points, Area = self._points('BAR', [hout, wout])
-            yi = points[0,:-1]
-            yip1 = points[0,1:]
-            xi = points[1,:-1]
-            xip1 = points[1,1:]
+            yi = points[0, :-1]
+            yip1 = points[0, 1:]
+            xi = points[1, :-1]
+            xip1 = points[1, 1:]
 
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
-            Ixx1 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
-            Iyy1 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
+            Ixx1 = 1/12 * sum((yi**2 + yi * yip1 + yip1**2)*ai)
+            Iyy1 = 1/12 * sum((xi**2 + xi * xip1 + xip1**2)*ai)
             #Ixy1 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
 
             points, Area = self._points('BAR', [hin, win])
-            yi = points[0,:-1]
-            yip1 = points[0,1:]
-            xi = points[1,:-1]
-            xip1 = points[1,1:]
+            yi = points[0, :-1]
+            yip1 = points[0, 1:]
+            xi = points[1, :-1]
+            xip1 = points[1, 1:]
 
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
@@ -1093,11 +1093,11 @@ class PBARL(LineProperty):
             #J = Ix + Iy
         elif self.Type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
             points, Area = self._points(self.Type, self.dim)
-            yi = points[0,:-1]
-            yip1 = points[0,1:]
+            yi = points[0, :-1]
+            yip1 = points[0, 1:]
 
-            xi = points[1,:-1]
-            xip1 = points[1,1:]
+            xi = points[1, :-1]
+            xip1 = points[1, 1:]
 
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi

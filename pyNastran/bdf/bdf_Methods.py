@@ -518,11 +518,11 @@ class BDFMethods(BDFMethodsDeprecated):
                 elif load.scale == 'LEPR':
                     print('LEPR continue')
                     continue
-                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
                 elif load.scale == 'FRPR':
                     print('FRPR continue')
                     continue
-                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
                 else:
                     raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
 
@@ -851,7 +851,7 @@ class BDFMethods(BDFMethodsDeprecated):
                 if load.scale == 'FR':  # x1, x2 are fractional lengths
                     x1 = load.x1
                     x2 = load.x2
-                    compute_fx = False
+                    #compute_fx = False
                 elif load.scale == 'LE': # x1, x2 are actual lengths
                     x1 = load.x1 / L
                     x2 = load.x2 / L

@@ -194,15 +194,15 @@ class MATT1(MaterialDependence):
 
         if card:
             self.mid = integer(card, 1, 'mid')
-            self._E_table   = integer_or_blank(card, 2, 'T(E)')
-            self._G_table   = integer_or_blank(card, 3, 'T(G)')
-            self._nu_table  = integer_or_blank(card, 4, 'T(nu)')
+            self._E_table = integer_or_blank(card, 2, 'T(E)')
+            self._G_table = integer_or_blank(card, 3, 'T(G)')
+            self._nu_table = integer_or_blank(card, 4, 'T(nu)')
             self._rho_table = integer_or_blank(card, 5, 'T(rho)')
-            self._A_table   = integer_or_blank(card, 6, 'T(A)')
-            self._ge_table  = integer_or_blank(card, 8, 'T(ge)')
-            self._st_table  = integer_or_blank(card, 9, 'T(st)')
-            self._sc_table  = integer_or_blank(card, 10, 'T(sc)')
-            self._ss_table  = integer_or_blank(card, 11, 'T(ss)')
+            self._A_table = integer_or_blank(card, 6, 'T(A)')
+            self._ge_table = integer_or_blank(card, 8, 'T(ge)')
+            self._st_table = integer_or_blank(card, 9, 'T(st)')
+            self._sc_table = integer_or_blank(card, 10, 'T(sc)')
+            self._ss_table = integer_or_blank(card, 11, 'T(ss)')
 
             assert len(card) <= 11, 'len(MATT1 card) = %i' % len(card)
         else:
@@ -267,7 +267,8 @@ class MATT1(MaterialDependence):
         return self._get_table('_ss_table')
 
     def raw_fields(self):
-        list_fields = ['MATT1', self.Mid(), self.E_table(), self.G_table(),
+        list_fields = [
+            'MATT1', self.Mid(), self.E_table(), self.G_table(),
             self.nu_table(), self.rho_table(), self.A_table(), self.ge_table(),
             self.st_table(), self.sc_table(), self.ss_table(),
         ]
@@ -304,20 +305,20 @@ class MATT2(MaterialDependence):
 
         if card:
             self.mid = integer(card, 1, 'mid')
-            self._G11_table   = integer_or_blank(card, 2, 'T(G11)')
-            self._G12_table   = integer_or_blank(card, 3, 'T(G12)')
-            self._G13_table   = integer_or_blank(card, 4, 'T(G13)')
-            self._G22_table   = integer_or_blank(card, 5, 'T(G22)')
-            self._G23_table   = integer_or_blank(card, 6, 'T(G23)')
-            self._G33_table   = integer_or_blank(card, 7, 'T(G33)')
+            self._G11_table = integer_or_blank(card, 2, 'T(G11)')
+            self._G12_table = integer_or_blank(card, 3, 'T(G12)')
+            self._G13_table = integer_or_blank(card, 4, 'T(G13)')
+            self._G22_table = integer_or_blank(card, 5, 'T(G22)')
+            self._G23_table = integer_or_blank(card, 6, 'T(G23)')
+            self._G33_table = integer_or_blank(card, 7, 'T(G33)')
             self._rho_table = integer_or_blank(card, 8, 'T(rho)')
-            self._A1_table   = integer_or_blank(card, 9, 'T(A1)')
-            self._A2_table   = integer_or_blank(card, 10, 'T(A2)')
-            self._A3_table   = integer_or_blank(card, 11, 'T(A3)')
-            self._ge_table  = integer_or_blank(card, 13, 'T(ge)')
-            self._st_table  = integer_or_blank(card, 14, 'T(st)')
-            self._sc_table  = integer_or_blank(card, 15, 'T(sc)')
-            self._ss_table  = integer_or_blank(card, 16, 'T(ss)')
+            self._A1_table = integer_or_blank(card, 9, 'T(A1)')
+            self._A2_table = integer_or_blank(card, 10, 'T(A2)')
+            self._A3_table = integer_or_blank(card, 11, 'T(A3)')
+            self._ge_table = integer_or_blank(card, 13, 'T(ge)')
+            self._st_table = integer_or_blank(card, 14, 'T(st)')
+            self._sc_table = integer_or_blank(card, 15, 'T(sc)')
+            self._ss_table = integer_or_blank(card, 16, 'T(ss)')
 
             assert len(card) <= 17, 'len(MATT2 card) = %i' % len(card)
         else:
@@ -505,10 +506,10 @@ class MATT5(MaterialDependence):
 
         if card:
             self.mid = integer(card, 1, 'mid')
-            self._kxx_table   = integer_or_blank(card, 2, 'T(Kxx)')
-            self._kxy_table   = integer_or_blank(card, 3, 'T(Kxy)')
-            self._kxz_table   = integer_or_blank(card, 5, 'T(Kxz)')
-            self._kyy_table   = integer_or_blank(card, 6, 'T(Kyy)')
+            self._kxx_table = integer_or_blank(card, 2, 'T(Kxx)')
+            self._kxy_table = integer_or_blank(card, 3, 'T(Kxy)')
+            self._kxz_table = integer_or_blank(card, 5, 'T(Kxz)')
+            self._kyy_table = integer_or_blank(card, 6, 'T(Kyy)')
             self._kyz_table = integer_or_blank(card, 7, 'T(Kyz)')
             self._kzz_table = integer_or_blank(card, 8, 'T(Kyz)')
             self._cp_table = integer_or_blank(card, 9, 'T(Kyz)')

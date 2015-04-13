@@ -133,7 +133,7 @@ class LOAD(LoadCombination):
         spaces = "                                 "
         for nid in sorted(nids):  # ,load in sorted(iteritems(forceLoads))
             #print("nid = ",nid)
-            msg += spaces + "_F(NOEUD='%s%s',\n" % (gridWord, nid)
+            msg += spaces + "_F(NOEUD='%s%s',\n" % (grid_word, nid)
             #print "load = ",load
 
             if nid in forceLoads:
@@ -166,8 +166,8 @@ class LOAD(LoadCombination):
         msg = msg[:-2]
         msg += ');\n'
 
-        for gravityLoad in gravityLoads:
-            msg += 'CA_GRAVITY(%s);\n' % (str(gravityLoad))
+        for gravity_load in gravityLoads:
+            msg += 'CA_GRAVITY(%s);\n' % (str(gravity_load))
         return (msg, loadIDs, loadTypes)
 
     def getReducedLoads(self):
@@ -535,8 +535,8 @@ class ACCEL1(BaseCard):
 
     def raw_fields(self):
         list_fields = ['ACCEL1', self.sid, self.Cid(), self.scale,
-                  self.N[0], self.N[1], self.N[2], None, None
-                  ] + self.nodeIDs()
+                       self.N[0], self.N[1], self.N[2], None, None
+                       ] + self.nodeIDs()
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -958,13 +958,13 @@ class MOMENT(Moment):
 
     def raw_fields(self):
         list_fields = ['MOMENT', self.sid, self.node, self.Cid(),
-                  self.mag] + list(self.xyz)
+                       self.mag] + list(self.xyz)
         return list_fields
 
     def repr_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
         list_fields = ['MOMENT', self.sid, self.node, cid,
-                  self.mag] + list(self.xyz)
+                       self.mag] + list(self.xyz)
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -1135,7 +1135,7 @@ class MOMENT2(Moment):
 
     def raw_fields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs(nodes=[self.node, self.g1, self.g2,
-                                               self.g3, self.g4])
+                                                     self.g3, self.g4])
         assert isinstance(g1, int), g1
         list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields

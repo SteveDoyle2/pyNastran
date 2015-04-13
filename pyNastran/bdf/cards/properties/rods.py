@@ -16,13 +16,10 @@ from six.moves import zip
 from itertools import count
 from numpy import pi, array
 
-from pyNastran.bdf.fieldWriter import (set_blank_if_default,
-                                       set_default_if_blank)
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank,
-    integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    double, double_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16

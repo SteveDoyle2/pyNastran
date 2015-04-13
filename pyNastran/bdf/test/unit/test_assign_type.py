@@ -11,11 +11,11 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 class ExtendedTestCase(unittest.TestCase):
 
   def assertRaisesWithMessage(self, msg, func, *args, **kwargs):
-    try:
-      func(*args, **kwargs)
-      self.assertFail()
-    except Exception as inst:
-      self.assertEqual(inst.message, msg)
+      try:
+          func(*args, **kwargs)
+          self.assertFail()
+      except Exception as inst:
+          self.assertEqual(inst.message, msg)
 
 class Test(ExtendedTestCase):
 

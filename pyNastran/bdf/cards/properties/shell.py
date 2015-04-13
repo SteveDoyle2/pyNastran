@@ -944,6 +944,7 @@ class PSHELL(ShellProperty):
             self.t = double(card, 3, 't')
 
             #: Material identification number for bending
+            #: -1 for plane strin
             self.mid2 = integer_or_blank(card, 4, 'mid2')
             #: Scales the moment of interia of the element based on the
             #: moment of interia for a plate
@@ -1008,7 +1009,12 @@ class PSHELL(ShellProperty):
         if xref:
             assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
 
-            for mid in mids:
+            for i, mid in enumerate(mids):
+                if i == 1: # mid2
+                    if isinstance(mid, int):
+                        assert mid == -1, mid
+                        continue
+
                 assert isinstance(mid, Material), 'mid=%r' % mid
                 assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
                 if mid.type == 'MAT1':

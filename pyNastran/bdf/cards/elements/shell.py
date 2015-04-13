@@ -1569,8 +1569,8 @@ class CQUAD(QuadShell):
         self.eid = integer(card, 1, 'eid')
         #: Property ID
         self.pid = integer(card, 2, 'pid')
-        nids = [integer_or_blank(card, 3, 'n1'),
-                integer_or_blank(card, 4, 'n2'),
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4'),
                 integer_or_blank(card, 7, 'n5'),
@@ -1579,7 +1579,7 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9')]
         assert len(card) <= 12, 'len(CQUAD card) = %i' % len(card)
-        self.prepare_node_ids(nids)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 9
 
     def cross_reference(self, model):
@@ -1619,7 +1619,9 @@ class CQUAD(QuadShell):
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
-        data = [self.eid, self.Pid()] + self.nodeIDs()
+        nodes = self.nodeIDs()
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
+        data = [self.eid, self.Pid()] + nodes[:4] + nodes2
         msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                '        %8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'

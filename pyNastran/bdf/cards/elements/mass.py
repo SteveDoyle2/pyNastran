@@ -578,10 +578,11 @@ class CONM1(PointMassElement):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
         m = self.massMatrix
-        list_fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
-                  m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
-                  m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
-                  m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
+        list_fields = [
+            'CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
+            m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
+            m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
+            m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
         return list_fields
 
     def repr_fields(self):
@@ -719,8 +720,8 @@ class CONM2(PointMassElement):
         """
         I = self.I
         A = [[ I[0], -I[1], -I[3]],
-             [-I[1],  I[2], -I[4]],
-             [-I[3], -I[4],  I[5]]]
+             [-I[1], I[2], -I[4]],
+             [-I[3], -I[4], I[5]]]
         if self.Cid() in [0, -1]:
             return A
         else:
@@ -813,7 +814,7 @@ class CONM2(PointMassElement):
 
         cid = set_blank_if_default(self.Cid(), 0)
         list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
-                  [None] + I)
+                       [None] + I)
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):

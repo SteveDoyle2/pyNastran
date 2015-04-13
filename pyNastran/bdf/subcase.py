@@ -2,6 +2,7 @@
 """
 Subcase creation/extraction class
 """
+from __future__ import print_function
 from six import string_types, iteritems
 
 class Subcase(object):
@@ -163,178 +164,178 @@ class Subcase(object):
             table_name = 'DISPLACEMENT'  # equivalent tables...
 
         key = (sol, table_name)
-        tables = {  # SOL, table_name      table_code
-                  (101, 'ACCELERATION'): 11,
-                  (103, 'ACCELERATION'): 11,
-                  (106, 'ACCELERATION'): 11,
-                  (107, 'ACCELERATION'): 11,
-                  (108, 'ACCELERATION'): 11,
-                  (129, 'ACCELERATION'): 11,
-                 #(144, 'ACCELERATION'): 11,
-                  (145, 'ACCELERATION'): 11,
-                  (146, 'ACCELERATION'): 11,
+        tables = {
+            # SOL, table_name      table_code
+            (101, 'ACCELERATION'): 11,
+            (103, 'ACCELERATION'): 11,
+            (106, 'ACCELERATION'): 11,
+            (107, 'ACCELERATION'): 11,
+            (108, 'ACCELERATION'): 11,
+            (129, 'ACCELERATION'): 11,
+           #(144, 'ACCELERATION'): 11,
+            (145, 'ACCELERATION'): 11,
+            (146, 'ACCELERATION'): 11,
 
-                  (101, 'DISPLACEMENT'): 1,
-                  (103, 'DISPLACEMENT'): 7,  # VECTOR
-                  (105, 'DISPLACEMENT'): 7,
-                  (106, 'DISPLACEMENT'): 1,
-                  (107, 'DISPLACEMENT'): 7,
-                  (108, 'DISPLACEMENT'): 1,
-                  (109, 'DISPLACEMENT'): 1,
-                  (111, 'DISPLACEMENT'): 7,
-                  (112, 'DISPLACEMENT'): 1,
-                  (129, 'DISPLACEMENT'): 7,
-                 #(144, 'DISPLACEMENT'): 1,
-                  (145, 'DISPLACEMENT'): 1,
-                  (146, 'DISPLACEMENT'): 1,
+            (101, 'DISPLACEMENT'): 1,
+            (103, 'DISPLACEMENT'): 7,  # VECTOR
+            (105, 'DISPLACEMENT'): 7,
+            (106, 'DISPLACEMENT'): 1,
+            (107, 'DISPLACEMENT'): 7,
+            (108, 'DISPLACEMENT'): 1,
+            (109, 'DISPLACEMENT'): 1,
+            (111, 'DISPLACEMENT'): 7,
+            (112, 'DISPLACEMENT'): 1,
+            (129, 'DISPLACEMENT'): 7,
+           #(144, 'DISPLACEMENT'): 1,
+            (145, 'DISPLACEMENT'): 1,
+            (146, 'DISPLACEMENT'): 1,
 
-                  (101, 'ESE'): 18,  # energy
-                  (103, 'ESE'): 18,  # energy
-                  (105, 'ESE'): 18,  # energy
-                  (106, 'ESE'): 18,  # energy
-                  (107, 'ESE'): 18,  # energy
-                  (108, 'ESE'): 18,  # energy
-                  (109, 'ESE'): 18,  # energy
-                  (110, 'ESE'): 18,  # energy
-                  (111, 'ESE'): 18,  # energy
-                  (112, 'ESE'): 18,  # energy
-                  (145, 'ESE'): 18,  # energy
-                  (146, 'ESE'): 18,  # energy
+            (101, 'ESE'): 18,  # energy
+            (103, 'ESE'): 18,  # energy
+            (105, 'ESE'): 18,  # energy
+            (106, 'ESE'): 18,  # energy
+            (107, 'ESE'): 18,  # energy
+            (108, 'ESE'): 18,  # energy
+            (109, 'ESE'): 18,  # energy
+            (110, 'ESE'): 18,  # energy
+            (111, 'ESE'): 18,  # energy
+            (112, 'ESE'): 18,  # energy
+            (145, 'ESE'): 18,  # energy
+            (146, 'ESE'): 18,  # energy
 
-                  (101, 'FORCE'): 3,  # ???
-                  (103, 'FORCE'): 3,  # ???
-                  (105, 'FORCE'): 3,  # ???
-                  (106, 'FORCE'): 3,  # ???
-                  (107, 'FORCE'): 4,  # ???
-                  (108, 'FORCE'): 3,  # ???
-                  (111, 'FORCE'): 3,  # ???
-                  (112, 'FORCE'): 3,  # ???
-                  (129, 'FORCE'): 3,  # ???
-                  (145, 'FORCE'): 3,  # ???
-                  (146, 'FORCE'): 3,  # ???
+            (101, 'FORCE'): 3,  # ???
+            (103, 'FORCE'): 3,  # ???
+            (105, 'FORCE'): 3,  # ???
+            (106, 'FORCE'): 3,  # ???
+            (107, 'FORCE'): 4,  # ???
+            (108, 'FORCE'): 3,  # ???
+            (111, 'FORCE'): 3,  # ???
+            (112, 'FORCE'): 3,  # ???
+            (129, 'FORCE'): 3,  # ???
+            (145, 'FORCE'): 3,  # ???
+            (146, 'FORCE'): 3,  # ???
 
-                  (101, 'GPFORCE'): 19,
-                  (105, 'GPFORCE'): 19,
-                  (106, 'GPFORCE'): 19,
-                  (107, 'GPFORCE'): 19,
-                  (108, 'GPFORCE'): 19,
-                  (111, 'GPFORCE'): 19,
-                  (112, 'GPFORCE'): 19,
-                  (129, 'GPFORCE'): 19,
-                  (145, 'GPFORCE'): 19,
-                  (146, 'GPFORCE'): 19,
+            (101, 'GPFORCE'): 19,
+            (105, 'GPFORCE'): 19,
+            (106, 'GPFORCE'): 19,
+            (107, 'GPFORCE'): 19,
+            (108, 'GPFORCE'): 19,
+            (111, 'GPFORCE'): 19,
+            (112, 'GPFORCE'): 19,
+            (129, 'GPFORCE'): 19,
+            (145, 'GPFORCE'): 19,
+            (146, 'GPFORCE'): 19,
 
-                  (101, 'GPSTRESS'): 20,
-                  (105, 'GPSTRESS'): 20,
-                  (106, 'GPSTRESS'): 20,
-                  (107, 'GPSTRESS'): 20,
-                  (108, 'GPSTRESS'): 20,
-                  (111, 'GPSTRESS'): 20,
-                  (112, 'GPSTRESS'): 20,
-                  (129, 'GPSTRESS'): 20,
-                  (145, 'GPSTRESS'): 20,
-                  (146, 'GPSTRESS'): 20,
+            (101, 'GPSTRESS'): 20,
+            (105, 'GPSTRESS'): 20,
+            (106, 'GPSTRESS'): 20,
+            (107, 'GPSTRESS'): 20,
+            (108, 'GPSTRESS'): 20,
+            (111, 'GPSTRESS'): 20,
+            (112, 'GPSTRESS'): 20,
+            (129, 'GPSTRESS'): 20,
+            (145, 'GPSTRESS'): 20,
+            (146, 'GPSTRESS'): 20,
 
-                  (101, 'GPSTRAIN'): 21,
-                  (105, 'GPSTRAIN'): 21,
-                  (106, 'GPSTRAIN'): 21,
-                  (107, 'GPSTRAIN'): 21,
-                  (108, 'GPSTRAIN'): 21,
-                  (111, 'GPSTRAIN'): 21,
-                  (112, 'GPSTRAIN'): 21,
-                  (129, 'GPSTRAIN'): 21,
-                  (145, 'GPSTRAIN'): 21,
-                  (146, 'GPSTRAIN'): 21,
+            (101, 'GPSTRAIN'): 21,
+            (105, 'GPSTRAIN'): 21,
+            (106, 'GPSTRAIN'): 21,
+            (107, 'GPSTRAIN'): 21,
+            (108, 'GPSTRAIN'): 21,
+            (111, 'GPSTRAIN'): 21,
+            (112, 'GPSTRAIN'): 21,
+            (129, 'GPSTRAIN'): 21,
+            (145, 'GPSTRAIN'): 21,
+            (146, 'GPSTRAIN'): 21,
 
-                  (101, 'MPCFORCES'): 3,
-                  (103, 'MPCFORCES'): 3,
-                  (106, 'MPCFORCES'): 3,
-                  (108, 'MPCFORCES'): 3,
-                  (112, 'MPCFORCES'): 3,
-                  (129, 'MPCFORCES'): 3,
-                 #(144, 'MPCFORCES'): 3,
-                  (145, 'MPCFORCES'): 3,
-                  (146, 'MPCFORCES'): 3,
+            (101, 'MPCFORCES'): 3,
+            (103, 'MPCFORCES'): 3,
+            (106, 'MPCFORCES'): 3,
+            (108, 'MPCFORCES'): 3,
+            (112, 'MPCFORCES'): 3,
+            (129, 'MPCFORCES'): 3,
+           #(144, 'MPCFORCES'): 3,
+            (145, 'MPCFORCES'): 3,
+            (146, 'MPCFORCES'): 3,
 
-                  (101, 'OLOAD'): 2,
-                  (103, 'OLOAD'): 2,
-                  (105, 'OLOAD'): 2,
-                  (106, 'OLOAD'): 2,
-                  (107, 'OLOAD'): 2,
-                  (108, 'OLOAD'): 2,
-                  (111, 'OLOAD'): 2,
-                  (112, 'OLOAD'): 2,
-                  (129, 'OLOAD'): 2,
-                 #(144, 'OLOAD'): 2,
-                  (145, 'OLOAD'): 2,
-                  (146, 'OLOAD'): 2,
+            (101, 'OLOAD'): 2,
+            (103, 'OLOAD'): 2,
+            (105, 'OLOAD'): 2,
+            (106, 'OLOAD'): 2,
+            (107, 'OLOAD'): 2,
+            (108, 'OLOAD'): 2,
+            (111, 'OLOAD'): 2,
+            (112, 'OLOAD'): 2,
+            (129, 'OLOAD'): 2,
+           #(144, 'OLOAD'): 2,
+            (145, 'OLOAD'): 2,
+            (146, 'OLOAD'): 2,
 
-                  (101, 'SPCFORCES'): 3,
-                  (103, 'SPCFORCES'): 3,
-                  (105, 'SPCFORCES'): 3,
-                  (106, 'SPCFORCES'): 3,
-                  (107, 'SPCFORCES'): 3,
-                  (108, 'SPCFORCES'): 3,
-                  (110, 'SPCFORCES'): 3,
-                  (111, 'SPCFORCES'): 3,
-                  (112, 'SPCFORCES'): 3,
-                  (129, 'SPCFORCES'): 3,
-                 #(144, 'SPCFORCES'): 3,
-                  (145, 'SPCFORCES'): 3,
-                  (146, 'SPCFORCES'): 3,
+            (101, 'SPCFORCES'): 3,
+            (103, 'SPCFORCES'): 3,
+            (105, 'SPCFORCES'): 3,
+            (106, 'SPCFORCES'): 3,
+            (107, 'SPCFORCES'): 3,
+            (108, 'SPCFORCES'): 3,
+            (110, 'SPCFORCES'): 3,
+            (111, 'SPCFORCES'): 3,
+            (112, 'SPCFORCES'): 3,
+            (129, 'SPCFORCES'): 3,
+           #(144, 'SPCFORCES'): 3,
+            (145, 'SPCFORCES'): 3,
+            (146, 'SPCFORCES'): 3,
 
-                  (101, 'STRAIN'): 5,  # 5/20/21 ???
-                  (105, 'STRAIN'): 5,
-                  (106, 'STRAIN'): 5,
-                  (107, 'STRAIN'): 5,
-                  (108, 'STRAIN'): 5,
-                  (110, 'STRAIN'): 5,
-                  (111, 'STRAIN'): 5,
-                  (112, 'STRAIN'): 5,
-                  (129, 'STRAIN'): 5,
-                  (145, 'STRAIN'): 5,
-                  (146, 'STRAIN'): 5,
+            (101, 'STRAIN'): 5,  # 5/20/21 ???
+            (105, 'STRAIN'): 5,
+            (106, 'STRAIN'): 5,
+            (107, 'STRAIN'): 5,
+            (108, 'STRAIN'): 5,
+            (110, 'STRAIN'): 5,
+            (111, 'STRAIN'): 5,
+            (112, 'STRAIN'): 5,
+            (129, 'STRAIN'): 5,
+            (145, 'STRAIN'): 5,
+            (146, 'STRAIN'): 5,
 
-                  (101, 'STRESS'): 5,  # 5/20/21 ???
-                  (103, 'STRESS'): 5,
-                  (105, 'STRESS'): 5,
-                  (106, 'STRESS'): 5,
-                  (107, 'STRESS'): 5,
-                  (108, 'STRESS'): 5,
-                  (111, 'STRESS'): 5,
-                  (112, 'STRESS'): 5,
-                  (129, 'STRESS'): 5,
-                  (145, 'STRESS'): 5,
-                  (146, 'STRESS'): 5,
+            (101, 'STRESS'): 5,  # 5/20/21 ???
+            (103, 'STRESS'): 5,
+            (105, 'STRESS'): 5,
+            (106, 'STRESS'): 5,
+            (107, 'STRESS'): 5,
+            (108, 'STRESS'): 5,
+            (111, 'STRESS'): 5,
+            (112, 'STRESS'): 5,
+            (129, 'STRESS'): 5,
+            (145, 'STRESS'): 5,
+            (146, 'STRESS'): 5,
 
-                  (145, 'SVECTOR'): 14,
+            (145, 'SVECTOR'): 14,
 
-                  (101, 'FLUX'): 4,
-                  (103, 'FLUX'): 4,
-                  (106, 'FLUX'): 4,
-                  (112, 'FLUX'): 4,
-                  (108, 'FLUX'): 4,
-                  (153, 'FLUX'): 4,
-                  (159, 'FLUX'): 4,
+            (101, 'FLUX'): 4,
+            (103, 'FLUX'): 4,
+            (106, 'FLUX'): 4,
+            (112, 'FLUX'): 4,
+            (108, 'FLUX'): 4,
+            (153, 'FLUX'): 4,
+            (159, 'FLUX'): 4,
 
-                  (101, 'THERMAL'): 3,  # 3/4 ???
-                  (159, 'THERMAL'): 3,  # 3/4 ???
+            (101, 'THERMAL'): 3,  # 3/4 ???
+            (159, 'THERMAL'): 3,  # 3/4 ???
 
-                  (101, 'VELOCITY'): 10,
-                  (103, 'VELOCITY'): 10,
-                  (106, 'VELOCITY'): 10,
-                  (107, 'VELOCITY'): 10,
-                  (108, 'VELOCITY'): 10,
-                  (111, 'VELOCITY'): 10,
-                  (112, 'VELOCITY'): 10,
-                  (129, 'VELOCITY'): 10,
-                 #(144, 'VELOCITY'): 10,
-                  (145, 'VELOCITY'): 10,
-                  (146, 'VELOCITY'): 10,
+            (101, 'VELOCITY'): 10,
+            (103, 'VELOCITY'): 10,
+            (106, 'VELOCITY'): 10,
+            (107, 'VELOCITY'): 10,
+            (108, 'VELOCITY'): 10,
+            (111, 'VELOCITY'): 10,
+            (112, 'VELOCITY'): 10,
+            (129, 'VELOCITY'): 10,
+           #(144, 'VELOCITY'): 10,
+            (145, 'VELOCITY'): 10,
+            (146, 'VELOCITY'): 10,
 
-                  (101, 'VUGRID'): 10,
-
-                 }
+            (101, 'VUGRID'): 10,
+        }
         print("key=%s" % (str(key)))
         if key not in tables:
             raise KeyError(key)

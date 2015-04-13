@@ -123,7 +123,7 @@ class AELINK(BaseCard):
             #: linking coefficient (real)
             self.Cis = []
 
-            fields = [interpret_value(field) for field in card[3:] ]
+            fields = [interpret_value(field) for field in card[3:]]
             assert len(fields) % 2 == 0, 'fields=%s' % fields
             for i in range(0, len(fields), 2):
                 independentLabel = fields[i]
@@ -375,7 +375,7 @@ class AESURF(BaseCard):
             #: Lower and upper deflection limits for the control surface in
             #: radians. (Real, Default = +/- pi/2)
             self.pllim = double_or_blank(card, 11, 'pllim', -pi / 2.)
-            self.pulim = double_or_blank(card, 12, 'pulim',  pi / 2.)
+            self.pulim = double_or_blank(card, 12, 'pulim', pi / 2.)
             #: Lower and upper hinge moment limits for the control surface in
             #: force-length units. (Real, Default = no limit) -> 1e8
             self.hmllim = double_or_blank(card, 13, 'hmllim')
@@ -402,9 +402,9 @@ class AESURF(BaseCard):
           LIST
         """
         list_fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
-                  self.cid2, self.alid2, self.eff, self.ldw,
-                  self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
-                  self.hmulim, self.tqllim, self.tqulim]
+                       self.cid2, self.alid2, self.eff, self.ldw,
+                       self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
+                       self.hmulim, self.tqllim, self.tqulim]
         return list_fields
 
     def repr_fields(self):
@@ -427,9 +427,9 @@ class AESURF(BaseCard):
         pulim = set_blank_if_default(self.pulim, pi / 2.)
 
         list_fields = ['AESURF', self.aesid,self.label, self.cid1, self.alid1,
-                  self.cid2, self.alid2, eff, ldw, crefc, crefs,
-                  pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
-                  self.tqulim]
+                       self.cid2, self.alid2, eff, ldw, crefc, crefs,
+                       pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
+                       self.tqulim]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -484,7 +484,7 @@ class AESURFS(BaseCard):  # not integrated
           LIST
         """
         list_fields = ['AESURFS', self.id, self.label, None, self.list1, None,
-                  self.list2]
+                       self.list2]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -579,7 +579,7 @@ class AERO(Aero):
           LIST
         """
         list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
-                  self.rhoRef, self.symXZ, self.symXY]
+                       self.rhoRef, self.symXZ, self.symXY]
         return list_fields
 
     def repr_fields(self):
@@ -596,7 +596,7 @@ class AERO(Aero):
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
         list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
-                  self.rhoRef, symXZ, symXY]
+                       self.rhoRef, symXZ, symXY]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -658,7 +658,7 @@ class AEROS(Aero):
           LIST
         """
         list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
-                  self.bRef, self.Sref, self.symXZ, self.symXY]
+                       self.bRef, self.Sref, self.symXZ, self.symXY]
         return list_fields
 
     def repr_fields(self):
@@ -675,7 +675,7 @@ class AEROS(Aero):
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
         list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
-                  self.bRef, self.Sref, symXZ, symXY]
+                       self.bRef, self.Sref, symXZ, symXY]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -763,7 +763,7 @@ class CSSCHD(BaseCard):
           LIST
         """
         list_fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
-                  self.LMach(), self.LSchd()]
+                       self.LMach(), self.LSchd()]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -878,7 +878,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
 
             self.igid = integer(card, 8, 'igid')
 
-            self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
+            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
                              double_or_blank(card, 10, 'y1', 0.0),
                              double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double_or_blank(card, 12, 'x12', 0.)
@@ -1016,8 +1016,8 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         lchord = self.get_LChord()
         lspan = self.get_LSpan()
         list_fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
-                  self.nchord, lspan, lchord, self.igid,
-                  ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
+                       self.nchord, lspan, lchord, self.igid,
+                       ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
         return list_fields
 
     def get_LChord(self):
@@ -1047,8 +1047,8 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         lchord = set_blank_if_default(self.get_LChord(), 0)
         lspan = set_blank_if_default(self.get_LSpan(), 0)
         list_fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
-                   lspan, lchord, self.igid] + list(self.p1) +
-                  [self.x12] + list(self.p4) + [self.x43])
+                        lspan, lchord, self.igid] + list(self.p1) +
+                       [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -1150,16 +1150,16 @@ class CAERO2(BaseCard, CAERO2Deprecated):
                 #: ID of an AEFACT data entry containing a list of division
                 #: points for interference elements; used only if NINT is zero
                 #: or blank. (Integer > 0)
-                self.lint = integer(card, 7, 'nint=%s lint' % self.nint )
+                self.lint = integer(card, 7, 'nint=%s lint' % self.nint)
             else:
-                self.lint = blank(card, 7, 'nint=%s lint' % self.nint )
+                self.lint = blank(card, 7, 'nint=%s lint' % self.nint)
 
             #: Interference group identification. Aerodynamic elements with
             #: different IGIDs are uncoupled. (Integer >= 0)
             self.igid = integer(card, 8, 'igid')
 
             #: Location of point 1 in coordinate system CP
-            self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
+            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
                              double_or_blank(card, 10, 'y1', 0.0),
                              double_or_blank(card, 11, 'z1', 0.0)])
 
@@ -1224,8 +1224,8 @@ class CAERO2(BaseCard, CAERO2Deprecated):
           LIST
         """
         list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
-                  self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
-                  + [self.x12])
+                        self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
+                       + [self.x12])
         return list_fields
 
     def repr_fields(self):
@@ -1241,8 +1241,8 @@ class CAERO2(BaseCard, CAERO2Deprecated):
         """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
-                  self.lsb, self.lint, self.igid, ] + list(self.p1) +
-                  [self.x12])
+                        self.lsb, self.lint, self.igid, ] + list(self.p1) +
+                       [self.x12])
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -1265,7 +1265,7 @@ class CAERO3(BaseCard):
             self.list_w = integer(card, 4, 'list_w')
             self.list_c1 = integer_or_blank(card, 5, 'list_c1')
             self.list_c2 = integer_or_blank(card, 6, 'list_c2')
-            self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
+            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
                              double_or_blank(card, 10, 'y1', 0.0),
                              double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double(card, 12, 'x12')
@@ -1316,8 +1316,8 @@ class CAERO3(BaseCard):
           LIST
         """
         list_fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
-                   self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
-                   list(self.p4) + [self.x43])
+                        self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
+                       list(self.p4) + [self.x43])
         return list_fields
 
     def repr_fields(self):
@@ -1333,8 +1333,8 @@ class CAERO3(BaseCard):
         """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO3', self.eid, self.Pid(), cp, self.list_w,
-                   self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
-                   list(self.p4) + [self.x43])
+                        self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
+                       list(self.p4) + [self.x43])
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -1358,7 +1358,7 @@ class CAERO4(BaseCard):
             self.nspan = integer_or_blank(card, 4, 'nspan', 0)
             self.lspan = integer_or_blank(card, 5, 'lspan', 0)
 
-            self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
+            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
                              double_or_blank(card, 10, 'y1', 0.0),
                              double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double_or_blank(card, 12, 'x12', 0.)
@@ -1456,7 +1456,7 @@ class CAERO5(BaseCard):
             self.ntheory = integer_or_blank(card, 6, 'ntheory')
             self.nthick = integer_or_blank(card, 7, 'nthick')
             # 8 - blank
-            self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
+            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
                              double_or_blank(card, 10, 'y1', 0.0),
                              double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double(card, 12, 'x12')
@@ -1953,7 +1953,7 @@ class FLUTTER(BaseCard):
         """
         (imethod, nValue) = self._get_raw_nvalue_omax()
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
-                  self.get_mach(), self.get_rfreq_vel(), imethod, nValue, self.epsilon]
+                       self.get_mach(), self.get_rfreq_vel(), imethod, nValue, self.epsilon]
         return list_fields
 
     #def repr_fields(self):
@@ -2045,7 +2045,7 @@ class MKAERO1(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            fields = [interpret_value(field) for field in card[1:] ]
+            fields = [interpret_value(field) for field in card[1:]]
             nfields = len(fields) - 8
             self.machs = []
             self.rFreqs = []
@@ -2196,7 +2196,7 @@ class PAERO1(BaseCard):
             self._comment = comment
         if card:
             self.pid = integer(card, 1, 'pid')
-            Bi = [interpret_value(field) for field in card[2:] ]
+            Bi = [interpret_value(field) for field in card[2:]]
             self.Bi = []
 
             for bi in Bi:
@@ -2313,7 +2313,7 @@ class PAERO2(BaseCard):
             self.lth2 = integer_or_blank(card, 8, 'lth2')
             self.thi = []
             self.thn = []
-            fields = [interpret_value(field) for field in card[9:] ]
+            fields = [interpret_value(field) for field in card[9:]]
             nfields = len(fields)
             for i in range(9, 9 + nfields, 2):
                 self.thi.append(integer(card, i, 'lth'))
@@ -2334,7 +2334,7 @@ class PAERO2(BaseCard):
           LIST
         """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
-                  self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
+                       self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
         for (thi, thn) in zip(self.thi, self.thn):
             list_fields += [thi, thn]
         return list_fields
@@ -2534,8 +2534,8 @@ class SPLINE1(Spline):
           LIST
         """
         list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
-                  self.Set(), self.dz, self.method, self.usage, self.nelements,
-                  self.melements]
+                       self.Set(), self.dz, self.method, self.usage, self.nelements,
+                       self.melements]
         return list_fields
 
     def repr_fields(self):
@@ -2546,7 +2546,7 @@ class SPLINE1(Spline):
         melements = set_blank_if_default(self.melements, 10)
 
         list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
-                  self.Set(), dz, method, usage, nelements, melements]
+                       self.Set(), dz, method, usage, nelements, melements]
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
@@ -2642,16 +2642,16 @@ class SPLINE2(Spline):
           LIST
         """
         list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
-                  self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
-                  self.dthy, None, self.usage]
+                       self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
+                       self.dthy, None, self.usage]
         return list_fields
 
     def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
         list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
-                  self.Set(), dz, self.dtor, self.Cid(), self.dthx, self.dthy,
-                  None, usage]
+                       self.Set(), dz, self.dtor, self.Cid(), self.dthx, self.dthy,
+                       None, usage]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -2751,8 +2751,8 @@ class SPLINE4(Spline):
           LIST
         """
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
-                  self.Set(), self.dz, self.method, self.usage, self.nelements,
-                  self.melements]
+                       self.Set(), self.dz, self.method, self.usage, self.nelements,
+                       self.melements]
         return list_fields
 
     def repr_fields(self):
@@ -2763,7 +2763,7 @@ class SPLINE4(Spline):
         melements = set_blank_if_default(self.melements, 10)
 
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
-                  self.Set(), dz, method, usage, nelements, melements]
+                       self.Set(), dz, method, usage, nelements, melements]
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
@@ -2859,16 +2859,16 @@ class SPLINE5(Spline):
           LIST
         """
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
-                  self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
-                  self.thy, None, self.usage]
+                       self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
+                       self.thy, None, self.usage]
         return list_fields
 
     def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
-                  self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
-                  None, usage]
+                       self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
+                       None, usage]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):

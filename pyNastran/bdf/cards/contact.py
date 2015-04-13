@@ -62,34 +62,34 @@ class BSURF(BaseCard):
         fields = ['BSURF', self.sid]
         return fields + list(self.eids)
 
-        fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
-        # is this right???
-        packs = collapse_thru_by(self.eids, get_packs=True)
+        #fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
+        ## is this right???
+        #packs = collapse_thru_by(self.eids, get_packs=True)
 
-        pack = packs[0]
-        if len(pack) == 3:
-            minv, maxv, dv = pack
-            if dv == 1:
-                fields[2:5] = [minv, 'THRU', maxv]
-            else:
-                fields[2:7] = [minv, 'THRU', maxv, 'BY', dv]
-        else:
-            fields[3:3+len(pack)] = pack
+        #pack = packs[0]
+        #if len(pack) == 3:
+            #minv, maxv, dv = pack
+            #if dv == 1:
+                #fields[2:5] = [minv, 'THRU', maxv]
+            #else:
+                #fields[2:7] = [minv, 'THRU', maxv, 'BY', dv]
+        #else:
+            #fields[3:3+len(pack)] = pack
 
-        for pack in packs[1:]:
-            #fields += pack + [None, None, None]
-            if len(pack) == 3:
-                minv, maxv, dv = pack
-                if dv == 1:
-                    fields += [minv, 'THRU', maxv, None, None, None, None]
-                else:
-                    fields += [minv, 'THRU', maxv, 'BY', dv, None, None]
-            else:
-                fields += pack + [None] * (8 - len(pack))
-        #for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
-        #                                      self.min_distances, self.max_distances):
-        #    fields += [sid, tid, fric, mind, maxd, None, None]
-        return fields
+        #for pack in packs[1:]:
+            ##fields += pack + [None, None, None]
+            #if len(pack) == 3:
+                #minv, maxv, dv = pack
+                #if dv == 1:
+                    #fields += [minv, 'THRU', maxv, None, None, None, None]
+                #else:
+                    #fields += [minv, 'THRU', maxv, 'BY', dv, None, None]
+            #else:
+                #fields += pack + [None] * (8 - len(pack))
+        ##for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
+        ##                                      self.min_distances, self.max_distances):
+        ##    fields += [sid, tid, fric, mind, maxd, None, None]
+        #return fields
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()

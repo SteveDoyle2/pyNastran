@@ -27,8 +27,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     components, components_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8, print_float_8
-from pyNastran.bdf.fieldWriter16 import print_float_16, print_card_16
-from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
+from pyNastran.bdf.fieldWriter16 import print_float_16
+from pyNastran.bdf.field_writer_double import print_scientific_double
 
 
 class ConstraintObject(object):
@@ -85,6 +85,7 @@ class ConstraintObject(object):
          not really done yet, idea needs to be integrated/separated from
          cross-referencing.  no point in doing it twice
         """
+        raise NotImplementedError()
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
@@ -342,7 +343,7 @@ class MPC(Constraint):
         elif size == 16:
             # TODO: we're sure MPCs support double precision?
             msg = 'MPC*    %16s' % self.conid
-            if double:
+            if is_double:
                 for (i, grid, component, enforced) in zip(count(), self.gids,
                      self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
@@ -427,7 +428,7 @@ class SPC(Constraint):
     def raw_fields(self):
         fields = ['SPC', self.conid]
         for (gid, constraint, enforced) in zip(self.gids, self.constraints,
-                self.enforced):
+                                               self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
@@ -459,7 +460,7 @@ class SPCD(SPC):
     def raw_fields(self):
         fields = ['SPCD', self.conid]
         for (gid, constraint, enforced) in zip(self.gids, self.constraints,
-                self.enforced):
+                                               self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
