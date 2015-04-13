@@ -630,13 +630,17 @@ class DVPREL2(OptConstraint):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          DVPREL2 ID TYPE PID PNAME/FID PMIN PMAX EQID
-          'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
-                   DVID8 -etc.-
-          'DTABLE' LABL1 LABL2 LABL3 LABL4 LABL5 LABL6 LABL7
-                   LABL8 -etc.-
+       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+       | DVPREL2  | ID     | TYPE   | PID   | PNAME/FID | PMIN  | PMAX  | EQID  |       |
+       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+       |          | DESVAR | DVID1  | DVID2 | DVID3     | DVID4 | DVID5 | DVID6 | DVID7 |
+       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+       |          | DVID8  | -etc.- |       |           |       |       |       |       |
+       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+       |          | DTABLE | LABL1  | LABL2 | LABL3     | LABL4 | LABL5 | LABL6 | LABL7 |
+       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+       |          | LABL8  | -etc.- |       |           |       |       |       |       |
+       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
         """
         if comment:
             self._comment = comment
