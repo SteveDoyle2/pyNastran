@@ -369,7 +369,7 @@ class MPC(Constraint):
 class SPC(Constraint):
     """
     Defines enforced displacement/temperature (static analysis)
-    velocity/acceleration (dynamic analysis).::
+    velocity/acceleration (dynamic analysis).
 
      +-----+-----+----+----+------+----+----+----+
      | SPC | SID | G1 | C1 |  D1  | G2 | C2 | D2 |
@@ -440,7 +440,7 @@ class SPC(Constraint):
 class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced
-    motion value (displacement, velocity or acceleration) in dynamic analysis.::
+    motion value (displacement, velocity or acceleration) in dynamic analysis.
 
      +------+-----+-----+-----+------+----+---+----+
      | SPCD | SID |  G1 | C1  |  D1  | G2 |C2 | D2 |
@@ -472,7 +472,7 @@ class SPCD(SPC):
 class SPCAX(Constraint):
     """
     Defines a set of single-point constraints or enforced displacements
-    for conical shell coordinates.::
+    for conical shell coordinates.
 
      +-------+-----+-----+-----+----+-----+
      | SPCAX | SID | RID | HID |  C |  D  |
@@ -612,9 +612,11 @@ class ConstraintADD(Constraint):
 class SPCADD(ConstraintADD):
     """
     Defines a single-point constraint set as a union of single-point constraint
-    sets defined on SPC or SPC1 entries.::
+    sets defined on SPC or SPC1 entries.
 
-      SPCADD   2       1       3
+    +---------+---+---+------+
+    | SPCADD  | 2 | 1 |   3  |
+    +---------+---+---+------+
     """
     type = 'SPCADD'
 

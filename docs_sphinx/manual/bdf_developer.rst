@@ -15,17 +15,15 @@ is called when ``model = BDF()`` is run.  The :py:class:`pyNastran.bdf.bdf.BDF`
 used to be very large and was split (in a non-standard way) into multiple files
 that allowed for simpler development.  The classes:
 
- * :py:class:`pyNastran.bdf.bdfInterface.bdf_Reader.BDFReader`,
+ * :py:class:`pyNastran.bdf.bdf_Methods.BDFMethods`,
  * :py:class:`pyNastran.bdf.bdfInterface.getCard.GetMethods`,
  * :py:class:`pyNastran.bdf.bdfInterface.addCard.AddMethods`,
  * :py:class:`pyNastran.bdf.bdfInterface.bdf_writeMesh.WriteMesh`,
- * :py:class:`pyNastran.bdf.bdfInterface.bdf_cardMethods.CardMethods`,
  * :py:class:`pyNastran.bdf.bdfInterface.crossReference.XrefMesh`
-
 
 are basically bags of functions for the "model" object.
 
-The :py:attr:`pyNastran.bdf.bdf.BDF.cardsToRead` attribute limits the cards that
+The :py:attr:`pyNastran.bdf.bdf.BDF.cards_to_read` attribute limits the cards that
 :mod:`pyNastran` processes and can be modified by the user in order to fix bugs
 or make their code run faster.
 
@@ -317,11 +315,16 @@ a full list of the status of various cards is listed in ``bdf_crossReferencing.t
 -----------------------------------------
 
 The BDF is written by looping through all the objects and calling the
-``card.__repr__()`` method by typing ``str(card)``.
+``card.write_bdf(size=8/16, is_double=True/False)`` method.
+Cards may also be written by typing ``str(card)``.
 
-Currently, only small field format is supported for writing.  The list from
-``repr_fields()`` is passed into ``fieldWriter.py`` function ``print_card(listObj)``
-and it dynamically figures out how to write the card based on the data type.
-For float values, the highest precision 8-character width field will be used
+The ``card.write_bdf()`` method dynamically figures out how to write the card
+based on the data type.
+For float values, the highest precision 8/16-character width field will be used
 even if it uses Nastran's strange syntax of "1.2345+8" to represent
 a more standard "1.2345e+08".
+
+Note that not all cards support double precision (e.g. ``1.8000D+08`` vs.
+``1.8000E+08``).  Nastran will crash if you write the card with double
+precision.  As such, the ``write_bdf`` method won't always write with double
+precision.

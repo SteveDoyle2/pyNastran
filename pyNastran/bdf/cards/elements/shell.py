@@ -171,7 +171,7 @@ class TriShell(ShellElement):
         r"""
         Get the area, :math:`A`.
 
-        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
+        .. math:: A = \frac{1}{2} \lvert (n_0-n_1) \times (n_0-n_2) \rvert
         """
         (n0, n1, n2) = self.nodePositions()
         a = n0 - n1
@@ -800,7 +800,7 @@ class CTRIAX(TriShell):
         r"""
         Get the area, :math:`A`.
 
-        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
@@ -919,7 +919,7 @@ class CTRIAX6(TriShell):
         r"""
         Get the normal vector.
 
-        .. math:: A = \frac{1}{2} (n_0-n_1) times (n_0-n_2)
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_1-n_5) \rvert
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n3
@@ -1053,7 +1053,7 @@ class QuadShell(ShellElement):
 
     def Area(self):
         r"""
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors
         """
         (n1, n2, n3, n4) = self.nodePositions()
@@ -1230,7 +1230,7 @@ class CSHEAR(QuadShell):
 
     def Area(self):
         r"""
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors
         """
         (n1, n2, n3, n4) = self.nodePositions()
@@ -1769,7 +1769,7 @@ class CQUAD8(QuadShell):
 
     def Area(self):
         r"""
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors
         """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()

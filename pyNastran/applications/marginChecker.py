@@ -20,26 +20,24 @@ class MarginChecker(object):
             * only does static loading & maxDeflection
             * solid elements stress ONLY
 
-        @code
-        User Info:
-        UnitCase  Tension      Compression   Bending
-        Filename  tension.op2  compBend.op2  compBend.op2
-        isubcase  1            1             2
+        ::
+          User Info:
+            UnitCase  Tension      Compression   Bending
+            Filename  tension.op2  compBend.op2  compBend.op2
+            isubcase  1            1             2
 
-        unitLoad  100.         1.            1.
-        ReqLoad   100.         100.          100.
-        Ratio     1.           100.          100.
+            unitLoad  100.         1.            1.
+            ReqLoad   100.         100.          100.
+            Ratio     1.           100.          100.
 
-        Code Inputs:
-        filenames =  ['tension.op2','compBend.op2','compBend.op2']
-        subcases  =  [1,            1,             2,            ]
-        # only for VonMises
-        vmFactors = [[1.,           100.,          100.          ]]
+          Code Inputs:
+            filenames =  ['tension.op2','compBend.op2','compBend.op2']
+            subcases  =  [1,            1,             2,            ]
+            # only for VonMises
+            vmFactors = [[1.,           100.,          100.          ]]
+            IDs       =  ['tension',    'comp',       'bend'         ]
 
-        IDs       =  ['tension',    'comp',       'bend'         ]
-        @endcode
-
-        @note vmFactors and IDs may have multiple levels...
+        .. note:: vmFactors and IDs may have multiple levels...
 
         @code
              vmFactors = [[1.,100.,100.],
