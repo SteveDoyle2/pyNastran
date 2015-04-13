@@ -28,7 +28,7 @@ from numpy import array, pi, linspace, zeros, arange, repeat, dot, cos, arcsin
 from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
-from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank,

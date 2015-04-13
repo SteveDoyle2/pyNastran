@@ -464,7 +464,7 @@ class RealSolidStress(StressObject):
 
                 etype = line[0]
                 eid = int(line[1])
-                nnodes = eMap[etype]
+                #nnodes = eMap[etype]
                 self.eType[eid] = etype
                 self.oxx[dt][eid] = {}
                 self.oyy[dt][eid] = {}
@@ -478,7 +478,12 @@ class RealSolidStress(StressObject):
                 self.ovmShear[dt][eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
+                    try:
+                        (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
+                    except:
+                        print('stress; error reading %s; nnodes=%s' % (self.element_name, nnodes))
+                        raise
+                    #(blank, node_id, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
                     (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n + 1]
                     (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n + 2]
                     if node_id.strip() == 'CENTER':
@@ -930,8 +935,8 @@ class RealSolidStrain(StrainObject):
                     n += 3
             return
 
-        (dtName, dt) = transient
-        self.data_code['name'] = dtName
+        #(dtName, dt) = transient
+        #self.data_code['name'] = dtName
         for dt, f06_data in sorted(iteritems(self._f06_data)):
             n = 0
             if dt not in self.exx:
@@ -951,7 +956,6 @@ class RealSolidStrain(StrainObject):
 
                 etype = line[0]
                 eid = int(line[1])
-                nnodes = eMap[etype]
                 self.eType[eid] = etype
                 self.exx[dt][eid] = {}
                 self.eyy[dt][eid] = {}
@@ -965,10 +969,16 @@ class RealSolidStrain(StrainObject):
                 self.evmShear[dt][eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
+                    try:
+                        (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
+                    except:
+                        print('strain; error reading %s; nnodes=%s' % (self.element_name, nnodes))
+                        raise
+
                     (blank, blank, y, oyy, tyz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
                     (blank, blank, z, ozz, tzx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n+2]
-                    if node_id.strip() == 'CENTER':
+                    if j == 0:
+                        assert node_id == 'CENTER', 'j=%s node_id=%s' % (j, node_id)
                         node_id = 0
                     else:
                         node_id = int(node_id)

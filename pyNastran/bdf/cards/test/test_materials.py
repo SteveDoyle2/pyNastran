@@ -1,7 +1,7 @@
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 bdf = BDF(debug=False)
 

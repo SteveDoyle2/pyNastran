@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 import sys
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 
 def set_string16_blank_if_default(value, default):
     """helper method for writing BDFs"""

@@ -5,7 +5,7 @@ from itertools import count
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
-from pyNastran.bdf.fieldWriter import print_field, print_card_8
+from pyNastran.bdf.field_writer_8 import print_field, print_card_8
 
 
 def assert_fields(card1, card2):

@@ -146,5 +146,5 @@ class StrainObject(StrainObject_Deprecated, OES_Object):
 
     def is_stress(self):
         assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
-        assert self.stress_bits[1] == 1, 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        assert self.stress_bits[1] == 1, 'is_stress=False scode=%s stress_bits=%s; element_type=%s element_name=%s' % (self.s_code, self.stress_bits, self.element_type, self.element_name)
         return False

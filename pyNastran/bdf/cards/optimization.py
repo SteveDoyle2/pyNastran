@@ -5,7 +5,7 @@ from six import iteritems
 from six.moves import zip, range
 #from math import ceil
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
     #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, integer_or_string,
@@ -13,8 +13,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, i
     string_or_blank, integer_double_or_blank,
     integer_double_string_or_blank, # integer_or_double,
     double_string_or_blank, interpret_value)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
 

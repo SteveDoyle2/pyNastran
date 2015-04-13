@@ -1,6 +1,6 @@
 from model import Model
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer_8 import print_card
 from pyNastran.utils.log import get_logger
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
