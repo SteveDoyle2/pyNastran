@@ -1,12 +1,12 @@
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, integer_types
 from six.moves import zip, range
 
-from pyNastran.bdf.fieldWriter import print_card, is_same
-                               #print_card_8, set_default_if_blank, print_card
-#from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.fieldWriter import print_card_8, is_same
+from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
 
@@ -49,10 +49,6 @@ class BaseCard(BaseCardDeprecated):
         return ('# skipping %s  because write_code_aster is not implemented\n'
                 % self.type)
 
-    #def write_code_asterLoad(self, model, gridWord='node'):
-        #return ('# skipping %s (lid=%s) because write_code_asterLoad is '
-                #'not implemented\n' % (self.type, self.lid))
-
     def _verify(self, xref):
         """
         Verifies all methods for this object work
@@ -77,22 +73,30 @@ class BaseCard(BaseCardDeprecated):
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def print_raw_fields(self, size=8):
+    def print_raw_fields(self, size=8, is_double=False):  ## TODO: needs to be fixed
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
-        return print_card(list_fields, size=size)
+        return print_card(list_fields, size=size, is_double=False)
 
     def repr_fields(self):
         """gets the card's fields"""
         return self.raw_fields()
 
-    def print_card(self, size=8):
+    def print_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
-        return self.comment() + print_card(list_fields, size=size)
+        if size == 8:
+            return self.comment() + print_card_8(list_fields)
+        elif is_double:
+            return self.comment() + print_card_double(list_fields)
+        return self.comment() + print_card_16(list_fields)
 
-    def repr_card(self, size=8):
+    def repr_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
-        return print_card(list_fields, size=size)
+        if size == 16:
+            if is_double:
+                return print_card_double(list_fields)
+            return print_card_16(list_fields)
+        return print_card_8(list_fields)
 
     def __repr__(self):
         """
@@ -100,12 +104,15 @@ class BaseCard(BaseCardDeprecated):
         (default values are left blank).
         """
         try:
-            return self.print_card()
+            return self.print_card(size=8)
         except:
-            print('problem printing %s card' % self.type)
-            fields = self.repr_fields()
-            print("fields = ", fields)
-            raise
+            try:
+                return self.print_card(size=16)
+            except:
+                print('problem printing %s card' % self.type)
+                fields = self.repr_fields()
+                print("fields = ", fields)
+                raise
 
 
 class Property(BaseCard):
@@ -226,28 +233,28 @@ class Element(BaseCard, ElementDeprecated):
                         #nodeIDs = [node.nid for node in nodes]
                 except:
                     print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                          self.type, nodes, allowEmptyNodes, msg))
+                        self.type, nodes, allowEmptyNodes, msg))
                     raise
                 assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
                 return nodeIDs
         except:
             print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                  self.type, nodes, allowEmptyNodes, msg))
+                self.type, nodes, allowEmptyNodes, msg))
             raise
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = []
         for nid in nids:
-            if isinstance(nid, int):
+            if isinstance(nid, integer_types):
                 self.nodes.append(nid)
             elif nid is None and allow_empty_nodes:
                 self.nodes.append(None)
             else:  # string???
                 #self.nodes.append(int(nid))
-                raise RuntimeError('this element may not have missing '
-                                   'nodes...nids=%s allow_empty_nodes=False'
-                                   % nids)
+                msg = 'this element may have missing nodes...\n'
+                msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (nids, type(nid))
+                raise RuntimeError(msg)
 
     @property  # I think this means you can just call it as an attribute...
     def faces(self):

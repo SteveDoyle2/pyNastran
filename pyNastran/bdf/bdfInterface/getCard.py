@@ -105,7 +105,7 @@ class GetMethods(GetMethodsDeprecated):
             _getattr(out_set, xi, ykeys, len(ykeys)-1, stop_on_failure)
         return out_set
 
-    def test_method(self):
+    def __test_method(self):
         # getElementsAssociatedWithMaterialIDs(self):
         #getElementIDsAssociatedWithPropertyIDs
         #getPropertyIDsAssociatedWithMaterialIDs
@@ -117,16 +117,16 @@ class GetMethods(GetMethodsDeprecated):
         #nids 7 8 13 33 45 58 59 62 66 67
 
         cps = self.get_x_associated_with_y(
-            self.elements, [1,2,3], ['nodes', 'cp', 'cast'], stop_on_failure=False)
+            self.elements, [1, 2, 3], ['nodes', 'cp', 'cast'], stop_on_failure=False)
         #print('*cps', cps)
 
-        nids2 = self.get_x_associated_with_y(self.elements, [1,2,3], ['nodes', 'nid'])
+        nids2 = self.get_x_associated_with_y(self.elements, [1, 2, 3], ['nodes', 'nid'])
         nids2 = list(nids2)
         nids2.sort()
         #print('*nids2', nids2)
 
         mids = self.get_x_associated_with_y(
-            self.elements, [1,2,3,4,5], ['pid', 'mid'])
+            self.elements, [1, 2, 3, 4, 5], ['pid', 'mid'])
         #print('*mids', mids)
 
         mids2 = self.get_x_associated_with_y(
@@ -301,7 +301,7 @@ class GetMethods(GetMethodsDeprecated):
                 if hasattr(prop, 'mid') and prop.Mid() in mids:
                     if pid not in midToPidsMap[mid]:
                         midToPidsMap[mid].append(pid)
-        return (midToPidsMap)
+        return midToPidsMap
 
     def Element(self, eid, msg=''):
         try:
@@ -354,7 +354,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.properties_mass[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
-                           % (pid, msg, self.mass_property,keys() ))
+                           % (pid, msg, self.mass_property.keys() ))
 
     def Phbdy(self, pid, msg=''):
         try:
@@ -423,6 +423,22 @@ class GetMethods(GetMethodsDeprecated):
             load = self.loads[sid]
         else:
             raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (sid, msg, sorted(self.loads.keys())))
+        return load
+
+    def DLoad(self, sid, msg=''):
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        if sid in self.dloads:
+            load = self.dloads[sid]
+        else:
+            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (sid, msg, sorted(self.dloads.keys())))
+        return load
+
+    def get_dload_entries(self, sid, msg=''):
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        if sid in self.dload_entries:
+            load = self.dload_entries[sid]
+        else:
+            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (sid, msg, sorted(self.dload_entries.keys())))
         return load
 
     #--------------------

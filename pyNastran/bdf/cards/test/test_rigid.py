@@ -1,6 +1,6 @@
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, RBE1, RBE2, RBE3
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 
 bdf = BDF(debug=False)
 class TestRigid(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestRigid(unittest.TestCase):
         #print(card)
         card2 = RBE3(card)
         fields = card2.raw_fields()
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         #print(msg)
         lines_expected = ['RBE3           6               3  123456      1.  123456      41       4',
                           '           ALPHA   .0002']
@@ -34,7 +34,7 @@ class TestRigid(unittest.TestCase):
         #print(card)
         card2 = RBE2(card)
         fields = card2.raw_fields()
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         #print(msg)
         lines_expected = ['RBE2      100045  166007  123456  117752  101899  117766  101898  117748',
                           '          117765  117764  117763  109821  117743  117744  117750  117751',
@@ -55,7 +55,7 @@ class TestRigid(unittest.TestCase):
         #print(card)
         card2 = RBE2(card)
         fields = card2.raw_fields()
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         #print(msg)
         lines_expected = ['RBE2      100045  166007  123456  117752  101899  117766  101898  117748',
                           '          117765  117764  117763  109821  117743  117744  117750  117751',
@@ -72,12 +72,12 @@ class TestRigid(unittest.TestCase):
                  '           UM   10201   456     10202   123',]
 
         card = bdf.process_card(lines)
-        #print(print_card(card))
+        #print(print_card_8(card))
         card = BDFCard(card)
         #print(card)
         card2 = RBE1(card)
         fields = card2.raw_fields()
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         #print(msg)
 
         lines_expected = ['RBE1       10201   10201     123   10202     456',
@@ -97,12 +97,12 @@ class TestRigid(unittest.TestCase):
                  '                    1009     123    1010     123    1011     123',
                  '                    1012     123',]
         card = bdf.process_card(lines)
-        #print(print_card(card))
+        #print(print_card_8(card))
         card = BDFCard(card)
         #print(card)
         card2 = RBE1(card)
         fields = card2.raw_fields()
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         #print(msg)
 
         lines_expected = ['RBE1        1001    1000  123456',
@@ -123,12 +123,12 @@ class TestRigid(unittest.TestCase):
         lines = ['rbe1,46,3,123456, , , , , ,+rbe46',
                 '+rbe46,UM,4,123456,5,123456,2.0-6']
         card = bdf.process_card(lines)
-        #print(print_card(card))
+        #print(print_card_8(card))
         card = BDFCard(card)
         #print(card)
         card2 = RBE1(card)
         fields = card2.raw_fields()
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         #print(msg)
 
         lines_expected = ['RBE1          46       3  123456',

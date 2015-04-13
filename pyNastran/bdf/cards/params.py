@@ -94,11 +94,9 @@ class PARAM(BaseCard):
             self.values = [value]
 
         if n == 1:
-            if len(card) != 3:
-                raise RuntimeError('len(PARAM card)=%i card=%r' % (len(card), card))
+            assert len(card) <= 3, 'len(PARAM card)=%i card=%r' % (len(card), card)
         else:
-            if len(card) != 4:
-                raise RuntimeError('len(PARAM card)=%i card=%r' % (len(card), card))
+            assert len(card) <= 4, 'len(PARAM card)=%i card=%r' % (len(card), card)
 
     def update_values(self, value1=None, value2=None):
         """

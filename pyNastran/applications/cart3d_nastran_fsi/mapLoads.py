@@ -269,7 +269,7 @@ class LoadMapping(object):
     def map_loads_mp_func(self, aEID, aModel):
         aElement = aModel.Element(aEID)
         (aArea, aCentroid, aNormal) = aModel.get_element_properties(aEID)
-        percentDone = i / nAeroElements * 100
+        #percentDone = i / nAeroElements * 100
 
         pSource = aCentroid
         distribution = self.pierce_elements(aCentroid, aEID, pSource, aNormal)
@@ -614,6 +614,7 @@ def run_map_loads(inputs, cart3dGeom='Components.i.triq', bdfModel='fem.bdf', bd
     # the property regions to map elements to
     propertyRegions = [1, 1101, 1501, 1601, 1701, 1801, 1901, 2101, 2501, 2601, 2701, 2801, 2901, 10103, 10201, 10203, 10301, 10401, 10501, 10601, 10701, 10801, 10901, 20103, 20203, 20301, 20401, 20501, 20601, 20701, 20801, 20901, 701512, 801812]
     if inputs is None:
+        pInf = 2116.  # sea level
         inputs = {
             'aero_format' : 'Cart3d',
             'Mach' : 0.825,

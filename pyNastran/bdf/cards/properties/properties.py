@@ -100,9 +100,8 @@ class PFAST(Property):
                   self.kt3, kr1, kr2, kr3, mass, ge]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -185,9 +184,8 @@ class PGAP(Property):
                   tmax, mar, trmin]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -244,9 +242,8 @@ class PLSOLID(SolidProperty):
         fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -312,7 +309,7 @@ class PSOLID(SolidProperty):
         assert isinstance(mid, int), 'mid=%r' % mid
 
         if xref:
-            if self.mid.type not in ['MAT1', 'MAT4', 'MAT9', 'MAT10']:
+            if self.mid.type not in ['MAT1', 'MAT4', 'MAT9', 'MAT10', 'MAT11']:
                 msg = 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
                 raise TypeError(msg)
 
@@ -333,7 +330,7 @@ class PSOLID(SolidProperty):
                   self.stress, self.isop, fctn]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         # this card has integers & strings, so it uses...
         return self.comment() + print_card_8(card)
@@ -347,9 +344,8 @@ class CrackProperty(Property):
             return self.mid
         return self.mid.mid
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -559,9 +555,8 @@ class PCONEAX(Property):
                   nsm, self.z1, self.z2] + self.phi
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

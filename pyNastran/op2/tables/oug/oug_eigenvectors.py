@@ -12,6 +12,22 @@ class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        if 0:
+            msg += header
+            freq = self.eigrs[i]
+            #freq = 0.0
+            msg.append('%16s = %12E\n' % ('EIGENVALUE', freq))
+            if hasCycle:
+                msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
+            else:
+                msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
+            msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
+
+        words = ['                                         C O M P L E X   E I G E N V E C T O R   N O . ???\n \n']
+        #words += self.get_table_marker()
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)
+
 class RealEigenvectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt, f06_flag=False):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)

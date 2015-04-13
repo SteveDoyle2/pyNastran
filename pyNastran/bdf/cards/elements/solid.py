@@ -20,7 +20,6 @@ from numpy.linalg import solve, norm
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area, gauss
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, fields)
-from pyNastran.bdf.fieldWriter import print_card_8
 
 
 def volume4(n1, n2, n3, n4):
@@ -132,25 +131,26 @@ class SolidElement(Element):
         list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
-        card = self.raw_fields()
-        msg2 = self.write_bdf2()
-        #msg1 = self.comment() + print_card_8(card)
-        #assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
-        return msg2
+    #def write_bdf(self, size=8, is_double=False):
+        #card = self.raw_fields()
+        #msg2 = self.write_bdf()
+        ##msg1 = self.comment() + print_card_8(card)
+        ##assert msg1 == msg2, 'write_bdf != write_bdf\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
+        #return msg2
 
 class CHEXA8(SolidElement):
     """
-    ::
-
-      CHEXA EID PID G1 G2 G3 G4 G5 G6
-      G7 G8
+    +-------+-----+-----+----+----+----+----+----+----+
+    | CHEXA | EID | PID | G1 | G2 | G3 | G4 | G5 | G6 |
+    +-------+-----+-----+----+----+----+----+----+----+
+    |       | G7  | G8  |    |    |    |    |    |    |
+    +-------+-----+-----+----+----+----+----+----+----+
     """
     type = 'CHEXA'
     asterType = 'HEXA8'
     calculixType = 'C3D8'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
@@ -182,7 +182,7 @@ class CHEXA8(SolidElement):
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 8
 
     def cross_reference(self, model):
@@ -233,14 +233,14 @@ class CHEXA20(SolidElement):
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     |       | G7  | G8  | G9  | G10 | G11 | G12 | G13 | G14 |
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
-    |       | G15 | G16 | G17 | G18 | G19 | G20 |
-    +-------+-----+-----+-----+-----+-----+-----+
+    |       | G15 | G16 | G17 | G18 | G19 | G20 |     |     |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CHEXA'
     asterType = 'HEXA20'
     calculixType = 'C3D20'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
 
@@ -281,7 +281,7 @@ class CHEXA20(SolidElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
 
@@ -337,9 +337,12 @@ class CHEXA20(SolidElement):
 
 class CPENTA6(SolidElement):
     """
+    +--------+-----+-----+----+----+----+----+----+----+
+    | CPENTA | EID | PID | G1 | G2 | G3 | G4 | G5 | G6 |
+    +--------+-----+-----+----+----+----+----+----+----+
+
     ::
 
-      CPENTA EID PID G1 G2 G3 G4 G5 G6
         *----------*
        / \        / \
       / A \      / c \
@@ -351,7 +354,7 @@ class CPENTA6(SolidElement):
     asterType = 'PENTA6'
     calculixType = 'C3D6'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes
         msg = 'CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
@@ -381,7 +384,7 @@ class CPENTA6(SolidElement):
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 8, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 6
 
     def cross_reference(self, model):
@@ -427,9 +430,6 @@ class CPENTA6(SolidElement):
             p3 = self.nodes[n3i].Position()
             a = p1 - p2
             b = p1 - p3
-            normal = cross(a, b)
-            n = norm(normal)
-            A = 0.5 * n
             centroid = (p1 + p2 + p3) / 3.
         else:
             (n1, n2, n3, n4) = pack2
@@ -444,10 +444,10 @@ class CPENTA6(SolidElement):
             p4 = self.nodes[n4i].Position()
             a = p1 - p3
             b = p2 - p4
-            normal = cross(a, b)
-            n = norm(normal)
-            A = 0.5 * n
             centroid = (p1 + p2 + p3 + p4) / 4.
+        normal = cross(a, b)
+        n = norm(normal)
+        area = 0.5 * n
         return area, centroid, normal / n
 
     def getFaceNodesAndArea(self, nidOpposite, nid):
@@ -458,23 +458,25 @@ class CPENTA6(SolidElement):
         #  offset so it's easier to map the nodes with the QRG
         pack = [indx1 + 1, indx2 + 1]
         pack.sort()
-        mapper = {  # reverse points away from the element
-                    [1, 2]: [1, 2, 3],  # close
-                    [2, 3]: [1, 2, 3],
-                    [1, 3]: [1, 2, 3],
+        mapper = {
+            # reverse points away from the element
+            [1, 2]: [1, 2, 3],  # close
+            [2, 3]: [1, 2, 3],
+            [1, 3]: [1, 2, 3],
 
-                    [4, 5]: [4, 5, 6],  # far-reverse
-                    [5, 6]: [4, 5, 6],
-                    [4, 6]: [4, 5, 6],
+            [4, 5]: [4, 5, 6],  # far-reverse
+            [5, 6]: [4, 5, 6],
+            [4, 6]: [4, 5, 6],
 
-                    [1, 5]: [1, 2, 5, 4],  # bottom
-                    [2, 4]: [1, 2, 5, 4],
+            [1, 5]: [1, 2, 5, 4],  # bottom
+            [2, 4]: [1, 2, 5, 4],
 
-                    [1, 6]: [1, 3, 6, 4],  # left-reverse
-                    [3, 4]: [1, 3, 6, 4],
+            [1, 6]: [1, 3, 6, 4],  # left-reverse
+            [3, 4]: [1, 3, 6, 4],
 
-                    [2, 6]: [2, 5, 6, 3],  # right
-                    [3, 5]: [2, 3, 6, 5], }
+            [2, 6]: [2, 5, 6, 3],  # right
+            [3, 5]: [2, 3, 6, 5],
+        }
 
         pack2 = mapper[pack]
         if len(pack2) == 3:
@@ -511,7 +513,7 @@ class CPENTA6(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -547,17 +549,19 @@ class CPENTA6(SolidElement):
 
 class CPENTA15(SolidElement):
     """
-    ::
-
-      CPENTA EID PID G1 G2  G3  G4  G5  G6
-             G7  G8  G9 G10 G11 G12 G13 G14
-             G15
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |  CPENTA | EID | PID | G1 | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |         | G7  | G8  | G9 | G10 | G11 | G12 | G13 | G14 |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |         | G15 |     |    |     |     |     |     |     |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
     """
     type = 'CPENTA'
     asterType = 'PENTA15'
     calculixType = 'C3D15'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
         data = [self.eid, self.Pid()] + nodes[:6] + nodes2
@@ -599,7 +603,7 @@ class CPENTA15(SolidElement):
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
             assert len(data) == 17, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) <= 15
 
     def cross_reference(self, model):
@@ -613,7 +617,7 @@ class CPENTA15(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -653,17 +657,193 @@ class CPENTA15(SolidElement):
         return self._nodeIDs(allowEmptyNodes=True)
 
 
+class CPYRAM5(SolidElement):
+    """
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    | CPYRAM | EID | PID | G1  | G2  | G3  | G4  | G5  |     |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    """
+    type = 'CPYRAM'
+    #asterType = 'CPYRAM5'
+    #calculixType = 'C3D5'
+
+    def write_bdf(self, size=8, is_double=False):
+        nodes = self.nodeIDs()
+        data = [self.eid, self.Pid()] + nodes
+        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
+
+    def __init__(self, card=None, data=None, comment=''):
+        SolidElement.__init__(self, card, data)
+
+        if comment:
+            self._comment = comment
+        if card:
+            #: Element ID
+            self.eid = integer(card, 1, 'eid')
+            #: Property ID
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                    integer(card, 7, 'nid5')]
+            assert len(card) == 8, 'len(CPYRAM5 1card) = %i' % len(card)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = [d if d > 0 else None for d in data[2:]]
+        self.prepare_node_ids(nids)
+        msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
+        assert len(self.nodes) <= 20, msg
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i, nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
+    def Centroid(self):
+        """
+        .. seealso:: CPYRAM5.Centroid
+        """
+        (n1, n2, n3, n4, n5) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        c = (c1 + n5) / 2.
+        return c
+
+    def Volume(self):
+        """
+        .. seealso:: CPYRAM5.Volume
+        """
+        (n1, n2, n3, n4, n5) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        V = A1 / 3. * norm(c1 - n5)
+        return abs(V)
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=False)
+
+
+class CPYRAM13(SolidElement):
+    """
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    | CPYRAM | EID | PID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |        | G7  | G8  | G9  | G10 | G11 | G12 |     |     |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    """
+    type = 'CPYRAM'
+    #asterType = 'CPYRAM13'
+    #calculixType = 'C3D13'
+
+    def write_bdf(self, size=8, is_double=False):
+        nodes = self.nodeIDs()
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
+        data = [self.eid, self.Pid()] + nodes[:5] + nodes2
+        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
+               '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
+
+    def __init__(self, card=None, data=None, comment=''):
+        SolidElement.__init__(self, card, data)
+
+        if comment:
+            self._comment = comment
+        if card:
+            #: Element ID
+            self.eid = integer(card, 1, 'eid')
+            #: Property ID
+            self.pid = integer(card, 2, 'pid')
+            nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                    integer(card, 7, 'nid5'),
+                    integer_or_blank(card, 8, 'nid6'),
+                    integer_or_blank(card, 9, 'nid7'),
+                    integer_or_blank(card, 10, 'nid8'),
+                    integer_or_blank(card, 11, 'nid9'),
+                    integer_or_blank(card, 12, 'nid10'),
+                    integer_or_blank(card, 13, 'nid11'),
+                    integer_or_blank(card, 14, 'nid12'),
+                    integer_or_blank(card, 15, 'nid13')]
+            assert len(card) <= 16, 'len(CPYRAM13 1card) = %i' % len(card)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = [d if d > 0 else None for d in data[2:]]
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
+        assert len(self.nodes) <= 13, msg
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i, nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
+    def Centroid(self):
+        """
+        .. seealso:: CPYRAM5.Centroid
+        """
+        (n1, n2, n3, n4, n5,
+         n6, n7, n8, n9, n10,
+         n11, n12, n13) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        c = (c1 + n5) / 2.
+        return c
+
+    def Volume(self):
+        """
+        .. seealso:: CPYRAM5.Volume
+        """
+        (n1, n2, n3, n4, n5,
+         n6, n7, n8, n9, n10,
+         n11, n12, n13) = self.nodePositions()
+        A1, c1 = area_centroid(n1, n2, n3, n4)
+        V = A1 / 2. * norm(c1 - n5)
+        return abs(V)
+
+    def nodeIDs(self):
+        return self._nodeIDs(allowEmptyNodes=True)
+
+
 class CTETRA4(SolidElement):
     """
-    ::
-
-      CTETRA EID PID G1 G2 G3 G4
+    +--------+-----+-----+----+----+----+----+
+    | CTETRA | EID | PID | G1 | G2 | G3 | G4 |
+    +--------+-----+-----+----+----+----+----+
     """
     type = 'CTETRA'
     asterType = 'TETRA4'
     calculixType = 'C3D4'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes
         msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
@@ -688,7 +868,7 @@ class CTETRA4(SolidElement):
             self.pid = data[1]
             nids = data[2:]
             assert len(data) == 6, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids)
+        self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
     def cross_reference(self, model):
@@ -727,7 +907,7 @@ class CTETRA4(SolidElement):
         return nids
 
     def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
-        n1, n2, n3 = getFaceNodes(nid_opposite)
+        n1, n2, n3 = self.getFaceNodes(nid_opposite)
         faceNodeIDs = [n1, n2, n3]
         p1 = self.nodes[n1].Position()
         p2 = self.nodes[n2].Position()
@@ -740,97 +920,29 @@ class CTETRA4(SolidElement):
         centroid = (p1 + p2 + p3) / 3.
         return A, centroid, normal / n
 
-    def Stiffness(self):
-        ng = 1
-        (P, W) = gauss(1)
-
-        K = zeros((6, 6))
-        for i in range(ng):
-            for j in range(ng):
-                for k in range(ng):
-                    p = [P[i], P[j], P[k]]
-                    w = W[i] * W[j] * W[k]
-                    pz = self.zeta(p)
-                    J = self.Jacobian(p)
-                    #N = self.N()
-                    #B = self.B()
-                    K += w * J * self.BtEB(pz)
-                    #K += w*J*B.T*E*B
-        return K
-
-    def BtEB(self, pz):
-        #E = self.Dsolid()
-
-        #o = E * e
-        #e = [exx,eyy,ezz,2exy,2eyz,2ezx]
-        #C = array([[Bxi*E11+Byi*E14+Bzi*E16, Byi*E12+Bxi*E14+Bzi*E15, Bzi*E13+Byi*E15+Bxi*E16]
-        #           [Bxi*E12+Byi*E24+Bzi*E26, Byi*E22+Bxi*E24+Bzi*E25, Bzi*E23+Byi*E25+Bxi*E26]
-        #           [Bxi*E13+Byi*E34+Bzi*E36, Byi*E23+Bxi*E34+Bzi*E35, Bzi*E33+Byi*E35+Bxi*E36]
-        #           [Bxi*E14+Byi*E44+Bzi*E46, Byi*E24+Bxi*E44+Bzi*E45, Bzi*E34+Byi*E45+Bxi*E46]
-        #           [Bxi*E15+Byi*E45+Bzi*E56, Byi*E25+Bxi*E45+Bzi*E55, Bzi*E35+Byi*E55+Bxi*E56]
-        #           [Bxi*E16+Byi*E46+Bzi*E16, Byi*E26+Bxi*E46+Bzi*E56, Bzi*E36+Byi*E56+Bxi*E66]])
-
-        #Qij = array([[Bxj*C11+ Byj*C41+Bzj+Bzj*C61, Bxj*C12+Byj*C42+Bzj*C62, Bxj*C13+Byj*C43+Bzj*C63],
-        #             [Byj*C21+ Bxj*C41+Bzj+Bzj*C51, Byj*C22+Bxj*C42+Bzj*C52, Byj*C23+Bxj*C43+Bzj*C53],
-        #             [Bzj*C31+ Byj*C51+Bzj+Bxj*C61, Bzj*C32+Byj*C52+Bxj*C62, Bzj*C33+Byj*C53+Bxj*C63]])
-        Qij = None
-        return Qij
-
-    def zeta(self, p):
-        p2 = array([1, p[0], p[1], p[2]])
-        J = self.Jacobian()
-        zeta = solve(J, p2)
-        return zeta
-
-    def Jacobian(self):
-        r"""
-        .. math::
-              [J] = \left[
-              \begin{array}{ccc}
-                1   & 1   & 1   \\
-                x_1 & y_1 & z_1 \\
-                x_2 & y_2 & z_2 \\
-                x_3 & y_3 & z_3 \\
-                x_4 & y_4 & z_4 \\
-              \end{array} \right]
-
-         .. warning:: this has got to be wrong
-        """
-        m = matrix((6, 6), 'd')
-        (n1, n2, n3, n4) = self.nodePositions()
-        m[0][0] = m[0][1] = m[0][2] = m[0][2] = 1.
-        m[1][0] = n1[0]
-        m[2][0] = n1[1]
-        m[3][0] = n1[2]
-        m[1][1] = n2[0]
-        m[2][1] = n2[1]
-        m[3][1] = n2[2]
-        m[1][2] = n3[0]
-        m[2][2] = n3[1]
-        m[3][2] = n3[2]
-        m[1][3] = n4[0]
-        m[2][3] = n4[1]
-        m[3][3] = n4[2]
-        return m
-
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
 
 class CTETRA10(SolidElement):
     """
-    ::
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    | CTETRA | EID | PID | G1  | G2  | G3  | G4 | G5  | G6  |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    |        | G7  |  G8 | G9  | G10 |     |    |     |     |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
 
-      CTETRA EID PID G1 G2  G3 G4 G5 G6
-             G7   G8 G9 G10
-      CTETRA   1       1       239     229     516     99      335     103
-               265     334     101     102
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    | CTETRA | 1   | 1   | 239 | 229 | 516 | 99 | 335 | 103 |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
+    |        | 265 | 334 | 101 | 102 |     |    |     |     |
+    +--------+-----+-----+-----+-----+-----+----+-----+-----+
     """
     type = 'CTETRA'
     asterType = 'TETRA10'
     calculixType = 'C3D10'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
 
@@ -864,7 +976,7 @@ class CTETRA10(SolidElement):
             self.pid = data[1]
             nids = [d if d > 0 else None for d in data[2:]]
             assert len(data) == 12, 'len(data)=%s data=%s' % (len(data), data)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) <= 10
 
     def cross_reference(self, model):

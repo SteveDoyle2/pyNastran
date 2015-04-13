@@ -80,16 +80,12 @@ class ScalarObject(BaseScalarObject):
             return []
 
         for name in self.data_code['dataNames']:
-            #try:
-                if hasattr(self, name + 's'):
-                    vals = getattr(self, name + 's')
-                    name = name + 's'
-                else:
-                    vals = getattr(self, name)
-                #msg.append('%s = %s\n' % (name, list_print(vals)))
-                msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])) )
-            #except AttributeError:  # weird case...
-                #pass
+            if hasattr(self, name + 's'):
+                vals = getattr(self, name + 's')
+                name = name + 's'
+            else:
+                vals = getattr(self, name)
+            msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])) )
         #print("***dataNames =", self.dataNames)
         return msg
 

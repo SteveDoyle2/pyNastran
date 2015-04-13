@@ -85,22 +85,23 @@ class ConstraintObject(object):
          not really done yet, idea needs to be integrated/separated from
          cross-referencing.  no point in doing it twice
         """
+        raise NotImplementedError()
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
         for key, add_constraint in sorted(iteritems(self.add_constraints)):
             constraints = []
-            for i, spcID in enumerate(add_constraint.sets):
+            for i, spc_id in enumerate(add_constraint.sets):
                 constraintIDs = add_constraint.getConstraintIDs()
-                constraints[spcID] = constraintIDs
+                constraints[spc_id] = constraintIDs
                 constraints += constraintIDs
-                #constraints.append(spcID)
-                constraints2[key] = [spcID]
+                #constraints.append(spc_id)
+                constraints2[key] = [spc_id]
 
             constraints2[key] = constraints
 
         # not needed b/c there are no MPCADD/SPCADD
-        #for key,constraints in sorted(iteritems(self.constraints)):
+        #for key, constraints in sorted(iteritems(self.constraints)):
             #for constraint in constraints:
                 #conID = constraint.ConID()
                 #constraints2[conID]
@@ -205,7 +206,7 @@ class SUPORT1(Constraint):
             fields += [ID, c]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -254,7 +255,7 @@ class SUPORT(Constraint):
             fields += [ID, c]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -331,7 +332,7 @@ class MPC(Constraint):
                 fields.append(None)
         return fields
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         if size == 8:
             msg = 'MPC     %8s' % self.conid
             for (i, grid, component, enforced) in zip(count(), self.gids,
@@ -342,7 +343,7 @@ class MPC(Constraint):
         elif size == 16:
             # TODO: we're sure MPCs support double precision?
             msg = 'MPC*    %16s' % self.conid
-            if double:
+            if is_double:
                 for (i, grid, component, enforced) in zip(count(), self.gids,
                      self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
@@ -356,9 +357,13 @@ class MPC(Constraint):
                         msg += '\n%8s%16s' % ('*', '')
         return self.comment() + msg.rstrip() + '\n'
 
-    def write_bdf(self, size, card_writer):
-        card = self.raw_fields()
-        return self.comment() + card_writer(card)
+    #def write_bdf(self, size=8, is_double=False):
+        #card = self.raw_fields()
+        #if size == 8:
+            #return self.comment() + print_card_8(card)
+        #if is_double:
+            #return self.comment() + print_card_double(card)
+        #return self.comment() + print_card_16(card)
 
 
 class SPC(Constraint):
@@ -423,11 +428,11 @@ class SPC(Constraint):
     def raw_fields(self):
         fields = ['SPC', self.conid]
         for (gid, constraint, enforced) in zip(self.gids, self.constraints,
-                self.enforced):
+                                               self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -455,11 +460,11 @@ class SPCD(SPC):
     def raw_fields(self):
         fields = ['SPCD', self.conid]
         for (gid, constraint, enforced) in zip(self.gids, self.constraints,
-                self.enforced):
+                                               self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -506,7 +511,7 @@ class SPCAX(Constraint):
         fields = ['SPCAX', self.conid, self.rid, self.hid, self.c, self.d]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -565,7 +570,7 @@ class SPC1(Constraint):
         fields = ['SPC1', self.conid, self.constraints] + nodes
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -647,7 +652,7 @@ class SPCADD(ConstraintADD):
         return fields
         #return self._reprSpcMpcAdd(fields)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -685,6 +690,6 @@ class MPCADD(ConstraintADD):
         return fields
         #return self._reprSpcMpcAdd(fields)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)

@@ -106,9 +106,3 @@ def print_card_double(fields, wipe_fields=True):
     if not out.endswith('\n'):
         out += '\n'
     return out
-
-
-if __name__ == '__main__':  # pragma: no cover
-    field = print_scientific_double(-55.1040257079)
-    field = print_scientific_double(-55.1040257078872)
-    field = print_scientific_double(-3.76948125497534)

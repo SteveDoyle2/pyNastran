@@ -373,13 +373,13 @@ class DelauneyReader(object):
         mid = 1 # material id
         for nid,node in nodes.items():
             card = ['GRID', ID, 0, node[0], node[1], node[2]]
-            msg += self.oneCard(card)
+            msg += print_card_8(card)
         outfile.write(msg)
 
         msg = ''
         for i,tet in enumerate(tets):
             nodes = tet.nodes
-            msg += self.oneCard(['CTETRA', tet.ID, mid, nodes[0], nodes[1], nodes[2], nodes[3]])
+            msg += print_card_8(['CTETRA', tet.ID, mid, nodes[0], nodes[1], nodes[2], nodes[3]])
             if i % 1000 == 0:
                 outfile.write(msg)
                 msg = ''

@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
 class ComplexBushStress(StressObject):
@@ -32,7 +32,7 @@ class ComplexBushStress(StressObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            self.add_new_eid = self.add_new_eid_sort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)

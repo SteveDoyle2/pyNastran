@@ -612,9 +612,11 @@ class PCOMP(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PCOMPG(CompositeShellProperty):
@@ -752,9 +754,11 @@ class PCOMPG(CompositeShellProperty):
             list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PLPLANE(ShellProperty):
@@ -808,7 +812,7 @@ class PLPLANE(ShellProperty):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -905,9 +909,11 @@ class PSHEAR(ShellProperty):
                   self.f1, self.f2]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PSHELL(ShellProperty):
@@ -938,6 +944,7 @@ class PSHELL(ShellProperty):
             self.t = double(card, 3, 't')
 
             #: Material identification number for bending
+            #: -1 for plane strin
             self.mid2 = integer_or_blank(card, 4, 'mid2')
             #: Scales the moment of interia of the element based on the
             #: moment of interia for a plate
@@ -1002,7 +1009,12 @@ class PSHELL(ShellProperty):
         if xref:
             assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
 
-            for mid in mids:
+            for i, mid in enumerate(mids):
+                if i == 1: # mid2
+                    if isinstance(mid, int):
+                        assert mid == -1, mid
+                        continue
+
                 assert isinstance(mid, Material), 'mid=%r' % mid
                 assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
                 if mid.type == 'MAT1':
@@ -1154,8 +1166,8 @@ class PSHELL(ShellProperty):
                   twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        if size == 16:
-            return self.comment() + print_card_16(card)
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

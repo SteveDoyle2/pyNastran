@@ -62,7 +62,7 @@ class CFAST(Element):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -171,7 +171,7 @@ class CGAP(Element):
                   [self.Cid()])
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -220,7 +220,7 @@ class CRAC2D(CrackElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 18
 
     def _verify(self, xref=True):
@@ -241,7 +241,7 @@ class CRAC2D(CrackElement):
         list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -269,7 +269,7 @@ class CRAC3D(CrackElement):
             self.eid = data[0]
             self.pid = data[1]
             nids = data[2:]
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 64
 
     def Eid(self):
@@ -290,6 +290,6 @@ class CRAC3D(CrackElement):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

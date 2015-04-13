@@ -7,7 +7,6 @@ from traceback import print_exc
 import pyNastran
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError
 
 try:
@@ -223,7 +222,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         if make_geom:
             op2 = OP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
         else:
-            op2 = OP2_Scalar(debug=debug, debug_file=debug_file)
+            op2 = OP2(debug=debug, debug_file=debug_file)
 
     op2.set_subcases(iSubcases)
     op2.remove_results(exclude)
@@ -239,7 +238,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
     try:
         #op2.read_bdf(op2.bdfFileName, includeDir=None, xref=False)
-        op2.read_op2(op2_filename)
+        op2.read_op2(op2_filename, vectorized=is_vector)
         print("---stats for %s---" % op2_filename)
         #op2.get_op2_stats()
         print(op2.get_op2_stats())

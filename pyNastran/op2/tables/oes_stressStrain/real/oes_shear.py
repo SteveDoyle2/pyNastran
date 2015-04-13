@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from six.moves import zip, range
-from numpy import zeros
+from numpy import zeros, searchsorted
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import _eigenvalue_header, get_key0
@@ -34,10 +34,6 @@ class RealShearArray(OES_Object):
 
     def get_headers(self):
         raise NotImplementedError()
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -235,8 +231,8 @@ class RealShearStress(StressObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -332,8 +328,8 @@ class RealShearStrain(StrainObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -395,7 +391,7 @@ class RealShearStrain(StrainObject):
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
-        self.maxShearl[eid] = axial
+        self.maxShear[eid] = axial
         self.avgShear[eid] = SMa
         self.margin[eid] = torsion
 

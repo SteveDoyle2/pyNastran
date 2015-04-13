@@ -112,8 +112,8 @@ class CREEP(Material):
 
     def raw_fields(self):
         list_fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form,
-                  self.tidkp, self.tidcp, self.tidcs, self.thresh, self.Type,
-                  self.a, self.b, self.c, self.d, self.e, self.f, self.g]
+                       self.tidkp, self.tidcp, self.tidcs, self.thresh, self.Type,
+                       self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return list_fields
 
     def repr_fields(self):
@@ -131,13 +131,15 @@ class CREEP(Material):
         exp = set_blank_if_default(self.exp, 4.1e-9)
         T0 = set_blank_if_default(self.T0, 0.0)
         list_fields = ['CREEP', self.Mid(), T0, exp, self.form, self.tidkp,
-                  self.tidcp, self.tidcs, thresh, self.Type,
-                  self.a, self.b, self.c, self.d, self.e, self.f, self.g]
+                       self.tidcp, self.tidcs, thresh, self.Type,
+                       self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class MAT1(IsotropicMaterial):
@@ -320,7 +322,7 @@ class MAT1(IsotropicMaterial):
 
     def raw_fields(self):
         list_fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
-                  self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
+                       self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
         return list_fields
 
     def getG_default(self):
@@ -360,10 +362,10 @@ class MAT1(IsotropicMaterial):
         Mcsid = set_blank_if_default(self.Mcsid, 0)
 
         list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge,
-                  St, Sc, Ss, Mcsid]
+                       St, Sc, Ss, Mcsid]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -388,7 +390,7 @@ class MAT2(AnisotropicMaterial):
     type = 'MAT2'
     _field_map = {
         1: 'mid', 2:'G11', 3:'G12', 4:'G13', 5: 'G22', 6:'G23', 7:'G33',
-        8:'rho', 9:'a1', 10:'a2', 11:'a3', 12:'TRef',13:'ge',
+        8:'rho', 9:'a1', 10:'a2', 11:'a3', 12:'TRef', 13:'ge',
         14: 'St', 15:'Sc', 16:'Ss', 17:'Mcsid',
     }
 
@@ -502,46 +504,46 @@ class MAT2(AnisotropicMaterial):
         #D[6,6] = G33
         return D
 
-    def writeCalculix(self):
+    def write_calculix(self):
         raise NotImplementedError(self.type)
-        msg = '*ELASTIC,TYPE=ORTHO\n'
-        temperature = 0.  # default value - same properties for all values
-        msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
-        D = Dplate
-        D1111 = D[0, 0]
-        D1122 = 0.
-        D2222 = D[1, 1]
-        D1133 = D[0, 2]
-        D2233 = D[1, 2]
-        D3333 = D[2, 2]
-        D1212 = D[0, 1]
-        D1313 = D[0, 2]
-        msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' % (
-            D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
+        #msg = '*ELASTIC,TYPE=ORTHO\n'
+        #temperature = 0.  # default value - same properties for all values
+        #msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
+        #D = Dplate
+        #D1111 = D[0, 0]
+        #D1122 = 0.
+        #D2222 = D[1, 1]
+        #D1133 = D[0, 2]
+        #D2233 = D[1, 2]
+        #D3333 = D[2, 2]
+        #D1212 = D[0, 1]
+        #D1313 = D[0, 2]
+        #msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' % (
+            #D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
 
-        #G23
-        temperature = self.TRef
-        msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (
-            self.mid)
-        msg += '** E1,E2,E3,NU12,NU13,NU23,G12,G13\n'
-        msg += '** G23,TEMPERATURE\n'
-        msg += '%s,%s,%s,%s,%s,%s,%s,%s\n' % (
-            e1, e2, e3, nu12, nu13, nu23, g12, g13)
-        msg += '%s,%s\n' % (G23, temperature)
-        if self.rho > 0.:
-            msg += '*DENSITY\n'
-            msg += '%s\n' % (self.rho)
-        if self.a > 0:
-            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.TRef)
-            msg += '** ALPHA,ALPHA*TREF\n'
-            msg += '%s,%s\n\n' % (self.a, self.a * self.TRef)
-        return msg
+        ##G23
+        #temperature = self.TRef
+        #msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (
+            #self.mid)
+        #msg += '** E1,E2,E3,NU12,NU13,NU23,G12,G13\n'
+        #msg += '** G23,TEMPERATURE\n'
+        #msg += '%s,%s,%s,%s,%s,%s,%s,%s\n' % (
+            #e1, e2, e3, nu12, nu13, nu23, g12, g13)
+        #msg += '%s,%s\n' % (G23, temperature)
+        #if self.rho > 0.:
+            #msg += '*DENSITY\n'
+            #msg += '%s\n' % (self.rho)
+        #if self.a > 0:
+            #msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.TRef)
+            #msg += '** ALPHA,ALPHA*TREF\n'
+            #msg += '%s,%s\n\n' % (self.a, self.a * self.TRef)
+        #return msg
 
     def raw_fields(self):
         list_fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22,
-                  self.G23, self.G33, self.rho, self.a1, self.a2, self.a3,
-                  self.TRef, self.ge, self.St, self.Sc, self.Ss,
-                  self.Mcsid]
+                       self.G23, self.G33, self.rho, self.a1, self.a2, self.a3,
+                       self.TRef, self.ge, self.St, self.Sc, self.Ss,
+                       self.Mcsid]
         return list_fields
 
     def repr_fields(self):
@@ -565,13 +567,15 @@ class MAT2(AnisotropicMaterial):
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MAT2', self.mid, G11, G12, G13, G22, G23, G33, rho,
-                  self.a1, self.a2, self.a3, TRef, ge,
-                  self.St, self.Sc, self.Ss, self.Mcsid]
+                       self.a1, self.a2, self.a3, TRef, ge,
+                       self.St, self.Sc, self.Ss, self.Mcsid]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class MAT3(OrthotropicMaterial):
@@ -590,7 +594,7 @@ class MAT3(OrthotropicMaterial):
     type = 'MAT3'
     _field_map = {
         1: 'mid', 2:'ex', 3:'eth', 4:'ez', 5: 'nuxth', 6:'nuthz', 7:'nuzx',
-        8:'rho', 11:'gzx', 12:'ax', 13:'ath', 14:'az',15:'TRef',
+        8:'rho', 11:'gzx', 12:'ax', 13:'ath', 14:'az', 15:'TRef',
         16: 'ge',
     }
 
@@ -658,8 +662,8 @@ class MAT3(OrthotropicMaterial):
 
     def raw_fields(self):
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
-                  self.nuthz, self.nuzx, self.rho, None, None, self.gzx,
-                  self.ax, self.ath, self.az, self.TRef, self.ge]
+                       self.nuthz, self.nuzx, self.rho, None, None, self.gzx,
+                       self.ax, self.ath, self.az, self.TRef, self.ge]
         return list_fields
 
     def repr_fields(self):
@@ -680,13 +684,15 @@ class MAT3(OrthotropicMaterial):
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
-                  self.nuthz, self.nuzx, rho, None, None, self.gzx,
-                  ax, ath, az, TRef, ge]
+                       self.nuthz, self.nuzx, rho, None, None, self.gzx,
+                       ax, ath, az, TRef, ge]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class MAT4(ThermalMaterial):
@@ -751,8 +757,8 @@ class MAT4(ThermalMaterial):
 
     def raw_fields(self):
         list_fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu,
-                  self.hgen, self.refEnthalpy, self.tch, self.tdelta,
-                  self.qlat]
+                       self.hgen, self.refEnthalpy, self.tch, self.tdelta,
+                       self.qlat]
         return list_fields
 
     def repr_fields(self):
@@ -770,12 +776,14 @@ class MAT4(ThermalMaterial):
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
         list_fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen,
-                  self.refEnthalpy, self.tch, self.tdelta, self.qlat]
+                       self.refEnthalpy, self.tch, self.tdelta, self.qlat]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
@@ -846,7 +854,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def raw_fields(self):
         list_fields = ['MAT5', self.mid, self.kxx, self.kxy, self.kxz, self.kyy,
-                  self.kyz, self.kzz, self.cp, self.rho, self.hgen]
+                       self.kyz, self.kzz, self.cp, self.rho, self.hgen]
         return list_fields
 
     def repr_fields(self):
@@ -871,12 +879,14 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
         list_fields = ['MAT5', self.mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho,
-                  hgen]
+                       hgen]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class MAT8(OrthotropicMaterial):
@@ -1047,15 +1057,14 @@ class MAT8(OrthotropicMaterial):
         strn = set_blank_if_default(self.strn, 0.0)
 
         list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, G12, G1z,
-                  G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
+                       G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 class MAT9(AnisotropicMaterial):
     """
@@ -1180,10 +1189,10 @@ class MAT9(AnisotropicMaterial):
 
     def raw_fields(self):
         list_fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
-                   self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
-                   self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
-                   self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]
-                  + self.A + [self.TRef, self.ge])
+                        self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
+                        self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
+                        self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]
+                       + self.A + [self.TRef, self.ge])
         return list_fields
 
     def repr_fields(self):
@@ -1206,15 +1215,17 @@ class MAT9(AnisotropicMaterial):
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
-                   self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
-                   self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
-                   self.G45, self.G46, self.G55, self.G56, self.G66, rho]
-                  + A + [TRef, ge])
+                        self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
+                        self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
+                        self.G45, self.G46, self.G55, self.G56, self.G66, rho]
+                       + A + [TRef, ge])
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class MAT10(Material):
@@ -1318,12 +1329,11 @@ class MAT10(Material):
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class MAT11(Material):
@@ -1402,8 +1412,8 @@ class MAT11(Material):
 
     def raw_fields(self):
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
-                  self.nu13, self.g12, self.g13, self.g23, self.rho, self.a1,
-                  self.a2, self.a3, self.TRef, self.ge]
+                       self.nu13, self.nu23, self.g12, self.g13, self.g23, self.rho, self.a1,
+                       self.a2, self.a3, self.TRef, self.ge]
         return list_fields
 
     def repr_fields(self):
@@ -1426,11 +1436,11 @@ class MAT11(Material):
         ge = set_blank_if_default(self.ge, 0.0)
 
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
-                  self.nu13, self.g12, self.g13, self.g23, rho, a1,
-                  a2, a3, TRef, ge]
+                       self.nu13, self.nu23, self.g12, self.g13, self.g23, rho, a1,
+                       a2, a3, TRef, ge]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1553,17 +1563,17 @@ class MATHP(HyperelasticMaterial):
 
     def raw_fields(self):
         list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
-                  self.av, self.TRef, self.ge,
-                  None, self.na, self.nd, None, None, None, None, None,
-                  self.a20, self.a11, self.a02, self.d2, None, None, None,
-                  None,
-                  self.a30, self.a21, self.a12, self.a03, self.d3, None,
-                  None, None,
-                  self.a40, self.a31, self.a22, self.a13, self.a04, self.d4,
-                  None, None,
-                  self.a50, self.a41, self.a32, self.a23, self.a14, self.a05,
-                  self.d5, None,
-                  self.tab1, self.tab2, self.tab4, None, None, None, self.tabd]
+                       self.av, self.TRef, self.ge,
+                       None, self.na, self.nd, None, None, None, None, None,
+                       self.a20, self.a11, self.a02, self.d2, None, None, None,
+                       None,
+                       self.a30, self.a21, self.a12, self.a03, self.d3, None,
+                       None, None,
+                       self.a40, self.a31, self.a22, self.a13, self.a04, self.d4,
+                       None, None,
+                       self.a50, self.a41, self.a32, self.a23, self.a14, self.a05,
+                       self.d5, None,
+                       self.tab1, self.tab2, self.tab4, None, None, None, self.tabd]
         return list_fields
 
     def repr_fields(self):
@@ -1614,18 +1624,20 @@ class MATHP(HyperelasticMaterial):
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, TRef, ge,
-                  None, na, nd, None, None, None, None, None,
-                  a20, a11, a02, d2, None, None, None, None,
-                  a30, a21, a12, a03, d3, None, None, None,
-                  a40, a31, a22, a13, a04, d4, None, None,
-                  a50, a41, a32, a23, a14, a05, d5, None,
-                  self.tab1, self.tab2, self.tab3, self.tab4,
-                  None, None, None, self.tabd]
+                       None, na, nd, None, None, None, None, None,
+                       a20, a11, a02, d2, None, None, None, None,
+                       a30, a21, a12, a03, d3, None, None, None,
+                       a40, a31, a22, a13, a04, d4, None, None,
+                       a50, a41, a32, a23, a14, a05, d5, None,
+                       self.tab1, self.tab2, self.tab3, self.tab4,
+                       None, None, None, self.tabd]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class EQUIV(Material):

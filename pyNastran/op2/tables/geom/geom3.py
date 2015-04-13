@@ -115,7 +115,8 @@ class GEOM3(object):
         s = Struct(b'iif4i')
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
-            (sid, g, f, n1, n2, n3, n4) = s.unpack(data[n:n + 28])
+            out = s.unpack(data[n:n + 28])
+            (sid, g, f, n1, n2, n3, n4) = out
             self.binary_debug.write('  FORCE2=%s\n' % str(out))
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
             self.add_load(load)

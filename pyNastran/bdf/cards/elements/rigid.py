@@ -17,13 +17,13 @@ from six.moves import zip, range
 import sys
 from itertools import count
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, fields, string, interpret_value)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.utils import build_table_lines
 
 
@@ -95,18 +95,20 @@ class RBAR(RigidElement):
 
     def raw_fields(self):
         list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna,
-                  self.cnb, self.cma, self.cmb, self.alpha]
+                       self.cnb, self.cma, self.cmb, self.alpha]
         return list_fields
 
     def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
         list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb,
-                  self.cma, self.cmb, alpha]
+                       self.cma, self.cmb, alpha]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RBAR1(RigidElement):
@@ -145,9 +147,11 @@ class RBAR1(RigidElement):
         list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RBE1(RigidElement):  # maybe not done, needs testing
@@ -256,14 +260,16 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RBE2(RigidElement):
     type = 'RBE2'
-    _field_map = {1: 'eid', 2:'gn',3:'cm'}
+    _field_map = {1: 'eid', 2:'gn', 3:'cm'}
 
     def _update_field_helper(self, n, value):
         """
@@ -275,7 +281,6 @@ class RBE2(RigidElement):
         :param value: the value for the appropriate field
         :type field:  varies
         """
-        list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         if n > 3 and n <= 3 + len(self.Gmi):
             self.Gmi[n-4] = value
         elif n == 4 + len(self.Gmi):
@@ -283,6 +288,7 @@ class RBE2(RigidElement):
         else:
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
+
     def __init__(self, card=None, data=None, comment=''):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
@@ -424,7 +430,7 @@ class RBE2(RigidElement):
         list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -589,6 +595,6 @@ class RBE3(RigidElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

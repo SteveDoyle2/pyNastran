@@ -15,6 +15,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, i
     double_string_or_blank, interpret_value)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
 
@@ -32,7 +33,7 @@ class DCONSTR(OptConstraint):
             self.oid = integer(card, 1, 'oid')
             self.rid = integer(card, 2, 'rid')
             self.lid = double_or_blank(card, 3, 'lid', -1e20)
-            self.uid = double_or_blank(card, 4, 'uid',  1e20)
+            self.uid = double_or_blank(card, 4, 'uid', 1e20)
             self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
             self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
             assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
@@ -57,9 +58,13 @@ class DCONSTR(OptConstraint):
         list_fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DESVAR(OptConstraint):
@@ -92,12 +97,11 @@ class DESVAR(OptConstraint):
                   xub, delx, self.ddval]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class DDVAL(OptConstraint):
@@ -124,9 +128,13 @@ class DDVAL(OptConstraint):
         list_fields = ['DDVAL', self.oid] + self.ddvals
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DOPTPRM(OptConstraint):
@@ -219,9 +227,13 @@ class DOPTPRM(OptConstraint):
             list_fields += [param, val]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DLINK(OptConstraint):
@@ -268,9 +280,13 @@ class DLINK(OptConstraint):
             list_fields += [idv, ci]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DRESP1(OptConstraint):
@@ -300,7 +316,7 @@ class DRESP1(OptConstraint):
         self.atta = integer_double_string_or_blank(card, 6, 'atta')
         self.attb = integer_double_string_or_blank(card, 7, 'attb')
         self.atti = integer_double_string_or_blank(card, 8, 'atti')
-        self.others = [interpret_value(field) for field in card[9:] ]
+        self.others = [interpret_value(field) for field in card[9:]]
         #if self.others:
             #print("self.others = %s" %(self.others))
             #print(str(self))
@@ -308,12 +324,16 @@ class DRESP1(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
-                  self.region, self.atta, self.attb, self.atti] + self.others
+                       self.region, self.atta, self.attb, self.atti] + self.others
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DRESP2(OptConstraint):
@@ -337,7 +357,7 @@ class DRESP2(OptConstraint):
         self.c3 = double_or_blank(card, 8, 'c3') #: .. todo:: or blank?
 
         i = 0
-        fields = [interpret_value(field) for field in card[9:] ]
+        fields = [interpret_value(field) for field in card[9:]]
         key = '$NULL$'  # dummy key
         self.params = {key: []}
         valueList = []
@@ -363,21 +383,21 @@ class DRESP2(OptConstraint):
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
         packLength = {
-             'DESVAR':  [1, 0],
-             'DTABLE':  [1, 0],
-             'DRESP1':  [1, 0],
-             'DNODE':   [1, 1],  # unique entry
-             'DVPREL1': [1, 0],
-             'DVCREL1': [1, 0],
-             'DVMREL1': [1, 0],
-             'DVPREL2': [1, 0],
-             'DVCREL2': [1, 0],
-             'DVMREL2': [1, 0],
-             'DRESP2':  [1, 0],
-             'DESVAR':  [1, 0],
-             'DESVAR':  [1, 0],
-             'DESVAR':  [1, 0],
-             'DESVAR':  [1, 0],
+             'DESVAR' : [1, 0],
+             'DTABLE' : [1, 0],
+             'DRESP1' : [1, 0],
+             'DNODE' : [1, 1],  # unique entry
+             'DVPREL1' : [1, 0],
+             'DVCREL1' : [1, 0],
+             'DVMREL1' : [1, 0],
+             'DVPREL2' : [1, 0],
+             'DVCREL2' : [1, 0],
+             'DVMREL2' : [1, 0],
+             'DRESP2' : [1, 0],
+             'DESVAR' : [1, 0],
+             'DESVAR' : [1, 0],
+             'DESVAR' : [1, 0],
+             'DESVAR' : [1, 0],
         }
         list_fields = []
         for key, valueList in sorted(iteritems(self.params)):
@@ -385,8 +405,7 @@ class DRESP2(OptConstraint):
             try:
                 (i, j) = packLength[key]
             except KeyError:
-                msg = 'INVALID DRESP2 key=|%s| fields=%s ID=%s' % (
-                    key, valueList, self.oid)
+                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, valueList, self.oid)
                 raise KeyError(msg)
             list_fields += build_table_lines(fields2, nStart=i, nEnd=j)
         return list_fields
@@ -407,9 +426,13 @@ class DRESP2(OptConstraint):
         list_fields += self._pack_params()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DSCREEN(OptConstraint):
@@ -424,7 +447,7 @@ class DSCREEN(OptConstraint):
         self.trs = double_or_blank(card, 2, 'trs', -0.5)
         #: Maximum number of constraints to be retained per region per load
         #: case. (Integer > 0; Default = 20)
-        self.nstr = integer(card, 3, 'nstr', 20)
+        self.nstr = integer_or_blank(card, 3, 'nstr', 20)
         assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
 
     def raw_fields(self):
@@ -437,9 +460,13 @@ class DSCREEN(OptConstraint):
         list_fields = ['DSCREEN', self.rType, trs, nstr]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DVMREL1(OptConstraint):  # similar to DVPREL1
@@ -469,7 +496,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = [interpret_value(field) for field in card[9:] ]
+        endFields = [interpret_value(field) for field in card[9:]]
         #print "endFields = ",endFields
         nfields = len(endFields) - 1
         if nfields % 2 == 1:
@@ -497,7 +524,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def raw_fields(self):
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
-                  self.mpName, self.mpMin, self.mpMax, self.c0, None]
+                       self.mpName, self.mpMin, self.mpMax, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -507,15 +534,19 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         mpMax = set_blank_if_default(self.mpMax, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
-                  self.mpName, self.mpMin, mpMax, c0, None]
+                       self.mpName, self.mpMin, mpMax, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DVPREL1(OptConstraint):  # similar to DVMREL1
@@ -543,7 +574,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
         self.dvids = []
         self.coeffs = []
-        endFields = [interpret_value(field) for field in card[9:] ]
+        endFields = [interpret_value(field) for field in card[9:]]
 
         nfields = len(endFields) - 1
         if nfields % 2 == 1:
@@ -570,7 +601,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
-                  self.pNameFid, self.pMin, self.pMax, self.c0, None]
+                       self.pNameFid, self.pMin, self.pMax, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -580,13 +611,13 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         pMax = set_blank_if_default(self.pMax, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
-                  self.pNameFid, self.pMin, pMax, c0, None]
+                       self.pNameFid, self.pMin, pMax, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -697,7 +728,7 @@ class DVPREL2(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
-                  self.pNameFid, self.pMin, self.pMax, self.eqID, None]
+                       self.pNameFid, self.pMin, self.pMax, self.eqID, None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
             list_fields += build_table_lines(fields2, nStart=1, nEnd=0)
@@ -712,6 +743,8 @@ class DVPREL2(OptConstraint):
         """
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

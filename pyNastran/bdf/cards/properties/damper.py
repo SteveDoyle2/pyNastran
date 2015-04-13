@@ -12,7 +12,8 @@ All damper properties are DamperProperty and Property objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
@@ -65,9 +66,11 @@ class PDAMP(DamperProperty):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PDAMP5(DamperProperty):
@@ -120,9 +123,11 @@ class PDAMP5(DamperProperty):
         list_fields = ['PDAMP5', self.pid, self.Mid(), self.b]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PDAMPT(DamperProperty):
@@ -167,9 +172,11 @@ class PDAMPT(DamperProperty):
         list_fields = ['PDAMPT', self.pid, self.Tbid()]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PVISC(DamperProperty):
@@ -207,6 +214,8 @@ class PVISC(DamperProperty):
         list_fields = ['PVISC', self.pid, self.ce, cr]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

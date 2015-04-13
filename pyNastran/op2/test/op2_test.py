@@ -8,7 +8,7 @@ from pyNastran.utils.dev import get_files_of_type
 pkg_path = pyNastran.__path__[0]
 
 def parse_skipped_cards(fname):
-    f = open(fname,'r')
+    f = open(fname, 'r')
     lines = f.readlines()
     f.close()
 

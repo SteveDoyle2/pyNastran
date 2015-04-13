@@ -105,7 +105,7 @@ class CELAS1(SpringElement):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
 
     def nodeIDs(self):
@@ -154,56 +154,7 @@ class CELAS1(SpringElement):
                   self.c1, nodes[1], self.c2]
         return list_fields
 
-    def Stiffness(self, model, node_ids, index0s, fnorm):
-        ki = self.K()
-        k = ki * array([[1, -1,],
-                        [-1, 1]])
-        Lambda = self.Lambda(model)
-        K = dot(dot(transpose(Lambda), k), Lambda)
-
-        c1 = self.c1
-        c2 = self.c2
-        n1, n2 = node_ids
-        delta1 = 0 if c1 in [1, 2, 3] else 3
-        delta2 = 0 if c2 in [1, 2, 3] else 3
-
-        nIJV = [
-            (n1, 1 + delta1), (n1, 2 + delta1), (n1, 3 + delta1),
-            (n2, 1 + delta2), (n2, 2 + delta2), (n2, 3 + delta2),
-        ]
-        dofs = nIJV
-        return (K, dofs, nIJV)
-
-    def displacement_stress(self, model, q, dofs, is3D=False):
-        (n1, n2) = self.nodeIDs()
-        Lambda = self.Lambda(model, debug=False)
-
-        n11 = dofs[(n1, 1)]
-        n21 = dofs[(n2, 1)]
-
-        n12 = dofs[(n1, 2)]
-        n22 = dofs[(n2, 2)]
-
-        n13 = dofs[(n1, 3)]
-        n23 = dofs[(n2, 3)]
-
-        q_axial = array([
-            q[n11], q[n12], q[n13],
-            q[n21], q[n22], q[n23]
-        ])
-        u_axial = dot(array(Lambda), q_axial)
-        du_axial = u_axial[0] - u_axial[1]
-
-        s = self.pid.s
-        ki = self.pid.k
-
-        axial_strain = du_axial * s
-        axial_force = ki * du_axial
-        axial_stress = axial_force * s
-
-        return (axial_strain, axial_stress, axial_force)
-
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -257,7 +208,7 @@ class CELAS2(SpringElement):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
-        self.prepareNodeIDs(nids, allowEmptyNodes=True)
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
     def cross_reference(self, model):
@@ -339,57 +290,7 @@ class CELAS2(SpringElement):
                   nodes[1], self.c2, ge, s]
         return list_fields
 
-
-    def Stiffness(self, model, node_ids, index0s, fnorm):
-        ki = self.k
-        k = ki * array([[1, -1,],
-                        [-1, 1]])
-        Lambda = self.Lambda(model)
-        K = dot(dot(transpose(Lambda), k), Lambda)
-
-        c1 = self.c1
-        c2 = self.c2
-        n1, n2 = node_ids
-        delta1 = 0 if c1 in [1, 2, 3] else 3
-        delta2 = 0 if c2 in [1, 2, 3] else 3
-
-        nIJV = [
-            (n1, 1 + delta1), (n1, 2 + delta1), (n1, 3 + delta1),
-            (n2, 1 + delta2), (n2, 2 + delta2), (n2, 3 + delta2),
-        ]
-        dofs = nIJV
-        return (K, dofs, nIJV)
-
-    def displacement_stress(self, model, q, dofs):
-        (n1, n2) = self.nodeIDs()
-        Lambda = self.Lambda(model, debug=False)
-
-        n11 = dofs[(n1, 1)]
-        n21 = dofs[(n2, 1)]
-
-        n12 = dofs[(n1, 2)]
-        n22 = dofs[(n2, 2)]
-
-        n13 = dofs[(n1, 3)]
-        n23 = dofs[(n2, 3)]
-
-        q_axial = array([
-            q[n11], q[n12], q[n13],
-            q[n21], q[n22], q[n23]
-        ])
-        u_axial = dot(Lambda, q_axial)
-        du_axial = u_axial[0] - u_axial[1]
-
-        s = self.s
-        ki = self.k
-
-        axial_strain = du_axial * s
-        axial_force = ki * du_axial
-        axial_stress = axial_force * s
-
-        return (axial_strain, axial_stress, axial_force)
-
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -442,48 +343,13 @@ class CELAS3(SpringElement):
         list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
         return list_fields
 
-    def Stiffness(self, model, node_ids, index0s, fnorm):
-        ki = self.pid.k
-        k = ki * array([[1, -1,],
-                        [-1, 1]])
-
-        s1, s2 = node_ids
-
-        nIJV = [
-            (s1, 0),
-            (s2, 0),
-        ]
-        dofs = nIJV
-        return (K, dofs, nIJV)
-
-    def displacement_stress(self, model, q, dofs):
-        (n1, n2) = self.nodeIDs()
-
-        #print("**dofs =", dofs)
-        n11 = dofs[(n1, self.c1)]
-        n21 = dofs[(n2, self.c2)]
-
-        u = array([
-            q[n11],
-            q[n21],
-        ])
-        du = u[0] - u[1]
-
-        s = self.s
-        axial_strain = du * s
-
-        ki = self.pid.k
-        axial_force = ki * du
-        axial_stress = axial_force * s
-        return (axial_strain, axial_stress, axial_force)
-
     #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1,0)
         #s2 = set_blank_if_default(self.s2,0)
         #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -537,45 +403,12 @@ class CELAS4(SpringElement):
         list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
         return list_fields
 
-    def Stiffness(self, model, node_ids, index0s, fnorm):
-        ki = self.k
-        k = ki * array([[1, -1,],
-                        [-1, 1]])
-
-        s1, s2 = node_ids
-
-        nIJV = [
-            (s1, 0),
-            (s2, 0),
-        ]
-        dofs = nIJV
-        return (K, dofs, nIJV)
-
-    def displacement_stress(self, model, q, dofs):
-        #print("**dofs =", dofs)
-        n11 = dofs[(self.s1, 0)]
-        n21 = dofs[(self.s2, 0)]
-
-        u = array([
-            q[n11],
-            q[n21],
-        ])
-        du = u[0] - u[1]
-
-        s = 0.0
-        axial_strain = du * s
-
-        ki = self.k
-        axial_force = ki * du
-        axial_stress = axial_force * s
-        return (axial_strain, axial_stress, axial_force)
-
     #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1, 0)
         #s2 = set_blank_if_default(self.s2, 0)
         #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

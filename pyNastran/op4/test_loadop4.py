@@ -25,7 +25,7 @@ for in_file in ['test/mat_b_dn.op4',
             if isinstance(A, ndarray):
                 pass
             else:  # sparse
-                a = a.todense()
+                #a = a.todense()
                 A = A.todense()
 
             if error > 0:

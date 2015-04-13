@@ -24,7 +24,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
+
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
@@ -44,12 +47,13 @@ class Table(BaseCard):
     def parse_fields(self, xy, nrepeated, isData=False):
         self.table = TableObj(xy, nrepeated, isData)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #if size == 8:
-            #return self.comment() + print_card_8(card)
-        #return self.comment() + print_card_16(card)
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class TableObj(object):
@@ -159,7 +163,7 @@ class TABLED1(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -173,7 +177,7 @@ class TABLED1(Table):
 
     def raw_fields(self):
         list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, None,
-                  None, None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def repr_fields(self):
@@ -204,7 +208,7 @@ class TABLED2(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -246,7 +250,7 @@ class TABLED3(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -293,7 +297,7 @@ class TABLED4(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -337,7 +341,7 @@ class TABDMP1(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -377,7 +381,7 @@ class TABLEM1(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -387,7 +391,7 @@ class TABLEM1(Table):
 
     def raw_fields(self):
         list_fields = ['TABLEM1', self.tid, None, None, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
 
@@ -413,7 +417,7 @@ class TABLEM2(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -455,7 +459,7 @@ class TABLEM3(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -467,7 +471,7 @@ class TABLEM3(Table):
 
     def raw_fields(self):
         list_fields = ['TABLEM3', self.tid, self.x1, self.x2, None,
-                  None, None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def repr_fields(self):
@@ -501,7 +505,7 @@ class TABLEM4(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -515,7 +519,7 @@ class TABLEM4(Table):
 
     def raw_fields(self):
         list_fields = ['TABLEM4', self.tid, self.x1, self.x2, self.x3, self.x4,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def repr_fields(self):
@@ -546,7 +550,7 @@ class TABLES1(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -556,7 +560,7 @@ class TABLES1(Table):
 
     def raw_fields(self):
         list_fields = ['TABLES1', self.tid, self.Type, None, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def repr_fields(self):
@@ -585,7 +589,7 @@ class TABLEST(Table):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -595,7 +599,7 @@ class TABLEST(Table):
 
     def raw_fields(self):
         list_fields = ['TABLEST', self.tid, None, None, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def repr_fields(self):
@@ -633,7 +637,7 @@ class TABRND1(RandomTable):
                 x = double(card, n, 'x' + str(i + 1))
                 y = double(card, n + 1, 'y' + str(i + 1))
                 xy += [x, y]
-            ENDT = string(card, nfields, 'ENDT')
+            string(card, nfields, 'ENDT')
             isData = False
         else:
             self.tid = data[0]
@@ -664,7 +668,7 @@ class TABRND1(RandomTable):
         xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
         yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
         list_fields = ['TABRND1', self.tid, xaxis, yaxis, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
 

@@ -1,7 +1,7 @@
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 
 bdf = BDF(debug=False)
 
@@ -63,14 +63,14 @@ class TestMaterials(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        #print(print_card(card))
+        #print(print_card_8(card))
         card = BDFCard(card)
         #print("card =", card)
         #with self.assertRaises(RuntimeError):  # temporary RuntimeError
         card2 = MAT8(card)
 
         fields = card2.raw_fields()
-        msg = print_card(fields)
+        msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 16
         msg = card2.write_bdf(size, 'dummy')
@@ -88,20 +88,20 @@ class TestMaterials(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_mat11_01(self):
-        lines = [  # fails
+        lines = [
             'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.+',
             '+       9000000.3000000.      .1    1.-5    7.-6    8.-6     50.',
         ]
         lines_expected = [
-            'MAT11          1    1.+75000000. 700000.      .1     .137000000.9000000.',
-            '        3000000.      .1  .00001 .000007 .000008     50.'
+            'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.',
+            '        9000000.3000000.      .1  .00001 .000007 .000008     50.'
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = MAT11(card)
 
         fields = card2.raw_fields()
-        msg = print_card(fields)
+        msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 8
         msg = card2.write_bdf(size, 'dummy')
@@ -114,8 +114,8 @@ class TestMaterials(unittest.TestCase):
         #print(msg)
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            msg =  'actual   = %r\n' % actual
-            msg += 'expected = %r' % expected
+            msg =  '\nactual   = %r\n' % actual
+            msg += 'expected =  %r' % expected
             self.assertEqual(actual, expected, msg)
 
 if __name__ == '__main__':  # pragma: no cover

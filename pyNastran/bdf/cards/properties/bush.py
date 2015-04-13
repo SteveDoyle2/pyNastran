@@ -153,12 +153,11 @@ class PBUSH(BushingProperty):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class PBUSH1D(BushingProperty):
@@ -362,12 +361,11 @@ class PBUSH1D(BushingProperty):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class PBUSH2D(BushingProperty):
@@ -382,7 +380,7 @@ class PBUSH2D(BushingProperty):
         else:
             raise NotImplementedError()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         #if size == 8:
             #return self.comment() + print_card_8(card)
@@ -402,9 +400,8 @@ class PBUSHT(BushingProperty):
         else:
             raise NotImplementedError()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

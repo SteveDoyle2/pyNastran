@@ -6,7 +6,7 @@ Links up the various cards in the BDF.
 from __future__ import print_function
 from six import iteritems, itervalues
 import warnings
-#from pyNastran.bdf.cards.constraints import constraintObject2
+import traceback
 
 
 class XrefMesh(object):
@@ -17,7 +17,10 @@ class XrefMesh(object):
         """
         The main BDF class defines all the parameters that are used.
         """
-        pass
+        self._ixref_errors = 0
+        self._nxref_errors = 100
+        self._stop_on_xref_error = True
+        self._stored_xref_errors = []
 
     def cross_reference(self, xref=True, xref_loads=True, xref_constraints=True):
         """
@@ -112,10 +115,15 @@ class XrefMesh(object):
         for elem in itervalues(self.elements):
             try:
                 elem.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Element.\n%s" % str(elem)
-                self.log.error(msg)
-                raise
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((elem, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+                    #msg = "Couldn't cross reference Element.\n%s" % str(elem)
+                    #self.log.error(msg)
+                    #raise
 
     def _cross_reference_masses(self):
         """
@@ -125,18 +133,28 @@ class XrefMesh(object):
         for mass in itervalues(self.masses):
             try:
                 mass.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Mass.\n%s" % str(mass)
-                self.log.error(msg)
-                raise
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((mass, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+                    #msg = "Couldn't cross reference Mass.\n%s" % str(mass)
+                    #self.log.error(msg)
+                    #raise
 
         for prop in itervalues(self.properties_mass):
             try:
                 prop.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference PropertyMass.\n%s" % (str(prop))
-                self.log.error(msg)
-                raise
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((prop, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+                    #msg = "Couldn't cross reference PropertyMass.\n%s" % (str(prop))
+                    #self.log.error(msg)
+                    #raise
 
     def _cross_reference_properties(self):
         """
@@ -145,10 +163,15 @@ class XrefMesh(object):
         for prop in itervalues(self.properties):
             try:
                 prop.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Property.\n%s" % (str(prop))
-                self.log.error(msg)
-                raise
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((prop, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+                    #msg = "Couldn't cross reference Property.\n%s" % (str(prop))
+                    #self.log.error(msg)
+                    #raise
 
     def _cross_reference_materials(self):
         """
@@ -158,10 +181,15 @@ class XrefMesh(object):
         for mat in itervalues(self.materials):  # MAT1
             try:
                 mat.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Material\n%s" % (str(mat))
-                self.log.error(msg)
-                raise
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((mat, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+                    #msg = "Couldn't cross reference Material\n%s" % (str(mat))
+                    #self.log.error(msg)
+                    #raise
 
         # CREEP - depends on MAT1
         data = [self.MATS1, self.MATS3, self.MATS8,
@@ -171,22 +199,58 @@ class XrefMesh(object):
             for mat in itervalues(material_deps):
                 try:
                     mat.cross_reference(self)
-                except:
-                    msg = "Couldn't cross reference Material\n%s" % (str(mat))
-                    self.log.error(msg)
-                    raise
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    self._ixref_errors += 1
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_xref_errors.append((mat, var))
+                    if self._ixref_errors > self._nxref_errors:
+                        self.pop_xref_errors()
+                        #msg = "Couldn't cross reference Material\n%s" % (str(mat))
+                        #self.log.error(msg)
+                        #raise
 
     def _cross_reference_loads(self):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
         for (lid, sid) in iteritems(self.loads):
-            #self.log.debug("lid=%s sid=%s" %(lid,sid))
+            #self.log.debug("lid=%s sid=%s" %(lid, sid))
             for load in sid:
                 try:
                     load.cross_reference(self)
-                except:
-                    self.log.error("lid=%s sid=%s" % (lid, sid))
-                    msg = "Couldn't cross reference Load\n%s" % (str(load))
-                    self.log.error(msg)
-                    raise
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    self._ixref_errors += 1
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_xref_errors.append((load, var))
+                    if self._ixref_errors > self._nxref_errors:
+                        self.pop_xref_errors()
+                        #self.log.error("lid=%s sid=%s" % (lid, sid))
+                        #msg = "Couldn't cross reference Load\n%s" % (str(load))
+                        #self.log.error(msg)
+                        #raise
+
+        for (lid, sid) in iteritems(self.dloads):
+            #self.log.debug("lid=%s sid=%s" %(lid, sid))
+            for load in sid:
+                try:
+                    load.cross_reference(self)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    self._ixref_errors += 1
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_xref_errors.append((load, var))
+                    if self._ixref_errors > self._nxref_errors:
+                        self.pop_xref_errors()
+
+        for (lid, sid) in iteritems(self.dload_entries):
+            #self.log.debug("lid=%s sid=%s" %(lid, sid))
+            for load in sid:
+                try:
+                    load.cross_reference(self)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    self._ixref_errors += 1
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_xref_errors.append((load, var))
+                    if self._ixref_errors > self._nxref_errors:
+                        self.pop_xref_errors()
+
+        self.log.debug("done with xref_loads")

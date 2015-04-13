@@ -360,6 +360,8 @@ class RealSolidStress(StressObject):
                                                      nelements))
         msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz, '
                    'o1, o2, o3, ovmShear\n  ')
+        msg.append('  scode=%s stress_bits=%s is_stress=%s dist=%s vm=%s\n' % (
+            self.s_code, self.stress_bits, self.is_stress(), self.is_fiber_distance(), self.is_von_mises()))
         msg.append('elementTypes: %s\n  ' % ', '.join(set(self.eType.values())))
         msg += self.get_data_code()
         return msg
@@ -390,10 +392,15 @@ class RealSolidStress(StressObject):
                                  Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
                                  Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
-        eMap = {
-            'CTETRA4': 5, 'CPENTA6': 7, 'CHEXA8': 9,
-            'TETRA10': 5, 'PENTA15': 7, 'HEXA20': 9,
-        }   # +1 for the centroid
+        # +1 for the centroid
+        if self.element_type == 39: # CTETRA
+            nnodes = 5
+        elif self.element_type == 67:  # CHEXA
+            nnodes = 9
+        elif self.element_type == 68:  # PENTA
+            nnodes = 7
+        else:
+            raise RuntimeError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
         if self.nonlinear_factor is None:
             ipack = []
             i = 0
@@ -403,8 +410,8 @@ class RealSolidStress(StressObject):
 
                 etype = line[0]
                 eid = int(line[1])
-                nnodes = eMap[etype]
                 self.eType[eid] = etype
+                self.cid[eid] = 0  ## TODO: set this properly
                 self.oxx[eid] = {}
                 self.oyy[eid] = {}
                 self.ozz[eid] = {}
@@ -417,9 +424,9 @@ class RealSolidStress(StressObject):
                 self.ovmShear[eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self._f06_data[n]
-                    (blank, blank, y, oyy, tyz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
-                    (blank, blank, z, ozz, tzx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
+                    (blank, node_id, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self._f06_data[n]
+                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
+                    (blank, blank, z, ozz, xz, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
                     if node_id.strip() == 'CENTER':
                         node_id = 0
                     else:
@@ -490,7 +497,6 @@ class RealSolidStress(StressObject):
                     self.o3[dt][eid][node_id] = float(o3)
                     self.ovmShear[dt][eid][node_id] = float(ovmShear)
                     n += 3
-        #del self.data
 
     def delete_transient(self, dt):
         del self.oxx[dt]
@@ -838,6 +844,8 @@ class RealSolidStrain(StrainObject):
         msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz, '
                    'e1, e2, e3, evmShear\n')
         msg.append('  elementTypes: %s\n  ' % ', '.join(set(self.eType.values())))
+        msg.append('  scode=%s stress_bits=%s is_stress=%s dist=%s vm=%s\n' % (
+            self.s_code, self.stress_bits, self.is_stress(), self.is_fiber_distance(), self.is_von_mises()))
         msg += self.get_data_code()
         return msg
 
@@ -867,20 +875,28 @@ class RealSolidStrain(StrainObject):
                                  Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
                                  Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
-        eMap = {'CTETRA': 5, 'CPENTA': 7, 'CHEXA': 9,
-                'TETRA': 5, 'PENTA': 7, 'HEXA': 9, }   # +1 for the centroid
-        if self._data is None:
+        # +1 for the centroid
+        if self.element_type == 39: # CTETRA
+            nnodes = 5
+        elif self.element_type == 67:  # CHEXA
+            nnodes = 9
+        elif self.element_type == 68:  # PENTA
+            nnodes = 7
+        else:
+            raise RuntimeError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+
+        if self._f06_data is None:
             return
         if self.nonlinear_factor is None:
             pack = []
             i = 0
             n = 0
-            while n < len(self._data):
-                line = self._data[n]
+            while n < len(self._f06_data):
+                line = self._f06_data[n]
 
                 etype = line[0]
                 eid = int(line[1])
-                nnodes = eMap[etype]
+                self.cid[eid] = 0  ## TODO: set this properly
                 self.eType[eid] = etype
                 self.exx[eid] = {}
                 self.eyy[eid] = {}
@@ -894,9 +910,9 @@ class RealSolidStrain(StrainObject):
                 self.evmShear[eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, exx, exy, exz, a, e1, lx, d1, d2, d3, pressure, evmShear) = self._data[n]
-                    (blank, blank, y, eyy, eyz, eyz, b, e2, ly, d1, d2, d3, blank, blank) = self._data[n + 1]
-                    (blank, blank, z, ezz, ezx, ezz, c, e3, lz, d1, d2, d3, blank, blank) = self._data[n + 2]
+                    (blank, node_id, x, exx, xy, exy, a, e1, lx, d1, d2, d3, pressure, evmShear) = self._f06_data[n]
+                    (blank, blank, y, eyy, yz, eyz, b, e2, ly, d1, d2, d3, blank, blank) = self._f06_data[n + 1]
+                    (blank, blank, z, ezz, zx, exz, c, e3, lz, d1, d2, d3, blank, blank) = self._f06_data[n + 2]
                     if node_id.strip() == 'CENTER':
                         node_id = 0
                     else:

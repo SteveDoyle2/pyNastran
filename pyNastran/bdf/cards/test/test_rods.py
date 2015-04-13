@@ -7,7 +7,7 @@ import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
 
-from pyNastran.bdf.fieldWriter import print_card
+#from pyNastran.bdf.fieldWriter import print_card_8
 
 bdf = BDF(debug=False)
 class TestRods(unittest.TestCase):

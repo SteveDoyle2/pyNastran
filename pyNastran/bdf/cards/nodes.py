@@ -9,7 +9,7 @@ from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
 from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru_packs
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 from pyNastran.bdf.fieldWriter import print_card_8, print_float_8, print_int_card
@@ -97,10 +97,10 @@ class RINGAX(Ring):
           LIST
         """
         list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
-                  None, self.ps]
+                       None, self.ps]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -110,13 +110,11 @@ class RINGAX(Ring):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
-        f.write(card_writer(card))
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class SPOINT(Node):
@@ -185,7 +183,7 @@ class SPOINT(Node):
                     lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf2(self, size=8, is_double=False):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -341,7 +339,7 @@ class SPOINTs(Node):
                 lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf2(self, size=8, is_double=False):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -508,7 +506,7 @@ class GRDSET(Node):
           LIST
         """
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
-                  self.Cd(), self.ps, self.SEid()]
+                       self.Cd(), self.ps, self.SEid()]
         return list_fields
 
     def repr_fields(self):
@@ -529,7 +527,7 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_bdf2(self, f, size, is_double):
+    def write_bdf(self, f, size, is_double):
         """
         The writer method used by BDF.write_bdf
 
@@ -539,10 +537,6 @@ class GRDSET(Node):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
         f.write(print_card_8(card))
@@ -638,7 +632,7 @@ class GRIDB(Node):
           LIST
         """
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
-                  self.Cd(), self.ps, self.idf]
+                       self.Cd(), self.ps, self.idf]
         return list_fields
 
     def repr_fields(self):
@@ -660,7 +654,7 @@ class GRIDB(Node):
                        idf]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -670,13 +664,11 @@ class GRIDB(Node):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class GRID(Node, GridDeprecated):
@@ -999,7 +991,7 @@ class GRID(Node, GridDeprecated):
                                                                  seid]
         return list_fields
 
-    def write_bdf2(self, size=8, is_double=False):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -1047,24 +1039,6 @@ class GRID(Node, GridDeprecated):
                         print_float_16(xyz[2]),
                         cd, self.ps, seid))
         return self.comment() + msg.rstrip() + '\n'
-
-    def write_bdf(self, size, card_writer):
-        """
-        The writer method used by BDF.write_bdf
-
-        :param self:
-          the GRID object pointer
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
-        """
-        card = self.repr_fields()
-        return self.comment() + card_writer(card)
 
 
 class POINT(Node, PointDeprecated):
@@ -1174,16 +1148,6 @@ class POINT(Node, PointDeprecated):
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
 
-    def get_ndof(self):
-        """
-        Gets the number of degrees of freedom for the POINT
-
-        :param self:  the POINT object pointer
-        :returns six: the value 6
-        :type six:    int
-        """
-        return 6
-
     def set_position(self, model, xyz, cid=0):
         """
         Updates the POINT location
@@ -1290,7 +1254,7 @@ class POINT(Node, PointDeprecated):
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -1300,10 +1264,10 @@ class POINT(Node, PointDeprecated):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)

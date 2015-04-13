@@ -1,4 +1,3 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0301
 """
 Defines functions for single precision 8 character field writing.
 """
@@ -7,13 +6,16 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import range
 import sys
-from numpy import allclose, isinf, float32
+from numpy import float32
+
 
 def set_string8_blank_if_default(value, default):
+    """helper method for writing BDFs"""
     val = set_blank_if_default(value, default)
     if val is None:
         return '        '
     return '%8s' % val
+
 
 def is_same(value1, value2):
     """
@@ -58,25 +60,25 @@ def print_scientific_8(value):
         return '%8s' % '0.'
 
     python_value = '%8.11e' % value
-    (svalue, sExponent) = python_value.strip().split('e')
-    exponent = int(sExponent)  # removes 0s
+    svalue, sexponent = python_value.strip().split('e')
+    exponent = int(sexponent)  # removes 0s
 
     sign = '-' if abs(value) < 1. else '+'
 
     # the exponent will be added later...
-    sExp2 = str(exponent).strip('-+')
+    exp2 = str(exponent).strip('-+')
     value2 = float(svalue)
 
-    leftover = 5 - len(sExp2)
+    leftover = 5 - len(exp2)
 
     if value < 0:
-        Format = "%%1.%sf" % (leftover - 1)
+        fmt = "%%1.%sf" % (leftover - 1)
     else:
-        Format = "%%1.%sf" % leftover
+        fmt = "%%1.%sf" % leftover
 
-    svalue3 = Format % value2
+    svalue3 = fmt % value2
     svalue4 = svalue3.strip('0')
-    field = "%8s" % (svalue4 + sign + sExp2)
+    field = "%8s" % (svalue4 + sign + exp2)
     return field
 
 
@@ -180,6 +182,7 @@ def print_float_8(value):
 
 
 def print_field(value):
+    """helper method for writing cards"""
     return print_field_8(value)
 
 def print_field_8(value):
@@ -201,37 +204,6 @@ def print_field_8(value):
         msg = 'field=%r is not 8 characters long...rawValue=%r' % (field, value)
         raise RuntimeError(msg)
     return field
-
-
-def print_card(fields, size=8):
-    """
-    Prints a nastran-style card with 8 or 16-character width fields
-
-    :param fields: all the fields in the BDF card (no trailing Nones)
-    :param size:   the width of a field (size=8 or 16)
-    :returns card: string representation of the card in small/large field format
-    .. note:: An internal field value of None or '' will be treated as
-              a blank field
-
-    Example
-    =======
-    >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
-    >>> print_card(fields, size=8)
-    DUMMY          1       2       3               4       5       6       7
-                  8.
-    >>> print_card(fields, size=16)
-    DUMMY*                 1               2               3
-    *                      4               5               6               7
-    *                     8.
-    *
-    """
-    if size == 8:
-        return print_card_8(fields)
-    elif size == 16:
-        return print_card_16(fields)
-    else:
-        msg = 'fields = %s\nsize = %s' % (fields, size)
-        raise ValueError(msg)
 
 
 def print_card_8(fields):
@@ -267,7 +239,7 @@ def print_card_8(fields):
     for i in range(1, len(fields)):
         field = fields[i]
         try:
-            out += print_field(field)
+            out += print_field_8(field)
         except:
             print("bad fields = %s" % fields)
             raise
@@ -368,7 +340,7 @@ def print_int_card_blocks(fields_blocks):
                     i = 0
         elif is_all_ints is False:
             for field in fields:
-                out += print_field(field)
+                out += print_field_8(field)
                 i += 1
                 if i == 8:  # allow 1+8 fields per line
                     out += '\n        '
@@ -377,7 +349,3 @@ def print_int_card_blocks(fields_blocks):
             raise SyntaxError('is_all_ints must be a boolean.  is_all_ints=%r' % is_all_ints)
     out = out.rstrip(' \n') + '\n'  # removes blank lines at the end of cards
     return out
-
-
-if __name__ == '__main__':  # pragma: no cover
-    pass

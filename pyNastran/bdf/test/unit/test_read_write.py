@@ -75,7 +75,7 @@ class TestReadWrite(unittest.TestCase):
             ('enddata3.bdf', False, False)]:
             out_filename = os.path.join(test_path, out_filename)
             model2.write_bdf(out_filename=out_filename+'.out', interspersed=True, size=8,
-                            precision='single', enddata=write_flag)
+                            is_double=False, enddata=write_flag)
             data = open(out_filename + '.out', 'r').read()
             if is_enddata:
                 self.assertTrue('ENDDATA' in data)
@@ -97,7 +97,7 @@ class TestReadWrite(unittest.TestCase):
             ('test_mass2.dat', True, True),
             ('test_mass3.dat', False, False)]:
             model2.write_bdf(out_filename=out_filename, interspersed=True, size=8,
-                            precision='single', enddata=write_flag)
+                            is_double=False, enddata=write_flag)
             data = open(out_filename, 'r').read()
             msg = 'outfilename=%r expected=%r write_flag=%s card_count=%r' % (out_filename, is_enddata, write_flag, model2.card_count.keys())
             if is_enddata:

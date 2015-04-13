@@ -166,19 +166,20 @@ class NastranIO(object):
         if ext == '.pch':
             punch = True
 
+        xref_loads = True
         if ext == '.op2' and 0 and is_geom:
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
                             debug_file=None)
             model._clear_results()
             model.read_op2(op2_filename=bdf_filename)
-            model.cross_reference(xref=True, xref_loads=False,
+            model.cross_reference(xref=True, xref_loads=xref_loads,
                                   xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.modelType = model.modelType
             model.read_bdf(bdf_filename, include_dir=dirname,
                            punch=punch, xref=False)
-            model.cross_reference(xref=True, xref_loads=False,
+            model.cross_reference(xref=True, xref_loads=xref_loads,
                                   xref_constraints=False)
 
         nnodes = model.nNodes()
@@ -367,12 +368,12 @@ class NastranIO(object):
             else:
                 self.log_info("skipping %s" % element.type)
 
-        self.mapElements(points, points2, self.nidMap, model, j, dim_max, plot=plot)
+        self.mapElements(points, points2, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
     def _get_sphere_size(self, dim_max):
         return 0.05 * dim_max
 
-    def mapElements(self, points, points2, nidMap, model, j, dim_max, plot=True):
+    def mapElements(self, points, points2, nidMap, model, j, dim_max, plot=True, xref_loads=True):
         sphere_size = self._get_sphere_size(dim_max)
         #self.eidMap = {}
 
@@ -740,7 +741,7 @@ class NastranIO(object):
             form0.append(('Property_ID', icase, []))
             icase += 1
 
-        #self._plot_pressures(model, cases)
+        icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
         #self._plot_applied_loads(model, cases)
 
         if 0:
@@ -777,12 +778,14 @@ class NastranIO(object):
             self.log.info(cases.keys())
             self._finish_results_io2([form], cases)
 
-    def _plot_pressures(self, model, cases):
+    def _plot_pressures(self, model, cases, form0, icase, xref_loads):
         """
         does pressure act normal or antinormal?
         """
         if not self.is_centroidal:
-            return
+            return icase
+        assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
+        print('_plot_pressures')
         sucaseIDs = model.caseControlDeck.get_subcase_list()
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
@@ -805,8 +808,11 @@ class NastranIO(object):
             eids = sorted(model.elements.keys())
             pressures = zeros(len(model.elements), dtype='float32')
 
+            iload = 0
             # loop thru scaled loads and plot the pressure
             for load, scale in zip(loads2, scale_factors2):
+                if iload % 1000 == 0:
+                    print('iload=%s' % iload)
                 if load.type == 'PLOAD4':
                     elem = load.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
@@ -823,11 +829,17 @@ class NastranIO(object):
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                         #r = centroid - p
-
+                iload += 1
+            print('iload=%s' % iload)
             # if there is no applied pressure, don't make a plot
             if abs(pressures).max():
+                case_name = 'Pressure Case=%i' % subcase_id
+                print(case_name)
                 # subcase_id, resultType, vectorSize, location, dataFormat
-                cases[(0, 'Pressure Case=%i' % subcase_id, 1, 'centroid', '%.1f')] = pressures
+                cases[(0, case_name , 1, 'centroid', '%.1f')] = pressures
+                form0.append((case_name, icase, []))
+                icase += 1
+        return icase
 
     def _plot_applied_loads(self, model, cases):
         if not self.is_nodal:

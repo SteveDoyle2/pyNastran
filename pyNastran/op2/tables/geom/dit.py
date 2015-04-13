@@ -50,7 +50,7 @@ class DIT(object):
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
-        self.skippedCardsFile.write('skipping TABLED1 in DIT\n')
+        #self.skippedCardsFile.write('skipping TABLED1 in DIT\n')
         return
         #print("reading TABLED1")
         func = TABLED1
@@ -92,6 +92,8 @@ class DIT(object):
         return n
 
     def readTable2(self, func, data):
+        n = 0
+        return len(data)
         while len(data) >= 40:
             eData = data[n:n + 40]
             out = unpack('ifiiiiiiff', eData)

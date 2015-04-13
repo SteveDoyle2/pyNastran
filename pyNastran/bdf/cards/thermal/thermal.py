@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer,
@@ -157,9 +158,11 @@ class CHBDYE(ThermalElement):
                   self.radMidBack]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CHBDYG(ThermalElement):
@@ -245,9 +248,11 @@ class CHBDYG(ThermalElement):
                     iViewBack, radMidFront, radMidBack, None, ] + self.grids
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CHBDYP(ThermalElement):
@@ -352,9 +357,11 @@ class CHBDYP(ThermalElement):
                   self.gmid, ce, self.e1, self.e2, self.e3]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 # Elements
 #-------------------------------------------------------
@@ -435,9 +442,11 @@ class PCONV(ThermalProperty):
                   self.e3]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PCONVM(ThermalProperty):
@@ -501,9 +510,11 @@ class PCONVM(ThermalProperty):
                   self.coef, expr, exppi, exppo]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PHBDY(ThermalProperty):
@@ -548,9 +559,11 @@ class PHBDY(ThermalProperty):
         list_fields = ['PHBDY', self.pid, self.af, self.d1, d2]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 # Properties
@@ -629,9 +642,11 @@ class CONV(ThermalBC):
         list_fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + ta
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CONVM(ThermalBC):
@@ -686,9 +701,11 @@ class CONVM(ThermalBC):
                   self.cntmdot, self.ta1, ta2, mdot]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RADM(ThermalBC):
@@ -725,9 +742,11 @@ class RADM(ThermalBC):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RADBC(ThermalBC):
@@ -795,9 +814,11 @@ class RADBC(ThermalBC):
         list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 # Boundary Conditions
 #-------------------------------------------------------

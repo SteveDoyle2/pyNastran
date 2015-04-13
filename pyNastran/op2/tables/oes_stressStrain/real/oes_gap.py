@@ -78,7 +78,6 @@ class NonlinearGapStress(StressObject):
 
 
     def add_new_eid(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
-        (stress,) = out
         self.eType[eid] = self.element_name
         self.compX[eid] = cpx
         self.shearY[eid] = shy
@@ -105,7 +104,6 @@ class NonlinearGapStress(StressObject):
     def add_new_eid_sort2(self, eid, dt, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
         if dt not in self.compX:
             self.add_new_transient(dt)
-        (stress,) = out
         self.eType[eid] = self.element_name
         self.compX[dt][eid] = cpx
         self.shearY[dt][eid] = shy

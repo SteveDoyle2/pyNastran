@@ -42,7 +42,7 @@ class ComplexBarStress(StressObject):
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -119,7 +119,7 @@ class ComplexBarStress(StressObject):
         #print "Bar Stress add..."
         self.eType[eid] = 'CBAR'  # eType
 
-        if self.eid in self.s1:
+        if eid in self.s1:
             self.s1[eid].append(s1)
             self.s2[eid].append(s2)
             self.s3[eid].append(s3)
@@ -312,7 +312,7 @@ class ComplexBarStrain(StrainObject):
         del self.e2[dt]
         del self.e3[dt]
         del self.e4[dt]
-        del self.exial[dt]
+        del self.axial[dt]
 
     def get_transients(self):
         k = self.e1.keys()

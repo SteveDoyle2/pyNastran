@@ -28,7 +28,7 @@ def update_bdf(model):
         model.rejects.append(['PARAM,POST,-1'])
 
 def main(bdf_name, run_first_nastran=True, debug=True):
-    base, ext = os.path.splitext(bdf_name)
+    base = os.path.splitext(bdf_name)[0]
 
     print("len(sys.argv) = %s" % len(sys.argv))
     #===========================

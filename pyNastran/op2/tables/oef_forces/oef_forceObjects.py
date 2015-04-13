@@ -48,10 +48,6 @@ class RealRodForceArray(ScalarObject):
         ctube_msg += base_msg
         return crod_msg, conrod_msg, ctube_msg
 
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -1045,7 +1041,7 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt] = {}
         self.ty[dt] = {}
 
-    def add_f06_data(dt, data):
+    def add_f06_data(self, dt, data):
         if dt is None:
             for (eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy) in data:
                 self.mx[eid] = mx

@@ -213,7 +213,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             cell.setStyleSheet("QLineEdit{background: white;}")
             return text, True
         else:
-            cell.setStyleSheet("QLineEdit{background: red;}");
+            cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
     def on_validate(self):

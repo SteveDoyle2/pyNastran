@@ -2,7 +2,7 @@
 from __future__ import print_function
 from six import iteritems
 import vtk
-from numpy import ndarray, asarray, hstack
+from numpy import ndarray, asarray, hstack, searchsorted
 
 
 class GuiCommon(object):

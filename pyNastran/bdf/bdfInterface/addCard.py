@@ -9,52 +9,22 @@ class AddMethods(object):
 
     def add_DMI(self, dmi, allowOverwrites=False):
         name = dmi.name
-        #if key in self.params and not allowOverwrites:
-            #if not param._is_same_card(self.params[key]):
-                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                #self.log.warning('key=%s param=%s oldPARAM=%s' %(key,param,self.params[key]))
-                #self.params[key] = param
-        #else:
         self.dmis[name] = dmi
 
     def add_DMIG(self, dmig, allowOverwrites=False):
         name = dmig.name
-        #if key in self.params and not allowOverwrites:
-            #if not param._is_same_card(self.params[key]):
-                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                #self.log.warning('key=%s param=%s oldPARAM=%s' %(key,param,self.params[key]))
-                #self.params[key] = param
-        #else:
         self.dmigs[name] = dmig
 
     def add_DMIJ(self, dmij, allowOverwrites=False):
         name = dmij.name
-        #if key in self.params and not allowOverwrites:
-            #if not param._is_same_card(self.params[key]):
-                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                #self.log.warning('key=%s param=%s oldPARAM=%s' %(key,param,self.params[key]))
-                #self.params[key] = param
-        #else:
         self.dmijs[name] = dmij
 
     def add_DMIJI(self, dmiji, allowOverwrites=False):
         name = dmiji.name
-        #if key in self.params and not allowOverwrites:
-            #if not param._is_same_card(self.params[key]):
-                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                #self.log.warning('key=%s param=%s oldPARAM=%s' %(key,param,self.params[key]))
-                #self.params[key] = param
-        #else:
         self.dmijis[name] = dmiji
 
     def add_DMIK(self, dmik, allowOverwrites=False):
         name = dmik.name
-        #if key in self.params and not allowOverwrites:
-            #if not param._is_same_card(self.params[key]):
-                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                #self.log.warning('key=%s param=%s oldPARAM=%s' %(key,param,self.params[key]))
-                #self.params[key] = param
-        #else:
         self.dmiks[name] = dmik
 
     def add_PARAM(self, param, allowOverwrites=False):
@@ -62,8 +32,7 @@ class AddMethods(object):
         if key in self.params and not allowOverwrites:
             if not param._is_same_card(self.params[key]):
                 #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                self.log.warning('key=%s param=%s oldPARAM=%s' %
-                                (key, param, self.params[key]))
+                self.log.warning('key=%s param=%s oldPARAM=%s' % (key, param, self.params[key]))
                 self.params[key] = param
         else:
             self.params[key] = param
@@ -72,8 +41,7 @@ class AddMethods(object):
         key = node.nid
         if key in self.nodes and not allowOverwrites:
             if not node._is_same_card(self.nodes[key]):
-                print('nid=%s\noldNode=\n%snewNode=\n%s' %
-                     (key, self.nodes[key], node))
+                print('nid=%s\noldNode=\n%snewNode=\n%s' % (key, self.nodes[key], node))
                 assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
             else:
                 #print('Node was duplicated...nid=%s; node=\n%s' % (key, node))
@@ -90,69 +58,54 @@ class AddMethods(object):
 
     def add_element(self, elem, allowOverwrites=False):
         key = elem.eid
+        assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         if key in self.elements and not allowOverwrites:
             if not elem._is_same_card(self.elements[key]):
-                msg = 'eid=%s is not unique\noldElement=\n%snewElement=\n%s' % (
-                    elem.eid, self.elements[elem.eid].repr_card(), elem.repr_card())
-                assert elem.eid not in self.elements, msg
-        assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
-        self.elements[key] = elem
+                self._duplicate_elements.append(elem)
+        else:
+            self.elements[key] = elem
 
     def add_mass(self, mass, allowOverwrites=False):
         key = mass.eid
+        assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
         if key in self.masses and not allowOverwrites:
             if not mass._is_same_card(self.masses[key]):
-                msg = 'eid=%s is not unique\noldMass=\n%snewMass=\n%s' % (
-                    mass.eid, self.masses[mass.eid], mass)
-                assert mass.eid not in self.masses, msg
-        assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
-        self.masses[key] = mass
+                self._duplicate_masses.append(mass)
+        else:
+            self.masses[key] = mass
 
     def add_damper(self, elem, allowOverwrites=False):
         """.. warning:: can dampers have the same ID as a standard element?"""
         return self.add_element(elem, allowOverwrites)
-        # key = elem.eid
-        # if key in self.damperElements and not allowOverwrites:
-        #     if not elem._is_same_card(self.damperElements[key]):
-        #         #print('eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem))
-        #         assert elem.eid not in self.damperElements, 'eid=%s\noldDamperElement=\n%snewDamperElement=\n%s' % (elem.eid, self.damperElements[elem.eid], elem)
-        # else:
-        #     assert key > 0, 'eid=%s elem=%s' % (key, elem)
-        #     self.damperElements[key] = elem
 
     def add_rigid_element(self, elem, allowOverwrites=False):
         key = elem.eid
         if key in self.rigidElements and not allowOverwrites:
             print('eid=%s\noldElement=\n%snewElement=\n%s' % (
                 key, self.rigidElements[key], elem))
-            #assert elem.eid not in self.rigidElements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.rigidElements[elem.eid],elem)
-            pass
+            assert elem.eid not in self.rigidElements,'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigidElements[elem.eid], elem)
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
         self.rigidElements[key] = elem
 
     def add_thermal_element(self, elem):
         """same as add_element at the moment..."""
         self.add_element(elem)
-        #assert elem.eid not in self.elements
-        #assert elem.eid>0
-        #self.elements[elem.eid] = elem
 
     def add_DEQATN(self, deqatn, allowOverwrites=False):
         key = deqatn.eqID
         #if not allowOverwrites:
-        #    assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
+        #    assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' % (prop.pid,self.properties[prop.pid], prop)
         assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
         self.dequations[key] = deqatn
 
     def add_property(self, prop, allowOverwrites=False):
         key = prop.pid
+        assert key > 0, 'pid=%s prop=%s' % (key, prop)
 
         if key in self.properties and not allowOverwrites:
             if not prop._is_same_card(self.properties[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop))
-                assert key not in self.properties, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties[key], prop)
+                self._duplicate_properties.append(prop)
         else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.properties[key] = prop
 
     def add_property_mass(self, prop, allowOverwrites=False):
@@ -206,40 +159,39 @@ class AddMethods(object):
 
     def add_PELAST(self, prop, allowOverwrites=False):
         key = prop.pid
-
+        assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.pelast and not allowOverwrites:
             if not prop._is_same_card(self.pelast[key]):
                 #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
                 assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key], prop)
         else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pdampt[key] = prop
 
     def add_structural_material(self, material, allowOverwrites=False):
         key = material.mid
+        assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.materials and not allowOverwrites:
             if not material._is_same_card(self.materials[key]):
-                assert key not in self.materials, 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.materials[key], material)
+                self._duplicate_materials.append(material)
         else:
-            assert key > 0, 'mid=%s material=\n%s' % (key, material)
             self.materials[key] = material
 
     def add_thermal_material(self, material, allowOverwrites=False):
         key = material.mid
+        assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.thermalMaterials and not allowOverwrites:
             if not material._is_same_card(self.thermalMaterials[key]):
-                assert key not in self.thermalMaterials, 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.thermalMaterials[key], material)
+                self._duplicate_thermal_materials.append(material)
         else:
-            assert key > 0, 'mid=%s material=\n%s' % (key, material)
             self.thermalMaterials[key] = material
 
     def add_hyperelastic_material(self, material, allowOverwrites=False):
         key = material.mid
+        assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.hyperelasticMaterials and not allowOverwrites:
             if not material._is_same_card(self.hyperelasticMaterials [key]):
-                assert key not in self.hyperelasticMaterials , 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.hyperelasticMaterials [key], material)
+                assert key not in self.hyperelasticMaterials, 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.hyperelasticMaterials[key], material)
         else:
-            assert key > 0, 'mid=%s material=\n%s' % (key, material)
             self.hyperelasticMaterials[key] = material
 
     def add_material_dependence(self, material, allowOverwrites=False):
@@ -282,10 +234,12 @@ class AddMethods(object):
 
     def add_coord(self, coord, allowOverwrites=False):
         key = coord.cid
-        if not allowOverwrites:
-            assert key not in self.coords, 'cid=%s\noldElement=\n%snewElement=\n%s' % (key, self.coords[key], coord)
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
-        self.coords[key] = coord
+        if key in self.coords:
+            if not allowOverwrites:
+                self._duplicate_coords.append(coord)
+        else:
+            self.coords[key] = coord
 
     def add_load(self, load):
         key = load.sid
@@ -293,6 +247,21 @@ class AddMethods(object):
             self.loads[key].append(load)
         else:
             self.loads[key] = [load]
+
+    def add_dload(self, dload):
+        key = dload.sid
+        if key in self.dloads:
+            self.dloads[key].append(dload)
+        else:
+            self.dloads[key] = [dload]
+
+    def add_dload_entry(self, dload):
+        print(dload)
+        key = dload.sid
+        if key in self.dload_entries:
+            self.dload_entries[key].append(dload)
+        else:
+            self.dload_entries[key] = [dload]
 
     def add_LSEQ(self, load):
         key = load.sid
@@ -319,10 +288,6 @@ class AddMethods(object):
         assert prop.pconid not in self.convectionProperties
         self.convectionProperties[prop.pconid] = prop
 
-    #def addThermalProperty(self,prop):
-    #    assert prop.pconid not in self.thermalProperties
-    #    self.thermalProperties[prop.pconid] = prop
-
     def add_thermal_BC(self, bc, key):
         assert key > 0
         if key in self.bcs:
@@ -331,50 +296,34 @@ class AddMethods(object):
             self.bcs[key] = [bc]
 
     def add_constraint_MPCADD(self, constraint):
-        #self.mpcObject.add(constraint)
         if constraint.conid in self.mpcadds:
             raise RuntimeError('must have unique MPCADD IDs')
         self.mpcadds[constraint.conid] = constraint
 
     def add_constraint_MPC(self, constraint):
-        #self.mpcObject.append(constraint)
         if constraint.conid in self.mpcs:
             self.mpcs[constraint.conid].append(constraint)
         else:
             self.mpcs[constraint.conid] = [constraint]
 
     def add_constraint_SPCADD(self, constraint):
-        #self.spcObject.add(constraint)
         if constraint.conid in self.spcadds:
             raise RuntimeError('must have unique SPCADD IDs')
         self.spcadds[constraint.conid] = constraint
 
     def add_constraint_SPC(self, constraint):
-        #self.spcObject.append(constraint)
         if constraint.conid in self.spcs:
             self.spcs[constraint.conid].append(constraint)
         else:
             self.spcs[constraint.conid] = [constraint]
-        #key = constraint.conid
-        #if self.constraints.has_key(key):
-        #    self.constraints[key].append(constraint)
-        #else:
-        #    self.constraints[key] = [constraint]
 
     def add_constraint(self, constraint):
-        #self.spcObject.append(constraint)
         key = constraint.conid
 
         if constraint.conid in self.spcs:
             self.spcs[key].append(constraint)
         else:
             self.spcs[key] = [constraint]
-
-        #assert key > 0
-        #if self.constraints.has_key(key):
-        #    self.constraints[key].append(constraint)
-        #else:
-        #    self.constraints[key] = [constraint]
 
     def add_suport(self, suport):
         self.suports.append(suport)
@@ -383,23 +332,20 @@ class AddMethods(object):
         key = (darea.sid, darea.p)
         if key in self.dareas and not allowOverwrites:
             if not darea._is_same_card(self.dareas[key]):
-                assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (
-                    darea, self.dareas[key])
+                assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (darea, self.dareas[key])
         else:
             assert darea.sid > 0
             self.dareas[key] = darea
 
     def add_AERO(self, aero):
         key = aero.acsid
-        assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (
-            aero, self.aero[key])
+        assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (aero, self.aero[key])
         assert key >= 0
         self.aero[key] = aero
 
     def add_AEROS(self, aero):
         key = aero.acsid
-        assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (
-            aero, self.aeros[key])
+        assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (aero, self.aeros[key])
         assert key >= 0
         self.aeros[key] = aero
 
@@ -414,8 +360,7 @@ class AddMethods(object):
 
     def add_AELIST(self, aelist):
         key = aelist.sid
-        assert key not in self.aelists, '\naelist=\n%s oldAELIST=\n%s' % (
-            aelist, self.aelists[key])
+        assert key not in self.aelists, '\naelist=\n%s oldAELIST=\n%s' % (aelist, self.aelists[key])
         assert key >= 0
         self.aelists[key] = aelist
 
@@ -429,8 +374,7 @@ class AddMethods(object):
 
     def add_AEPARM(self, aeparam):
         key = aeparam.id
-        assert key not in self.aeparams, '\naeparam=\n%s oldAESTAT=\n%s' % (
-            aeparam, self.aeparams[key])
+        assert key not in self.aeparams, '\naeparam=\n%s oldAEPARM=\n%s' % (aeparam, self.aeparams[key])
         assert key >= 0
         self.aeparams[key] = aeparam
 
@@ -491,7 +435,6 @@ class AddMethods(object):
         #assert key not in self.flfacts
         assert key > 0
         self.flfacts[key] = flfact  # set id...
-        #print("added flfact...flflact =\n"+flfact)
 
     def add_DCONSTR(self, dconstr):
         key = (dconstr.oid, dconstr.rid)
@@ -573,12 +516,9 @@ class AddMethods(object):
             self.frequencies[key].add_frequency_object(freq)
         else:
             self.frequencies[key] = freq
-        #assert key not in self.frequencies,'\nfreq=\n%s oldFreq=\n%s' %(freq,self.frequencies[key])
 
     def add_SET(self, set_obj):
         key = set_obj.sid
-        #assert key not in self.sets, '\nSET=\n%s oldSET=\n%s' % (
-            #setObj, self.sets[key])
         assert key >= 0
         if key in self.sets:
             self.sets[key].add_set(set_obj)

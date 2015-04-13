@@ -1,4 +1,3 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0301
 """
 Defines functions for single precision 16 character field writing.
 """
@@ -10,6 +9,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 
 def set_string16_blank_if_default(value, default):
+    """helper method for writing BDFs"""
     val = set_blank_if_default(value, default)
     if val is None:
         return '                '
@@ -26,8 +26,8 @@ def print_scientific_16(value):
         return '%16s' % '0.'
 
     python_value = '%16.14e' % value  # -1.e-2
-    (svalue, sExponent) = python_value.strip().split('e')
-    exponent = int(sExponent)  # removes 0s
+    svalue, sexponent = python_value.strip().split('e')
+    exponent = int(sexponent)  # removes 0s
 
     if abs(value) < 1.:
         sign = '-'
@@ -35,21 +35,21 @@ def print_scientific_16(value):
         sign = '+'
 
     # the exponent will be added later...
-    sExp2 = str(exponent).strip('-+')
+    sexp2 = str(exponent).strip('-+')
     value2 = float(svalue)
 
     # the plus 1 is for the sign
-    lenSExp = len(sExp2) + 1
-    leftover = 16 - lenSExp
+    len_sexp = len(sexp2) + 1
+    leftover = 16 - len_sexp
 
     if value < 0:
-        Format = "%%1.%sf" % (leftover - 3)
+        fmt = "%%1.%sf" % (leftover - 3)
     else:
-        Format = "%%1.%sf" % (leftover - 2)
+        fmt = "%%1.%sf" % (leftover - 2)
 
-    svalue3 = Format % value2
+    svalue3 = fmt % value2
     svalue4 = svalue3.strip('0')
-    field = "%16s" % (svalue4 + sign + sExp2)
+    field = "%16s" % (svalue4 + sign + sexp2)
     return field
 
 
@@ -233,11 +233,11 @@ def print_card_16(fields, wipe_fields=True):
     if wipe_fields:
         fields = wipe_empty_fields(fields)
     nfields_main = len(fields) - 1  # chop off the card name
-    nBDF_lines = nfields_main // 8
+    nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:
-        nBDF_lines += 1
-        nExtra_fields = 8 * nBDF_lines -  nfields_main
-        fields += [None] * nExtra_fields
+        nbdf_lines += 1
+        nextra_fields = 8 * nbdf_lines -  nfields_main
+        fields += [None] * nextra_fields
 
     try:
         out = '%-8s' % (fields[0] + '*')
@@ -262,9 +262,3 @@ def print_card_16(fields, wipe_fields=True):
     if not out.endswith('\n'):
         out += '\n'
     return out
-
-
-if __name__ == '__main__':  # pragma: no cover
-    field = print_float_16(-55.1040257079)
-    field = print_float_16(-55.1040257078872)
-    field = print_float_16(-3.76948125497534)

@@ -1,4 +1,5 @@
 #pylint:  disable=C0103,C0111
+from __future__ import print_function
 from six import iteritems, PY2
 from six.moves import zip, range
 import os
@@ -11,8 +12,7 @@ from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
 from numpy import arange, searchsorted, vstack, unique, hstack, ravel, cross
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card
-from pyNastran.utils import is_binary
+from pyNastran.utils import is_binary as is_binary_file
 from pyNastran.utils.log import get_logger
 
 
@@ -39,21 +39,24 @@ def comp2tri(self, in_filenames, out_filename,
     elements = []
     regions = []
 
-    ne = 0
-    np = 0
-    nr = 0
+    #ne = 0
+    npi = 0
+    nri = 0
     model = Cart3DReader()
     for infilename in in_filenames:
         point, element, region, load = model.read_cart3d(infilename)
-        np, three = point.shape
-        ne, three = element.shape
+        np = point.shape[0]
+        #ne = element.shape[0]
         nr += len(unique(region))
-        element += np - 1
-        region += nr
+        element += npi - 1
+        region += nri
 
         points.append(point)
         elements.append(element)
         regions.append(region)
+        npi += np
+        nri += nr
+
     points = vstack(points)
     elements = vstack(elements)
     regions = vstack(regions)
@@ -90,10 +93,10 @@ class Cart3DReader(object):
         self.log.info('---starting make_mirror_model---')
         assert tol >= 0, 'tol=%r' % tol #  prevents hacks to the axis
 
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
         assert nnodes > 0, 'nnodes=%s' % nnodes
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         assert nelements > 0, 'nelements=%s' % nelements
 
         ax = self._get_ax(axis)
@@ -111,12 +114,12 @@ class Cart3DReader(object):
         nodes_upper[:, ax2] *= -1.0  # flip the nodes about the axis
 
         nodes2 = vstack([nodes, nodes_upper])
-        nnodes2, three = nodes2.shape
+        nnodes2 = nodes2.shape[0]
         assert nnodes2 > nnodes, 'nnodes2=%s nnodes=%s' % (nnodes2, nnodes)
 
-        nnodes_upper, three = nodes_upper.shape
+        nnodes_upper = nodes_upper.shape[0]
         elements_upper = elements.copy()
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
 
         # remap the mirrored nodes with the new node ids
         for eid in range(nelements):
@@ -130,7 +133,7 @@ class Cart3DReader(object):
                 elements_upper[eid] = elements_upper[eid, ::-1]
 
         elements2 = vstack([elements, elements_upper])
-        nelements2, three = elements2.shape
+        nelements2 = elements2.shape[0]
         assert nelements2 > nelements, 'nelements2=%s nelements=%s' % (nelements2, nelements)
 
         nregions = len(unique(regions))
@@ -141,9 +144,9 @@ class Cart3DReader(object):
         for key, data in iteritems(loads):
 
             # flip the sign on the flipping axis terms
-            if ((key in ['U', 'rhoU'] and ax2==0) or
-                (key in ['V', 'rhoV'] and ax2==1) or
-                (key in ['W', 'rhoW'] and ax2==2)):
+            if((key in ['U', 'rhoU'] and ax2 == 0) or
+               (key in ['V', 'rhoV'] and ax2 == 1) or
+               (key in ['W', 'rhoW'] and ax2 == 2)):
                 data_upper = -data[iy0]
             else:
                 data_upper = data[iy0]
@@ -181,10 +184,10 @@ class Cart3DReader(object):
         if loads is None:
             loads = {}
 
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
         assert nnodes > 0, 'nnodes=%s'  % nnodes
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         assert nelements > 0, 'nelements=%s'  % nelements
 
         inodes_remove = set([])
@@ -203,7 +206,7 @@ class Cart3DReader(object):
         assert 0 < len(inodes_save) < nnodes, 'len(inodes_save)=%s nnodes=%s'  % (len(inodes_save), nnodes)
 
         nodes2 = nodes[inodes_save, :]
-        nnodes2, three = nodes2.shape
+        nnodes2 = nodes2.shape[0]
         assert 0 < nnodes2 < nnodes, 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
 
         inodes_save += 1  # +1 is so we don't have to shift inode
@@ -276,8 +279,8 @@ class Cart3DReader(object):
         f.close()
 
     def write_header(self, f, points, elements, is_loads, is_binary=False):
-        npoints, three = points.shape
-        nelements, three = elements.shape
+        npoints = points.shape[0]
+        nelements = elements.shape[0]
 
         if is_binary:
             if is_loads:
@@ -303,9 +306,9 @@ class Cart3DReader(object):
             four = pack('>i', 4)
             f.write(four)
 
-            npoints, three = points.shape
+            npoints = points.shape[0]
             fmt = '>%if' % (npoints * 3)
-            floats = pack(fmt, *ravel(points) )
+            floats = pack(fmt, *ravel(points))
 
             f.write(floats)
             f.write(four)
@@ -318,9 +321,9 @@ class Cart3DReader(object):
         if is_binary:
             four = pack('>i', 4)
             f.write(four)
-            nelements, three = elements.shape
+            nelements = elements.shape[0]
             fmt = '>%ii' % (nelements * 3)
-            ints = pack(fmt, *ravel(elements) )
+            ints = pack(fmt, *ravel(elements))
 
             f.write(ints)
             f.write(four)
@@ -758,7 +761,7 @@ class Cart3DReader(object):
 
             r = nelements
             if len(regions[nr:]) != len(region_data):
-                msg = 'len(regions[nr:]=%s len(region_data)=%s' % ( len(regions[nr:]), len(region_data) )
+                msg = 'len(regions[nr:]=%s len(region_data)=%s' % (len(regions[nr:]), len(region_data))
                 raise RuntimeError(msg)
             regions[nr:] = region_data
             size = 0
@@ -871,7 +874,7 @@ def main():
     #full_model = os.path.join('flat_full.tri')
 
     cart3dGeom = 'Cart3d_bwb.i.tri'
-    rewrite    = 'Cart3d_bwb_rewrite.tri'
+    rewrite = 'Cart3d_bwb_rewrite.tri'
     half_model = 'Cart3d_bwb_half.tri'
     full_model = 'Cart3d_bwb_full.tri'
 

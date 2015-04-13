@@ -112,9 +112,9 @@ class TestConstraints(unittest.TestCase):
         card = BDFCard(card)
         mpc = MPC(card)
         #print ' %r' % str(mpc)
-        #print '%r' % mpc.write_bdf2(size=8)
-        #msg = mpc.write_bdf2(size=8, double=False)
-        self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_bdf2(size=8))
+        #print '%r' % mpc.write_bdf(size=8)
+        #msg = mpc.write_bdf(size=8, double=False)
+        self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_bdf(size=8))
 
         model = BDF()
 
@@ -125,10 +125,10 @@ class TestConstraints(unittest.TestCase):
 
         card = model.add_card(card, 'MPC', is_list=False)
         mpc = MPC(card)
-        print('u%r' % msgA)
-        print('%r' % mpc.write_bdf2(size=8))
-        self.assertEqual(msgA, mpc.write_bdf2(size=8))
-        print(mpc, type(mpc))
+        #print('u%r' % msgA)
+        #print('%r' % mpc.write_bdf(size=8))
+        self.assertEqual(msgA, mpc.write_bdf(size=8))
+        #print(mpc, type(mpc))
 
         card = []
 

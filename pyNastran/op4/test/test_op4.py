@@ -83,7 +83,7 @@ def run_op4(op4_filename, write_op4=True, debug=True):
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' % op2FileName)
+        sys.stderr.write('**file=%s\n' % op4_filename)
         sys.exit('keyboard stop...')
     #except RuntimeError: # the op2 is bad, not my fault
     #    isPassed = True

@@ -21,7 +21,7 @@ class KdTree2(object):
         i = 0
         for node_id, xyz in sorted(iteritems(pointList)):
             nodes[i, :] = xyz
-            self.node_ids[i] = nid
+            self.node_ids[i] = node_id
         self.tree = scipyKDTree(pointList)
 
     def getCloseElementIDs(self, point):

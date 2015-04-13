@@ -135,7 +135,6 @@ class BDFMethodsDeprecated(object):
         """
         return self.mass()
 
-
     def mass(self, element_ids=None, sym_axis=None):
         """Calculates mass in the global coordinate system"""
         mass, cg, I = self.mass_properties(element_ids=element_ids,
@@ -157,40 +156,6 @@ class BDFMethodsDeprecated(object):
         .. deprecated: will be replaced in version 0.7 with unresolve_grids
         """
         return self.unresolve_grids(femOld)
-
-    #def sumForces(self):
-        #"""
-        #.. seealso:: sum_forces
-        #.. deprecated: will be replaced in version 0.7 with sum_forces
-        #"""
-        #return self.sum_forces()
-
-    #def sumMoments(self, p0):
-        #"""
-        #.. seealso:: sum_moments
-        #.. deprecated: will be replaced in version 0.7 with sum_moments
-        #"""
-        #return self.sum_moments(p0)
-
-
-class DeprecatedNastranMatrix(object):
-    """
-    Will be deprecated in:
-      - v0.7
-    Will be removed in:
-      - v0.8
-    """
-    def isComplex(self):
-        return self.is_complex()
-
-    def isReal(self):
-        return self.is_real()
-
-    def isPolar(self):
-        return self.is_polar()
-
-    def getMatrix(self, isSparse=False, applySymmetry=True):
-        return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
 
 
 class GetMethodsDeprecated(object):
@@ -339,9 +304,6 @@ class GridDeprecated(object):
     def UpdatePosition(self, model, xyz, cid=0):
         return self.set_position(model, xyz, cid=cid)
 
-    def nDOF(self):
-        return self.get_ndof()
-
 
 class PointDeprecated(object):
     def Position(self, debug=False):
@@ -352,9 +314,6 @@ class PointDeprecated(object):
 
     def UpdatePosition(self, model, xyz, cid=0):
         return self.set_position(model, xyz, cid=cid)
-
-    def nDOF(self):
-        return self.get_ndof()
 
 
 class SPOINTsDeprecated(object):

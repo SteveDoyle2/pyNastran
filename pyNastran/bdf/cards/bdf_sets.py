@@ -35,7 +35,7 @@ class Set(BaseCard):
     def __repr__(self):
         return self.comment() + print_card_8(self.repr_fields())
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -357,7 +357,7 @@ class SET1(Set):
 
         return ['SET1', self.sid] + skin + self.IDs
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         skin = []
         if self.isSkin:
             skin = ['SKIN']
@@ -415,6 +415,11 @@ class SET3(Set):
         self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
+    def symmetric_difference(self, set1):
+        s1 = set(self.IDs)
+        s2 = set(set1.IDs)
+        return s1.symmetric_difference(s2)
+
     def IsGrid(self):
         if self.desc == 'GRID':
             return True
@@ -446,7 +451,7 @@ class SET3(Set):
             [[self.sid, self.desc], False], # these are not all integers
             [self.SetIDs(), True], # these are all integers
         ]
-        return self.comment() + print_int_card_blocks(fields_blocks )
+        return self.comment() + print_int_card_blocks(fields_blocks)
 
 
 class SESET(SetSuper):
@@ -477,24 +482,18 @@ class SESET(SetSuper):
 
     def __repr__(self):
         thruFields = collapse_thru(self.IDs)
-
         #list_fields = ['SESET', self.seid]
 
-        #i = 0
         cards = []
-        #print("thruFields", thruFields)
         while 'THRU' in thruFields:
-            #print("thruFields", thruFields)
             iThru = thruFields.index('THRU')
             card = print_card_8(['SESET', self.seid] +
                                 thruFields[iThru - 1:iThru + 2])
             cards.append(card)
             thruFields = thruFields[0:iThru - 1]+thruFields[iThru + 2:]
-        #print("thruFields", thruFields)
         if thruFields:
             card = print_card_8(['SESET', self.seid] + thruFields)
             cards.append(card)
-        #print("cards",cards)
         return ''.join(cards)
 
 class SEBSET(Set):
@@ -518,7 +517,7 @@ class SEBSET(Set):
         self.IDs = []
 
         #fields = str(card.fields(1))
-        nsets = (len(card) - 1 ) // 2
+        nsets = (len(card) - 1) // 2
         for n in range(nsets):
             i = n * 2 + 1
             component = components(card, i, 'component' + str(n))

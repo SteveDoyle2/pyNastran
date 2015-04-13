@@ -193,7 +193,7 @@ class CBUSH(BushElement):
                   x + [self.Cid(), s, ocid] + self.si)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -262,7 +262,7 @@ class CBUSH1D(BushElement):
                   self.Cid()]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -341,6 +341,6 @@ class CBUSH2D(BushElement):
                   self.Cid(), self.plane, self.sptid]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

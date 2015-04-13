@@ -16,13 +16,10 @@ from six.moves import zip
 from itertools import count
 from numpy import pi, array
 
-from pyNastran.bdf.fieldWriter import (set_blank_if_default,
-                                       set_default_if_blank)
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank,
-    integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    double, double_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
@@ -116,9 +113,8 @@ class PROD(Property):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -263,9 +259,8 @@ class PTUBE(Property):
         list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

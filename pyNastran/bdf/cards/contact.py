@@ -9,17 +9,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 
-#from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru_by, collapse_thru_by
-#from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
-#                                          wipe_empty_fields)
-from pyNastran.bdf.bdfInterface.assign_type import (fields,
-    integer, integer_or_blank, integer_string_or_blank,
-    double, double_or_blank, integer_or_double, integer_double_or_blank,
-    string, string_or_blank,
-    integer_or_string, double_string_or_blank,
-    blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+    integer_string_or_blank, double_or_blank, integer_double_or_blank,
+    string, string_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class BSURF(BaseCard):
@@ -67,36 +62,36 @@ class BSURF(BaseCard):
         fields = ['BSURF', self.sid]
         return fields + list(self.eids)
 
-        fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
-        # is this right???
-        packs = collapse_thru_by(self.eids, get_packs=True)
+        #fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
+        ## is this right???
+        #packs = collapse_thru_by(self.eids, get_packs=True)
 
-        pack = packs[0]
-        if len(pack) == 3:
-            minv, maxv, dv = pack
-            if dv == 1:
-                fields[2:5] = [minv, 'THRU', maxv]
-            else:
-                fields[2:7] = [minv, 'THRU', maxv, 'BY', dv]
-        else:
-            fields[3:3+len(pack)] = pack
+        #pack = packs[0]
+        #if len(pack) == 3:
+            #minv, maxv, dv = pack
+            #if dv == 1:
+                #fields[2:5] = [minv, 'THRU', maxv]
+            #else:
+                #fields[2:7] = [minv, 'THRU', maxv, 'BY', dv]
+        #else:
+            #fields[3:3+len(pack)] = pack
 
-        for pack in packs[1:]:
-            #fields += pack + [None, None, None]
-            if len(pack) == 3:
-                minv, maxv, dv = pack
-                if dv == 1:
-                    fields += [minv, 'THRU', maxv, None, None, None, None]
-                else:
-                    fields += [minv, 'THRU', maxv, 'BY',   dv, None, None]
-            else:
-                fields += pack + [None] * (8 - len(pack))
-        #for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
-        #                                      self.min_distances, self.max_distances):
-        #    fields += [sid, tid, fric, mind, maxd, None, None]
-        return fields
+        #for pack in packs[1:]:
+            ##fields += pack + [None, None, None]
+            #if len(pack) == 3:
+                #minv, maxv, dv = pack
+                #if dv == 1:
+                    #fields += [minv, 'THRU', maxv, None, None, None, None]
+                #else:
+                    #fields += [minv, 'THRU', maxv, 'BY', dv, None, None]
+            #else:
+                #fields += pack + [None] * (8 - len(pack))
+        ##for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
+        ##                                      self.min_distances, self.max_distances):
+        ##    fields += [sid, tid, fric, mind, maxd, None, None]
+        #return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -138,9 +133,9 @@ class BSURFS(BaseCard):
             j = 0
             while i < n:
                 eid = integer(card, 5 + i, 'eid%s' % j)
-                g1  = integer(card, 5 + i + 1, 'g3_%s' % j)
-                g2  = integer(card, 5 + i + 2, 'g2_%s' % j)
-                g3  = integer(card, 5 + i + 3, 'g1_%s' % j)
+                g1 = integer(card, 5 + i + 1, 'g3_%s' % j)
+                g2 = integer(card, 5 + i + 2, 'g2_%s' % j)
+                g3 = integer(card, 5 + i + 3, 'g1_%s' % j)
                 j += 1
                 i += 4
                 self.eids.append(eid)
@@ -157,9 +152,9 @@ class BSURFS(BaseCard):
             fields += [eid, g1, g2, g3]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)  # I think this is right...
+        return self.comment() + print_card_8(card)
 
 
 class BCTSET(BaseCard):
@@ -167,10 +162,15 @@ class BCTSET(BaseCard):
     3D Contact Set Definition (SOLs 101, 601 and 701 only)
     Defines contact pairs of a 3D contact set.
 
-      1      2   3    4     5     6     7   8   9   10
-    BCTSET CSID SID1 TID1 FRIC1 MIND1 MAXD1
-                SID2 TID2 FRIC2 MIND2 MAXD2
-                -etc-
+    +--------+-------+------+-------+-------+-------+-------+-----+------+
+    |   1    |   2   | 3    |  4    |   5   |   6   |   7   | 8   |  9   |
+    +--------+-------+------+-------+-------+-------+-------+-----+------+
+    | BCTSET | CSID  | SID1 | TID1  | FRIC1 | MIND1 | MAXD1 |     |      |
+    +--------+-------+------+-------+-------+-------+-------+-----+------+
+    |        | SID2  | TID2 | FRIC2 | MIND2 | MAXD2 |       |     |      |
+    +--------+-------+------+-------+-------+-------+-------+-----+------+
+    |        | -etc- |      |       |       |       |       |     |      |
+    +--------+-------+------+-------+-------+-------+-------+-----+------+
     """
     type = 'BCTSET'
     def __init__(self, card=None, data=None, comment='', sol=101):
@@ -204,12 +204,12 @@ class BCTSET(BaseCard):
                 self.tids.append(integer(card, i + 1, 'tid%s' % j))
                 self.frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
                 if sol == 101:
-                    self.min_distances.append(double(card, i + 3, 'mind%s' % j))
-                    self.max_distances.append(double(card, i + 4, 'maxd%s' % j))
+                    self.min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
+                    self.max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, 0.0))
                 else:
                     self.min_distances.append(None)
                     self.max_distances.append(None)
-                i += 7
+                i += 8
                 j += 1
         else:
             msg = '%s has not implemented data parsing' % self.type
@@ -219,12 +219,14 @@ class BCTSET(BaseCard):
         fields = ['BCTSET', self.csid]
         for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
                                               self.min_distances, self.max_distances):
-            fields += [sid, tid, fric, mind, maxd, None, None]
+            fields += [sid, tid, fric, mind, maxd, None, None, None]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class BCRPARA(BaseCard):
@@ -232,6 +234,7 @@ class BCRPARA(BaseCard):
     1 2 3 4 5 6 7 8 9 10
     BCRPARA CRID SURF OFFSET TYPE MGP
     """
+    type = 'BCRPARA'
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
@@ -265,16 +268,22 @@ class BCRPARA(BaseCard):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class BCTPARA(BaseCard):
     """
-    1 2 3 4 5 6 7 8 9 10
-    BCTPARA CSID Param1 Value1 Param2 Value2 Param3 Value3
-            Param4 Value4 Param5 Value5 -etc-
+    +---------+--------+--------+--------+--------+--------+--------+--------+----+
+    |    1    |   2    |    3   |   4    |   5    |   6    |   7    |    8   |  9 |
+    +---------+--------+--------+--------+--------+--------+--------+--------+----+
+    | BCTPARA | CSID   | Param1 | Value1 | Param2 | Value2 | Param3 | Value3 |    |
+    +---------+--------+--------+--------+--------+--------+--------+--------+----+
+    |         | Param4 | Value4 | Param5 | Value5 | -etc-  |        |        |    |
+    +---------+--------+--------+--------+--------+--------+--------+--------+----+
     """
     type = 'BCTPARA'
     def __init__(self, card=None, data=None, comment=''):
@@ -291,26 +300,26 @@ class BCTPARA(BaseCard):
                 param = string(card, i, 'param%s' % j)
                 i += 1
                 if param == 'TYPE':
-                    value = integer(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]'
+                    value = integer_or_blank(card, i, 'value%s' % j, 0)
+                    assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
                 elif param == 'NSIDE':
                     value = integer_or_blank(card, i, 'value%s' % j, 1)
-                    assert value in [1, 2], 'NSIDE must be [1, 2]'
+                    assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
                 elif param == 'TBIRTH':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'TDEATH':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'INIPENE':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'INIPENE must be [0, 1, 2]'
+                    assert value in [0, 1, 2], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
                 elif param == 'PDEPTH':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'SEGNORM':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]'
+                    assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
                 elif param == 'OFFTYPE':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'SEGNORM must be [0, 1, 2]'
+                    assert value in [0, 1, 2], 'SEGNORM must be [0, 1, 2]; SEGNORM=%r' % value
                 elif param == 'OFFSET':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'TZPENE':
@@ -318,15 +327,15 @@ class BCTPARA(BaseCard):
 
                 elif param == 'CSTIFF':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1], 'CSTIFF must be [0, 1]'
+                    assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
                 elif param == 'TIED':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1], 'TIED must be [0, 1]'
+                    assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
                 elif param == 'TIEDTOL':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'EXTFAC':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                    assert 1.0E-6 < value < 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1'
+                    value = double_or_blank(card, i, 'value%s' % j, 0.001)
+                    assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
                 else:
                     # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
                     # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
@@ -335,8 +344,10 @@ class BCTPARA(BaseCard):
                     assert value is not None, '%s%i must not be None' % (param, j)
 
                 self.params[param] = value
-                i += 2
+                i += 1
                 j += 1
+                if j == 4:
+                    i += 1
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -348,9 +359,11 @@ class BCTPARA(BaseCard):
             fields.append(value)
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class BCTADD(BaseCard):
@@ -397,6 +410,8 @@ class BCTADD(BaseCard):
         fields = ['BCTADD'] + self.S
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

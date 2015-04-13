@@ -374,7 +374,7 @@ class MarginChecker(object):
         # 6.  get damage margin per ratio of life used
         pass
 
-    def SNcurve(stress):
+    def SNcurve(self, stress):
         """
         @code
         stress amplitude = fatigue strength coefficient* (2 N(f))^b

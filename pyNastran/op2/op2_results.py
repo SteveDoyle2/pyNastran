@@ -116,12 +116,13 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
                         for nid in node_ids[:4]:
                             results['x'   ][nid].append(layer_func(case.oxx[eid][nid]))
                             results['y'   ][nid].append(layer_func(case.oyy[eid][nid]))
-                            results['xy'  ][nid].append(layer_func(case.txy[eid][cen]))
+                            results['xy'  ][nid].append(layer_func(case.txy[eid][nid]))
                             results['maxP'][nid].append(layer_func(case.majorP[eid][nid]))
                             results['minP'][nid].append(layer_func(case.minorP[eid][nid]))
                             results['vonMises'][nid].append(layer_func(case.ovmShear[eid][nid]))
                     else:
-                        cen = 'CEN/%s' % eType[-1]
+                        #cen = 'CEN/%s' % eType[-1]
+                        cen = 0
                         for nid in node_ids[:4]:
                             results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
                             results['y'   ][nid].append(layer_func(case.oyy[eid][cen]))
@@ -130,7 +131,8 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
                             results['minP'][nid].append(layer_func(case.minorP[eid][cen]))
                             results['vonMises'][nid].append(layer_func(case.ovmShear[eid][cen]))
                 elif eType in ['CTRIA3', 'CTRIA6']:
-                    cen = 'CEN/%s' % eType[-1]
+                    #cen = 'CEN/%s' % eType[-1]
+                    cen = 0
                     assert len(node_ids[:3]) == 3, len(node_ids[:3])
                     for nid in node_ids[:3]:
                         results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
@@ -146,7 +148,8 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
                 node_ids = eid_to_nid_map[eid]
                 eType = case.eType[eid]
                 if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
-                    cen = 'CEN/%s' % eType[-1]
+                    #cen = 'CEN/%s' % eType[-1]
+                    cen  0
                 else:
                     raise NotImplementedError(eType)
                 for nid in node_ids:

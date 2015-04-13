@@ -34,6 +34,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_string_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 
 class LOAD(LoadCombination):
@@ -95,12 +96,12 @@ class LOAD(LoadCombination):
         #print "loadTypes = ",loadTypes
         return loadTypes
 
-    def writeCalculixGRAV(self, gx, gy, gz):
+    def write_calculix_GRAV(self, gx, gy, gz):
         msg = '*DLOAD\n'
         msg += 'AllElements,GRAV,%s,%s,%s\n' % (gx, gy, gz)
         return msg
 
-    def writeCodeAsterLoad(self, model, gridWord='node'):
+    def write_code_aster_load(self, model, grid_word='node'):
         loadIDs = self.getLoadIDs()
         loadTypes = self.getLoadTypes()
 
@@ -132,7 +133,7 @@ class LOAD(LoadCombination):
         spaces = "                                 "
         for nid in sorted(nids):  # ,load in sorted(iteritems(forceLoads))
             #print("nid = ",nid)
-            msg += spaces + "_F(NOEUD='%s%s',\n" % (gridWord, nid)
+            msg += spaces + "_F(NOEUD='%s%s',\n" % (grid_word, nid)
             #print "load = ",load
 
             if nid in forceLoads:
@@ -165,8 +166,8 @@ class LOAD(LoadCombination):
         msg = msg[:-2]
         msg += ');\n'
 
-        for gravityLoad in gravityLoads:
-            msg += 'CA_GRAVITY(%s);\n' % (str(gravityLoad))
+        for gravity_load in gravityLoads:
+            msg += 'CA_GRAVITY(%s);\n' % (str(gravity_load))
         return (msg, loadIDs, loadTypes)
 
     def getReducedLoads(self):
@@ -182,6 +183,9 @@ class LOAD(LoadCombination):
         load_scale = self.scale # global
         for (loadsPack, i_scale) in zip(self.loadIDs, self.scaleFactors):
             scale = i_scale * load_scale # actual scale = global * local
+            if isinstance(loadsPack, int):
+                raise RuntimeError('the load have not been cross-referenced')
+
             for load in loadsPack:
                 if (isinstance(load, Force) or isinstance(load, Moment) or
                     isinstance(load, PLOAD4) or isinstance(load, GRAV)):
@@ -274,13 +278,12 @@ class LOAD(LoadCombination):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         else:
             return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class GRAV(BaseCard):
@@ -383,7 +386,7 @@ class GRAV(BaseCard):
         list_fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [mb]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -463,9 +466,13 @@ class ACCEL(BaseCard):
             list_fields += [loc, val]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 class ACCEL1(BaseCard):
     """
@@ -528,13 +535,17 @@ class ACCEL1(BaseCard):
 
     def raw_fields(self):
         list_fields = ['ACCEL1', self.sid, self.Cid(), self.scale,
-                  self.N[0], self.N[1], self.N[2], None, None
-                  ] + self.nodeIDs()
+                       self.N[0], self.N[1], self.N[2], None, None
+                       ] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class Force(Load):
@@ -590,9 +601,13 @@ class Force(Load):
                 forceConstraints, momentConstraints,
                 gravityLoads)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class Moment(Load):
@@ -611,7 +626,7 @@ class Moment(Load):
             normXYZ = norm(self.xyz)
             #mag = self.mag*normXYZ
             self.mag *= normXYZ
-            self.xyz = self.xyz / normXYZ
+            self.xyz /= normXYZ
 
     def transformLoad(self):
         #print("self.xyz = ",self.xyz)
@@ -645,9 +660,13 @@ class Moment(Load):
     def M(self):
         return self.xyz * self.mag
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class FORCE(Force):
@@ -710,12 +729,11 @@ class FORCE(Force):
                        self.mag] + list(self.xyz)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)  # doesn't work
 
 
 class FORCE1(Force):
@@ -777,9 +795,13 @@ class FORCE1(Force):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class FORCE2(Force):
@@ -880,9 +902,13 @@ class FORCE2(Force):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class MOMENT(Moment):
@@ -932,18 +958,22 @@ class MOMENT(Moment):
 
     def raw_fields(self):
         list_fields = ['MOMENT', self.sid, self.node, self.Cid(),
-                  self.mag] + list(self.xyz)
+                       self.mag] + list(self.xyz)
         return list_fields
 
     def repr_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
         list_fields = ['MOMENT', self.sid, self.node, cid,
-                  self.mag] + list(self.xyz)
+                       self.mag] + list(self.xyz)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class MOMENT1(Moment):
@@ -1017,9 +1047,13 @@ class MOMENT1(Moment):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class MOMENT2(Moment):
@@ -1101,7 +1135,7 @@ class MOMENT2(Moment):
 
     def raw_fields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs(nodes=[self.node, self.g1, self.g2,
-                                               self.g3, self.g4])
+                                                     self.g3, self.g4])
         assert isinstance(g1, int), g1
         list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
@@ -1109,9 +1143,13 @@ class MOMENT2(Moment):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class PLOAD(Load):
@@ -1156,9 +1194,13 @@ class PLOAD(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class PLOAD1(Load):
@@ -1208,7 +1250,8 @@ class PLOAD1(Load):
         """
         .. todo:: cross reference and fix repr function
         """
-        self.eid = model.elements[self.eid]
+        msg = ' which is required by PLOAD1 sid=%s' % self.sid
+        self.eid = model.Element(self.eid, msg=msg)
 
     def transformLoad(self):
         p1 = self.eid.ga.Position()
@@ -1370,9 +1413,13 @@ class PLOAD1(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class PLOAD2(Load):
@@ -1419,9 +1466,13 @@ class PLOAD2(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class PLOAD4(Load):
@@ -1512,8 +1563,7 @@ class PLOAD4(Load):
         if self.g1 and self.g34:  # solid elements
             nid = self.g1.nid
             nidOpposite = self.g34.nid
-            (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid,
-                                                               nidOpposite)
+            (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid, nidOpposite)
         else:
             faceNodeIDs = self.eid.nodeIDs()
             Area = self.eid.Area()
@@ -1613,7 +1663,7 @@ class PLOAD4(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1658,6 +1708,10 @@ class PLOADX1(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)

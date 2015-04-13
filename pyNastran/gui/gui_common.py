@@ -88,8 +88,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.set_tools()
 
     def set_window_title(self, msg):
-        msg2 = "%s - "  % self.base_window_title
-        msg2 += msg
+        #msg2 = "%s - "  % self.base_window_title
+        #msg2 += msg
         self.setWindowTitle(msg)
 
     def set_logo(self, logo):
@@ -446,22 +446,20 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 axes.SetZAxisLabelText(zlabel)
         else:
             if Type == 'Rtz':  # cylindrical
-                xlabel = u'R'
-                ylabel = u'?'
-                zlabel = 'z'
-
-                xlabel = 'R'
-                ylabel = 'theta'
-                zlabel = 'z'
+                #x = u'R'
+                #y = u'?'
+                #z = 'z'
+                x = 'R'
+                y = 't'
+                z = 'z'
 
             elif Type == 'Rtp':  # spherical
                 xlabel = u'R'
                 #ylabel = u'?'
-                #zlabel = u'?'
-
-                #xlabel = 'R'
-                ylabel = 'theta'
-                zlabel = 'phi'
+                #z = u'?'
+                x = 'R'
+                y = 't'
+                z = 'p'
             else:
                 raise RuntimeError('invalid axis type; Type=%r' % Type)
 
@@ -1190,7 +1188,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if fname:
             renderLarge = vtk.vtkRenderLargeImage()
             if self.vtk_version[0] >= 6:
-                renderLarge.SetInputData(self.rend)
+                renderLarge.SetInput(self.rend)
             else:
                 renderLarge.SetInput(self.rend)
             renderLarge.SetMagnification(self.magnify)

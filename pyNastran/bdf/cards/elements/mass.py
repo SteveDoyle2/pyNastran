@@ -16,12 +16,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 from numpy import zeros, array
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Element #, BaseCard
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 
 class PointElement(Element):
@@ -156,9 +156,13 @@ class CMASS1(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CMASS2(PointMassElement):
@@ -270,9 +274,13 @@ class CMASS2(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CMASS3(PointMassElement):
@@ -330,9 +338,13 @@ class CMASS3(PointMassElement):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CMASS4(PointMassElement):
@@ -389,9 +401,13 @@ class CMASS4(PointMassElement):
         fields = ['CMASS4', self.eid, self.mass, self.s1, self.s2]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CONM1(PointMassElement):
@@ -562,10 +578,11 @@ class CONM1(PointMassElement):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
         m = self.massMatrix
-        list_fields = ['CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
-                  m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
-                  m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
-                  m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
+        list_fields = [
+            'CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
+            m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
+            m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
+            m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
         return list_fields
 
     def repr_fields(self):
@@ -576,9 +593,13 @@ class CONM1(PointMassElement):
             list_fields2.append(val)
         return list_fields2
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CONM2(PointMassElement):
@@ -699,8 +720,8 @@ class CONM2(PointMassElement):
         """
         I = self.I
         A = [[ I[0], -I[1], -I[3]],
-             [-I[1],  I[2], -I[4]],
-             [-I[3], -I[4],  I[5]]]
+             [-I[1], I[2], -I[4]],
+             [-I[3], -I[4], I[5]]]
         if self.Cid() in [0, -1]:
             return A
         else:
@@ -793,10 +814,10 @@ class CONM2(PointMassElement):
 
         cid = set_blank_if_default(self.Cid(), 0)
         list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
-                  [None] + I)
+                       [None] + I)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
