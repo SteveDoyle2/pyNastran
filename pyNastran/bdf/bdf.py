@@ -914,7 +914,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         try:
             self.sol = int(sol)
         except ValueError:
-            self.sol = self._solmap_to_value[sol]
+            try:
+                self.sol = self._solmap_to_value[sol]
+            except KeyError:
+                self.sol = sol
 
         if self.sol == 600:
             #: solution 600 method modifier
@@ -1280,11 +1283,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     return card_obj
 
             # card that requires more careful processing, elements
-            _dct = {'CTETRA' : (7, CTETRA4, CTETRA10),
-                    'CPYRAM' : (8, CPYRAM5, CPYRAM13),
-                    'CPENTA' : (9, CPENTA6, CPENTA15),
-                    'CHEXA' : (11, CHEXA8, CHEXA20),
-                    }
+            _dct = {
+                'CTETRA' : (7, CTETRA4, CTETRA10),
+                'CPYRAM' : (8, CPYRAM5, CPYRAM13),
+                'CPENTA' : (9, CPENTA6, CPENTA15),
+                'CHEXA' : (11, CHEXA8, CHEXA20),
+            }
             if card_name in _dct:
                 d = _dct[card_name]
                 self.add_element((d[1] if card_obj.nFields() == d[0]

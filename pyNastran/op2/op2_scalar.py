@@ -32,7 +32,7 @@ from pyNastran.op2.tables.oug.oug import OUG
 from pyNastran.op2.tables.ogpwg import OGPWG
 from pyNastran.op2.fortran_format import FortranFormat
 
-from pyNastran.utils import is_binary
+from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
 
@@ -158,10 +158,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'MATPOOL': [self._table_passer, self._table_passer],
             b'CSTM':    [self._table_passer, self._table_passer],
-            b'TOUGV1':  [self._table_passer, self._table_passer],
+            b'TOUGV1':  [self._table_passer, self._table_passer],  # grid point temperature
             b'AXIC':    [self._table_passer, self._table_passer],
-            b'BOPHIG':  [self._table_passer, self._table_passer],
-            b'HOEF1':  [self._table_passer, self._table_passer],
+            b'BOPHIG':  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
             b'ONRGY2':  [self._table_passer, self._table_passer],
 
             b'RSOUGV1': [self._table_passer, self._table_passer],
@@ -170,10 +169,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #=======================
             # OEF
             # element forces
-            b'OEFIT' : [self._read_oef1_3, self._read_oef1_4],
-            b'OEF1X' : [self._read_oef1_3, self._read_oef1_4],
-            b'OEF1'  : [self._read_oef1_3, self._read_oef1_4],
-            b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFIT' : [self._read_oef1_3, self._read_oef1_4],  # failure indices
+            b'OEF1X' : [self._read_oef1_3, self._read_oef1_4],  # element forces at intermediate stations
+            b'OEF1'  : [self._read_oef1_3, self._read_oef1_4],  # element forces or heat flux
+            b'HOEF1':  [self._table_passer, self._table_passer], # element heat flux
+            b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],  # scaled response spectra - spc forces?
             #=======================
             # OQG
             # spc forces
@@ -183,13 +183,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQMG1' : [self._read_oqg1_3, self._read_oqg1_4],
 
             # ???? - passer
-            #'OQP1': [self._table_passer, self._table_passer],
+            #'OQP1': [self._table_passer, self._table_passer],  # scaled response spectra - displacement
             #=======================
             # OPG
             # applied loads
             b'OPG1'  : [self._read_opg1_3, self._read_opg1_4],  # applied loads in the nodal frame
             b'OPGV1' : [self._read_opg1_3, self._read_opg1_4],
-            b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
 
             # OGPFB1
             # grid point forces
@@ -201,13 +201,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #=======================
             # OES
             # stress
-            b'OES1X1'  : [self._read_oes1_3, self._read_oes1_4],  # stress
-            b'OES1'    : [self._read_oes1_3, self._read_oes1_4],  # stress
-            b'OES1X'   : [self._read_oes1_3, self._read_oes1_4],  # stress
+            b'OES1X1'  : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear elements
+            b'OES1'    : [self._read_oes1_3, self._read_oes1_4],  # stress - linear only
+            b'OES1X'   : [self._read_oes1_3, self._read_oes1_4],  # element stresses at intermediate stations & nonlinear stresses
             b'OES1C'   : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
             b'OESCP'   : [self._read_oes1_3, self._read_oes1_4],
-            b'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear stresses
+            b'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear transient stresses
             b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
             b'OESTRCP' : [self._read_oes1_3, self._read_oes1_4],
             b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
@@ -224,7 +224,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGV1'   : [self._read_oug1_3, self._read_oug1_4],  # displacements in nodal frame
             b'BOUGV1'  : [self._read_oug1_3, self._read_oug1_4],  # OUG1 on the boundary???
             b'OUGV1PAT': [self._read_oug1_3, self._read_oug1_4],  # OUG1 + coord ID
-            b'OUPV1'   : [self._read_oug1_3, self._read_oug1_4],
+            b'OUPV1'   : [self._read_oug1_3, self._read_oug1_4],  # scaled response spectra - displacement
 
             #=======================
             # OGPWG
@@ -314,11 +314,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EQEXINS': [self._table_passer, self._table_passer],
 
             b'GPDT': [self._table_passer, self._table_passer],     # grid points?
-            b'BGPDT': [self._table_passer, self._table_passer],
+            b'BGPDT': [self._table_passer, self._table_passer],    # basic grid point defintion table
             b'BGPDTS': [self._table_passer, self._table_passer],
             b'BGPDTOLD': [self._table_passer, self._table_passer],
 
-            b'PVT0': [self._table_passer, self._table_passer],
+            b'PVT0': [self._table_passer, self._table_passer],  # user parameter value table
             b'DESTAB': [self._table_passer, self._table_passer],
             b'STDISP': [self._table_passer, self._table_passer],
             b'CASECC': [self._table_passer, self._table_passer],  # case control deck
@@ -370,7 +370,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #==================================
             #b'GPL': [self._table_passer, self._table_passer],
             b'OMM2': [self._table_passer, self._table_passer],
-            b'ERRORN': [self._table_passer, self._table_passer],
+            b'ERRORN': [self._table_passer, self._table_passer],  # p-element error summary table
             #==================================
 
             b'OCRPG': [self._table_passer, self._table_passer],
@@ -476,7 +476,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.read_mode != 2:
             op2_filename = self._validate_op2_filename(op2_filename)
             self.log.debug('op2_filename = %r' % op2_filename)
-            if not is_binary(op2_filename):
+            if not is_binary_file(op2_filename):
                 if os.path.getsize(op2_filename) == 0:
                     raise IOError('op2_filename=%r is empty.' % op2_filename)
                 raise IOError('op2_filename=%r is not a binary OP2.' % op2_filename)

@@ -10,7 +10,7 @@ from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose, ndarray)
 from scipy.sparse import coo_matrix
 
-from pyNastran.utils import is_binary as file_is_binary
+from pyNastran.utils import is_binary_file as file_is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 
 

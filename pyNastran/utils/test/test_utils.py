@@ -6,7 +6,7 @@ import unittest
 from numpy import matrix, array
 
 import pyNastran
-from pyNastran.utils import is_binary, object_methods, object_attributes
+from pyNastran.utils import is_binary_file, object_methods, object_attributes
 from pyNastran.utils.dev import list_print
 
 pkg_path = pyNastran.__path__[0]
@@ -45,8 +45,8 @@ class TestUtils(unittest.TestCase):
     def test_is_binary(self):
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf')
         op2_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.op2')
-        self.assertTrue(is_binary(op2_filename))
-        self.assertFalse(is_binary(bdf_filename))
+        self.assertTrue(is_binary_file(op2_filename))
+        self.assertFalse(is_binary_file(bdf_filename))
 
     #def test_obscure(self):
         #for num in [0,1,5,53,231123, 34567523, 1024, 65367, 14321324, 73123434,

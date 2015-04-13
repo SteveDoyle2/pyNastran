@@ -15,7 +15,7 @@ import scipy
 from struct import unpack, Struct, pack
 import pyNastran
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.utils import is_binary as is_file_binary
+from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
 
@@ -77,7 +77,7 @@ class STLReader(object):
         self.infilename = stl_filename
         self.log.info("---starting reading STL file...%r---" % self.infilename)
 
-        if is_file_binary(stl_filename):
+        if is_binary_file(stl_filename):
             self.read_binary_stl(stl_filename)
         else:
             self.read_ascii_stl(stl_filename)

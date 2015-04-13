@@ -6,7 +6,7 @@ from numpy import ndarray
 import io
 
 
-def is_binary(filename):
+def is_binary_file(filename):
     """
     Return true if the given filename is binary.
 

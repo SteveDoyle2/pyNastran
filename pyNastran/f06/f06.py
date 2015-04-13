@@ -21,7 +21,7 @@ from pyNastran.f06.tables.max_min import MAX_MIN
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForces
 
-from pyNastran.utils import is_binary
+from pyNastran.utils import is_binary_file
 from pyNastran.f06.errors import FatalError
 
 
