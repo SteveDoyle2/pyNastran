@@ -188,4 +188,3 @@ Subpackages
     pyNastran.bdf.cards.thermal
     pyNastran.bdf.cards.test
 
-

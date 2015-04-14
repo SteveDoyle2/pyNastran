@@ -1,12 +1,12 @@
 tables Package
 ==============
 
-:mod:`destab` Module
+:mod:`ogs` Module
 --------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.destab
+.. inheritance-diagram:: pyNastran.op2.tables.ogs
 
-.. automodule:: pyNastran.op2.tables.destab
+.. automodule:: pyNastran.op2.tables.ogs
     :members:
     :private-members:
     :undoc-members:

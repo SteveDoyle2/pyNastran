@@ -48,7 +48,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`deprecated` Module
------------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.deprecated
 
@@ -70,7 +70,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`field_writer_8` Module
--------------------------
+----------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.field_writer_8
 
@@ -81,7 +81,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`field_writer_16` Module
----------------------------
+-----------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.field_writer_16
 
@@ -114,7 +114,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`utils` Module
----------------------
+-------------------
 
 .. inheritance-diagram:: pyNastran.bdf.utils
 
@@ -125,7 +125,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`write_path` Module
------------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.write_path
 

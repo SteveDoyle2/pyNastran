@@ -67,12 +67,23 @@ geom Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`geometryTables` Module
+:mod:`ept` Module
 ----------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.geom.geometryTables
+.. inheritance-diagram:: pyNastran.op2.tables.geom.ept
 
-.. automodule:: pyNastran.op2.tables.geom.geometryTables
+.. automodule:: pyNastran.op2.tables.geom.ept
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`mpt` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.geom.mpt
+
+.. automodule:: pyNastran.op2.tables.geom.mpt
     :members:
     :private-members:
     :undoc-members:

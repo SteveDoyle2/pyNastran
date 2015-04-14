@@ -111,17 +111,6 @@ test Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_openmdao` Module
----------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.test.test_openmdao
-
-.. automodule:: pyNastran.bdf.test.test_openmdao
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 

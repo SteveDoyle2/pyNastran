@@ -2,7 +2,7 @@ nastran Package
 ===============
 
 :mod:`nastranIOv` Module
------------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.converters.nastran.nastranIOv
 
@@ -35,7 +35,7 @@ nastran Package
     :show-inheritance:
 
 :mod:`nastran_to_cart3d` Module
------------------------
+-------------------------------
 
 .. inheritance-diagram:: pyNastran.converters.nastran.nastran_to_cart3d
 

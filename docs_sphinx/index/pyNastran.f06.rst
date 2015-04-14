@@ -48,7 +48,7 @@ This is the pyNastran.f06.rst file.
     :show-inheritance:
 
 :mod:`errors` Module
-----------------------------
+--------------------
 
 .. inheritance-diagram:: pyNastran.f06.errors
 
