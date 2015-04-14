@@ -4,9 +4,9 @@ cards Package
 :mod:`test_beams` Module
 ------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.cards.test_beams
+.. inheritance-diagram:: pyNastran.bdf.cards.test.test_beams
 
-.. automodule:: pyNastran.bdf.test.cards.test_beams
+.. automodule:: pyNastran.bdf.cards.test.test_beams
     :members:
     :private-members:
     :undoc-members:
@@ -15,9 +15,9 @@ cards Package
 :mod:`test_constraints` Module
 ------------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.cards.test_constraints
+.. inheritance-diagram:: pyNastran.bdf.cards.test.test_constraints
 
-.. automodule:: pyNastran.bdf.test.cards.test_constraints
+.. automodule:: pyNastran.bdf.cards.test.test_constraints
     :members:
     :private-members:
     :undoc-members:
@@ -26,9 +26,9 @@ cards Package
 :mod:`test_coords` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.cards.test_coords
+.. inheritance-diagram:: pyNastran.bdf.cards.test.test_coords
 
-.. automodule:: pyNastran.bdf.test.cards.test_coords
+.. automodule:: pyNastran.bdf.cards.test.test_coords
     :members:
     :private-members:
     :undoc-members:
@@ -37,9 +37,9 @@ cards Package
 :mod:`test_materials` Module
 ----------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.cards.test_materials
+.. inheritance-diagram:: pyNastran.bdf.cards.test.test_materials
 
-.. automodule:: pyNastran.bdf.test.cards.test_materials
+.. automodule:: pyNastran.bdf.cards.test.test_materials
     :members:
     :private-members:
     :undoc-members:
@@ -48,9 +48,9 @@ cards Package
 :mod:`test_rigid` Module
 ------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.cards.test_rigid
+.. inheritance-diagram:: pyNastran.bdf.cards.test.test_rigid
 
-.. automodule:: pyNastran.bdf.test.cards.test_rigid
+.. automodule:: pyNastran.bdf.cards.test.test_rigid
     :members:
     :private-members:
     :undoc-members:
@@ -59,9 +59,9 @@ cards Package
 :mod:`test_shells` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.cards.test_shells
+.. inheritance-diagram:: pyNastran.bdf.cards.test.test_shells
 
-.. automodule:: pyNastran.bdf.test.cards.test_shells
+.. automodule:: pyNastran.bdf.cards.test.test_shells
     :members:
     :private-members:
     :undoc-members:

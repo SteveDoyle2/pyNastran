@@ -221,8 +221,10 @@ def parse_patran_syntax(node_sets):
 
     Example
     -------
-    node_sets = "1 2 3 5:10 12:20:2"
-    data = parse_patran_syntax(node_sets)
+    ::
+
+      node_sets = "1 2 3 5:10 12:20:2"
+      data = parse_patran_syntax(node_sets)
 
     :warning:
       Don't include the n/node or e/element or any other identifier,
@@ -264,13 +266,15 @@ def parse_patran_syntax_dict(node_sets):
 
     Example
     -------
-    node_sets = "e 1:3 n 2:6:2 Node 10:13"
-    data = parse_patran_syntax_dict(node_sets)
-    data = {
-        'e'    : [1, 2, 3],
-        'n'    : [2, 4, 6],
-        'Node' : [10, 11, 12, 13],
-    }
+    ::
+
+      node_sets = "e 1:3 n 2:6:2 Node 10:13"
+      data = parse_patran_syntax_dict(node_sets)
+      data = {
+          'e'    : [1, 2, 3],
+          'n'    : [2, 4, 6],
+          'Node' : [10, 11, 12, 13],
+      }
     :note:
       the identifier (e.g. "e") must be used.  Use parse_patran_syntax to skip the identifier.
     :note:

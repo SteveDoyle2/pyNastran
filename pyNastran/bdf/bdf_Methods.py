@@ -94,9 +94,7 @@ class BDFMethods(BDFMethodsDeprecated):
             masses = [mass for eid, mass in self.masses.items() if eid in element_ids]
             nelements = len(element_ids)
 
-        #num_cpus = 1
         if num_cpus > 1:
-            # must use num_cpus = 1
             mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses,
                                                    nelements,
                                                    reference_point=reference_point)
@@ -378,18 +376,21 @@ class BDFMethods(BDFMethodsDeprecated):
 
         Just pressure:
         ==============
-        eids = [3]
-        nids = []
+        .. code-block:: python
+          eids = [3]
+          nids = []
 
         Just force:
         ==============
-        eids = []
-        nids = [5]
+        .. code-block:: python
+          eids = []
+          nids = [5]
 
         or both:
         ==============
-        eids = [3]
-        nids = [5]
+        .. code-block:: python
+          eids = [3]
+          nids = [5]
 
         .. note:: If you split the model into sections and sum the loads
                   on each section, you may not get the same result as

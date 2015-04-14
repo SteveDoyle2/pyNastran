@@ -138,8 +138,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def set_transient_times(self, times):  # TODO this name sucks...
         """
         Takes a dictionary of list of times in a transient case and
-        gets the output closest to those times.::
+        gets the output closest to those times.
 
+        .. code-block:: python
           times = {subcaseID_1: [time1, time2],
                    subcaseID_2: [time3, time4]}
         """
@@ -460,11 +461,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Starts the OP2 file reading
 
-        :param op2_filename: if a string is set, the filename specified in the
-            __init__ is overwritten.
-
-            init=None,  op2_filename=None   -> a dialog is popped up  (not implemented; crash)
-            init=fname, op2_filename=fname  -> fname is used
+        :param op2_filename: the op2 file
+        +--------------+-----------------------+
+        | op2_filename | Description           |
+        +--------------+-----------------------+
+        |     None     | a dialog is popped up |
+        +--------------+-----------------------+
+        |    string    | the path is used      |
+        +--------------+-----------------------+
         """
         sr = list(self._saved_results)
         sr.sort()

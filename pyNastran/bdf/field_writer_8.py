@@ -36,6 +36,7 @@ def set_blank_if_default(value, default):
 
     :param value: the field value the may be set to None (blank)
                   if value=default, the default value for the field
+
     .. note:: this method is used by almost every card when printing
     """
     return None if is_same(value, default) else value
@@ -212,6 +213,7 @@ def print_card_8(fields):
 
     :param fields: all the fields in the BDF card (no trailing Nones)
     :returns card: string representation of the card in small field format
+
     .. note:: An internal field value of None or '' will be treated as
               a blank field
     .. note:: A small field format follows the  8-8-8-8-8-8-8-8 = 80
@@ -222,12 +224,13 @@ def print_card_8(fields):
 
     Example
     =======
-    >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
-    >>> print_card_16(fields)
-    DUMMY*                 1               2               3
-    *                      4               5               6               7
-    *                     8.
-    *
+    .. code-block:: python
+
+      >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+      >>> print_card_8(fields)
+      DUMMY          1       2       3               4       5       6       7
+      DUMMY          1       2       3               4       5       6       7
+                    8.
     """
     try:
         out = '%-8s' % fields[0]
@@ -267,7 +270,9 @@ def print_int_card(fields):
 
     Example
     -------
-    fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
+    .. code-block:: python
+
+      fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
     """
     try:
         out = '%-8s' % fields[0]
@@ -310,6 +315,8 @@ def print_int_card_blocks(fields_blocks):
 
     Example
     -------
+    .. code-block:: python
+
       fields_blocks = [
           'SET1',
           [['a', 1.0, 3], False], # these are not all integers
