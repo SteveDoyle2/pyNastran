@@ -27,12 +27,12 @@ class TestMaterials(unittest.TestCase):
         self.assertEquals(rho, mat1.Rho())
 
         size = 8
-        msg = mat1.write_bdf(size, 'dummy')
+        msg = mat1.write_card(size, 'dummy')
         self.assertEquals(msg,
             'MAT1           1    2.+7    3.+7      .4   1.-50\n')
 
         size = 16
-        msg = mat1.write_bdf(size, 'dummy')
+        msg = mat1.write_card(size, 'dummy')
         self.assertEquals(msg,
             'MAT1*                  1       20000000.       30000000.              .4\n*                  1.-50\n')
 
@@ -73,7 +73,7 @@ class TestMaterials(unittest.TestCase):
         msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 16
-        msg = card2.write_bdf(size, 'dummy')
+        msg = card2.write_card(size, 'dummy')
         #msg = f.getvalue()
         #print(msg)
 
@@ -104,7 +104,7 @@ class TestMaterials(unittest.TestCase):
         msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 8
-        msg = card2.write_bdf(size, 'dummy')
+        msg = card2.write_card(size, 'dummy')
         #msg = f.getvalue()
         #print(msg)
 

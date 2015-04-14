@@ -811,7 +811,7 @@ class Cord2x(Coord):
         assert isinstance(cid, int), 'cid=%r' % cid
         assert isinstance(rid, int), 'rid=%r' % rid
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -995,7 +995,7 @@ class Cord1x(Coord):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 

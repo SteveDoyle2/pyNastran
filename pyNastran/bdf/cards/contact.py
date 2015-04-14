@@ -91,7 +91,7 @@ class BSURF(BaseCard):
         ##    fields += [sid, tid, fric, mind, maxd, None, None]
         #return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -152,7 +152,7 @@ class BSURFS(BaseCard):
             fields += [eid, g1, g2, g3]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -222,7 +222,7 @@ class BCTSET(BaseCard):
             fields += [sid, tid, fric, mind, maxd, None, None, None]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -271,7 +271,7 @@ class BCRPARA(BaseCard):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -362,7 +362,7 @@ class BCTPARA(BaseCard):
             fields.append(value)
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -413,7 +413,7 @@ class BCTADD(BaseCard):
         fields = ['BCTADD'] + self.S
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

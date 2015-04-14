@@ -100,7 +100,7 @@ class PFAST(Property):
                   self.kt3, kr1, kr2, kr3, mass, ge]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -184,7 +184,7 @@ class PGAP(Property):
                   tmax, mar, trmin]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -242,7 +242,7 @@ class PLSOLID(SolidProperty):
         fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -330,7 +330,7 @@ class PSOLID(SolidProperty):
                   self.stress, self.isop, fctn]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         # this card has integers & strings, so it uses...
         return self.comment() + print_card_8(card)
@@ -344,7 +344,7 @@ class CrackProperty(Property):
             return self.mid
         return self.mid.mid
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -555,7 +555,7 @@ class PCONEAX(Property):
                   nsm, self.z1, self.z2] + self.phi
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

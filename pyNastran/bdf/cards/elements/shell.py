@@ -404,7 +404,7 @@ class CTRIA3(TriShell):
                        [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -413,7 +413,7 @@ class CTRIA3(TriShell):
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
 
-        #return self.write_bdf(size, double)
+        #return self.write_card(size, double)
         nodes = self.nodeIDs()
         row2_data = [thetaMcid, zOffset,
                      TFlag, T1, T2, T3]
@@ -423,13 +423,13 @@ class CTRIA3(TriShell):
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    #def write_bdf(self, size=8, is_double=False):
+    #def write_card(self, size=8, is_double=False):
         #card = wipe_empty_fields(self.repr_fields())
         #if size == 8 or len(card) == 6: # to last node
             #msg = self.comment() + print_card_8(card)
         #else:
             #msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         #return msg
 
@@ -596,13 +596,13 @@ class CTRIA6(TriShell):
                        [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment() + print_card_8(card)
         else:
             msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
@@ -725,13 +725,13 @@ class CTRIAR(TriShell):
                        [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 5: # to last node
             msg = self.comment() + print_card_8(card)
         else:
             msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
@@ -827,13 +827,13 @@ class CTRIAX(TriShell):
         list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [thetaMcid]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment() + print_card_8(card)
         else:
             msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
@@ -973,13 +973,13 @@ class CTRIAX6(TriShell):
         list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [theta]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment() + print_card_8(card)
         else:
             msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
@@ -1261,10 +1261,10 @@ class CSHEAR(QuadShell):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         msg = self.comment() + print_card_8(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
@@ -1407,7 +1407,7 @@ class CQUAD4(QuadShell):
                        [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -1426,13 +1426,13 @@ class CQUAD4(QuadShell):
                '                %8s%8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    #def write_bdf(self, size=8, is_double=False):
+    #def write_card(self, size=8, is_double=False):
         #card = wipe_empty_fields(self.repr_fields())
         #if size == 8 or len(card) == 7: # to last node
             #msg = self.comment() + print_card_8(card)
         #else:
             #msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         #return msg
 
@@ -1547,13 +1547,13 @@ class CQUADR(QuadShell):
                        [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8 or len(card) == 7: # to last node
             msg = self.comment() + print_card_8(card)
         else:
             msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
@@ -1618,7 +1618,7 @@ class CQUAD(QuadShell):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
@@ -1626,10 +1626,10 @@ class CQUAD(QuadShell):
                '        %8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    #def write_bdf(self, size=8, is_double=False):
+    #def write_card(self, size=8, is_double=False):
         #card = self.repr_fields()
         #msg = self.comment() + print_card_8(card)
-        #msg2 = self.write_bdf(size)
+        #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         #return msg
 
@@ -1793,7 +1793,7 @@ class CQUAD8(QuadShell):
             T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8 or len(card) == 11: # to last node
             return self.comment() + print_card_8(card)
@@ -1862,7 +1862,7 @@ class CQUADX(QuadShell):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes[:4]
         row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]]

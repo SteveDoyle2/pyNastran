@@ -455,7 +455,7 @@ class PBEAM(IntegratedLineProperty):
         list_fields += footer
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -689,7 +689,7 @@ class PBEAML(IntegratedLineProperty):
         #list_fields[3] = group
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_card(self, size, is_double):
         """.. todo:: having bug with PBEAML"""
         card = self.repr_fields()
         if size == 8:
@@ -793,7 +793,7 @@ class PBCOMP(LineProperty):
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

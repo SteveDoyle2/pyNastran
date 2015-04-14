@@ -102,7 +102,7 @@ def _write_nodes(self, outfile, size, is_double):
     if self.spoints:
         msg = []
         msg.append('$SPOINTS\n')
-        msg.append(self.spoints.write_bdf(size, is_double))
+        msg.append(self.spoints.write_card(size, is_double))
         outfile.write(''.join(msg))
 
     if self.nodes:
@@ -112,7 +112,7 @@ def _write_nodes(self, outfile, size, is_double):
             msg.append(self.gridSet.print_card(size))
         for (nid, node) in sorted(iteritems(self.nodes)):
             if nid not in self.remove_nodes:
-                msg.append(node.write_bdf(size, is_double))
+                msg.append(node.write_card(size, is_double))
         outfile.write(''.join(msg))
     #if 0:  # not finished
 

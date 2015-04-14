@@ -192,7 +192,7 @@ class CROD(RodElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -293,7 +293,7 @@ class CTUBE(RodElement):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -447,7 +447,7 @@ class CONROD(RodElement):
                   self.A, j, c, nsm]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

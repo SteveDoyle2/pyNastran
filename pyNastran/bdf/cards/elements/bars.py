@@ -427,7 +427,7 @@ class CBAR(LineElement):
                        x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -519,7 +519,7 @@ class CBEAM3(CBAR):
                        twa, twb, twc, self.s[0], self.s[1], self.s[2]]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -598,7 +598,7 @@ class CBEND(LineElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, is_double):
+    def write_card(self, size, is_double):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

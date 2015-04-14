@@ -154,7 +154,7 @@ class CELAS1(SpringElement):
                   self.c1, nodes[1], self.c2]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -290,7 +290,7 @@ class CELAS2(SpringElement):
                   nodes[1], self.c2, ge, s]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -349,7 +349,7 @@ class CELAS3(SpringElement):
         #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -409,6 +409,6 @@ class CELAS4(SpringElement):
         #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

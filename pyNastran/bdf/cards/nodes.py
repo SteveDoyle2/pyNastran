@@ -100,9 +100,9 @@ class RINGAX(Ring):
                        None, self.ps]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the RINGAX object pointer
@@ -183,9 +183,9 @@ class SPOINT(Node):
                     lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:   the SPOINT object pointer
         :param size:   unused
@@ -339,9 +339,9 @@ class SPOINTs(Node):
                 lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:   the SPOINT object pointer
         :param size:   unused
@@ -527,9 +527,9 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_bdf(self, f, size, is_double):
+    def write_card(self, f, size, is_double):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the SPOINT object pointer
@@ -654,9 +654,9 @@ class GRIDB(Node):
                        idf]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the GRIDB object pointer
@@ -991,9 +991,9 @@ class GRID(Node, GridDeprecated):
                                                                  seid]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the GRID object pointer
@@ -1254,9 +1254,9 @@ class POINT(Node, PointDeprecated):
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the GRID object pointer

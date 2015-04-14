@@ -133,7 +133,7 @@ class TestCoords(unittest.TestCase):
         card = CORD1R(card)
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cord2c_01(self):
@@ -388,7 +388,7 @@ class TestCoords(unittest.TestCase):
         card = CORD1C(card)
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cord1s_01(self):
@@ -400,7 +400,7 @@ class TestCoords(unittest.TestCase):
         card = CORD1S(card)
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cord2r_02(self):

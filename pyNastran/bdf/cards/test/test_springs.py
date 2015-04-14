@@ -12,7 +12,7 @@ class TestSprings(unittest.TestCase):
 
         size = 8
         card = PELAS(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
         self.assertEquals(card.Pid(), 201)
         self.assertEquals(card.K(), 1e5)

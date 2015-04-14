@@ -62,7 +62,7 @@ class CFAST(Element):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -171,7 +171,7 @@ class CGAP(Element):
                   [self.Cid()])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -241,7 +241,7 @@ class CRAC2D(CrackElement):
         list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -290,6 +290,6 @@ class CRAC3D(CrackElement):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

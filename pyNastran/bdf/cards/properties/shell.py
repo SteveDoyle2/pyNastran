@@ -612,7 +612,7 @@ class PCOMP(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -754,7 +754,7 @@ class PCOMPG(CompositeShellProperty):
             list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -812,7 +812,7 @@ class PLPLANE(ShellProperty):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -909,7 +909,7 @@ class PSHEAR(ShellProperty):
                   self.f1, self.f2]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1166,7 +1166,7 @@ class PSHELL(ShellProperty):
                   twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

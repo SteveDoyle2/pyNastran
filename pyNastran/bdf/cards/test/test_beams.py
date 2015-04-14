@@ -248,7 +248,7 @@ class TestBeams(unittest.TestCase):
             fields = card2.raw_fields()
             msg = print_card_8(fields)
             size = 16
-            msg = card2.write_bdf(size, 'dummy')
+            msg = card2.write_card(size, 'dummy')
 
             lines_actual = msg.rstrip().split('\n')
             msgA = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)

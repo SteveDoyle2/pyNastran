@@ -113,7 +113,7 @@ class PROD(Property):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -259,7 +259,7 @@ class PTUBE(Property):
         list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

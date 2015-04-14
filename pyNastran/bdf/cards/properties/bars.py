@@ -768,7 +768,7 @@ class PBAR(LineProperty):
                        None, C1, C2, D1, D2, E1, E2, F1, F2, K1, K2, i12]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1142,7 +1142,7 @@ class PBARL(LineProperty):
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_card(self, size, is_double):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1309,7 +1309,7 @@ class PBEND(LineProperty):
             raise ValueError('only beamType=1 and 2 supported')
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

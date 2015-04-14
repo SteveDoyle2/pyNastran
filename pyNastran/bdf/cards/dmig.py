@@ -320,9 +320,9 @@ class NastranMatrix(BaseCard):
         return dtype
 
     def __repr__(self):
-        return self.write_bdf(size=8, is_double=False)
+        return self.write_card(size=8, is_double=False)
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
         .. todo:: support double precision
         """
@@ -713,7 +713,7 @@ class DMI(NastranMatrix):
                 list_fields += ['DMI', self.name, GCj, GCi, reali]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
@@ -751,4 +751,4 @@ class DMI(NastranMatrix):
         .. todo:: support shortened output format.  There's a stupidly low 1000
                   DMI cap, I assume this is entries and not matrices.
         """
-        return self.write_bdf(size=8, is_double=False)
+        return self.write_card(size=8, is_double=False)

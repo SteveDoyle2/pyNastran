@@ -15,7 +15,7 @@ class TestSolids(unittest.TestCase):
 
         size = 8
         card = CPENTA15(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     #def test_solid_02(self):

@@ -47,11 +47,11 @@ class TestAero(unittest.TestCase):
         self.assertTrue(all(aefact97.Di == [.3, .7, 1.0]))
         self.assertTrue(all(aefact98.Di == [.3, .7, 1.0]))
 
-        out = aefact97.write_bdf(8, None)
+        out = aefact97.write_card(8, None)
         self.assertEqual(msg, out)
 
         msg = 'this is a good comment\nAEFACT        98      .3      .7      1.\n'
-        out = aefact98.write_bdf(8, None)
+        out = aefact98.write_card(8, None)
         self.assertEqual(msg, out)
 
         data = ['AEFACT', 99, .3, 0.7, 1.0, None, 'cat']

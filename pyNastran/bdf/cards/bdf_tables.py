@@ -47,7 +47,7 @@ class Table(BaseCard):
     def parse_fields(self, xy, nrepeated, isData=False):
         self.table = TableObj(xy, nrepeated, isData)
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

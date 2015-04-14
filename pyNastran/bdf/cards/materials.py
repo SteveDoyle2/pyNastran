@@ -135,7 +135,7 @@ class CREEP(Material):
                        self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -365,7 +365,7 @@ class MAT1(IsotropicMaterial):
                        St, Sc, Ss, Mcsid]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -571,7 +571,7 @@ class MAT2(AnisotropicMaterial):
                        self.St, self.Sc, self.Ss, self.Mcsid]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -688,7 +688,7 @@ class MAT3(OrthotropicMaterial):
                        ax, ath, az, TRef, ge]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -779,7 +779,7 @@ class MAT4(ThermalMaterial):
                        self.refEnthalpy, self.tch, self.tdelta, self.qlat]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -882,7 +882,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
                        hgen]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1060,7 +1060,7 @@ class MAT8(OrthotropicMaterial):
                        G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1221,7 +1221,7 @@ class MAT9(AnisotropicMaterial):
                        + A + [TRef, ge])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1329,7 +1329,7 @@ class MAT10(Material):
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1440,7 +1440,7 @@ class MAT11(Material):
                        a2, a3, TRef, ge]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1633,7 +1633,7 @@ class MATHP(HyperelasticMaterial):
                        None, None, None, self.tabd]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

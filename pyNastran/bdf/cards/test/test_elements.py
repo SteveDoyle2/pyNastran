@@ -16,7 +16,7 @@ class TestElements(unittest.TestCase):
         card = CBUSH(card)
         self.assertEquals(card.Eid(), 101)
         self.assertEquals(card.Pid(), 102)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cdamp1_01(self):
@@ -28,7 +28,7 @@ class TestElements(unittest.TestCase):
         card = CDAMP1(card)
         self.assertEquals(card.Eid(), 2001)
         self.assertEquals(card.Pid(), 20)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cgap_01(self):
@@ -40,7 +40,7 @@ class TestElements(unittest.TestCase):
         card = CGAP(card)
         self.assertEquals(card.Eid(), 899)
         self.assertEquals(card.Pid(), 90)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_pgap_01(self):
@@ -50,7 +50,7 @@ class TestElements(unittest.TestCase):
 
         size = 8
         card = PGAP(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         self.assertEquals(card.Pid(), 90)
         card.raw_fields()
 

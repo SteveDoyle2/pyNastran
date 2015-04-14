@@ -125,7 +125,7 @@ class TestDMIG(unittest.TestCase):
 
         size = 8
         card = DMIG(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         #card.rawFields()
 
 

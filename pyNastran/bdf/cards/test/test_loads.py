@@ -16,7 +16,7 @@ class TestLoads(unittest.TestCase):
 
         size = 8
         card = DAREA(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_pload4_01(self):
@@ -26,7 +26,7 @@ class TestLoads(unittest.TestCase):
 
         size = 8
         card = PLOAD4(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_pload4_02(self):
@@ -36,7 +36,7 @@ class TestLoads(unittest.TestCase):
 
         size = 8
         card = PLOAD4(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_aestat_01(self):
@@ -46,7 +46,7 @@ class TestLoads(unittest.TestCase):
 
         size = 8
         card = AESTAT(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_dmi_01(self):
@@ -56,7 +56,7 @@ class TestLoads(unittest.TestCase):
 
         size = 8
         card = DMI(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         #card.rawFields()
 
     def test_set1_01(self):
@@ -66,7 +66,7 @@ class TestLoads(unittest.TestCase):
 
         size = 8
         card = SET1(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
 
