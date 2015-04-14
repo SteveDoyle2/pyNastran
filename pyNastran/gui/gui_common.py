@@ -1210,7 +1210,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if self.vtk_version[0] >= 6:
                 writer.SetInputData(renderLarge.GetOutputPort())
             else:
-                writer.SetInput(renderLarge.GetOutputPort())
+                writer.SetInputConnection(renderLarge.GetOutputPort())
             writer.SetFileName(fname)
             writer.Write()
             #self.log_info("Saved screenshot: " + fname)
