@@ -26,7 +26,8 @@ from numpy.linalg import norm
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-                 vtkQuadraticWedge, vtkQuadraticHexahedron)
+                 vtkQuadraticWedge, vtkQuadraticHexahedron,
+                 vtkPyramid, vtkQuadraticPyramid)
 
 #from pyNastran import is_release
 from pyNastran.bdf.bdf import (BDF,
@@ -35,6 +36,7 @@ from pyNastran.bdf.bdf import (BDF,
                                CTRIA3, CTRIA6, CTRIAR, CTRIAX6,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,
                                CHEXA8, CHEXA20,
+                               CPYRAM5, CPYRAM13,
                                CONM2,
                                ShellElement, LineElement, SpringElement,
                                LOAD)
@@ -592,6 +594,51 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
                 elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
                 elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
+                self.grid.InsertNextCell(elem.GetCellType(),
+                                         elem.GetPointIds())
+
+
+            elif isinstance(element, CPYRAM5):
+                nodeIDs = element.nodeIDs()
+                pid = element.Pid()
+                self.eid_to_nid_map[eid] = nodeIDs[:8]
+                elem = vtkPyramid()
+                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
+                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
+                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
+                self.grid.InsertNextCell(elem.GetCellType(),
+                                         elem.GetPointIds())
+            elif isinstance(element, CPYRAM13):
+                nodeIDs = element.nodeIDs()
+                pid = element.Pid()
+                if None not in nodeIDs:
+                    elem = vtkQuadraticPyramid()
+                    elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
+                    elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
+                    elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
+                    elem.GetPointIds().SetId(8, nidMap[nodeIDs[8]])
+                    elem.GetPointIds().SetId(9, nidMap[nodeIDs[9]])
+                    elem.GetPointIds().SetId(10, nidMap[nodeIDs[10]])
+                    elem.GetPointIds().SetId(11, nidMap[nodeIDs[11]])
+                    elem.GetPointIds().SetId(12, nidMap[nodeIDs[12]])
+                    #elem.GetPointIds().SetId(13, nidMap[nodeIDs[13]])
+                    #elem.GetPointIds().SetId(14, nidMap[nodeIDs[14]])
+                    #elem.GetPointIds().SetId(15, nidMap[nodeIDs[15]])
+                    #elem.GetPointIds().SetId(16, nidMap[nodeIDs[16]])
+                    #elem.GetPointIds().SetId(17, nidMap[nodeIDs[17]])
+                    #elem.GetPointIds().SetId(18, nidMap[nodeIDs[18]])
+                    #elem.GetPointIds().SetId(19, nidMap[nodeIDs[19]])
+                else:
+                    elem = vtkHexahedron()
+
+                self.eid_to_nid_map[eid] = nodeIDs[:8]
+                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
+                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
+                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif (isinstance(element, LineElement) or

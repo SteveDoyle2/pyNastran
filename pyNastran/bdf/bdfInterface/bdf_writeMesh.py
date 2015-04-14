@@ -77,21 +77,22 @@ class WriteMesh(object):
         self.log.debug("***writing %s" % fname)
         return out_filename
 
-    def write_bdf(self, out_filename=None, interspersed=True,
-                  size=8, is_double=False, enddata=None):
+    def write_bdf(self, out_filename=None,
+                  size=8, is_double=False,
+                  interspersed=True, enddata=None):
         """
         Writes the BDF.
 
         :param self:         the BDF object
         :param out_filename: the name to call the output bdf
                              (default=None; pops a dialog)
+        :param size:      the field size (8 is recommended)
+        :param is_double: small field (False) or large field (True); default=False
         :param interspersed: Writes a bdf with properties & elements
               interspersed like how Patran writes the bdf.  This takes
               slightly longer than if interspersed=False, but makes it
               much easier to compare to a Patran-formatted bdf and is
               more clear. (default=True)
-        :param size:      the field size (8 is recommended)
-        :param is_double: small field (False) or large field (True); default=False
         :param enddata:   Flag to enable/disable writing ENDDATA
                           (default=None -> depends on input BDF)
         """
