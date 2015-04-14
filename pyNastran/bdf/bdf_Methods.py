@@ -62,7 +62,7 @@ class BDFMethods(BDFMethodsDeprecated):
                       float > 0.0
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
-        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]) or None
+        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
 
         I = mass * centroid * centroid
 

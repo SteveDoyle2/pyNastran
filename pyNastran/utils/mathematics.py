@@ -198,9 +198,10 @@ def augmented_identity(A):
 def solve_tridag(A, D):
     """
     Solves a tridagonal matrix [A]{x}={b} for {x}
+	
     :param A: main diagonal (length=N)
     :param D: off diagonal (length=N-1)
-    :returns x
+    :returns: x
     """
     # Find the diagonals
     ud = insert(diag(A, 1), 0, 0)  # upper diagonal
