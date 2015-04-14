@@ -116,10 +116,11 @@ class RBAR1(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          RBAR1 EID GA GB CB  ALPHA
-          RBAR1 5    1  2 123 6.5-6
+        +-------+-----+----+----+-----+-------+
+        | RBAR1 | EID | GA | GB | CB  | ALPHA |
+        +-------+-----+----+----+-----+-------+
+        | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
+        +-------+-----+----+----+-----+-------+
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -296,8 +297,8 @@ class RBE2(RigidElement):
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |  RBE2 | EID | GN  | CM  | GM1  | GM2   | GM3 | GM4 | GM5 |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |       | GM6 | GM7 | GM8 | etc. | ALPHA |
-        +-------+-----+-----+-----+------+-------+
+        |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
+        +-------+-----+-----+-----+------+-------+-----+-----+-----+
         """
         RigidElement.__init__(self, card, data)
         if comment:

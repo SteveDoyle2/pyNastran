@@ -1206,8 +1206,8 @@ class CORD2R(Cord2x, RectangularCoord):
         +========+=====+=====+=====+====+=====+====+====+=====+
         | CORD2R | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-        |        | B3  | C1  | C2  | C3 |
-        +--------+-----+-----+-----+----+
+        |        | B3  | C1  | C2  | C3 |     |    |    |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
 
         :param self: the CORD2R coordinate system object
         :param card: a BDFCard object
