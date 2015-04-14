@@ -1,5 +1,5 @@
 from pyNastran.converters.stl.stl_reader import STLReader
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer_8 import print_card
 
 def stl_to_nastran_filename(stl_filename, bdf_filename,
                             nnodes_offset=0, nelements_offset=0, log=None):

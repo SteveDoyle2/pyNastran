@@ -19,7 +19,7 @@ from numpy import unique
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck,
                                  clean_empty_lines, _clean_comment, CardParseSyntaxError)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 from pyNastran.utils import (object_attributes, print_bad_path)

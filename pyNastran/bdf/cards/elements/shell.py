@@ -24,14 +24,14 @@ from numpy import array, eye, cross, allclose
 from numpy.linalg import det, norm  # inv
 
 from pyNastran.bdf.deprecated import ShellElementDeprecated
-from pyNastran.bdf.fieldWriter import (set_blank_if_default,
+from pyNastran.bdf.field_writer_8 import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-from pyNastran.bdf.fieldWriter import print_card_8, print_field_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 def _triangle_area_centroid_normal(nodes):
@@ -171,7 +171,7 @@ class TriShell(ShellElement):
         r"""
         Get the area, :math:`A`.
 
-        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
+        .. math:: A = \frac{1}{2} \lvert (n_0-n_1) \times (n_0-n_2) \rvert
         """
         (n0, n1, n2) = self.nodePositions()
         a = n0 - n1
@@ -800,7 +800,7 @@ class CTRIAX(TriShell):
         r"""
         Get the area, :math:`A`.
 
-        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
@@ -919,7 +919,7 @@ class CTRIAX6(TriShell):
         r"""
         Get the normal vector.
 
-        .. math:: A = \frac{1}{2} (n_0-n_1) times (n_0-n_2)
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_1-n_5) \rvert
         """
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n3
@@ -1053,7 +1053,7 @@ class QuadShell(ShellElement):
 
     def Area(self):
         r"""
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors
         """
         (n1, n2, n3, n4) = self.nodePositions()
@@ -1230,7 +1230,7 @@ class CSHEAR(QuadShell):
 
     def Area(self):
         r"""
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors
         """
         (n1, n2, n3, n4) = self.nodePositions()
@@ -1769,7 +1769,7 @@ class CQUAD8(QuadShell):
 
     def Area(self):
         r"""
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors
         """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()

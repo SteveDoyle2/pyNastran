@@ -69,12 +69,23 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`fieldWriter16` Module
+:mod:`field_writer_8` Module
+-------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.field_writer_8
+
+.. automodule:: pyNastran.bdf.field_writer_8
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`field_writer_16` Module
 ---------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.fieldWriter16
+.. inheritance-diagram:: pyNastran.bdf.field_writer_16
 
-.. automodule:: pyNastran.bdf.fieldWriter16
+.. automodule:: pyNastran.bdf.field_writer_16
     :members:
     :private-members:
     :undoc-members:

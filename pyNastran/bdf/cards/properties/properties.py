@@ -13,13 +13,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string_or_blank, integer_string_or_blank, blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class PFAST(Property):

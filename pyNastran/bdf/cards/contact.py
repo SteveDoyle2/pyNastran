@@ -13,8 +13,8 @@ from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru_by, collapse_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_string_or_blank, double_or_blank, integer_double_or_blank,
     string, string_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class BSURF(BaseCard):
@@ -231,8 +231,11 @@ class BCTSET(BaseCard):
 
 class BCRPARA(BaseCard):
     """
-    1 2 3 4 5 6 7 8 9 10
-    BCRPARA CRID SURF OFFSET TYPE MGP
+    +---------+------+------+--------+------+-----+---+---+---+----+
+    |    1    |   2  |   3  |   4    |   5  |  6  | 7 | 8 | 9 | 10 |
+    +---------+------+------+--------+------+-----+---+---+---+----+
+    | BCRPARA | CRID | SURF | OFFSET | TYPE | MGP |   |   |   |    |
+    +---------+------+------+--------+------+-----+---+---+---+----+
     """
     type = 'BCRPARA'
     def __init__(self, card=None, data=None, comment=''):
@@ -373,8 +376,8 @@ class BCTADD(BaseCard):
     +--------+------+----+-------+----+----+----+----+----+
     | BCTADD | CSID | SI |  S2   | S3 | S4 | S5 | S6 | S7 |
     +--------+------+----+-------+----+----+----+----+----+
-    |        |   S8 | S9 | -etc- |
-    +--------+------+----+-------+
+    |        |   S8 | S9 | -etc- |    |    |    |    |    |
+    +--------+------+----+-------+----+----+----+----+----+
 
     Remarks:
     1. To include several contact sets defined via BCTSET entries in a model,

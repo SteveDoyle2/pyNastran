@@ -1,17 +1,6 @@
 ogf_gridPointForces Package
 ===========================
 
-:mod:`ogf` Module
------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.ogf_gridPointForces.ogf
-
-.. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogf
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`ogf_Objects` Module
 -------------------------
 

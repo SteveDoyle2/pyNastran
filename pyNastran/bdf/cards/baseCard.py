@@ -4,8 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types
 from six.moves import zip, range
 
-from pyNastran.bdf.fieldWriter import print_card_8, is_same
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8, is_same
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated

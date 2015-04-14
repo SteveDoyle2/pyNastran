@@ -32,7 +32,7 @@ class GetMethods(GetMethodsDeprecated):
         """
         Get the range of sub-properties of a card.
 
-        @note
+        .. note::
            Assumes you're taking a single path through the cards.
            You could probably explicitly code these queries faster, but
            this method has a lot of flexibility with very little user code.

@@ -26,8 +26,8 @@ from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     components, components_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8, print_float_8
-from pyNastran.bdf.fieldWriter16 import print_float_16
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
+from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 
 
@@ -369,7 +369,7 @@ class MPC(Constraint):
 class SPC(Constraint):
     """
     Defines enforced displacement/temperature (static analysis)
-    velocity/acceleration (dynamic analysis).::
+    velocity/acceleration (dynamic analysis).
 
      +-----+-----+----+----+------+----+----+----+
      | SPC | SID | G1 | C1 |  D1  | G2 | C2 | D2 |
@@ -440,7 +440,7 @@ class SPC(Constraint):
 class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced
-    motion value (displacement, velocity or acceleration) in dynamic analysis.::
+    motion value (displacement, velocity or acceleration) in dynamic analysis.
 
      +------+-----+-----+-----+------+----+---+----+
      | SPCD | SID |  G1 | C1  |  D1  | G2 |C2 | D2 |
@@ -472,7 +472,7 @@ class SPCD(SPC):
 class SPCAX(Constraint):
     """
     Defines a set of single-point constraints or enforced displacements
-    for conical shell coordinates.::
+    for conical shell coordinates.
 
      +-------+-----+-----+-----+----+-----+
      | SPCAX | SID | RID | HID |  C |  D  |
@@ -521,16 +521,16 @@ class SPC1(Constraint):
       +------+-----+----+----+--------+----+----+----+----+
       | SPC1 | SID | C  | G1 | G2     | G3 | G4 | G5 | G6 |
       +------+-----+----+----+--------+----+----+----+----+
-      |      |  G7 | G8 | G9 | -etc.- |
-      +------+-----+----+----+--------+
+      |      |  G7 | G8 | G9 | -etc.- |    |    |    |    |
+      +------+-----+----+----+--------+----+----+----+----+
 
-      +------+---+-----+--------+--------+--------+--------+--------+
-      | SPC1 | 3 | 246 | 209075 | 209096 | 209512 | 209513 | 209516 |
+      +------+---+-----+--------+--------+--------+--------+--------+---+
+      | SPC1 | 3 | 246 | 209075 | 209096 | 209512 | 209513 | 209516 |   |
       +------+---+-----+--------+--------+--------+--------+--------+---+
       | SPC1 | 3 |  2  |   1    |   3    |   10   |   9    |   6    | 5 |
       +------+---+-----+--------+--------+--------+--------+--------+---+
-      |      | 2 |  8  |
-      +------+---+-----+
+      |      | 2 |  8  |        |        |        |        |        |   |
+      +------+---+-----+--------+--------+--------+--------+--------+---+
 
       +------+-----+-------+----+------+----+
       | SPC1 | SID | C     | G1 | THRU | G2 |
@@ -612,9 +612,11 @@ class ConstraintADD(Constraint):
 class SPCADD(ConstraintADD):
     """
     Defines a single-point constraint set as a union of single-point constraint
-    sets defined on SPC or SPC1 entries.::
+    sets defined on SPC or SPC1 entries.
 
-      SPCADD   2       1       3
+    +---------+---+---+------+
+    | SPCADD  | 2 | 1 |   3  |
+    +---------+---+---+------+
     """
     type = 'SPCADD'
 

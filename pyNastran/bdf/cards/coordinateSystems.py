@@ -18,13 +18,13 @@ from numpy import array, cross, dot, transpose, zeros, vstack, ndarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import CoordDeprecated
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 #from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 
@@ -76,17 +76,23 @@ class Coord(BaseCard, CoordDeprecated):
 
     def setup(self):
         """
-        .. math:: e_{13} = e_3 - e_1
+        .. math::
+          e_{13} = e_3 - e_1
 
-        .. math:: e_{12} = e_2 - e_1
+        .. math::
+          e_{12} = e_2 - e_1
 
-        .. math:: k = \frac{e_{12}}{|e_{12}|}
+        .. math::
+          k = \frac{e_{12}}{\lvert e_{12} \rvert}
 
-        .. math:: j_{dir} = k \times e_{13}
+        .. math::
+          j_{dir} = k \times e_{13}
 
-        .. math:: j = \frac{j_{dir}}{|j_{dir}|}
+        .. math::
+          j = \frac{j_{dir}}{\lvert j_{dir} \rvert}
 
-        .. math:: i = j \times k
+        .. math::
+          i = j \times k
         """
         try:
             assert len(self.e1) == 3, self.e1
@@ -1106,8 +1112,6 @@ class CORD3G(Coord):  # not done
 
 class CORD1R(Cord1x, RectangularCoord):
     """
-    ::
-
     +-------+------+-----+-----+------+------+-----+------+-----+
     |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
     +=======+======+=====+=====+======+======+=====+======+=====+
@@ -1135,8 +1139,6 @@ class CORD1R(Cord1x, RectangularCoord):
 
 class CORD1C(Cord1x, CylindricalCoord):
     """
-    ::
-
     +-------+------+-----+-----+------+------+-----+------+-----+
     |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
     +=======+======+=====+=====+======+======+=====+======+=====+
@@ -1165,8 +1167,6 @@ class CORD1C(Cord1x, CylindricalCoord):
 
 class CORD1S(Cord1x, SphericalCoord):
     """
-    ::
-
     +-------+------+-----+-----+------+------+-----+------+-----+
     |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
     +=======+======+=====+=====+======+======+=====+======+=====+
@@ -1206,8 +1206,8 @@ class CORD2R(Cord2x, RectangularCoord):
         +========+=====+=====+=====+====+=====+====+====+=====+
         | CORD2R | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-        |        | B3  | C1  | C2  | C3 |
-        +--------+-----+-----+-----+----+
+        |        | B3  | C1  | C2  | C3 |     |    |    |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
 
         :param self: the CORD2R coordinate system object
         :param card: a BDFCard object
@@ -1251,8 +1251,8 @@ class CORD2C(Cord2x, CylindricalCoord):
         +========+=====+=====+=====+====+=====+====+====+=====+
         | CORD2C | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-        |        | B3  | C1  | C2  | C3 |
-        +--------+-----+-----+-----+----+
+        |        | B3  | C1  | C2  | C3 |     |    |    |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
 
         :param self: the CORD2C coordinate system object
         :param card: a BDFCard object
@@ -1280,8 +1280,8 @@ class CORD2S(Cord2x, SphericalCoord):
         +========+=====+=====+=====+====+=====+====+====+=====+
         | CORD2S | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-        |        | B3  | C1  | C2  | C3 |
-        +--------+-----+-----+-----+----+
+        |        | B3  | C1  | C2  | C3 |     |    |    |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
 
         :param self: the CORD2S coordinate system object
         :param card: a BDFCard object

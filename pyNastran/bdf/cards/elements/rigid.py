@@ -17,13 +17,13 @@ from six.moves import zip, range
 import sys
 from itertools import count
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, fields, string, interpret_value)
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import build_table_lines
 
 
@@ -116,10 +116,11 @@ class RBAR1(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          RBAR1 EID GA GB CB  ALPHA
-          RBAR1 5    1  2 123 6.5-6
+        +-------+-----+----+----+-----+-------+
+        | RBAR1 | EID | GA | GB | CB  | ALPHA |
+        +-------+-----+----+----+-----+-------+
+        | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
+        +-------+-----+----+----+-----+-------+
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -296,8 +297,8 @@ class RBE2(RigidElement):
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |  RBE2 | EID | GN  | CM  | GM1  | GM2   | GM3 | GM4 | GM5 |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |       | GM6 | GM7 | GM8 | etc. | ALPHA |
-        +-------+-----+-----+-----+------+-------+
+        |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
+        +-------+-----+-----+-----+------+-------+-----+-----+-----+
         """
         RigidElement.__init__(self, card, data)
         if comment:

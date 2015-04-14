@@ -1,7 +1,7 @@
 from six.moves import range
 from numpy import array, zeros
 from pyNastran.utils.log import get_logger
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer_8 import print_card
 
 
 class TetgenReader(object):

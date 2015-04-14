@@ -201,7 +201,10 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+if on_rtd:
+    html_theme = 'default'
+else:
+    html_theme = 'classic' # classic/alabaster
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -393,83 +396,6 @@ epub_copyright = u'2012, Steven Doyle, Al Danial, Marcin Gasiorek'
 
 # Allow duplicate toc entries.
 #epub_tocdup = True
-
-# Convert comments from doxygen style to spnix/reStructuredText
-regex_param = re.compile("@param (\w+)")
-regex_see   = re.compile("@see (\w+)")
-regex_math  = re.compile("\\\\f\\[(.*)\\\\f\\]")
-regex_math_inline  = re.compile("\\\\f\$ *(.*?) *\\\\f\$")
-
-substitutions = (("@retval", ":returns:"), ("@note", "\n.. note::"),
-                 ("@warning", "\n.. warning::"), ("@todo", "\n.. todo::"),
-                 ("@raise", ":raises:"), ("@deprecated", "\n.. deprecated::"),
-                 ("@code","\n::\n\n"), ("@endcode", "\n\n"))
-
-# adding some new lines (thus empty strings to lines list ) is necessary
-# for some of  doxygen style  comments to render correcty in sphinx
-# todo: @attention
-#@author
-#@debug
-#@code @endcode: pyNastran.bdf.cards.coordinateSystems.CylindricalCoord.coordToXYZ
-def convert_doxygen_comments(app, what, name, obj, options, lines):
-    res_lines = []
-    _need_indent = False
-    for line in lines:
-        #copy empty lines directly to result
-        if not line:
-            res_lines.append(line)
-            continue
-
-        #function parameters
-        new_line = regex_param.sub("\n:param \\1:", line)
-
-        # multiline latex mathematics: begining of block
-        if "\\f[" in new_line and "\\f]" not in new_line:
-            new_line = new_line.replace("\\f[", "\n.. math::\n")
-            _need_indent = True
-
-        # multiline latex mathematics: end of block
-        elif "\\f]" in new_line and "\\f[" not in new_line:
-            new_line = new_line.replace("\\f]", "\n\n")
-            _need_indent = False
-
-        # blocks of 'verbatim code' also needs  indent
-        if "@code" in new_line:
-            _need_indent = True
-        elif "@endcode" in new_line:
-            _need_indent = False
-
-        # add indent if necessary
-        if _need_indent:
-            new_line = " "+new_line
-
-        # single line latex mathematics
-        new_line = regex_math.sub("\n.. math:: \\1\n\n", new_line)
-        new_line = regex_math_inline.sub(":math:`\\1`", new_line)
-
-
-        # simple subsitutions
-        new_line = reduce(lambda s, l: s.replace(*l), substitutions, new_line)
-
-        # other links
-        if "@see" in new_line:
-            # links in their own frame
-            if new_line.startswith("@see"):
-                new_line = "\n.. seealso:: " + new_line
-
-            # sphinx automatically treats http://... as link
-            if "http" in new_line:
-                new_line = new_line.replace("@see", "see")
-            elif "pdf" in new_line: ## todo: what is refman.pdf?
-                new_line = new_line.replace("@see", "see")
-            elif "import logging" in new_line: ## todo: what is that?
-                new_line = new_line.replace("@see", "see")
-            else:
-                new_line = regex_see.sub("see :py:func:`\\1`", new_line)
-
-        res_lines += new_line.splitlines()
-
-    lines[:] = res_lines
 
 def passer(app, what, name, obj, options, lines):
     pass

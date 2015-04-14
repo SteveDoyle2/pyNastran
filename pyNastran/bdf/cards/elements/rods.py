@@ -8,12 +8,12 @@ from numpy import eye, allclose, cross
 from numpy.linalg import norm
 
 from pyNastran.utils.dev import list_print
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element #, Mid
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 def _Lambda(model, n1, n2, debug=True):

@@ -5,10 +5,11 @@ This document discusses the major features (and limitations) added in each
 version of the software.  See the HTML documentation for more information.
 
 If you like it/want to help leave some feedback on the
-Dicussion Page:  http://groups.google.com/group/pynastran-discuss?pli=1
+Dicussion Page:     https://groups.google.com/forum/#!forum/pynastran-discuss
+Developer Dicussion https://groups.google.com/forum/#!forum/pynastran-dev
 
 If you have a bug/want a new feature or card, leave some feedback on the
-Issues List:     http://code.google.com/p/pynastran/issues/list
+Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 
 This code was written entirely in Python and should install easily.
 
@@ -31,8 +32,8 @@ BDF:
    - imporved SET/SPOINT writing
    - improved messages when cross-referencing
    - readBDF is now gone, replaced by read_bdf (was previously deprecated)
-   - large field format writing now supported
-     write_bdf method now has a precision='single' or 'double' option
+   - large field & double precision format writing now supported
+     write_bdf method now has a is_double=True/False option
    - fixed bug with SETx writing.  Nastran limits a SETx card to one THRU
      per card, which is inconsistent with other cards that use THRU.
    - fixed GRID Position bug when using referenced cylindrical/spherical
@@ -49,21 +50,14 @@ OP2:
      readOP2 is now gone, replaced by read_op2 (was previously deprecated)
    - renamed OP2 class names to be more descriptive
      (e.g. DisplacementObject -> RealDisplacement)
-   - OP2 vectorized support.  It's slower, but it takes up much  less 
+   - OP2 vectorized support.  It's slower, but it takes up much less
      memory (~5x).  Note: the F06 writing cannot be vectorized, so if
      you do vectorize your code, it may be much faster.  The API and data
      members are still in development and should be expected to change.
+   - superelement support
 
 F06:
-   - Most fatal errors caught
-   - F06 no longer defines the filename; use read_f06
-   - readF06 is now gone, replaced by read_f06 (was previously deprecated)
-   - grid point weight table is now supported
-   - fixed bug in subcase reading
-   - added GRID POINT FORCE BALANCE
-   - added FORCES IN CQUAD4s (bilinear)
-   - added LOAD VECTOR
-   - supports SPOINTs now
+   - removed; use the OP2
 
 GUI:
  - added much improved qt GUI
@@ -83,6 +77,51 @@ Converters / Additional GUI Options
    - Panair
    - STL
    - Usm3D
+
+Known issues:
+=============
+  - 1. Unicode
+  - 2. doesn't support elements/properties with the same ID
+  - 3. card replication
+  - 4. Executive Control Deck INCLUDE files
+    5. DMIG headers not defined at the top of the matrix
+  - 6. cannot parse doubly included BDFs if the include file
+      is at the end of file A
+
+      Fails
+      =========
+      A.bdf
+      ---------
+      CEND
+      BEGIN BULK
+      GRID,2,,1.0, 0.0, 0.0
+      INCLUDE B.bdf
+
+      B.bdf
+      ---------
+      INCLUDE C.bdf
+
+      C.bdf
+      ---------
+      GRID,1,,0.0, 0.0, 0.0
+
+     This will work
+     ==============
+      A.bdf
+      ---------
+      CEND
+      BEGIN BULK
+      INCLUDE B.bdf
+      GRID,2,,1.0, 0.0, 0.0
+
+      B.bdf
+      ---------
+      INCLUDE C.bdf
+
+      C.bdf
+      ---------
+      GRID,1,,0.0, 0.0, 0.0
+
 
 -----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes

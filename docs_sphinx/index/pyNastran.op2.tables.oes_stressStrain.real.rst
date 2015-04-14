@@ -1,17 +1,6 @@
 real Package
 ============
 
-:mod:`elementsStressStrain` Module
-----------------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain
-
-.. automodule:: pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`oes_bars` Module
 ----------------------
 

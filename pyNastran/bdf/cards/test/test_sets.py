@@ -1,6 +1,6 @@
 import unittest
 
-from pyNastran.bdf.fieldWriter import print_int_card_blocks
+from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 
 
 class TestSets(unittest.TestCase):

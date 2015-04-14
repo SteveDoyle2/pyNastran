@@ -67,17 +67,6 @@ oef_forces Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`realForces` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.realForces
-
-.. automodule:: pyNastran.op2.tables.oef_forces.realForces
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`thermal_elements` Module
 ------------------------------
 

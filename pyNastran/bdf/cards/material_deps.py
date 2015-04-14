@@ -20,8 +20,8 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.cards.bdf_tables import Table
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class MaterialDependence(BaseCard):
@@ -494,8 +494,8 @@ class MATT5(MaterialDependence):
     +=======+=========+=========+========+========+========+========+========+=======+
     | MATT5 |   MID   | T(Kxx)  | T(Kxy) | T(Kxz) | T(Kyy) | T(Kyz) | T(Kzz) | T(CP) |
     +-------+---------+---------+--------+--------+--------+--------+--------+-------+
-    |       |         | T(HGEN) |
-    +-------+---------+---------+
+    |       |         | T(HGEN) |        |        |        |        |        |       |
+    +-------+---------+---------+--------+--------+--------+--------+--------+-------+
     """
     type = 'MATT5'
 
@@ -591,8 +591,8 @@ class MATT8(MaterialDependence):
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
     |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Yc)  | T(Yt)  | T(Yc)  | T(S)   |
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-    |       |  T(GE) | T(F12) |
-    +-------+--------+--------+
+    |       |  T(GE) | T(F12) |       |         |        |        |        |        |
+    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
     """
     type = 'MATT8'
 

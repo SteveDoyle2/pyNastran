@@ -14,7 +14,7 @@ import scipy
 
 from struct import unpack, Struct, pack
 import pyNastran
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 

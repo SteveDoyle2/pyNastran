@@ -13,11 +13,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #simport sys
 #from numpy import zeros,pi
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double, double_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class SpringProperty(Property):

@@ -4,7 +4,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF
 
-#from pyNastran.bdf.fieldWriter import print_card
+#from pyNastran.bdf.field_writer_8 import print_card
 
 class TestContact(unittest.TestCase):
 
