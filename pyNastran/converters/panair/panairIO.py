@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 import os
 from numpy import zeros, array, cross, dot, ravel, amax, amin
@@ -92,9 +93,10 @@ class PanairIO(object):
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid2.Modified()
-        self.grid.Update()
-        self.grid2.Update()
-        print("updated grid")
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+            self.grid2.Update()
+            print("updated grid")
 
         #return
 
@@ -126,7 +128,7 @@ class PanairIO(object):
             Zc = zeros(len(elements), dtype='float32')
             area = zeros(len(elements), dtype='float32')
 
-            for i,element in enumerate(elements):
+            for i, element in enumerate(elements):
                 p1, p2, p3, p4 = element
                 P1 = array(nodes[p1])
                 P2 = array(nodes[p2])

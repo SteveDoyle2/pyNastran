@@ -85,19 +85,19 @@ class TestCoords(unittest.TestCase):
 
     def test_rotate3(self):
         grids = [
-                     [1, 1, 0., 0., 1.],
-                     [2, 1, 0., 1., 0.],
-                     [3, 1, 1., 0., 0.],
-                     [4, 1, 1., 1., 1.],
-                     [5, 1, 1., 1., 0.],
-                 ]
+            [1, 1, 0., 0., 1.],
+            [2, 1, 0., 1., 0.],
+            [3, 1, 1., 0., 0.],
+            [4, 1, 1., 1., 1.],
+            [5, 1, 1., 1., 0.],
+        ]
         grids_expected = [
-                     [1, 1,  0., 0., -1.],
-                     [2, 1,  0., 1.,  0.],
-                     [3, 1, -1., 0.,  0.],
-                     [4, 1, -1., 1., -1.],
-                     [5, 1, -1., 1.,  0.],
-                 ]
+            [1, 1,  0., 0., -1.],
+            [2, 1,  0., 1.,  0.],
+            [3, 1, -1., 0.,  0.],
+            [4, 1, -1., 1., -1.],
+            [5, 1, -1., 1.,  0.],
+        ]
 
         coords = [  # cid, rid, origin,      zaxis          xaxis
                    [1, 0,      [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
@@ -301,9 +301,9 @@ class TestCoords(unittest.TestCase):
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
-            a = array([30.,40.,50.])
+            a = array([30., 40., 50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord2_rcs_02(self):
         """
@@ -340,7 +340,7 @@ class TestCoords(unittest.TestCase):
         for nid in model.nodes:
             a = array([30.,40.,50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord2_rcs_03(self):
         """
@@ -377,7 +377,7 @@ class TestCoords(unittest.TestCase):
         for nid in model.nodes:
             a = array([30.,40.,50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
@@ -405,8 +405,10 @@ class TestCoords(unittest.TestCase):
 
     def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
-        coord = ['CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
-                 '           1.135 .089237   .9324']
+        coord = [
+            'CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
+            '           1.135 .089237   .9324'
+        ]
 
         model = BDF(debug=False)
         card = model.process_card(grid)
@@ -487,7 +489,7 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
     def test_B(self):
@@ -512,7 +514,7 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
 

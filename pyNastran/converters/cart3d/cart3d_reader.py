@@ -1,6 +1,6 @@
 #pylint:  disable=C0103,C0111
 from __future__ import print_function
-from six import iteritems, PY2
+from six import iteritems
 from six.moves import zip, range
 import os
 import sys
@@ -8,8 +8,8 @@ from struct import Struct, pack, unpack
 from math import ceil
 from collections import defaultdict
 
-from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
-from numpy import arange, searchsorted, vstack, unique, hstack, ravel, cross
+from numpy import zeros, where, savetxt, sqrt, abs, amax, amin
+from numpy import arange, vstack, unique, hstack, ravel, cross
 from numpy.linalg import norm
 
 from pyNastran.utils import is_binary_file

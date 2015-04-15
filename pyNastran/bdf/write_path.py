@@ -37,14 +37,17 @@ def write_include(filename, is_windows=True):
                        but since you might need to change platforms, it's an
                        option (default=True)
 
-    Example (Linux)
-    ---------------
-    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
-    write_include(fname, is_windows=False)
+    For a model that will run on Linux:
 
-    returns...
-    INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
-            pyNastran/bdf/model.inc
+    ..code-blocK:: python
+
+      fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
+      write_include(fname, is_windows=False)
+
+    ..code-blocK:: python
+
+      INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
+              pyNastran/bdf/model.inc
     """
     msg = 'INCLUDE '  # len=8
     #nmax = 72 - 8 # 64

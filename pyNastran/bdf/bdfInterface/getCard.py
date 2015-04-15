@@ -53,36 +53,38 @@ class GetMethods(GetMethodsDeprecated):
             Should an error be raised if there is an invalid key?
             For example, get all material used by elements, but don't crash
             on CONRODs.
-        :returns reslts:
+        :returns results:
             The set of all values used
 
-        # Get nodes associated with eid=[1, 2, 3]
-        nodes = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes'])
+        .. code-block:: python
 
-        # Get node IDs associated with eid=[1, 2, 3]
-        nodesIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes', 'nid'])
+          # Get nodes associated with eid=[1, 2, 3]
+          nodes = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes'])
 
-        # Get coord IDs associated with eid=[1, 2, 3]
-        coordIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes', 'cp', 'cid'])
+          # Get node IDs associated with eid=[1, 2, 3]
+          nodesIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes', 'nid'])
 
-        # Get properties associated with eid=[1, 2, 3]
-        properties = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid'])
+          # Get coord IDs associated with eid=[1, 2, 3]
+          coordIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes', 'cp', 'cid'])
 
-        # Get materials associated with eid=[1, 2, 3]
-        materials = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid', 'mid'])
+          # Get properties associated with eid=[1, 2, 3]
+          properties = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid'])
 
-        # Get material IDs associated with eid=[1, 2, 3]
-        materialIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid', 'mid', 'mid'])
+          # Get materials associated with eid=[1, 2, 3]
+          materials = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid', 'mid'])
 
-        # Get the values for Young's Modulus
-        E = self.get_x_associated_with_y(
-            self.elements, None, ['pid', 'mid', 'e'])
+          # Get material IDs associated with eid=[1, 2, 3]
+          materialIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid', 'mid', 'mid'])
+
+          # Get the values for Young's Modulus
+          E = self.get_x_associated_with_y(
+              self.elements, None, ['pid', 'mid', 'e'])
         """
         assert isinstance(xdict, dict), type(xdict)
         assert self._xref == True, self._xref
@@ -155,8 +157,10 @@ class GetMethods(GetMethodsDeprecated):
         :returns node_ids: set of node IDs
 
 
-        Example
-        -------
+        For example
+
+        .. code-block:: python
+
           >>> eids = [1, 2, 3]  # list of elements with pid=1
           >>> msg = ' which are required for pid=1'
           >>> node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
@@ -204,10 +208,39 @@ class GetMethods(GetMethodsDeprecated):
 
         :param self: the BDF object
         :param pids: list of property ID
-        :param mode:  'list' - returns the data as one list (default)
-                      'dict' - returns the data as a dictionary of lists based on the property ID
+        :param mode:  the mode to run the method in
 
-        :returns elementIDs: as a list or dictionary of lists by property based on the mode
+           +--------+--------------------------------------------------+
+           |  mode  | Description                                      |
+           +--------+--------------------------------------------------+
+           | 'list' | returns the data as one list (default)           |
+           +--------+--------------------------------------------------+
+           | 'dict' | returns the data as a dictionary of lists based  |
+           |        | on the property ID                               |
+           +--------+--------------------------------------------------+
+
+        :returns element_ids: as a list or dictionary of lists by
+                              property based on the mode
+
+        For example, we want to get all the element ids with ``pids=[1, 2, 3]``
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          pids = [1, 2, 3]
+          eids_list = model.get_element_ids_with_pids(pids, mode='list')
+
+        Now we want all the elements with ``pids=[4, 5, 6]``, but we want
+        them in separate groups
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          pids = [4, 5, 6]
+          eids_dict = model.get_element_ids_with_pids(pids, mode='dict')
+
         """
         if mode not in ['list', 'dict']:
             msg = "mode=%r is not supported.  Use 'list' or 'dict'\n" % mode
@@ -238,7 +271,7 @@ class GetMethods(GetMethodsDeprecated):
         Returns a dictionary that maps a node ID to a list of elemnents
 
         .. todo:: support 0d or 1d elements
-        .  todo:: support elements with missing nodes
+        .. todo:: support elements with missing nodes
                   (e.g. CQUAD8 with missing nodes)
         """
         nidToElementsMap = {}

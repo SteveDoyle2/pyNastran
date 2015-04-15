@@ -37,10 +37,11 @@ class RBAR(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          RBAR EID GA GB CNA    CNB CMA CMB ALPHA
-          RBAR 5   1   2 123456             6.5-6
+        +------+-----+----+----+--------+-----+-----+-----+-------+
+        | RBAR | EID | GA | GB | CNA    | CNB | CMA | CMB | ALPHA |
+        +------+-----+----+----+--------+-----+-----+-----+-------+
+        | RBAR | 5   | 1  |  2 | 123456 |     |     |     | 6.5-6 |
+        +------+-----+----+----+--------+-----+-----+-----+-------+
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -354,7 +355,7 @@ class RBE2(RigidElement):
         """
         .. math:: -A_i u_i + A_j u_j = 0
 
-        where :math:`u_i` are the base DOFs (max=6)::
+        where :math:`u_i` are the base DOFs (max=6)
 
          +------+------+----+----+-----+----+----+----+
          | MPC  | sid  | g1 | c1 | a1  | g2 | c2 | a2 |

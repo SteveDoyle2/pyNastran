@@ -8,10 +8,9 @@ from six.moves import zip, range
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
     #collapse_thru_by_float, condense, build_thru_float)
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, integer_or_string,
-    integer_string_or_blank, double, double_or_blank, string,
-    string_or_blank, integer_double_or_blank,
-    integer_double_string_or_blank, # integer_or_double,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+    integer_or_string, integer_string_or_blank, double, double_or_blank, string,
+    string_or_blank, integer_double_or_blank, integer_double_string_or_blank,
     double_string_or_blank, interpret_value)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -383,21 +382,21 @@ class DRESP2(OptConstraint):
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
         packLength = {
-             'DESVAR' : [1, 0],
-             'DTABLE' : [1, 0],
-             'DRESP1' : [1, 0],
-             'DNODE' : [1, 1],  # unique entry
-             'DVPREL1' : [1, 0],
-             'DVCREL1' : [1, 0],
-             'DVMREL1' : [1, 0],
-             'DVPREL2' : [1, 0],
-             'DVCREL2' : [1, 0],
-             'DVMREL2' : [1, 0],
-             'DRESP2' : [1, 0],
-             'DESVAR' : [1, 0],
-             'DESVAR' : [1, 0],
-             'DESVAR' : [1, 0],
-             'DESVAR' : [1, 0],
+            'DESVAR' : [1, 0],
+            'DTABLE' : [1, 0],
+            'DRESP1' : [1, 0],
+            'DNODE' : [1, 1],  # unique entry
+            'DVPREL1' : [1, 0],
+            'DVCREL1' : [1, 0],
+            'DVMREL1' : [1, 0],
+            'DVPREL2' : [1, 0],
+            'DVCREL2' : [1, 0],
+            'DVMREL2' : [1, 0],
+            'DRESP2' : [1, 0],
+            'DESVAR' : [1, 0],
+            'DESVAR' : [1, 0],
+            'DESVAR' : [1, 0],
+            'DESVAR' : [1, 0],
         }
         list_fields = []
         for key, valueList in sorted(iteritems(self.params)):
@@ -412,7 +411,7 @@ class DRESP2(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
-                  self.region, self.method, self.c1, self.c2, self.c3]
+                       self.region, self.method, self.c1, self.c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
 
@@ -422,7 +421,7 @@ class DRESP2(OptConstraint):
         c2 = set_blank_if_default(self.c2, 0.005)
 
         list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
-                  self.region, method, c1, c2, self.c3]
+                       self.region, method, c1, c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
 
@@ -671,8 +670,7 @@ class DVPREL2(OptConstraint):
         #: DEQATN entry identification number. (Integer > 0)
         self.eqID = integer_or_blank(card, 7, 'eqID') #: .. todo:: or blank?
 
-        fields = [interpret_value(field) for field in card[9:] ]
-        #print "fields = ",fields
+        fields = [interpret_value(field) for field in card[9:]]
         iOffset = 9
         iEnd = len(fields) + iOffset
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from docopt import docopt
 from copy import deepcopy
 
@@ -53,7 +54,7 @@ def main():
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-    print data
+    print(data)
     stl_reshape(data)
 
 def stl_reshape(data):

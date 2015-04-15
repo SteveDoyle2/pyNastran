@@ -28,10 +28,8 @@ from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, expand_thru_by
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank,
-    integer_or_string, fields,
-    integer_string_or_blank)
+    double, double_or_blank, string, string_or_blank,
+    integer_or_string, fields, integer_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -293,8 +291,8 @@ class GRAV(BaseCard):
     +------+-----+-----+------+-----+-----+------+-----+
     | GRAV | SID | CID | A    | N1  | N2  | N3   |  MB |
     +------+-----+-----+------+-----+-----+------+-----+
-    | GRAV | 1   | 3   | 32.2 | 0.0 | 0.0 | -1.0 |
-    +------+-----+-----+------+-----+-----+------+
+    | GRAV | 1   | 3   | 32.2 | 0.0 | 0.0 | -1.0 |     |
+    +------+-----+-----+------+-----+-----+------+-----+
     """
     type = 'GRAV'
 
@@ -407,7 +405,7 @@ class ACCEL(BaseCard):
     | ACCEL | SID  | CID  | N1   | N2   | N3  | DIR |        |     |
     +-------+------+------+------+------+-----+-----+--------+-----+
     |       | LOC1 | VAL1 | LOC2 | VAL2 | Continues in Groups of 2 |
-    +-------+------+------+------+------+------------------------- +
+    +-------+------+------+------+------+--------------------------+
     """
     type = 'ACCEL'
 
@@ -1215,8 +1213,8 @@ class PLOAD1(Load):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.eid = integer(card, 2, 'eid')
-            self.Type = string(card, 3,  'Type ("%s")' % '",  "'.join(self.validTypes) )
-            self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.validScales) )
+            self.Type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.validTypes))
+            self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.validScales))
             self.x1 = double(card, 5, 'x1')
             self.p1 = double(card, 6, 'p1')
             self.x2 = double_or_blank(card, 7, 'x2', self.x1)
@@ -1233,10 +1231,12 @@ class PLOAD1(Load):
             self.x2 = data[6]
             self.p2 = data[7]
         if self.Type not in self.validTypes:
-            msg = '%s is an invalid type on the PLOAD1 card; validTypes=[%s]' % (self.Type, ', '.join(self.validTypes).rstrip(', '))
+            msg = '%s is an invalid type on the PLOAD1 card; validTypes=[%s]' % (
+                self.Type, ', '.join(self.validTypes).rstrip(', '))
             raise RuntimeError(msg)
         if self.scale not in self.validScales:
-            msg = '%s is an invalid scale on the PLOAD1 card; validScales=[%s]' % (self.scale, ', '.join(self.validScales).rstrip(', '))
+            msg = '%s is an invalid scale on the PLOAD1 card; validScales=[%s]' % (
+                self.scale, ', '.join(self.validScales).rstrip(', '))
             raise RuntimeError(msg)
 
         assert 0.0 <= self.x1 <= self.x2
@@ -1295,13 +1295,11 @@ class PLOAD1(Load):
         forceConstraints = {}
         momentConstraints = {}
         gravityLoads = []
-        #print("self.loadIDs = ",self.loadIDs)
 
         typesFound = set()
         (scaleFactors, loads) = self.getReducedLoads()
 
-        for (scaleFactor, load) in zip(scaleFactors, loads):
-            #print("*load = ",load)
+        for scaleFactor, load in zip(scaleFactors, loads):
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
 
@@ -1496,8 +1494,9 @@ class PLOAD4(Load):
                 integer_or_blank(card, 8, 'eid2')):  # plates
                 eid2 = integer(card, 8, 'eid2')
                 if eid2:
-                    self.eids = list(unique(expand_thru([self.eid, 'THRU', eid2],
-                                            set_fields=False, sort_fields=False)))
+                    self.eids = list(unique(
+                        expand_thru([self.eid, 'THRU', eid2], set_fields=False, sort_fields=False)
+                    ))
                 self.g1 = None
                 self.g34 = None
             else:

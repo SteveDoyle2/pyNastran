@@ -56,10 +56,3 @@ test Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pyNastran.f06.test.tests
-

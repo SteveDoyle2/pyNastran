@@ -24,8 +24,7 @@ from numpy import array, eye, cross, allclose
 from numpy.linalg import det, norm  # inv
 
 from pyNastran.bdf.deprecated import ShellElementDeprecated
-from pyNastran.bdf.field_writer_8 import (set_blank_if_default,
-                                       set_default_if_blank)
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -171,8 +170,7 @@ class TriShell(ShellElement):
         r"""
         Get the area, :math:`A`.
 
-        .. math:: A = \frac{1}{2} \lvert (n_0-n_1) \times (n_0-n_2) \rvert
-        """
+        .. math:: A = \frac{1}{2} \lvert (n_0-n_1) \times (n_0-n_2) \rvert"""
         (n0, n1, n2) = self.nodePositions()
         a = n0 - n1
         b = n0 - n2
@@ -190,7 +188,6 @@ class TriShell(ShellElement):
         (n1, n2, n3) = self.nodePositions()
         try:
             n = _normal(n1 - n2, n1 - n3)
-
         except:
             msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
             msg += '  nid1=%i n1=%s\n' % (self.nodes[0].nid, n1)
@@ -394,13 +391,13 @@ class CTRIA3(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
-                       [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
-                        self.T1, self.T2, self.T3])
+                       [self.thetaMcid, self.zOffset, None] +
+                       [None, self.TFlag, self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
                        [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
@@ -528,8 +525,7 @@ class CTRIA6(TriShell):
         r"""
         Get the area, :math:`A`.
 
-        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)
-        """
+        .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)"""
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
         b = n1 - n3
@@ -715,8 +711,9 @@ class CTRIAR(TriShell):
         return self._nodeIDs(allowEmptyNodes=False)
 
     def raw_fields(self):
-        list_fields = [self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid,
-                  self.zOffset, self.TFlag, self.T1, self.T2, self.T3]
+        list_fields = (['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() +
+                       [self.thetaMcid, self.zOffset, self.TFlag,
+                        self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
@@ -731,8 +728,6 @@ class CTRIAR(TriShell):
             msg = self.comment() + print_card_8(card)
         else:
             msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_card(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
 
@@ -800,8 +795,7 @@ class CTRIAX(TriShell):
         r"""
         Get the area, :math:`A`.
 
-        .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert
-        """
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert"""
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n2
         b = n1 - n3
@@ -839,9 +833,9 @@ class CTRIAX(TriShell):
 
 
 class CTRIAX6(TriShell):
-    """
-    Nodes defined in a non-standard way
-    ::
+    r"""
+    Nodes defined in a non-standard way::
+
            5
           / \
          6   4
@@ -909,7 +903,7 @@ class CTRIAX6(TriShell):
 
     def AreaCentroidNormal(self):
         """
-        Returns area,centroid, normal as it's more efficient to do them
+        Returns area, centroid, normal as it's more efficient to do them
         together
         """
         (n0, n1, n2, n3, n4, n5) = self.nodePositions()
@@ -919,8 +913,7 @@ class CTRIAX6(TriShell):
         r"""
         Get the normal vector.
 
-        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_1-n_5) \rvert
-        """
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_1-n_5) \rvert"""
         (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1 - n3
         b = n1 - n5
@@ -1052,10 +1045,9 @@ class QuadShell(ShellElement):
         return centroid
 
     def Area(self):
-        r"""
-        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
-        where a and b are the quad's cross node point vectors
         """
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
+        where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.nodePositions()
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         return area
@@ -1171,7 +1163,7 @@ class CSHEAR(QuadShell):
         return (area, centroid, normal)
 
     def AreaCentroid(self):
-        """
+        r"""
         ::
           1-----2
           |    /|
@@ -1180,11 +1172,13 @@ class CSHEAR(QuadShell):
           |/ A2 |
           4-----3
 
-          centroid
-             c = sum(ci*Ai)/sum(A)
-             where:
-               c=centroid
-               A=area
+        .. math:
+            c = \frac{\sum(c_i A_i){\sum{A_i}}
+
+         c = sum(ci*Ai)/sum(A)
+         where:
+           c=centroid
+           A=area
         """
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n2
@@ -1231,8 +1225,7 @@ class CSHEAR(QuadShell):
     def Area(self):
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
-        where a and b are the quad's cross node point vectors
-        """
+        where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.nodePositions()
         a = n1 - n3
         b = n2 - n4
@@ -1770,8 +1763,7 @@ class CQUAD8(QuadShell):
     def Area(self):
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
-        where a and b are the quad's cross node point vectors
-        """
+        where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
         a = n1 - n3
         b = n2 - n4

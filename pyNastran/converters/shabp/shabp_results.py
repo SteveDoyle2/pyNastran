@@ -74,13 +74,13 @@ class ShabpOut(object):
     def _parse_results(self, out_filename):
         f = open(out_filename, 'r')
         i = 0
-        line,i = self.readline(f, i)
+        line, i = self.readline(f, i)
         while '******** MAIN PROGRAM NOW HAS CONTROL OF SYSTEM ********' not in line:
-            line,i = self.readline(f, i)
+            line, i = self.readline(f, i)
         #print line
 
         while '*** PRESSURE CALCULATION PROGRAM' not in line:
-            line,i = self.readline(f, i)
+            line, i = self.readline(f, i)
         #print line
 
         line, i, Cp_dict_components, delta_dict_components, ncases = self._read_inviscid_pressure(f, i)
@@ -131,8 +131,8 @@ class ShabpOut(object):
             #print "*mach_line = ", mach_line.rstrip()
             #if ipatch == 1:
                 #asfdfsadfas
-            xcg_line,i   = self.readline(f, i)
-            alpha_line,i = self.readline(f, i)
+            xcg_line, i = self.readline(f, i)
+            alpha_line, i = self.readline(f, i)
             #print "*alpha_line = ", alpha_line.rstrip()
 
             xcent_line, i = self.readline_n(f, i, 3)
@@ -140,7 +140,7 @@ class ShabpOut(object):
             #            CA            CY            CN           CLL           CLM            CLN        DELTA
             #           XCENT         YCENT         ZCENT      NX             NY             NZ
 
-            line,i = self.readline(f, i)
+            line, i = self.readline(f, i)
             Cp = []
             Delta = []
             while 1:
@@ -159,7 +159,7 @@ class ShabpOut(object):
                         line[91:103], line[105:117],
                     )
 
-                    line,i = self.readline(f, i)
+                    line, i = self.readline(f, i)
                     ca, cy, cn, cll, clm, cln, delta = (
                         line[8 :20], line[21:33],
                         line[35:47], line[49:63],
@@ -167,7 +167,7 @@ class ShabpOut(object):
                         line[91:103],
                     )
 
-                    line,i = self.readline(f, i)
+                    line, i = self.readline(f, i)
                     xc, yc, zc, nx, ny, nz = (
                         line[8 :20], line[21:33],
                         line[35:47], line[49:63],
@@ -178,18 +178,18 @@ class ShabpOut(object):
                     #print '0=%r 1=%r 2=%r 3=%r 4=%r 5=%r 6=%r 7=%r' % (del_ca, del_cy, del_cn, del_cll, del_clm, del_cln, cp, area)
                     Cp.append(cp)
                     Delta.append(delta)
-                    line,i = self.readline(f, i)
+                    line, i = self.readline(f, i)
 
                 #print '%r' % line
                 #4 check on COMPONENT
-                line,i = self.readline_n(f, i, 4)
+                line, i = self.readline_n(f, i, 4)
                 #print '---%r' % line.strip()
                 if '*AIR' in line:
                     # keep going
                     #line,i = self.readline_n(f, i, 3)
                     #print "**alpha_line = ", line.strip()
                     #line,i = self.readline_n(f, i, 4)
-                    line,i = self.readline_n(f, i, 7)
+                    line, i = self.readline_n(f, i, 7)
                 elif 'COMPONENT' in line:
                     #npanels = None
                     while 1:
@@ -217,7 +217,7 @@ class ShabpOut(object):
                         line, i = self.readline(f, i)
                     ncases -= 2  # correct for reading too many lines
 
-                    line,i = self.readline_n(f, i, 3)
+                    line, i = self.readline_n(f, i, 3)
                     #print line
                     break
                     #print '%r' % line

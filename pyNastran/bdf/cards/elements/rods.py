@@ -16,37 +16,6 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
-def _Lambda(model, n1, n2, debug=True):
-    """
-    ::
-      3d  [l,m,n,0,0,0]  2x6
-          [0,0,0,l,m,n]
-    """
-    #R = self.Rmatrix(model,is3D)
-
-    p1 = model.Node(n1).Position()
-    p2 = model.Node(n2).Position()
-    v1 = p2 - p1
-    #if debug:
-        #print("v1=%s" % (v1))
-    v1 = v1 / norm(v1)
-    (l, m, n) = v1
-    #l = 1
-    #m = 2
-    #n = 3
-    Lambda = matrix(zeros((2, 6), 'd'))
-    Lambda[0, 0] = Lambda[1, 3] = l
-    Lambda[0, 1] = Lambda[1, 4] = m
-    Lambda[0, 2] = Lambda[1, 5] = n
-
-    #print("R = \n",R)
-    #debug = True
-    #if debug:
-        #print("Lambda = \n" + str(Lambda))
-        #sys.exit('asdf')
-    return Lambda
-
-
 class RodElement(Element):  # CROD, CONROD, CTUBE
 
     def __init__(self, card, data):

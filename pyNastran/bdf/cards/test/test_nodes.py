@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 import unittest
 
 from pyNastran.bdf.bdf import GRID, SPOINTs as SPOINT, BDFCard
@@ -61,7 +61,7 @@ class TestNodes(unittest.TestCase):
         #assert s2.write_card() == msg, '\n%s---\n%s' % (s2.write_card(), msg)
 
         #       12345678 2345678 2345678 2345678 2345678 2345678
-        msg  = 'SPOINT         7\n'
+        msg = 'SPOINT         7\n'
         msg += 'SPOINT         1    THRU       5\n'
         card = BDFCard(['SPOINT', 1, 2, 3, 4, 5, 7])
         s3 = SPOINT(card)
@@ -69,7 +69,7 @@ class TestNodes(unittest.TestCase):
         #assert s3.write_card() == msg, '\n%s---\n%s' % (s3.write_card(), msg)
 
         #       12345678 2345678 2345678 2345678 2345678 2345678
-        msg  = 'SPOINT         7\n'
+        msg = 'SPOINT         7\n'
         msg += 'SPOINT         1    THRU       5\n'
         card = BDFCard(['SPOINT', 1, 'THRU', 5, 7])
         s4 = SPOINT(card)
@@ -78,7 +78,7 @@ class TestNodes(unittest.TestCase):
 
 
         #       12345678 2345678 2345678 2345678 2345678 2345678
-        msg  = 'SPOINT         7\n'
+        msg = 'SPOINT         7\n'
         msg += 'SPOINT         1    THRU       5\n'
         card = BDFCard(['SPOINT', 1, 'THRU', 5, 7])
         s5 = SPOINT(card)

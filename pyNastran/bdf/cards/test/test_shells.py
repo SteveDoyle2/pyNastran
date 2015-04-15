@@ -337,7 +337,7 @@ class TestShells(unittest.TestCase):
         Sc = None
         Ss = None
         Mcsid = None
-        mat1 = [mid,E,G,nu,rho,a,TRef, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
         m = MAT1(data=mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
@@ -404,9 +404,9 @@ class TestShells(unittest.TestCase):
         TRef = 0.
         ge = 0.
         lam = 'SYM'  # isSymmetrical SYM
-        Mid = [1,2,3]
-        Theta = [0.,10.,20.]
-        T = [.1,.2,.3]
+        Mid = [1, 2, 3]
+        Theta = [0., 10., 20.]
+        T = [.1, .2, .3]
         Sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
         p = PCOMP(data=data)
@@ -441,7 +441,7 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.Mid(6)
 
-        self.assertEqual(p.Mids(), [1,2,3,1,2,3])
+        self.assertEqual(p.Mids(), [1, 2, 3, 1, 2, 3])
 
         self.assertEqual(p.sout(0), 'YES')
         self.assertEqual(p.sout(1), 'YES')
@@ -463,7 +463,7 @@ class TestShells(unittest.TestCase):
         Sc = None
         Ss = None
         Mcsid = None
-        mat1 = [mid,E,G,nu,rho,a,TRef, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
         m = MAT1(data=mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import range
 from numpy import array, zeros, cross, transpose
 from numpy.linalg import norm

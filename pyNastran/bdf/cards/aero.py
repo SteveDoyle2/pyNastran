@@ -426,7 +426,7 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -pi / 2.)
         pulim = set_blank_if_default(self.pulim, pi / 2.)
 
-        list_fields = ['AESURF', self.aesid,self.label, self.cid1, self.alid1,
+        list_fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
                        self.cid2, self.alid2, eff, ldw, crefc, crefs,
                        pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                        self.tqulim]
@@ -1016,9 +1016,9 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         """
         lchord = self.get_LChord()
         lspan = self.get_LSpan()
-        list_fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
-                       self.nchord, lspan, lchord, self.igid,
-                       ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
+        list_fields = (['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
+                        self.nchord, lspan, lchord, self.igid, ] +
+                       list(self.p1) + [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
     def get_LChord(self):
@@ -1432,7 +1432,7 @@ class CAERO4(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO4', self.eid, self.Pid(), cp, self.nspan,
                         self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
-                        list(self.p4) + [self.x43])
+                       list(self.p4) + [self.x43])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1596,7 +1596,7 @@ class CAERO5(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO5', self.eid, self.Pid(), cp, nspan, lspan,
                         ntheory, self.nthick, None,] + list(self.p1) + [self.x12] +
-                        list(self.p4) + [self.x43])
+                       list(self.p4) + [self.x43])
         return list_fields
 
     def write_card(self, size=8, is_double=False):

@@ -115,9 +115,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
-    #: this is a nastran model
-    modelType = 'nastran'
-
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
@@ -133,7 +130,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :param log:   a python logging module object;
                       if log is set, debug is ignored and uses the
                       settings the logging object has
-
         """
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
@@ -312,12 +308,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'TABRND1', 'TABRNDG',
 
             # initial conditions - sid (set ID)
-            #'TIC',  (in tables.py)
+            #'TIC',  (in bdf_tables.py)
 
-            #: methods - .. todo:: EIGRL not done???
+            #: methods
             'EIGB', 'EIGR', 'EIGRL',
 
-            #: cMethods - .. todo:: EIGC not done???
+            #: cMethods
             'EIGC', 'EIGP',
 
             #: contact
@@ -691,18 +687,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :param xref:  should the bdf be cross referenced (default=True)
         :param punch: indicates whether the file is a punch file (default=False)
 
-        >>> bdf = BDF()
-        >>> bdf.read_bdf(bdf_filename, xref=True)
-        >>> g1 = bdf.Node(1)
-        >>> print(g1.Position())
-        [10.0, 12.0, 42.0]
-        >>> bdf.write_card(bdf_filename2)
-        >>> print(bdf.card_stats())
-        ---BDF Statistics---
-        SOL 101
-        bdf.nodes = 20
-        bdf.elements = 10
-        etc.
+        .. code-block:: python
+
+            >>> bdf = BDF()
+            >>> bdf.read_bdf(bdf_filename, xref=True)
+            >>> g1 = bdf.Node(1)
+            >>> print(g1.Position())
+            [10.0, 12.0, 42.0]
+            >>> bdf.write_card(bdf_filename2)
+            >>> print(bdf.card_stats())
+
+            ---BDF Statistics---
+            SOL 101
+            bdf.nodes = 20
+            bdf.elements = 10
+            etc.
         """
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
@@ -892,19 +891,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.has_case_control_deck = False
             (i, line, comment) = self._get_line()   # BEGIN BULK
 
-        sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
-        self.update_solution(sol, method, iSolLine)
+        sol, method, isol_line = parse_executive_control_deck(self.executive_control_lines)
+        self.update_solution(sol, method, isol_line)
 
-    def update_solution(self, sol, method, iSolLine):
+    def update_solution(self, sol, method, isol_line):
         """
         Updates the overall solution type (e.g. 101,200,600)
 
-        :param self:     the object pointer
-        :param sol:      the solution type (101,103, etc)
-        :param method:   the solution method (only for SOL=600)
-        :param iSolLine: the line to put the SOL/method on
+        :param self:      the object pointer
+        :param sol:       the solution type (101,103, etc)
+        :param method:    the solution method (only for SOL=600)
+        :param isol_line: the line to put the SOL/method on
         """
-        self.iSolLine = iSolLine
+        self.iSolLine = isol_line
         # the integer of the solution type (e.g. SOL 101)
         if sol is None:
             self.sol = None
@@ -934,15 +933,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :param self:         the BDF object
         :param dict_of_vars: dictionary of 7 character variable names to map.
 
-        ::
+        .. code-block:: python
 
-          GRID, 1, %xVar, %yVar, %zVar
+            GRID, 1, %xVar, %yVar, %zVar
 
-        >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
-        >>> bdf = BDF()
-        >>> bdf.set_dynamic_syntax(dict_of_vars)
-        >>> bdf,read_bdf(bdf_filename, xref=True)
-        >>>
+          >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
+          >>> bdf = BDF()
+          >>> bdf.set_dynamic_syntax(dict_of_vars)
+          >>> bdf,read_bdf(bdf_filename, xref=True)
+          >>>
 
         .. note:: Case sensitivity is supported.
         .. note:: Variables should be 7 characters or less to fit in an
@@ -962,20 +961,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
 
-    def _is_case_control_deck(self, line):
-        """
-        .. todo:: not done...
-        """
-        lineUpper = line.upper().strip()
-        if 'CEND' in line.upper():
-            raise SyntaxError('invalid Case Control Deck card...CEND...')
-        if '=' in lineUpper or ' ' in lineUpper:
-            return True
-        for card in self.uniqueBulkDataCards:
-            lenCard = len(card)
-            if card in lineUpper[:lenCard]:
-                return False
-        return True
+    #def _is_case_control_deck(self, line):
+        #lineUpper = line.upper().strip()
+        #if 'CEND' in line.upper():
+            #raise SyntaxError('invalid Case Control Deck card...CEND...')
+        #if '=' in lineUpper or ' ' in lineUpper:
+            #return True
+        #for card in self.uniqueBulkDataCards:
+            #lenCard = len(card)
+            #if card in lineUpper[:lenCard]:
+                #return False
+        #return True
 
     def _read_case_control_deck(self):
         """
@@ -1033,7 +1029,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def is_reject(self, card_name):
         """
-        Can the card be read
+        Can the card be read.
+
+        If the card is rejected, it's added to self.reject_count
 
         :param self: the BDF object
         :param card_name: the card_name -> 'GRID'
@@ -1050,7 +1048,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _open_file(self, bdf_filename):
         """
-        Opens the primary bdf/dat file and all subsequent INCLUDE files.
+        Opens the primary .bdf/.dat file and all subsequent INCLUDE files.
 
         :param bdf_filename: the name of the bdf/dat file to open
         :returns: None
@@ -1085,7 +1083,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _close_file(self):
         """
-        handles closing the file stream and resetting the active file
+        Handles closing the file stream and resetting the active file
         """
         self.log.info('closing %r' % self.active_filename)
         if self._ifile == 0:
@@ -1104,7 +1102,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def process_card(self, card_lines):
         """
-        :param self: the BDF object
+        Converts card_lines into a card.
+        Considers dynamic syntax and removes empty fields
+
+        :param self:        the BDF object
+        :param card_lines:  list of strings that represent the card's lines
+        :returns fields:    the parsed card's fields
+        :returns card_name: the card's name
+
+        .. code-block:: python
+
+        >>> card_lines = ['GRID,1,,1.0,2.0,3.0,,']
+        >>> model = BDF()
+        >>> fields, card_name = model.process_card(card_lines)
+        >>> fields
+        ['GRID', '1', '', '1.0', '2.0', '3.0']
+        >>> card_name
+        'GRID'
         """
         card_name = self._get_card_name(card_lines)
         fields = to_fields(card_lines, card_name)
@@ -1121,22 +1135,32 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         :param self:       the BDF object
         :param card_lines: the list of the card fields
-         >>> ['GRID,1,2',]  # (is_list = False)
-         >>> ['GRID',1,2,]  # (is_list = True; default)
-
         :param card_name: the card_name -> 'GRID'
         :param comment:   an optional the comment for the card
         :param is_list:   changes card_lines from a list of lines to
                           a list of fields
         :returns card_object: the card object representation of card
 
+        .. code-block:: python
+
+          >>> model = BDF()
+
+          # is_list is a somewhat misleading name; is it a list of card_lines?
+          # where a card_line is an unparsed string
+          >>> card_lines =['GRID,1,2']
+          >>> comment = 'this is a comment'
+          >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
+
+          # here is_list=False because it's been parsed
+         >>> card = ['GRID', 1, 2,]
+          >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
+
         .. note:: this is a very useful method for interfacing with the code
-        .. note:: the cardObject is not a card-type object...so not a GRID
+        .. note:: the card_object is not a card-type object...so not a GRID
                   card or CQUAD4 object.  It's a BDFCard Object.  However,
                   you know the type (assuming a GRID), so just call the
                   *mesh.Node(nid)* to get the Node object that was just
                   created.
-        .. warning:: cardObject is not returned
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
@@ -1604,7 +1628,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         :param self:  the BDF object
         :param lines: the lines of the card
-        :returns cardname: the name of the card
+        :returns card_name: the name of the card
         """
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:

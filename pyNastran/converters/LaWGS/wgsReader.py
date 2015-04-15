@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import range
 import copy
@@ -7,14 +8,14 @@ from numpy import array, radians, dot, zeros
 
 class LaWGS_Panel(object):
     """
-    @param rotate
-    @param translate
-    @param scale
+    :param rotate: rotates the patch
+    :param translate: translates the patch
+    :param scale: scales the patch
     """
     def __init__(self, key, header, group):
         #print("key=%s \nheader=|%s|" % (key, header))   # ,iSymG
         (ID, nline, npnt, isyml, rx, ry, rz, tx, ty, tz, xScale,
-            yScale, zScale, iSymG) = header.strip().split()
+         yScale, zScale, iSymG) = header.strip().split()
         print("ID=%s name=%s imax=%s jmax=%s" % (ID, key, nline, npnt))
         print("Rotate    = <%s,%s,%s>" % (rx, ry, rz))
         print("Translate = <%s,%s,%s>" % (tx, ty, rz))

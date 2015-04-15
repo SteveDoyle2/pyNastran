@@ -213,7 +213,7 @@ class CBEAM(CBAR):
 
         v2 = cross(v1, v3)
 
-        R = array([ v1, v2, v3 ])
+        R = array([v1, v2, v3])
         #if debug:
             #print("v1 =", v1)
             #print("v2 =", v2)
@@ -227,7 +227,7 @@ class CBEAM(CBAR):
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
-                  self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
+                       self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
         return list_fields
 
     def repr_fields(self):
@@ -244,8 +244,8 @@ class CBEAM(CBAR):
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
-                  self.pa, self.pb, w1a, w2a, w3a,
-                  w1b, w2b, w3b, sa, sb]
+                       self.pa, self.pb, w1a, w2a, w3a,
+                       w1b, w2b, w3b, sa, sb]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

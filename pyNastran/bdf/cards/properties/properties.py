@@ -16,15 +16,15 @@ from six.moves import range
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string_or_blank, integer_string_or_blank, blank)
+    double, double_or_blank, string_or_blank, integer_string_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class PFAST(Property):
     type = 'PFAST'
-    _field_map = {1: 'pid', 2:'d', 3:'mcid', 4:'mflag',
+    _field_map = {
+        1: 'pid', 2:'d', 3:'mcid', 4:'mflag',
         5:'kt1', 6:'kt2', 7:'kt3',
         8:'kr1', 9:'kr2', 10:'kr3',
         11:'mass', 12:'ge'
@@ -313,7 +313,7 @@ class PSOLID(SolidProperty):
                 msg = 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
                 raise TypeError(msg)
 
-    def writeCalculix(self, elementSet=999):
+    def _write_calculix(self, elementSet=999):
         msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (
             self.mid, elementSet)
         return msg

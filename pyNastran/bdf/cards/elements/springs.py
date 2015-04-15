@@ -34,28 +34,6 @@ class SpringElement(Element):
         p = (self.nodes[1].Position() - self.nodes[0].Position()) / 2.
         return p
 
-    def K(self):
-        raise NotImplementedError('K not implemented in the %s class'
-                                  % self.type)
-
-    def Lambda(self, model, debug=False):
-        """
-          3d  [l,m,n,0,0,0]
-              [0,0,0,l,m,n]
-        """
-        (n1, n2) = self.nodeIDs()
-        p1 = model.Node(n1).Position()
-        p2 = model.Node(n2).Position()
-        v1 = p2 - p1
-        v1 = v1 / norm(v1)
-        (l, m, n) = v1
-        Lambda = array(zeros((2, 6), 'float64'))
-
-        Lambda[0, 0] = Lambda[1, 3] = l
-        Lambda[0, 1] = Lambda[1, 4] = m
-        Lambda[0, 2] = Lambda[1, 5] = n
-        return Lambda
-
     def Mass(self):
         return 0.0
 
@@ -279,7 +257,7 @@ class CELAS2(SpringElement):
     def raw_fields(self):
         nodes = self.nodeIDs()
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
-                  nodes[1], self.c2, self.ge, self.s]
+                       nodes[1], self.c2, self.ge, self.s]
         return list_fields
 
     def repr_fields(self):
@@ -287,7 +265,7 @@ class CELAS2(SpringElement):
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
-                  nodes[1], self.c2, ge, s]
+                       nodes[1], self.c2, ge, s]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

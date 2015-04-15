@@ -67,10 +67,3 @@ test Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pyNastran.op2.test.tests
-

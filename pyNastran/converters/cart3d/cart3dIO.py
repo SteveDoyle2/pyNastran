@@ -1,7 +1,7 @@
-#VTK_TRIANGLE = 5
+from __future__ import print_function
 from six import iteritems
 from six.moves import range
-from numpy import zeros, arange, mean, amax, amin
+from numpy import arange, mean, amax, amin
 
 import vtk
 from vtk import vtkTriangle
@@ -124,8 +124,9 @@ class Cart3dIO(object):
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         #self.grid2.Modified()
-        self.grid.Update()
-        #self.grid2.Update()
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+            #self.grid2.Update()
         print("updated grid")
 
         # loadCart3dResults - regions/loads
@@ -187,23 +188,23 @@ class Cart3dIO(object):
                 cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
 
             i = 2
-            if 0:
-                from pyNastran.converters.cart3d.cart3d_to_quad import get_normal_groups
-                normal, normal_groups = get_normal_groups(nodes, elements)
-                groups = zeros(nelements, dtype='int32')
-                for igroup, normal_group in enumerate(normal_groups):
-                    if igroup % 2 == 0:
-                        continue
-                    for ni in normal_group:
-                        groups[ni] = igroup + 1
-                cases[(ID, 2, 'Quad Group', 1, 'centroid', '%i')] = groups
-                geometry_form.append('Quad Group', 2, [])
+            #if 0:
+                #from pyNastran.converters.cart3d.cart3d_to_quad import get_normal_groups
+                #normal, normal_groups = get_normal_groups(nodes, elements)
+                #groups = zeros(nelements, dtype='int32')
+                #for igroup, normal_group in enumerate(normal_groups):
+                    #if igroup % 2 == 0:
+                        #continue
+                    #for ni in normal_group:
+                        #groups[ni] = igroup + 1
+                #cases[(ID, 2, 'Quad Group', 1, 'centroid', '%i')] = groups
+                #geometry_form.append('Quad Group', 2, [])
 
 
             if is_normals:
-                geometry_form.append( ('Normal X', i, []) )
-                geometry_form.append( ('Normal Y', i + 1, []) )
-                geometry_form.append( ('Normal Z', i + 2, []) )
+                geometry_form.append(('Normal X', i, []))
+                geometry_form.append(('Normal Y', i + 1, []))
+                geometry_form.append(('Normal Z', i + 2, []))
 
                 cnormals = model.get_normals(nodes, elements, shift_nodes=False)
                 cnnodes = cnormals.shape[0]
@@ -250,9 +251,9 @@ class Cart3dIO(object):
             i += 1
 
             if is_normals:
-                geometry_form.append( ('Normal X', 1, []) )
-                geometry_form.append( ('Normal Y', 2, []) )
-                geometry_form.append( ('Normal Z', 3, []) )
+                geometry_form.append(('Normal X', 1, []))
+                geometry_form.append(('Normal Y', 2, []))
+                geometry_form.append(('Normal Z', 3, []))
 
                 cnormals = model.get_normals(nodes, elements, shift_nodes=False)
                 nnormals = model.get_normals_at_nodes(nodes, elements, cnormals, shift_nodes=False)
@@ -283,7 +284,7 @@ class Cart3dIO(object):
         if len(results_form):
             form.append(('Results', None, results_form))
         return form, cases
-        if new:
-            obj = Cart3dResultsObj(form, new_cases)
-            obj.get_result_index_by_form_key()
-            obj.get_result_by_index(1)
+        #if new:
+            #obj = Cart3dResultsObj(form, new_cases)
+            #obj.get_result_index_by_form_key()
+            #obj.get_result_by_index(1)

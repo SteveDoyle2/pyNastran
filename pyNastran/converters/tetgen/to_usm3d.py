@@ -1,8 +1,6 @@
 from struct import pack, unpack
-from numpy import array, transpose, zeros, unique
 
 from pyNastran.utils.log import get_logger
-
 from pyNastran.converters.tetgen.tetgen_reader import TetgenReader
 from pyNastran.converters.usm3d.usm3d_reader import write_usm3d_volume
 

@@ -24,8 +24,7 @@ from itertools import count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    components, components_or_blank)
+    double, double_or_blank, components, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -324,8 +323,7 @@ class MPC(Constraint):
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
-        for (i, gid, constraint, enforced) in zip(count(), self.gids,
-             self.constraints, self.enforced):
+        for i, gid, constraint, enforced in zip(count(), self.gids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
             if i % 2 == 1 and i > 0:
                 fields.append(None)
@@ -335,8 +333,7 @@ class MPC(Constraint):
     def write_card(self, size=8, is_double=False):
         if size == 8:
             msg = 'MPC     %8s' % self.conid
-            for (i, grid, component, enforced) in zip(count(), self.gids,
-                 self.constraints, self.enforced):
+            for i, grid, component, enforced in zip(count(), self.gids, self.constraints, self.enforced):
                 msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
                 if i % 2 == 1 and i > 0:
                     msg += '\n%8s%8s' % ('', '')
@@ -344,26 +341,16 @@ class MPC(Constraint):
             # TODO: we're sure MPCs support double precision?
             msg = 'MPC*    %16s' % self.conid
             if is_double:
-                for (i, grid, component, enforced) in zip(count(), self.gids,
-                     self.constraints, self.enforced):
+                for i, grid, component, enforced in zip(count(), self.gids, self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
                     if i % 2 == 1 and i > 0:
                         msg += '\n%8s%16s' % ('*', '')
             else:
-                for (i, grid, component, enforced) in zip(count(), self.gids,
-                     self.constraints, self.enforced):
+                for (i, grid, component, enforced) in zip(count(), self.gids, self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_float_16(enforced))
                     if i % 2 == 1 and i > 0:
                         msg += '\n%8s%16s' % ('*', '')
         return self.comment() + msg.rstrip() + '\n'
-
-    #def write_card(self, size=8, is_double=False):
-        #card = self.raw_fields()
-        #if size == 8:
-            #return self.comment() + print_card_8(card)
-        #if is_double:
-            #return self.comment() + print_card_double(card)
-        #return self.comment() + print_card_16(card)
 
 
 class SPC(Constraint):

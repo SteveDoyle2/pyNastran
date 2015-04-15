@@ -1,17 +1,6 @@
 converters Package
 ==================
 
-:mod:`nastran` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran
-
-.. automodule:: pyNastran.converters.nastran
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`cart3d` Module
 -----------------------
 
@@ -34,23 +23,23 @@ converters Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`nastran` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.converters.nastran
+
+.. automodule:: pyNastran.converters.nastran
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`panair` Module
 -----------------------
 
 .. inheritance-diagram:: pyNastran.converters.panair
 
 .. automodule:: pyNastran.converters.panair
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`tetgen` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.converters.tetgen
-
-.. automodule:: pyNastran.converters.tetgen
     :members:
     :private-members:
     :undoc-members:
@@ -79,6 +68,17 @@ converters Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`tetgen` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.converters.tetgen
+
+.. automodule:: pyNastran.converters.tetgen
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`usm3d` Module
 -----------------------
 
@@ -91,8 +91,6 @@ converters Package
     :show-inheritance:
 
 
-Subpackages
------------
 
 .. toctree::
 

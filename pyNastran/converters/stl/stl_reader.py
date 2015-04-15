@@ -1,19 +1,20 @@
 #pylint:  disable=C0103,C0111
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip, range
 import os
-import sys
 from copy import deepcopy
 #from struct import pack
 
 from docopt import docopt
 
 from numpy import array, zeros, ndarray, cross, where, vstack, unique
+from numpy import arctan2, cos, sin, transpose, pi
 from numpy.linalg import norm
 import scipy
 
 from struct import unpack, Struct, pack
-import pyNastran
+
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
@@ -98,10 +99,10 @@ class STLReader(object):
         else:
             header = '%-80s' % stl_filename
             f.write(pack('80s', header))
-        a = [0.,0.,0.]
-        b = [0.,0.,0.]
-        c = [0.,0.,0.]
-        nelements, three = self.elements.shape
+        a = [0., 0., 0.]
+        b = [0., 0., 0.]
+        c = [0., 0., 0.]
+        nelements = self.elements.shape[0]
         f.write(pack('i', nelements))
         elements = self.elements
 
@@ -191,13 +192,13 @@ class STLReader(object):
         v13 = p3 - p1
         v123 = cross(v12, v13)
         n = norm(v123, axis=1)
-        inan = where(n==0)[0]
+        inan = where(n == 0)[0]
         return v123, n, inan
 
     def remove_elements_with_bad_normals(self, elements, nodes=None):
         v123, n, inan = self._get_normals_data(elements, nodes=nodes)
         if len(inan):
-            inotnan = where(n!=0)[0]
+            inotnan = where(n != 0)[0]
             self.elements = elements[inotnan, :]
             n = n[inotnan]
             v123 = v123[inotnan]
@@ -209,18 +210,18 @@ class STLReader(object):
         normals[:, 2] /= n
         return normals
 
-    def get_area(self, elements, stop_on_failure=True):
-        v123, n, inan = self._get_normals_data(elements, nodes=self.nodes)
+    #def get_area(self, elements, stop_on_failure=True):
+        #v123, n, inan = self._get_normals_data(elements, nodes=self.nodes)
 
-        if stop_on_failure:
-            msg = 'Failed Elements: %s\n' % inan
-            if len(inan) > 0:
-                for inani in inan:
-                    msg += '  eid=%s nodes=%s\n' % (inani, elements[inani, :])
-                    for ni in elements[inani]:
-                        msg += '    nid=%s node=%s\n' % (ni, nodes[ni, :])
-                raise RuntimeError(msg)
-        return 0.5 * n
+        #if stop_on_failure:
+            #msg = 'Failed Elements: %s\n' % inan
+            #if len(inan) > 0:
+                #for inani in inan:
+                    #msg += '  eid=%s nodes=%s\n' % (inani, elements[inani, :])
+                    #for ni in elements[inani]:
+                        #msg += '    nid=%s node=%s\n' % (ni, nodes[ni, :])
+                #raise RuntimeError(msg)
+        #return 0.5 * n
 
     def get_normals(self, elements, nodes=None, stop_on_failure=True):
         """
@@ -246,7 +247,7 @@ class STLReader(object):
                 msg += 'Failed Elements: %s; n=%s\n' % (inan, len(inan))
                 raise RuntimeError(msg)
         else:
-            inotnan = where(n!=0)[0]
+            inotnan = where(n != 0)[0]
             n[inan] = array([1., 0., 0.])
             elements = elements[inotnan, :]
             n = n[inotnan]
@@ -386,11 +387,11 @@ class STLReader(object):
 
         nid = 0
         #print "deltaNs =", deltaNs
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
         nodes2 = zeros((nnodes * (N+1), 3), 'float64')
         nodes2[:nnodes, :] = nodes
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         elements2 = zeros((nelements * (N+1), 3), 'int32')
         elements2[:nelements, :] = elements
         #print "nodes.shape =", nodes.shape
@@ -414,12 +415,12 @@ class STLReader(object):
 
         for deltaN in deltaNs:
             outer_points = nodes + normals_at_nodes * deltaN
-            nodes2[   ni*nnodes   :(ni+1)*nnodes, :] = outer_points
+            nodes2[ni*nnodes : (ni+1)*nnodes, :] = outer_points
 
             nnbase = ni * nnodes
             nnshift = (ni+1) * nnodes
 
-            nebase  = (ni) * nelements
+            nebase = (ni) * nelements
             neshift = (ni + 1) * nelements
             elements2[neshift : neshift + nelements, :] = elements + nnodes * (ni + 1)
 
@@ -428,7 +429,7 @@ class STLReader(object):
             self.log.info('normals_at_nodes = %s' % str(normals_at_nodes))
             self.log.info('outer_points = %s' % str(outer_points))
             bdf.write('$NODES in Layer=%i\n' % (ni + 1))
-            for (x, y, z) in outer_points:
+            for x, y, z in outer_points:
                 card = ['GRID', nid, cid, x, y, z]
                 bdf.write(print_card_8(card))
                 nid += 1
@@ -494,7 +495,7 @@ class STLReader(object):
         out = open(out_filename, 'wb')
         out.write(msg)
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         normals = self.get_normals(elements)
         for element, normal in zip(elements, normals):
             try:
@@ -688,7 +689,6 @@ def _rotate_model(stl):  # pragma: no cover
     elements = stl.elements
     if 0:
         # rotate the model
-        from numpy import where, arctan2, cos, sin, hstack, vstack, concatenate, transpose, pi
         x, y, z = nodes[:, 0], nodes[:, 1], nodes[:, 2]
         #i = where(y > 0.0)[0]
         R = x**2 + y**2

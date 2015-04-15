@@ -661,7 +661,7 @@ class TABRND1(RandomTable):
 
     def raw_fields(self):
         list_fields = ['TABRND1', self.tid, self.xaxis, self.yaxis, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def repr_fields(self):

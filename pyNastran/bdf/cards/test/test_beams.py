@@ -46,74 +46,88 @@ class TestBeams(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_pbeam_02(self):
-        lines =['PBEAM,39,6,2.9,3.5,5.97',
-                '     ,  , ,2.0,-4.0',
-                '     ,YES,1.0,5.3,56.2,78.6',
-                '     ,   ,   ,2.5,-5.0',
-                '     ,YES,1.0,5.3,56.2,78.6',
-                '     ,   ,   ,2.5,-5.0',
-                '     ,YES,1.0,5.3,56.2,78.6',
-                '     ,   ,   ,2.5,-5.0',
-                '     ,   ,   ,1.1,    ,2.1,,0.21',
-                '     ,   ,   ,   ,    ,0.5,,0.0',]
+        lines = [
+            'PBEAM,39,6,2.9,3.5,5.97',
+            '     ,  , ,2.0,-4.0',
+            '     ,YES,1.0,5.3,56.2,78.6',
+            '     ,   ,   ,2.5,-5.0',
+            '     ,YES,1.0,5.3,56.2,78.6',
+            '     ,   ,   ,2.5,-5.0',
+            '     ,YES,1.0,5.3,56.2,78.6',
+            '     ,   ,   ,2.5,-5.0',
+            '     ,   ,   ,1.1,    ,2.1,,0.21',
+            '     ,   ,   ,   ,    ,0.5,,0.0',
+        ]
 
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
         fields = card2.raw_fields()
 
-        lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
-                          '              0.      0.      2.     -4.      0.      0.      0.      0.',
-                          '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
-                          '              0.      0.     2.5     -5.      0.      0.      0.      0.',
-                          '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
-                          '              0.      0.     2.5     -5.      0.      0.      0.      0.',
-                          '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
-                          '              0.      0.     2.5     -5.      0.      0.      0.      0.',
-                          '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
-                          '              0.      0.      0.      0.      .5      .5      0.      0.']
+        lines_expected = [
+            'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
+            '              0.      0.      2.     -4.      0.      0.      0.      0.',
+            '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
+            '              0.      0.     2.5     -5.      0.      0.      0.      0.',
+            '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
+            '              0.      0.     2.5     -5.      0.      0.      0.      0.',
+            '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
+            '              0.      0.     2.5     -5.      0.      0.      0.      0.',
+            '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
+            '              0.      0.      0.      0.      .5      .5      0.      0.'
+        ]
         self._compare(fields, lines_expected)
 
     def test_pbeam_03(self):
-        lines =['PBEAM,39,6,2.9,3.5,5.97',
-                '     ,  , ,2.0,-4.0',
-                '     ,YES,1.0,5.3,56.2,78.6',
-                '     ,   ,   ,2.5,-5.0',
-                '     ,   ,   ,1.1,    ,2.1,,0.21',
-                '     ,   ,   ,   ,    ,0.5,,0.0',]
+        lines = [
+            'PBEAM,39,6,2.9,3.5,5.97',
+            '     ,  , ,2.0,-4.0',
+            '     ,YES,1.0,5.3,56.2,78.6',
+            '     ,   ,   ,2.5,-5.0',
+            '     ,   ,   ,1.1,    ,2.1,,0.21',
+            '     ,   ,   ,   ,    ,0.5,,0.0',
+        ]
 
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
         fields = card2.raw_fields()
 
-        lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
-                          '              0.      0.      2.     -4.      0.      0.      0.      0.',
-                          '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
-                          '              0.      0.     2.5     -5.      0.      0.      0.      0.',
-                          '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
-                          '              0.      0.      0.      0.      .5      .5      0.      0.',]
+        lines_expected = [
+            'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
+            '              0.      0.      2.     -4.      0.      0.      0.      0.',
+            '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
+            '              0.      0.     2.5     -5.      0.      0.      0.      0.',
+            '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
+            '              0.      0.      0.      0.      .5      .5      0.      0.',
+        ]
         self._compare(fields, lines_expected)
 
     def test_pbeam_04(self):
-        lines =['PBEAM,39,6,2.9,3.5,5.97',
-                '     ,  , ,2.0,-4.0',
-                '     ,   ,   ,1.1,    ,2.1,,0.21',
-                '     ,   ,   ,   ,    ,0.5,,0.0',]
+        lines = [
+            'PBEAM,39,6,2.9,3.5,5.97',
+            '     ,  , ,2.0,-4.0',
+            '     ,   ,   ,1.1,    ,2.1,,0.21',
+            '     ,   ,   ,   ,    ,0.5,,0.0',
+        ]
 
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
         fields = card2.raw_fields()
-        lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
-                          '              0.      0.      2.     -4.      0.      0.      0.      0.',
-                          '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
-                          '              0.      0.      0.      0.      .5      .5      0.      0.',]
+        lines_expected = [
+            'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
+            '              0.      0.      2.     -4.      0.      0.      0.      0.',
+            '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
+            '              0.      0.      0.      0.      .5      .5      0.      0.',
+        ]
         self._compare(fields, lines_expected)
 
     def test_pbeam_05(self):
-        lines =['PBEAM,39,6,2.9,3.5,5.97',
-                '     ,  , ,2.0,-4.0',]
+        lines = [
+            'PBEAM,39,6,2.9,3.5,5.97',
+            '     ,  , ,2.0,-4.0',
+        ]
 
         card = bdf.process_card(lines)
         #print(print_card_8(card))
@@ -122,10 +136,12 @@ class TestBeams(unittest.TestCase):
         fields = card2.raw_fields()
         msg = print_card_8(fields)
 
-        lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
-                          '              0.      0.      2.     -4.      0.      0.      0.      0.',
-                          '              1.      1.      0.      0.      0.      0.      0.      0.',
-                          '              0.      0.      0.      0.      0.      0.      0.      0.',]
+        lines_expected = [
+            'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
+            '              0.      0.      2.     -4.      0.      0.      0.      0.',
+            '              1.      1.      0.      0.      0.      0.      0.      0.',
+            '              0.      0.      0.      0.      0.      0.      0.      0.',
+        ]
         self._compare(fields, lines_expected)
 
     def test_cbeam_05(self):
@@ -168,12 +184,13 @@ class TestBeams(unittest.TestCase):
         self.assertEqual(cbeam.J(), 3.14)
 
     def test_pbeam_06(self):
-        lines =[
+        lines = [
             'PBEAM   1       1       1.      60.     1.                              PBEAM1',
             '+BEAM1  5.              -5.                                             PBEAM2',
             '+BEAM2  YES     1.      2.      240.                                    PBEAM3',
             '+BEAM3  10.             -10.                                            PBEAM4',
-            '+BEAM4                  -.666667',]
+            '+BEAM4                  -.666667',
+        ]
 
         card = bdf.process_card(lines)
         card = BDFCard(card)
@@ -194,7 +211,8 @@ class TestBeams(unittest.TestCase):
         lines = [
             'PBEAM   100     100     1.00    10.     1.0                             +Z1',
             '+Z1     NO      1.0                                                     +Z4',
-            '+Z4     0.0     0.0',]
+            '+Z4     0.0     0.0',
+        ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
         with self.assertRaises(SyntaxError):  # .. todo:: is this correct?

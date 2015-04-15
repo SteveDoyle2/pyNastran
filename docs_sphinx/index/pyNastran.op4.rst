@@ -23,8 +23,6 @@ op4 Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
 .. toctree::
 

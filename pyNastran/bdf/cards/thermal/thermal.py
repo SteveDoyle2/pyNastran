@@ -7,9 +7,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer,
-    integer_or_blank, double, double_or_blank,
-    integer_or_string, string, blank)
+from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, double,
+    integer_or_blank, double_or_blank, integer_or_string, string, blank)
 
 class ThermalCard(BaseCard):
     def __init__(self, card, data):
@@ -59,29 +58,37 @@ class CHBDYE(ThermalElement):
     """
     type = 'CHBDYE'
 
-    hexMap = {1: [4, 3, 2, 1],  # CHEXA8/CHEXA20
-              2: [1, 2, 6, 5],
-              3: [2, 3, 7, 6],
-              4: [3, 4, 8, 7],
-              5: [4, 1, 5, 8],
-              6: [5, 6, 7, 8],
-              }
+    hexMap = {
+        1: [4, 3, 2, 1],
+        2: [1, 2, 6, 5],
+        3: [2, 3, 7, 6],
+        4: [3, 4, 8, 7],
+        5: [4, 1, 5, 8],
+        6: [5, 6, 7, 8],
+    }
 
-    pentMap = {1: [3, 2, 1],  # CPENTA
-               2: [1, 2, 5, 4],
-               3: [2, 3, 6, 5],
-               4: [3, 1, 4, 6],
-               5: [4, 5, 6],
-               }
+    pentMap = {
+        1: [3, 2, 1],
+        2: [1, 2, 5, 4],
+        3: [2, 3, 6, 5],
+        4: [3, 1, 4, 6],
+        5: [4, 5, 6],
+    }
 
-    tetMap = {1: [1, 3, 2],  # CTETRA
-              2: [1, 2, 4],
-              3: [2, 3, 4],
-              4: [3, 1, 4],
-              }
+    tetMap = {
+        1: [1, 3, 2],
+        2: [1, 2, 4],
+        3: [2, 3, 4],
+        4: [3, 1, 4],
+    }
 
-    sideMaps = {'CHEXA': hexMap, 'CPENTA': pentMap, 'CTETRA': tetMap,
-                'CTRIA3': [1, 2, 3], 'CQUAD4': [1, 2, 3, 4]}
+    sideMaps = {
+        'CHEXA': hexMap,
+        'CPENTA': pentMap,
+        'CTETRA': tetMap,
+        'CTRIA3': [1, 2, 3],
+        'CQUAD4': [1, 2, 3, 4],
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         ThermalElement.__init__(self, card, data)
@@ -144,8 +151,8 @@ class CHBDYE(ThermalElement):
 
     def raw_fields(self):
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
-                  self.iViewFront, self.iViewBack, self.radMidFront,
-                  self.radMidBack]
+                       self.iViewFront, self.iViewBack, self.radMidFront,
+                       self.radMidBack]
         return list_fields
 
     def repr_fields(self):
@@ -154,8 +161,8 @@ class CHBDYE(ThermalElement):
         """
         #eids = collapse_thru_by(self.eids)
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
-                  self.iViewFront, self.iViewBack, self.radMidFront,
-                  self.radMidBack]
+                       self.iViewFront, self.iViewBack, self.radMidFront,
+                       self.radMidBack]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -233,9 +240,9 @@ class CHBDYG(ThermalElement):
         return self.eid
 
     def raw_fields(self):
-        list_fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,
-                  self.iViewBack, self.radMidFront, self.radMidBack, None,
-                  ] + self.grids
+        list_fields = (['CHBDYG', self.eid, None, self.Type, self.iViewFront,
+                        self.iViewBack, self.radMidFront, self.radMidBack, None,] +
+                       self.grids)
         return list_fields
 
     def repr_fields(self):
@@ -244,8 +251,8 @@ class CHBDYG(ThermalElement):
         radMidFront = set_blank_if_default(self.radMidFront, 0)
         radMidBack = set_blank_if_default(self.radMidBack, 0)
 
-        list_fields = ['CHBDYG', self.eid, None, self.Type, iViewFront,
-                    iViewBack, radMidFront, radMidBack, None, ] + self.grids
+        list_fields = (['CHBDYG', self.eid, None, self.Type, iViewFront,
+                        iViewBack, radMidFront, radMidBack, None, ] + self.grids)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -338,9 +345,9 @@ class CHBDYP(ThermalElement):
 
     def raw_fields(self):
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type,
-                  self.iViewFront, self.iViewBack, self.g1, self.g2, self.g0,
-                  self.radMidFront, self.radMidBack, self.gmid, self.ce,
-                  self.e1, self.e2, self.e3]
+                       self.iViewFront, self.iViewBack, self.g1, self.g2, self.g0,
+                       self.radMidFront, self.radMidBack, self.gmid, self.ce,
+                       self.e1, self.e2, self.e3]
         return list_fields
 
     def repr_fields(self):
@@ -353,8 +360,8 @@ class CHBDYP(ThermalElement):
         ce = set_blank_if_default(self.ce, 0)
 
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, iViewFront,
-                  iViewBack, self.g1, self.g2, g0, radMidFront, radMidBack,
-                  self.gmid, ce, self.e1, self.e2, self.e3]
+                       iViewBack, self.g1, self.g2, g0, radMidFront, radMidBack,
+                       self.gmid, ce, self.e1, self.e2, self.e3]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -428,8 +435,8 @@ class PCONV(ThermalProperty):
 
     def raw_fields(self):
         list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
-                  self.ftype, self.tid, None, None, self.chlen, self.gidin,
-                  self.ce, self.e1, self.e2, self.e3]
+                       self.ftype, self.tid, None, None, self.chlen, self.gidin,
+                       self.ce, self.e1, self.e2, self.e3]
         return list_fields
 
     def repr_fields(self):
@@ -438,8 +445,8 @@ class PCONV(ThermalProperty):
         ftype = set_blank_if_default(self.ftype, 0)
         ce = set_blank_if_default(self.ce, 0)
         list_fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
-                  None, None, self.chlen, self.gidin, ce, self.e1, self.e2,
-                  self.e3]
+                       None, None, self.chlen, self.gidin, ce, self.e1, self.e2,
+                       self.e3]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -497,7 +504,7 @@ class PCONVM(ThermalProperty):
 
     def raw_fields(self):
         list_fields = ['PCONVM', self.pconid, self.mid, self.form,
-                  self.flag, self.coef, self.expr, self.exppi, self.exppo]
+                       self.flag, self.coef, self.expr, self.exppi, self.exppo]
         return list_fields
 
     def repr_fields(self):
@@ -507,7 +514,7 @@ class PCONVM(ThermalProperty):
         exppi = set_blank_if_default(self.exppi, 0.0)
         exppo = set_blank_if_default(self.exppo, 0.0)
         list_fields = ['PCONVM', self.pconid, self.mid, form, flag,
-                  self.coef, expr, exppi, exppo]
+                       self.coef, expr, exppi, exppo]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -627,7 +634,7 @@ class CONV(ThermalBC):
 
     def raw_fields(self):
         list_fields = ['CONV', self.eid, self.pconID, self.flmnd,
-                  self.cntrlnd] + self.ta
+                       self.cntrlnd] + self.ta
         return list_fields
 
     def repr_fields(self):
@@ -690,7 +697,7 @@ class CONVM(ThermalBC):
 
     def raw_fields(self):
         list_fields = ['CONVM', self.eid, self.pconvmID, self.filmNode,
-                  self.cntmdot, self.ta1, self.ta2, self.mdot]
+                       self.cntmdot, self.ta1, self.ta2, self.mdot]
         return list_fields
 
     def repr_fields(self):
@@ -698,7 +705,7 @@ class CONVM(ThermalBC):
         ta2 = set_blank_if_default(self.ta2, self.ta1)
         mdot = set_blank_if_default(self.mdot, 1.0)
         list_fields = ['CONVM', self.eid, self.pconvmID, filmNode,
-                  self.cntmdot, self.ta1, ta2, mdot]
+                       self.cntmdot, self.ta1, ta2, mdot]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

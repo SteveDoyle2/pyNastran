@@ -1,5 +1,64 @@
 """
 Links up the various cards in the BDF.
+
+For example, with cross referencing...
+
+.. code-block:: python
+
+  >>> model = BDF()
+  >>> model.read_bdf(bdf_filename, xref=True)
+
+  >>> nid1 = 1
+  >>> node1 = model.nodes[nid1]
+  >>> node.nid
+  1
+
+  >>> node.xyz
+  [1., 2., 3.]
+
+  >>> node.Cid()
+  3
+
+  >>> node.cid
+  CORD2S, 3, 1, 0., 0., 0., 0., 0., 1.,
+          1., 0., 0.
+  # get the position in the global frame
+  >>> node.Position()
+  [4., 5., 6.]
+
+  # get the position with respect to another frame
+  >>> node.PositionWRT(model, cid=2)
+  [4., 5., 6.]
+
+
+Without cross referencing...
+
+.. code-block:: python
+
+  >>> model = BDF()
+  >>> model.read_bdf(bdf_filename, xref=True)
+
+  >>> nid1 = 1
+  >>> node1 = model.nodes[nid1]
+  >>> node.nid
+  1
+
+  >>> node.xyz
+  [1., 2., 3.]
+
+  >>> node.Cid()
+  3
+
+  >>> node.cid
+  3
+
+  # get the position in the global frame
+  >>> node.Position()
+  Error!
+
+Cross-referencing allows you to easily jump across cards and also helps
+with calculating things like position, area, and mass.  The BDF is designed
+around the idea of cross-referencing, so it's recommended that you use it.
 """
 # pylint: disable=E1101,C0103,R0902,R0904,R0914,W0611
 
@@ -22,9 +81,35 @@ class XrefMesh(object):
         self._stop_on_xref_error = True
         self._stored_xref_errors = []
 
-    def cross_reference(self, xref=True, xref_loads=True, xref_constraints=True):
+    def cross_reference(self, xref=True,
+                        xref_elements=True,
+                        xref_properties=True,
+                        xref_materials=True,
+                        xref_loads=True,
+                        xref_constraints=True,
+                        xref_aero=True):
         """
         Links up all the cards to the cards they reference
+
+        :param xref:             cross references the model (default=True)
+        :param xref_element:     set cross referencing of elements (default=True)
+        :param xref_properties:  set cross referencing of properties (default=True)
+        :param xref_materials:   set cross referencing of materials (default=True)
+        :param xref_loads:       set cross referencing of loads (default=True)
+        :param xref_constraints: set cross referencing of constraints (default=True)
+        :param xref_aero:        set cross referencing of CAERO/SPLINEs (default=True)
+
+        To only cross-reference nodes:
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename, xref=False)
+          model.cross_reference(xref=True, xref_loads=False, xref_constraints=False,
+                                           xref_materials=False, xref_properties=False,
+                                           xref_aero=False, xref_masses=False)
+
+        .. warning:: be careful if you call this method
         """
         if xref:
             self.log.debug("Cross Referencing...")
@@ -34,12 +119,16 @@ class XrefMesh(object):
             self._cross_reference_nodes()
             self._cross_reference_coordinates()
 
-            self._cross_reference_elements()
-            self._cross_reference_properties()
+            if xref_elements:
+                self._cross_reference_elements()
+            if xref_properties:
+                self._cross_reference_properties()
             self._cross_reference_masses()
-            self._cross_reference_materials()
+            if xref_materials:
+                self._cross_reference_materials()
 
-            self._cross_reference_aero()
+            if xref_aero:
+                self._cross_reference_aero()
             if xref_constraints:
                 self._cross_reference_constraints()
             if xref_loads:

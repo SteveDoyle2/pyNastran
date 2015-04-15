@@ -55,7 +55,10 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     f.write('ENDDATA\n')
     f.close()
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
     cart3d_filename = 'threePlugs.tri'
     bdf_filename = 'threePlugs.bdf'
     cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
+
+    if __name__ == '__main__':  # pragma: no cover
+        main()
