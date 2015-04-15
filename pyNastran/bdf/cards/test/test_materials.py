@@ -83,7 +83,7 @@ class TestMaterials(unittest.TestCase):
         #print(msg)
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            msg =  'actual   = %r\n' % actual
+            msg = 'actual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
@@ -114,7 +114,7 @@ class TestMaterials(unittest.TestCase):
         #print(msg)
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            msg =  '\nactual   = %r\n' % actual
+            msg = '\nactual   = %r\n' % actual
             msg += 'expected =  %r' % expected
             self.assertEqual(actual, expected, msg)
 

@@ -1,4 +1,3 @@
-#pylint: disable=C0103,C0111
 """
 All shell properties are defined in this file.  This includes:
 
@@ -589,7 +588,7 @@ class PCOMP(CompositeShellProperty):
 
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                  self.TRef, self.ge, self.lam, ]
+                       self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iply)
@@ -730,7 +729,7 @@ class PCOMPG(CompositeShellProperty):
 
     def raw_fields(self):
         list_fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                  self.TRef, self.ge, self.lam, ]
+                       self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iply)
@@ -876,8 +875,7 @@ class PSHEAR(ShellProperty):
         """
         Calculates mass per area.
 
-        .. math:: \frac{m}{A} = nsm + \rho t
-        """
+        .. math::  \frac{m}{A} = nsm + \rho t"""
         rho = self.Rho()
         massPerArea = self.nsm + rho * self.t
         return massPerArea
@@ -906,7 +904,7 @@ class PSHEAR(ShellProperty):
 
     def raw_fields(self):
         list_fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
-                  self.f1, self.f2]
+                       self.f1, self.f2]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -957,8 +955,8 @@ class PSHELL(ShellProperty):
             self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
             tOver2 = self.t / 2.
-            self.z1 = double_or_blank(card, 9,  'z1', -tOver2)
-            self.z2 = double_or_blank(card, 10, 'z2',  tOver2)
+            self.z1 = double_or_blank(card, 9, 'z1', -tOver2)
+            self.z2 = double_or_blank(card, 10, 'z2', tOver2)
             self.mid4 = integer_or_blank(card, 11, 'mid4')
 
             #if self.mid2 is None:
@@ -1094,8 +1092,7 @@ class PSHELL(ShellProperty):
         """
         Calculates mass per area.
 
-        .. math:: \frac{m}{A} = nsm + \rho t
-        """
+        .. math:: \frac{m}{A} = nsm + \rho t"""
         rho = self.Rho()
         try:
             massPerArea = self.nsm + rho * self.t
@@ -1116,9 +1113,9 @@ class PSHELL(ShellProperty):
             self.mid4 = model.Material(self.mid4, msg)
 
     def _write_calculix(self, marker='markerDummyProp',
-                      elementSet='ELsetDummyProp'):
+                        element_set='ELsetDummyProp'):
         msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' % (
-            marker, self.mid, elementSet, self.z1)
+            marker, self.mid, element_set, self.z1)
         msg += '** THICKNESS\n'
         msg += '%s\n\n' % (self.t)
         return msg
@@ -1146,8 +1143,8 @@ class PSHELL(ShellProperty):
 
     def raw_fields(self):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
-                  self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,
-                  self.z2, self.Mid4()]
+                       self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,
+                       self.z2, self.Mid4()]
         return list_fields
 
     def repr_fields(self):
@@ -1160,7 +1157,7 @@ class PSHELL(ShellProperty):
         z2 = set_blank_if_default(self.z2, tOver2)
 
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
-                  twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
+                       twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

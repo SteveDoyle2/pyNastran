@@ -337,7 +337,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
     def __gravity_load(self, loadcase_id):
         """
-        TODO:
+        .. todo::
             1.  resolve the load case
             2.  grab all of the GRAV cards and combine them into one
                 GRAV vector
@@ -345,9 +345,9 @@ class BDFMethods(BDFMethodsDeprecated):
             4.  multiply by the gravity vector
         """
 
-        gravity_i = self.loads[2][0]  ## TODO: hardcoded
+        gravity_i = self.loads[2][0]  ## .. todo:: hardcoded
         gi = gravity_i.N * gravity_i.scale
-        p0 = array([0., 0., 0.])  ## TODO: hardcoded
+        p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
         mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None,
                                            num_cpus=6)
 
@@ -374,22 +374,22 @@ class BDFMethods(BDFMethodsDeprecated):
         card (nid=5) acting on it, you can incldue the PLOAD4, but
         not the FORCE card by using:
 
-        Just pressure:
-        ==============
+        For just pressure:
+
         .. code-block:: python
 
           eids = [3]
           nids = []
 
-        Just force:
-        ==============
+        For just force:
+
         .. code-block:: python
 
           eids = []
           nids = [5]
 
         or both:
-        ==============
+
         .. code-block:: python
 
           eids = [3]
@@ -401,6 +401,7 @@ class BDFMethods(BDFMethodsDeprecated):
                   due to the fact that nodal loads on the boundary are
                   double/triple/etc. counted depending on how many breaks
                   you have.
+
         .. todo:: not done...
         """
         if not isinstance(loadcase_id, int):

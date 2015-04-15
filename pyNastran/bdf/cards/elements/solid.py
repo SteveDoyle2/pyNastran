@@ -990,7 +990,7 @@ class CTETRA10(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()

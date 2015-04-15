@@ -80,13 +80,13 @@ class TestDMIG(unittest.TestCase):
         IMAGS_actual, rowsReversed, colsReversed = out
         #print "---IMAGS_actual---\n", IMAGS_actual
         IMAGS_expected_real = [
-            [1.0,  0.5,  0.25],
-            [0.5,  2.0,  0.75],
+            [1.0, 0.5, 0.25],
+            [0.5, 2.0, 0.75],
             [0.25, 0.75, 3.0 ],
         ]
         IMAGS_expected_imag = [
-            [1.1,   0.51, 0.251],
-            [0.51,  2.1,  0.751],
+            [1.1, 0.51, 0.251],
+            [0.51, 2.1, 0.751],
             [0.251, 0.751, 3.1  ],
         ]
         IMAGS_expected = array(IMAGS_expected_real) + array(IMAGS_expected_imag)*1j

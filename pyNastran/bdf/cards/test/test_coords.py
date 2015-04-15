@@ -489,7 +489,7 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
     def test_B(self):
@@ -514,7 +514,7 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
 
