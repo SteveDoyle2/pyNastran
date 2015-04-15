@@ -24,7 +24,7 @@ cards Package
     :show-inheritance:
 
 :mod:`bdf_sets` Module
-------------------
+----------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.bdf_sets
 
@@ -35,7 +35,7 @@ cards Package
     :show-inheritance:
 
 :mod:`bdf_tables` Module
---------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.bdf_tables
 
@@ -167,7 +167,7 @@ cards Package
     :show-inheritance:
 
 :mod:`utils` Module
---------------------
+-------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.utils
 
