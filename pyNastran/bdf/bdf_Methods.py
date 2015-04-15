@@ -377,18 +377,21 @@ class BDFMethods(BDFMethodsDeprecated):
         Just pressure:
         ==============
         .. code-block:: python
+
           eids = [3]
           nids = []
 
         Just force:
         ==============
         .. code-block:: python
+
           eids = []
           nids = [5]
 
         or both:
         ==============
         .. code-block:: python
+
           eids = [3]
           nids = [5]
 

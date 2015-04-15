@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for Nastran.
+"""
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
 from six import iteritems, itervalues
@@ -47,7 +50,7 @@ try:
     is_geom = True
 except ImportError:
     is_geom = False
-from pyNastran.f06.f06 import F06
+#from pyNastran.f06.f06 import F06
 
 
 class NastranIO(object):
@@ -1011,10 +1014,10 @@ class NastranIO(object):
 
         elif ext == '.pch':
             raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
-        elif ext == '.f06':
-            model = F06(log=self.log, debug=True)
-            model.set_vectorization(True)
-            model.read_f06(op2_filename)
+        #elif ext == '.f06':
+            #model = F06(log=self.log, debug=True)
+            #model.set_vectorization(True)
+            #model.read_f06(op2_filename)
         else:
             print("error...")
             raise NotImplementedError('extension=%r is not supported; filename=%r' % (ext, op2_filename))
