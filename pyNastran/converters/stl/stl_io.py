@@ -1,4 +1,4 @@
-#VTK_TRIANGLE = 5
+from __future__ import print_function
 from six import iteritems
 from six.moves import range
 from numpy import zeros, arange, mean
@@ -125,8 +125,9 @@ class STL_IO(object):
 
         self.grid.SetPoints(points)
         self.grid.Modified()
-        self.grid.Update()
-        print("updated grid")
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+            print("updated grid")
 
         # loadSTLResults - regions/loads
         self.TurnTextOn()

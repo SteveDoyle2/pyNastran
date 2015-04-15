@@ -1,7 +1,7 @@
 from six import iteritems
 import vtk
 from vtk import vtkQuad
-from wgsReader import LaWGS
+from pyNastran.converters.LaWGS.wgsReader import LaWGS
 
 
 class LaWGS_IO(object):
@@ -82,8 +82,9 @@ class LaWGS_IO(object):
         self.grid.Modified()
         self.grid2.Modified()
         self.grid.Update()
-        self.grid2.Update()
-        print("updated grid")
+        if hasattr(self.grid, 'Update'):
+            self.grid2.Update()
+            print("updated grid")
 
         return
 

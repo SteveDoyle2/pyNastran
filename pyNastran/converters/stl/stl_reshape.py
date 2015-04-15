@@ -1,3 +1,4 @@
+from __future__ import print_function
 from docopt import docopt
 from copy import deepcopy
 

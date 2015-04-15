@@ -30,8 +30,8 @@ class Usm3dIO(object):
         if dirname == '':
             dirname = os.getcwd()
         basename = os.path.basename(flo_filename)
-        base, ext = os.path.splitext(basename)
-        #print("base=%r ext=%r" % (base, ext))
+        base = os.path.splitext(basename)[0]
+
         if '_' in base:
             model_name, n = base.rsplit('_', 1)
             #print("model_name=%r n=%r" % (model_name, n))
@@ -118,16 +118,16 @@ class Usm3dIO(object):
 
         bcmap_to_bc_name = model.bcmap_to_bc_name
 
-        self.nNodes, three = nodes.shape
+        self.nNodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if tris is not None:
-            ntris, three = tris.shape
+            ntris = tris.shape[0]
 
         if dimension_flag == 2:
             pass
         elif dimension_flag == 3:
-            ntets, four = tets.shape
+            ntets = tets.shape[0]
             ntets = 0
         else:
             raise RuntimeError()
@@ -159,7 +159,7 @@ class Usm3dIO(object):
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
 
         nid = 0
         #print("nnodes=%s" % nnodes)
@@ -194,8 +194,9 @@ class Usm3dIO(object):
 
         self.grid.SetPoints(points)
         self.grid.Modified()
-        self.grid.Update()
-        print("updated grid")
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+            print("updated grid")
 
         # regions/loads
         self.TurnTextOn()
@@ -211,8 +212,8 @@ class Usm3dIO(object):
 
     def _fill_usm3d_results(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
         if 'Mach' in loads:
-            avgMach = loads['Mach'].mean()
-            note = ':  avg(Mach)=%g' % avgMach
+            avg_mach = loads['Mach'].mean()
+            note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
 

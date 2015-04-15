@@ -1,7 +1,8 @@
+from __future__ import print_function
 from six.moves import range
 import os
 from struct import pack, unpack
-from numpy import array, transpose, zeros, where
+from numpy import array, zeros, where
 from pyNastran.utils.log import get_logger
 
 def write_front(model):
@@ -45,14 +46,12 @@ class Usm3dReader(object):
         self.nodes = None
         self.tris = None
         self.tets = None
+        self.bcs = None
         self.precision = 'double'
         self.log = get_logger(log, 'debug' if debug else 'info')
 
     def write_usm3d(self, basename):
-        if 1:
-            write_usm3d_volume(self, basename)
-        else:
-            asdf
+        write_usm3d_volume(self, basename)
 
     def read_mapbc(self, mapbc_filename):
         """
@@ -82,14 +81,14 @@ class Usm3dReader(object):
 
         #Thu Dec 19 11:46:03 2013
         #bc.map
-        Patch #        BC             Family   #surf   surfIDs         Family
-        #----------------------------------------------------------------------
-        1              44             44             0            0        Base  -> Blunt base
-        2              4              4              0            0        Bay   -> Viscous Surfaces
-        3              0              0              0            0        Inflow -> Supersonic Inflow
-        4              2              2              0            0        Outflow -> Supersonic Outflow
-        5              3              3              0            0        Sideflow -> Characteristic Inflow/Outflow
-        7              1              1              0            0        Symmetry -> Reflection plane
+        Patch #    BC   Family   #surf   surfIDs      Family
+        #--------------------------------------------------------
+        1          44     44         0         0      Base  -> Blunt base
+        2          4       4         0         0      Bay   -> Viscous Surfaces
+        3          0       0         0         0      Inflow -> Supersonic Inflow
+        4          2       2         0         0      Outflow -> Supersonic Outflow
+        5          3       3         0         0      Sideflow -> Characteristic Inflow/Outflow
+        7          1       1         0         0      Symmetry -> Reflection plane
         """
         mapbc_file = open(mapbc_filename, 'r')
         lines = mapbc_file.readlines()
@@ -103,7 +102,7 @@ class Usm3dReader(object):
         for line in lines[1:]:
             sline = line.split()
             #self.log.info(sline)
-            patch_id, bc, family, surf, surf_ids  = sline[:5]
+            patch_id, bc, family, surf, surf_ids = sline[:5]
             mapbc[int(patch_id)] = int(bc)
         mapbc_file.close()
         return mapbc
@@ -204,7 +203,7 @@ class Usm3dReader(object):
             return header, lbouf
         else:
             tris = zeros((ntris, 3), dtype='int32')
-            bcs  = zeros(ntris, dtype='int32')
+            bcs = zeros(ntris, dtype='int32')
 
             for i in range(ntris):
                 (n, isurf, n1, n2, n3) = lines[i+2].split()
@@ -223,11 +222,11 @@ class Usm3dReader(object):
         #assert dummy_int == 1022848, 'dummy_int = %s' % dummy_int
 
         # file header
-        if self.precision=='single':
+        if self.precision == 'single':
             Format = '>6if'
             nbytes = 6 * 4 + 4
             self.log.debug("***single precision")
-        elif self.precision=='double':
+        elif self.precision == 'double':
             Format = '>6id'
             nbytes = 6 * 4 + 8
         else:
@@ -288,7 +287,7 @@ class Usm3dReader(object):
 
         skip_nodes = False
         if skip_nodes == True:
-            t = self.tell()
+            t = f.tell()
             f.goto(t + data_length * 3)
             nodes = None
         else:
@@ -346,8 +345,6 @@ class Usm3dReader(object):
         nodes_vol = unpack(Format, data)
         nodes_vol = array(nodes_vol)
         nodes_vol = nodes_vol.reshape((tets, 3))
-
-
 
     def _read_cogsg_volume(self, f):
         # volume cells
@@ -556,9 +553,9 @@ class Usm3dReader(object):
                         e[ni] = ei
                         assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
                         ni += 1
-                else:
-                    line1 = flo_file.readline()
-                    line2 = flo_file.readline()
+                    else:
+                        line1 = flo_file.readline()
+                        line2 = flo_file.readline()
         flo_file.close()
 
         assert len(rho) == ni
@@ -590,7 +587,7 @@ class Usm3dReader(object):
         # node_id, rhoi, rhoui, rhovi, rhowi, ei
         rhoVV = (rhoU**2 + rhoV**2 + rhoW**2) / rho
         if 'p' in result_names or 'Mach' in result_names or 'Cp' in result_names:
-            pND = gm1*(e - rhoVV/2. )
+            pND = gm1*(e - rhoVV/2.)
             if 'p' in result_names:
                 loads['p'] = pND
         if 'Mach' in result_names:
@@ -637,8 +634,8 @@ def Float(sline, n):
 
 def write_usm3d_volume(model, basename):
     cogsg_file = basename + '.cogsg'
-    face_file = basename + '.face'
-    front_file = basename + '.front'
+    #face_file = basename + '.face'
+    #front_file = basename + '.front'
 
     write_cogsg_volume(model, cogsg_file)
     #write_front(model, front_file)
@@ -647,8 +644,8 @@ def write_usm3d_volume(model, basename):
 def write_cogsg_volume(model, cogsg_file):
     #n = 0
     self = model
-    nnodes, three = self.nodes.shape
-    ntets, four = self.tets.shape
+    nnodes = self.nodes.shape[0]
+    ntets = self.tets.shape[0]
 
     outfile = open(cogsg_file, 'wb')
 
@@ -659,14 +656,15 @@ def write_cogsg_volume(model, cogsg_file):
     outfile.write(block_size)
 
     header = self.header
-    values_header = [header['inew'],
-              header['nElements'],
-              header['nPoints'],
-              header['nBoundPts'],
-              header['nViscPts'],
-              header['nViscElem'],
-              header['tc'], # d
-              ]
+    values_header = [
+        header['inew'],
+        header['nElements'],
+        header['nPoints'],
+        header['nBoundPts'],
+        header['nViscPts'],
+        header['nViscElem'],
+        header['tc'], # d
+        ]
     #n = 36
     Format = '>6id'
     model.log.debug("Format = %r" % Format)
@@ -689,10 +687,10 @@ def write_cogsg_volume(model, cogsg_file):
     n2 = tets[:, 2] + 1
     n3 = tets[:, 3] + 1
     #print("n0 = %s" % n0)
-    outfile.write( pack(Format, *n0) )
-    outfile.write( pack(Format, *n1) )
-    outfile.write( pack(Format, *n2) )
-    outfile.write( pack(Format, *n3) )
+    outfile.write(pack(Format, *n0))
+    outfile.write(pack(Format, *n1))
+    outfile.write(pack(Format, *n2))
+    outfile.write(pack(Format, *n3))
     #n += 4 * 8 * ntets
     #print "outfile.tell 2 = ", outfile.tell(), n
 
@@ -712,9 +710,9 @@ def write_cogsg_volume(model, cogsg_file):
     n0 = nodes[:, 0]
     n1 = nodes[:, 1]
     n2 = nodes[:, 2]
-    outfile.write( pack(Format, *n0) )
-    outfile.write( pack(Format, *n1) )
-    outfile.write( pack(Format, *n2) )
+    outfile.write(pack(Format, *n0))
+    outfile.write(pack(Format, *n1))
+    outfile.write(pack(Format, *n2))
 
     # nodes footer
     outfile.write(block_size)

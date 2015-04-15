@@ -1,15 +1,20 @@
-
-from numpy import arange, sqrt, linspace, where, zeros, array
-from struct import pack, unpack
-from pyNastran.op2.fortranFile import FortranFile
+from __future__ import print_function
+from numpy import zeros
+from struct import unpack
+#from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
-from math import floor
 
 def factors(nraw):
+    """
+    function for getting the primes factors of a number.
+
+    This is supposed to help with figuring out the file format.
+    I'm sure there's a better method, but it doesn't matter too much.
+    """
     result = []
     n = nraw
-    for i in range(2,n+1): # test all integers between 2 and n
-        s = 0;
+    for i in range(2, n + 1): # test all integers between 2 and n
+        s = 0
         while n % i == 0: # is n/i an integer?
             n = n / float(i)
             s += 1
@@ -20,9 +25,13 @@ def factors(nraw):
                 return result
     return [nraw]
 
-class IFace(FortranFile):
+#class IFace(FortranFile):
+class IFace(object):
     def __init__(self, log=None, debug=None):
-        FortranFile.__init__(self)
+        #FortranFile.__init__(self)
+        self.n = 0
+        self.log = log
+        self.debug = debug
 
 
     def read_poin1(self, poin1_filename):
@@ -42,10 +51,11 @@ class IFace(FortranFile):
         return poin1
 
     def read_m2(self, m2_filename):
-        m2 = open(m2_filename)
-        self.op2 = m2
+        pass
+        #m2 = open(m2_filename)
+        #self.op2 = m2
 
-        self.print_section2(5000, '>')
+        #self.print_section2(5000, '>')
 
     def read_iface(self, iface_filename):
         """
@@ -119,8 +129,8 @@ class IFace(FortranFile):
         f = open(iface_filename, 'rb')
 
         # makes it so FortranFile works...
-        self.op2 = f
-        n = 0
+        #self.op2 = f
+        #n = 0
 
         data = f.read(4 * 3)  # A, B, C
         A, B, C = unpack('>3i', data)
@@ -156,21 +166,20 @@ class IFace(FortranFile):
         #print(factors(B))
         #print(factors(C))
 
-        print(self.print_section2(n, '>'))
-        pass
+        #print(self.print_section2(n, '>'))
 
 
-if __name__ == '__main__':  # pragma: no cover
-    cogsg_obj = Usm3dReader()
-    model = 'new2'
-    cogsg_obj.read_cogsg(model + '.cogsg')
-    iface_obj = IFace()
-    if model in ['box']:
-        iface_obj.read_poin1(model + '.poin1')
+#if __name__ == '__main__':  # pragma: no cover
+    #cogsg_obj = Usm3dReader()
+    #model = 'new2'
+    #cogsg_obj.read_cogsg(model + '.cogsg')
+    #iface_obj = IFace()
+    #if model in ['box']:
+        #iface_obj.read_poin1(model + '.poin1')
 
-    #iface_obj.read_m2(model + '.m2')
-    #iface_obj.read_iface(model + '.iface')
-    if model == 'new2':
-        iface_obj.read_flo(model + '.flo', n=79734)
-    elif model == 'box':
-        iface_obj.read_flo(model + '.flo', n=12440)
+    ##iface_obj.read_m2(model + '.m2')
+    ##iface_obj.read_iface(model + '.iface')
+    #if model == 'new2':
+        #iface_obj.read_flo(model + '.flo', n=79734)
+    #elif model == 'box':
+        #iface_obj.read_flo(model + '.flo', n=12440)

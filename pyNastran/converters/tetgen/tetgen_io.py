@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import range
 import os
@@ -108,8 +109,9 @@ class TetgenIO(object):
 
         self.grid.SetPoints(points)
         self.grid.Modified()
-        self.grid.Update()
-        print("updated grid")
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+            print("updated grid")
 
         # loadSTLResults - regions/loads
         self.TurnTextOn()

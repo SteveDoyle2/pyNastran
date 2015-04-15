@@ -116,7 +116,7 @@ class TestCart3d(unittest.TestCase):
 
 
 def check_array(points, points2):
-    nnodes, three = points.shape
+    nnodes = points.shape[0]
     if not array_equal(points, points2):
         for nid in range(nnodes):
             p1 = points[nid]

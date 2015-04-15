@@ -1,6 +1,6 @@
+from __future__ import print_function
 from six import iteritems
 import os
-from collections import defaultdict
 from numpy import savetxt, arange, zeros
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
@@ -106,26 +106,23 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
                 rhoU[node_id][i] = loads['rhoU'][i]
     else:
         pool = mp.Pool(num_cpus)
-        result = pool.imap(_loads_func, [(flo_filename, node_ids) for flo_filename in flo_filenames])
+        result = pool.imap(_loads_func,
+                           [(flo_filename, node_ids) for flo_filename in flo_filenames])
         n = 0
-        #try:
-        if 1:
-            for j, loads in enumerate(result):
-                if j % 500 == 0:
-                    print("n =", j, flo_filenames[j])
-                for i, node_id in enumerate(node_ids):
-                    #print("Cp[node=%s] =%s" % (node_id, loads['Cp'][i]))
-                    Cp[node_id][j] = loads['Cp'][i]
-                    Mach[node_id][j] = loads['Mach'][i]
-                    T[node_id][j] = loads['T'][i]
-                    U[node_id][j] = loads['U'][i]
-                    V[node_id][j] = loads['V'][i]
-                    W[node_id][j] = loads['W'][i]
-                    p[node_id][j] = loads['p'][i]
-                    rhoU[node_id][j] = loads['rhoU'][i]
-                    n += 1
-        #except ValueError:  # no idea what causes this..
-            #pass
+        for j, loads in enumerate(result):
+            if j % 500 == 0:
+                print("n =", j, flo_filenames[j])
+            for i, node_id in enumerate(node_ids):
+                #print("Cp[node=%s] =%s" % (node_id, loads['Cp'][i]))
+                Cp[node_id][j] = loads['Cp'][i]
+                Mach[node_id][j] = loads['Mach'][i]
+                T[node_id][j] = loads['T'][i]
+                U[node_id][j] = loads['U'][i]
+                V[node_id][j] = loads['V'][i]
+                W[node_id][j] = loads['W'][i]
+                p[node_id][j] = loads['p'][i]
+                rhoU[node_id][j] = loads['rhoU'][i]
+                n += 1
         pool.close()
         pool.join()
     return n_list, Cp, Mach, T, U, V, W, p, rhoU
@@ -136,18 +133,23 @@ def _loads_func(data):
     node_ids2, loads = model.read_flo(flo_filename, node_ids=node_ids)
     return loads
 
-def write_loads(csv_filename, loads):
+def write_loads(csv_filename, loads, node_id):
     (Cp, Mach, T, U, V, W, p, rhoU) = loads
     #print("loads.keys() = ", sorted(loads.keys()))
     f = open(csv_filename, 'wb')
     dt = 1.0
     t = arange(len(Cp[node_id])) * dt  # broken...
-    f.write('time\t');  savetxt(f, t, delimiter='', newline=',')
+    f.write('time\t')
+    savetxt(f, t, delimiter='', newline=',')
     f.write('\n')
     for node_id, Cpi in sorted(iteritems(Cp)):
         f.write("\nnode_id=%i\n" % node_id)
-        f.write('Cp[%s],' % node_id);  savetxt(f, Cpi,        delimiter='', newline=',')
-        f.write('\np[%s],' % node_id); savetxt(f, p[node_id], delimiter='', newline=',')
+
+        f.write('Cp[%s],' % node_id)
+        savetxt(f, Cpi, delimiter='', newline=',')
+
+        f.write('\np[%s],' % node_id)
+        savetxt(f, p[node_id], delimiter='', newline=',')
         f.write('\n\n')
     f.close()
 
@@ -157,7 +159,7 @@ def main():
     model_name = 'spw4'
     node_ids = [517]
     loads = run_time_acc(dirname, model_name, node_ids)
-    write_loads('usm3d.csv', loads)
+    write_loads('usm3d.csv', loads, node_ids)
 
 
 if __name__ == '__main__':  # pragma: no cover

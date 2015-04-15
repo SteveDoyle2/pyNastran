@@ -883,7 +883,7 @@ class NastranIO(object):
                 case_name = 'Pressure Case=%i' % subcase_id
                 print(case_name)
                 # subcase_id, resultType, vectorSize, location, dataFormat
-                cases[(0, case_name , 1, 'centroid', '%.1f')] = pressures
+                cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
                 form0.append((case_name, icase, []))
                 icase += 1
         return icase
