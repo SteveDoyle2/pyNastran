@@ -1011,33 +1011,36 @@ class GRID(Node, GridDeprecated):
             cp = set_string8_blank_if_default(self.Cp(), 0)
             cd = set_string8_blank_if_default(self.Cd(), 0)
             seid = set_string8_blank_if_default(self.SEid(), 0)
-            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % ('GRID', self.nid, cp,
-                    print_float_8(xyz[0]),
-                    print_float_8(xyz[1]),
-                    print_float_8(xyz[2]),
-                    cd, self.ps, seid)
+            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % (
+                'GRID', self.nid, cp,
+                print_float_8(xyz[0]),
+                print_float_8(xyz[1]),
+                print_float_8(xyz[2]),
+                cd, self.ps, seid)
         else:
             cp = set_string16_blank_if_default(self.Cp(), 0)
             cd = set_string16_blank_if_default(self.Cd(), 0)
             seid = set_string16_blank_if_default(self.SEid(), 0)
             if double:
                 msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % ('GRID*', self.nid,
-                        cp,
-                        print_scientific_double(xyz[0]),
-                        print_scientific_double(xyz[1]),
-                        '*',
-                        print_scientific_double(xyz[2]),
-                        cd, self.ps, seid))
+                       '%-8s%16s%16s%16s%16s\n' % (
+                           'GRID*', self.nid,
+                           cp,
+                           print_scientific_double(xyz[0]),
+                           print_scientific_double(xyz[1]),
+                           '*',
+                           print_scientific_double(xyz[2]),
+                           cd, self.ps, seid))
             else:
                 msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % ('GRID*', self.nid,
-                        cp,
-                        print_float_16(xyz[0]),
-                        print_float_16(xyz[1]),
-                        '*',
-                        print_float_16(xyz[2]),
-                        cd, self.ps, seid))
+                       '%-8s%16s%16s%16s%16s\n' % (
+                           'GRID*', self.nid,
+                           cp,
+                           print_float_16(xyz[0]),
+                           print_float_16(xyz[1]),
+                           '*',
+                           print_float_16(xyz[2]),
+                           cd, self.ps, seid))
         return self.comment() + msg.rstrip() + '\n'
 
 

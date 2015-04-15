@@ -810,7 +810,7 @@ class CONM2(PointMassElement):
 
     def raw_fields(self):
         list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
-                  list(self.X) + [None] + list(self.I))
+                       list(self.X) + [None] + list(self.I))
         return list_fields
 
     def repr_fields(self):

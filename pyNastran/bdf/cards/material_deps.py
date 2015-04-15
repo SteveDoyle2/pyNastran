@@ -429,10 +429,10 @@ class MATT4(MaterialDependence):
 
         if card:
             self.mid = integer(card, 1, 'mid')
-            self._k_table   = integer_or_blank(card, 2, 'T(K)')
-            self._cp_table   = integer_or_blank(card, 3, 'T(CP)')
-            self._H_table   = integer_or_blank(card, 5, 'T(H)')
-            self._mu_table   = integer_or_blank(card, 6, 'T(mu)')
+            self._k_table = integer_or_blank(card, 2, 'T(K)')
+            self._cp_table = integer_or_blank(card, 3, 'T(CP)')
+            self._H_table = integer_or_blank(card, 5, 'T(H)')
+            self._mu_table = integer_or_blank(card, 6, 'T(mu)')
             self._Hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
 
             assert len(card) <= 8, 'len(MATT4 card) = %i' % len(card)

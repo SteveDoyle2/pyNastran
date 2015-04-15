@@ -1104,9 +1104,6 @@ class PSHELL(ShellProperty):
             raise
         return massPerArea
 
-    def D(self):
-        return self.mid().Dplate()
-
     def cross_reference(self, model):
         msg = ' which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
@@ -1118,7 +1115,7 @@ class PSHELL(ShellProperty):
         if self.mid4:
             self.mid4 = model.Material(self.mid4, msg)
 
-    def writeCalculix(self, marker='markerDummyProp',
+    def _write_calculix(self, marker='markerDummyProp',
                       elementSet='ELsetDummyProp'):
         msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' % (
             marker, self.mid, elementSet, self.z1)

@@ -394,13 +394,13 @@ class CTRIA3(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
-                       [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
-                        self.T1, self.T2, self.T3])
+                       [self.thetaMcid, self.zOffset, None] +
+                       [None, self.TFlag, self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
-        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
+        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
                        [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
@@ -715,8 +715,9 @@ class CTRIAR(TriShell):
         return self._nodeIDs(allowEmptyNodes=False)
 
     def raw_fields(self):
-        list_fields = [self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid,
-                  self.zOffset, self.TFlag, self.T1, self.T2, self.T3]
+        list_fields = (['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() +
+                       [self.thetaMcid, self.zOffset, self.TFlag,
+                        self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
@@ -731,8 +732,6 @@ class CTRIAR(TriShell):
             msg = self.comment() + print_card_8(card)
         else:
             msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_card(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
 

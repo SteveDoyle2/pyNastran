@@ -18,10 +18,8 @@ from six.moves import zip, range
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank,
-    components, components_or_blank,
-    integer_double_string_or_blank, blank, interpret_value)
+    double, double_or_blank, string, string_or_blank, components,
+    components_or_blank, integer_double_string_or_blank, blank, interpret_value)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 

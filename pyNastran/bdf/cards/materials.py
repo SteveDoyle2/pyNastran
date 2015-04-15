@@ -287,7 +287,7 @@ class MAT1(IsotropicMaterial):
         self.g = G
         self.nu = nu
 
-    def writeCalculix(self, elementSet='ELSetDummyMat'):
+    def _write_calculix(self, elementSet='ELSetDummyMat'):
         # default value - same properties for all values
         temperature = self.TRef
         msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (elementSet)

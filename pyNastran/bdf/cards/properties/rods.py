@@ -103,7 +103,7 @@ class PROD(Property):
 
     def raw_fields(self):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
-                  self.nsm]
+                       self.nsm]
         return list_fields
 
     def repr_fields(self):

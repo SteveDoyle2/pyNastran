@@ -316,9 +316,9 @@ class PBUSH1D(BushingProperty):
 
     def _shock_fields(self):
         list_fields = ['SHOCKA', self.shockType, self.shockCVT, self.shockCVC,
-                  self.shockExpVT, self.shockExpVC, self.shockIDTS, None, None,
-                  self.shockIDETS, self.shockIDECS, self.shockIDETSD,
-                  self.shockIDECSD]
+                       self.shockExpVT, self.shockExpVC, self.shockIDTS, None, None,
+                       self.shockIDETS, self.shockIDECS, self.shockIDETSD,
+                       self.shockIDECSD]
         return list_fields
 
     def _spring_fields(self):
@@ -333,8 +333,8 @@ class PBUSH1D(BushingProperty):
 
     def _gener_fields(self):
         list_fields = ['GENER', None, self.generIDT, self.generIDC,
-                  self.generIDTDU, self.generIDCDU, self.generIDTDV,
-                  self.generIDCDV]
+                       self.generIDTDU, self.generIDCDU, self.generIDTDV,
+                       self.generIDCDV]
         return list_fields
 
     def raw_fields(self):

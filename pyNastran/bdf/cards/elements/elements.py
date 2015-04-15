@@ -56,7 +56,7 @@ class CFAST(Element):
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
-                  self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
+                       self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
         return list_fields
 
     def repr_fields(self):
@@ -72,9 +72,11 @@ class CGAP(Element):
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
     }
-    ## todo:: not done...
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        # .. todo:: not done...
+        """
         Element.__init__(self, card, data)
         if comment:
             self._comment = comment

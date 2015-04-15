@@ -6,8 +6,7 @@ from six.moves import zip
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer_or_blank,
-    double_or_blank, string, string_or_blank,
-    integer_double_string_or_blank)
+    double_or_blank, string, string_or_blank, integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
