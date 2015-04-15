@@ -56,33 +56,34 @@ class GetMethods(GetMethodsDeprecated):
         :returns reslts:
             The set of all values used
 
-        # Get nodes associated with eid=[1, 2, 3]
-        nodes = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes'])
+        .. code-block:: python
+          # Get nodes associated with eid=[1, 2, 3]
+          nodes = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes'])
 
-        # Get node IDs associated with eid=[1, 2, 3]
-        nodesIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes', 'nid'])
+          # Get node IDs associated with eid=[1, 2, 3]
+          nodesIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes', 'nid'])
 
-        # Get coord IDs associated with eid=[1, 2, 3]
-        coordIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes', 'cp', 'cid'])
+          # Get coord IDs associated with eid=[1, 2, 3]
+          coordIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes', 'cp', 'cid'])
 
-        # Get properties associated with eid=[1, 2, 3]
-        properties = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid'])
+          # Get properties associated with eid=[1, 2, 3]
+          properties = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid'])
 
-        # Get materials associated with eid=[1, 2, 3]
-        materials = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid', 'mid'])
+          # Get materials associated with eid=[1, 2, 3]
+          materials = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid', 'mid'])
 
-        # Get material IDs associated with eid=[1, 2, 3]
-        materialIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid', 'mid', 'mid'])
+          # Get material IDs associated with eid=[1, 2, 3]
+          materialIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid', 'mid', 'mid'])
 
-        # Get the values for Young's Modulus
-        E = self.get_x_associated_with_y(
-            self.elements, None, ['pid', 'mid', 'e'])
+          # Get the values for Young's Modulus
+          E = self.get_x_associated_with_y(
+              self.elements, None, ['pid', 'mid', 'e'])
         """
         assert isinstance(xdict, dict), type(xdict)
         assert self._xref == True, self._xref
@@ -238,7 +239,7 @@ class GetMethods(GetMethodsDeprecated):
         Returns a dictionary that maps a node ID to a list of elemnents
 
         .. todo:: support 0d or 1d elements
-        .  todo:: support elements with missing nodes
+        .. todo:: support elements with missing nodes
                   (e.g. CQUAD8 with missing nodes)
         """
         nidToElementsMap = {}
