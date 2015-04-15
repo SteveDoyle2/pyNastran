@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six import iteritems
 from six.moves import range
-from numpy import zeros, arange, mean
+from numpy import arange
 
 import vtk
 from vtk import vtkTriangle
@@ -97,7 +97,7 @@ class STL_IO(object):
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
         self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
@@ -113,7 +113,7 @@ class STL_IO(object):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         #elements -= 1
         for eid in range(nelements):
             elem = vtkTriangle()

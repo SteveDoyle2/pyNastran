@@ -54,7 +54,7 @@ def main():
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-    print data
+    print(data)
     stl_reshape(data)
 
 def stl_reshape(data):

@@ -3,18 +3,18 @@ from __future__ import print_function
 from six import iteritems
 from six.moves import zip, range
 import os
-import sys
 from copy import deepcopy
 #from struct import pack
 
 from docopt import docopt
 
 from numpy import array, zeros, ndarray, cross, where, vstack, unique
+from numpy import arctan2, cos, sin, transpose, pi
 from numpy.linalg import norm
 import scipy
 
 from struct import unpack, Struct, pack
-import pyNastran
+
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
@@ -387,11 +387,11 @@ class STLReader(object):
 
         nid = 0
         #print "deltaNs =", deltaNs
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
         nodes2 = zeros((nnodes * (N+1), 3), 'float64')
         nodes2[:nnodes, :] = nodes
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         elements2 = zeros((nelements * (N+1), 3), 'int32')
         elements2[:nelements, :] = elements
         #print "nodes.shape =", nodes.shape
@@ -495,7 +495,7 @@ class STLReader(object):
         out = open(out_filename, 'wb')
         out.write(msg)
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         normals = self.get_normals(elements)
         for element, normal in zip(elements, normals):
             try:
@@ -689,7 +689,6 @@ def _rotate_model(stl):  # pragma: no cover
     elements = stl.elements
     if 0:
         # rotate the model
-        from numpy import where, arctan2, cos, sin, hstack, vstack, concatenate, transpose, pi
         x, y, z = nodes[:, 0], nodes[:, 1], nodes[:, 2]
         #i = where(y > 0.0)[0]
         R = x**2 + y**2
