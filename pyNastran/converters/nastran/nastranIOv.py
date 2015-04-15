@@ -837,7 +837,10 @@ class NastranIO(object):
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
                 continue
-            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
+            try:
+                load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
+            except KeyError:
+                continue
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
