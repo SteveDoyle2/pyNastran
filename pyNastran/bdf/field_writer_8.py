@@ -222,8 +222,6 @@ def print_card_8(fields):
               an optional continuation, but because it's a left-justified
               unneccessary field, print_card doesnt use it.
 
-    Example
-    =======
     .. code-block:: python
 
       >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
@@ -268,8 +266,6 @@ def print_int_card(fields):
       Blanks are not allowed!
       Floats and strings are not allowed.
 
-    Example
-    -------
     .. code-block:: python
 
       fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
@@ -313,8 +309,6 @@ def print_int_card_blocks(fields_blocks):
 
     .. note:: Blanks are allowed in the False block.
 
-    Example
-    -------
     .. code-block:: python
 
       fields_blocks = [

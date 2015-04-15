@@ -278,8 +278,6 @@ def parse_patran_syntax_dict(node_sets):
     :param node_sets: the node_set to parse
     :returns nodes: list of integers
 
-    Example
-    -------
     .. code-block:: python
 
       node_sets = "e 1:3 n 2:6:2 Node 10:13"
@@ -289,6 +287,7 @@ def parse_patran_syntax_dict(node_sets):
           'n'    : [2, 4, 6],
           'Node' : [10, 11, 12, 13],
       }
+
     .. note::
       the identifier (e.g. "e") must be used.  Use parse_patran_syntax to skip the identifier.
     .. note::

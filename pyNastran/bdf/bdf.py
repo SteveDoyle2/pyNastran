@@ -1142,6 +1142,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :returns card_object: the card object representation of card
 
         .. code-block:: python
+
           >>> model = BDF()
 
           # is_list is a somewhat misleading name; is it a list of card_lines?
