@@ -4,7 +4,6 @@ pyNastran Package
 This is the pyNastran.rst file for v0.7-dev.
 
 .. toctree::
-   :maxdepth: 2
 
     pyNastran.bdf
     pyNastran.f06
