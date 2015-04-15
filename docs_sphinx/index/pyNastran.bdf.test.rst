@@ -111,12 +111,9 @@ test Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
 .. toctree::
 
     pyNastran.bdf.test.cards
-    pyNastran.bdf.test.tests
     pyNastran.bdf.test.unit
 

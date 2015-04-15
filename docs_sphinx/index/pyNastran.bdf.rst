@@ -135,8 +135,6 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
 .. toctree::
 

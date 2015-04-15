@@ -69,8 +69,6 @@ This is the pyNastran.utils.rst file.
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
 .. toctree::
 

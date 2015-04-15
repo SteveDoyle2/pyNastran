@@ -92,8 +92,6 @@ This is the pyNastran.op2.rst file.
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
 .. toctree::
 
