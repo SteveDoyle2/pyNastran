@@ -114,6 +114,5 @@ test Package
 
 .. toctree::
 
-    pyNastran.bdf.test.cards
     pyNastran.bdf.test.unit
 
