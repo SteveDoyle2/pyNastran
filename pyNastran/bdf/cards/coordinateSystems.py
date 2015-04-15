@@ -812,7 +812,7 @@ class Cord2x(Coord):
         assert isinstance(rid, int), 'rid=%r' % rid
 
     def write_card(self, size=8, is_double=False):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         elif is_double:
@@ -986,14 +986,22 @@ class Cord1x(Coord):
             return self.g3
         return self.g3.nid
 
-    def NodeIDs(self):
+    def nodeIDs(self):
         """
         Gets the integers for the node [g1,g2,g3]
 
         :param self: the coordinate system object
         """
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -1133,7 +1141,7 @@ class CORD1R(Cord1x, RectangularCoord):
         Cord1x.__init__(self, card, nCoord, data, comment)
 
     def raw_fields(self):
-        list_fields = ['CORD1R', self.cid] + self.NodeIDs()
+        list_fields = ['CORD1R', self.cid] + self.node_ids
         return list_fields
 
 
@@ -1161,7 +1169,7 @@ class CORD1C(Cord1x, CylindricalCoord):
         Cord1x.__init__(self, card, nCoord, data, comment)
 
     def raw_fields(self):
-        list_fields = ['CORD1C', self.cid] + self.NodeIDs()
+        list_fields = ['CORD1C', self.cid] + self.node_ids
         return list_fields
 
 
@@ -1189,7 +1197,7 @@ class CORD1S(Cord1x, SphericalCoord):
         Cord1x.__init__(self, card, nCoord, data, comment)
 
     def raw_fields(self):
-        list_fields = ['CORD1S', self.cid] + self.NodeIDs()
+        list_fields = ['CORD1S', self.cid] + self.node_ids
         return list_fields
 
 

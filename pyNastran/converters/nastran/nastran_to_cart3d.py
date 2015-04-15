@@ -29,7 +29,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
         elements[i, :] = node.Position()
     for element_id, element in sorted(iteritems(bdf.elements)):
         if element.type == 'CTRIA3':
-            elements[i, :] = element.NodeIDs()
+            elements[i, :] = element.node_ids
             regions[i] = element.Mid()
         else:
             raise NotImplementedError(element.type)

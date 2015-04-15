@@ -10,16 +10,19 @@ class BaseCardDeprecated(object):
       - version 0.8
     """
     def rawFields(self):
+        aaa
         warnings.warn('deprecated; use raw_fields() instead of rawFields()',
                       DeprecationWarning, stacklevel=2)
         return self.raw_fields()
 
     def reprFields(self):
+        asdf
         warnings.warn('deprecated; use repr_fields() instead of reprFields()',
                       DeprecationWarning, stacklevel=2)
         return self.repr_fields()
 
     def printRawFields(self, size=8):
+        aaa
         warnings.warn('deprecated; use print_raw_fields(size, is_double) instead of printRawFields(size)',
                       DeprecationWarning, stacklevel=2)
         return self.print_raw_fields(size=size)
@@ -63,49 +66,59 @@ class CoordDeprecated(object):
         return p2, matrix
 
     def transformVectorToGlobal(self, p):
+        aa
         warnings.warn('deprecated; use transform_vector_to_global(p) instead of transformVectorToGlobal(p)', DeprecationWarning, stacklevel=2)
         return self.transform_vector_to_global(p)
 
     def transformNodeToGlobal(self, p):
+        aaa
         warnings.warn('deprecated; use transform_node_to_global(p) instead of transformVectorToGlobal(p)', DeprecationWarning, stacklevel=2)
         return self.transform_node_to_global(p)
 
     def transformToLocal(self, p, beta, debug=False):
+        aaa
         warnings.warn('deprecated; use transform_node_to_local(p) instead of transformToLocal(p)', DeprecationWarning, stacklevel=2)
         return self.transform_node_to_local(p, debug)
 
     def transform_to_local(self, p, beta, debug=False):
+        aaa
         warnings.warn('deprecated; use transform_node_to_local(p) instead of transform_to_local(p)', DeprecationWarning, stacklevel=2)
         return self.transform_node_to_local(p, debug)
 
 
 class AeroDeprecated(object):
     def IsSymmetricalXY(self):
+        aaa
         warnings.warn('deprecated; use is_symmetric_xy() instead of IsSymmetricalXY()',
                       DeprecationWarning, stacklevel=2)
         return self.is_symmetric_xy()
 
     def IsSymmetricalXZ(self):
+        aaa
         warnings.warn('deprecated; use is_symmetric_xz() instead of IsSymmetricalXZ()',
                       DeprecationWarning, stacklevel=2)
         return self.is_symmetric_xz()
 
     def IsAntiSymmetricalXY(self):
+        aaa
         warnings.warn('deprecated; use is_anti_symmetric_xy() instead of IsAntiSymmetricalXY()',
                       DeprecationWarning, stacklevel=2)
         return self.is_anti_symmetric_xy()
 
     def IsAntiSymmetricalXZ(self):
+        aasdf
         warnings.warn('deprecated; use is_anti_symmetric_xz() instead of IsAntiSymmetricalXZ()',
                       DeprecationWarning, stacklevel=2)
         return self.is_anti_symmetric_xz()
 
     def EnableGroundEffect(self):
+        asdf
         warnings.warn('deprecated; use set_ground_effect(True) instead of EnableGroundEffect()',
                       DeprecationWarning, stacklevel=2)
         self.set_ground_effect(True)
 
     def DisableGroundEffect(self):
+        asdf
         warnings.warn('deprecated; use set_ground_effect(False) instead of DisableGroundEffect()',
                       DeprecationWarning, stacklevel=2)
         self.set_ground_effect(False)
@@ -113,20 +126,24 @@ class AeroDeprecated(object):
 
 class CAERO1Deprecated(object):
     def Points(self):
+        asdf
         warnings.warn('deprecated; use get_points() instead of Points()', DeprecationWarning, stacklevel=2)
         return self.get_points()
 
     def SetPoints(self, points):
+        asdf
         warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)', DeprecationWarning, stacklevel=2)
         return self.set_points(points)
 
 
 class CAERO2Deprecated(object):
     def Points(self):
+        adf
         warnings.warn('deprecated; use get_points() instead of Points()', DeprecationWarning, stacklevel=2)
         return self.get_points()
 
     def SetPoints(self, points):
+        asdf
         warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)', DeprecationWarning, stacklevel=2)
         return self.set_points(points)
 
@@ -134,14 +151,14 @@ class CAERO2Deprecated(object):
 class ElementDeprecated(object):
 
     def nodePositions(self, nodes=None):
-        warnings.warn('deprecated; use get_node_positions(nodes) instead of nodePositions(nodes)',
-                      DeprecationWarning, stacklevel=2)
+        #warnings.warn('deprecated; use get_node_positions(nodes) instead of nodePositions(nodes)',
+                      #DeprecationWarning, stacklevel=2)
         return self.get_node_positions(nodes=nodes)
 
-    def prepareNodeIDs(self, nids, allowEmptyNodes=False):
-        warnings.warn('deprecated; use prepare_node_ids(nids, allow_empty_nodes) instead of prepareNodeIDs(nids, allowEmptyNodes)',
-                      DeprecationWarning, stacklevel=2)
-        self.prepare_node_ids(nids, allow_empty_nodes=allowEmptyNodes)
+    #def prepareNodeIDs(self, nids, allowEmptyNodes=False):
+        #warnings.warn('deprecated; use prepare_node_ids(nids, allow_empty_nodes) instead of prepareNodeIDs(nids, allowEmptyNodes)',
+                      #DeprecationWarning, stacklevel=2)
+        #self.prepare_node_ids(nids, allow_empty_nodes=allowEmptyNodes)
 
 
 class BDFMethodsDeprecated(object):
@@ -150,6 +167,7 @@ class BDFMethodsDeprecated(object):
         """
         .. seealso:: mass_properties
         """
+        asfd
         warnings.warn('deprecated; use mass_properties() instead of MassProperties()',
                       DeprecationWarning, stacklevel=2)
         return self.mass_properties()
@@ -158,6 +176,7 @@ class BDFMethodsDeprecated(object):
         """
         .. seealso:: mass
         """
+        adf
         warnings.warn('deprecated; use mass_properties() instead of Mass()',
                       DeprecationWarning, stacklevel=2)
         mass, cg, I = self.mass_properties()
@@ -165,6 +184,7 @@ class BDFMethodsDeprecated(object):
 
     def mass(self, element_ids=None, sym_axis=None):
         """Calculates mass in the global coordinate system"""
+        asfd
         warnings.warn('deprecated; use mass_properties() instead of mass()',
                       DeprecationWarning, stacklevel=2)
         mass, cg, I = self.mass_properties(element_ids=element_ids,
@@ -178,6 +198,7 @@ class BDFMethodsDeprecated(object):
         .. seealso:: resolve_grids
         .. deprecated: will be replaced in version 0.7 with resolve_grids
         """
+        asdf
         warnings.warn('deprecated; use resolve_grids(cid) instead of resolveGrids(cid)',
                       DeprecationWarning, stacklevel=2)
         return self.resolve_grids(cid)
@@ -187,6 +208,7 @@ class BDFMethodsDeprecated(object):
         .. seealso:: unresolve_grids
         .. deprecated: will be replaced in version 0.7 with unresolve_grids
         """
+        asdf
         warnings.warn('deprecated; use unresolve_grids(femOld) instead of unresolveGrids(femOld)',
                       DeprecationWarning, stacklevel=2)
         return self.unresolve_grids(femOld)
@@ -206,6 +228,7 @@ class GetMethodsDeprecated(object):
         The same functionality may be used by calling
           >>> self.getElementIDsWithPIDs([pid], mode='list')
         """
+        asfd
         warnings.warn('deprecated; use getElementIDsWithPIDs instead of '
                       'getElementIDsWithPID', DeprecationWarning, stacklevel=2)
         return self.getElementIDsWithPIDs([pid], mode='list')
@@ -214,75 +237,103 @@ class GetMethodsDeprecated(object):
         """
         .. deprecated:: will be removed in version 0.8
         """
+        adf
         warnings.warn('deprecated; use FLFACT(sid) instead of Flfact(sid)', DeprecationWarning, stacklevel=2)
         return self.FLFACT(sid, msg)
 
     def nNodes(self):
         """deprecated"""
+        asdf
         return self.get_nnodes()
 
     def nodeIDs(self):
         """deprecated"""
+        adf
         return self.get_node_ids()
 
     def getNodes(self):
         """deprecated"""
+        asdf
         return self.get_nodes()
 
     def getNodeIDsWithElement(self, eid):
         """deprecated"""
+        afd
         return self.get_node_ids_with_element(eid)
 
     def getNodeIDsWithElements(self, eids, msg=''):
         """deprecated"""
+        asfd
         return self.get_node_ids_with_elements(eids, msg=msg)
 
     def nElements(self):
         """deprecated"""
+        asdf
         return self.get_nelements()
 
     def elementIDs(self):
         """deprecated"""
+        adf
         return self.get_element_ids()
 
     def getElementIDsWithPIDs(self, pids, mode='list'):
         """deprecated"""
+        asfd
         return self.get_element_ids_with_pids(pids, mode=mode)
+
+
+    def _get_element_ids_with_pids(self, pids, mode='list'):
+        if mode not in ['list', 'dict']:
+            msg = "mode=%r is not supported.  Use 'list' or 'dict'\n" % mode
+            raise ValueError(msg)
+        if mode == 'list':
+            return self.get_element_ids_list_with_pids(pids)
+        else:
+            return self.get_element_ids_dict_with_pids(pids)
 
     def getNodeIDToElementIDsMap(self):
         """deprecated"""
+        asdf
         return self.get_node_id_to_element_ids_map()
 
     def getPropertyIDToElementIDsMap(self):
         """deprecated"""
+        asdf
         return self.get_property_id_to_element_ids_map()
 
     def getMaterialIDToPropertyIDsMap(self):
         """deprecated"""
+        asdf
         return self.get_material_id_to_property_ids_map()
 
     def propertyIDs(self):
         """deprecated"""
+        af
         return self.get_property_ids()
 
     def structuralMaterialIDs(self):
         """deprecated"""
+        asdf
         return self.get_structural_material_ids()
 
     def thermalMaterialIDs(self):
         """deprecated"""
+        asdf
         return self.get_thermal_material_ids()
 
     def materialIDs(self):
         """deprecated"""
+        sadf
         return self.get_material_ids()
 
     def coordIDs(self):
         """deprecated"""
+        asdf
         return self.get_coord_ids()
 
     def nCAeros(self):
         """deprecated"""
+        asfd
         return self.get_ncaeros()
 
 

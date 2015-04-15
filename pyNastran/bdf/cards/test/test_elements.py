@@ -28,6 +28,8 @@ class TestElements(unittest.TestCase):
         card = CDAMP1(card)
         self.assertEquals(card.Eid(), 2001)
         self.assertEquals(card.Pid(), 20)
+        node_ids = card.node_ids
+        assert node_ids == [1001, 0], node_ids
         card.write_card(size, 'dummy')
         card.raw_fields()
 
@@ -38,6 +40,8 @@ class TestElements(unittest.TestCase):
 
         size = 8
         card = CGAP(card)
+        node_ids = card.node_ids
+        assert node_ids == [21, 99], node_ids
         self.assertEquals(card.Eid(), 899)
         self.assertEquals(card.Pid(), 90)
         card.write_card(size, 'dummy')

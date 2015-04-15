@@ -32,6 +32,8 @@ class TestShells(unittest.TestCase):
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
         cquad4 = model.Element(eid)
+        node_ids = cquad4.node_ids
+        assert node_ids == [n1, n2, n3, n4], node_ids
 
         # cquad4 / pshell
         self.assertEquals(cquad4.Eid(), eid)
@@ -81,6 +83,8 @@ class TestShells(unittest.TestCase):
 
         # ctria3 / pshell
         ctria3 = model.Element(eid)
+        node_ids = ctria3.node_ids
+        assert node_ids == [n1, n2, n3], node_ids
         mass = A * (t * rho + nsm)
         self.assertEquals(ctria3.Eid(), eid)
         self.assertEquals(ctria3.Pid(), pid)
@@ -225,29 +229,29 @@ class TestShells(unittest.TestCase):
 
         # get node IDs without cross referencing
         eids = [10]
-        nids = model.getNodeIDsWithElements(eids)
+        nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4]), nids
 
         eids = [11]
-        nids = model.getNodeIDsWithElements(eids)
+        nids = model.get_node_ids_with_elements(eids)
         assert nids == set([3, 4, 5, 6]), nids
 
         eids = [10, 11]
-        nids = model.getNodeIDsWithElements(eids)
+        nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4, 5, 6]), nids
 
         # get node IDs with cross referencing
         model.cross_reference()
         eids = [10]
-        nids = model.getNodeIDsWithElements(eids)
+        nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4]), nids
 
         eids = [11]
-        nids = model.getNodeIDsWithElements(eids)
+        nids = model.get_node_ids_with_elements(eids)
         assert nids == set([3, 4, 5, 6]), nids
 
         eids = [10, 11]
-        nids = model.getNodeIDsWithElements(eids)
+        nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4, 5, 6]), nids
 
 

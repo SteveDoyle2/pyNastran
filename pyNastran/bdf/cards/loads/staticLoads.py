@@ -534,7 +534,7 @@ class ACCEL1(BaseCard):
     def raw_fields(self):
         list_fields = ['ACCEL1', self.sid, self.Cid(), self.scale,
                        self.N[0], self.N[1], self.N[2], None, None
-                       ] + self.nodeIDs()
+                       ] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1186,7 +1186,7 @@ class PLOAD(Load):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['PLOAD', self.sid, self.p] + self.nodeIDs()
+        list_fields = ['PLOAD', self.sid, self.p] + self.node_ids
         return list_fields
 
     def repr_fields(self):

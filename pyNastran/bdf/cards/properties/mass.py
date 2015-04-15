@@ -61,7 +61,7 @@ class NSM(PointProperty):
         assert self.Type in self.validProperties
 
     def raw_fields(self):
-        #nodes = self.nodeIDs()
+        #nodes = self.node_ids
         list_fields = ['NSM', self.sid, self.Type, self.id, self.value]
         return list_fields
 

@@ -35,6 +35,14 @@ class Load(BaseCard):
         else:
             return self.cid.cid
 
+    @property
+    def node_ids(self):
+        return self.nodeIDs()
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def nodeIDs(self, nodes=None):
         """returns nodeIDs for repr functions"""
         if not nodes:

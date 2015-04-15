@@ -231,7 +231,7 @@ class TestCoords(unittest.TestCase):
         self.assertEquals(c1.G2(), 2)
         self.assertEquals(c1.G3(), 3)
 
-        self.assertEquals(c1.NodeIDs(), [1, 2, 3])
+        self.assertEquals(c1.node_ids, [1, 2, 3])
 
     def test_cord2_bad_01(self):
         model = BDF(debug=False)
@@ -433,7 +433,10 @@ class TestCoords(unittest.TestCase):
         msg = '\nexpected=%s \nactual  =%s \ndiff    =%s' % (expected, xyz, diff)
         assert allclose(diff, 0.), msg
         coord = model.Coord(7)
-        coord.T()
+        coord.beta_n(1)
+        coord.beta_n(2)
+        coord.beta_n(3)
+        coord.beta_n(6)
         self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
     def getNodes(self, grids, grids_expected, coords):

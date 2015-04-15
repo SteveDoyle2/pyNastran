@@ -199,33 +199,10 @@ class CBEAM(CBAR):
         else:
             self.g0_vector = self.x
 
-    def Rmatrix(self, model, n1, n2):
-        p1 = model.Node(n1).Position()
-        p2 = model.Node(n2).Position()
-        v1 = p2 - p1
-        v1 = v1 / norm(v1)
-
-        #v2 = self.g0_vector
-        #v2 = p3 - p1
-
-        v3 = cross(v1, self.g0_vector)
-        v3 /= norm(v3)
-
-        v2 = cross(v1, v3)
-
-        R = array([v1, v2, v3])
-        #if debug:
-            #print("v1 =", v1)
-            #print("v2 =", v2)
-            #print("v3 =", v3)
-            #print('R =\n', R)
-            #print('R.shape =', R.shape)
-        return R, v1, v2, v3
-
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
-        ga, gb = self.nodeIDs()
+        ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
                        self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
         return list_fields
@@ -242,7 +219,7 @@ class CBEAM(CBAR):
         sb = set_blank_if_default(self.sb, 0)
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
-        ga, gb = self.nodeIDs()
+        ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
                        self.pa, self.pb, w1a, w2a, w3a,
                        w1b, w2b, w3b, sa, sb]

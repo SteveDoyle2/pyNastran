@@ -79,7 +79,7 @@ class CDAMP1(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -93,12 +93,20 @@ class CDAMP1(LineDamper):
         return self.eid
 
     def nodeIDs(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
-        fields1 = [self.eid, self.Pid()] + self.nodeIDs() + [self.c1, self.c2]
+        fields1 = [self.eid, self.Pid()] + self.node_ids + [self.c1, self.c2]
         fields2 = [elem.eid, elem.Pid()] + elem.nodeIDs() + [elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
@@ -122,7 +130,7 @@ class CDAMP1(LineDamper):
             raise KeyError(msg)
 
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         fields = ['CDAMP1', self.eid, self.Pid(), nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
@@ -177,7 +185,7 @@ class CDAMP2(LineDamper):
     def _verify(self, xref=True):
         eid = self.Eid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(b, float)
@@ -198,7 +206,7 @@ class CDAMP2(LineDamper):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         fields = ['CDAMP2', self.eid, self.b, nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
@@ -242,7 +250,7 @@ class CDAMP3(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -264,10 +272,18 @@ class CDAMP3(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
         return list_fields
 
@@ -310,7 +326,7 @@ class CDAMP4(LineDamper):
     def _verify(self, xref=True):
         eid = self.Eid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(b, float)
@@ -328,10 +344,18 @@ class CDAMP4(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
         return list_fields
 
@@ -375,7 +399,7 @@ class CDAMP5(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -397,10 +421,18 @@ class CDAMP5(LineDamper):
         return self.pid.b
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return list_fields
 
@@ -443,7 +475,7 @@ class CVISC(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -460,10 +492,18 @@ class CVISC(LineDamper):
         return self.pid.ce
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        list_fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def repr_fields(self):

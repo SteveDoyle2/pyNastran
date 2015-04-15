@@ -202,25 +202,15 @@ class GetMethods(GetMethodsDeprecated):
     def get_element_ids(self):
         return self.elements.keys()
 
-    def get_element_ids_with_pids(self, pids, mode='list'):
+    def get_element_ids_list_with_pids(self, pids):
         """
         Gets all the element IDs with a specific property ID.
 
         :param self: the BDF object
         :param pids: list of property ID
-        :param mode:  the mode to run the method in
 
-           +--------+--------------------------------------------------+
-           |  mode  | Description                                      |
-           +--------+--------------------------------------------------+
-           | 'list' | returns the data as one list (default)           |
-           +--------+--------------------------------------------------+
-           | 'dict' | returns the data as a dictionary of lists based  |
-           |        | on the property ID                               |
-           +--------+--------------------------------------------------+
 
-        :returns element_ids: as a list or dictionary of lists by
-                              property based on the mode
+        :returns element_ids: as a list
 
         For example, we want to get all the element ids with ``pids=[1, 2, 3]``
 
@@ -230,9 +220,25 @@ class GetMethods(GetMethodsDeprecated):
           model.read_bdf(bdf_filename)
           pids = [1, 2, 3]
           eids_list = model.get_element_ids_with_pids(pids, mode='list')
+        """
+        assert isinstance(pids, list), pids
+        eids2 = []
+        for eid, element in sorted(iteritems(self.elements)):
+            pid = element.Pid()
+            if pid in pids:
+                eids2.append(eid)
+        return eids2
 
-        Now we want all the elements with ``pids=[4, 5, 6]``, but we want
-        them in separate groups
+    def get_element_ids_dict_with_pids(self, pids):
+        """
+        Gets all the element IDs with a specific property ID.
+
+        :param self: the BDF object
+        :param pids: list of property ID
+        :returns element_ids: as a dictionary of lists by property
+
+        For example, we want all the elements with ``pids=[4, 5, 6]``,
+        but we want them in separate groups
 
         .. code-block:: python
 
@@ -240,30 +246,19 @@ class GetMethods(GetMethodsDeprecated):
           model.read_bdf(bdf_filename)
           pids = [4, 5, 6]
           eids_dict = model.get_element_ids_with_pids(pids, mode='dict')
-
         """
-        if mode not in ['list', 'dict']:
-            msg = "mode=%r is not supported.  Use 'list' or 'dict'\n" % mode
-            raise ValueError(msg)
         assert isinstance(pids, list), pids
-        if mode == 'list':
-            eids2 = []
-            for eid, element in sorted(iteritems(self.elements)):
+        eids2 = {}
+        for pid in pids:
+            eids2[pid] = []
+        for eid, element in iteritems(self.elements):
+            try:
                 pid = element.Pid()
                 if pid in pids:
-                    eids2.append(eid)
-        else:
-            eids2 = {}
-            for pid in pids:
-                eids2[pid] = []
-            for eid, element in iteritems(self.elements):
-                try:
-                    pid = element.Pid()
-                    if pid in pids:
-                        eids2[pid].append(eid)
-                except AttributeError:
-                    #eids2[0].append(eid)
-                    pass
+                    eids2[pid].append(eid)
+            except AttributeError:
+                #eids2[0].append(eid)
+                pass
         return eids2
 
     def get_node_id_to_element_ids_map(self):

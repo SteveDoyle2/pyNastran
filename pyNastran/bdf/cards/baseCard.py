@@ -270,7 +270,7 @@ class Element(BaseCard, ElementDeprecated):
         >>> print element.faces
         """
         faces = {}
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         if self.type.find('HEX') != -1:  # CHEXA
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]

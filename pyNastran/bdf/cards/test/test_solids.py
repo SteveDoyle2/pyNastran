@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard
@@ -10,7 +11,8 @@ class TestSolids(unittest.TestCase):
     def test_cpenta_01(self):
         lines = [
             'CPENTA,85,22,201,202,203,205,206,207,+PN2',
-            '+PN2,209,210,217,  ,  ,  ,213,214,218'
+            '+PN2,209,210,217,  ,  ,  ,213,214,',
+            ',218'
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
@@ -18,7 +20,18 @@ class TestSolids(unittest.TestCase):
         size = 8
         card = CPENTA15(card)
         card.write_card(size, 'dummy')
+        node_ids = card.node_ids
+        assert node_ids == [201, 202, 203, 205, 206, 207,
+                            209, 210, 217, None, None, None, 213, 214, 218], node_ids
         card.raw_fields()
+
+    def test_cpenta_01b(self):
+        pass
+          # ..todo:: this is wrong...
+        #lines = [  # this will fail!
+        #    'CPENTA,85,22,201,202,203,205,206,207,+PN2',
+        #    '+PN2,209,210,217,  ,  ,  ,213,214,218'
+        #]
 
     #def test_solid_02(self):
         #"""checks nonlinear static solid material"""
@@ -83,6 +96,7 @@ class TestSolids(unittest.TestCase):
     def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
         mass = rho * V
         element = model.elements[eid]
+        element.node_ids
         self.assertEquals(element.type, etype)
         self.assertEquals(element.Eid(), eid)
         self.assertEquals(element.pid.type, ptype)

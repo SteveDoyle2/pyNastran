@@ -187,7 +187,7 @@ class WriteMesh(object):
 
         eids_written = []
         pids = sorted(self.properties.keys())
-        pid_eids = self.getElementIDsWithPIDs(pids, mode='dict')
+        pid_eids = self.get_element_ids_dict_with_pids(pids)
 
         msg = []
         #failed_element_types = set([])

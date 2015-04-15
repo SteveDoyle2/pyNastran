@@ -397,7 +397,15 @@ class CBAR(LineElement):
         return v
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         """
@@ -491,7 +499,7 @@ class CBEAM3(CBAR):
 
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
-        (ga, gb, gc) = self.nodeIDs()
+        (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
                   list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
         return list_fields
@@ -512,7 +520,7 @@ class CBEAM3(CBAR):
         twc = set_blank_if_default(self.tw[2], 0.0)
 
         (x1, x2, x3) = self.getX_G0_defaults()
-        (ga, gb, gc) = self.nodeIDs()
+        (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
                        w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
                        twa, twb, twc, self.s[0], self.s[1], self.s[2]]

@@ -177,6 +177,8 @@ class TestBeams(unittest.TestCase):
         #print("I22 = ", cbeam.I2())
         #print("I12 = ", cbeam.I12())
         #print("J = ", cbeam.J())
+        node_ids = cbeam.node_ids
+        assert node_ids == [1, 2], node_ids
         self.assertEqual(cbeam.Area(), 2.9)
         self.assertEqual(cbeam.I11(), 3.5)
         self.assertEqual(cbeam.I22(), 5.97)

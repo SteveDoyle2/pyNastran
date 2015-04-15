@@ -22,6 +22,8 @@ class TestRods(unittest.TestCase):
         card.raw_fields()
         self.assertEquals(card.Eid(), 10)
         self.assertEquals(card.Pid(), 100)
+        node_ids = card.node_ids
+        assert node_ids == [10, 2], node_ids # probably wrong
 
     def test_conrod_01(self):
         eid = 10
@@ -39,6 +41,8 @@ class TestRods(unittest.TestCase):
         card.raw_fields()
         self.assertEquals(card.Eid(), eid)
         self.assertEquals(card.Mid(), mid)
+        node_ids = card.node_ids
+        assert node_ids == [nid1, nid2], node_ids
 
     def test_mass_01(self):
         """tests a CROD and a CONROD mass"""
@@ -72,18 +76,27 @@ class TestRods(unittest.TestCase):
         card = BDFCard(card)
         conrod = CONROD(card)
         model.add_element(conrod)
+        card = model.elements[eid]
+        node_ids = card.node_ids
+        assert node_ids == [nid1, nid2], node_ids # probably wrong
 
         lines = ['crod,%i, %i, %i, %i' % (eid+1, pid, nid1, nid2)]
         card = model.process_card(lines)
         card = BDFCard(card)
         crod = CROD(card)
         model.add_element(crod)
+        card = model.elements[eid+1]
+        node_ids = card.node_ids
+        assert node_ids == [nid1, nid2], node_ids # probably wrong
 
         lines = ['ctube,%i, %i, %i, %i' % (eid+2, pid+1, nid1, nid2)]
         card = model.process_card(lines)
         card = BDFCard(card)
         ctube = CTUBE(card)
         model.add_element(ctube)
+        card = model.elements[eid+2]
+        node_ids = card.node_ids
+        assert node_ids == [nid1, nid2], node_ids # probably wrong
 
         lines = ['prod,%i, %i, %f, %f, %f, %f' % (pid, mid, A, J, c, nsm)]
         card = model.process_card(lines)

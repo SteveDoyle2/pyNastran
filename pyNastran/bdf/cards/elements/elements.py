@@ -119,7 +119,7 @@ class CGAP(Element):
         cid = self.Cid()
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert cid is None or isinstance(cid, int), 'cid=%r\n%s' % (cid, str(self))
         assert isinstance(eid, int), 'eid=%r\n%s' % (eid, str(self))
@@ -147,7 +147,15 @@ class CGAP(Element):
         return self.eid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def Cid(self):
         if isinstance(self.cid, int) or self.cid is None:
@@ -228,7 +236,7 @@ class CRAC2D(CrackElement):
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -237,10 +245,18 @@ class CRAC2D(CrackElement):
         return self.eid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -280,16 +296,24 @@ class CRAC3D(CrackElement):
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):

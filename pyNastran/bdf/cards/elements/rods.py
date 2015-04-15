@@ -27,7 +27,15 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def Rho(self):
         r"""returns the material density  \f$ \rho \f$"""
@@ -155,7 +163,7 @@ class CROD(RodElement):
         return massPerLength
 
     def raw_fields(self):
-        list_fields = ['CROD', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CROD', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def repr_fields(self):
@@ -259,7 +267,7 @@ class CTUBE(RodElement):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
 
     def raw_fields(self):
-        list_fields = ['CTUBE', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CTUBE', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -404,7 +412,7 @@ class CONROD(RodElement):
         return msg
 
     def raw_fields(self):
-        list_fields = ['CONROD', self.eid] + self.nodeIDs() + [
+        list_fields = ['CONROD', self.eid] + self.node_ids + [
                   self.Mid(), self.A, self.j, self.c, self.nsm]
         return list_fields
 
@@ -412,7 +420,7 @@ class CONROD(RodElement):
         j = set_blank_if_default(self.j, 0.0)
         c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
-        list_fields = ['CONROD', self.eid] + self.nodeIDs() + [self.Mid(),
+        list_fields = ['CONROD', self.eid] + self.node_ids + [self.Mid(),
                   self.A, j, c, nsm]
         return list_fields
 
