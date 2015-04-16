@@ -38,10 +38,10 @@ def main():
         # option 2
         model.params['POST'].update_values(value1=-1, value2=None)
 
-    model.write_bdf(out_bdf, size=16, precision='double')
+    model.write_bdf(out_bdf, size=16, is_double=True)
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf)
 
-    model2 = F06(out_f06)
+    model2 = F06()
     if 0:
         model2.markerMap = {
             'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': model2._grid_point_weight_generator,
@@ -50,20 +50,19 @@ def main():
 
     if 0:
         model2.stop_after_reading_grid_point_weight(stop=True)
-    model2.read_f06()
+    model2.read_f06(out_f06)
 
     #print('\n'.join(dir(subcase1)))
     print("")
     print("mass = %s" % model2.grid_point_weight.mass)
 
     #========================================
-    model3 = OP2(out_op2)
-    model3.read_op2()
+    model3 = OP2()
+    model3.read_op2(out_op2, vectorized=False)
     #========================================
     for form, modeli in [('f06', model2), ('op2', model3)]:
         print("---%s---" % form)
-        subcase1 = modeli.rodStress[1]
-
+        subcase1 = modeli.crod_stress[1]
         eid = 2
         print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
         print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
@@ -73,6 +72,7 @@ def main():
         print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
         print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
         print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
+
 
 if __name__ == '__main__':  # pragma: no cover
     main()

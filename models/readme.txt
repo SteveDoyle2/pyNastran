@@ -26,7 +26,7 @@ iSat
  - transient (modal) eigenvectors/stress
 
 plate
- - written using Patran 2012 64-Bit
+ - written by Patran 2012 64-Bit
  - it has two versions:
      plate_formatted.bdf
        ASSIGN OUTPUT2 = 'plate.op2', UNIT = 12, FORM = FORMATTED
@@ -39,7 +39,7 @@ contact
  - bdf
    - tests contact cards (BCTPARA, PCTSET, BSURFS, BSURF)
    - CTETRA10s with missing nodes
-   - CPYRAM solids not supported in GUI/OP2
+   - CPYRAM solids not supported in OP2
    - MATT1
    - shows a badly formatted BCTABLE
  - op2
