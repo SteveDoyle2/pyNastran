@@ -116,6 +116,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
+    modelType = 'nastran'
+
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']

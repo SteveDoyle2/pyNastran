@@ -1843,7 +1843,15 @@ class CQUAD8(QuadShell):
         return area
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.node_ids + [

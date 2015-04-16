@@ -204,7 +204,15 @@ class CDAMP2(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         nodes = self.node_ids

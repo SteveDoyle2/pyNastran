@@ -167,13 +167,13 @@ class BDFMethods(BDFMethodsDeprecated):
         if sym_axis is None:
             for key, aero in iteritems(self.aero):
                 sym_axis = ''
-                if aero.IsSymmetricalXY():
+                if aero.is_symmetric_xy():
                     sym_axis += 'y'
-                if aero.IsSymmetricalXZ():
+                if aero.is_symmetric_xz():
                     sym_axis += 'z'
-                if aero.IsAntiSymmetricalXY():
+                if aero.is_symmetric_xy():
                     raise NotImplementedError('%s is antisymmetric about the XY plane' % str(aero))
-                if aero.IsAntiSymmetricalXZ():
+                if aero.is_symmetric_xz():
                     raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
         if sym_axis is not None:
             # either we figured sym_axis out from the AERO cards or the user told us

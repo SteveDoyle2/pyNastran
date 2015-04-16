@@ -152,11 +152,11 @@ class GetMethods(GetMethodsDeprecated):
         Returns a dictionary that maps a property ID to a list of elemnents
         """
         pidToEidsMap = {}
-        pids = self.propertyIDs()
+        pids = self.property_ids
         for pid in pids:
             pidToEidsMap[pid] = []
 
-        for eid in self.elementIDs():
+        for eid in self.element_ids:
             element = self.Element(eid)
 
             if hasattr(element, 'pid'):
@@ -187,7 +187,7 @@ class GetMethods(GetMethodsDeprecated):
         for mid in self.materialIDs():
             mid_to_pids_map[mid] = []
 
-        for pid in self.propertyIDs():
+        for pid in self.property_ids:
             prop = self.Property(pid)
             if prop.type == 'PCOMP':
                 mids = prop.Mids()
@@ -236,7 +236,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.properties[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
-                           % (pid, msg, self.propertyIDs()))
+                           % (pid, msg, self.property_ids))
 
     def Properties(self, pids, msg=''):
         properties = []
@@ -354,7 +354,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.coords[cid]
         except KeyError:
             raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
-                           % (cid, msg, self.coordIDs()))
+                           % (cid, msg, self.coord_ids))
 
     #--------------------
     # AERO CARDS
@@ -399,7 +399,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.caeros[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
-                           % (eid, msg, self.caeros.keys()))
+                           % (eid, msg, self.caero_ids))
 
     def PAero(self, pid, msg=''):
         try:

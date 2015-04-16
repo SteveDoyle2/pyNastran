@@ -763,7 +763,15 @@ class CPYRAM5(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPYRAM13(SolidElement):
