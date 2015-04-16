@@ -93,6 +93,7 @@ class CDAMP1(LineDamper):
         return self.eid
 
     def nodeIDs(self):
+        """deprecated"""
         return self.node_ids
 
     @property
@@ -179,8 +180,8 @@ class CDAMP2(LineDamper):
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -272,6 +273,7 @@ class CDAMP3(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
+        """deprecated"""
         return self.node_ids
 
     @property
@@ -344,6 +346,7 @@ class CDAMP4(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def nodeIDs(self):
+        """deprecated"""
         return self.node_ids
 
     @property
@@ -421,6 +424,7 @@ class CDAMP5(LineDamper):
         return self.pid.b
 
     def nodeIDs(self):
+        """deprecated"""
         return self.node_ids
 
     @property
@@ -492,6 +496,7 @@ class CVISC(LineDamper):
         return self.pid.ce
 
     def nodeIDs(self):
+        """deprecated"""
         return self.node_ids
 
     @property

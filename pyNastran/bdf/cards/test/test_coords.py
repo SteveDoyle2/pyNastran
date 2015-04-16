@@ -262,12 +262,12 @@ class TestCoords(unittest.TestCase):
 
         # this runs because it's got rid=0
         cord4 = model.Coord(4)
-        cord4.transformToGlobal([0., 0., 0.])
+        cord4.transform_node_to_global([0., 0., 0.])
 
         # this doesn't run because rid != 0
         cord5 = model.Coord(5)
         with self.assertRaises(RuntimeError):
-            cord5.transformToGlobal([0., 0., 0.])
+            cord5.transform_node_to_global([0., 0., 0.])
         model.cross_reference()
 
     def test_cord2_rcs_01(self):

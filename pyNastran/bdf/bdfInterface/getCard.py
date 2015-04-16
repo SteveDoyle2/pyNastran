@@ -16,17 +16,75 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # NODE CARDS
 
-    def get_nnodes(self):
+    @property
+    def nnodes(self):
         return len(self.nodes)
 
-    def get_node_ids(self):
+    @nnodes.setter
+    def nnodes(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
+    @property
+    def node_ids(self):
         return self.nodes.keys()
+
+    @nnodes.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def get_nodes(self):
         nodes = []
         for (nid, node) in sorted(iteritems(self.nodes)):
             nodes.append(node)
         return nodes
+
+    #--------------------
+    # Elements CARDS
+
+    @property
+    def nelements(self):
+        return len(self.elements)
+
+    @nnodes.setter
+    def nelements(self, value):
+        raise ValueError("You cannot set nnode IDs like this...modify the node objects")
+
+    @property
+    def element_ids(self):
+        return self.elements.keys()
+
+    @nnodes.setter
+    def element_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
+    #--------------------
+    # Other CARDS
+
+    @property
+    def coord_ids(self):
+        return self.coords.keys()
+
+    @nnodes.setter
+    def coord_ids(self, value):
+        raise ValueError("You cannot set coord IDs like this...modify the coord objects")
+
+    @property
+    def ncoord_ids(self):
+        return len(self.coords)
+
+    @nnodes.setter
+    def ncoord_ids(self, value):
+        raise ValueError("You cannot set ncoord IDs like this...modify the coord objects")
+
+    @property
+    def ncaero_ids(self):
+        return len(self.caeros)
+
+    @nnodes.setter
+    def ncaero_ids(self, value):
+        raise ValueError("You cannot set ncaero IDs like this...modify the caero objects")
+
+    #--------------------
 
     def get_x_associated_with_y(self, xdict, xkeys, ykeys, stop_on_failure=True):
         """
@@ -143,8 +201,8 @@ class GetMethods(GetMethodsDeprecated):
         #pids = get_x_associated_with_y(self, self.elements, 'pid', 'pid')
         #mids = get_x_associated_with_y(self, self.properties, 'mid', 'mid')
 
-    def get_node_ids_with_element(self, eid):
-        return self.getNodeIDsWithElements([eid])
+    def get_node_ids_with_element(self, eid, msg=''):
+        return self.get_node_ids_with_elements([eid], msg=msg)
 
     def get_node_ids_with_elements(self, eids, msg=''):
         """
@@ -195,12 +253,6 @@ class GetMethods(GetMethodsDeprecated):
 
     #--------------------
     # ELEMENT CARDS
-
-    def get_nelements(self):
-        return len(self.elements)
-
-    def get_element_ids(self):
-        return self.elements.keys()
 
     def get_element_ids_list_with_pids(self, pids):
         """
@@ -489,13 +541,8 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
                            % (cid, msg, self.coordIDs()))
 
-    def get_coord_ids(self):
-        return sorted(self.coords.keys())
     #--------------------
     # AERO CARDS
-
-    def get_ncaeros(self):
-        return len(self.caeros)
 
     def AEList(self, aelist, msg=''):
         try:
