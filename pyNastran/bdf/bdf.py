@@ -763,11 +763,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 uduplicate_eids.sort()
                 msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
-                    msg += 'old_element=\n%s\n' % self.elements[eid].repr_card()
+                    msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
                     msg += 'new_elements=\n'
                     for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
                         if eidi == eid:
-                            msg += elem.repr_card()
+                            msg += elem.print_repr_card()
                     msg += '\n'
                     is_error = True
 
@@ -777,11 +777,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 uduplicate_pids.sort()
                 msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
                 for pid in duplicate_pids:
-                    msg += 'old_property=\n%s\n' % self.properties[pid].repr_card()
+                    msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
                     msg += 'new_properties=\n'
                     for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
                         if pidi == pid:
-                            msg += prop.repr_card()
+                            msg += prop.print_repr_card()
                     msg += '\n'
                     is_error = True
 
@@ -791,11 +791,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 uduplicate_eids.sort()
                 msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
-                    msg += 'old_mass=\n%s\n' % self.masses[eid].repr_card()
+                    msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
                     msg += 'new_masses=\n'
                     for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
                         if eidi == eid:
-                            msg += elem.repr_card()
+                            msg += elem.print_repr_card()
                     msg += '\n'
                     is_error = True
 
@@ -805,11 +805,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 uduplicate_mids.sort()
                 msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
-                    msg += 'old_material=\n%s\n' % self.materials[mid].repr_card()
+                    msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
                     msg += 'new_materials=\n'
                     for mat, midi in zip(self._duplicate_materials, duplicate_mids):
                         if midi == mid:
-                            msg += mat.repr_card()
+                            msg += mat.print_repr_card()
                     msg += '\n'
                     is_error = True
 
@@ -819,11 +819,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 uduplicate_mids.sort()
                 msg += 'self.thermalMaterials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
-                    msg += 'old_thermal_material=\n%s\n' % self.thermalMaterials[mid].repr_card()
+                    msg += 'old_thermal_material=\n%s\n' % self.thermalMaterials[mid].print_repr_card()
                     msg += 'new_thermal_materials=\n'
                     for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
                         if midi == mid:
-                            msg += mat.repr_card()
+                            msg += mat.print_repr_card()
                     msg += '\n'
                     is_error = True
 
@@ -833,11 +833,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 uduplicate_cids.sort()
                 msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
                 for cid in uduplicate_cids:
-                    msg += 'old_coord=\n%s\n' % self.coords[cid].repr_card()
+                    msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
                     msg += 'new_coords=\n'
                     for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
                         if cidi == cid:
-                            msg += coord.repr_card()
+                            msg += coord.print_repr_card()
                     msg += '\n'
                     is_error = True
             if is_error:

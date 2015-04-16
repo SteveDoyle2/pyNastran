@@ -741,7 +741,8 @@ class CONM2(PointMassElement):
             return A
         else:
             # transform to global
-            (dx, matrix) = self.cid.transformToGlobal(self.X)
+            #dx = self.cid.transform_node_to_global(self.X)
+            matrix = self.cid.beta()
             raise NotImplementedError('CONM2 intertia method is not implemented.')
             A2 = A * matrix
             return A2  # correct for offset using dx???
@@ -772,7 +773,7 @@ class CONM2(PointMassElement):
             # this statement is not supported...
 
             # convert self.X into the global frame
-            x, matrix = self.cid.transformToGlobal(self.X)
+            x = self.cid.transform_node_to_global(self.X)
 
             # self.X is an offset
             dx = x - self.cid.origin

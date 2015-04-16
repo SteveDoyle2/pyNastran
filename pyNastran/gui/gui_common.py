@@ -536,7 +536,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.textActors = {}
 
 
-        #for cid, axes in self.axes.iteritems():
+        #for cid, axes in iteritems(self.axes):
             #self.rend.AddActor(axes)
         self.addGeometry()
         self.addAltGeometry()

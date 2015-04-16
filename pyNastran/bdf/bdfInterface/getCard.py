@@ -16,76 +16,6 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # NODE CARDS
 
-    @property
-    def nnodes(self):
-        return len(self.nodes)
-
-    @nnodes.setter
-    def nnodes(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
-    @property
-    def node_ids(self):
-        return self.nodes.keys()
-
-    @nnodes.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
-    def get_nodes(self):
-        nodes = []
-        for (nid, node) in sorted(iteritems(self.nodes)):
-            nodes.append(node)
-        return nodes
-
-    #--------------------
-    # Elements CARDS
-
-    @property
-    def nelements(self):
-        return len(self.elements)
-
-    @nnodes.setter
-    def nelements(self, value):
-        raise ValueError("You cannot set nnode IDs like this...modify the node objects")
-
-    @property
-    def element_ids(self):
-        return self.elements.keys()
-
-    @nnodes.setter
-    def element_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
-    #--------------------
-    # Other CARDS
-
-    @property
-    def coord_ids(self):
-        return self.coords.keys()
-
-    @nnodes.setter
-    def coord_ids(self, value):
-        raise ValueError("You cannot set coord IDs like this...modify the coord objects")
-
-    @property
-    def ncoord_ids(self):
-        return len(self.coords)
-
-    @nnodes.setter
-    def ncoord_ids(self, value):
-        raise ValueError("You cannot set ncoord IDs like this...modify the coord objects")
-
-    @property
-    def ncaero_ids(self):
-        return len(self.caeros)
-
-    @nnodes.setter
-    def ncaero_ids(self, value):
-        raise ValueError("You cannot set ncaero IDs like this...modify the caero objects")
-
-    #--------------------
-
     def get_x_associated_with_y(self, xdict, xkeys, ykeys, stop_on_failure=True):
         """
         Get the range of sub-properties of a card.
@@ -260,8 +190,6 @@ class GetMethods(GetMethodsDeprecated):
 
         :param self: the BDF object
         :param pids: list of property ID
-
-
         :returns element_ids: as a list
 
         For example, we want to get all the element ids with ``pids=[1, 2, 3]``
@@ -362,12 +290,22 @@ class GetMethods(GetMethodsDeprecated):
         """
         Returns a dictionary that maps a material ID to a list of properties
 
+        :returns mid_to_pids_map: the mapping
+
+        .. code-block:: python
+
+          >>> mid_to_pid_map = get_material_id_to_property_ids_map()
+          >>> mid = 1
+          >>> pids = get_material_id_to_property_ids_map[mid]
+          >>> pids
+          [1, 2, 3]
+
         .. note:: all properties require an mid to be counted (except for
                   PCOMP, which has multiple mids)
         """
-        midToPidsMap = {}
+        mid_to_pids_map = {}
         for mid in self.materialIDs():
-            midToPidsMap[mid] = []
+            mid_to_pids_map[mid] = []
 
         for pid in self.propertyIDs():
             prop = self.Property(pid)
@@ -375,13 +313,13 @@ class GetMethods(GetMethodsDeprecated):
                 mids = prop.Mids()
 
                 for mid in mids:
-                    if pid not in midToPidsMap[mid]:
-                        midToPidsMap[mid].append(pid)
+                    if pid not in mid_to_pids_map[mid]:
+                        mid_to_pids_map[mid].append(pid)
             else:  # PCOMP
                 if hasattr(prop, 'mid') and prop.Mid() in mids:
-                    if pid not in midToPidsMap[mid]:
-                        midToPidsMap[mid].append(pid)
-        return midToPidsMap
+                    if pid not in mid_to_pids_map[mid]:
+                        mid_to_pids_map[mid].append(pid)
+        return mid_to_pids_map
 
     def Element(self, eid, msg=''):
         try:
@@ -413,9 +351,6 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # PROPERTY CARDS
 
-    def get_property_ids(self):
-        return self.properties.keys()
-
     def Property(self, pid, msg=''):
         try:
             return self.properties[pid]
@@ -434,7 +369,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.properties_mass[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
-                           % (pid, msg, self.mass_property.keys() ))
+                           % (pid, msg, self.mass_property.keys()))
 
     def Phbdy(self, pid, msg=''):
         try:
