@@ -617,4 +617,3 @@ class OP2_F06_Common(object):
                 print(table)
                 raise
         return ''.join(msg)
-
