@@ -109,9 +109,10 @@ from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
+from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
 
-class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
+class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -167,6 +168,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         BDFMethods.__init__(self)
         WriteMesh.__init__(self)
         XrefMesh.__init__(self)
+        #BDF_Attributes.__init__(self)
 
         #: useful in debugging errors in input
         self.debug = debug

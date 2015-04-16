@@ -1,4 +1,5 @@
-def BDF_Attributes(object):
+class BDFAttributes(object):
+
     def __init__(self):
         pass
 
@@ -14,15 +15,15 @@ def BDF_Attributes(object):
     def node_ids(self):
         return self.nodes.keys()
 
-    @nnodes.setter
+    @node_ids.setter
     def node_ids(self, value):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
 
-    def get_nodes(self):
-        nodes = []
-        for (nid, node) in sorted(iteritems(self.nodes)):
-            nodes.append(node)
-        return nodes
+    #def get_nodes(self):
+        #nodes = []
+        #for nid, node in sorted(iteritems(self.nodes)):
+            #nodes.append(node)
+        #return nodes
 
     #--------------------
     # Elements CARDS
@@ -31,7 +32,7 @@ def BDF_Attributes(object):
     def nelements(self):
         return len(self.elements)
 
-    @nnodes.setter
+    @nelements.setter
     def nelements(self, value):
         raise ValueError("You cannot set nnode IDs like this...modify the node objects")
 
@@ -39,7 +40,7 @@ def BDF_Attributes(object):
     def element_ids(self):
         return self.elements.keys()
 
-    @nnodes.setter
+    @element_ids.setter
     def element_ids(self, value):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
 
@@ -50,7 +51,7 @@ def BDF_Attributes(object):
     def coord_ids(self):
         return self.coords.keys()
 
-    @nnodes.setter
+    @coord_ids.setter
     def coord_ids(self, value):
         raise ValueError("You cannot set coord IDs like this...modify the coord objects")
 
@@ -58,7 +59,7 @@ def BDF_Attributes(object):
     def ncoord_ids(self):
         return len(self.coords)
 
-    @nnodes.setter
+    @ncoord_ids.setter
     def ncoord_ids(self, value):
         raise ValueError("You cannot set ncoord IDs like this...modify the coord objects")
 
@@ -66,7 +67,7 @@ def BDF_Attributes(object):
     def ncaero_ids(self):
         return len(self.caeros)
 
-    @nnodes.setter
+    @ncaero_ids.setter
     def ncaero_ids(self, value):
         raise ValueError("You cannot set ncaero IDs like this...modify the caero objects")
 
