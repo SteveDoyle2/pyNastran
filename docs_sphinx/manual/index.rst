@@ -10,6 +10,6 @@ pyNastran Manual
    #developer_introduction
    #bdf_developer
 
-   bdf
-   op2
+   bdf_doc
+   op2_doc
 
