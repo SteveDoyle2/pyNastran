@@ -418,11 +418,11 @@ def composite_plate_stress():
 def main():
     # the order here doesn't matter
     introduction()
-    #read_write()
-    #displacement()
-    #eigenvector()
-    #solid_stress()
-    #isotropic_plate_stress()
+    read_write()
+    displacement()
+    eigenvector()
+    solid_stress()
+    isotropic_plate_stress()
     composite_plate_stress()
 
 
