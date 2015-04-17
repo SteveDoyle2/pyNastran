@@ -1,4 +1,4 @@
-Release 0.7
+Release 0.8
 ===========
  Tasks
  -----
@@ -6,10 +6,9 @@ Release 0.7
  - sphinx documention on all relevant functions
    - make sure OP2/BDF classes are shown in ReadTheDocs
  - fix SetInput/SetInputData
- - 
 
- Completed
- ---------
+Release 0.7
+===========
  - large/small field format & single/double precision writing
  - tests for op2 results request
  - cleanup outdated op2 table skipping
@@ -20,6 +19,8 @@ Release 0.7
  - RealBeamArrayStress/Strain in gui considers all nodes in gui
  - RealCompositePlateArrayStress/Strain considers all layers in gui
  - get the iSat model working again
+ - test_op2 should be simplified b/c geometry doesn't work and op2 writing doesn't work
+ - improved xref
 
  Remove
  ------
@@ -41,11 +42,6 @@ Release 0.7
 
  - functions
    -
-
-Release 0.8
-===========
- Tasks
- -----
 
 Future
 ===========

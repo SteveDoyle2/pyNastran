@@ -52,7 +52,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.7.0 released 2015/04/??-----------------------
+-----------------------v0.7.0 released 2015/04/17-----------------------
 Release notes:
    - much improved Python 3 support
    - added large field BDF writing
@@ -62,6 +62,8 @@ Release notes:
    - making bdf/f06/op2 APIs more consistent
 
 BDF:
+   - added MAT11, ACCEL1, CAERO3/PAERO3, DMI, TABLED4/TABDMP1,
+     BCTPARA, BCRPARA, BCTADD, BCTSET, BSURF, BSURFS
    - MATS1, MATTx, TABLED4, TABDMP1, CAERO3, PAERO3 supported
    - fixed major PBEAM bug
    - fixed bugs in PBUSHT, PDAMPT, PELST, TABRND1, PTUBE, EIGC
@@ -76,6 +78,8 @@ BDF:
      coordinate systems
    - fixed CONM2 offset bug for coordinate systems
    - added CAERO1/2 sub-element access methods for use in GUI
+   - additional xref options
+   - improved error handling
 
 OP2:
    - rewrite of the OP2 allows for increased robustness and speed
