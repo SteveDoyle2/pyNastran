@@ -1,7 +1,7 @@
 pyNastran Package
 =================
 
-This is the pyNastran.rst file for v0.7-dev.
+This is the pyNastran.rst file for v0.7.
 
 .. toctree::
 
