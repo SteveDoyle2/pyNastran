@@ -1,4 +1,5 @@
-from six import iteritems
+from __future__ import print_function
+from six import iteritems, PY2
 import os
 
 from numpy import ndarray, eye, array_equal, complex64, complex128, zeros
@@ -184,7 +185,7 @@ class TestOP4(unittest.TestCase):
         # now the inputs are valid, so this works
         matrices2 = op4.read_op4(op4_filename, precision='default')
 
-    def test_file_obj(self):
+    def test_file_obj_ascii(self):
         op4 = OP4()
         form1 = 1
         from numpy import ones
@@ -192,14 +193,25 @@ class TestOP4(unittest.TestCase):
         matrices = {
             'A1': (form1, A1),
         }
-        f = open(os.path.join(op4Path, 'file_ascii.op4'), 'wb')
+        if PY2:
+            f = open(os.path.join(op4Path, 'file_ascii.op4'), 'wb')
+        else:
+            f = open(os.path.join(op4Path, 'file_ascii.op4'), 'w')
         op4.write_op4(f, matrices, name_order='A1', precision='default',
                      is_binary=False)
         f.close()
 
+    def test_file_obj_binary(self):
+        op4 = OP4()
+        form1 = 1
+        from numpy import ones
+        A1 = ones((3,3), dtype='float64')
+        matrices = {
+            'A1': (form1, A1),
+        }
         f = open(os.path.join(op4Path, 'file_binary.op4'), 'wb')
         op4.write_op4(f, matrices, name_order='A1', precision='default',
-                     is_binary=False)
+                     is_binary=True)
         f.close()
 
     def test_square_matrices_1(self):
