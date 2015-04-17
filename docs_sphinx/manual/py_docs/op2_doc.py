@@ -1,12 +1,12 @@
 from __future__ import print_function
 import os
 from itertools import islice
-from bdf import head, tail
+from bdf_doc import head, tail
 
 
 def introduction():
     """
-    Introduction - Level 1
+    Introduction - Level 2
     """
     # This page runs through examples relating to the vectorized OP2.  The vectorized OP2 is preferred as it uses about 20% of the memory as the non-vectorized version of the OP2.  It's slower to parse as it has to do two passes, but calculations will be much faster.
 

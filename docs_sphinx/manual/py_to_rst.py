@@ -96,9 +96,11 @@ def main():
 
     print(fnames)
     for py_filename in fnames:
-        base = os.path.splitext(py_filename)[0]
+        root = os.path.splitext(py_filename)[0]
+        base = os.path.splitext(os.path.basename(py_filename))[0]
+
         rst_filename = base + '.rst'
-        html_filename = base + '.html'
+        html_filename = root + '.html'
         #print(py_filename)
         create_rst_from_python(py_filename, rst_filename)
         create_html_from_rst(rst_filename, html_filename)
@@ -226,6 +228,14 @@ def create_rst_from_python(py_filename, rst_filename, debug=False):
 
     print('-----------------------------------')
     rst = open(rst_filename, 'w')
+    fname = os.path.basename(rst_filename).split('.rst')[0][:-4] # remove the _doc
+    n = len(fname)
+    print(fname)
+    msg = '=' * n + '\n'
+    msg += '%s\n' % fname
+    msg += '=' * n + '\n\n'
+    rst.write(msg)
+
     for section in sections:
         #print(section)
         rst.write(str(section))

@@ -1,7 +1,11 @@
-============
+===
+bdf
+===
+
+------------
 Introduction
-============
-this is an introduction with no pass
+------------
+This is meant as a guide of how to use the pyNastran ``BDF`` clas
 
 ---------
 Example 1
