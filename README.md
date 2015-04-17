@@ -19,9 +19,13 @@ for more detailed information.
 
 There is still a bit of updating left to do on the Wiki.  The outdated wiki pages will be updated soon.
 
-## pyNastran v0.7 has been Released (4/16/2015)
+## pyNastran v0.7.1 has been Released (4/17/2015)
+
+This is a bug fix release.
 
 [Download pyNastran v0.7] (https://github.com/SteveDoyle2/pyNastran/releases)
+
+## pyNastran v0.7.0 has been Released (4/17/2015)
 
 Some of the improvements include:
  * OP2
