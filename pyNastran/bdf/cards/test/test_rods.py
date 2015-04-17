@@ -186,10 +186,10 @@ class TestRods(unittest.TestCase):
         self.assertEqual(ctube.Mid(), mid)
         self.assertEqual(ctube.Length(), L)
         self.assertEqual(ctube.Nsm(), nsm)
-        self.assertAlmostEquals(ctube.Mass(), mass, 5)
+        self.assertAlmostEqual(ctube.Mass(), mass, 5)
         self.assertEqual(ctube.E(), E)
         self.assertEqual(ctube.G(), G)
-        self.assertAlmostEquals(ctube.Area(), A, 5)
+        self.assertAlmostEqual(ctube.Area(), A, 5)
         ctube.J()
         self.assertEqual(ctube.Rho(), rho)
 
@@ -199,7 +199,7 @@ class TestRods(unittest.TestCase):
         self.assertEqual(ptube.Nsm(), nsm)
         self.assertEqual(ptube.E(), E)
         self.assertEqual(ptube.G(), G)
-        self.assertAlmostEquals(ptube.Area(), A, 5)
+        self.assertAlmostEqual(ptube.Area(), A, 5)
         ptube.J()
         self.assertEqual(ptube.Rho(), rho)
 
