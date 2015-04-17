@@ -21,7 +21,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from six.moves import zip, range
 
-from numpy import array, cross, allclose, unique
+from numpy import array, cross, allclose, unique, int32
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
@@ -1594,7 +1594,7 @@ class PLOAD4(Load):
             self.eids = model.Elements(self.eids, msg=msg)
 
     def Eid(self, eid):
-        if isinstance(eid, int):
+        if isinstance(eid, int) or isinstance(eid, int32):
             return eid
         return eid.eid
 
