@@ -11,13 +11,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 #from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_string_or_blank, string_or_blank,
     integer_double_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.loads.loads import TabularLoad, LoadCombination
 
@@ -47,7 +47,7 @@ class DLOAD(LoadCombination):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 16:
             return self.comment() + print_card_16(card)
@@ -134,7 +134,7 @@ class RLOAD1(TabularLoad):
                        self.Tc(), self.Td(), Type]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -225,7 +225,7 @@ class RLOAD2(TabularLoad):
                        self.Tb(), self.Tp(), Type]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -321,7 +321,7 @@ class TLOAD1(TabularLoad):
                        self.Tid(), us0, vs0]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -426,7 +426,7 @@ class TLOAD2(TabularLoad):
                        self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

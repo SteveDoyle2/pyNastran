@@ -16,14 +16,14 @@ from itertools import count
 from numpy import pi, array
 
 from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,
     double_string_or_blank, integer_double_string_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class PBEAM(IntegratedLineProperty):
@@ -178,13 +178,13 @@ class PBEAM(IntegratedLineProperty):
 
                 #propFields = []
                 #n = 1
-                so  = string(card,  nstart, 'SO%i' % nrepeated)
+                so = string(card,  nstart, 'SO%i' % nrepeated)
                 xxb = double(card,  nstart + 1, 'x/xb%i' % nrepeated)
-                A   = double_or_blank(card, nstart + 2, 'Area%i' % nrepeated, 0.0)
-                i1  = double_or_blank(card, nstart + 3, 'I1 %i' % nrepeated, 0.0)
-                i2  = double_or_blank(card, nstart + 4, 'I2 %i' % nrepeated, 0.0)
+                A = double_or_blank(card, nstart + 2, 'Area%i' % nrepeated, 0.0)
+                i1 = double_or_blank(card, nstart + 3, 'I1 %i' % nrepeated, 0.0)
+                i2 = double_or_blank(card, nstart + 4, 'I2 %i' % nrepeated, 0.0)
                 i12 = double_or_blank(card, nstart + 5, 'I12 %i' % nrepeated, 0.0)
-                j   = double_or_blank(card, nstart + 6, 'J%i' % nrepeated, 0.0)
+                j = double_or_blank(card, nstart + 6, 'J%i' % nrepeated, 0.0)
                 nsm = double_or_blank(card, nstart + 7, 'nsm%i' % nrepeated, 0.0)
 
                 self.so.append(so)
@@ -392,8 +392,8 @@ class PBEAM(IntegratedLineProperty):
         i = 0
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
              f2) in zip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
-                         self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
-                         self.e1, self.e2, self.f1, self.f2):
+                        self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
+                        self.e1, self.e2, self.f1, self.f2):
 
             i1 = set_blank_if_default(i1, 0.0)
             i2 = set_blank_if_default(i2, 0.0)
@@ -455,7 +455,7 @@ class PBEAM(IntegratedLineProperty):
         list_fields += footer
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -675,7 +675,7 @@ class PBEAML(IntegratedLineProperty):
         #print("xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,
         #                                     self.dim,self.nsm))
         for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so,
-                                           self.dim, self.nsm):
+                                          self.dim, self.nsm):
             if i == 0:
                 list_fields += dim + [nsm]
             else:
@@ -689,7 +689,7 @@ class PBEAML(IntegratedLineProperty):
         #list_fields[3] = group
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_card(self, size, is_double):
         """.. todo:: having bug with PBEAML"""
         card = self.repr_fields()
         if size == 8:
@@ -793,7 +793,7 @@ class PBCOMP(LineProperty):
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

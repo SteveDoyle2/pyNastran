@@ -56,10 +56,3 @@ unit Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pyNastran.bdf.test.unit.include_dir
-

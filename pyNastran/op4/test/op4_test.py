@@ -1,4 +1,5 @@
-from six import iteritems
+from __future__ import print_function
+from six import iteritems, PY2
 import os
 
 from numpy import ndarray, eye, array_equal, complex64, complex128, zeros
@@ -98,7 +99,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
             (form, A) = matrices['EYE10']
-            self.assertEquals(form, 6)  # form=6 -> Symmetric
+            self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
                 self.assertTrue(array_equal(A.row, range(10)))
                 self.assertTrue(array_equal(A.col, range(10)))
@@ -115,7 +116,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
             (form, A) = matrices['EYE5CD']
-            self.assertEquals(form, 6)  # form=6 -> Symmetric
+            self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
                 self.assertTrue(array_equal(A.row, range(5)))
                 self.assertTrue(array_equal(A.col, range(5)))
@@ -133,7 +134,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
             (form, A) = matrices['NULL']
-            self.assertEquals(form, 6)  # form=6 -> Symmetric
+            self.assertEqual(form, 6)  # form=6 -> Symmetric
             #print A.shape
 
             # kind of strange that the NULL matrix is dense...
@@ -184,7 +185,7 @@ class TestOP4(unittest.TestCase):
         # now the inputs are valid, so this works
         matrices2 = op4.read_op4(op4_filename, precision='default')
 
-    def test_file_obj(self):
+    def test_file_obj_ascii(self):
         op4 = OP4()
         form1 = 1
         from numpy import ones
@@ -192,14 +193,25 @@ class TestOP4(unittest.TestCase):
         matrices = {
             'A1': (form1, A1),
         }
-        f = open(os.path.join(op4Path, 'file_ascii.op4'), 'wb')
+        if PY2:
+            f = open(os.path.join(op4Path, 'file_ascii.op4'), 'wb')
+        else:
+            f = open(os.path.join(op4Path, 'file_ascii.op4'), 'w')
         op4.write_op4(f, matrices, name_order='A1', precision='default',
                      is_binary=False)
         f.close()
 
+    def test_file_obj_binary(self):
+        op4 = OP4()
+        form1 = 1
+        from numpy import ones
+        A1 = ones((3,3), dtype='float64')
+        matrices = {
+            'A1': (form1, A1),
+        }
         f = open(os.path.join(op4Path, 'file_binary.op4'), 'wb')
         op4.write_op4(f, matrices, name_order='A1', precision='default',
-                     is_binary=False)
+                     is_binary=True)
         f.close()
 
     def test_square_matrices_1(self):
@@ -225,15 +237,15 @@ class TestOP4(unittest.TestCase):
             matrices2 = op4.read_op4(op4_filename, precision='default')
             (form1b, A1b) = matrices2['A1']
             (form2b, A2b) = matrices2['A2']
-            self.assertEquals(form1, form1b)
-            self.assertEquals(form2, form2b)
+            self.assertEqual(form1, form1b)
+            self.assertEqual(form2, form2b)
 
             (form1b, A1b) = matrices2['A1']
             (form2b, A2b) = matrices2['A2']
             (form3b, A3b) = matrices2['A3']
-            self.assertEquals(form1, form1b)
-            self.assertEquals(form2, form2b)
-            self.assertEquals(form3, form3b)
+            self.assertEqual(form1, form1b)
+            self.assertEqual(form2, form2b)
+            self.assertEqual(form3, form3b)
 
             self.assertTrue(array_equal(A1, A1b))
             self.assertTrue(array_equal(A2, A2b))

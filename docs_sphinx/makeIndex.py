@@ -1,15 +1,17 @@
+from __future__ import print_function
+from six import iteritems
 import pyNastran
 import os
 
 pkg_path = pyNastran.__path__[0]
 
 ignore_dirs = ['src', 'dmap', 'solver', '__pycache__', 'converters',
-    'op4_old', 'cart3d', 'panair', 'calculix', 'bars', 'case_control',
-    'gui', 'gui_qt', 'pch', 'mesh', 'LaWGS', 'old', 'solver', 'test']
+               'op4_old', 'cart3d', 'panair', 'calculix', 'bars', 'case_control',
+               'gui', 'gui_qt', 'pch', 'mesh', 'LaWGS', 'old', 'solver', 'test']
 mods_skip = ['spike', 'shell_backup']
 
-def get_folders_files(dirname, skip_file_sufix = ('.pyc', '.pyx', '.bdf'),
-                            skip_directories = ('.svn', '.idea', '.settings')):
+def get_folders_files(dirname, skip_file_sufix=('.pyc', '.pyx', '.bdf'),
+                      skip_directories=('.svn', '.idea', '.settings')):
     """
     Return list of directories and files in a given tree path. By default discards:
 
@@ -68,7 +70,7 @@ def get_doc(filenames):
             dirs[dirname] = []
         dirs[dirname].append(filename)
 
-    for dirname, files in sorted(dirs.iteritems()):
+    for dirname, files in sorted(iteritems(dirs)):
         print("***************************************")
         basepath = os.path.basename(dirname)
         if basepath in ignore_dirs:
@@ -145,11 +147,11 @@ def get_doc(filenames):
             msg += '\n'
             msg += '.. toctree::\n'
             msg += '\n'
-            for dir in dirs:
-                dir2 = dir.strip('/.')
-                dir2 = dir2.replace('\\', '.')
-                print("dir2 =", dir2)
-                msg += '    %s\n' % dir2
+            for diri in dirs:
+                diri2 = diri.strip('/.')
+                diri2 = diri2.replace('\\', '.')
+                print("diri2 =", diri2)
+                msg += '    %s\n' % diri2
             msg += '\n'
             f.write(msg)
         f.close()
@@ -159,11 +161,11 @@ def get_sub_dirs(dirname):
     dirs = []
     print("dirname_check =", dirname)
 
-    for dir in maybe_dirs:
-        #print "dir = ", dir
-        dir2 = os.path.join(dirname, dir)
+    for idir in maybe_dirs:
+        #print "idir = ", idir
+        dir2 = os.path.join(dirname, idir)
         if os.path.isdir(dir2):
-            if dir not in ignore_dirs:
+            if idir not in ignore_dirs:
                 print("adding %s" % dir2)
                 dirs.append(dir2)
 
@@ -175,7 +177,7 @@ def get_sub_dirs(dirname):
 def run():
     folders, files = get_folders_files('../pyNastran')
     #c = get_classes(files)
-    c2 = get_doc(files)
+    get_doc(files)
 
 
 if __name__ == '__main__':  # pragma: no cover

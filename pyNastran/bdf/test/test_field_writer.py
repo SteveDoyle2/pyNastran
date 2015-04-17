@@ -4,17 +4,17 @@ from six.moves import zip, range
 import random
 import unittest
 
-from pyNastran.bdf.fieldWriter import (print_field, print_float_8,
+from pyNastran.bdf.field_writer_8 import (print_field, print_float_8,
                                        set_default_if_blank,
                                        set_blank_if_default, is_same, print_card_8)
-from pyNastran.bdf.fieldWriter16 import print_field_16, print_card_16, print_float_16, print_scientific_16
+from pyNastran.bdf.field_writer_16 import print_field_16, print_card_16, print_float_16, print_scientific_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 
 
-class TestFieldWriter(unittest.TestCase):
+class Testfield_writer_8(unittest.TestCase):
 
     def test_field_vals_8(self):
         self.assertEqual(print_field(1e20),     '   1.+20',

@@ -1,7 +1,7 @@
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PELAS
-#from pyNastran.bdf.fieldWriter import print_card
+#from pyNastran.bdf.field_writer_8 import print_card
 
 bdf = BDF(debug=False)
 class TestSprings(unittest.TestCase):
@@ -12,10 +12,10 @@ class TestSprings(unittest.TestCase):
 
         size = 8
         card = PELAS(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
-        self.assertEquals(card.Pid(), 201)
-        self.assertEquals(card.K(), 1e5)
+        self.assertEqual(card.Pid(), 201)
+        self.assertEqual(card.K(), 1e5)
 
 
 if __name__ == '__main__':  # pragma: no cover

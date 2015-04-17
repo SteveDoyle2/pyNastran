@@ -20,8 +20,8 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.cards.bdf_tables import Table
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class MaterialDependence(BaseCard):
@@ -165,7 +165,7 @@ class MATS1(MaterialDependence):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -277,7 +277,7 @@ class MATT1(MaterialDependence):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -401,7 +401,7 @@ class MATT2(MaterialDependence):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -429,10 +429,10 @@ class MATT4(MaterialDependence):
 
         if card:
             self.mid = integer(card, 1, 'mid')
-            self._k_table   = integer_or_blank(card, 2, 'T(K)')
-            self._cp_table   = integer_or_blank(card, 3, 'T(CP)')
-            self._H_table   = integer_or_blank(card, 5, 'T(H)')
-            self._mu_table   = integer_or_blank(card, 6, 'T(mu)')
+            self._k_table = integer_or_blank(card, 2, 'T(K)')
+            self._cp_table = integer_or_blank(card, 3, 'T(CP)')
+            self._H_table = integer_or_blank(card, 5, 'T(H)')
+            self._mu_table = integer_or_blank(card, 6, 'T(mu)')
             self._Hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
 
             assert len(card) <= 8, 'len(MATT4 card) = %i' % len(card)
@@ -478,7 +478,7 @@ class MATT4(MaterialDependence):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -494,8 +494,8 @@ class MATT5(MaterialDependence):
     +=======+=========+=========+========+========+========+========+========+=======+
     | MATT5 |   MID   | T(Kxx)  | T(Kxy) | T(Kxz) | T(Kyy) | T(Kyz) | T(Kzz) | T(CP) |
     +-------+---------+---------+--------+--------+--------+--------+--------+-------+
-    |       |         | T(HGEN) |
-    +-------+---------+---------+
+    |       |         | T(HGEN) |        |        |        |        |        |       |
+    +-------+---------+---------+--------+--------+--------+--------+--------+-------+
     """
     type = 'MATT5'
 
@@ -570,7 +570,7 @@ class MATT5(MaterialDependence):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -591,8 +591,8 @@ class MATT8(MaterialDependence):
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
     |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Yc)  | T(Yt)  | T(Yc)  | T(S)   |
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-    |       |  T(GE) | T(F12) |
-    +-------+--------+--------+
+    |       |  T(GE) | T(F12) |       |         |        |        |        |        |
+    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
     """
     type = 'MATT8'
 

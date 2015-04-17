@@ -5,15 +5,15 @@ from numpy import array
 
 from pyNastran.bdf.deprecated import GridDeprecated, PointDeprecated, SPOINTsDeprecated
 
-from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
-from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
+from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru_packs
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
-from pyNastran.bdf.fieldWriter import print_card_8, print_float_8, print_int_card
-from pyNastran.bdf.fieldWriter16 import print_float_16, print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
+from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 class Ring(BaseCard):
@@ -100,9 +100,9 @@ class RINGAX(Ring):
                        None, self.ps]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the RINGAX object pointer
@@ -183,9 +183,9 @@ class SPOINT(Node):
                     lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:   the SPOINT object pointer
         :param size:   unused
@@ -339,9 +339,9 @@ class SPOINTs(Node):
                 lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:   the SPOINT object pointer
         :param size:   unused
@@ -527,9 +527,9 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_bdf(self, f, size, is_double):
+    def write_card(self, f, size, is_double):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the SPOINT object pointer
@@ -654,9 +654,9 @@ class GRIDB(Node):
                        idf]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the GRIDB object pointer
@@ -991,9 +991,9 @@ class GRID(Node, GridDeprecated):
                                                                  seid]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the GRID object pointer
@@ -1011,33 +1011,36 @@ class GRID(Node, GridDeprecated):
             cp = set_string8_blank_if_default(self.Cp(), 0)
             cd = set_string8_blank_if_default(self.Cd(), 0)
             seid = set_string8_blank_if_default(self.SEid(), 0)
-            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % ('GRID', self.nid, cp,
-                    print_float_8(xyz[0]),
-                    print_float_8(xyz[1]),
-                    print_float_8(xyz[2]),
-                    cd, self.ps, seid)
+            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % (
+                'GRID', self.nid, cp,
+                print_float_8(xyz[0]),
+                print_float_8(xyz[1]),
+                print_float_8(xyz[2]),
+                cd, self.ps, seid)
         else:
             cp = set_string16_blank_if_default(self.Cp(), 0)
             cd = set_string16_blank_if_default(self.Cd(), 0)
             seid = set_string16_blank_if_default(self.SEid(), 0)
             if double:
                 msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % ('GRID*', self.nid,
-                        cp,
-                        print_scientific_double(xyz[0]),
-                        print_scientific_double(xyz[1]),
-                        '*',
-                        print_scientific_double(xyz[2]),
-                        cd, self.ps, seid))
+                       '%-8s%16s%16s%16s%16s\n' % (
+                           'GRID*', self.nid,
+                           cp,
+                           print_scientific_double(xyz[0]),
+                           print_scientific_double(xyz[1]),
+                           '*',
+                           print_scientific_double(xyz[2]),
+                           cd, self.ps, seid))
             else:
                 msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % ('GRID*', self.nid,
-                        cp,
-                        print_float_16(xyz[0]),
-                        print_float_16(xyz[1]),
-                        '*',
-                        print_float_16(xyz[2]),
-                        cd, self.ps, seid))
+                       '%-8s%16s%16s%16s%16s\n' % (
+                           'GRID*', self.nid,
+                           cp,
+                           print_float_16(xyz[0]),
+                           print_float_16(xyz[1]),
+                           '*',
+                           print_float_16(xyz[2]),
+                           cd, self.ps, seid))
         return self.comment() + msg.rstrip() + '\n'
 
 
@@ -1254,9 +1257,9 @@ class POINT(Node, PointDeprecated):
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
-        The writer method used by BDF.write_bdf
+        The writer method used by BDF.write_card
 
         :param self:
           the GRID object pointer

@@ -17,13 +17,13 @@ from six.moves import zip, range
 import sys
 from itertools import count
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, fields, string, interpret_value)
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import build_table_lines
 
 
@@ -37,10 +37,11 @@ class RBAR(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          RBAR EID GA GB CNA    CNB CMA CMB ALPHA
-          RBAR 5   1   2 123456             6.5-6
+        +------+-----+----+----+--------+-----+-----+-----+-------+
+        | RBAR | EID | GA | GB | CNA    | CNB | CMA | CMB | ALPHA |
+        +------+-----+----+----+--------+-----+-----+-----+-------+
+        | RBAR | 5   | 1  |  2 | 123456 |     |     |     | 6.5-6 |
+        +------+-----+----+----+--------+-----+-----+-----+-------+
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -104,7 +105,7 @@ class RBAR(RigidElement):
                        self.cma, self.cmb, alpha]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -116,10 +117,11 @@ class RBAR1(RigidElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          RBAR1 EID GA GB CB  ALPHA
-          RBAR1 5    1  2 123 6.5-6
+        +-------+-----+----+----+-----+-------+
+        | RBAR1 | EID | GA | GB | CB  | ALPHA |
+        +-------+-----+----+----+-----+-------+
+        | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
+        +-------+-----+----+----+-----+-------+
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -147,7 +149,7 @@ class RBAR1(RigidElement):
         list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -260,7 +262,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -296,8 +298,8 @@ class RBE2(RigidElement):
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |  RBE2 | EID | GN  | CM  | GM1  | GM2   | GM3 | GM4 | GM5 |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |       | GM6 | GM7 | GM8 | etc. | ALPHA |
-        +-------+-----+-----+-----+------+-------+
+        |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
+        +-------+-----+-----+-----+------+-------+-----+-----+-----+
         """
         RigidElement.__init__(self, card, data)
         if comment:
@@ -353,7 +355,7 @@ class RBE2(RigidElement):
         """
         .. math:: -A_i u_i + A_j u_j = 0
 
-        where :math:`u_i` are the base DOFs (max=6)::
+        where :math:`u_i` are the base DOFs (max=6)
 
          +------+------+----+----+-----+----+----+----+
          | MPC  | sid  | g1 | c1 | a1  | g2 | c2 | a2 |
@@ -430,7 +432,7 @@ class RBE2(RigidElement):
         list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -595,6 +597,6 @@ class RBE3(RigidElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

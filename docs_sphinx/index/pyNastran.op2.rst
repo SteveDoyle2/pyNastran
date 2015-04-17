@@ -16,7 +16,7 @@ This is the pyNastran.op2.rst file.
     :show-inheritance:
 
 :mod:`op2_scalar` Module
------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.op2.op2_scalar
 
@@ -71,7 +71,7 @@ This is the pyNastran.op2.rst file.
     :show-inheritance:
 
 :mod:`op2_f06_common` Module
-------------------------
+----------------------------
 
 .. inheritance-diagram:: pyNastran.op2.op2_f06_common
 
@@ -82,7 +82,7 @@ This is the pyNastran.op2.rst file.
     :show-inheritance:
 
 :mod:`vector_utils` Module
-------------------------
+--------------------------
 
 .. inheritance-diagram:: pyNastran.op2.vector_utils
 
@@ -92,8 +92,6 @@ This is the pyNastran.op2.rst file.
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
 .. toctree::
 

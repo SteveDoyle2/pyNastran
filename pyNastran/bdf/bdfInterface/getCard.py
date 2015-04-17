@@ -13,136 +13,8 @@ class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         pass
 
-    #--------------------
-    # NODE CARDS
-
-    def get_nnodes(self):
-        return len(self.nodes)
-
-    def get_node_ids(self):
-        return self.nodes.keys()
-
-    def get_nodes(self):
-        nodes = []
-        for (nid, node) in sorted(iteritems(self.nodes)):
-            nodes.append(node)
-        return nodes
-
-    def get_x_associated_with_y(self, xdict, xkeys, ykeys, stop_on_failure=True):
-        """
-        Get the range of sub-properties of a card.
-
-        @note
-           Assumes you're taking a single path through the cards.
-           You could probably explicitly code these queries faster, but
-           this method has a lot of flexibility with very little user code.
-
-        :param self:
-            the BDF object
-        :param xdict:
-            the BDF attribute that should be querried
-            (e.g. self.elements)
-        :param xkeys:
-            the list of object keys that should be stepped through
-            associated with xdict
-            (e.g. eids=[1, 2, 3])
-        :param ykeys:
-            the list of response keys that should be stepped through
-            (e.g. ['pid', 'mid', 'mid'])
-        :param stop_on_failure:
-            Should an error be raised if there is an invalid key?
-            For example, get all material used by elements, but don't crash
-            on CONRODs.
-        :returns reslts:
-            The set of all values used
-
-        # Get nodes associated with eid=[1, 2, 3]
-        nodes = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes'])
-
-        # Get node IDs associated with eid=[1, 2, 3]
-        nodesIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes', 'nid'])
-
-        # Get coord IDs associated with eid=[1, 2, 3]
-        coordIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes', 'cp', 'cid'])
-
-        # Get properties associated with eid=[1, 2, 3]
-        properties = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid'])
-
-        # Get materials associated with eid=[1, 2, 3]
-        materials = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid', 'mid'])
-
-        # Get material IDs associated with eid=[1, 2, 3]
-        materialIDs = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['pid', 'mid', 'mid'])
-
-        # Get the values for Young's Modulus
-        E = self.get_x_associated_with_y(
-            self.elements, None, ['pid', 'mid', 'e'])
-        """
-        assert isinstance(xdict, dict), type(xdict)
-        assert self._xref == True, self._xref
-
-        if isinstance(xkeys, list) or isinstance(xkeys, tuple):
-            pass
-        elif isinstance(xkeys, ndarray):
-            assert len(xkeys.shape) == 1, xkeys.shape
-            assert isinstance(xkeys[0], int), type(xkeys[0])
-        elif xkeys is None:
-            xkeys = xdict.iterkeys()
-        else:
-            raise RuntimeError('invalid type; type(xkeys)=%r' % type(xkeys))
-
-        assert isinstance(ykeys[0], string_types), ykeys
-
-        out_set = set([])
-        for xkey in xkeys:
-            xi = xdict[xkey]
-            _getattr(out_set, xi, ykeys, len(ykeys)-1, stop_on_failure)
-        return out_set
-
-    def __test_method(self):
-        # getElementsAssociatedWithMaterialIDs(self):
-        #getElementIDsAssociatedWithPropertyIDs
-        #getPropertyIDsAssociatedWithMaterialIDs
-        #get_x_associated_with_y(self, mids, 'pid', yname='mid')
-
-        #CTETRA   1       1       8       13      67      33
-        #CTETRA   2       1       8       7       62      59
-        #CTETRA   3       1       8       45      58      66
-        #nids 7 8 13 33 45 58 59 62 66 67
-
-        cps = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3], ['nodes', 'cp', 'cast'], stop_on_failure=False)
-        #print('*cps', cps)
-
-        nids2 = self.get_x_associated_with_y(self.elements, [1, 2, 3], ['nodes', 'nid'])
-        nids2 = list(nids2)
-        nids2.sort()
-        #print('*nids2', nids2)
-
-        mids = self.get_x_associated_with_y(
-            self.elements, [1, 2, 3, 4, 5], ['pid', 'mid'])
-        #print('*mids', mids)
-
-        mids2 = self.get_x_associated_with_y(
-            self.elements, None, ['pid', 'mid', 'mid'])
-
-        E = self.get_x_associated_with_y(
-            self.elements, None, ['pid', 'mid', 'e'])
-        #print('*E', E)
-
-        #get_nodes_associated_with_elements
-        #nids = get_x_associated_with_y(self, self.elements, 'nodes', 'nid')
-        #pids = get_x_associated_with_y(self, self.elements, 'pid', 'pid')
-        #mids = get_x_associated_with_y(self, self.properties, 'mid', 'mid')
-
-    def get_node_ids_with_element(self, eid):
-        return self.getNodeIDsWithElements([eid])
+    def get_node_ids_with_element(self, eid, msg=''):
+        return self.get_node_ids_with_elements([eid], msg=msg)
 
     def get_node_ids_with_elements(self, eids, msg=''):
         """
@@ -151,12 +23,12 @@ class GetMethods(GetMethodsDeprecated):
         :param self: the BDF object
         :param eids: list of element ID
         :param msg:  a additional message to print out if an element is not found
-
         :returns node_ids: set of node IDs
 
+        For example
 
-        Example
-        -------
+        .. code-block:: python
+
           >>> eids = [1, 2, 3]  # list of elements with pid=1
           >>> msg = ' which are required for pid=1'
           >>> node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
@@ -192,45 +64,61 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # ELEMENT CARDS
 
-    def get_nelements(self):
-        return len(self.elements)
-
-    def get_element_ids(self):
-        return self.elements.keys()
-
-    def get_element_ids_with_pids(self, pids, mode='list'):
+    def get_element_ids_list_with_pids(self, pids):
         """
         Gets all the element IDs with a specific property ID.
 
         :param self: the BDF object
         :param pids: list of property ID
-        :param mode:  'list' - returns the data as one list (default)
-                      'dict' - returns the data as a dictionary of lists based on the property ID
+        :returns element_ids: as a list
 
-        :returns elementIDs: as a list or dictionary of lists by property based on the mode
+        For example, we want to get all the element ids with ``pids=[1, 2, 3]``
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          pids = [1, 2, 3]
+          eids_list = model.get_element_ids_with_pids(pids, mode='list')
         """
-        if mode not in ['list', 'dict']:
-            msg = "mode=%r is not supported.  Use 'list' or 'dict'\n" % mode
-            raise ValueError(msg)
         assert isinstance(pids, list), pids
-        if mode == 'list':
-            eids2 = []
-            for eid, element in sorted(iteritems(self.elements)):
+        eids2 = []
+        for eid, element in sorted(iteritems(self.elements)):
+            pid = element.Pid()
+            if pid in pids:
+                eids2.append(eid)
+        return eids2
+
+    def get_element_ids_dict_with_pids(self, pids):
+        """
+        Gets all the element IDs with a specific property ID.
+
+        :param self: the BDF object
+        :param pids: list of property ID
+        :returns element_ids: as a dictionary of lists by property
+
+        For example, we want all the elements with ``pids=[4, 5, 6]``,
+        but we want them in separate groups
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          pids = [4, 5, 6]
+          eids_dict = model.get_element_ids_with_pids(pids, mode='dict')
+        """
+        assert isinstance(pids, list), pids
+        eids2 = {}
+        for pid in pids:
+            eids2[pid] = []
+        for eid, element in iteritems(self.elements):
+            try:
                 pid = element.Pid()
                 if pid in pids:
-                    eids2.append(eid)
-        else:
-            eids2 = {}
-            for pid in pids:
-                eids2[pid] = []
-            for eid, element in iteritems(self.elements):
-                try:
-                    pid = element.Pid()
-                    if pid in pids:
-                        eids2[pid].append(eid)
-                except AttributeError:
-                    #eids2[0].append(eid)
-                    pass
+                    eids2[pid].append(eid)
+            except AttributeError:
+                #eids2[0].append(eid)
+                pass
         return eids2
 
     def get_node_id_to_element_ids_map(self):
@@ -238,7 +126,7 @@ class GetMethods(GetMethodsDeprecated):
         Returns a dictionary that maps a node ID to a list of elemnents
 
         .. todo:: support 0d or 1d elements
-        .  todo:: support elements with missing nodes
+        .. todo:: support elements with missing nodes
                   (e.g. CQUAD8 with missing nodes)
         """
         nidToElementsMap = {}
@@ -264,11 +152,11 @@ class GetMethods(GetMethodsDeprecated):
         Returns a dictionary that maps a property ID to a list of elemnents
         """
         pidToEidsMap = {}
-        pids = self.propertyIDs()
+        pids = self.property_ids
         for pid in pids:
             pidToEidsMap[pid] = []
 
-        for eid in self.elementIDs():
+        for eid in self.element_ids:
             element = self.Element(eid)
 
             if hasattr(element, 'pid'):
@@ -282,26 +170,36 @@ class GetMethods(GetMethodsDeprecated):
         """
         Returns a dictionary that maps a material ID to a list of properties
 
+        :returns mid_to_pids_map: the mapping
+
+        .. code-block:: python
+
+          >>> mid_to_pid_map = get_material_id_to_property_ids_map()
+          >>> mid = 1
+          >>> pids = get_material_id_to_property_ids_map[mid]
+          >>> pids
+          [1, 2, 3]
+
         .. note:: all properties require an mid to be counted (except for
                   PCOMP, which has multiple mids)
         """
-        midToPidsMap = {}
+        mid_to_pids_map = {}
         for mid in self.materialIDs():
-            midToPidsMap[mid] = []
+            mid_to_pids_map[mid] = []
 
-        for pid in self.propertyIDs():
+        for pid in self.property_ids:
             prop = self.Property(pid)
             if prop.type == 'PCOMP':
                 mids = prop.Mids()
 
                 for mid in mids:
-                    if pid not in midToPidsMap[mid]:
-                        midToPidsMap[mid].append(pid)
+                    if pid not in mid_to_pids_map[mid]:
+                        mid_to_pids_map[mid].append(pid)
             else:  # PCOMP
                 if hasattr(prop, 'mid') and prop.Mid() in mids:
-                    if pid not in midToPidsMap[mid]:
-                        midToPidsMap[mid].append(pid)
-        return midToPidsMap
+                    if pid not in mid_to_pids_map[mid]:
+                        mid_to_pids_map[mid].append(pid)
+        return mid_to_pids_map
 
     def Element(self, eid, msg=''):
         try:
@@ -333,15 +231,12 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # PROPERTY CARDS
 
-    def get_property_ids(self):
-        return self.properties.keys()
-
     def Property(self, pid, msg=''):
         try:
             return self.properties[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
-                           % (pid, msg, self.propertyIDs()))
+                           % (pid, msg, self.property_ids))
 
     def Properties(self, pids, msg=''):
         properties = []
@@ -354,7 +249,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.properties_mass[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
-                           % (pid, msg, self.mass_property.keys() ))
+                           % (pid, msg, self.mass_property.keys()))
 
     def Phbdy(self, pid, msg=''):
         try:
@@ -459,15 +354,10 @@ class GetMethods(GetMethodsDeprecated):
             return self.coords[cid]
         except KeyError:
             raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
-                           % (cid, msg, self.coordIDs()))
+                           % (cid, msg, self.coord_ids))
 
-    def get_coord_ids(self):
-        return sorted(self.coords.keys())
     #--------------------
     # AERO CARDS
-
-    def get_ncaeros(self):
-        return len(self.caeros)
 
     def AEList(self, aelist, msg=''):
         try:
@@ -509,7 +399,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.caeros[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
-                           % (eid, msg, self.caeros.keys()))
+                           % (eid, msg, self.caero_ids))
 
     def PAero(self, pid, msg=''):
         try:
@@ -656,6 +546,121 @@ class GetMethods(GetMethodsDeprecated):
         except KeyError:
             raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
                            % (dname, msg, self.dmig.keys()))
+
+    def get_x_associated_with_y(self, xdict, xkeys, ykeys, stop_on_failure=True):
+        """
+        Get the range of sub-properties of a card.
+
+        .. note::
+           Assumes you're taking a single path through the cards.
+           You could probably explicitly code these queries faster, but
+           this method has a lot of flexibility with very little user code.
+
+        :param self:
+            the BDF object
+        :param xdict:
+            the BDF attribute that should be querried
+            (e.g. self.elements)
+        :param xkeys:
+            the list of object keys that should be stepped through
+            associated with xdict
+            (e.g. eids=[1, 2, 3])
+        :param ykeys:
+            the list of response keys that should be stepped through
+            (e.g. ['pid', 'mid', 'mid'])
+        :param stop_on_failure:
+            Should an error be raised if there is an invalid key?
+            For example, get all material used by elements, but don't crash
+            on CONRODs.
+        :returns results:
+            The set of all values used
+
+        .. code-block:: python
+
+          # Get nodes associated with eid=[1, 2, 3]
+          nodes = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes'])
+
+          # Get node IDs associated with eid=[1, 2, 3]
+          nodesIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes', 'nid'])
+
+          # Get coord IDs associated with eid=[1, 2, 3]
+          coordIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['nodes', 'cp', 'cid'])
+
+          # Get properties associated with eid=[1, 2, 3]
+          properties = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid'])
+
+          # Get materials associated with eid=[1, 2, 3]
+          materials = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid', 'mid'])
+
+          # Get material IDs associated with eid=[1, 2, 3]
+          materialIDs = self.get_x_associated_with_y(
+              self.elements, [1, 2, 3], ['pid', 'mid', 'mid'])
+
+          # Get the values for Young's Modulus
+          E = self.get_x_associated_with_y(
+              self.elements, None, ['pid', 'mid', 'e'])
+        """
+        assert isinstance(xdict, dict), type(xdict)
+        assert self._xref == True, self._xref
+
+        if isinstance(xkeys, list) or isinstance(xkeys, tuple):
+            pass
+        elif isinstance(xkeys, ndarray):
+            assert len(xkeys.shape) == 1, xkeys.shape
+            assert isinstance(xkeys[0], int), type(xkeys[0])
+        elif xkeys is None:
+            xkeys = xdict.iterkeys()
+        else:
+            raise RuntimeError('invalid type; type(xkeys)=%r' % type(xkeys))
+
+        assert isinstance(ykeys[0], string_types), ykeys
+
+        out_set = set([])
+        for xkey in xkeys:
+            xi = xdict[xkey]
+            _getattr(out_set, xi, ykeys, len(ykeys)-1, stop_on_failure)
+        return out_set
+
+    def __test_method(self):
+        # getElementsAssociatedWithMaterialIDs(self):
+        #getElementIDsAssociatedWithPropertyIDs
+        #getPropertyIDsAssociatedWithMaterialIDs
+        #get_x_associated_with_y(self, mids, 'pid', yname='mid')
+
+        #CTETRA   1       1       8       13      67      33
+        #CTETRA   2       1       8       7       62      59
+        #CTETRA   3       1       8       45      58      66
+        #nids 7 8 13 33 45 58 59 62 66 67
+
+        cps = self.get_x_associated_with_y(
+            self.elements, [1, 2, 3], ['nodes', 'cp', 'cast'], stop_on_failure=False)
+        #print('*cps', cps)
+
+        nids2 = self.get_x_associated_with_y(self.elements, [1, 2, 3], ['nodes', 'nid'])
+        nids2 = list(nids2)
+        nids2.sort()
+        #print('*nids2', nids2)
+
+        mids = self.get_x_associated_with_y(
+            self.elements, [1, 2, 3, 4, 5], ['pid', 'mid'])
+        #print('*mids', mids)
+
+        mids2 = self.get_x_associated_with_y(
+            self.elements, None, ['pid', 'mid', 'mid'])
+
+        E = self.get_x_associated_with_y(
+            self.elements, None, ['pid', 'mid', 'e'])
+        #print('*E', E)
+
+        #get_nodes_associated_with_elements
+        #nids = get_x_associated_with_y(self, self.elements, 'nodes', 'nid')
+        #pids = get_x_associated_with_y(self, self.elements, 'pid', 'pid')
+        #mids = get_x_associated_with_y(self, self.properties, 'mid', 'mid')
 
 
 def _getattr(out_set, xi, xkeys, nlevels_left=0, stop_on_failure=True):

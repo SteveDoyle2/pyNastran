@@ -6,13 +6,12 @@ from six import string_types
 from numpy import array
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank,
-    string_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+    integer_double_or_blank, double_or_blank, string_or_blank)
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
@@ -398,7 +397,15 @@ class CBAR(LineElement):
         return v
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         """
@@ -427,7 +434,7 @@ class CBAR(LineElement):
                        x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -492,7 +499,7 @@ class CBEAM3(CBAR):
 
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
-        (ga, gb, gc) = self.nodeIDs()
+        (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
                   list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
         return list_fields
@@ -513,13 +520,13 @@ class CBEAM3(CBAR):
         twc = set_blank_if_default(self.tw[2], 0.0)
 
         (x1, x2, x3) = self.getX_G0_defaults()
-        (ga, gb, gc) = self.nodeIDs()
+        (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
                        w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
                        twa, twb, twc, self.s[0], self.s[1], self.s[2]]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -598,7 +605,7 @@ class CBEND(LineElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, is_double):
+    def write_card(self, size, is_double):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

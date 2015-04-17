@@ -784,9 +784,9 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _parse_sort_code(self):
         """
-        +-------------------------+
+        +------------+------------+
         | sort_code  | sort_bits  |
-        +=========================+
+        +============+============+
         | 0          | [0, 0, 0]  |
         +------------+------------+
         | 1          | [0, 0, 1]  |
@@ -800,16 +800,17 @@ class OP2Common(Op2Codes, F06Writer):
         | 7          | [1, 1, 1]  |
         +------------+------------+
 
-        sort_code = 0 -> sort_bits = [0,0,0]
-        sort_code = 1 -> sort_bits = [0,0,1]
-        sort_code = 2 -> sort_bits = [0,1,0]
-        sort_code = 3 -> sort_bits = [0,1,1]
-        etc.
-        sort_code = 7 -> sort_bits = [1,1,1]
+        ::
+          sort_code = 0 -> sort_bits = [0,0,0]
+          sort_code = 1 -> sort_bits = [0,0,1]
+          sort_code = 2 -> sort_bits = [0,1,0]
+          sort_code = 3 -> sort_bits = [0,1,1]
+          etc.
+          sort_code = 7 -> sort_bits = [1,1,1]
 
-        sort_bits[0] = 0 -> is_sort1=True  isSort2=False
-        sort_bits[1] = 0 -> isReal=True   isReal/Imaginary=False
-        sort_bits[2] = 0 -> isSorted=True isRandom=False
+          sort_bits[0] = 0 -> is_sort1=True  isSort2=False
+          sort_bits[1] = 0 -> isReal=True   isReal/Imaginary=False
+          sort_bits[2] = 0 -> isSorted=True isRandom=False
         """
         bits = [0, 0, 0]
         sort_code = self.sort_code
@@ -831,21 +832,21 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _table_specs(self):
         """
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         | Value | Sort Type | Data Format | Random ? |
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         |   0   |   SORT1   |    Real     |   No     |
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         |   1   |   SORT1   |    Complex  |   No     |
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         |   2   |   SORT2   |    Real     |   No     |
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         |   3   |   SORT2   |    Complex  |   No     |
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         |   4   |   SORT1   |    Real     |   Yes    |
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         |   5   |   SORT2   |    Real     |   Yes    |
-        +=======+===========+=============+==========+
+        +-------+-----------+-------------+----------+
         """
         tcode = self.table_code // 1000
         sort_method = 1

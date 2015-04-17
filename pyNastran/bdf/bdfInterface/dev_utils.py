@@ -7,6 +7,9 @@ from numpy import array, zeros, unique, where, arange, hstack, vstack, searchsor
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
+
+    .. warning:: only handles CQUAD4, CTRIA3
+    .. warning:: assumes cid=0
     """
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
@@ -19,22 +22,22 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
 
     inode = 1
     nid_map = {}
-    for nid, node in sorted(model.nodes.iteritems()):
+    for nid, node in sorted(iteritems(model.nodes)):
         node.nid = inode
         nid_map[inode - 1] = nid
         inode += 1
     #model.write_bdf('A_' + bdf_filename_out)
 
-    nids = array([node.nid for nid, node in sorted(model.nodes.iteritems())], dtype='int32')
+    nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
     nnodes = len(nids)
     i = arange(nnodes, dtype='int32')
     nids2 = vstack([i, nids]).T
     print(nids2)
 
-    nodes_xyz = array([node.xyz for nid, node in sorted(model.nodes.iteritems())], dtype='float32')
+    nodes_xyz = array([node.xyz for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
 
     nids_new = set([])
-    for eid, element in sorted(model.elements.iteritems()):
+    for eid, element in sorted(iteritems(model.elements)):
         emap = []
 
         print(element.nodeIDs())
@@ -42,10 +45,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
             #element.nodes[i] = nid_map[nid]
 
         if element.type == 'CQUAD4':
-            quads.append(element.nodeIDs())
+            quads.append(element.node_ids)
             quadmap.append(element.eid)
         elif element.type == 'CTRIA3':
-            tris.append(element.nodeIDs())
+            tris.append(element.node_ids)
             trimap.append(element.eid)
         else:
             raise NotImplementedError(element.type)
@@ -54,7 +57,6 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     quadmap = array(quadmap, dtype='int32')
     tris = array(tris, dtype='int32') - 1
     trimap = array(trimap, dtype='int32')
-
 
     # build the kdtree
     kdt = scipy.spatial.KDTree(nodes_xyz)
@@ -102,7 +104,7 @@ def _write_nodes(self, outfile, size, is_double):
     if self.spoints:
         msg = []
         msg.append('$SPOINTS\n')
-        msg.append(self.spoints.write_bdf(size, is_double))
+        msg.append(self.spoints.write_card(size, is_double))
         outfile.write(''.join(msg))
 
     if self.nodes:
@@ -112,7 +114,7 @@ def _write_nodes(self, outfile, size, is_double):
             msg.append(self.gridSet.print_card(size))
         for (nid, node) in sorted(iteritems(self.nodes)):
             if nid not in self.remove_nodes:
-                msg.append(node.write_bdf(size, is_double))
+                msg.append(node.write_card(size, is_double))
         outfile.write(''.join(msg))
     #if 0:  # not finished
 
@@ -144,4 +146,5 @@ def main():
     tol = 0.2
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 
-main()
+if __name__ == '__main__':
+    main()

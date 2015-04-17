@@ -22,16 +22,20 @@ class BDFCard(object):
         self.nfields -= 1
         return self.card.pop()
 
-    def __setitem__(self, key, value):  # card[4] = value
+    def __setitem__(self, key, value):
+        """card[4] = value"""
         self.card.__setitem__(key, value)
 
-    def __getitem__(self, key):  # print card[5]
+    def __getitem__(self, key):
+        """print card[5]"""
         return self.card.__getitem__(key)
 
-    def __getslice__(self, i, j):  # card[1:10]
+    def __getslice__(self, i, j):
+        """card[1:10]"""
         return self.card.__getslice__(i, j)
 
-    def __setslice__(self, i, j, sequence):  # card[1:10] = 2
+    def __setslice__(self, i, j, sequence):
+        """card[1:10] = 2"""
         self.card.__setslice__(i, j, sequence)
 
     def index(self, i):

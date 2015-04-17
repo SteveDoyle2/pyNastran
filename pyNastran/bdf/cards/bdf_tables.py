@@ -24,8 +24,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -47,7 +47,7 @@ class Table(BaseCard):
     def parse_fields(self, xy, nrepeated, isData=False):
         self.table = TableObj(xy, nrepeated, isData)
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -661,7 +661,7 @@ class TABRND1(RandomTable):
 
     def raw_fields(self):
         list_fields = ['TABRND1', self.tid, self.xaxis, self.yaxis, None, None,
-                  None, None, None] + self.table.fields() + ['ENDT']
+                       None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def repr_fields(self):

@@ -13,8 +13,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank, string)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class PointProperty(Property):
@@ -61,14 +61,14 @@ class NSM(PointProperty):
         assert self.Type in self.validProperties
 
     def raw_fields(self):
-        #nodes = self.nodeIDs()
+        #nodes = self.node_ids
         list_fields = ['NSM', self.sid, self.Type, self.id, self.value]
         return list_fields
 
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -110,7 +110,7 @@ class PMASS(PointProperty):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

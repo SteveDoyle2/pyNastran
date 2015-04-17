@@ -78,7 +78,7 @@ class TestF06(unittest.TestCase):
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
-        #self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
+        #self.assertEqual(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
 
         f06 = F06(debug=False, log=None)
 
@@ -144,7 +144,7 @@ class TestF06(unittest.TestCase):
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
-        #self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
+        #self.assertEqual(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
         f06 = F06(debug=False, log=None)
 
         # we skip the fatal by stopping after reading the matrices
@@ -449,7 +449,7 @@ class TestF06(unittest.TestCase):
         #disp = f06.displacements[isubcase]
         #frequency = .21
         #T3 = disp.translations[frequency][21][2]
-        #self.assertEquals(T3, -1.456074E+02 + -6.035482E+00j)  # T3
+        #self.assertEqual(T3, -1.456074E+02 + -6.035482E+00j)  # T3
 
     def test_plate_openmdao(self):
         bdfname = os.path.join(model_path, 'plate', 'plate_openmdao.bdf')
@@ -457,7 +457,7 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
         dynamic_vars = {'t' : 42.}
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, dynamic_vars=dynamic_vars, f06_has_weight=False)
-        self.assertEquals(bdf.properties[1].t, 42., 't=%s' % bdf.properties[1].t)
+        self.assertEqual(bdf.properties[1].t, 42., 't=%s' % bdf.properties[1].t)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
         assert len(f06.spc_forces) == 1, len(f06.spc_forces)
@@ -556,15 +556,15 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
 
         (bdf, f06, op2) = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
-        self.assertEquals(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
+        self.assertEqual(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
 
-        self.assertEquals(len(bdf.nodes), 36, bdf.nodes)
-        self.assertEquals(len(bdf.elements), 25, bdf.elements)
-        self.assertEquals(len(bdf.properties), 1, bdf.properties)
-        self.assertEquals(len(bdf.materials), 1, bdf.materials)
-        self.assertEquals(len(bdf.loads), 9, 'nloads=%s\n%s' % (len(bdf.loads), bdf.loads))  # FORCE, LOAD
-        self.assertEquals(len(bdf.params), 2, bdf.params)
-        self.assertEquals(bdf.sol, 101, bdf.sol)
+        self.assertEqual(len(bdf.nodes), 36, bdf.nodes)
+        self.assertEqual(len(bdf.elements), 25, bdf.elements)
+        self.assertEqual(len(bdf.properties), 1, bdf.properties)
+        self.assertEqual(len(bdf.materials), 1, bdf.materials)
+        self.assertEqual(len(bdf.loads), 9, 'nloads=%s\n%s' % (len(bdf.loads), bdf.loads))  # FORCE, LOAD
+        self.assertEqual(len(bdf.params), 2, bdf.params)
+        self.assertEqual(bdf.sol, 101, bdf.sol)
 
         cen = 0 # 'CEN/4'
         for (loadcase, stress) in iteritems(f06.cquad4_stress):
@@ -596,8 +596,8 @@ class TestF06(unittest.TestCase):
         assert len(f06.cquad4_stress.keys()) == 1, f06.cquad4_stress.keys()
         assert list(op2.cquad4_stress.keys()) == [1], list(op2.cquad4_stress.keys())
         assert list(f06.cquad4_stress.keys()) == [1], list(f06.cquad4_stress.keys())
-        self.assertEquals(op2.cquad4_stress[1].ovmShear[25][cen][0], 276.8023376464844)
-        self.assertEquals(f06.cquad4_stress[1].ovmShear[25][cen][0], 276.8023)
+        self.assertEqual(op2.cquad4_stress[1].ovmShear[25][cen][0], 276.8023376464844)
+        self.assertEqual(f06.cquad4_stress[1].ovmShear[25][cen][0], 276.8023)
         #f06.print_stats()
         #op2.print_stats()
 

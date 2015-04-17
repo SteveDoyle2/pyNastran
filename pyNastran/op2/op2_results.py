@@ -149,7 +149,8 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
                 eType = case.eType[eid]
                 if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
                     #cen = 'CEN/%s' % eType[-1]
-                    cen  0
+                    # cen  0
+                    pass
                 else:
                     raise NotImplementedError(eType)
                 for nid in node_ids:

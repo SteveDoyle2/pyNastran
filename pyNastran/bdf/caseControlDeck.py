@@ -431,7 +431,7 @@ class CaseControlDeck(object):
                 # read more lines....
                 if line[-1].strip() == ',':
                     i += 1
-                    #print("rawSETLine = |%r|" %(lines[i]))
+                    #print("rawSETLine = %r" % (lines[i]))
                     while 1:
                         if ',' == lines[i].strip()[-1]:
                             fivalues += lines[i][:-1].split(',')
@@ -541,7 +541,7 @@ class CaseControlDeck(object):
         subcase = self.subcases[isubcase]
         subcase._add_data(key, value, options, param_type)
 
-        #print("\n%s\n" %(self.subcases[isubcase]))
+        #print("\n%s\n" % (self.subcases[isubcase]))
         return isubcase
 
     def cross_reference(self, model):

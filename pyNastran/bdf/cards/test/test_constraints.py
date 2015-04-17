@@ -10,7 +10,7 @@ class TestConstraints(unittest.TestCase):
 
         size = 8
         card = SUPORT(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_suport_02(self):
@@ -67,7 +67,7 @@ class TestConstraints(unittest.TestCase):
 
         size = 8
         card = SUPORT1(card)
-        card.write_bdf(size, 'dummy')
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_suport1_02(self):
@@ -112,9 +112,9 @@ class TestConstraints(unittest.TestCase):
         card = BDFCard(card)
         mpc = MPC(card)
         #print ' %r' % str(mpc)
-        #print '%r' % mpc.write_bdf(size=8)
-        #msg = mpc.write_bdf(size=8, double=False)
-        self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_bdf(size=8))
+        #print '%r' % mpc.write_card(size=8)
+        #msg = mpc.write_card(size=8, double=False)
+        self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_card(size=8))
 
         model = BDF()
 
@@ -126,8 +126,8 @@ class TestConstraints(unittest.TestCase):
         card = model.add_card(card, 'MPC', is_list=False)
         mpc = MPC(card)
         #print('u%r' % msgA)
-        #print('%r' % mpc.write_bdf(size=8))
-        self.assertEqual(msgA, mpc.write_bdf(size=8))
+        #print('%r' % mpc.write_card(size=8))
+        self.assertEqual(msgA, mpc.write_card(size=8))
         #print(mpc, type(mpc))
 
         card = []

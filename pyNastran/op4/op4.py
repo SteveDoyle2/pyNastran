@@ -1,16 +1,15 @@
-#!/usr/bin/env python
-__all__ = ['OP4']
-from six import string_types, iteritems, PY2
+from __future__ import print_function
+from six import string_types, iteritems, PY2, PY3
 from six.moves import range
 import os
 import io
-from struct import pack, unpack
+from struct import pack, unpack, Struct
 
 from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose, ndarray)
 from scipy.sparse import coo_matrix
 
-from pyNastran.utils import is_binary as file_is_binary
+from pyNastran.utils import is_binary_file as file_is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 
 
@@ -33,27 +32,29 @@ class OP4(object):
         matrices will be read.  The resulting output is a dictionary of
         matrices that are accessed by their name.
 
-        >>> from pyNastran.op4.op4 import OP4
-        >>> op4 = OP4()
+        .. code-block:: python
 
-        # get all the matrices
-        >>> matrices = op4.read_op4(op4_filename)
-        >>> (formA,A) = matrices['A']
-        >>> (formB,B) = matrices['B']
-        >>> (formC,C) = matrices['C']
+          >>> from pyNastran.op4.op4 import OP4
+          >>> op4 = OP4()
 
-        # or to reduce memory usage
-        >>> matrices = op4.read_op4(op4_filename, matrix_names=['A','B'])
-        >>> (formA,A) = matrices['A']
-        >>> (formB,B) = matrices['B']
+          # get all the matrices
+          >>> matrices = op4.read_op4(op4_filename)
+          >>> (formA,A) = matrices['A']
+          >>> (formB,B) = matrices['B']
+          >>> (formC,C) = matrices['C']
 
-        # or because you only want A
-        >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
-        >>> (formA,A) = matrices['A']
+          # or to reduce memory usage
+          >>> matrices = op4.read_op4(op4_filename, matrix_names=['A','B'])
+          >>> (formA,A) = matrices['A']
+          >>> (formB,B) = matrices['B']
 
-        # get all the matrices, but select the file using a file dialog
-        >>> matrices = op4.read_op4()
-        >>>
+          # or because you only want A
+          >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
+          >>> (formA,A) = matrices['A']
+
+          # get all the matrices, but select the file using a file dialog
+          >>> matrices = op4.read_op4()
+          >>>
 
         :param op4_filename: an OP4 filename.  Type=STRING.
         :param matrix_names: matrix name(s) (or None); Type=LIST OF STRINGS / STRING / NONE.
@@ -787,9 +788,9 @@ class OP4(object):
     def _show_data(self, data):
         n = len(data)
         nints = n // 4
-        strings = unpack(self.endian + b'%is' % n, data)
-        ints    = unpack(self.endian + b'%ii' % nints, data)
-        floats  = unpack(self.endian + b'%if' % nints, data)
+        strings = unpack(self.endian + '%is' % n, data)
+        ints    = unpack(self.endian + '%ii' % nints, data)
+        floats  = unpack(self.endian + '%if' % nints, data)
         #print("strings =", strings)
         print("ints    =", ints)
         print("floats  =", floats)
@@ -1278,7 +1279,8 @@ class OP4(object):
         f.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
         f.write(' 1.0000000000000000E+00\n')
 
-    def _write_dense_matrix_binary(self, f, name, matrix, form=2, precision='default'):
+    def _write_dense_matrix_binary(self, f, name, matrix, form=2,
+                                   precision='default', encoding='utf-8'):
         """
         24 bytes is the record length
           - (1) ncols
@@ -1290,17 +1292,18 @@ class OP4(object):
 
         .. todo:: support precision
         """
+        if PY3:
+            raise NotImplementedError('_write_dense_matrix_binary is not supported')
         A = matrix
-        #print('A =', A)
         (Type, NWV) = self._get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
         #if nrows==ncols and form==2:
             #form = 1
-
         name2 = '%-8s' % name
         assert len(name2) == 8, 'name=%r is too long; 8 characters max' % name
-        msg = pack(self.endian + '5i8s', 24, ncols, nrows, form, Type, name2)
+        s = Struct(self.endian + '5i8s')
+        msg = s.pack(24, ncols, nrows, form, Type, name2)
         f.write(msg)
 
         for icol in range(ncols):
@@ -1352,7 +1355,7 @@ class OP4(object):
         (Type, NWV) = self._get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
-        msg = '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)
+        msg = u'%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)
         f.write(msg)
 
         if Type in [1, 2]: # real
@@ -1489,7 +1492,7 @@ def compress_column(col):
     #print("packs = ", packs)
     return packs
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
     from pyNastran.op4.utils import write_DMIG
 
     #compress_column([14, 15, 16, 20, 21, 22, 26, 27, 28])
@@ -1537,3 +1540,6 @@ if __name__ == '__main__':  # pragma: no cover
     print("-----------------------------")
     print("done")
     print("-----------------------------")
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

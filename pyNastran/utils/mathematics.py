@@ -3,10 +3,9 @@
 from __future__ import print_function
 from six.moves import range
 
-import sys
 from math import sqrt
 from numpy import (float32, float64, complex64, complex128, array, cross,
-                   allclose, zeros, matrix, insert, diag)
+                   allclose, zeros, matrix, insert, diag, eye)
 from numpy.linalg import norm
 
 from scipy.linalg import solve_banded
@@ -144,8 +143,9 @@ def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
         header = row_fmt % '' + '   ' + col_fmt * len(col_names) % tuple(col_name_list) + '\n'
         float_fmt = '%%-%i.2f' % cwidth
 
-    c= header + ''.join([row_fmt % (str(row_names[i])) + ' ' + list_print(B[i, :], tol, float_fmt=float_fmt)
-                              + '\n' for i in range(B.shape[0])])
+    c = header + ''.join([row_fmt % (str(row_names[i])) + ' ' +
+                          list_print(B[i, :], tol, float_fmt=float_fmt)
+                          + '\n' for i in range(B.shape[0])])
     return c
 
 
@@ -162,7 +162,7 @@ def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
         if isinstance(a, str):
             return a
         for i, j in ((float, float_fmt), (float32, float_fmt),
-                     (float64, float_fmt), (int, '%3i') ):
+                     (float64, float_fmt), (int, '%3i')):
             if isinstance(a, i):
                 if abs(a) < tol:
                     return zero_fmt
@@ -170,7 +170,7 @@ def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
 
         if isinstance(a, complex) or isinstance(a, complex64) or isinstance(a, complex128):
             return '%4s%4s' % ('0' if abs(a.real) < 1e-8 else '%.4g' % (a.real),
-                                '' if abs(a.imag) < 1e-8 else '%+.4gj' % (a.imag))
+                               '' if abs(a.imag) < 1e-8 else '%+.4gj' % (a.imag))
         try:
             print("list_print: type(a) is not supported... %s" % (type(a)))
             return ' %g' % a
@@ -186,9 +186,11 @@ def augmented_identity(A):
     Creates an Identity Matrix augmented with zeros.
     The location of the extra zeros depends on A.
 
-    [ 1, 0, 0, 0 ]
-    [ 0, 1, 0, 0 ]
-    [ 0, 0, 1, 0 ]
+    .. code-block:: python
+
+      [ 1, 0, 0, 0 ]
+      [ 0, 1, 0, 0 ]
+      [ 0, 0, 1, 0 ]
     """
     (nx, ny) = A.shape
     I = eye(max(nx, ny), 'float64')
@@ -198,9 +200,10 @@ def augmented_identity(A):
 def solve_tridag(A, D):
     """
     Solves a tridagonal matrix [A]{x}={b} for {x}
+
     :param A: main diagonal (length=N)
     :param D: off diagonal (length=N-1)
-    :returns x
+    :returns: x
     """
     # Find the diagonals
     ud = insert(diag(A, 1), 0, 0)  # upper diagonal
@@ -256,29 +259,30 @@ def gauss(n):
      - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$
 
 
-    :param n: Number of quadrature points
-    @retval Two lists: points and corresponding weights, sorted by points value
+    :param n:       Number of quadrature points
+    :returns lists: points and corresponding weights, sorted by points value
+
     .. seealso:: http://en.wikipedia.org/wiki/Gaussian_quadrature"""
     if n == 1:
-        return ([0.], [2.])
+        return [0.], [2.]
     elif n == 2:
         p = 1. / sqrt(3)
-        return ([-p, p], [1., 1.])
+        return [-p, p], [1., 1.]
     elif n == 3:
         p = sqrt(3 / 5.)
-        return ([-p, 0., p], [5 / 9., 8 / 9., 5 / 9.])
+        return [-p, 0., p], [5 / 9., 8 / 9., 5 / 9.]
     elif n == 4:
         p1 = (3 - 2. * sqrt(6 / 5)) / 7.
         p2 = (3 + 2. * sqrt(6 / 5)) / 7.
         w1 = (18 + sqrt(30)) / 36.
         w2 = (18 - sqrt(30)) / 36.
-        return ([-p2, -p1, p1, p2], [w2, w1, w1, w2])
+        return [-p2, -p1, p1, p2], [w2, w1, w1, w2]
     elif n == 5:
         p1 = 1 / 3. * sqrt(5 - 2 * sqrt(10. / 7.))
         p2 = 1 / 3. * sqrt(5 + 2 * sqrt(10. / 7.))
         w1 = (322 + 13 * sqrt(70)) / 900.
         w2 = (322 - 13 * sqrt(70)) / 900.
-        return ([-p2, -p1, 0, p1, p2], [w2, w1, 128 / 225., w1, w2])
+        return [-p2, -p1, 0, p1, p2], [w2, w1, 128 / 225., w1, w2]
 
     raise NotImplementedError('The current implementation only supports up to '
                               '5 quadrature points')

@@ -20,13 +20,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from math import log, exp, ceil
 from six.moves import zip, range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string_or_blank, blank, fields)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class FREQ(BaseCard):
@@ -83,7 +83,7 @@ class FREQ(BaseCard):
         list_fields = ['FREQ', self.sid] + self.freqs
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -120,7 +120,7 @@ class FREQ1(FREQ):
             self.freqs.append(f1 + i * df)
         self.cleanFreqs()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -167,7 +167,7 @@ class FREQ3(FREQ):
             self._comment = comment
         raise NotImplementedError()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -210,7 +210,7 @@ class FREQ4(FREQ):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -225,7 +225,7 @@ class FREQ5(FREQ):
             self._comment = comment
         raise NotImplementedError()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -344,7 +344,7 @@ class NLPARM(BaseCard):
                        rTolB]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card) # having trouble with double precision...
@@ -375,7 +375,7 @@ class NLPCI(BaseCard):
         #minalr = set_blank_if_default(self.minalr, 0.25)
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -427,7 +427,7 @@ class TSTEP(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -577,7 +577,7 @@ class TSTEPNL(BaseCard):
                        maxR, uTol, rTolB, self.minIter]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

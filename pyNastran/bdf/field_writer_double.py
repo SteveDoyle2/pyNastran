@@ -65,14 +65,14 @@ def print_card_double(fields, wipe_fields=True):
               an optional continuation, but because it's a left-justified
               unneccessary field, print_card doesnt use it.
 
-    Example
-    =======
-    >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
-    >>> print_card_double(fields)
-    DUMMY*                 1               2               3
-    *                      4               5               6               7
-    *       8.0000000000D+00
-    *
+    .. code-block:: python
+
+      >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+      >>> print_card_double(fields)
+      DUMMY*                 1               2               3
+      *                      4               5               6               7
+      *       8.0000000000D+00
+      *
     """
     if wipe_fields:
         fields = wipe_empty_fields(fields)

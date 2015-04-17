@@ -62,7 +62,7 @@ class BDFMethods(BDFMethodsDeprecated):
                       float > 0.0
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
-        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]) or None
+        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
 
         I = mass * centroid * centroid
 
@@ -94,9 +94,7 @@ class BDFMethods(BDFMethodsDeprecated):
             masses = [mass for eid, mass in self.masses.items() if eid in element_ids]
             nelements = len(element_ids)
 
-        #num_cpus = 1
         if num_cpus > 1:
-            # must use num_cpus = 1
             mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses,
                                                    nelements,
                                                    reference_point=reference_point)
@@ -169,13 +167,13 @@ class BDFMethods(BDFMethodsDeprecated):
         if sym_axis is None:
             for key, aero in iteritems(self.aero):
                 sym_axis = ''
-                if aero.IsSymmetricalXY():
+                if aero.is_symmetric_xy():
                     sym_axis += 'y'
-                if aero.IsSymmetricalXZ():
+                if aero.is_symmetric_xz():
                     sym_axis += 'z'
-                if aero.IsAntiSymmetricalXY():
+                if aero.is_symmetric_xy():
                     raise NotImplementedError('%s is antisymmetric about the XY plane' % str(aero))
-                if aero.IsAntiSymmetricalXZ():
+                if aero.is_symmetric_xz():
                     raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
         if sym_axis is not None:
             # either we figured sym_axis out from the AERO cards or the user told us
@@ -339,7 +337,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
     def __gravity_load(self, loadcase_id):
         """
-        TODO:
+        .. todo::
             1.  resolve the load case
             2.  grab all of the GRAV cards and combine them into one
                 GRAV vector
@@ -347,9 +345,9 @@ class BDFMethods(BDFMethodsDeprecated):
             4.  multiply by the gravity vector
         """
 
-        gravity_i = self.loads[2][0]  ## TODO: hardcoded
+        gravity_i = self.loads[2][0]  ## .. todo:: hardcoded
         gi = gravity_i.N * gravity_i.scale
-        p0 = array([0., 0., 0.])  ## TODO: hardcoded
+        p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
         mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None,
                                            num_cpus=6)
 
@@ -376,20 +374,26 @@ class BDFMethods(BDFMethodsDeprecated):
         card (nid=5) acting on it, you can incldue the PLOAD4, but
         not the FORCE card by using:
 
-        Just pressure:
-        ==============
-        eids = [3]
-        nids = []
+        For just pressure:
 
-        Just force:
-        ==============
-        eids = []
-        nids = [5]
+        .. code-block:: python
+
+          eids = [3]
+          nids = []
+
+        For just force:
+
+        .. code-block:: python
+
+          eids = []
+          nids = [5]
 
         or both:
-        ==============
-        eids = [3]
-        nids = [5]
+
+        .. code-block:: python
+
+          eids = [3]
+          nids = [5]
 
         .. note:: If you split the model into sections and sum the loads
                   on each section, you may not get the same result as
@@ -397,6 +401,7 @@ class BDFMethods(BDFMethodsDeprecated):
                   due to the fact that nodal loads on the boundary are
                   double/triple/etc. counted depending on how many breaks
                   you have.
+
         .. todo:: not done...
         """
         if not isinstance(loadcase_id, int):

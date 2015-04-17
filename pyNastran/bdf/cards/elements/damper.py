@@ -17,7 +17,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     double)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class DamperElement(Element):
@@ -79,7 +79,7 @@ class CDAMP1(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -93,12 +93,21 @@ class CDAMP1(LineDamper):
         return self.eid
 
     def nodeIDs(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
+        """deprecated"""
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
-        fields1 = [self.eid, self.Pid()] + self.nodeIDs() + [self.c1, self.c2]
+        fields1 = [self.eid, self.Pid()] + self.node_ids + [self.c1, self.c2]
         fields2 = [elem.eid, elem.Pid()] + elem.nodeIDs() + [elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
@@ -122,12 +131,12 @@ class CDAMP1(LineDamper):
             raise KeyError(msg)
 
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         fields = ['CDAMP1', self.eid, self.Pid(), nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -171,13 +180,13 @@ class CDAMP2(LineDamper):
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
 
     def _verify(self, xref=True):
         eid = self.Eid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(b, float)
@@ -195,15 +204,23 @@ class CDAMP2(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         fields = ['CDAMP2', self.eid, self.b, nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -242,7 +259,7 @@ class CDAMP3(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -264,14 +281,23 @@ class CDAMP3(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+        """deprecated"""
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -310,7 +336,7 @@ class CDAMP4(LineDamper):
     def _verify(self, xref=True):
         eid = self.Eid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(b, float)
@@ -328,14 +354,23 @@ class CDAMP4(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
     def nodeIDs(self):
+        """deprecated"""
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -375,7 +410,7 @@ class CDAMP5(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -397,14 +432,23 @@ class CDAMP5(LineDamper):
         return self.pid.b
 
     def nodeIDs(self):
+        """deprecated"""
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -443,7 +487,7 @@ class CVISC(LineDamper):
         eid = self.Eid()
         pid = self.Pid()
         b = self.B()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -460,15 +504,24 @@ class CVISC(LineDamper):
         return self.pid.ce
 
     def nodeIDs(self):
+        """deprecated"""
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        list_fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)

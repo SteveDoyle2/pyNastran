@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, absolute_import,
                         print_function, unicode_literals)
 from six import PY2
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value

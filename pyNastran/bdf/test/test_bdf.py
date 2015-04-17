@@ -214,7 +214,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
     else:
         outModel = bdfModel + '_out'
         if cid is not None and xref:
-            fem1.resolveGrids(cid=cid)
+            fem1.resolve_grids(cid=cid)
         if meshForm == 'combined':
             fem1.write_bdf(outModel, interspersed=False, size=size, is_double=is_double)
         elif meshForm == 'separate':

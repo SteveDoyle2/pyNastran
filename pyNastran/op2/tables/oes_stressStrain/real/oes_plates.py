@@ -45,7 +45,7 @@ class RealPlateArray(OES_Object):
     def is_bilinear(self):
         if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
             return False
-        elif self.element_type in [144]:  # CQUAD4
+        elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             return True
         else:
             raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))

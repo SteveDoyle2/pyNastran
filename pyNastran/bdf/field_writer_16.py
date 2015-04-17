@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 import sys
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 
 def set_string16_blank_if_default(value, default):
     """helper method for writing BDFs"""
@@ -221,14 +221,14 @@ def print_card_16(fields, wipe_fields=True):
               an optional continuation, but because it's a left-justified
               unneccessary field, print_card doesnt use it.
 
-    Example
-    =======
-    >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
-    >>> print_card_16(fields)
-    DUMMY*                 1               2               3
-    *                      4               5               6               7
-    *                     8.
-    *
+    .. code-block:: python
+
+      >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+      >>> print_card_16(fields)
+      DUMMY*                 1               2               3
+      *                      4               5               6               7
+      *                     8.
+      *
     """
     if wipe_fields:
         fields = wipe_empty_fields(fields)

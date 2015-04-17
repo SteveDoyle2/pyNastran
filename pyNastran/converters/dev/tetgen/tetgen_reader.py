@@ -1,7 +1,9 @@
+from __future__ import print_function
+from six import PY2
 from six.moves import range
 from numpy import array, zeros
 from pyNastran.utils.log import get_logger
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class TetgenReader(object):
@@ -15,7 +17,10 @@ class TetgenReader(object):
         self.tets = None
 
     def write_nastran(self, bdf_filename):
-        f = open(bdf_filename, 'wb')
+        if PY2:
+            f = open(bdf_filename, 'wb')
+        else:
+            f = open(bdf_filename, 'w')
         msg = 'CEND\n'
         msg += 'BEGIN BULK\n'
 
@@ -23,7 +28,7 @@ class TetgenReader(object):
         cid = None
         for (x, y, z) in self.nodes:
             card = ['GRID', nid, cid, x, y, z]
-            msg += print_card(card)
+            msg += print_card_8(card)
             nid += 1
         f.write(msg)
 
@@ -33,11 +38,11 @@ class TetgenReader(object):
             pid = 1
             thickness = 0.1
             pshell = ['PSHELL', pid, mid, thickness]
-            msg = print_card(pshell)
+            msg = print_card_8(pshell)
 
-            for (n0, n1, n2) in (self.tris + 1):
+            for n0, n1, n2 in self.tris + 1:
                 card = ['CTRIA3', eid, pid, n0, n1, n2]
-                msg += print_card(card)
+                msg += print_card_8(card)
                 eid += 1
                 if eid % 1000 == 0:
                     f.write(msg)
@@ -47,10 +52,10 @@ class TetgenReader(object):
         if self.tets is not None:
             pid = 2
             psolid = ['PSOLID', pid, mid]
-            msg = print_card(psolid)
-            for (n0, n1, n2, n3) in (self.tets + 1):
+            msg = print_card_8(psolid)
+            for n0, n1, n2, n3 in self.tets + 1:
                 card = ['CTETRA', eid, pid, n0, n1, n2, n3]
-                msg += print_card(card)
+                msg += print_card_8(card)
                 eid += 1
                 if eid % 1000 == 0:
                     f.write(msg)
@@ -62,7 +67,7 @@ class TetgenReader(object):
         nu = 0.3
         rho = 0.1
         mat1 = ['MAT1', mid, E, G, nu, rho]
-        msg = print_card(mat1)
+        msg = print_card_8(mat1)
         f.write(msg)
         f.write('ENDDATA\n')
 
@@ -135,9 +140,9 @@ class TetgenReader(object):
             for ielement in range(nelements):
                 # eid n1    n2    n3    n4       flip_flag???
                 # 1   13260 15506 16059 16065    -1
-                (n0, n1, n2, n3, flag) = f.readline().strip().split()[1:]
+                n0, n1, n2, n3, flag = f.readline().strip().split()[1:]
                 if flag == form_flag:
-                    tets.append( (n0, n1, n2, n3) )
+                    tets.append((n0, n1, n2, n3))
             tets = array(tets, 'int32')
 
         f.close()

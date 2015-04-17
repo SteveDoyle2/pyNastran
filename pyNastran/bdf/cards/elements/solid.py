@@ -128,14 +128,14 @@ class SolidElement(Element):
         return self._is_same_fields(fields1, fields2)
 
     def raw_fields(self):
-        list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = [self.type, self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    #def write_bdf(self, size=8, is_double=False):
+    #def write_card(self, size=8, is_double=False):
         #card = self.raw_fields()
-        #msg2 = self.write_bdf()
+        #msg2 = self.write_card()
         ##msg1 = self.comment() + print_card_8(card)
-        ##assert msg1 == msg2, 'write_bdf != write_bdf\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
+        ##assert msg1 == msg2, 'write_card != write_card\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         #return msg2
 
 class CHEXA8(SolidElement):
@@ -150,9 +150,8 @@ class CHEXA8(SolidElement):
     asterType = 'HEXA8'
     calculixType = 'C3D8'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
-        data = [self.eid, self.Pid()] + nodes
+    def write_card(self, size=8, is_double=False):
+        data = [self.eid, self.Pid()] + self.node_ids
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
                '        %8i%8i\n' % tuple(data))
         return self.comment() + msg
@@ -193,10 +192,9 @@ class CHEXA8(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i,nid in enumerate(self.node_ids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -223,7 +221,15 @@ class CHEXA8(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CHEXA20(SolidElement):
@@ -240,8 +246,8 @@ class CHEXA20(SolidElement):
     asterType = 'HEXA20'
     calculixType = 'C3D20'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
 
         data = [self.eid, self.Pid()] + nodes[:8] + nodes2
@@ -293,10 +299,9 @@ class CHEXA20(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i,nid in enumerate(self.node_ids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -332,7 +337,15 @@ class CHEXA20(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPENTA6(SolidElement):
@@ -354,8 +367,8 @@ class CPENTA6(SolidElement):
     asterType = 'PENTA6'
     calculixType = 'C3D6'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = 'CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
         return self.comment() + msg
@@ -393,7 +406,7 @@ class CPENTA6(SolidElement):
         self.pid = model.Property(self.pid, msg=msg)
 
     def getFaceAreaCentroidNormal(self, nidOpposite, nid):
-        nids = self.nodeIDs()[:6]
+        nids = self.node_ids[:6]
         indx1 = nids.index(nid)
         indx2 = nids.index(nidOpposite)
 
@@ -451,7 +464,7 @@ class CPENTA6(SolidElement):
         return area, centroid, normal / n
 
     def getFaceNodesAndArea(self, nidOpposite, nid):
-        nids = self.nodeIDs()[:6]
+        nids = self.node_ids[:6]
         indx1 = nids.index(nid)
         indx2 = nids.index(nidOpposite)
 
@@ -510,7 +523,7 @@ class CPENTA6(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
@@ -544,7 +557,15 @@ class CPENTA6(SolidElement):
         return list_fields
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPENTA15(SolidElement):
@@ -561,8 +582,8 @@ class CPENTA15(SolidElement):
     asterType = 'PENTA15'
     calculixType = 'C3D15'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
         data = [self.eid, self.Pid()] + nodes[:6] + nodes2
         msg = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
@@ -614,7 +635,7 @@ class CPENTA15(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
@@ -654,7 +675,15 @@ class CPENTA15(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPYRAM5(SolidElement):
@@ -667,8 +696,8 @@ class CPYRAM5(SolidElement):
     #asterType = 'CPYRAM5'
     #calculixType = 'C3D5'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
@@ -703,7 +732,7 @@ class CPYRAM5(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
@@ -734,7 +763,15 @@ class CPYRAM5(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPYRAM13(SolidElement):
@@ -749,8 +786,8 @@ class CPYRAM13(SolidElement):
     #asterType = 'CPYRAM13'
     #calculixType = 'C3D13'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
         data = [self.eid, self.Pid()] + nodes[:5] + nodes2
         msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
@@ -795,7 +832,7 @@ class CPYRAM13(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
@@ -830,7 +867,15 @@ class CPYRAM13(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CTETRA4(SolidElement):
@@ -843,8 +888,8 @@ class CTETRA4(SolidElement):
     asterType = 'TETRA4'
     calculixType = 'C3D4'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
         return self.comment() + msg
@@ -879,10 +924,10 @@ class CTETRA4(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -901,7 +946,7 @@ class CTETRA4(SolidElement):
 
     def getFaceNodes(self, nid_opposite, nid=None):
         assert nid is None, nid
-        nids = self.nodeIDs()[:4]
+        nids = self.node_ids[:4]
         indx = nids.index(nid_opposite)
         nids.pop(indx)
         return nids
@@ -921,7 +966,15 @@ class CTETRA4(SolidElement):
         return A, centroid, normal / n
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CTETRA10(SolidElement):
@@ -942,8 +995,8 @@ class CTETRA10(SolidElement):
     asterType = 'TETRA10'
     calculixType = 'C3D10'
 
-    def write_bdf(self, size=8, is_double=False):
-        nodes = self.nodeIDs()
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
 
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
@@ -987,10 +1040,10 @@ class CTETRA10(SolidElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -1031,10 +1084,18 @@ class CTETRA10(SolidElement):
         return (n1 + n2 + n3 + n4) / 4.
 
     def getFaceNodes(self, nidOpposite, nid=None):
-        nids = self.nodeIDs()[:4]
+        nids = self.node_ids[:4]
         indx = nids.index(nidOpposite)
         nids.pop(indx)
         return nids
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")

@@ -44,10 +44,13 @@ class OP2(OP2_Scalar):
         | Case # | Vectorization |  Ask    | Read Modes |
         +========+===============+=========+============+
         |    1   | True          |  True   |  1, 2      |
+        +--------+---------------+---------+------------+
         |    2   | True          |  False  |  1, 2      |
+        +--------+---------------+---------+------------+
         |    3   | False         |  True   |  1, 2      |
-        |    4   | False         |  False  |  0         | <------ < v0.8
-        +--------+---------------+---------+------------|
+        +--------+---------------+---------+------------+
+        |    4   | False         |  False  |  0         |
+        +--------+---------------+---------+------------+
 
         Definitions
         ===========
@@ -132,18 +135,22 @@ class OP2(OP2_Scalar):
         we want the data to be in the same format and grouped by subcase, so
         we take
 
-        stress = {
-            (1, 'SUPERELEMENT 0') : result1,
-            (1, 'SUPERELEMENT 10') : result2,
-            (1, 'SUPERELEMENT 20') : result3,
-            (2, 'SUPERELEMENT 0') : result4,
-        }
+        .. code-block:: python
+
+          stress = {
+              (1, 'SUPERELEMENT 0') : result1,
+              (1, 'SUPERELEMENT 10') : result2,
+              (1, 'SUPERELEMENT 20') : result3,
+              (2, 'SUPERELEMENT 0') : result4,
+          }
         and convert it to:
 
-        stress = {
-            1 : result1 + result2 + results3,
-            2 : result4,
-        }
+        .. code-block:: python
+
+          stress = {
+              1 : result1 + result2 + results3,
+              2 : result4,
+          }
         """
         if not combine:
             return

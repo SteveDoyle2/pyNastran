@@ -39,6 +39,17 @@ def to_fields(card_lines, card_name):
     :param lines:     the lines of the BDF card object
     :param card_name: the card_name -> 'GRID'
     :returns fields:  the string formatted fields of the card
+
+    .. warning:: this function is used by the reader and isn't intended
+                 to be called by a separate process
+
+    .. code-block:: python
+
+      >>> card_lines = []'GRID,1,,1.0,2.0,3.0']
+      >>> card_name = 'GRID'
+      >>> fields = to_fields(lines, card_name)
+      >>> fields
+      ['GRID', '1', '', '1.0', '2.0', '3.0']
     """
     fields = []
     # first line
@@ -73,7 +84,7 @@ def to_fields(card_lines, card_name):
                           line[32:40], line[40:48], line[48:56], line[56:64],
                           line[64:72]]
         fields += new_fields
-        assert len(fields) == 9
+        assert len(fields) == 9, fields
 
     for j, line in enumerate(card_lines): # continuation lines
         #for i, field in enumerate(fields):
@@ -168,7 +179,7 @@ def parse_executive_control_deck(executive_control_lines):
 
 def clean_empty_lines(lines):
     """
-    removes leading and trailing empty lines
+    Removes leading and trailing empty lines
     don't remove internally blank lines
     """
     found_lines = False
@@ -209,24 +220,31 @@ def parse_patran_syntax(node_sets):
 
     Patran has a short syntax of the form:
 
-      +------------+--------------------+
-      |  String    | Output             |
-      +------------+--------------------+
-      |"1 2 3"   | [1, 2, 3]            |
-      |"5:10"    | [5, 6, 7, 8, 9, 10]  |
-      |"12:20:2" | [12, 14, 16, 18, 20] |
-      +------------+--------------------+
+      +------------+----------------------+
+      |  String    | Output               |
+      +------------+----------------------+
+      |"1 2 3"     | [1, 2, 3]            |
+      +------------+----------------------+
+      |"5:10"      | [5, 6, 7, 8, 9, 10]  |
+      +------------+----------------------+
+      |"12:20:2"   | [12, 14, 16, 18, 20] |
+      +------------+----------------------+
 
     Example
     -------
-    node_sets = "1 2 3 5:10 12:20:2"
-    data = parse_patran_syntax(node_sets)
+    .. code-block:: python
 
-    :warning:
+      >>> node_sets = "1 2 3 5:10 12:20:2"
+      >>> data = parse_patran_syntax(node_sets)
+      >>> data
+      data = [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20]
+
+    .. warning::
       Don't include the n/node or e/element or any other identifier,
       just a string of "1 2 3 5:10 12:20:2".
       Use parse_patran_syntax_dict to consider the identifier.
-    :note:
+
+    .. note::
       doesn't support "1:#"
     """
     snodes = node_sets.split()
@@ -260,18 +278,19 @@ def parse_patran_syntax_dict(node_sets):
     :param node_sets: the node_set to parse
     :returns nodes: list of integers
 
-    Example
-    -------
-    node_sets = "e 1:3 n 2:6:2 Node 10:13"
-    data = parse_patran_syntax_dict(node_sets)
-    data = {
-        'e'    : [1, 2, 3],
-        'n'    : [2, 4, 6],
-        'Node' : [10, 11, 12, 13],
-    }
-    :note:
+    .. code-block:: python
+
+      node_sets = "e 1:3 n 2:6:2 Node 10:13"
+      data = parse_patran_syntax_dict(node_sets)
+      data = {
+          'e'    : [1, 2, 3],
+          'n'    : [2, 4, 6],
+          'Node' : [10, 11, 12, 13],
+      }
+
+    .. note::
       the identifier (e.g. "e") must be used.  Use parse_patran_syntax to skip the identifier.
-    :note:
+    .. note::
       doesn't support "1:#"
     """
     data = {}

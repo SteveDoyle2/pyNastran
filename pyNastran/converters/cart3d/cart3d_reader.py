@@ -1,6 +1,6 @@
 #pylint:  disable=C0103,C0111
 from __future__ import print_function
-from six import iteritems, PY2
+from six import iteritems
 from six.moves import zip, range
 import os
 import sys
@@ -8,11 +8,11 @@ from struct import Struct, pack, unpack
 from math import ceil
 from collections import defaultdict
 
-from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
-from numpy import arange, searchsorted, vstack, unique, hstack, ravel, cross
+from numpy import zeros, where, savetxt, sqrt, abs, amax, amin
+from numpy import arange, vstack, unique, hstack, ravel, cross
 from numpy.linalg import norm
 
-from pyNastran.utils import is_binary as is_binary_file
+from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
 
@@ -367,7 +367,7 @@ class Cart3DReader(object):
         self.log.info("---starting reading cart3d file...%r---" % self.infilename)
 
         self.infilename = infilename
-        if is_binary(infilename):
+        if is_binary_file(infilename):
             self.infile = open(infilename, 'rb')
             (self.nPoints, self.nElements) = self.read_header_binary()
             points = self.read_points_binary(self.nPoints)

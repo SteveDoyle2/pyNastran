@@ -48,7 +48,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`deprecated` Module
------------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.deprecated
 
@@ -69,12 +69,23 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`fieldWriter16` Module
----------------------------
+:mod:`field_writer_8` Module
+----------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.fieldWriter16
+.. inheritance-diagram:: pyNastran.bdf.field_writer_8
 
-.. automodule:: pyNastran.bdf.fieldWriter16
+.. automodule:: pyNastran.bdf.field_writer_8
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`field_writer_16` Module
+-----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.field_writer_16
+
+.. automodule:: pyNastran.bdf.field_writer_16
     :members:
     :private-members:
     :undoc-members:
@@ -103,7 +114,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`utils` Module
----------------------
+-------------------
 
 .. inheritance-diagram:: pyNastran.bdf.utils
 
@@ -114,7 +125,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`write_path` Module
------------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.write_path
 
@@ -124,8 +135,6 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
 .. toctree::
 

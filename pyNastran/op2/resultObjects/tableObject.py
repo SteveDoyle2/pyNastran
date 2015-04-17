@@ -691,7 +691,6 @@ class ComplexTableObject(ScalarObject):
             self.gridTypes[nodeID] = grid_type
             self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
             self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
-        #print("------")
 
     def add_complex_f06_data(self, data, transient):
         raise NotImplementedError()

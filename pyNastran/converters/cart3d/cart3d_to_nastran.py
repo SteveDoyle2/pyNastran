@@ -2,8 +2,8 @@ from six.moves import zip
 from numpy import unique
 
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=False):
@@ -55,7 +55,10 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     f.write('ENDDATA\n')
     f.close()
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
     cart3d_filename = 'threePlugs.tri'
     bdf_filename = 'threePlugs.bdf'
     cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
+
+    if __name__ == '__main__':  # pragma: no cover
+        main()

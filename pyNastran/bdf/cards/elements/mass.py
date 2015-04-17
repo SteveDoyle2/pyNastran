@@ -16,11 +16,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 from numpy import zeros, array
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double_or_blank)
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 
@@ -49,8 +49,10 @@ class PointMassElement(PointElement):
 class CMASS1(PointMassElement):
     """
     Defines a scalar mass element.
-    CMASS2 EID M   G1 C1 G2 C2
-    CMASS1 EID PID G1 C1 G2 C2
+
+    +--------+-----+-----+----+----+----+----+
+    | CMASS1 | EID | PID | G1 | C1 | G2 | C2 |
+    +--------+-----+-----+----+----+----+----+
     """
     type = 'CMASS1'
     _field_map = {
@@ -156,7 +158,7 @@ class CMASS1(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -168,7 +170,10 @@ class CMASS1(PointMassElement):
 class CMASS2(PointMassElement):
     """
     Defines a scalar mass element without reference to a property entry.
-    CMASS2 EID M G1 C1 G2 C2
+
+    +--------+-----+-----+----+----+----+----+
+    | CMASS2 |   M | PID | G1 | C1 | G2 | C2 |
+    +--------+-----+-----+----+----+----+----+
     """
     type = 'CMASS2'
     _field_map = {
@@ -274,7 +279,7 @@ class CMASS2(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -286,7 +291,10 @@ class CMASS2(PointMassElement):
 class CMASS3(PointMassElement):
     """
     Defines a scalar mass element that is connected only to scalar points.
-    CMASS3 EID PID S1 S2
+
+    +--------+-----+-----+----+----+
+    | CMASS3 | EID | PID | S1 | S2 |
+    +--------+-----+-----+----+----+
     """
     type = 'CMASS3'
     _field_map = {
@@ -338,7 +346,7 @@ class CMASS3(PointMassElement):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -351,7 +359,10 @@ class CMASS4(PointMassElement):
     """
     Defines a scalar mass element that is connected only to scalar points,
     without reference to a property entry
-    CMASS4 EID M S1 S2
+
+    +--------+-----+-----+----+----+
+    | CMASS4 | EID |  M  | G1 | S2 |
+    +--------+-----+-----+----+----+
     """
     type = 'CMASS4'
     _field_map = {
@@ -401,7 +412,7 @@ class CMASS4(PointMassElement):
         fields = ['CMASS4', self.eid, self.mass, self.s1, self.s2]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -465,11 +476,15 @@ class CONM1(PointMassElement):
     def __init__(self, card=None, data=None, comment=''):
         """
         Concentrated Mass Element Connection, General Form
-        Defines a 6 x 6 symmetric mass matrix at a geometric grid point::
+        Defines a 6 x 6 symmetric mass matrix at a geometric grid point
 
-          CONM1 EID G CID M11 M21 M22 M31 M32
-                M33 M41 M42 M43 M44 M51 M52 M53
-                M54 M55 M61 M62 M63 M64 M65 M66
+        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+        |  CONM1 | EID | G   | CID | M11 | M21 | M22 | M31 | M32 |
+        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+        |        | M33 | M41 | M42 | M43 | M44 | M51 | M52 | M53 |
+        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+        |        | M54 | M55 | M61 | M62 | M63 | M64 | M65 | M66 |
+        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
 
         ::
 
@@ -593,7 +608,7 @@ class CONM1(PointMassElement):
             list_fields2.append(val)
         return list_fields2
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -642,8 +657,8 @@ class CONM2(PointMassElement):
         +-------+--------+-------+-------+---------+------+------+------+------+
         | CONM2 | EID    | NID   |  CID  |  MASS   |  X1  |  X2  |  X3  |      |
         +-------+--------+-------+-------+---------+------+------+------+------+
-        |       |   I11  |   I21 |  I22  |   I31   |  I32 |  I33 |
-        +-------+--------+-------+-------+---------+------+------+
+        |       |   I11  |   I21 |  I22  |   I31   |  I32 |  I33 |      |      |
+        +-------+--------+-------+-------+---------+------+------+------+------+
 
         +-------+--------+-------+-------+---------+
         | CONM2 | 501274 | 11064 |       | 132.274 |
@@ -726,7 +741,8 @@ class CONM2(PointMassElement):
             return A
         else:
             # transform to global
-            (dx, matrix) = self.cid.transformToGlobal(self.X)
+            #dx = self.cid.transform_node_to_global(self.X)
+            matrix = self.cid.beta()
             raise NotImplementedError('CONM2 intertia method is not implemented.')
             A2 = A * matrix
             return A2  # correct for offset using dx???
@@ -757,7 +773,7 @@ class CONM2(PointMassElement):
             # this statement is not supported...
 
             # convert self.X into the global frame
-            x, matrix = self.cid.transformToGlobal(self.X)
+            x = self.cid.transform_node_to_global(self.X)
 
             # self.X is an offset
             dx = x - self.cid.origin
@@ -795,7 +811,7 @@ class CONM2(PointMassElement):
 
     def raw_fields(self):
         list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
-                  list(self.X) + [None] + list(self.I))
+                       list(self.X) + [None] + list(self.I))
         return list_fields
 
     def repr_fields(self):
@@ -817,7 +833,7 @@ class CONM2(PointMassElement):
                        [None] + I)
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

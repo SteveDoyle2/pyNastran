@@ -3,7 +3,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBAR #, GRID, MAT1
 
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 bdf = BDF(debug=False)
 class TestBars(unittest.TestCase):
@@ -30,12 +30,14 @@ class TestBars(unittest.TestCase):
         I1 = I2 = None
         J = None
         nsm = None
-        c1=c2=d1=d2=e1=e2=f1=f2=None
-        k1=k2=None
+        c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = None
+        k1 = k2 = None
         i12 = 3.
-        fields = ['PBAR', pid, mid, A, I1, I2, J, nsm, None,
-                          c1, c2, d1, d2, e1, e2, f1, f2,
-                          k1, k2, i12]
+        fields = [
+            'PBAR', pid, mid, A, I1, I2, J, nsm, None,
+            c1, c2, d1, d2, e1, e2, f1, f2,
+            k1, k2, i12
+        ]
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
@@ -65,12 +67,13 @@ class TestBars(unittest.TestCase):
         I2 = 4.
         J = 3.
         nsm = 2.
-        c1=c2=d1=d2=e1=e2=f1=f2=None
-        k1=k2=1e2
+        c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = None
+        k1 = k2 = 1e2
         i12 = 0.
-        fields = ['PBAR', pid, mid, A, I1, I2, J, nsm, None,
-                          c1, c2, d1, d2, e1, e2, f1, f2,
-                          k1, k2, i12]
+        fields = [
+            'PBAR', pid, mid, A, I1, I2, J, nsm, None,
+            c1, c2, d1, d2, e1, e2, f1, f2,
+            k1, k2, i12]
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)

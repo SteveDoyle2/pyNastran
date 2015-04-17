@@ -78,11 +78,11 @@ class Test(ExtendedTestCase):
 
         # blank
         val = blank(BDFCard(['']   ), 0, 'field')
-        self.assertEquals(val, None)
+        self.assertEqual(val, None)
         val = blank(BDFCard([None] ), 0, 'field')
-        self.assertEquals(val, None)
+        self.assertEqual(val, None)
         val = blank(BDFCard([None] ), 0, 'field', 'default')
-        self.assertEquals(val, 'default')
+        self.assertEqual(val, 'default')
 
     def test_double(self):
         """
@@ -228,11 +228,11 @@ class Test(ExtendedTestCase):
 
         # float
         val = method(BDFCard([1.]  ), 0, 'field')
-        self.assertEquals(1., val)
+        self.assertEqual(1., val)
         val = method(BDFCard(['1.']), 0, 'field')
-        self.assertEquals(1., val)
+        self.assertEqual(1., val)
         val = method(BDFCard(['1-3']), 0, 'field')
-        self.assertEquals(1.e-3, val)
+        self.assertEqual(1.e-3, val)
 
     def test_double_or_blank(self):
         """
@@ -347,27 +347,27 @@ class Test(ExtendedTestCase):
     def test_components(self):
         # single ints
         val = components(BDFCard([0]), 0, 'field')
-        self.assertEquals(val, '0')
+        self.assertEqual(val, '0')
 
         val = components(BDFCard([1]), 0, 'field')
-        self.assertEquals(val, '1')
+        self.assertEqual(val, '1')
 
         # single strings
         val = components(BDFCard(['0']), 0, 'field')
-        self.assertEquals(val, '0')
+        self.assertEqual(val, '0')
 
         val = components(BDFCard(['1']), 0, 'field')
-        self.assertEquals(val, '1')
+        self.assertEqual(val, '1')
 
         # double ints
         val = components(BDFCard(['123']), 0, 'field')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         val = components(BDFCard([123]), 0, 'field')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         val = components(BDFCard([321]), 0, 'field')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         # embedded whiteshape
         with self.assertRaises(SyntaxError):
@@ -375,7 +375,7 @@ class Test(ExtendedTestCase):
 
         # all numbers
         val = components(BDFCard(['123456']), 0, 'field')
-        self.assertEquals(val, '123456')
+        self.assertEqual(val, '123456')
 
         # invalid 0's defined with numbers
         with self.assertRaises(SyntaxError):
@@ -415,27 +415,27 @@ class Test(ExtendedTestCase):
     def test_components_or_blank_01(self):
         # single ints
         val = components_or_blank(BDFCard([0]), 0, 'field')
-        self.assertEquals(val, '0')
+        self.assertEqual(val, '0')
 
         val = components_or_blank(BDFCard([1]), 0, 'field')
-        self.assertEquals(val, '1')
+        self.assertEqual(val, '1')
 
         # single strings
         val = components_or_blank(BDFCard(['0']), 0, 'field')
-        self.assertEquals(val, '0')
+        self.assertEqual(val, '0')
 
         val = components_or_blank(BDFCard(['1']), 0, 'field')
-        self.assertEquals(val, '1')
+        self.assertEqual(val, '1')
 
         # double ints
         val = components_or_blank(BDFCard(['123']), 0, 'field')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         val = components_or_blank(BDFCard([123]), 0, 'field')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         val = components_or_blank(BDFCard([321]), 0, 'field')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         # embedded whiteshape
         with self.assertRaises(SyntaxError):
@@ -443,7 +443,7 @@ class Test(ExtendedTestCase):
 
         # all numbers
         val = components_or_blank(BDFCard(['123456']), 0, 'field')
-        self.assertEquals(val, '123456')
+        self.assertEqual(val, '123456')
 
         # invalid 0's defined with numbers
         with self.assertRaises(SyntaxError):
@@ -483,27 +483,27 @@ class Test(ExtendedTestCase):
     def test_components_or_blank_02(self):
         # single ints
         val = components_or_blank(BDFCard([0]), 0, 'field', 'default')
-        self.assertEquals(val, '0')
+        self.assertEqual(val, '0')
 
         val = components_or_blank(BDFCard([1]), 0, 'field', 'default')
-        self.assertEquals(val, '1')
+        self.assertEqual(val, '1')
 
         # single strings
         val = components_or_blank(BDFCard(['0']), 0, 'field', 'default')
-        self.assertEquals(val, '0')
+        self.assertEqual(val, '0')
 
         val = components_or_blank(BDFCard(['1']), 0, 'field', 'default')
-        self.assertEquals(val, '1')
+        self.assertEqual(val, '1')
 
         # double ints
         val = components_or_blank(BDFCard(['123']), 0, 'field', 'default')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         val = components_or_blank(BDFCard([123]), 0, 'field', 'default')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         val = components_or_blank(BDFCard([321]), 0, 'field', 'default')
-        self.assertEquals(val, '123')
+        self.assertEqual(val, '123')
 
         # embedded whiteshape
         with self.assertRaises(SyntaxError):
@@ -511,7 +511,7 @@ class Test(ExtendedTestCase):
 
         # all numbers
         val = components_or_blank(BDFCard(['123456']), 0, 'field', 'default')
-        self.assertEquals(val, '123456')
+        self.assertEqual(val, '123456')
 
         # invalid 0's defined with numbers
         with self.assertRaises(SyntaxError):
@@ -546,9 +546,9 @@ class Test(ExtendedTestCase):
 
         # blank
         val = components_or_blank(BDFCard(['   ']), 0, 'field', 'default')
-        self.assertEquals(val, 'default')
+        self.assertEqual(val, 'default')
         val = components_or_blank(BDFCard([None]), 0, 'field', 'default')
-        self.assertEquals(val, 'default')
+        self.assertEqual(val, 'default')
 
     def test_bad(self):
         val = _get_dtype('1.000000000D+00')

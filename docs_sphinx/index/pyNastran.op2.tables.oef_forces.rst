@@ -1,17 +1,6 @@
 oef_forces Package
 ==================
 
-:mod:`complexForces` Module
----------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.complexForces
-
-.. automodule:: pyNastran.op2.tables.oef_forces.complexForces
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`oef` Module
 -----------------
 
@@ -62,28 +51,6 @@ oef_forces Package
 .. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_thermalObjects
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_thermalObjects
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`realForces` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.realForces
-
-.. automodule:: pyNastran.op2.tables.oef_forces.realForces
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`thermal_elements` Module
-------------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.thermal_elements
-
-.. automodule:: pyNastran.op2.tables.oef_forces.thermal_elements
     :members:
     :private-members:
     :undoc-members:

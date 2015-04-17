@@ -28,7 +28,7 @@ from numpy import array, pi, linspace, zeros, arange, repeat, dot, cos, arcsin
 from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
-from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank,
@@ -45,8 +45,8 @@ class AEFACT(BaseCard):
     +--------+-----+----+--------+-----+----+----+----+----+
     | AEFACT | SID | D1 | D2     | D3  | D4 | D5 | D6 | D7 |
     +--------+-----+----+--------+-----+----+----+----+----+
-    |        | D8  | D9 | -etc.- |
-    +--------+-----+----+--------+
+    |        | D8  | D9 | -etc.- |     |    |    |    |    |
+    +--------+-----+----+--------+-----+----+----+----+----+
 
     +--------+-----+----+--------+-----+
     | AEFACT | 97  |.3  | 0.7    | 1.0 |
@@ -86,7 +86,7 @@ class AEFACT(BaseCard):
         fields = ['AEFACT', self.sid] + list(self.Di)
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -101,8 +101,8 @@ class AELINK(BaseCard):
     +--------+-------+-------+--------+----+-------+----+-------+----+
     | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 | C4    | etc.   |
-    +--------+-------+-------+--------+
+    |        | LABL4 | C4    | etc.   |    |       |    |       |    |
+    +--------+-------+-------+--------+----+-------+----+-------+----+
 
     +--------+-------+-------+-------+------+
     | AELINK | 10    | INBDA | OTBDA | -2.0 |
@@ -150,7 +150,7 @@ class AELINK(BaseCard):
             fields += [ivar, ival]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -163,14 +163,14 @@ class AELIST(BaseCard):
     +---------+------+------+------+------+------+------+------+------+
     |  AELIST |  SID | E1   | E2   | E3   | E4   | E5   | E6   | E7   |
     +---------+------+------+------+------+------+------+------+------+
-    |         |  E8  | etc. |
-    +---------+------+------+
+    |         |  E8  | etc. |      |      |      |      |      |      |
+    +---------+------+------+------+------+------+------+------+------+
 
     +---------+------+------+------+------+------+------+------+------+
     |  AELIST |  75  | 1001 | THRU | 1075 | 1101 | THRU | 1109 | 1201 |
     +---------+------+------+------+------+------+------+------+------+
-    |         | 1202 |
-    +---------+------+
+    |         | 1202 |      |      |      |      |      |      |      |
+    +---------+------+------+------+------+------+------+------+------+
 
     Remarks
     -------
@@ -216,7 +216,7 @@ class AELIST(BaseCard):
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -266,7 +266,7 @@ class AEPARM(BaseCard):
         list_fields = ['AEPARM', self.id, self.label, self.units]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -313,7 +313,7 @@ class AESTAT(BaseCard):
         list_fields = ['AESTAT', self.id, self.label]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -426,13 +426,13 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -pi / 2.)
         pulim = set_blank_if_default(self.pulim, pi / 2.)
 
-        list_fields = ['AESURF', self.aesid,self.label, self.cid1, self.alid1,
+        list_fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
                        self.cid2, self.alid2, eff, ldw, crefc, crefs,
                        pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                        self.tqulim]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -487,7 +487,7 @@ class AESURFS(BaseCard):  # not integrated
                        self.list2]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -599,7 +599,7 @@ class AERO(Aero):
                        self.rhoRef, symXZ, symXY]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -613,6 +613,7 @@ class AEROS(Aero):
     +-------+-------+-------+------+------+-------+------+-------+
     | AEROS | ACSID | RCSID | REFC | REFB | REFS  |SYMXZ | SYMXY |
     +-------+-------+-------+------+------+-------+------+-------+
+
     +-------+-------+-------+------+------+-------+------+-------+
     | AEROS | 10    | 20    | 10.  | 100. | 1000. | 1    |       |
     +-------+-------+-------+------+------+-------+------+-------+
@@ -678,7 +679,7 @@ class AEROS(Aero):
                        self.bRef, self.Sref, symXZ, symXY]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -686,7 +687,7 @@ class AEROS(Aero):
 class CSSCHD(BaseCard):
     """
     Defines a scheduled control surface deflection as a function of Mach number
-    and angle of attack.::
+    and angle of attack.
 
     +--------+-----+-------+--------+-------+-------+
     |    1   |  2  |   3   |   4    |   5   |   6   |
@@ -766,7 +767,7 @@ class CSSCHD(BaseCard):
                        self.LMach(), self.LSchd()]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -775,7 +776,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
     """
     Defines an aerodynamic macro element (panel) in terms of two leading edge
     locations and side chords. This is used for Doublet-Lattice theory for
-    subsonic aerodynamics and the ZONA51 theory for supersonic aerodynamics.::
+    subsonic aerodynamics and the ZONA51 theory for supersonic aerodynamics.
 
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
@@ -1015,9 +1016,9 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         """
         lchord = self.get_LChord()
         lspan = self.get_LSpan()
-        list_fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
-                       self.nchord, lspan, lchord, self.igid,
-                       ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
+        list_fields = (['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
+                        self.nchord, lspan, lchord, self.igid, ] +
+                       list(self.p1) + [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
     def get_LChord(self):
@@ -1051,7 +1052,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
                        [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1245,7 +1246,7 @@ class CAERO2(BaseCard, CAERO2Deprecated):
                        [self.x12])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1337,7 +1338,7 @@ class CAERO3(BaseCard):
                        list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1431,10 +1432,10 @@ class CAERO4(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO4', self.eid, self.Pid(), cp, self.nspan,
                         self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
-                        list(self.p4) + [self.x43])
+                       list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1595,10 +1596,10 @@ class CAERO5(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO5', self.eid, self.Pid(), cp, nspan, lspan,
                         ntheory, self.nthick, None,] + list(self.p1) + [self.x12] +
-                        list(self.p4) + [self.x43])
+                       list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1645,20 +1646,20 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     return points, elements
 
 
-class PAERO5(object):
+class PAERO5(BaseCard):
     def __init__(self, card=None, data=None):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
         | PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
         +--------+-------+--------+--------+---------+-------+-------+-------+
-        |        | CAOC1 | CAOC2  | CAOC3  | CAOC4   | CAOC5 |
-        +--------+-------+--------+--------+---------+-------+
+        |        | CAOC1 | CAOC2  | CAOC3  | CAOC4   | CAOC5 |       |       |
+        +--------+-------+--------+--------+---------+-------+-------+-------+
 
         +--------+-------+--------+--------+---------+-------+-------+-------+
         | PAERO5 | 7001  |   1    |  702   |    1    | 701   |   1   |  700  |
         +--------+-------+--------+--------+---------+-------+-------+-------+
-                 |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |
-        +--------+-------+--------+--------+---------+-------+
+                 |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |       |       |
+        +--------+-------+--------+--------+---------+-------+-------+-------+
         """
         if card:
             self.pid = integer(card, 1, 'property_id')
@@ -1723,14 +1724,14 @@ class FLFACT(BaseCard):
     +--------+-----+----+------+----+----+----+----+----+
     | FLFACT | SID | F1 | F2   | F3 | F4 | F5 | F6 | F7 |
     +--------+-----+----+------+----+----+----+----+----+
-    |        | F8  | F9 | etc. |
-    +--------+-----+----+------+
+    |        | F8  | F9 | etc. |    |    |    |    |    |
+    +--------+-----+----+------+----+----+----+----+----+
 
     +--------+-----+----+------+-----+
     |   1    |  2  |  3 |   4  | 5   |
-    +--------+-----+----+------+------
+    +--------+-----+----+------+-----+
     | FLFACT | 97  | .3 |.7    | 3.5 |
-    +--------+-----+----+------+------
+    +--------+-----+----+------+-----+
 
     # delta quantity approach
 
@@ -1786,7 +1787,7 @@ class FLFACT(BaseCard):
         list_fields = ['FLFACT', self.sid] + self.factors
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1962,7 +1963,7 @@ class FLUTTER(BaseCard):
         #          self.get_rfreq_vel(), imethod, nValue, self.epsilon]
         #return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2021,7 +2022,7 @@ class GUST(BaseCard):
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2094,7 +2095,7 @@ class MKAERO1(BaseCard):
     def getMach_rFreqs(self):
         return self.machs, self.rFreqs
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2153,16 +2154,18 @@ class MKAERO2(BaseCard):
     def getMach_rFreqs(self):
         return self.machs, self.rFreqs
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
 class PAERO1(BaseCard):
     """
-    Defines associated bodies for the panels in the Doublet-Lattice method.::
+    Defines associated bodies for the panels in the Doublet-Lattice method.
 
-      PAERO1 PID B1 B2 B3 B4 B5 B6
+    +--------+-----+----+----+----+----+----+----+
+    | PAERO1 | PID | B1 | B2 | B3 | B4 | B5 | B6 |
+    +--------+-----+----+----+----+----+----+----+
     """
     type = 'PAERO1'
     _field_map = {1: 'pid'}
@@ -2227,17 +2230,20 @@ class PAERO1(BaseCard):
         list_fields = ['PAERO1', self.pid] + self.Bi
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
 class PAERO2(BaseCard):
     """
-    Defines the cross-sectional properties of aerodynamic bodies.::
+    Defines the cross-sectional properties of aerodynamic bodies.
 
-      PAERO2 PID ORIENT WIDTH AR LRSB LRIB LTH1 LTH2
-      THI1 THN1 THI2 THN2 THI3 THN3
+    +--------+------+--------+-------+------+------+------+------+------+
+    | PAERO2 | PID  | ORIENT | WIDTH |  AR  | LRSB | LRIB | LTH1 | LTH2 |
+    +--------+------+--------+-------+------+------+------+------+------+
+    | THI1   | THN1 |  THI2  |  THN2 | THI3 | THN3 |      |      |      |
+    +--------+------+--------+-------+------+------+------+------+------+
     """
     type = 'PAERO2'
     _field_map = {
@@ -2339,7 +2345,7 @@ class PAERO2(BaseCard):
             list_fields += [thi, thn]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2434,7 +2440,7 @@ class PAERO3(BaseCard):
             list_fields += [x, y]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2449,15 +2455,15 @@ class SPLINE1(Spline):
     Surface Spline Methods
     Defines a surface spline for interpolating motion and/or forces for
     aeroelastic problems on aerodynamic geometries defined by regular arrays of
-    aerodynamic points.::
+    aerodynamic points.
 
       +---------+-------+-------+------+------+------+----+------+-------+
       | SPLINE1 | EID   | CAERO | BOX1 | BOX2 | SETG | DZ | METH | USAGE |
       +---------+-------+-------+------+------+------+----+------+-------+
-      | NELEM   | MELEM |
-      +---------+-------+-------+------+------+------+----+
-      | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |
-      +---------+-------+-------+------+------+------+----+
+      | NELEM   | MELEM |       |      |      |      |    |      |       |
+      +---------+-------+-------+------+------+------+----+------+-------+
+      | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |      |       |
+      +---------+-------+-------+------+------+------+----+------+-------+
     """
     type = 'SPLINE1'
     _field_map = {
@@ -2550,7 +2556,7 @@ class SPLINE1(Spline):
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2560,19 +2566,19 @@ class SPLINE2(Spline):
     Linear Spline
     Defines a surface spline for interpolating motion and/or forces for
     aeroelastic problems on aerodynamic geometries defined by regular arrays of
-    aerodynamic points.::
+    aerodynamic points.
 
       +---------+------+-------+-------+-------+------+----+------+-----+
       | SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
       +---------+------+-------+-------+-------+------+----+------+-----+
-      |         | DTHX | DTHY  | None  | USAGE |
-      +---------+------+-------+-------+-------+
+      |         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
+      +---------+------+-------+-------+-------+------+----+------+-----+
 
       +---------+------+-------+-------+-------+------+----+------+-----+
       | SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
       +---------+------+-------+-------+-------+------+----+------+-----+
-      |         |  1.  |
-      +---------+------+
+      |         |  1.  |       |       |       |      |    |      |     |
+      +---------+------+-------+-------+-------+------+----+------+-----+
     """
     type = 'SPLINE2'
     _field_map = {
@@ -2654,7 +2660,7 @@ class SPLINE2(Spline):
                        None, usage]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2669,10 +2675,10 @@ class SPLINE4(Spline):
      +---------+-------+-------+--------+-----+------+----+------+-------+
      | SPLINE4 | EID   | CAERO | AELIST | --- | SETG | DZ | METH | USAGE |
      +---------+-------+-------+--------+-----+------+----+------+-------+
-     | NELEM   | MELEM |
-     +---------+-------+-------+--------+-----+------+----+------+
-     | SPLINE4 |   3   | 111   |   115  | --- |  14  | 0. | IPS  }
-     +---------+-------+-------+--------+-----+------+----+------+
+     | NELEM   | MELEM |       |        |     |      |    |      |       |
+     +---------+-------+-------+--------+-----+------+----+------+-------+
+     | SPLINE4 |   3   | 111   |   115  | --- |  14  | 0. | IPS  |       |
+     +---------+-------+-------+--------+-----+------+----+------+-------+
     """
     type = 'SPLINE4'
     _field_map = {
@@ -2767,7 +2773,7 @@ class SPLINE4(Spline):
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2783,8 +2789,8 @@ class SPLINE5(Spline):
     +---------+------+-------+--------+-------+------+----+------+-----+
     | SPLINE5 | EID  | CAERO | AELIST | ---   | SETG | DZ | DTOR | CID |
     +---------+------+-------+--------+-------+------+----+------+-----+
-    |         | DTHX | DTHY  | ---    | USAGE |
-    +---------+------+-------+--------+-------+
+    |         | DTHX | DTHY  | ---    | USAGE |      |    |      |     |
+    +---------+------+-------+--------+-------+------+----+------+-----+
     """
     type = 'SPLINE5'
     _field_map = {
@@ -2871,7 +2877,7 @@ class SPLINE5(Spline):
                        None, usage]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2997,6 +3003,6 @@ class TRIM(BaseCard):
                 list_fields += [self.aeqr]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

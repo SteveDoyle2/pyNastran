@@ -1,4 +1,5 @@
 #pylint: disable=C0301,C0111
+from __future__ import print_function
 from six.moves import range
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStress, RealRodStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
@@ -588,7 +589,6 @@ class OES(object):
             class_obj = RealPlateStress
 
 
-        print('is_max_shear = ', is_max_shear)
         if isubcase in slot:
             slot[isubcase].add_f06_data(data, transient)
         else:
@@ -695,7 +695,7 @@ class OES(object):
         return self._read_solid_strain('CTETRA', 39, 4, self.ctetra_strain)
 
     def _read_solid_stress(self, element_name, element_type, n, slot):
-        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, n, False)
+        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, n, is_strain=False)
         data_code['table_name'] = 'OES1X'
 
         data = self._read_3D_stress(element_name, n)
@@ -705,10 +705,12 @@ class OES(object):
             is_sort1 = True
             slot[isubcase] = RealSolidStress(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
+            assert slot[isubcase].is_stress() == True
+            assert slot[isubcase].is_strain() == False
         self.iSubcases.append(isubcase)
 
     def _read_solid_strain(self, element_name, element_type, n, slot):
-        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, n, True)
+        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, n, is_strain=True)
         data_code['table_name'] = 'OSTR1X'
 
         data = self._read_3D_stress(element_name, n)
@@ -718,9 +720,11 @@ class OES(object):
             is_sort1 = True
             slot[isubcase] = RealSolidStrain(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
+            assert slot[isubcase].is_stress() == False
+            assert slot[isubcase].is_strain() == True
         self.iSubcases.append(isubcase)
 
-    def _get_solid_header(self, element_name, element_type, n, is_strain):
+    def _get_solid_header(self, element_name, element_type, n, is_strain=True):
         """
         * analysis_code = 1 (Statics)
         * device_code   = 1 (Print)
@@ -787,7 +791,6 @@ def make_stress_bits(is_fiber_distance=False, is_max_shear=True, is_strain=True,
     #print "is_max_shear=%s is_fiber_distance=%s" %(is_max_shear, is_fiber_distance)
 
    #code = (isVonMises, isFiberCurvatur, isStress, isNotRod)
-    code = (is_max_shear, is_fiber_distance, is_strain, is_rod_or_solid)
     von_mises_code = 0 if is_max_shear else 1
     strain_code = 1 if is_strain else 0
     fiber_code = 1 if is_fiber_distance else 0
@@ -800,32 +803,37 @@ def make_stress_bits(is_fiber_distance=False, is_max_shear=True, is_strain=True,
         #von_mises_code = 0
         #stress_bits = [1, 0, 0, 0, 0]
         #stress_bits.reverse()
-        print('bits=%s' % stress_bits)
+        #print('bits=%s' % stress_bits)
         s_code = 0
         for i, codei in enumerate(reversed(stress_bits)):
             s_code += codei * 2**i
-        print('s_code=%s' % (s_code))
+        #print('s_code=%s' % (s_code))
         return (stress_bits, s_code)
 
     # True, False, True, False
     #[zero, one, two, three, is_von_mises]
+    code = (is_max_shear, is_fiber_distance, is_strain, is_rod_or_solid)
     mapper = {
         # element coordinate system (no material support)
         (True,  False, False, True) : ([0, 0, 0, 0, 0], 0),  # 0,  rod/csolid
-        (False, False, False, True) : ([0, 0, 0, 0, 1], 1),  # 1,  rod/csolid
-        (False, False, True,  True) : ([0, 0, 0, 0, 1], 1),   # ???
+        (False, False, False, True) : ([0, 0, 0, 0, 1], 1),  # 1,  rod/csolid strain
+        (False, False, True,  True) : ([0, 1, 0, 1, 1], 1),   # ???, rod/csolid strain
 
-        (True,  False, True, False) : ([0, 1, 0, 1, 0], 10),  # 10
-        (False, False, True, False) : ([0, 1, 0, 1, 1], 11),  # 11
+        #(True,  False, True, False) : ([0, 1, 0, 1, 0], 10),  # 10
+        #(False, False, True, False) : ([0, 1, 0, 1, 1], 11),  # 11
 
-        (True,  True, False, False) : ([0, 1, 1, 1, 0], 14),  # 14 - max shear, fiber_dist, stress, quad/tri
-        (True,  True, True,  False) : ([0, 1, 1, 1, 0], 14),  # 14 - max shear, fiber_dist, strain, quad/tri
-        (False, True, True,  False) : ([0, 1, 1, 1, 1], 15),  # 15 - von mises, fiber_dist, strain, quad/tri
+        #(True,  True, False, False) : ([0, 1, 1, 1, 0], 14),  # 14 - max shear, fiber_dist, stress, quad/tri
+        #(True,  True, True,  False) : ([0, 1, 1, 1, 0], 14),  # 14 - max shear, fiber_dist, strain, quad/tri
+        #(False, True, True,  False) : ([0, 1, 1, 1, 1], 15),  # 15 - von mises, fiber_dist, strain, quad/tri
 
-        (True,  False, False, False) : ([0, 0, 0, 0, 0], 0),  # 0,  composite
-        (False, True,  False, False) : ([0, 0, 0, 0, 1], 0),  # cquad4 bilinear ??? why do i need this...
+        #(True,  False, False, False) : ([0, 0, 0, 0, 0], 0),  # 0,  composite
+        #(False, True,  False, False) : ([0, 0, 0, 0, 1], 0),  # cquad4 bilinear ??? why do i need this...
     }
-    (stress_bits, s_code) = mapper[code]
+    try:
+        (stress_bits, s_code) = mapper[code]
+    except KeyError:
+        msg = 'is_max_shear=%s is_fiber_distance=%s is_strain=%s is_rod_or_solid=%s' % (is_max_shear, is_fiber_distance, is_strain, is_rod_or_solid)
+        raise RuntimeError(msg)
 
     #if is_max_shear==False:
     #    stress_bits[4] = 1 # Von Mises

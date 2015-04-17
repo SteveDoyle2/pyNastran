@@ -13,7 +13,7 @@ tables Package
     :show-inheritance:
 
 :mod:`lama` Module
------------------
+------------------
 
 .. inheritance-diagram:: pyNastran.f06.tables.lama
 
@@ -24,7 +24,7 @@ tables Package
     :show-inheritance:
 
 :mod:`max_min` Module
------------------
+---------------------
 
 .. inheritance-diagram:: pyNastran.f06.tables.max_min
 
@@ -57,7 +57,7 @@ tables Package
     :show-inheritance:
 
 :mod:`oload_resultant` Module
------------------
+-----------------------------
 
 .. inheritance-diagram:: pyNastran.f06.tables.oload_resultant
 

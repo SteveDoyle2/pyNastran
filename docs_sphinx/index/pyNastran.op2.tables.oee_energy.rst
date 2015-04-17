@@ -1,12 +1,12 @@
 oee_energy Package
 ==================
 
-:mod:`oee` Module
+:mod:`onr` Module
 -----------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.oee_energy.oee
+.. inheritance-diagram:: pyNastran.op2.tables.oee_energy.onr
 
-.. automodule:: pyNastran.op2.tables.oee_energy.oee
+.. automodule:: pyNastran.op2.tables.oee_energy.onr
     :members:
     :private-members:
     :undoc-members:

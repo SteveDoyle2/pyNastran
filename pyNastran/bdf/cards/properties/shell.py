@@ -1,4 +1,3 @@
-#pylint: disable=C0103,C0111
 """
 All shell properties are defined in this file.  This includes:
 
@@ -16,12 +15,12 @@ from six.moves import zip, range
 from numpy import array
 
 from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 class ShellProperty(Property):
     def __init__(self, card, data):
@@ -589,7 +588,7 @@ class PCOMP(CompositeShellProperty):
 
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                  self.TRef, self.ge, self.lam, ]
+                       self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iply)
@@ -612,7 +611,7 @@ class PCOMP(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -730,7 +729,7 @@ class PCOMPG(CompositeShellProperty):
 
     def raw_fields(self):
         list_fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                  self.TRef, self.ge, self.lam, ]
+                       self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iply)
@@ -754,7 +753,7 @@ class PCOMPG(CompositeShellProperty):
             list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -812,7 +811,7 @@ class PLPLANE(ShellProperty):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -876,8 +875,7 @@ class PSHEAR(ShellProperty):
         """
         Calculates mass per area.
 
-        .. math:: \frac{m}{A} = nsm + \rho t
-        """
+        .. math::  \frac{m}{A} = nsm + \rho t"""
         rho = self.Rho()
         massPerArea = self.nsm + rho * self.t
         return massPerArea
@@ -906,10 +904,10 @@ class PSHEAR(ShellProperty):
 
     def raw_fields(self):
         list_fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
-                  self.f1, self.f2]
+                       self.f1, self.f2]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -921,7 +919,7 @@ class PSHELL(ShellProperty):
     +--------+-------+------+--------+------+----------+------+------+---------+
     | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
     +--------+-------+------+--------+------+----------+------+------+---------+
-    |        |  Z1   |  Z2  |  MID4  |
+    |        |  Z1   |  Z2  |  MID4  |      |          |      |      |         |
     +--------+-------+------+--------+------+----------+------+------+---------+
     | PSHELL | 41111 |  1   | 1.0000 |  1   |          |   1  |      | 0.02081 |
     +--------+-------+------+--------+------+----------+------+------+---------+
@@ -957,8 +955,8 @@ class PSHELL(ShellProperty):
             self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
             tOver2 = self.t / 2.
-            self.z1 = double_or_blank(card, 9,  'z1', -tOver2)
-            self.z2 = double_or_blank(card, 10, 'z2',  tOver2)
+            self.z1 = double_or_blank(card, 9, 'z1', -tOver2)
+            self.z2 = double_or_blank(card, 10, 'z2', tOver2)
             self.mid4 = integer_or_blank(card, 11, 'mid4')
 
             #if self.mid2 is None:
@@ -1094,8 +1092,7 @@ class PSHELL(ShellProperty):
         """
         Calculates mass per area.
 
-        .. math:: \frac{m}{A} = nsm + \rho t
-        """
+        .. math:: \frac{m}{A} = nsm + \rho t"""
         rho = self.Rho()
         try:
             massPerArea = self.nsm + rho * self.t
@@ -1103,9 +1100,6 @@ class PSHELL(ShellProperty):
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return massPerArea
-
-    def D(self):
-        return self.mid().Dplate()
 
     def cross_reference(self, model):
         msg = ' which is required by PSHELL pid=%s' % self.pid
@@ -1118,10 +1112,10 @@ class PSHELL(ShellProperty):
         if self.mid4:
             self.mid4 = model.Material(self.mid4, msg)
 
-    def writeCalculix(self, marker='markerDummyProp',
-                      elementSet='ELsetDummyProp'):
+    def _write_calculix(self, marker='markerDummyProp',
+                        element_set='ELsetDummyProp'):
         msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' % (
-            marker, self.mid, elementSet, self.z1)
+            marker, self.mid, element_set, self.z1)
         msg += '** THICKNESS\n'
         msg += '%s\n\n' % (self.t)
         return msg
@@ -1149,8 +1143,8 @@ class PSHELL(ShellProperty):
 
     def raw_fields(self):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
-                  self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,
-                  self.z2, self.Mid4()]
+                       self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,
+                       self.z2, self.Mid4()]
         return list_fields
 
     def repr_fields(self):
@@ -1163,10 +1157,10 @@ class PSHELL(ShellProperty):
         z2 = set_blank_if_default(self.z2, tOver2)
 
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
-                  twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
+                       twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

@@ -85,19 +85,19 @@ class TestCoords(unittest.TestCase):
 
     def test_rotate3(self):
         grids = [
-                     [1, 1, 0., 0., 1.],
-                     [2, 1, 0., 1., 0.],
-                     [3, 1, 1., 0., 0.],
-                     [4, 1, 1., 1., 1.],
-                     [5, 1, 1., 1., 0.],
-                 ]
+            [1, 1, 0., 0., 1.],
+            [2, 1, 0., 1., 0.],
+            [3, 1, 1., 0., 0.],
+            [4, 1, 1., 1., 1.],
+            [5, 1, 1., 1., 0.],
+        ]
         grids_expected = [
-                     [1, 1,  0., 0., -1.],
-                     [2, 1,  0., 1.,  0.],
-                     [3, 1, -1., 0.,  0.],
-                     [4, 1, -1., 1., -1.],
-                     [5, 1, -1., 1.,  0.],
-                 ]
+            [1, 1,  0., 0., -1.],
+            [2, 1,  0., 1.,  0.],
+            [3, 1, -1., 0.,  0.],
+            [4, 1, -1., 1., -1.],
+            [5, 1, -1., 1.,  0.],
+        ]
 
         coords = [  # cid, rid, origin,      zaxis          xaxis
                    [1, 0,      [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
@@ -131,9 +131,9 @@ class TestCoords(unittest.TestCase):
 
         size = 8
         card = CORD1R(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        self.assertEqual(card.Cid(), 2)
+        self.assertEqual(card.Rid(), 0)
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cord2c_01(self):
@@ -159,12 +159,12 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
 
         cord2r = model.Coord(3)
-        self.assertEquals(cord2r.Cid(), 3)
-        self.assertEquals(cord2r.Rid(), 0)
+        self.assertEqual(cord2r.Cid(), 3)
+        self.assertEqual(cord2r.Rid(), 0)
 
         cord2r = model.Coord(4)
-        self.assertEquals(cord2r.Cid(), 4)
-        self.assertEquals(cord2r.Rid(), 3)
+        self.assertEqual(cord2r.Cid(), 4)
+        self.assertEqual(cord2r.Rid(), 3)
 
         self.assertTrue(allclose(cord2r.i, array([0., 0., 1.])))
         delta = cord2r.j - array([1., 1., 0.]) / 2**0.5
@@ -222,16 +222,16 @@ class TestCoords(unittest.TestCase):
         for card in cards:
             model.add_card(card, card[0], comment='comment', is_list=True)
         c1 = model.Coord(1)
-        self.assertEquals(c1.G1(), 1)
-        self.assertEquals(c1.G2(), 2)
-        self.assertEquals(c1.G3(), 3)
+        self.assertEqual(c1.G1(), 1)
+        self.assertEqual(c1.G2(), 2)
+        self.assertEqual(c1.G3(), 3)
 
         model.cross_reference()
-        self.assertEquals(c1.G1(), 1)
-        self.assertEquals(c1.G2(), 2)
-        self.assertEquals(c1.G3(), 3)
+        self.assertEqual(c1.G1(), 1)
+        self.assertEqual(c1.G2(), 2)
+        self.assertEqual(c1.G3(), 3)
 
-        self.assertEquals(c1.NodeIDs(), [1, 2, 3])
+        self.assertEqual(c1.node_ids, [1, 2, 3])
 
     def test_cord2_bad_01(self):
         model = BDF(debug=False)
@@ -262,12 +262,12 @@ class TestCoords(unittest.TestCase):
 
         # this runs because it's got rid=0
         cord4 = model.Coord(4)
-        cord4.transformToGlobal([0., 0., 0.])
+        cord4.transform_node_to_global([0., 0., 0.])
 
         # this doesn't run because rid != 0
         cord5 = model.Coord(5)
         with self.assertRaises(RuntimeError):
-            cord5.transformToGlobal([0., 0., 0.])
+            cord5.transform_node_to_global([0., 0., 0.])
         model.cross_reference()
 
     def test_cord2_rcs_01(self):
@@ -301,9 +301,9 @@ class TestCoords(unittest.TestCase):
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
-            a = array([30.,40.,50.])
+            a = array([30., 40., 50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord2_rcs_02(self):
         """
@@ -340,7 +340,7 @@ class TestCoords(unittest.TestCase):
         for nid in model.nodes:
             a = array([30.,40.,50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord2_rcs_03(self):
         """
@@ -377,7 +377,7 @@ class TestCoords(unittest.TestCase):
         for nid in model.nodes:
             a = array([30.,40.,50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
@@ -386,9 +386,9 @@ class TestCoords(unittest.TestCase):
 
         size = 8
         card = CORD1C(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        self.assertEqual(card.Cid(), 2)
+        self.assertEqual(card.Rid(), 0)
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cord1s_01(self):
@@ -398,15 +398,17 @@ class TestCoords(unittest.TestCase):
 
         size = 8
         card = CORD1S(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        self.assertEqual(card.Cid(), 2)
+        self.assertEqual(card.Rid(), 0)
+        card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
-        coord = ['CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
-                 '           1.135 .089237   .9324']
+        coord = [
+            'CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
+            '           1.135 .089237   .9324'
+        ]
 
         model = BDF(debug=False)
         card = model.process_card(grid)
@@ -431,7 +433,10 @@ class TestCoords(unittest.TestCase):
         msg = '\nexpected=%s \nactual  =%s \ndiff    =%s' % (expected, xyz, diff)
         assert allclose(diff, 0.), msg
         coord = model.Coord(7)
-        coord.T()
+        coord.beta_n(1)
+        coord.beta_n(2)
+        coord.beta_n(3)
+        coord.beta_n(6)
         self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
     def getNodes(self, grids, grids_expected, coords):
@@ -487,7 +492,7 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
     def test_B(self):
@@ -512,7 +517,7 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
 

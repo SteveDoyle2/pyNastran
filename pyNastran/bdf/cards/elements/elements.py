@@ -16,7 +16,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string)  # double
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class CFAST(Element):
@@ -56,13 +56,13 @@ class CFAST(Element):
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
-                  self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
+                       self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
         return list_fields
 
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -72,9 +72,11 @@ class CGAP(Element):
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
     }
-    ## todo:: not done...
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        # .. todo:: not done...
+        """
         Element.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -117,7 +119,7 @@ class CGAP(Element):
         cid = self.Cid()
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert cid is None or isinstance(cid, int), 'cid=%r\n%s' % (cid, str(self))
         assert isinstance(eid, int), 'eid=%r\n%s' % (eid, str(self))
@@ -145,7 +147,15 @@ class CGAP(Element):
         return self.eid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def Cid(self):
         if isinstance(self.cid, int) or self.cid is None:
@@ -171,7 +181,7 @@ class CGAP(Element):
                   [self.Cid()])
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -226,7 +236,7 @@ class CRAC2D(CrackElement):
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -235,13 +245,21 @@ class CRAC2D(CrackElement):
         return self.eid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CRAC2D', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -278,18 +296,26 @@ class CRAC3D(CrackElement):
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
+        list_fields = ['CRAC3D', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

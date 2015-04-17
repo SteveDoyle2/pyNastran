@@ -1,7 +1,7 @@
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 bdf = BDF(debug=False)
 
@@ -20,20 +20,20 @@ class TestMaterials(unittest.TestCase):
         card = BDFCard(fields)
 
         mat1 = MAT1(card)
-        self.assertEquals(mid, mat1.Mid())
-        self.assertEquals(E, mat1.E())
-        self.assertEquals(G, mat1.G())
-        self.assertEquals(nu, mat1.Nu())
-        self.assertEquals(rho, mat1.Rho())
+        self.assertEqual(mid, mat1.Mid())
+        self.assertEqual(E, mat1.E())
+        self.assertEqual(G, mat1.G())
+        self.assertEqual(nu, mat1.Nu())
+        self.assertEqual(rho, mat1.Rho())
 
         size = 8
-        msg = mat1.write_bdf(size, 'dummy')
-        self.assertEquals(msg,
+        msg = mat1.write_card(size, 'dummy')
+        self.assertEqual(msg,
             'MAT1           1    2.+7    3.+7      .4   1.-50\n')
 
         size = 16
-        msg = mat1.write_bdf(size, 'dummy')
-        self.assertEquals(msg,
+        msg = mat1.write_card(size, 'dummy')
+        self.assertEqual(msg,
             'MAT1*                  1       20000000.       30000000.              .4\n*                  1.-50\n')
 
     def test_mat5_01(self):
@@ -73,7 +73,7 @@ class TestMaterials(unittest.TestCase):
         msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 16
-        msg = card2.write_bdf(size, 'dummy')
+        msg = card2.write_card(size, 'dummy')
         #msg = f.getvalue()
         #print(msg)
 
@@ -83,7 +83,7 @@ class TestMaterials(unittest.TestCase):
         #print(msg)
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            msg =  'actual   = %r\n' % actual
+            msg = 'actual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
@@ -104,7 +104,7 @@ class TestMaterials(unittest.TestCase):
         msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 8
-        msg = card2.write_bdf(size, 'dummy')
+        msg = card2.write_card(size, 'dummy')
         #msg = f.getvalue()
         #print(msg)
 
@@ -114,7 +114,7 @@ class TestMaterials(unittest.TestCase):
         #print(msg)
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
-            msg =  '\nactual   = %r\n' % actual
+            msg = '\nactual   = %r\n' % actual
             msg += 'expected =  %r' % expected
             self.assertEqual(actual, expected, msg)
 

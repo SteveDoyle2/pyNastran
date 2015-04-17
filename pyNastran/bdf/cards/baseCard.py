@@ -4,8 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types
 from six.moves import zip, range
 
-from pyNastran.bdf.fieldWriter import print_card_8, is_same
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8, is_same
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
@@ -73,7 +73,7 @@ class BaseCard(BaseCardDeprecated):
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def print_raw_fields(self, size=8, is_double=False):  ## TODO: needs to be fixed
+    def print_raw_card(self, size=8, is_double=False):  ## TODO: needs to be fixed
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return print_card(list_fields, size=size, is_double=False)
@@ -90,7 +90,7 @@ class BaseCard(BaseCardDeprecated):
             return self.comment() + print_card_double(list_fields)
         return self.comment() + print_card_16(list_fields)
 
-    def repr_card(self, size=8, is_double=False):
+    def print_repr_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
         if size == 16:
             if is_double:
@@ -270,7 +270,7 @@ class Element(BaseCard, ElementDeprecated):
         >>> print element.faces
         """
         faces = {}
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         if self.type.find('HEX') != -1:  # CHEXA
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]

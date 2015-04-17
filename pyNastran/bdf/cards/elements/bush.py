@@ -13,11 +13,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 #from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string_or_blank) # double
-from pyNastran.bdf.fieldWriter import print_card_8
+    integer_double_or_blank, double_or_blank, string_or_blank)
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class BushElement(Element):
@@ -31,17 +31,6 @@ class BushElement(Element):
         elif isinstance(self.cid, int):
             return self.cid
         return self.cid.cid
-
-    #def Ga(self):
-        #print dir(self)
-        #if isinstance(self.ga, int):
-            #return self.ga
-        #return self.ga.nid
-
-    #def Gb(self):
-        #if isinstance(self.gb, int):
-            #return self.gb
-        #return self.gb.nid
 
     def Mass(self):
         return 0.
@@ -125,7 +114,15 @@ class CBUSH(BushElement):
         return self.eid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -193,7 +190,7 @@ class CBUSH(BushElement):
                   x + [self.Cid(), s, ocid] + self.si)
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -255,14 +252,22 @@ class CBUSH1D(BushElement):
         return self.gb.nid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid()]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -324,7 +329,15 @@ class CBUSH2D(BushElement):
         return self.gb.nid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
@@ -341,6 +354,6 @@ class CBUSH2D(BushElement):
                   self.Cid(), self.plane, self.sptid]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

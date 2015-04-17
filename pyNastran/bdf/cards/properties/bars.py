@@ -13,16 +13,14 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 from numpy import pi, array
 
-from pyNastran.bdf.fieldWriter import (set_blank_if_default,
-                                       set_default_if_blank)
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank, blank,
+    double, double_or_blank, string, string_or_blank, blank,
     integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 def IyyBeam(b, h):
     return 1 / 12. * b * h ** 3
@@ -579,13 +577,13 @@ class PBAR(LineProperty):
             do a check for mid -> MAT1      for structural
             do a check for mid -> MAT4/MAT5 for thermal
 
-        +------+-----+-----+-----+----+----+----+-----+
-        | PBAR | PID | MID | A   | I1 | I2 | J  | NSM |
+        +------+-----+-----+-----+----+----+----+-----+-----+
+        | PBAR | PID | MID | A   | I1 | I2 | J  | NSM |     |
         +------+-----+-----+-----+----+----+----+-----+-----+
         |      | C1  | C2  | D1  | D2 | E1 | E2 | F1  | F2  |
         +------+-----+-----+-----+----+----+----+-----+-----+
-        |      | K1  | K2  | I12 |
-        +------+-----+-----+-----+
+        |      | K1  | K2  | I12 |    |    |    |     |     |
+        +------+-----+-----+-----+----+----+----+-----+-----+
         """
         LineProperty.__init__(self, card, data)
         if comment:
@@ -732,13 +730,13 @@ class PBAR(LineProperty):
         msg += "              ORIENTATION=(\n"
         msg += "                    CARA=('VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return (msg)
+        return msg
 
     def raw_fields(self):
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, self.i1, self.i2,
-                  self.j, self.nsm, None, self.C1, self.C2, self.D1, self.D2,
-                  self.E1, self.E2, self.F1, self.F2, self.K1, self.K2,
-                  self.i12]
+                       self.j, self.nsm, None, self.C1, self.C2, self.D1, self.D2,
+                       self.E1, self.E2, self.F1, self.F2, self.K1, self.K2,
+                       self.i12]
         return list_fields
 
     def repr_fields(self):
@@ -768,7 +766,7 @@ class PBAR(LineProperty):
                        None, C1, C2, D1, D2, E1, E2, F1, F2, K1, K2, i12]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1012,11 +1010,11 @@ class PBARL(LineProperty):
             Area = d2 * d3 + d1 * d4
 
         elif Type in ['T2']:
-            (d1, d2, d3, d4) = dim  # check origin, y3 at bottom, x1 innner
+            d1, d2, d3, d4 = dim  # check origin, y3 at bottom, x1 innner
             x1 = d4 / 2.
             x2 = d1 / 2.
             y1 = -d3 / 2.
-            y2 =  d3 / 2.
+            y2 = d3 / 2.
             y3 = -d3 / 2.
             points = [  # start at upper right, go clockwise
                 [x1, y3],   # p1
@@ -1142,7 +1140,7 @@ class PBARL(LineProperty):
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_card(self, size, is_double):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1299,17 +1297,17 @@ class PBEND(LineProperty):
         list_fields = ['PBEND', self.pid, self.Mid(), ]  # other
         if self.beamType == 1:
             list_fields += [self.A, self.i1, self.i2, self.j, self.rb,
-                       self.thetab, self.c1, self.c2, self.d1, self.d2,
-                       self.e1, self.e2, self.f1, self.f2, self.k1, self.k2,
-                       self.nsm, self.rc, self.zc, self.deltaN]
+                            self.thetab, self.c1, self.c2, self.d1, self.d2,
+                            self.e1, self.e2, self.f1, self.f2, self.k1, self.k2,
+                            self.nsm, self.rc, self.zc, self.deltaN]
         elif self.beamType == 2:
             list_fields += [self.fsi, self.rm, self.t, self.p, self.rb,
-                       self.thetab, None, None, self.nsm, self.rc, self.zc]
+                            self.thetab, None, None, self.nsm, self.rc, self.zc]
         else:
             raise ValueError('only beamType=1 and 2 supported')
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

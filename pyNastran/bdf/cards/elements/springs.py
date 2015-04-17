@@ -15,11 +15,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import array, zeros, dot, transpose
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double, double_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class SpringElement(Element):
@@ -33,28 +33,6 @@ class SpringElement(Element):
     def Centroid(self):
         p = (self.nodes[1].Position() - self.nodes[0].Position()) / 2.
         return p
-
-    def K(self):
-        raise NotImplementedError('K not implemented in the %s class'
-                                  % self.type)
-
-    def Lambda(self, model, debug=False):
-        """
-          3d  [l,m,n,0,0,0]
-              [0,0,0,l,m,n]
-        """
-        (n1, n2) = self.nodeIDs()
-        p1 = model.Node(n1).Position()
-        p2 = model.Node(n2).Position()
-        v1 = p2 - p1
-        v1 = v1 / norm(v1)
-        (l, m, n) = v1
-        Lambda = array(zeros((2, 6), 'float64'))
-
-        Lambda[0, 0] = Lambda[1, 3] = l
-        Lambda[0, 1] = Lambda[1, 4] = m
-        Lambda[0, 2] = Lambda[1, 5] = n
-        return Lambda
 
     def Mass(self):
         return 0.0
@@ -109,12 +87,21 @@ class CELAS1(SpringElement):
         assert len(self.nodes) == 2
 
     def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        return self._nodeIDs(allowEmptyNodes=True,
+                             msg=str(['CELAS1', self.eid]))
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _verify(self, xref=False):
         eid = self.Eid()
         k = self.K()
-        nodeIDs = self.nodeIDs()
+        nodeIDs = self.node_ids
         c1 = self.c2
         c2 = self.c1
         #ge = self.ge
@@ -149,12 +136,12 @@ class CELAS1(SpringElement):
         self.pid = model.Property(self.pid, msg=msg)
 
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
                   self.c1, nodes[1], self.c2]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -206,8 +193,8 @@ class CELAS2(SpringElement):
             self.s = data[7]
 
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
@@ -218,7 +205,7 @@ class CELAS2(SpringElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         k = self.K()
-        nodeIDs = self.nodeIDs()
+        nodeIDs = self.node_ids
         c1 = self.c2
         c2 = self.c1
         ge = self.ge
@@ -248,7 +235,7 @@ class CELAS2(SpringElement):
         return self.k
 
     def write_code_aster(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         msg = ''
         msg += 'DISCRET=_F( # CELAS2\n'
         if nodes[0]:
@@ -273,24 +260,32 @@ class CELAS2(SpringElement):
         return msg
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True,
                              msg=str(['CELAS2', self.eid]))
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
-                  nodes[1], self.c2, self.ge, self.s]
+                       nodes[1], self.c2, self.ge, self.s]
         return list_fields
 
     def repr_fields(self):
-        nodes = self.nodeIDs()
+        nodes = self.node_ids
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
-                  nodes[1], self.c2, ge, s]
+                       nodes[1], self.c2, ge, s]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -339,6 +334,18 @@ class CELAS3(SpringElement):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        return self._nodeIDs(allowEmptyNodes=True,
+                             msg=str(['CELAS3', self.eid]))
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def raw_fields(self):
         list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
         return list_fields
@@ -349,7 +356,7 @@ class CELAS3(SpringElement):
         #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -395,6 +402,18 @@ class CELAS4(SpringElement):
     def K(self):
         return self.k
 
+    def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        return self._nodeIDs(allowEmptyNodes=True,
+                             msg=str(['CELAS4', self.eid]))
+
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def cross_reference(self, model):
         msg = ' which is required by CELAS4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
@@ -409,6 +428,6 @@ class CELAS4(SpringElement):
         #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

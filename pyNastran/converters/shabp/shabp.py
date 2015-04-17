@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import range
 from numpy import array, zeros, arange, ravel, ones, cross
 from numpy.linalg import norm
@@ -105,9 +106,9 @@ class SHABP(ShabpOut):
             for irow in range(nrows-1):
                 for jcol in range(ncols-1):
                     i1 = irow*ncols +jcol,
-                    i2 = (irow+1)*ncols +(jcol  ),
+                    i2 = (irow+1)*ncols +(jcol),
                     i3 = (irow+1)*ncols +(jcol+1),
-                    i4 = irow*ncols +(jcol+1),
+                    i4 = irow*ncols + (jcol+1),
                     a = XYZ[i3, :] - XYZ[i1, :]
                     b = XYZ[i4, :] - XYZ[i2, :]
                     A += 0.5 * norm(cross(a, b))
@@ -150,7 +151,7 @@ class SHABP(ShabpOut):
                 line = lines[i]
                 i += 1
 
-                x1,y1,z1,t1 = line[:10], line[10:20],line[20:30],line[30:31]
+                x1, y1, z1, t1 = line[:10], line[10:20], line[20:30], line[30:31]
                 x1 = float(x1)
                 y1 = float(y1)
                 z1 = float(z1)
@@ -168,9 +169,9 @@ class SHABP(ShabpOut):
                     #print "breaking1"
                     break
                 else:
-                    aaaa
+                    raise RuntimeError()
 
-                x2,y2,z2,t2 = line[31:41], line[41:51],line[51:61],line[61:62]
+                x2, y2, z2, t2 = line[31:41], line[41:51], line[51:61], line[61:62]
                 x2 = float(x2)
                 y2 = float(y2)
                 z2 = float(z2)
@@ -188,7 +189,7 @@ class SHABP(ShabpOut):
                     #print "breaking2"
                     break
                 else:
-                    bbb
+                    raise RuntimeError()
 
             patches.append(array(patch, dtype='float32'))
             if is_last_patch:
@@ -271,11 +272,11 @@ class SHABP(ShabpOut):
             for irow in range(nrows-1):
                 for jcol in range(ncols-1):
                     element = [
-                         irow*ncols + jcol,
-                         (irow+1)*ncols + (jcol  ),
-                         (irow+1)*ncols + (jcol+1),
-                         irow*ncols + (jcol+1),
-                         ]
+                        irow*ncols + jcol,
+                        (irow+1)*ncols + (jcol),
+                        (irow+1)*ncols + (jcol+1),
+                        irow*ncols + (jcol+1),
+                    ]
                     elements.append(element)
             elements = array(elements, dtype='int32')
 
@@ -283,7 +284,7 @@ class SHABP(ShabpOut):
             components[ielement:ielement+nelementsi] *= comp_num
             impact[ielement:ielement+nelementsi] *= impact_val
             shadow[ielement:ielement+nelementsi] *= shadow_val
-            elements2[ielement:ielement+nelementsi,:] = elements[:,:] + ipoint
+            elements2[ielement:ielement+nelementsi, :] = elements[:, :] + ipoint
             #print "  ipatch=%i Cp[%i:%i]" % (ipatch+1, ielement, ielement+nelementsi)
             ipoint += npointsi
             ielement += nelementsi
@@ -338,16 +339,18 @@ class SHABP(ShabpOut):
             impact = int(line2[0:2].strip())
             shadow = int(line2[2:4].strip())
             iprint = int(line2[4:5].strip())
-            ipin   = int(line2[5:6].strip())
-            isave  = int(line2[6:7].strip())
+            ipin = int(line2[5:6].strip())
+            isave = int(line2[6:7].strip())
             pdata1 = float(line2[10:20].strip())
             pdata2 = float(line2[20:30].strip())
             pdata3 = float(line2[30:40].strip())
             pdata4 = float(line2[40:50].strip())
             pdata5 = float(line2[50:60].strip())
             pdata6 = float(line2[60:70].strip())
-            self.component_to_params[icomponent] = [impact, shadow, iprint,
-                ipin, isave, pdata1, pdata2, pdata3, pdata4, pdata5, pdata6]
+            self.component_to_params[icomponent] = [
+                impact, shadow, iprint,
+                ipin, isave, pdata1, pdata2, pdata3, pdata4, pdata5, pdata6
+            ]
             i += 2
 
         #print "ncomps =", len(self.component_to_params)
@@ -380,7 +383,8 @@ class SHABP(ShabpOut):
                 i += 1
         else:
             print("*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip()))
-            aaaa
+            raise RuntimeError()
+            #aaaa
 
         # component names   7
         comp_names_line = self.trailer[i].rstrip()

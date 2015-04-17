@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for Nastran.
+"""
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
 from six import iteritems, itervalues
@@ -26,7 +29,8 @@ from numpy.linalg import norm
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-                 vtkQuadraticWedge, vtkQuadraticHexahedron)
+                 vtkQuadraticWedge, vtkQuadraticHexahedron,
+                 vtkPyramid, vtkQuadraticPyramid)
 
 #from pyNastran import is_release
 from pyNastran.bdf.bdf import (BDF,
@@ -35,6 +39,7 @@ from pyNastran.bdf.bdf import (BDF,
                                CTRIA3, CTRIA6, CTRIAR, CTRIAX6,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,
                                CHEXA8, CHEXA20,
+                               CPYRAM5, CPYRAM13,
                                CONM2,
                                ShellElement, LineElement, SpringElement,
                                LOAD)
@@ -45,7 +50,7 @@ try:
     is_geom = True
 except ImportError:
     is_geom = False
-from pyNastran.f06.f06 import F06
+#from pyNastran.f06.f06 import F06
 
 
 class NastranIO(object):
@@ -182,9 +187,9 @@ class NastranIO(object):
             model.cross_reference(xref=True, xref_loads=xref_loads,
                                   xref_constraints=False)
 
-        nnodes = model.nNodes()
+        nnodes = model.nnodes
         assert nnodes > 0
-        nelements = model.nElements()
+        nelements = model.nelements
         assert nelements > 0
 
         if self.is_sub_panels:
@@ -200,7 +205,7 @@ class NastranIO(object):
             ncaeros = nsub_elements_caeros
             ncaeros_points = nsub_points_caeros
         else:
-            ncaeros = model.nCAeros()
+            ncaeros = model.ncaeros
             ncaeros_points = ncaeros * 4
 
         self.nNodes = nnodes
@@ -299,7 +304,7 @@ class NastranIO(object):
                    element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
-                    node_ids = element.nodeIDs()
+                    node_ids = element.node_ids
                     if None in node_ids:
                         nsprings += 1
 
@@ -396,7 +401,7 @@ class NastranIO(object):
             pid = 0
             if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
                 elem = vtkTriangle()
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -405,7 +410,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif isinstance(element, CTRIA6):
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:3]
                 if None not in nodeIDs:
@@ -422,7 +427,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CTRIAX6):
                 # midside nodes are required, nodes out of order
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 if None not in nodeIDs:
                     elem = vtkQuadraticTriangle()
@@ -450,7 +455,7 @@ class NastranIO(object):
 
             elif (isinstance(element, CQUAD4) or isinstance(element, CSHEAR) or
                   isinstance(element, CQUADR)):
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 elem = vtkQuad()
@@ -461,7 +466,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif isinstance(element, CQUAD8):
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 if None not in nodeIDs:
@@ -480,7 +485,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CTETRA4):
                 elem = vtkTetra()
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -490,7 +495,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif isinstance(element, CTETRA10):
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 if None not in nodeIDs:
@@ -511,7 +516,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:6]
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -524,7 +529,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
 
             elif isinstance(element, CPENTA15):
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:6]
                 if None not in nodeIDs:
@@ -549,7 +554,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif isinstance(element, CHEXA8):
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:8]
                 elem = vtkHexahedron()
@@ -564,7 +569,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
             elif isinstance(element, CHEXA20):
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 pid = element.Pid()
                 if None not in nodeIDs:
                     elem = vtkQuadraticHexahedron()
@@ -594,6 +599,47 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
+
+
+            elif isinstance(element, CPYRAM5):
+                nodeIDs = element.node_ids
+                pid = element.Pid()
+                self.eid_to_nid_map[eid] = nodeIDs[:5]
+                elem = vtkPyramid()
+                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
+                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
+                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
+                self.grid.InsertNextCell(elem.GetCellType(),
+                                         elem.GetPointIds())
+            elif isinstance(element, CPYRAM13):
+                nodeIDs = element.node_ids
+                pid = element.Pid()
+                #if None not in nodeIDs:
+                    #print(' node_ids =', nodeIDs)
+                    #elem = vtkQuadraticPyramid()
+                    #elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
+                    #elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
+                    #elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
+                    #elem.GetPointIds().SetId(8, nidMap[nodeIDs[8]])
+                    #elem.GetPointIds().SetId(9, nidMap[nodeIDs[9]])
+                    #elem.GetPointIds().SetId(10, nidMap[nodeIDs[10]])
+                    #elem.GetPointIds().SetId(11, nidMap[nodeIDs[11]])
+                    #elem.GetPointIds().SetId(12, nidMap[nodeIDs[12]])
+                #else:
+                elem = vtkPyramid()
+                #print('*node_ids =', nodeIDs[:5])
+
+                self.eid_to_nid_map[eid] = nodeIDs[:5]
+
+                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
+                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
+                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
+                self.grid.InsertNextCell(elem.GetCellType(),
+                                         elem.GetPointIds())
             elif (isinstance(element, LineElement) or
                   isinstance(element, SpringElement) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
@@ -609,7 +655,7 @@ class NastranIO(object):
                     # CONROD
                     # CELAS2, CELAS4?
                     pid = 0
-                nodeIDs = element.nodeIDs()
+                nodeIDs = element.node_ids
                 if nodeIDs[0] is None and  nodeIDs[0] is None: # CELAS2
                     print('removing CELASx eid=%i -> no node %i' % (eid, nodeIDs[0]))
                     del self.eidMap[eid]
@@ -790,7 +836,10 @@ class NastranIO(object):
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
                 continue
-            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
+            try:
+                load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
+            except KeyError:
+                continue
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -836,7 +885,7 @@ class NastranIO(object):
                 case_name = 'Pressure Case=%i' % subcase_id
                 print(case_name)
                 # subcase_id, resultType, vectorSize, location, dataFormat
-                cases[(0, case_name , 1, 'centroid', '%.1f')] = pressures
+                cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
                 form0.append((case_name, icase, []))
                 icase += 1
         return icase
@@ -878,14 +927,14 @@ class NastranIO(object):
                     #elem = load.eid
                     #if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
                         #eid = elem.eid
-                        #node_ids = elem.nodeIDs()
+                        #node_ids = elem.node_ids
                         #k = load.pressures[0] * scale / 3.
                         ## TODO: doesn't consider load.eids for distributed pressures???
                         #for nid in node_ids[3:]:
                             #pressures[eids.index(nid)] += k
                     #if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         #eid = elem.eid
-                        #node_ids = elem.nodeIDs()
+                        #node_ids = elem.node_ids
                         #k = load.pressures[0] * scale / 4.
                         ## TODO: doesn't consider load.eids for distributed pressures???
                         #for nid in node_ids[4:]:
@@ -964,10 +1013,10 @@ class NastranIO(object):
 
         elif ext == '.pch':
             raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
-        elif ext == '.f06':
-            model = F06(log=self.log, debug=True)
-            model.set_vectorization(True)
-            model.read_f06(op2_filename)
+        #elif ext == '.f06':
+            #model = F06(log=self.log, debug=True)
+            #model.set_vectorization(True)
+            #model.read_f06(op2_filename)
         else:
             print("error...")
             raise NotImplementedError('extension=%r is not supported; filename=%r' % (ext, op2_filename))

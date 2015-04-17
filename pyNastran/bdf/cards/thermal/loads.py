@@ -4,17 +4,16 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import  iteritems
 from six.moves import range
 
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
-from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import (expand_thru, expand_thru_by,
-    collapse_thru_by) # collapse_thru,
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
+from pyNastran.bdf.cards.baseCard import expand_thru, expand_thru_by, collapse_thru_by
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    integer_or_string, string, fields)
+    double, double_or_blank, integer_or_string, string, fields)
+
 
 class ThermalLoadDefault(ThermalCard):
     def __init__(self, card, data):
@@ -42,7 +41,7 @@ class QBDY1(ThermalLoad):
 
             #: Heat flux into element (FLOAT)
             self.qFlux = double(card, 2, 'qFlux')
-            eids  = []
+            eids = []
             j = 1
             for i in range(3, len(card)):
                 eid = integer_or_string(card, i, 'eid%i' % j)
@@ -88,7 +87,7 @@ class QBDY1(ThermalLoad):
         list_fields = ['QBDY1', self.sid, self.qFlux] + eids
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -114,7 +113,7 @@ class QBDY2(ThermalLoad):  # not tested
             #: Identification number of an CHBDYj element. (Integer > 0)
             self.eid = integer(card, 2, 'eid')
 
-            qFlux  = []
+            qFlux = []
             j = 1
             for i in range(3, len(card)):
                 q = double_or_blank(card, i, 'qFlux%i' % j)
@@ -152,7 +151,7 @@ class QBDY2(ThermalLoad):  # not tested
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -209,7 +208,7 @@ class QBDY3(ThermalLoad):
         eids = self.Eids()
         eids.sort()
         list_fields = (['QBDY3', self.sid, self.Q0, self.cntrlnd] +
-                  collapse_thru_by(eids))
+                       collapse_thru_by(eids))
         return list_fields
 
     def repr_fields(self):
@@ -225,7 +224,7 @@ class QBDY3(ThermalLoad):
         """
         return []
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -286,7 +285,7 @@ class QHBDY(ThermalLoad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -298,10 +297,13 @@ class QHBDY(ThermalLoad):
 class TEMP(ThermalLoad):
     """
     Defines temperature at grid points for determination of thermal loading,
-    temperature-dependent material properties, or stress recovery.::
+    temperature-dependent material properties, or stress recovery.
 
-      TEMP SID G1 T1 G2 T2 G3 T3
-      TEMP 3 94 316.2 49 219.8
+    +------+-----+----+-------+----+-------+----+----+
+    | TEMP | SID | G1 |  T1   | G2 |  T2   | G3 | T3 |
+    +------+-----+----+-------+----+-------+----+----+
+    | TEMP |  3  | 94 | 316.2 | 49 | 219.8 |    |    |
+    +------+-----+----+-------+----+-------+----+----+
     """
     type = 'TEMP'
 
@@ -329,8 +331,8 @@ class TEMP(ThermalLoad):
             self.sid = data[0]
             self.temperatures = {data[1]: data[2]}
 
-    def add(self, tempObj):
-        assert self.sid == tempObj.sid
+    def add(self, temp_obj):
+        assert self.sid == temp_obj.sid
         for (gid, temp) in iteritems(self.tempObj.temperatures):
             self.temperatures[gid] = temp
 
@@ -340,10 +342,10 @@ class TEMP(ThermalLoad):
     def raw_fields(self):
         """Writes the TEMP card"""
         list_fields = ['TEMP', self.sid]
-        nTemps = len(self.temperatures) - 1
+        ntemps = len(self.temperatures) - 1
         for i, (gid, temp) in enumerate(sorted(iteritems(self.temperatures))):
             list_fields += [gid, temp]
-            if i % 3 == 2 and nTemps > i:  # start a new TEMP card
+            if i % 3 == 2 and ntemps > i:  # start a new TEMP card
                 list_fields += [None, 'TEMP', self.lid]
         return list_fields
 
@@ -357,7 +359,7 @@ class TEMP(ThermalLoad):
         """
         return []
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -414,7 +416,7 @@ class TEMPD(ThermalLoadDefault):
                 list_fields += ['TEMPD']
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

@@ -7,9 +7,9 @@ from numpy.linalg import norm
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_string_or_blank)
-from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 class CBEAM(CBAR):
     """
@@ -199,35 +199,12 @@ class CBEAM(CBAR):
         else:
             self.g0_vector = self.x
 
-    def Rmatrix(self, model, n1, n2):
-        p1 = model.Node(n1).Position()
-        p2 = model.Node(n2).Position()
-        v1 = p2 - p1
-        v1 = v1 / norm(v1)
-
-        #v2 = self.g0_vector
-        #v2 = p3 - p1
-
-        v3 = cross(v1, self.g0_vector)
-        v3 /= norm(v3)
-
-        v2 = cross(v1, v3)
-
-        R = array([ v1, v2, v3 ])
-        #if debug:
-            #print("v1 =", v1)
-            #print("v2 =", v2)
-            #print("v3 =", v3)
-            #print('R =\n', R)
-            #print('R.shape =', R.shape)
-        return R, v1, v2, v3
-
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
-        ga, gb = self.nodeIDs()
+        ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
-                  self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
+                       self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
         return list_fields
 
     def repr_fields(self):
@@ -242,13 +219,13 @@ class CBEAM(CBAR):
         sb = set_blank_if_default(self.sb, 0)
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
-        ga, gb = self.nodeIDs()
+        ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
-                  self.pa, self.pb, w1a, w2a, w3a,
-                  w1b, w2b, w3b, sa, sb]
+                       self.pa, self.pb, w1a, w2a, w3a,
+                       w1b, w2b, w3b, sa, sb]
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

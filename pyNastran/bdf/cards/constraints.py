@@ -24,10 +24,9 @@ from itertools import count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    components, components_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8, print_float_8
-from pyNastran.bdf.fieldWriter16 import print_float_16
+    double, double_or_blank, components, components_or_blank)
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
+from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 
 
@@ -206,7 +205,7 @@ class SUPORT1(Constraint):
             fields += [ID, c]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -255,7 +254,7 @@ class SUPORT(Constraint):
             fields += [ID, c]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -324,19 +323,17 @@ class MPC(Constraint):
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
-        for (i, gid, constraint, enforced) in zip(count(), self.gids,
-             self.constraints, self.enforced):
+        for i, gid, constraint, enforced in zip(count(), self.gids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
             if i % 2 == 1 and i > 0:
                 fields.append(None)
                 fields.append(None)
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         if size == 8:
             msg = 'MPC     %8s' % self.conid
-            for (i, grid, component, enforced) in zip(count(), self.gids,
-                 self.constraints, self.enforced):
+            for i, grid, component, enforced in zip(count(), self.gids, self.constraints, self.enforced):
                 msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
                 if i % 2 == 1 and i > 0:
                     msg += '\n%8s%8s' % ('', '')
@@ -344,32 +341,22 @@ class MPC(Constraint):
             # TODO: we're sure MPCs support double precision?
             msg = 'MPC*    %16s' % self.conid
             if is_double:
-                for (i, grid, component, enforced) in zip(count(), self.gids,
-                     self.constraints, self.enforced):
+                for i, grid, component, enforced in zip(count(), self.gids, self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
                     if i % 2 == 1 and i > 0:
                         msg += '\n%8s%16s' % ('*', '')
             else:
-                for (i, grid, component, enforced) in zip(count(), self.gids,
-                     self.constraints, self.enforced):
+                for (i, grid, component, enforced) in zip(count(), self.gids, self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_float_16(enforced))
                     if i % 2 == 1 and i > 0:
                         msg += '\n%8s%16s' % ('*', '')
         return self.comment() + msg.rstrip() + '\n'
 
-    #def write_bdf(self, size=8, is_double=False):
-        #card = self.raw_fields()
-        #if size == 8:
-            #return self.comment() + print_card_8(card)
-        #if is_double:
-            #return self.comment() + print_card_double(card)
-        #return self.comment() + print_card_16(card)
-
 
 class SPC(Constraint):
     """
     Defines enforced displacement/temperature (static analysis)
-    velocity/acceleration (dynamic analysis).::
+    velocity/acceleration (dynamic analysis).
 
      +-----+-----+----+----+------+----+----+----+
      | SPC | SID | G1 | C1 |  D1  | G2 | C2 | D2 |
@@ -432,7 +419,7 @@ class SPC(Constraint):
             fields += [gid, constraint, enforced]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -440,7 +427,7 @@ class SPC(Constraint):
 class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced
-    motion value (displacement, velocity or acceleration) in dynamic analysis.::
+    motion value (displacement, velocity or acceleration) in dynamic analysis.
 
      +------+-----+-----+-----+------+----+---+----+
      | SPCD | SID |  G1 | C1  |  D1  | G2 |C2 | D2 |
@@ -464,7 +451,7 @@ class SPCD(SPC):
             fields += [gid, constraint, enforced]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -472,7 +459,7 @@ class SPCD(SPC):
 class SPCAX(Constraint):
     """
     Defines a set of single-point constraints or enforced displacements
-    for conical shell coordinates.::
+    for conical shell coordinates.
 
      +-------+-----+-----+-----+----+-----+
      | SPCAX | SID | RID | HID |  C |  D  |
@@ -511,7 +498,7 @@ class SPCAX(Constraint):
         fields = ['SPCAX', self.conid, self.rid, self.hid, self.c, self.d]
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -521,16 +508,16 @@ class SPC1(Constraint):
       +------+-----+----+----+--------+----+----+----+----+
       | SPC1 | SID | C  | G1 | G2     | G3 | G4 | G5 | G6 |
       +------+-----+----+----+--------+----+----+----+----+
-      |      |  G7 | G8 | G9 | -etc.- |
-      +------+-----+----+----+--------+
+      |      |  G7 | G8 | G9 | -etc.- |    |    |    |    |
+      +------+-----+----+----+--------+----+----+----+----+
 
-      +------+---+-----+--------+--------+--------+--------+--------+
-      | SPC1 | 3 | 246 | 209075 | 209096 | 209512 | 209513 | 209516 |
+      +------+---+-----+--------+--------+--------+--------+--------+---+
+      | SPC1 | 3 | 246 | 209075 | 209096 | 209512 | 209513 | 209516 |   |
       +------+---+-----+--------+--------+--------+--------+--------+---+
       | SPC1 | 3 |  2  |   1    |   3    |   10   |   9    |   6    | 5 |
       +------+---+-----+--------+--------+--------+--------+--------+---+
-      |      | 2 |  8  |
-      +------+---+-----+
+      |      | 2 |  8  |        |        |        |        |        |   |
+      +------+---+-----+--------+--------+--------+--------+--------+---+
 
       +------+-----+-------+----+------+----+
       | SPC1 | SID | C     | G1 | THRU | G2 |
@@ -570,7 +557,7 @@ class SPC1(Constraint):
         fields = ['SPC1', self.conid, self.constraints] + nodes
         return fields
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -612,9 +599,11 @@ class ConstraintADD(Constraint):
 class SPCADD(ConstraintADD):
     """
     Defines a single-point constraint set as a union of single-point constraint
-    sets defined on SPC or SPC1 entries.::
+    sets defined on SPC or SPC1 entries.
 
-      SPCADD   2       1       3
+    +---------+---+---+------+
+    | SPCADD  | 2 | 1 |   3  |
+    +---------+---+---+------+
     """
     type = 'SPCADD'
 
@@ -652,7 +641,7 @@ class SPCADD(ConstraintADD):
         return fields
         #return self._reprSpcMpcAdd(fields)
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -690,6 +679,6 @@ class MPCADD(ConstraintADD):
         return fields
         #return self._reprSpcMpcAdd(fields)
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)

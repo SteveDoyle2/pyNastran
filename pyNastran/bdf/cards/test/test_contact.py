@@ -4,7 +4,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF
 
-#from pyNastran.bdf.fieldWriter import print_card
+#from pyNastran.bdf.field_writer_8 import print_card
 
 class TestContact(unittest.TestCase):
 
@@ -17,7 +17,7 @@ class TestContact(unittest.TestCase):
             '              16      17      18      19      20      21      22      23',
         ]
         card = model.add_card(copy.deepcopy(lines), 'BSURF', is_list=False)
-        out = model.bsurf[3].write_bdf(8, None)
+        out = model.bsurf[3].write_card(8, None)
         lines2 = out.split('\n')
         for i, (line, line2) in enumerate(zip(lines, lines2)):
             self.assertEqual(line, line2)

@@ -1,8 +1,16 @@
 import os
+from numpy import sqrt, searchsorted
+
 from pyNastran.bdf.bdf import BDF
-from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
-from math import sqrt
+is_op2 = True
+
+try:
+    from pyNastran.f06.f06 import F06
+    is_f06 = True
+except ImportError:
+    is_f06 = False
+is_f06 = False
 
 def calculate_stress(ax, tors):
     sigma = 2 * ax * ax
@@ -38,41 +46,52 @@ def main():
         # option 2
         model.params['POST'].update_values(value1=-1, value2=None)
 
-    model.write_bdf(out_bdf, size=16, precision='double')
+    model.write_bdf(out_bdf, size=16, is_double=True)
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf)
 
-    model2 = F06(out_f06)
-    if 0:
-        model2.markerMap = {
-            'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': model2._grid_point_weight_generator,
-        }
-        model2.markers = model2.markerMap.keys()
-
-    if 0:
-        model2.stop_after_reading_grid_point_weight(stop=True)
-    model2.read_f06()
-
-    #print('\n'.join(dir(subcase1)))
-    print("")
-    print("mass = %s" % model2.grid_point_weight.mass)
+    if is_f06:
+        model2 = F06()
+        model2.read_f06(out_f06)
+        print("")
+        print("mass = %s" % model2.grid_point_weight.mass)
+    else:
+        model2 = None
 
     #========================================
-    model3 = OP2(out_op2)
-    model3.read_op2()
+    model3 = OP2()
+    model3.read_op2(out_op2, vectorized=False)
+    model4 = OP2()
+    model4.read_op2(out_op2, vectorized=True)
+
+    eids = [2, 3]
     #========================================
-    for form, modeli in [('f06', model2), ('op2', model3)]:
-        print("---%s---" % form)
-        subcase1 = modeli.rodStress[1]
+    for form, modeli, exists in [('f06', model2, is_f06), ('op2', model3, is_op2)]:
+        if exists:
+            print("---%s---" % form)
+            subcase1 = modeli.crod_stress[1]
+            for eid in eids:
+                eid = 2
+                print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
+                print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
+                print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
+    #========================================
+    subcase1 = model4.crod_stress[1]
+    combined_stress = calculate_stress(subcase1.data[0, :, 0], subcase1.data[0, :, 1])
 
-        eid = 2
-        print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
-        print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
-        print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
+    search = searchsorted(subcase1.element, eids)
 
-        eid = 3
-        print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
-        print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
-        print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
+    print("---op2 vectorized---")
+    #[axial, torsion, SMa, SMt]
+    for i, j in enumerate(search):
+        eid = eids[i]
+        axial = subcase1.data[0, j, 0]
+        torsion = subcase1.data[0, j, 1]
+        combined = combined_stress[i]
+        print('axial   stress[%s] = %s' % (eid, axial))
+        print('torsion stress[%s] = %s' % (eid, torsion))
+        print('        stress[%s] = %s\n' % (eid, combined))
+
+
 
 if __name__ == '__main__':  # pragma: no cover
     main()

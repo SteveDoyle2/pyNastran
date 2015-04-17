@@ -1,4 +1,6 @@
+from __future__ import unicode_literals
 import unittest
+from six import PY2
 
 import os
 import pyNastran
@@ -108,17 +110,26 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_end(self):
         """this test fails incorrectly"""
-        f = open('a.bdf', 'wb')
+        if PY2:
+            f = open('a.bdf', 'wb')
+        else:
+            f = open('a.bdf', 'w')
         f.write('CEND\n')
         f.write('BEGIN BULK\n')
         f.write('GRID,1\n')
         f.write("INCLUDE 'b.bdf'\n\n")
 
-        f = open('b.bdf', 'wb')
+        if PY2:
+            f = open('b.bdf', 'wb')
+        else:
+            f = open('b.bdf', 'w')
         f.write('GRID,2\n')
         f.write("INCLUDE 'c.bdf'\n\n")
 
-        f = open('c.bdf', 'wb')
+        if PY2:
+            f = open('c.bdf', 'wb')
+        else:
+            f = open('c.bdf', 'w')
         f.write('GRID,3\n\n')
         f.write("ENDDATA\n")
         f.close()
@@ -131,7 +142,7 @@ class TestReadWrite(unittest.TestCase):
         os.remove('b.bdf')
         os.remove('c.bdf')
         os.remove('a.out.bdf')
-        self.assertEquals(len(model.nodes), 3)
+        self.assertEqual(len(model.nodes), 3)
 
     def test_read_bad_01(self):
         model = BDF()
