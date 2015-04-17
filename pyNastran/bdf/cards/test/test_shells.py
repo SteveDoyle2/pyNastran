@@ -36,15 +36,15 @@ class TestShells(unittest.TestCase):
         assert node_ids == [n1, n2, n3, n4], node_ids
 
         # cquad4 / pshell
-        self.assertEquals(cquad4.Eid(), eid)
-        self.assertEquals(cquad4.Pid(), pid)
-        self.assertEquals(cquad4.Mid(), mid)
-        self.assertEquals(cquad4.Nsm(), nsm)
-        self.assertEquals(cquad4.Mass(), mass)
+        self.assertEqual(cquad4.Eid(), eid)
+        self.assertEqual(cquad4.Pid(), pid)
+        self.assertEqual(cquad4.Mid(), mid)
+        self.assertEqual(cquad4.Nsm(), nsm)
+        self.assertEqual(cquad4.Mass(), mass)
         self.assertAlmostEquals(cquad4.MassPerArea(), mass / A)
-        self.assertEquals(cquad4.Area(), A)
-        self.assertEquals(cquad4.Thickness(), t)
-        #self.assertEquals(cquad4.Rho(), rho)  # removed because of PCOMP
+        self.assertEqual(cquad4.Area(), A)
+        self.assertEqual(cquad4.Thickness(), t)
+        #self.assertEqual(cquad4.Rho(), rho)  # removed because of PCOMP
 
     def _make_ctria3(self, model, rho, nu, G, E, t, nsm):
         eid = 10
@@ -86,91 +86,91 @@ class TestShells(unittest.TestCase):
         node_ids = ctria3.node_ids
         assert node_ids == [n1, n2, n3], node_ids
         mass = A * (t * rho + nsm)
-        self.assertEquals(ctria3.Eid(), eid)
-        self.assertEquals(ctria3.Pid(), pid)
-        self.assertEquals(ctria3.Mid(), mid)
-        self.assertEquals(ctria3.Nsm(), nsm)
-        self.assertEquals(ctria3.Mass(), mass)
+        self.assertEqual(ctria3.Eid(), eid)
+        self.assertEqual(ctria3.Pid(), pid)
+        self.assertEqual(ctria3.Mid(), mid)
+        self.assertEqual(ctria3.Nsm(), nsm)
+        self.assertEqual(ctria3.Mass(), mass)
         self.assertAlmostEquals(ctria3.MassPerArea(), mass / A)
-        self.assertEquals(ctria3.Area(), A)
-        self.assertEquals(ctria3.Thickness(), t)
-        self.assertEquals(ctria3.MassPerArea(), mass / A)
+        self.assertEqual(ctria3.Area(), A)
+        self.assertEqual(ctria3.Thickness(), t)
+        self.assertEqual(ctria3.MassPerArea(), mass / A)
 
         # removed because of PCOMP
         # also no E, G, J, Nu, for the same reason
         # what about Mid
-        #self.assertEquals(ctria3.Rho(), rho)
+        #self.assertEqual(ctria3.Rho(), rho)
 
 
         # pshell
         pshell = model.Property(pid)
-        self.assertEquals(pshell.Pid(), pid)
-        self.assertEquals(pshell.Mid(), mid)
-        self.assertEquals(pshell.Nsm(), nsm)
-        self.assertEquals(pshell.Thickness(), t)
-        self.assertEquals(pshell.Rho(), rho)
-        self.assertEquals(pshell.z1, -t / 2.)
-        self.assertEquals(pshell.z2,  t / 2.)
+        self.assertEqual(pshell.Pid(), pid)
+        self.assertEqual(pshell.Mid(), mid)
+        self.assertEqual(pshell.Nsm(), nsm)
+        self.assertEqual(pshell.Thickness(), t)
+        self.assertEqual(pshell.Rho(), rho)
+        self.assertEqual(pshell.z1, -t / 2.)
+        self.assertEqual(pshell.z2,  t / 2.)
 
         # ctria3 / pcomp
         ctria3 = model.Element(eid + 1)
         mass = A * (10 * t * rho + nsm)
-        self.assertEquals(ctria3.Eid(), eid + 1)
-        self.assertEquals(ctria3.Pid(), pid + 1)
-        #self.assertEquals(ctria3.Mid(), mid)
-        self.assertEquals(ctria3.Nsm(), nsm)
+        self.assertEqual(ctria3.Eid(), eid + 1)
+        self.assertEqual(ctria3.Pid(), pid + 1)
+        #self.assertEqual(ctria3.Mid(), mid)
+        self.assertEqual(ctria3.Nsm(), nsm)
         self.assertAlmostEquals(ctria3.Mass(), mass)
         self.assertAlmostEquals(ctria3.MassPerArea(), mass / A)
-        self.assertEquals(ctria3.Area(), A)
-        self.assertEquals(ctria3.Thickness(), 10 * t)
-        #self.assertEquals(ctria3.Rho(), rho)
+        self.assertEqual(ctria3.Area(), A)
+        self.assertEqual(ctria3.Thickness(), 10 * t)
+        #self.assertEqual(ctria3.Rho(), rho)
 
         # pcomp
         pcomp = model.Property(pid + 1)
-        self.assertEquals(pcomp.Pid(), pid + 1)
-        self.assertEquals(pcomp.nPlies(), 4)
+        self.assertEqual(pcomp.Pid(), pid + 1)
+        self.assertEqual(pcomp.nPlies(), 4)
 
-        self.assertEquals(pcomp.Mid(0), mid)
-        self.assertEquals(pcomp.Nsm(), nsm)
-
-        with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Mid(-1), mid)
-        self.assertEquals(pcomp.Mids(), [mid] * 4)
-        self.assertEquals(pcomp.Mid(0), mid)
-        self.assertEquals(pcomp.Mid(1), mid)
-        self.assertEquals(pcomp.Mid(2), mid)
-        self.assertEquals(pcomp.Mid(3), mid)
-        with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Mid(4), mid)
+        self.assertEqual(pcomp.Mid(0), mid)
+        self.assertEqual(pcomp.Nsm(), nsm)
 
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Thickness(-1), t)
-        self.assertEquals(pcomp.Thickness(), 10 * t)
-        self.assertEquals(pcomp.Thickness(0), t)
-        self.assertEquals(pcomp.Thickness(1), 2 * t)
-        self.assertEquals(pcomp.Thickness(2), 3 * t)
-        self.assertEquals(pcomp.Thickness(3), 4 * t)
+            self.assertEqual(pcomp.Mid(-1), mid)
+        self.assertEqual(pcomp.Mids(), [mid] * 4)
+        self.assertEqual(pcomp.Mid(0), mid)
+        self.assertEqual(pcomp.Mid(1), mid)
+        self.assertEqual(pcomp.Mid(2), mid)
+        self.assertEqual(pcomp.Mid(3), mid)
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Thickness(4), 5*t)
+            self.assertEqual(pcomp.Mid(4), mid)
 
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Rho(-1), rho)
-        self.assertEquals(pcomp.Rho(0), rho)
-        self.assertEquals(pcomp.Rho(1), rho)
-        self.assertEquals(pcomp.Rho(2), rho)
-        self.assertEquals(pcomp.Rho(3), rho)
+            self.assertEqual(pcomp.Thickness(-1), t)
+        self.assertEqual(pcomp.Thickness(), 10 * t)
+        self.assertEqual(pcomp.Thickness(0), t)
+        self.assertEqual(pcomp.Thickness(1), 2 * t)
+        self.assertEqual(pcomp.Thickness(2), 3 * t)
+        self.assertEqual(pcomp.Thickness(3), 4 * t)
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Rho(4), rho)
+            self.assertEqual(pcomp.Thickness(4), 5*t)
 
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Theta(-1), 0.)
-        self.assertEquals(pcomp.Theta(0), 0.)
-        self.assertEquals(pcomp.Theta(1), 30.)
-        self.assertEquals(pcomp.Theta(2), 60.)
-        self.assertEquals(pcomp.Theta(3), 90.)
+            self.assertEqual(pcomp.Rho(-1), rho)
+        self.assertEqual(pcomp.Rho(0), rho)
+        self.assertEqual(pcomp.Rho(1), rho)
+        self.assertEqual(pcomp.Rho(2), rho)
+        self.assertEqual(pcomp.Rho(3), rho)
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.Theta(4), rho)
-        self.assertEquals(pcomp.z0, -10*t/2.)
+            self.assertEqual(pcomp.Rho(4), rho)
+
+        with self.assertRaises(IndexError):
+            self.assertEqual(pcomp.Theta(-1), 0.)
+        self.assertEqual(pcomp.Theta(0), 0.)
+        self.assertEqual(pcomp.Theta(1), 30.)
+        self.assertEqual(pcomp.Theta(2), 60.)
+        self.assertEqual(pcomp.Theta(3), 90.)
+        with self.assertRaises(IndexError):
+            self.assertEqual(pcomp.Theta(4), rho)
+        self.assertEqual(pcomp.z0, -10*t/2.)
 
     def test_PSHELL_01(self):
         """tests a CQUAD4 and a PSHELL"""

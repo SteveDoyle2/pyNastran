@@ -131,7 +131,7 @@ class TestReadWrite(unittest.TestCase):
         os.remove('b.bdf')
         os.remove('c.bdf')
         os.remove('a.out.bdf')
-        self.assertEquals(len(model.nodes), 3)
+        self.assertEqual(len(model.nodes), 3)
 
     def test_read_bad_01(self):
         model = BDF()

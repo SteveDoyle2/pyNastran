@@ -98,7 +98,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
             (form, A) = matrices['EYE10']
-            self.assertEquals(form, 6)  # form=6 -> Symmetric
+            self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
                 self.assertTrue(array_equal(A.row, range(10)))
                 self.assertTrue(array_equal(A.col, range(10)))
@@ -115,7 +115,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
             (form, A) = matrices['EYE5CD']
-            self.assertEquals(form, 6)  # form=6 -> Symmetric
+            self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
                 self.assertTrue(array_equal(A.row, range(5)))
                 self.assertTrue(array_equal(A.col, range(5)))
@@ -133,7 +133,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
             (form, A) = matrices['NULL']
-            self.assertEquals(form, 6)  # form=6 -> Symmetric
+            self.assertEqual(form, 6)  # form=6 -> Symmetric
             #print A.shape
 
             # kind of strange that the NULL matrix is dense...
@@ -225,15 +225,15 @@ class TestOP4(unittest.TestCase):
             matrices2 = op4.read_op4(op4_filename, precision='default')
             (form1b, A1b) = matrices2['A1']
             (form2b, A2b) = matrices2['A2']
-            self.assertEquals(form1, form1b)
-            self.assertEquals(form2, form2b)
+            self.assertEqual(form1, form1b)
+            self.assertEqual(form2, form2b)
 
             (form1b, A1b) = matrices2['A1']
             (form2b, A2b) = matrices2['A2']
             (form3b, A3b) = matrices2['A3']
-            self.assertEquals(form1, form1b)
-            self.assertEquals(form2, form2b)
-            self.assertEquals(form3, form3b)
+            self.assertEqual(form1, form1b)
+            self.assertEqual(form2, form2b)
+            self.assertEqual(form3, form3b)
 
             self.assertTrue(array_equal(A1, A1b))
             self.assertTrue(array_equal(A2, A2b))

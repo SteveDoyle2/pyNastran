@@ -97,14 +97,14 @@ class TestSolids(unittest.TestCase):
         mass = rho * V
         element = model.elements[eid]
         element.node_ids
-        self.assertEquals(element.type, etype)
-        self.assertEquals(element.Eid(), eid)
-        self.assertEquals(element.pid.type, ptype)
-        self.assertEquals(element.Pid(), pid)
-        self.assertEquals(element.pid.mid.type, mtype)
-        self.assertEquals(element.Mid(), mid)
-        self.assertEquals(element.Volume(), V)
-        self.assertEquals(element.Mass(), mass)
+        self.assertEqual(element.type, etype)
+        self.assertEqual(element.Eid(), eid)
+        self.assertEqual(element.pid.type, ptype)
+        self.assertEqual(element.Pid(), pid)
+        self.assertEqual(element.pid.mid.type, mtype)
+        self.assertEqual(element.Mid(), mid)
+        self.assertEqual(element.Volume(), V)
+        self.assertEqual(element.Mass(), mass)
 
     def test_solid_02(self):
         mid = 2

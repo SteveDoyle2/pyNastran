@@ -20,20 +20,20 @@ class TestMaterials(unittest.TestCase):
         card = BDFCard(fields)
 
         mat1 = MAT1(card)
-        self.assertEquals(mid, mat1.Mid())
-        self.assertEquals(E, mat1.E())
-        self.assertEquals(G, mat1.G())
-        self.assertEquals(nu, mat1.Nu())
-        self.assertEquals(rho, mat1.Rho())
+        self.assertEqual(mid, mat1.Mid())
+        self.assertEqual(E, mat1.E())
+        self.assertEqual(G, mat1.G())
+        self.assertEqual(nu, mat1.Nu())
+        self.assertEqual(rho, mat1.Rho())
 
         size = 8
         msg = mat1.write_card(size, 'dummy')
-        self.assertEquals(msg,
+        self.assertEqual(msg,
             'MAT1           1    2.+7    3.+7      .4   1.-50\n')
 
         size = 16
         msg = mat1.write_card(size, 'dummy')
-        self.assertEquals(msg,
+        self.assertEqual(msg,
             'MAT1*                  1       20000000.       30000000.              .4\n*                  1.-50\n')
 
     def test_mat5_01(self):
