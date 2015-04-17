@@ -156,7 +156,7 @@ master_doc = 'index'
 # The short X.Y version.
 version = u'0.7'
 # The full version, including alpha/beta/rc tags.
-release = u'0.7.0-alpha'
+release = u'0.7.0'
 
 # General information about the project.
 project = u'pyNastran' + u' ' + version
