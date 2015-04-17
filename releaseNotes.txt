@@ -16,6 +16,10 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
+-----------------------v0.7.1 released 2015/04/17-----------------------
+Relase notes:
+   - removed deprecation crashes
+
 -----------------------v0.7.0 released 2015/04/17-----------------------
 Release notes:
    - much improved Python 3 support

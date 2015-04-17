@@ -17,7 +17,7 @@ __pyqt_copyright__ = 'Copyright GPLv3; 2011-2015'
 __releaseDate__ = '2015/4/17'
 __releaseDate2__ = 'APRIL 17, 2015'
 #__version__     = '0.7.0_%s' % revision
-__version__     = '0.7.0'
+__version__     = '0.7.1'
 __website__     = 'https://github.com/SteveDoyle2/pyNastran'
 
 is_release = True  ## turns on skipping of tables that aren't supported
