@@ -1,7 +1,7 @@
-# these imports are not included
 from __future__ import print_function
 import os
 from itertools import islice
+
 
 def introduction():
     """
@@ -10,24 +10,15 @@ def introduction():
     # this is an introduction with no pass
     pass
 
+
 def example1():
     """
     Example 1 - Level 2
     """
     # this example will demonstate:
-    #  - reading
+    #  - reading the BDF
     #  - getting some basic information
     #  - writing the BDF
-
-    ### doing some table black magic; ### are unindented code
-    ###
-    ### +---------+---------+
-    ### |   cat   |   dog   |
-    ### +=========+=========+
-    ### |   cat   |   dog   |
-    ### +---------+---------+
-    ### |   cat   |   dog   |
-    ### +---------+---------+
 
     # our model
     import pyNastran
@@ -39,7 +30,6 @@ def example1():
     from pyNastran.bdf.bdf import BDF
     model = BDF()
     model.read_bdf(bdf_filename)
-
 
     # print information about the model
     print(model.get_bdf_stats())
@@ -112,11 +102,13 @@ def example1():
     ## CTETRA         2       1       8       7      62      59
     ## CTETRA         3       1       8      45      58      66
 
+
 def example2():
     """
     Example 2 - Level 2
     """
-    from pyNastran.bdf.bdf import BDF
+    # this example will demonstate:
+    #  - writing cards
 
     # our model
     import pyNastran
@@ -125,6 +117,7 @@ def example2():
     bdf_filename = os.path.join(test_path, 'solid_bending.bdf')
 
     # instantiate the model
+    from pyNastran.bdf.bdf import BDF
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
     f = open('junk.out', 'w')
@@ -158,6 +151,7 @@ def example2():
     model._write_nodes(f)
     model._write_coords(f)
 
+
 def example3():
     """
     Example 3 - Level 2
@@ -166,7 +160,8 @@ def example3():
 
     # note this skips rigidElements
 
-    from pyNastran.bdf.bdf import BDF
+    # this example will demonstate:
+    #  - using the BDF class to write cards/properties
 
     # our model
     import pyNastran
@@ -175,6 +170,7 @@ def example3():
     bdf_filename = os.path.join(test_path, 'solid_bending.bdf')
 
     # instantiate the model
+    from pyNastran.bdf.bdf import BDF
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
     f = open('junk.out', 'w')
@@ -202,6 +198,7 @@ def example3():
     model._write_elements(f)
     model._write_properties(f)
 
+
 def example4():
     """
     Example 4 - Level 2
@@ -210,7 +207,8 @@ def example4():
 
     # note this skips rigidElements
 
-    from pyNastran.bdf.bdf import BDF
+    # this example will demonstate:
+    #  - accessing element type information
 
     # our model
     import pyNastran
@@ -219,6 +217,7 @@ def example4():
     bdf_filename = os.path.join(test_path, 'solid_bending.bdf')
 
     # instantiate the model
+    from pyNastran.bdf.bdf import BDF
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
     f = open('junk.out', 'w')
@@ -228,14 +227,16 @@ def example4():
     ####---------------------------------
     ####
     for eid,element in sorted(model.elements.items()):
-        msg = 'eid=%s type=%s\n' %(eid,element.type)
+        msg = 'eid=%s type=%s\n' %(eid, element.type)
     f.write(msg)
 
 def example5():
     """
     Example 5 - Level 2
     """
-    from pyNastran.bdf.bdf import BDF
+
+    # this example will demonstate:
+    #  - getting the list of elements that share a certain node
 
     # our model
     import pyNastran
@@ -244,6 +245,7 @@ def example5():
     bdf_filename = os.path.join(test_path, 'solid_bending.bdf')
 
     # instantiate the model
+    from pyNastran.bdf.bdf import BDF
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
     f = open('junk.out', 'w')
@@ -267,7 +269,8 @@ def example6():
     """
     Example 6 - Level 2
     """
-    from pyNastran.bdf.bdf import BDF
+    # this example will demonstate:
+    #  - getting a list of elements that have a certain property
 
     # our model
     import pyNastran
@@ -276,6 +279,7 @@ def example6():
     bdf_filename = os.path.join(test_path, 'static_solid_shell_bar.bdf')
 
     # instantiate the model
+    from pyNastran.bdf.bdf import BDF
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
     f = open('junk.out', 'w')
@@ -285,9 +289,9 @@ def example6():
     # assume pid=1
     pid_to_eids_map = model.get_property_id_to_element_ids_map()
     eids4  = pid_to_eids_map[4] # PSHELL
-    #eids10 = pid_to_eids_map[10]
 
     print("eids4 = %s" % eids4)
+    ## eids4 = [6, 7, 8, 9, 10, 11]
 
     # convert to elements instead of element IDs
     elements4 = []
@@ -297,12 +301,14 @@ def example6():
     # just to verify
     elem = model.elements[eids4[0]]
     print(elem.pid)
+    ## PSHELL         4       1     .25       1               1
 
 def example7():
     """
     Example 7 - Level 2
     """
-    from pyNastran.bdf.bdf import BDF
+    # this example will demonstate:
+    #  - getting a list of elements that have a certain material
 
     # our model
     import pyNastran
@@ -311,6 +317,7 @@ def example7():
     bdf_filename = os.path.join(test_path, 'static_solid_shell_bar.bdf')
 
     # instantiate the model
+    from pyNastran.bdf.bdf import BDF
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
     f = open('junk.out', 'w')
@@ -353,6 +360,7 @@ def example7():
     ## $
     ## CBEAM         12       5      14      18      0.      1.      0.     GGG
 
+
 def main():  ## pragma: no cover
     """
     anything at main or below is not documented,
@@ -367,20 +375,18 @@ def main():  ## pragma: no cover
     example6()
     example7()
 
-def head(fname, n):
-    with open(fname) as myfile:
-        head = list(islice(myfile, n))
-    return ''.join(head)
 
 def head(fname, n):
     with open(fname) as myfile:
         head = list(islice(myfile, n))
     return ''.join(head)
+
 
 def tail(fname, n=10):
     f = open(fname, 'r')
     lines = f.readlines()
     return ''.join(lines[-n:])
+
 
 def file_slice(fname, i, j):
     f = open(fname, 'r')
@@ -388,14 +394,9 @@ def file_slice(fname, i, j):
     return ''.join(lines[i:j])
 
 
-#def tail(f, n, offset=0):
-#    stdin,stdout = os.popen2("tail -n "+n+offset+" "+f)
-#    stdin.close()
-#    lines = stdout.readlines(); stdout.close()
-#    return lines[:,-offset]
-
 def this_is_ok():  ## pragma: no cover
     pass
+
 
 if __name__ == '__main__':  ## pragma: no cover
     main()

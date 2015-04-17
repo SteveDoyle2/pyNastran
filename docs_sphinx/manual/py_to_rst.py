@@ -89,9 +89,9 @@ def create_html_from_rst(rst_filename, html_filename):
 def main():
     fnames = [os.path.join('py_docs', fname) for fname in os.listdir('py_docs')
               if '__init__' not in fname
-              and not fname.endswith('.html')
-              and not fname.endswith('.pyc')
-              and not fname.endswith('.rst')
+              and fname.endswith('.py')
+              #and not fname.endswith('.pyc')
+              #and not fname.endswith('.rst')
               ]
 
     print(fnames)
