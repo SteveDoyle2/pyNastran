@@ -1021,7 +1021,7 @@ class GRID(Node, GridDeprecated):
             cp = set_string16_blank_if_default(self.Cp(), 0)
             cd = set_string16_blank_if_default(self.Cd(), 0)
             seid = set_string16_blank_if_default(self.SEid(), 0)
-            if double:
+            if is_double:
                 msg = ('%-8s%16i%16s%16s%16s\n'
                        '%-8s%16s%16s%16s%16s\n' % (
                            'GRID*', self.nid,
