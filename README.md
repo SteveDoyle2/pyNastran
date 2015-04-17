@@ -21,6 +21,8 @@ There is still a bit of updating left to do on the Wiki.  The outdated wiki page
 
 ## pyNastran v0.7 has been Released (4/16/2015)
 
+[Download pyNastran v0.7] (https://github.com/SteveDoyle2/pyNastran/releases)
+
 Some of the improvements include:
  * OP2
    * superelement support
