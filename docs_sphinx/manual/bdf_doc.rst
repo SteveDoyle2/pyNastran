@@ -5,11 +5,20 @@ bdf
 ------------
 Introduction
 ------------
-This is meant as a guide of how to use the pyNastran ``BDF`` clas
+This is meant as a tutorial on how to use the pyNastran ``pyNastran.bdf.bdf.BDF`` class
 
----------
-Example 1
----------
+
+The **head**/**tail**/**file_slice** methods can be found at:
+
+    https://github.com/SteveDoyle2/pyNastran/blob/v0.7/docs_sphinx/manual/py_docs/bdf_doc.py
+
+These examples can be found at:
+
+    https://github.com/SteveDoyle2/pyNastran/blob/v0.7/docs_sphinx/manual/py_docs/bdf_doc.py
+
+---------------------
+Example 1: Read/Write
+---------------------
 this example will demonstate:
 
  - reading the BDF
@@ -120,9 +129,9 @@ write the file with large field format; double precision
     CTETRA         2       1       8       7      62      59
     CTETRA         3       1       8      45      58      66
 
----------
-Example 2
----------
+--------------------------
+Example 2:  Printing Nodes
+--------------------------
 this example will demonstate:
 
  - writing cards
@@ -184,9 +193,9 @@ Method 2 - using built-in methods
     >>> model._write_nodes(f)
     >>> model._write_coords(f)
 
----------
-Example 3
----------
+----------------------------------------
+Example 3:  Printing Elements/Properties
+----------------------------------------
 Print the Element ID and associated Node and Property to an Output File
 
 note this skips rigidElements
@@ -232,9 +241,9 @@ Method 3 - using built-in methods
     >>> model._write_elements(f)
     >>> model._write_properties(f)
 
----------
-Example 4
----------
+--------------------------------
+Example 4: Get Element ID & Type
+--------------------------------
 Print the Element ID and its type(e.g. CQUAD4, CTRIA3, etc.) to a file
 
 note this skips rigidElements
@@ -268,9 +277,9 @@ Method 1 - using objects
     >>>     msg = 'eid=%s type=%s\n' %(eid, element.type)
     >>> f.write(msg)
 
----------
-Example 5
----------
+----------------------------------
+Example 5: Get Elements by Node ID
+----------------------------------
 this example will demonstate:
 
  - getting the list of elements that share a certain node
@@ -314,9 +323,9 @@ convert to elements instead of element IDs
     >>> print("eids = %s" % eids)
     >>> print("elements =\n %s" % elements)
 
----------
-Example 6
----------
+---------------------------------------
+Example 6:  Get Elements by Property ID
+---------------------------------------
 this example will demonstate:
 
  - getting a list of elements that have a certain property
@@ -366,9 +375,9 @@ just to verify
     >>> print(elem.pid)
     PSHELL         4       1     .25       1               1
 
----------
-Example 7
----------
+---------------------------------------
+Example 7:  Get Elements by Material ID
+---------------------------------------
 this example will demonstate:
 
  - getting a list of elements that have a certain material

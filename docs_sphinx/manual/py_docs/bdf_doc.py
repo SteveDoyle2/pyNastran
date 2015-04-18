@@ -5,15 +5,24 @@ from itertools import islice
 
 def introduction():
     """
-    Introduction - Level 1
+    Introduction - Level 2
     """
-    # this is an introduction with no pass
+    # This is meant as a tutorial on how to use the pyNastran ``pyNastran.bdf.bdf.BDF`` class
+
+    ####The **head**/**tail**/**file_slice** methods can be found at:
+    ####
+    ####    https://github.com/SteveDoyle2/pyNastran/blob/v0.7/docs_sphinx/manual/py_docs/bdf_doc.py
+    ####
+    ####These examples can be found at:
+    ####
+    ####    https://github.com/SteveDoyle2/pyNastran/blob/v0.7/docs_sphinx/manual/py_docs/bdf_doc.py
+    ####
     pass
 
 
 def example1():
     """
-    Example 1 - Level 2
+    Example 1: Read/Write - Level 2
     """
     # this example will demonstate:
     #  - reading the BDF
@@ -105,7 +114,7 @@ def example1():
 
 def example2():
     """
-    Example 2 - Level 2
+    Example 2:  Printing Nodes - Level 2
     """
     # this example will demonstate:
     #  - writing cards
@@ -154,7 +163,7 @@ def example2():
 
 def example3():
     """
-    Example 3 - Level 2
+    Example 3:  Printing Elements/Properties - Level 2
     """
     # Print the Element ID and associated Node and Property to an Output File
 
@@ -201,7 +210,7 @@ def example3():
 
 def example4():
     """
-    Example 4 - Level 2
+    Example 4: Get Element ID & Type - Level 2
     """
     # Print the Element ID and its type(e.g. CQUAD4, CTRIA3, etc.) to a file
 
@@ -232,7 +241,7 @@ def example4():
 
 def example5():
     """
-    Example 5 - Level 2
+    Example 5: Get Elements by Node ID - Level 2
     """
 
     # this example will demonstate:
@@ -267,7 +276,7 @@ def example5():
 
 def example6():
     """
-    Example 6 - Level 2
+    Example 6:  Get Elements by Property ID - Level 2
     """
     # this example will demonstate:
     #  - getting a list of elements that have a certain property
@@ -305,7 +314,7 @@ def example6():
 
 def example7():
     """
-    Example 7 - Level 2
+    Example 7:  Get Elements by Material ID - Level 2
     """
     # this example will demonstate:
     #  - getting a list of elements that have a certain material
