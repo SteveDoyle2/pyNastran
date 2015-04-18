@@ -16,6 +16,17 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
+
+-----------------------v0.7.2 released 2015/04/xx-----------------------
+Relase notes:
+   - This is a bug fix release
+   - improved documentation
+
+BDF:
+   - fixed bug with write_card on GRID card
+   - fixing bug with bdf.get_material_id_to_property_ids_map
+   - fixing deprecation messages; missed a few stack traces
+
 -----------------------v0.7.1 released 2015/04/17-----------------------
 Relase notes:
    - removed deprecation crashes

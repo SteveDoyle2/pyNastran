@@ -1,7 +1,7 @@
 # Documentation
-   * [v0.6.1] (http://pynastran-git.readthedocs.org/en/v0.6/index.html)
-   * v0.7
+   * [v0.7] (http://pynastran-git.readthedocs.org/en/v0.7/index.html)
    * [Master/Trunk](http://pynastran-git.readthedocs.org/en/latest/index.html)
+
 
 Also, check out the:
   * [Wiki](https://github.com/SteveDoyle2/pynastran/wiki)
@@ -10,24 +10,18 @@ Also, check out the:
 
 for more detailed information.
 
-<!--- http://pynastran-git.readthedocs.org/en/v0.6/index.html      doesnt work???...isn't this "stable" -->
-<!--- http://pynastran-git.readthedocs.org/en/stable/index.html    is not used yet...will be v0.7 later? -->
+<!--- this isn't setup... -->
 <!--- http://stevedoyle2.github.io/pyNastran/ --->
 
 # News
 
+### Wiki Notes
 
-## pyNastran has Moved (3/12/2015)
-Google Code is  [closing down](http://google-opensource.blogspot.com/2015/03/farewell-to-google-code.html)
-on January 25, 2016 and as such pyNastran is moving to [github](https://github.com/SteveDoyle2/pynastran).
-New commits will now be made on github.  The wiki is currently in the process of being migrated to github.
+There is still a bit of updating left to do on the Wiki.  The outdated wiki pages will be updated soon.
 
+## pyNastran v0.7.1 has been Released (4/17/2015)
 
-## pyNastran v0.7
-
-The long awaited new release (v0.7) is coming soon.  It is a major update.
-The target is sometime within the next month.  Testing is nearly done, but there are a
-few cleanup tasks to do.
+[Download pyNastran v0.7] (https://github.com/SteveDoyle2/pyNastran/releases)
 
 Some of the improvements include:
  * OP2
@@ -55,12 +49,18 @@ Where possible, old methods will be maintained until v0.8, but that is not alway
 
 Additionally, most op2 object were changed in order to eliminate errors, and be more consistent.  For example, `plateStress` has been replaced by `ctria3_stress`, `cquad4_stress`, `ctria6_stress`, etc.  Also, plate centroids now have a `node_id` of `0`.  This greatly simplifies F06 writing and vectorized data extraction.
 
-## Download Page
+### pyNastran has Moved (3/12/2015)
+Google Code is  [closing down](http://google-opensource.blogspot.com/2015/03/farewell-to-google-code.html)
+on January 25, 2016 and as such pyNastran has moved to [github](https://github.com/SteveDoyle2/pynastran).
+New commits will now be made on github.  The wiki is currently in the process of being migrated to github.
+
+
+### GUI (v0.7 pre-release; 12/2014)
 Google Code no longer supports new downloads.
 As such, the download page will now be located at [Sourceforge](https://sourceforge.net/projects/pynastran/files/?source=navbar).  The much improved dev version of the [GUI](https://github.com/SteveDoyle2/pynastran/wiki/GUI) is located there.
 v0.6.1 and earlier releases will still be located at Google Code (at least for now).
 
-## Version 0.6.1 has been released
+### Version 0.6.1 has been released (6/2013)
 **Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
 
 Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" [SOCIS](http://sophia.estec.esa.int/socis2012/?q=node/13) program.  The program provides a stipend to students to work on open-source projects.
