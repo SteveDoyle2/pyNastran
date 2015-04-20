@@ -1,5 +1,6 @@
 from __future__ import print_function
-from six.moves import iteritems
+from six import iteritems
+from six.moves import zip
 import scipy
 from pyNastran.bdf.bdf import BDF
 from numpy import array, zeros, unique, where, arange, hstack, vstack, searchsorted
@@ -32,17 +33,12 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     nnodes = len(nids)
     i = arange(nnodes, dtype='int32')
     nids2 = vstack([i, nids]).T
-    print(nids2)
 
     nodes_xyz = array([node.xyz for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
 
     nids_new = set([])
     for eid, element in sorted(iteritems(model.elements)):
         emap = []
-
-        print(element.nodeIDs())
-        #for i, nid in element.nodeIDs():
-            #element.nodes[i] = nid_map[nid]
 
         if element.type == 'CQUAD4':
             quads.append(element.node_ids)
@@ -59,7 +55,11 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     trimap = array(trimap, dtype='int32')
 
     # build the kdtree
-    kdt = scipy.spatial.KDTree(nodes_xyz)
+    try:
+        kdt = scipy.spatial.cKDTree(list(nodes_xyz))
+    except RuntimeError:
+        print(nodes_xyz)
+        raise RuntimeError(nodes_xyz)
 
     # find the node ids of interest
     nids_new = hstack([unique(quads), unique(tris)])
@@ -91,7 +91,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
         skip_nodes.append(nid2)
 
     model.remove_nodes = skip_nodes
-    model._write_nodes = _write_nodes
+    #model._write_nodes = _write_nodes
     model.write_bdf(bdf_filename_out)
 
 
@@ -116,7 +116,6 @@ def _write_nodes(self, outfile, size, is_double):
             if nid not in self.remove_nodes:
                 msg.append(node.write_card(size, is_double))
         outfile.write(''.join(msg))
-    #if 0:  # not finished
 
 
 def main():
