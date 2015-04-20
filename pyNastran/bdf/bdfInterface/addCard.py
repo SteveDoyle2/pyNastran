@@ -235,7 +235,8 @@ class AddMethods(object):
         key = coord.cid
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
         if key in self.coords:
-            if not allowOverwrites:
+            #if not allowOverwrites:
+            if not coord._is_same_card(self.coords[key]):
                 self._duplicate_coords.append(coord)
         else:
             self.coords[key] = coord
