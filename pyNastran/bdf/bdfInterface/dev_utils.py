@@ -33,17 +33,12 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     nnodes = len(nids)
     i = arange(nnodes, dtype='int32')
     nids2 = vstack([i, nids]).T
-    #print(nids2)
 
     nodes_xyz = array([node.xyz for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
 
     nids_new = set([])
     for eid, element in sorted(iteritems(model.elements)):
         emap = []
-
-        #print(element.nodeIDs())
-        #for i, nid in element.nodeIDs():
-            #element.nodes[i] = nid_map[nid]
 
         if element.type == 'CQUAD4':
             quads.append(element.node_ids)

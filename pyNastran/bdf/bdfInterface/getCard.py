@@ -184,21 +184,29 @@ class GetMethods(GetMethodsDeprecated):
                   PCOMP, which has multiple mids)
         """
         mid_to_pids_map = {}
-        for mid in self.materialIDs():
+        for mid in self.get_material_ids():
             mid_to_pids_map[mid] = []
 
         for pid in self.property_ids:
             prop = self.Property(pid)
-            if prop.type == 'PCOMP':
+            if prop.type in ['PCOMP', 'PCOMPG']:
                 mids = prop.Mids()
 
                 for mid in mids:
                     if pid not in mid_to_pids_map[mid]:
                         mid_to_pids_map[mid].append(pid)
-            else:  # PCOMP
-                if hasattr(prop, 'mid') and prop.Mid() in mids:
-                    if pid not in mid_to_pids_map[mid]:
-                        mid_to_pids_map[mid].append(pid)
+                    else:  # PCOMP
+                        if hasattr(prop, 'mid') and prop.Mid() in mids:
+                            if pid not in mid_to_pids_map[mid]:
+                                mid_to_pids_map[mid].append(pid)
+            else:
+                if hasattr(prop, 'Mids'):
+                    mids = prop.Mids()
+                else:
+                    mids = [prop.Mid()]
+
+                for mid in mids:
+                    mid_to_pids_map[mid].append(pid)
         return mid_to_pids_map
 
     def Element(self, eid, msg=''):
