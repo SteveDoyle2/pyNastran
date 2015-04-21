@@ -831,8 +831,12 @@ class NastranIO(object):
         if not self.is_centroidal:
             return icase
         assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
+        try:
+            sucaseIDs = model.caseControlDeck.get_subcase_list()
+        except AttributeError:
+            return icase
+
         print('_plot_pressures')
-        sucaseIDs = model.caseControlDeck.get_subcase_list()
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
                 continue
