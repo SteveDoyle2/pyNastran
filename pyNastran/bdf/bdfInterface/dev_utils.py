@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, itervalues
 from six.moves import zip
 import scipy
 from pyNastran.bdf.bdf import BDF
@@ -30,6 +30,13 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     #model.write_bdf('A_' + bdf_filename_out)
 
     nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
+    #nids_used = set([])
+    #for element in itervalues(model.elements):
+    #    nids_used.update(element.node_ids)
+    #nids_used = array(list(nids_used), dtype='int32')
+    #nids_used.sort()
+    #nids = nids_used
+
     nnodes = len(nids)
     i = arange(nnodes, dtype='int32')
     nids2 = vstack([i, nids]).T
@@ -94,6 +101,49 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     #model._write_nodes = _write_nodes
     model.write_bdf(bdf_filename_out)
 
+def cut_model(model, axis='-y'):
+    #model.read_bdf(bdf_filename, xref=False)
+    #model.cross_reference(xref_loads=xref_loads)
+
+    if axis == '-x':
+        iaxis = 0
+    elif axis == '-y':
+        iaxis = 1
+    elif axis == '-z':
+        iaxis = 2
+    else:
+        raise NotImplementedError(axis)
+
+    remove_nids = []
+    for nid, node in iteritems(model.nodes):
+        c = node.Position()
+        if c[iaxis] < 0.0:
+            remove_nids.append(nid)
+
+    remove_eids = []
+    for eid, element in iteritems(model.elements):
+        c = element.Centroid()
+        if c[iaxis] < 0.0:
+            remove_eids.append(eid)
+
+    for nid in remove_nids:
+        del model.nodes[nid]
+    for eid in remove_eids:
+        del model.elements[eid]
+
+    loads2 = {}
+    for load_id, loadcase in iteritems(model.loads):
+        loadcase2 = []
+        for load in loadcase:
+            if load.type == 'LOAD':
+                loadcase2.append(load)
+            elif load.type == 'PLOAD4':
+                if load.eid not in remove_eids:
+                    loadcase2.append(load)
+            else:
+                loadcase2.append(load)
+        loads2[load_id] = loadcase2
+    model.loads = loads2
 
 def _write_nodes(self, outfile, size, is_double):
     """
