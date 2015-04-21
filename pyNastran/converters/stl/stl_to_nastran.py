@@ -3,21 +3,21 @@ from pyNastran.converters.stl.stl_reader import STLReader
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 def stl_to_nastran_filename(stl_filename, bdf_filename,
-                            nnodes_offset=0, nelements_offset=0, log=None):
+                            nnodes_offset=0, nelements_offset=0,
+                            pid=100, mid=200,
+                            log=None):
     model = STLReader(log=log)
     model.read_stl(stl_filename)
 
     nid = nnodes_offset + 1
     cid = None
-    pid = 100
-    mid = 200
     load_id = 10
 
     nodal_normals = model.get_normals_at_nodes(model.elements)
 
     bdf = open(bdf_filename, 'wb')
     bdf.write('CEND\n')
-    bdf.write('LOAD = %s\n' % load_id)
+    #bdf.write('LOAD = %s\n' % load_id)
     bdf.write('BEGIN BULK\n')
     nid2 = 1
     magnitude = 100.
@@ -25,9 +25,9 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
         card = ['GRID', nid, cid, x, y, z]
         bdf.write(print_card_8(card))
 
-        nx, ny, nz = nodal_normals[nid2 - 1]
-        card = ['FORCE', load_id, nid, cid, magnitude, nx, ny, nz]
-        bdf.write(print_card_8(card))
+        #nx, ny, nz = nodal_normals[nid2 - 1]
+        #card = ['FORCE', load_id, nid, cid, magnitude, nx, ny, nz]
+        #bdf.write(print_card_8(card))
         nid += 1
         nid2 += 1
 
