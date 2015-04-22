@@ -5,6 +5,29 @@ import scipy
 from pyNastran.bdf.bdf import BDF
 from numpy import array, zeros, unique, where, arange, hstack, vstack, searchsorted
 
+
+def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
+    """
+    Removes nodes from a model that are not referenced.
+
+    .. warning only considers elements
+    .. renumber=False is not supported
+    """
+    model = BDF()
+    model.read_bdf(bdf_filename, xref=True)
+
+    nids_used = set([])
+    for element in itervalues(model.elements):
+        nids_used.update(element.node_ids)
+    all_nids = set(model.nodes.keys())
+
+    nodes_to_remove = all_nids - nids_used
+    print('nodes_to_remove = %s' % nodes_to_remove)
+    for nid in nodes_to_remove:
+        del model.nodes[nid]
+    model.write_bdf(bdf_filename_out)
+
+
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
@@ -101,7 +124,23 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     #model._write_nodes = _write_nodes
     model.write_bdf(bdf_filename_out)
 
+
 def cut_model(model, axis='-y'):
+    """
+    Removes the elements on one side of a model.
+
+    Typically aircraft are defined as x-aft, y-right, z-up, so
+    all node xyz locations are positive.  We then have a xz plane
+    of symmetry with the axis of symmetry being y.
+
+    Considers
+    =========
+      - nodes
+      - elements
+      - loads (LOAD/PLOAD4)
+
+    ..note doesn't support +cuts (e.g. +x, +y, +z)
+    """
     #model.read_bdf(bdf_filename, xref=False)
     #model.cross_reference(xref_loads=xref_loads)
 
