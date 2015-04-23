@@ -208,95 +208,30 @@ def rainflow_from_csv(input_csv, casenames, features,
         plt.savefig('%s.png' % feature_name)
     #plt.show()
 
-
-def rainflow_from_csv2(input_csv, names, write_csvs=True):
-    """
-    Rainflow counts from csv files
-
-    :param fname:   a file as described below
-    :param names:   data to append to the filename
-    :retval out_stress: dictionary of name:[N, 2] where
-                        2=[min_stress, max_stress] and N=nMinMax
-    :returns files: of the form icase_icase_name.csv
-
-    .. note:: This is not the ideal method as it only handles one case,
-              and the input has to be hand created with min/max stress
-              for each row, so it will be removed at some point.
-
-    Input_csv
-    ---------
-      # case, min_stress, max_stress
-      1, 0.00, 20.0
-      1, 20.0, 50.0
-      1, 50.0, 0.0
-      2, etc.
-      3, etc.
-      12, etc.
-
-    names = {
-        1 : 'A',
-        2 : 'B',
-        3 : 'C',
-        12 : 'D',
+def main():
+    input_csv = 'test.csv'
+    n = 700
+    n1 = int(n/3)
+    casenames = {
+       ('normal',  0,  n1),
+       ('impulse',  n1,  n-1),
     }
 
-    so we get:
-       icase_1_A.csv
-       icase_2_B.csv
-       icase_3_C.csv
-       icase_12_D.csv
-    """
-    A = loadtxt(input_csv, delimiter=',', skiprows=1)
-    nrows = A.shape[0]
-    ncols = A.shape[1]
-    assert ncols == 3, ncols  # icycle, stress_min, smax
-    cases = {}
-    case = []
-
-    row_id_old = None
-    for row in A:
-        row_id = int(row[0])
-        if row_id == row_id_old:
-            case.append(row[1])
-            case.append(row[2])
-        else:
-            if row_id_old is not None:
-                if min(case) == max(case):
-                    print('  case[%i] = %s'  %(row_id_old, case))
-                else:
-                    if row_id_old in cases:
-                        raise KeyError('row_id=%s exists' % row_id_old)
-                    cases[row_id_old] = case
-
-            case = []
-            case.append(row[1])
-            case.append(row[2])
-            row_id_old = int(row[0])
-            #print(row_id_old)
-    if min(case) == max(case):
-        print('  case[%i] = %s'  %(row_id_old, case))
-    else:
-        if row_id_old in cases:
-            raise KeyError('row_id=%s already exists' % row_id_old)
-        cases[row_id_old] = case
-
-    out_stress = {}
-    for icase, case in sorted(iteritems(cases)):
-        name = names[icase]
-        max_stress, min_stress = rainflow(icase, case)
-        A = vstack([min_stress, max_stress]).T
-
-        if write_csvs:
-            print('  max[%i] = %s' % (icase, max_stress))
-            print('  min[%i] = %s\n' % (icase, min_stress))
-
-            print(A)
-            fname = 'icase_%s_%s.out'% (icase, name)
-            f = open(fname, 'wb')
-            f.write('# max stress,min_stress\n')
-            savetxt(f, A, delimiter=',')
-        out_stress[name] = A
-    return out_stress
+    import os
+    from numpy import linspace, sin, cos, tan, vstack
+    x = linspace(0., 3.14*5, num=n)
+    y = sin(x) * cos(201 * x)
+    z = sin(x) * cos(201 * x) * tan(x)
+    A = vstack([y, z])
+    savetxt(input_csv, A.T, delimiter=',')
+    features = {
+        0 : 'fillet',
+        1 : 'groove',
+    }
+    rainflow_from_csv(input_csv, casenames, features,
+                      write_csvs=True, delimiter=',',
+                      xmax=None, legend_alpha=1.0)
+    os.remove(input_csv)
 
 if __name__ == '__main__':
     main()
