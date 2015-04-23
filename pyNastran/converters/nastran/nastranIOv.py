@@ -51,7 +51,7 @@ try:
 except ImportError:
     is_geom = False
 #from pyNastran.f06.f06 import F06
-
+is_geom = False
 
 class NastranIO(object):
     def __init__(self):
@@ -79,9 +79,9 @@ class NastranIO(object):
 
     def get_nastran_wildcard_geometry_results_functions(self):
         if is_geom:
-            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas, *.pch)'
+            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas; *.op2; *.pch)'
         else:
-            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas, *.op2, *.pch)'
+            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas; *.pch)'
 
         data = (
             'Nastran',
