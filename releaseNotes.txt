@@ -52,6 +52,17 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
+-----------------------v0.8.0 released 2015/04/xx-----------------------
+BDF:
+OP2:
+
+BDF API:
+ - build_thru(packs, maxDV=None) is now build_thru(packs, max_dv=None)
+ - build_thru_packs(packs, maxDV=None) is now build_thru_packs(packs, max_dv=None)
+ - build_thru_float(packs, maxDV=None) is now build_thru_float(packs, max_dv=None)
+ - subcases now support ``in`` and subcase['LOAD']
+ - deprecated echo_bdf
+
 -----------------------v0.7.2 released 2015/04/xx-----------------------
 Relase notes:
    - This is a bug fix release
