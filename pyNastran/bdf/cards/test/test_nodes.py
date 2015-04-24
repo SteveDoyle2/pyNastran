@@ -45,6 +45,46 @@ class TestNodes(unittest.TestCase):
             print(ref)
             self.assertEqual(msg, card), ref
 
+    def test_grid_02(self):
+        nid = 1
+        cp = 2
+        cd = 0
+        ps = '1'
+        seid = 4
+        datai = ['GRID', nid, cp, 0., 0., 0., cd, ps, seid]
+        card = BDFCard(datai)
+        n1 = GRID(card=card)
+
+        x = 0.1
+        y = 0.2
+        z = 0.3
+        self.assertEqual(n1.get_field(3), 0., msg='%s' % n1.get_field(3))
+        self.assertEqual(n1.get_field(4), 0., msg='%s' % n1.get_field(4))
+        self.assertEqual(n1.get_field(5), 0., msg='%s' % n1.get_field(5))
+
+        self.assertEqual(n1.get_field(6), cd, msg='%s' % n1.get_field(6))
+        self.assertEqual(n1.get_field(7), ps, msg='%s' % n1.get_field(7))
+        self.assertEqual(n1.get_field(8), seid, msg='%s' % n1.get_field(8))
+        n1.update_field(3, x)
+        n1.update_field(4, y)
+        n1.update_field(5, z)
+        print('ps = %r' % n1.ps)
+        self.assertEqual(n1.xyz[0], x)
+        self.assertEqual(n1.xyz[1], y)
+        self.assertEqual(n1.xyz[2], z)
+        self.assertEqual(n1.ps, ps)
+        self.assertEqual(n1.cd, cd)
+        self.assertEqual(n1.seid, seid)
+
+        self.assertEqual(n1.get_field(3), x, msg='%s' % n1.get_field(3))
+        self.assertEqual(n1.get_field(4), y, msg='%s' % n1.get_field(4))
+        self.assertEqual(n1.get_field(5), z, msg='%s' % n1.get_field(5))
+
+        self.assertEqual(n1.get_field(6), cd, msg='%s' % n1.get_field(6))
+        self.assertEqual(n1.get_field(7), ps, msg='%s' % n1.get_field(7))
+        self.assertEqual(n1.get_field(8), seid, msg='%s' % n1.get_field(8))
+
+
     def test_spoint_01(self):
         #      12345678 2345678 2345678 2345678 2345678 2345678
         msg = 'SPOINT         1       3       5\n'

@@ -2411,7 +2411,7 @@ class PAERO3(BaseCard):
             self.ncontrol_surfaces = integer(card, 3, 'ncontrol_surfaces')
             self.x = []
             self.y = []
-            nfields = card.nFields()
+            nfields = card.nfields
 
             j = 0
             for i in range(6, nfields, 2):

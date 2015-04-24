@@ -1319,7 +1319,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             }
             if card_name in _dct:
                 d = _dct[card_name]
-                self.add_element((d[1] if card_obj.nFields() == d[0]
+                self.add_element((d[1] if card_obj.nfields == d[0]
                                   else d[2])(card_obj, comment=comment))
                 return card_obj
 

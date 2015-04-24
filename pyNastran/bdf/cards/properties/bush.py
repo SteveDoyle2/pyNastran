@@ -59,7 +59,7 @@ class PBUSH(BushingProperty):
             #: Property ID
             self.pid = integer(card, 1, 'pid')
 
-            nfields = card.nFields()
+            nfields = card.nfields
             self.vars = []
             iStart = 2
             while iStart < nfields:
@@ -213,7 +213,7 @@ class PBUSH1D(BushingProperty):
             self.sa = double_or_blank(card, 6, 'sa', 0.0)
             self.se = double_or_blank(card, 7, 'se', 0.0)
 
-            nfields = card.nFields()
+            nfields = card.nfields
             self.vars = []
             iStart = 9
             while iStart < nfields:

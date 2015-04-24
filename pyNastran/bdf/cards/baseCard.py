@@ -1,12 +1,12 @@
-# pylint: disable=R0904,R0902,C0111,C0103
+# pylint: disable=C0103
+# R0904,R0902,C0111,
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, integer_types
 from six.moves import zip, range
 
-from pyNastran.bdf.field_writer_8 import print_card_8, is_same
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
 
@@ -31,13 +31,51 @@ class BaseCard(BaseCardDeprecated):
                 return
 
     def update_field(self, n, value):
+        """
+        Updates a field based on it's field number.
+
+        :param self: the BaseCard object
+        :param n: the integer field number
+        :param value: the value to update the field to
+
+        .. note::
+            This is dynamic if the card length changes.
+
+        .. code-block:: python
+
+          nid = 1
+          node = model.nodes[nid]
+          # ['GRID', nid, cp, x, y, z]
+          node.update_field(3, 0.1) # change the z coordinate
+        """
         try:
             key_name = self._field_map[n]
             setattr(self, key_name, value)
         except KeyError:
             self._update_field_helper(n, value)
 
+    def _update_field_helper(self, n, value):
+        raise NotImplementedError()
+
+    def _get_field_helper(self, n):
+        raise NotImplementedError()
+
     def get_field(self, n):
+        """
+        Gets a field based on it's field number
+
+        :param self: the BaseCard object
+        :param n: the integer field number
+        :returns value: the value of the field
+
+        .. code-block:: python
+
+          nid = 1
+          node = model.nodes[nid]
+          # ['GRID', nid, cp, x, y, z]
+          z = node.get_field(5)
+
+        """
         try:
             key_name = self._field_map[n]
             value = getattr(self, key_name)
@@ -46,7 +84,8 @@ class BaseCard(BaseCardDeprecated):
         return value
 
     def write_code_aster(self):
-        return ('# skipping %s  because write_code_aster is not implemented\n'
+        """default method for Code Aster"""
+        return ('# skipping %s because write_code_aster is not implemented\n'
                 % self.type)
 
     def _verify(self, xref):
@@ -76,7 +115,7 @@ class BaseCard(BaseCardDeprecated):
     def print_raw_card(self, size=8, is_double=False):  ## TODO: needs to be fixed
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
-        return print_card(list_fields, size=size, is_double=False)
+        return self.comment() + print_card(list_fields, size=size, is_double=is_double)
 
     def repr_fields(self):
         """gets the card's fields"""
@@ -84,19 +123,11 @@ class BaseCard(BaseCardDeprecated):
 
     def print_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
-        if size == 8:
-            return self.comment() + print_card_8(list_fields)
-        elif is_double:
-            return self.comment() + print_card_double(list_fields)
-        return self.comment() + print_card_16(list_fields)
+        return self.comment() + print_card(list_fields, size=size, is_double=is_double)
 
     def print_repr_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
-        if size == 16:
-            if is_double:
-                return print_card_double(list_fields)
-            return print_card_16(list_fields)
-        return print_card_8(list_fields)
+        return self.comment() + print_card(list_fields, size=size, is_double=is_double)
 
     def __repr__(self):
         """
@@ -143,6 +174,7 @@ class Property(BaseCard):
             return self.mid.mid
 
     def cross_reference(self, model):
+        """dummy cross reference method for a Property"""
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
 
@@ -153,6 +185,7 @@ class Material(BaseCard):
         BaseCard.__init__(self)
 
     def cross_reference(self, model):
+        """dummy cross reference method for a Material"""
         pass
 
     def Mid(self):
@@ -167,6 +200,7 @@ class Material(BaseCard):
 
 
 class Element(BaseCard, ElementDeprecated):
+    """defines the Element class"""
     pid = 0  # CONM2, rigid
 
     def __init__(self, card, data):
@@ -271,35 +305,35 @@ class Element(BaseCard, ElementDeprecated):
         """
         faces = {}
         nodes = self.node_ids
-        if self.type.find('HEX') != -1:  # CHEXA
+        if self.type.startswith('HEX'):  # CHEXA
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
             faces[3] = [nodes[1], nodes[2], nodes[6], nodes[5]]
             faces[4] = [nodes[2], nodes[3], nodes[7], nodes[6]]
             faces[5] = [nodes[3], nodes[0], nodes[4], nodes[7]]
             faces[6] = [nodes[4], nodes[5], nodes[6], nodes[7]]
-        elif self.type.find('TET') != -1:  # CTETRA
+        elif self.type.startswith('TET'):  # CTETRA
             faces[1] = [nodes[0], nodes[1], nodes[2]]
             faces[2] = [nodes[0], nodes[1], nodes[3]]
             faces[3] = [nodes[1], nodes[2], nodes[3]]
             faces[4] = [nodes[2], nodes[0], nodes[3]]
-        elif self.type.find('PYR') != -1:  # PYRAMID
+        elif self.type.startswith('PYR'):  # PYRAMID
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[4]]
             faces[3] = [nodes[1], nodes[2], nodes[4]]
             faces[4] = [nodes[2], nodes[3], nodes[4]]
             faces[5] = [nodes[3], nodes[0], nodes[4]]
-        elif self.type.find('PEN') != -1:  # CPENTA
+        elif self.type.startswith('PEN'):  # CPENTA
             faces[1] = [nodes[0], nodes[1], nodes[2]]
             faces[2] = [nodes[3], nodes[4], nodes[5]]
             faces[3] = [nodes[0], nodes[1], nodes[4], nodes[3]]
             faces[4] = [nodes[1], nodes[2], nodes[5], nodes[4]]
             faces[5] = [nodes[2], nodes[0], nodes[3], nodes[5]]
-        elif self.type.find('QUAD') != -1:  # CQUADx
+        elif self.type.startswith('QUAD'):  # CQUADx
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
-        elif self.type.find('TRI') != -1:  # CTRIAx
+        elif self.type.startswith('TRI'):  # CTRIAx
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2]]
             faces[2] = [nodes[1], nodes[0], nodes[2]]
@@ -481,7 +515,7 @@ def collapse_thru(fields):
     assert 'THRU' not in fields, fields
     fields.sort()
     packs = condense(fields)
-    fields2 = build_thru(packs, maxDV=1)
+    fields2 = build_thru(packs, max_dv=1)
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return fields2
 
@@ -490,7 +524,7 @@ def collapse_thru_packs(fields):
     assert 'THRU' not in fields, fields
     fields.sort()
     packs = condense(fields)
-    singles, doubles = build_thru_packs(packs, maxDV=1)
+    singles, doubles = build_thru_packs(packs, max_dv=1)
 
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return singles, doubles
@@ -543,7 +577,7 @@ def condense(value_list):
     return packs
 
 
-def build_thru_packs(packs, maxDV=1):
+def build_thru_packs(packs, max_dv=1):
     """
     # invalid
     SET1,4000, 1, 3, THRU, 10, 20, THRU, 30
@@ -576,7 +610,7 @@ def build_thru_packs(packs, maxDV=1):
     return singles, doubles
 
 
-def build_thru(packs, maxDV=None):
+def build_thru(packs, max_dv=None):
     """
     Takes a pack [1,7,2] and converts it into fields used by a SET card.
     The values correspond to the first value, last value, and delta in the
@@ -604,7 +638,7 @@ def build_thru(packs, maxDV=None):
                 fields.append(first_val)
                 fields.append(last_val)
         else:
-            if maxDV is None:
+            if max_dv is None:
                 if last_val - first_val > 4 * dv:
                     fields.append(first_val)
                     fields.append('THRU')
@@ -620,7 +654,7 @@ def build_thru(packs, maxDV=None):
     return fields
 
 
-def build_thru_float(packs, maxDV=None):
+def build_thru_float(packs, max_dv=None):
     """
     Takes a pack [1,7,2] and converts it into fields used by a SET card.
     The values correspond to the first value, last value, and delta in the
@@ -628,8 +662,8 @@ def build_thru_float(packs, maxDV=None):
     [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
 
     :param packs: list of packs (list of 3 values: [first, last, delta] )
-    :param maxDV: integer defining the max allowable delta between two values
-                  (default=None; no limit)
+    :param max_dv: integer defining the max allowable delta between two values
+                   (default=None; no limit)
     """
     fields = []
     for (first_val, last_val, dv) in packs:

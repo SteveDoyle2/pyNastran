@@ -44,7 +44,7 @@ class BSURF(BaseCard):
             #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
             #: Number (float)
-            n = card.nFields()
+            n = card.nfields
             i = 2
             eid_data = []
             while i < n:
@@ -128,7 +128,7 @@ class BSURFS(BaseCard):
             self.g2s = []
             self.g3s = []
 
-            n = card.nFields() - 5
+            n = card.nfields - 5
             i = 0
             j = 0
             while i < n:
@@ -299,7 +299,7 @@ class BCTPARA(BaseCard):
             i = 2
             j = 1
             self.params = {}
-            while i < card.nFields():
+            while i < card.nfields:
                 param = string(card, i, 'param%s' % j)
                 i += 1
                 if param == 'TYPE':

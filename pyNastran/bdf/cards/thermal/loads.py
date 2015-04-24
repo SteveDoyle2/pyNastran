@@ -178,7 +178,7 @@ class QBDY3(ThermalLoad):
             #: Control point for thermal flux load. (Integer > 0; Default = 0)
             self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
 
-            nfields = card.nFields()
+            nfields = card.nfields
             eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
             #: CHBDYj element identification numbers
             self.eids = expand_thru_by(eids)
@@ -257,7 +257,7 @@ class QHBDY(ThermalLoad):
 
             #: Area factor depends on type. (Real > 0.0 or blank)
             self.af = double_or_blank(card, 4, 'af')
-            nfields = card.nFields()
+            nfields = card.nfields
 
             #: grids
             self.grids = fields(integer, card, 'grid', i=5, j=nfields)

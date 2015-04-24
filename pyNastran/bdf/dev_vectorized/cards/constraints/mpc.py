@@ -16,8 +16,8 @@ def get_mpc_constraint(card):
     constraints = []
 
     fields = card.fields(0)
-    nFields = len(fields) - 1
-    for iField in range(2, nFields, 8):
+    nfields = len(fields) - 1
+    for iField in range(2, nfields, 8):
         grid = integer(card, iField, 'gid')
         component = components_or_blank(card, iField + 1, 'constraint', 0)  # scalar point
         value = double_or_blank(card, iField + 2, 'enforced', 0.0)
@@ -27,7 +27,7 @@ def get_mpc_constraint(card):
         #self.constraints.append(component)
         #self.enforced.append(value)
 
-        if iField + 3 > nFields:
+        if iField + 3 > nfields:
             break
         grid = integer(card, iField + 3, 'gid')
         component = components_or_blank(card, iField + 4, 'constraint', 0)  # scalar point

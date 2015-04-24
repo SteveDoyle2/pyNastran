@@ -1,3 +1,4 @@
+# pylint: disable=E1101,C0103
 import warnings
 from numpy import array
 
@@ -63,7 +64,8 @@ class CoordDeprecated(object):
         :retval p2: the xyz point in the global frame
         :retval matrix: the transformation matrix
         """
-        warnings.warn('deprecated; use p2=cid.transform_node_to_global(p);M=cid.beta() instead of (p2,M)=cid.transformToGlobal(p)',
+        warnings.warn('deprecated; use p2=cid.transform_node_to_global(p);'
+                      'M=cid.beta() instead of (p2,M)=cid.transformToGlobal(p)',
                       DeprecationWarning, stacklevel=2)
         if self.cid == 0:
             return p, array([[1., 0., 0.],
@@ -75,19 +77,23 @@ class CoordDeprecated(object):
         return p2, matrix
 
     def transformVectorToGlobal(self, p):
-        warnings.warn('deprecated; use transform_vector_to_global(p) instead of transformVectorToGlobal(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_vector_to_global(p) instead of transformVectorToGlobal(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_vector_to_global(p)
 
     def transformNodeToGlobal(self, p):
-        warnings.warn('deprecated; use transform_node_to_global(p) instead of transformVectorToGlobal(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_node_to_global(p) instead of transformVectorToGlobal(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_node_to_global(p)
 
     def transformToLocal(self, p, beta, debug=False):
-        warnings.warn('deprecated; use transform_node_to_local(p) instead of transformToLocal(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_node_to_local(p) instead of transformToLocal(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_node_to_local(p, debug)
 
     def transform_to_local(self, p, beta, debug=False):
-        warnings.warn('deprecated; use transform_node_to_local(p) instead of transform_to_local(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_node_to_local(p) instead of transform_to_local(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_node_to_local(p, debug)
 
 
@@ -125,21 +131,25 @@ class AeroDeprecated(object):
 
 class CAERO1Deprecated(object):
     def Points(self):
-        warnings.warn('deprecated; use get_points() instead of Points()', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use get_points() instead of Points()',
+                      DeprecationWarning, stacklevel=2)
         return self.get_points()
 
     def SetPoints(self, points):
-        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)',
+                      DeprecationWarning, stacklevel=2)
         return self.set_points(points)
 
 
 class CAERO2Deprecated(object):
     def Points(self):
-        warnings.warn('deprecated; use get_points() instead of Points()', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use get_points() instead of Points()',
+                      DeprecationWarning, stacklevel=2)
         return self.get_points()
 
     def SetPoints(self, points):
-        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)',
+                      DeprecationWarning, stacklevel=2)
         return self.set_points(points)
 
 
@@ -226,7 +236,8 @@ class GetMethodsDeprecated(object):
         """
         .. deprecated:: will be removed in version 0.8
         """
-        warnings.warn('deprecated; use FLFACT(sid) instead of Flfact(sid)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use FLFACT(sid) instead of Flfact(sid)',
+                      DeprecationWarning, stacklevel=2)
         return self.FLFACT(sid, msg)
 
     def getNodes(self):
@@ -244,13 +255,13 @@ class GetMethodsDeprecated(object):
     #------------------------------
     def nNodes(self):
         """deprecated"""
-        warnings.warn('deprecated; use node_ids instead of nNodes()',
+        warnings.warn('deprecated; use nnodes instead of nNodes()',
                       DeprecationWarning, stacklevel=2)
         return self.nnodes
 
     def get_nnodes(self):
         """deprecated"""
-        warnings.warn('deprecated; use node_ids instead of get_nnodes()',
+        warnings.warn('deprecated; use nnodes instead of get_nnodes()',
                       DeprecationWarning, stacklevel=2)
         return len(self.nodes)
 

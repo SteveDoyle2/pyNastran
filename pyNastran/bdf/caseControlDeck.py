@@ -8,7 +8,7 @@ from six import iteritems, itervalues
 import sys
 import copy
 
-from pyNastran.bdf import subcase
+#from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.utils.log import get_logger
 
@@ -84,7 +84,8 @@ class CaseControlDeck(object):
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper())
-        msg = 'isubcase=%r does not exist...subcases=%s' % (isubcase, str(sorted(self.subcases.keys())))
+        msg = ('isubcase=%r does not exist...subcases=%s'
+               % (isubcase, str(sorted(self.subcases.keys()))))
         raise RuntimeError(msg)
 
     def has_subcase(self, isubcase):
@@ -152,7 +153,8 @@ class CaseControlDeck(object):
             self.subcases[i_to_subcase] = subcase_to
         else:
             if not self.has_subcase(i_to_subcase):
-                msg = 'i_from_subcase=%r does not exist...subcases=%s' % (i_to_subcase, str(sorted(self.subcases.keys())))
+                msg = ('i_from_subcase=%r does not exist...subcases=%s'
+                       % (i_to_subcase, str(sorted(self.subcases.keys()))))
                 raise RuntimeError(msg)
             subcase_to = self.subcases[i_to_subcase]
 
@@ -301,7 +303,7 @@ class CaseControlDeck(object):
                 paramType = 'STRESS-type'
 
                 isubcase = self._add_parameter_to_subcase(key, value, options,
-                    paramType, isubcase)
+                                                          paramType, isubcase)
                 self.output_lines.append(line)
                 continue
             #print("key=%-12r icase=%i value=%r options=%r paramType=%r" %(key,
@@ -545,7 +547,10 @@ class CaseControlDeck(object):
         return isubcase
 
     def cross_reference(self, model):
-        for (isubcase, subcase) in sorted(iteritems(self.subcases)):
+        """
+        Cross references the subcase objects
+        """
+        for isubcase, subcase in sorted(iteritems(self.subcases)):
             subcase.cross_reference(model)
 
     def get_op2_data(self):
@@ -556,7 +561,7 @@ class CaseControlDeck(object):
         .. todo:: not done...
         """
         cases = {}
-        for (isubcase, subcase) in sorted(iteritems(self.subcases)):
+        for isubcase, subcase in sorted(iteritems(self.subcases)):
             if isubcase:
                 cases[isubcase] = subcase.getOp2Data(self.sol, subcase.solmap_toValue)
         return cases
@@ -579,15 +584,6 @@ class CaseControlDeck(object):
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
-    ##def parseParam(self,param):
-       #"""
-       #.. warning:: doesnt support comment characters
-       #"""
-       #param = param.substr('\n','').substr('\r','') # remove line endings
-       #parse(param)
-       ##param2 = [''.join(param)]
-       ##print('param2 = ',param2)
-
 
 def verify_card(key, value, options, line):
     if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD',
@@ -607,6 +603,23 @@ def verify_card2(key, value, options, line):
     Make sure there are no obvious errors
     """
     # this is purposely made overly strict to catch all the cases
+    int_cards = [
+        'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
+        'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)',
+        'DLOAD', 'MFLUID', 'CLOAD', 'NLPARM', 'CMETHOD',
+        'FREQUENCY', 'TSTEP', 'TSTEPNL', 'SDAMPING', 'DESOBJ',
+        'TEMPERATURE(INIT)', 'RANDOM', 'DESSUB', 'ADAPT', 'MAXLINES',
+        'TFL', 'DESGLB', 'SMETHOD', 'DYNRED', 'GUST', 'TEMPERATURE(MATE)',
+        'OTIME', 'NONLINEAR', 'AUXM', 'IC', 'BC', 'OUTRCV', 'DIVERG',
+        'DATAREC', 'TEMPERATURE(BOTH)', 'DEFORM', 'MODES', 'CASE',
+        'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
+        'GPSDCON', 'AUXMODEL',
+        'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
+        'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
+        'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
+        '', '', '', '', '', '', '', '', '', '',
+        '',
+    ]
 
     # these may only be integers
     #print("key =", key)
@@ -618,22 +631,7 @@ def verify_card2(key, value, options, line):
             raise
 
     # these may only be integers greater than 0
-    elif key in [
-        'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
-        'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)',
-        'DLOAD', 'MFLUID', 'CLOAD', 'NLPARM', 'CMETHOD',
-        'FREQUENCY', 'TSTEP', 'TSTEPNL', 'SDAMPING', 'DESOBJ',
-        'TEMPERATURE(INIT)', 'RANDOM', 'DESSUB', 'ADAPT', 'MAXLINES',
-        'TFL','DESGLB', 'SMETHOD', 'DYNRED', 'GUST', 'TEMPERATURE(MATE)',
-        'OTIME', 'NONLINEAR', 'AUXM', 'IC', 'BC', 'OUTRCV', 'DIVERG',
-        'DATAREC', 'TEMPERATURE(BOTH)', 'DEFORM', 'MODES', 'CASE',
-        'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
-        'GPSDCON', 'AUXMODEL',
-        'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
-        'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
-        'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
-        '', '', '', '', '', '', '', '', '', '',
-        '']:
+    elif key in int_cards:
         try:
             value2 = int(value)
         except:
@@ -646,7 +644,7 @@ def verify_card2(key, value, options, line):
     # 'DISP=ALL', 'DISP=NONE', 'DISP=1', 'DISP=1,2'
     elif key in ['STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR',
                  'VELOCITY', 'ACCELERATION', 'FORCE', 'ESE', 'OLOAD', 'SEALL', 'GPFORCE',
-                 'GPSTRESS', 'GPSTRAIN', 'FLUX','AEROF', 'THERMAL', 'STRFIELD',
+                 'GPSTRESS', 'GPSTRAIN', 'FLUX', 'AEROF', 'THERMAL', 'STRFIELD',
                  'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
                  'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
                  'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
@@ -670,7 +668,7 @@ def verify_card2(key, value, options, line):
     elif key in ['ECHO']:
         #assert value in ['NONE','BOTH','UNSORT','SORT', 'NOSORT', 'PUNCH', ''], 'line=%r is invalid; value=%r.' % (line, value)
         pass
-    elif key in ['CSCALE', 'SUBSEQ','SYMSEQ', 'DEFORMATION SCALE', '', '']:
+    elif key in ['CSCALE', 'SUBSEQ', 'SYMSEQ', 'DEFORMATION SCALE', '', '']:
         # floats
         pass
     elif 'SET' in key:
@@ -678,18 +676,18 @@ def verify_card2(key, value, options, line):
 
     # weird cards
     elif key in ['SUBTITLE', 'TITLE',
-                 'A2GG',  'M2GG', 'K2GG',
+                 'A2GG', 'M2GG', 'K2GG',
                  'K2PP', 'M2PP',
                  'K42GG',
 
-                 'XMIN', 'XMAX', 'XTITLE','XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
-                 'YMIN', 'YMAX', 'YTITLE','YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
-                 'XTMIN','XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
-                 'YTMIN','YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
+                 'XMIN', 'XMAX', 'XTITLE', 'XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
+                 'YMIN', 'YMAX', 'YTITLE', 'YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
+                 'XTMIN', 'XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
+                 'YTMIN', 'YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
                  'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
                  'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
 
-                 'RIGHT TICS','UPPER TICS',
+                 'RIGHT TICS', 'UPPER TICS',
                  'TRIGHT TICS',
                  'BRIGHT TICS',
 
@@ -699,8 +697,8 @@ def verify_card2(key, value, options, line):
                  'HOUTPUT', 'PLOTID', '', '', '', '', '',
                  'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
                  'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
-                 'MAXMIN', 'RESVEC',  'MODESELECT', 'RIGID', 'TCURVE',
-                 'SUPER',  'MAXI DEFO', 'P2G',
+                 'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
+                 'SUPER', 'MAXI DEFO', 'P2G',
                  'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
                  'DSYM', '', '', '']:
         pass
@@ -755,8 +753,7 @@ def _clean_lines(case_control, lines):
                 lines_pack = [line]
     return [''.join(pack) for pack in lines3]
 
-
-if __name__ == '__main__':  # pragma: no cover
+def main():
     lines = [
         'SUBCASE 1',
         '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
@@ -786,3 +783,6 @@ if __name__ == '__main__':  # pragma: no cover
     #                         'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
     #                         'BEGIN BULK'])
     #print('\n\n%s' % deck2)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

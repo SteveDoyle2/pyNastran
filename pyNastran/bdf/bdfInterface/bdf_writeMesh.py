@@ -1,4 +1,4 @@
-# pylint: disable=E1101,W0612
+# pylint: disable=E1101
 # coding: utf-8
 """
 This file defines:
@@ -13,17 +13,12 @@ import warnings
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
-class WriteMesh(object):
-    """
-    Major methods:
-      - model.write_bdf(...)
-      - model.echo_bdf(...)
-      - model.auto_reject_bdf(...)
-    """
+class WriteMeshDeprecated(object):
+    """Storage contained for deprecated functions"""
     def __init__(self):
-        self._auto_reject = True
         self.cards_to_read = set([])
 
     def echo_bdf(self, infile_name):
@@ -32,9 +27,25 @@ class WriteMesh(object):
         A write method is stil required.
 
         .. todo:: maybe add the write method
+
+        .. code-block:: python
+
+          model = BDF()
+          model.echo_bdf(bdf_filename)
         """
         self.cards_to_read = set([])
         return self.read_bdf(infile_name)
+
+class WriteMesh(WriteMeshDeprecated):
+    """
+    Major methods:
+      - model.write_bdf(...)
+      - model.echo_bdf(...)
+      - model.auto_reject_bdf(...)
+    """
+    def __init__(self):
+        WriteMeshDeprecated.__init__(self)
+        self._auto_reject = True
 
     def auto_reject_bdf(self, infile_name):
         """
@@ -320,9 +331,9 @@ class WriteMesh(object):
             if str_spc:
                 msg.append(str_spc)
             else:
-                for (spc_id, spcadd) in sorted(iteritems(self.spcadds)):
+                for (unused_id, spcadd) in sorted(iteritems(self.spcadds)):
                     msg.append(str(spcadd))
-                for (spc_id, spcs) in sorted(iteritems(self.spcs)):
+                for (unused_id, spcs) in sorted(iteritems(self.spcs)):
                     for spc in spcs:
                         msg.append(str(spc))
             outfile.write(''.join(msg))
@@ -487,33 +498,33 @@ class WriteMesh(object):
            self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
            self.MATT8 or self.MATT9):
             msg = ['$MATERIALS\n']
-            for (mid, material) in sorted(iteritems(self.materials)):
+            for (unused_mid, material) in sorted(iteritems(self.materials)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.hyperelasticMaterials)):
+            for (unused_mid, material) in sorted(iteritems(self.hyperelasticMaterials)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.creepMaterials)):
-                msg.append(material.write_card(size, is_double))
-
-            for (mid, material) in sorted(iteritems(self.MATS1)):
-                msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATS3)):
-                msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATS8)):
+            for (unused_mid, material) in sorted(iteritems(self.creepMaterials)):
                 msg.append(material.write_card(size, is_double))
 
-            for (mid, material) in sorted(iteritems(self.MATT1)):
+            for (unused_mid, material) in sorted(iteritems(self.MATS1)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATT2)):
+            for (unused_mid, material) in sorted(iteritems(self.MATS3)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATT3)):
+            for (unused_mid, material) in sorted(iteritems(self.MATS8)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATT4)):
+
+            for (unused_mid, material) in sorted(iteritems(self.MATT1)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATT5)):
+            for (unused_mid, material) in sorted(iteritems(self.MATT2)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATT8)):
+            for (unused_mid, material) in sorted(iteritems(self.MATT3)):
                 msg.append(material.write_card(size, is_double))
-            for (mid, material) in sorted(iteritems(self.MATT9)):
+            for (unused_mid, material) in sorted(iteritems(self.MATT4)):
+                msg.append(material.write_card(size, is_double))
+            for (unused_mid, material) in sorted(iteritems(self.MATT5)):
+                msg.append(material.write_card(size, is_double))
+            for (unused_mid, material) in sorted(iteritems(self.MATT8)):
+                msg.append(material.write_card(size, is_double))
+            for (unused_mid, material) in sorted(iteritems(self.MATT9)):
                 msg.append(material.write_card(size, is_double))
             outfile.write(''.join(msg))
 
@@ -534,7 +545,7 @@ class WriteMesh(object):
             msg.append('$NODES\n')
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
-            for (nid, node) in sorted(iteritems(self.nodes)):
+            for (unused_nid, node) in sorted(iteritems(self.nodes)):
                 msg.append(node.write_card(size, is_double))
             outfile.write(''.join(msg))
         #if 0:  # not finished
@@ -636,12 +647,16 @@ class WriteMesh(object):
         Writes the rejected (processed) cards and the rejected unprocessed
         cardLines
         """
+        if size == 8:
+            print_func = print_card_8
+        else:
+            print_func = print_card_16
         msg = []
         if self.reject_cards:
             msg.append('$REJECTS\n')
             for reject_card in self.reject_cards:
                 try:
-                    msg.append(print_card_8(reject_card))
+                    msg.append(print_func(reject_card))
                 except RuntimeError:
                     for field in reject_card:
                         if field is not None and '=' in field:
@@ -724,14 +739,14 @@ class WriteMesh(object):
 
             # BCs
             for (unused_key, bcs) in sorted(iteritems(self.bcs)):
-                for bc in bcs:  # list
-                    msg.append(bc.write_card(size, is_double))
+                for boundary_condition in bcs:  # list
+                    msg.append(boundary_condition.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_thermal_materials(self, outfile, size=8, is_double=False):
         """Writes the thermal materials in a sorted order"""
         if self.thermalMaterials:
             msg = ['$THERMAL MATERIALS\n']
-            for (mid, material) in sorted(iteritems(self.thermalMaterials)):
+            for (unused_mid, material) in sorted(iteritems(self.thermalMaterials)):
                 msg.append(material.write_card(size, is_double))
             outfile.write(''.join(msg))
