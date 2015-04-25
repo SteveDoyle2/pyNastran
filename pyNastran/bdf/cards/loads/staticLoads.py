@@ -221,7 +221,7 @@ class LOAD(LoadCombination):
         typesFound = set()
         (scaleFactors, loads) = self.getReducedLoads()
 
-        for (scaleFactor, load) in zip(scaleFactors, loads):
+        for (scale_factor, load) in zip(scaleFactors, loads):
             #print("*load = ",load)
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
@@ -229,37 +229,37 @@ class LOAD(LoadCombination):
                 (isLoad, node, vector) = out
                 if isLoad:  # load
                     if node not in forceLoads:
-                        forceLoads[node] = vector * scaleFactor
+                        forceLoads[node] = vector * scale_factor
                     else:
-                        forceLoads[node] += vector * scaleFactor
+                        forceLoads[node] += vector * scale_factor
                 else:  # constraint
                     if node not in forceLoads:
-                        forceConstraints[node] = vector * scaleFactor
+                        forceConstraints[node] = vector * scale_factor
                     else:
-                        forceConstraints[node] += vector * scaleFactor
+                        forceConstraints[node] += vector * scale_factor
 
             elif isinstance(load, Moment):
                 (isLoad, node, vector) = out
                 if isLoad:  # load
                     if node not in momentLoads:
-                        momentLoads[node] = vector * scaleFactor
+                        momentLoads[node] = vector * scale_factor
                     else:
-                        momentLoads[node] += vector * scaleFactor
+                        momentLoads[node] += vector * scale_factor
                 else:  # constraint
                     if node not in momentLoads:
-                        momentConstraints[node] = vector * scaleFactor
+                        momentConstraints[node] = vector * scale_factor
                     else:
-                        momentConstraints[node] += vector * scaleFactor
+                        momentConstraints[node] += vector * scale_factor
 
             elif isinstance(load, PLOAD4):
                 (isLoad, nodes, vectors) = out
                 for (nid, vector) in zip(nodes, vectors):
                     # not the same vector for all nodes
-                    forceLoads[nid] = vector * scaleFactor
+                    forceLoads[nid] = vector * scale_factor
 
             elif isinstance(load, GRAV):
                 #(grav) = out
-                gravityLoads.append(out * scaleFactor)  # grav
+                gravityLoads.append(out * scale_factor)  # grav
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
@@ -269,8 +269,8 @@ class LOAD(LoadCombination):
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
-            list_fields += [scaleFactor, self.LoadID(loadID)]
+        for (scale_factor, loadID) in zip(self.scaleFactors, self.loadIDs):
+            list_fields += [scale_factor, self.LoadID(loadID)]
         return list_fields
 
     def repr_fields(self):
@@ -1299,7 +1299,7 @@ class PLOAD1(Load):
         typesFound = set()
         (scaleFactors, loads) = self.getReducedLoads()
 
-        for scaleFactor, load in zip(scaleFactors, loads):
+        for scale_factor, load in zip(scaleFactors, loads):
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
 
@@ -1390,7 +1390,6 @@ class PLOAD1(Load):
                         raise NotImplementedError(load_type)
                 else:
                     raise NotImplementedError(eType)
-
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)

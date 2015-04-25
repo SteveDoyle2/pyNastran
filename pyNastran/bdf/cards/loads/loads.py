@@ -75,7 +75,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
             assert nLoads % 2 == 0
             for i in range(nLoads // 2):
                 n = 2 * i + 3
-                self.scaleFactors.append(double(card, n, 'scaleFactor'))
+                self.scaleFactors.append(double(card, n, 'scale_factor'))
                 self.loadIDs.append(integer(card, n + 1, 'loadID'))
         else:
             self.sid = data[0]

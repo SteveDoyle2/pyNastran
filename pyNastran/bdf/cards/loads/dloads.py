@@ -31,17 +31,17 @@ class DLOAD(LoadCombination):
             self._comment = comment
 
     def cross_reference(self, model):
-        loadIDs2 = []
+        load_id2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for loadID in self.loadIDs:
-            loadID2 = model.get_dload_entries(loadID, msg=msg)
-            loadIDs2.append(loadID2)
+        for load_id in self.loadIDs:
+            load_id2 = model.get_dload_entries(load_id, msg=msg)
+            loadIDs2.append(load_id2)
         self.loadIDs = loadIDs2
 
     def raw_fields(self):
         list_fields = ['DLOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
-            list_fields += [scaleFactor, self.LoadID(loadID)]
+        for (scale_factor, loadID) in zip(self.scaleFactors, self.loadIDs):
+            list_fields += [scale_factor, self.LoadID(loadID)]
         return list_fields
 
     def repr_fields(self):
