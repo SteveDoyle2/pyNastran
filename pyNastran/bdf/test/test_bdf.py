@@ -62,8 +62,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             isPassed = True
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        except IOError:
-            pass
+        #except IOError:
+            #pass
         #except RuntimeError:  # only temporarily uncomment this when running lots of tests
             #pass
         #except AttributeError:  # only temporarily uncomment this when running lots of tests
