@@ -41,7 +41,6 @@ def _Lambda(v1, debug=True):
     #debug = True
     if debug:
         print("Lambda = \n" + str(Lambda))
-        #sys.exit('asdf')
     return Lambda
 
 

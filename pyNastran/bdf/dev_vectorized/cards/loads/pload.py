@@ -88,7 +88,7 @@ class PLOAD(object):
 
             n3 = ['' if n3i == 0 else n3i for n3i in self.node_ids[i, 3]]
             for (load_id, p, n, n3i) in zip(self.load_id[i], self.pressure[i],self.node_ids[i, :2], n3):
-                card = ['PLOAD', load_id, p, n[0], n[1], n[2], n3i ]
+                card = ['PLOAD', load_id, p, n[0], n[1], n[2], n3i]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

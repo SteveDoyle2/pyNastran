@@ -349,31 +349,31 @@ class Elements(object):
         #print('eids orig = %s' % element_ids_orig)
 
         TypeMap = {
-            #'CELAS1'  : self.elements_spring.celas1,
-            'CELAS2'  : self.elements_spring.celas2,
-            'CELAS3'  : self.elements_spring.celas3,
-            'CELAS4'  : self.elements_spring.celas4,
+            #'CELAS1' : self.elements_spring.celas1,
+            'CELAS2' : self.elements_spring.celas2,
+            'CELAS3' : self.elements_spring.celas3,
+            'CELAS4' : self.elements_spring.celas4,
 
             'CBAR'  : self.cbar,
-            'CBEAM'  : self.cbeam,
+            'CBEAM' : self.cbeam,
 
-            'CROD'  : self.crod,
-            'CONROD'  : self.conrod,
-            'CSHEAR'  : self.cshear,
+            'CROD' : self.crod,
+            'CONROD' : self.conrod,
+            'CSHEAR' : self.cshear,
 
-            'CQUAD4'  : self.elements_shell.cquad4,
-            'CTRIA3'  : self.elements_shell.ctria3,
+            'CQUAD4' : self.elements_shell.cquad4,
+            'CTRIA3' : self.elements_shell.ctria3,
 
             'CTETRA4' : self.elements_solid.ctetra4,
             'CPENTA6' : self.elements_solid.cpenta6,
-            'CHEXA8'  : self.elements_solid.chexa8,
+            'CHEXA8' : self.elements_solid.chexa8,
 
             'CTETRA10' : self.elements_solid.ctetra10,
             'CPENTA15' : self.elements_solid.cpenta15,
-            'CHEXA20'  : self.elements_solid.chexa20,
+            'CHEXA20' : self.elements_solid.chexa20,
         }
 
-        exclude_types=[
+        exclude_types = [
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
             'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',

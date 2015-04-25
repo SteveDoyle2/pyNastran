@@ -509,7 +509,7 @@ def main():
     run_bdf('.',
             data['BDF_FILENAME'],
             debug=not(data['--quiet']),
-            xref =not(data['--xref' ]),
+            xref =not(data['--xref']),
             check=not(data['--check']),
             punch=data['--punch'],
             reject=data['--reject'],

@@ -73,7 +73,7 @@ class CTETRA10(SolidElement):
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' % (i, nid)
         if xref:
             c = self.centroid()
             v = self.volume()

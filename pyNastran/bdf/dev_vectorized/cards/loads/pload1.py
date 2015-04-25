@@ -120,7 +120,7 @@ class PLOAD1(object):
 
             for (load_id, element_id, Type, scale, x1, p1, x2, p2) in zip(self.load_id[i], self.element_id[i],
                     self.Type[i], self.scale[i], self.x1[i], self.p1[i], self.x2[i], self.p2[i]):
-                card = ['PLOAD1', load_id, element_id, Type, scale, x1, p1, x2, p2 ]
+                card = ['PLOAD1', load_id, element_id, Type, scale, x1, p1, x2, p2]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

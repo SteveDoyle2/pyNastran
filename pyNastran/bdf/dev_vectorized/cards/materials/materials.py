@@ -1,6 +1,6 @@
 from six import iteritems
 from six.moves import zip
-from numpy import zeros, where, array, nan, unique
+from numpy import zeros, where, array, nan, unique, concatenate
 
 #from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
 #from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1

@@ -412,7 +412,6 @@ class FortranFormat(object):
         if msg:
             print(object_attributes(self))
             print(msg)
-        #asdf
         return n
 
     def is_valid_subcase(self):

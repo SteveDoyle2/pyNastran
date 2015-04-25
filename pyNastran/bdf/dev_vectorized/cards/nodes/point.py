@@ -85,7 +85,7 @@ class POINT(object):
         if self.n:
             f.write('$POINT\n')
             cp0 = self.model.grdset.cp
-            Cp   = [cpi   if cpi   != cp0   else '' for cpi   in self.cp]
+            Cp = [cpi if cpi != cp0 else '' for cpi in self.cp]
             for (nid, cp, xyz) in zip(self.nid, Cp, self.xyz):
                 card = ['POINT', nid, cp, xyz[0], xyz[1], xyz[2]]
                 if size == 8:

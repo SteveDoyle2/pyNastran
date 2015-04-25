@@ -196,7 +196,6 @@ class RealBeamArray(OES_Object):
                     continue
                 # #if eid != eid_old and xxb != xxb_old:
                     #continue
-                #asdf
                 vals = [sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 [sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc] = vals2

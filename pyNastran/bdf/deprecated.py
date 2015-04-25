@@ -310,7 +310,6 @@ class GetMethodsDeprecated(object):
     #------------------------------
     #def nProperties(self):
         #"""deprecated"""
-        #asdf
         #return self.nproperties
 
     #def elementIDs(self):
