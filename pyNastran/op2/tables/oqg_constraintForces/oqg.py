@@ -117,7 +117,8 @@ class OQG(OP2Common):
         self._write_debug_bits()
 
     def _read_oqg1_4(self, data):
-        if 'constraint_forces' not in self._saved_results:
+        result_name = 'constraint_forces'
+        if self._results.is_not_saved(result_name):
             return len(data)
 
         if self.table_code == 3:   # SPC Forces
@@ -140,18 +141,18 @@ class OQG(OP2Common):
         if self.thermal == 0:
             result_name = 'spc_forces'
             storage_obj = self.spc_forces
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealSPCForces, ComplexSPCForces,
                                  RealSPCForcesArray, ComplexSPCForcesArray, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermal_gradient_and_flux' #'finite element temperature gradients and fluxes'
             storage_obj =  self.thermal_gradient_and_flux
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperatureGradientAndFlux, None,
                                  RealTemperatureGradientAndFluxArray, None, 'node', random_code=self.random_code)
@@ -167,9 +168,9 @@ class OQG(OP2Common):
         result_name = 'mpc_forces'
         storage_obj = self.mpc_forces
         if self.thermal == 0:
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealMPCForces, ComplexMPCForces,
                                  RealMPCForcesArray, ComplexMPCForcesArray, 'node', random_code=self.random_code)

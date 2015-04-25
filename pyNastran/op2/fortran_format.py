@@ -214,8 +214,8 @@ class FortranFormat(object):
         # back at table 3 (with isubtable=-5), which will occur in the case of multiple
         # times/element types/results in a single macro table (e.g. OUG, OES).
         if self.table_name in table_mapper:
-            if self.read_mode in [0, 2]:
-                self.log.debug("table_name = %r" % self.table_name)
+            #if self.read_mode in [0, 2]:
+                #self.log.debug("table_name = %r" % self.table_name)
 
             table3_parser, table4_parser = table_mapper[self.table_name]
             passer = False

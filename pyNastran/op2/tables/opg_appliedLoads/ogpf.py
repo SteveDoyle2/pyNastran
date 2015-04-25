@@ -31,10 +31,9 @@ class OGPF(OP2Common):
         n = 0
         if self.thermal == 0:
             result_name = 'grid_point_forces'
-            if result_name not in self._saved_results:
-                asfd
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results.add(result_name)
             if self.num_wide == 10:
                 self.create_transient_object(self.grid_point_forces, RealGridPointForces)
                 s = Struct(b'ii8s6f')

@@ -988,7 +988,7 @@ class NastranIO(NastranIO_xref):
         print("tring to read...", op2_filename)
         if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
             model = OP2(log=self.log, debug=True)
-            model._saved_results = set([])
+            model._results.saved = set([])
             all_results = model.get_all_results()
             if self.is_nodal:
                 desired_results = [
@@ -1011,7 +1011,7 @@ class NastranIO(NastranIO_xref):
                 ]
             for result in desired_results:
                 if result in all_results:
-                    model._saved_results.add(result)
+                    model._results.saved.add(result)
             model.read_op2(op2_filename)
 
         elif '.f06' in op2_filename:  # TODO: do this based on lower & file extension

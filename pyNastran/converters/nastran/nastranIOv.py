@@ -976,7 +976,7 @@ class NastranIO(object):
             model = OP2(log=self.log, debug=True)
 
             if 0:
-                model._saved_results = set([])
+                model._results.saved = set([])
                 all_results = model.get_all_results()
                 if self.is_nodal:
                     desired_results = [
@@ -1021,7 +1021,7 @@ class NastranIO(object):
                     ]
                 for result in desired_results:
                     if result in all_results:
-                        model._saved_results.add(result)
+                        model._results.saved.add(result)
             model.read_op2(op2_filename)
 
             self.log.info(model.get_op2_stats())
