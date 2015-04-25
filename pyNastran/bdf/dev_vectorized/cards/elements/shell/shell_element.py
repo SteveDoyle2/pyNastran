@@ -101,9 +101,9 @@ class ShellElement(Element):
                   must be calculated
         """
         _mass, area, normal = self._mass_area_normal(element_id=element_id,
-            xyz_cid0=xyz_cid0,
-            calculate_mass=False, calculate_area=False,
-            calculate_normal=True)
+                                                     xyz_cid0=xyz_cid0,
+                                                     calculate_mass=False, calculate_area=False,
+                                                     calculate_normal=True)
         return normal
 
     def get_area_by_element_id(self, element_id=None, total=False, xyz_cid0=None):

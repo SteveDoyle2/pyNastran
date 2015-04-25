@@ -5,10 +5,10 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, d
 
 
 def divide_2d_array_by_column_vector(array_obj, vector):
-    v = array_obj.copy()
-    v[:, 0] / vector
-    v[:, 1] / vector
-    v[:, 2] / vector
+    vector = array_obj.copy()
+    vector[:, 0] / vector
+    vector[:, 1] / vector
+    vector[:, 2] / vector
     return v
 
 class ElementsRod(object):

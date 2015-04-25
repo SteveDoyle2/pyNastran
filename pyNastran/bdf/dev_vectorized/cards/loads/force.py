@@ -123,7 +123,7 @@ class FORCE(object):
                 for (lid, nid, cid, mag, xyz) in zip(
                      self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
-                    card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
+                    card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
                     if size == 8:
                         f.write(print_card_8(card))
                     else:
@@ -134,7 +134,7 @@ class FORCE(object):
                     for (lid, nid, cid, mag, xyz) in zip(
                          self.load_id[i], self.node_id[i], self.coord_id[i], self.mag[i], self.xyz[i]):
 
-                        card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
+                        card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
                         if size == 8:
                             f.write(print_card_8(card))
                         else:

@@ -174,7 +174,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, c
         msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
         raise NotImplementedError(msg)
     #fem1.writeAsCTRIA3(outModel)
-    return (outModel)
+    return outModel
 
 
 def run_fem2(bdfModel, outModel, xref, punch,
@@ -197,7 +197,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
     fem2.write_bdf(outModel2, interspersed=True)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
-    return (fem2)
+    return fem2
 
 
 def divide(value1, value2):
@@ -257,9 +257,9 @@ def compute_ints(cards1, cards2, fem1):
         factorMsg = ''
         if factor1 != factor2:
             factorMsg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
-                                                          factor2)
+                                                           factor2)
         msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (star, key, value1,
-                                                       value2) + factorMsg
+                                                         value2) + factorMsg
         msg = msg.rstrip()
         print(msg)
     return listKeys1 + listKeys2
@@ -387,7 +387,7 @@ def print_points(fem1, fem2):
 
 def main():
     from docopt import docopt
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] BDF_FILENAME\n" #
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-d] BDF_FILENAME\n" #
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-l] BDF_FILENAME\n" #
@@ -443,15 +443,16 @@ def main():
         size = 8
         precision = 'single'
 
-    run_bdf('.', data['BDF_FILENAME'],
-                 debug=not(data['--quiet']),
-                 xref =not(data['--xref' ]),
-                 check=not(data['--check']),
-                 punch=data['--punch'],
-                 reject=data['--reject'],
-                 size=size,
-                 precision=precision,
-                 sum_load=data['--loads']
+    run_bdf('.',
+            data['BDF_FILENAME'],
+            debug=not(data['--quiet']),
+            xref=not(data['--xref' ]),
+            check=not(data['--check']),
+            punch=data['--punch'],
+            reject=data['--reject'],
+            size=size,
+            precision=precision,
+            sum_load=data['--loads']
     )
     print("total time:  %.2f sec" % (time.time() - t0))
 

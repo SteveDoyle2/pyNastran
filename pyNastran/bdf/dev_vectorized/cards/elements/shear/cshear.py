@@ -1,5 +1,5 @@
 from six.moves import zip, StringIO
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -54,7 +54,7 @@ class CSHEAR(Element):
             if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_id))==len(element_id), unique(element_id)
+                assert len(unique(element_id)) == len(element_id), unique(element_id)
                 i = searchsorted(self.element_id, element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
@@ -135,9 +135,9 @@ class CSHEAR(Element):
                   must be calculated
         """
         _mass, area, normal = self._mass_area_normal(eids=eids,
-            node_ids=node_ids, grids_cid0=grids_cid0,
-            calculate_mass=False, calculate_area=False,
-            calculate_normal=True)
+                                                     node_ids=node_ids, grids_cid0=grids_cid0,
+                                                     calculate_mass=False, calculate_area=False,
+                                                     calculate_normal=True)
 
         if total:
             return area.sum()

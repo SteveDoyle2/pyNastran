@@ -130,13 +130,13 @@ class PSHELL(Property):
             Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
             Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
             Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
-            Nsm       = ['' if nsmi == 0.0      else nsmi for nsmi in self.nsm[i]]
-            Tst       = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
-            TwelveIt3 = ['' if tw   == 1.0      else tw   for tw   in self.twelveIt3[i]]
+            Nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
+            Tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
+            TwelveIt3 = ['' if tw   == 1.0 else tw for tw in self.twelveIt3[i]]
 
             to2 = self.thickness[i] / 2
             Z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
-            Z2 = ['' if z2i ==  to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
+            Z2 = ['' if z2i == to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
 
             for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
                     self.property_id[i], self.material_id[i], self.thickness[i], Mid2,

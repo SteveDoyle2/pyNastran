@@ -44,7 +44,7 @@ class PBEAM(Property):
     def slice_by_index(self, i):
         i = asarray(i)
         obj = PBEAM(self.model)
-        asdf
+        raise NotImplementedError()
         return obj
 
     def __init__(self, model):

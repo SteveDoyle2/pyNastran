@@ -87,9 +87,9 @@ class NLPARM(object):
         rTolB = set_blank_if_default(self.rTolB, 20.)
 
         list_fields = ['NLPARM', self.nlparm_id, ninc, dt, kMethod, kStep, maxIter,
-                  conv, intOut, epsU, epsP, epsW, maxDiv, maxQn, maxLs,
-                  fStress, lsTol, maxBisect, None, None, None, maxR, None,
-                  rTolB]
+                       conv, intOut, epsU, epsP, epsW, maxDiv, maxQn, maxLs,
+                       fStress, lsTol, maxBisect, None, None, None, maxR, None,
+                       rTolB]
         return list_fields
 
     def write_bdf(self, f, size=8):

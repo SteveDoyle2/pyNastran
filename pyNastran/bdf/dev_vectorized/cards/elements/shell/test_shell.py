@@ -66,12 +66,13 @@ class TestShells(unittest.TestCase):
             ['grid', n1, 0, 0., 0., 0.],
             ['grid', n2, 0, 4., 0., 0.],
             ['grid', n3, 0, 4., 1., 0.],
-            ['ctria3', eid, pid, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
+            ['ctria3', eid, pid, n1, n2, n3],  # A = 1/2 * 4 * 1 = 2.
             ['pshell', pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4],
 
-            ['ctria3', eid + 1, pid + 1, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
-            ['pcomp', pid + 1, z0, nsm, sb, ft, Tref, ge, lam,
-                mid, t,     theta0, sout,
+            ['ctria3', eid + 1, pid + 1, n1, n2, n3],  # A = 1/2 * 4 * 1 = 2.
+            [
+                'pcomp', pid + 1, z0, nsm, sb, ft, Tref, ge, lam,
+                mid, t, theta0, sout,
                 mid, 2 * t, theta1, sout,
                 mid, 3 * t, theta2, sout,
                 mid, 4 * t, theta3, sout,
@@ -110,7 +111,7 @@ class TestShells(unittest.TestCase):
         #self.assertEquals(pshell.Thickness(), t)
         #self.assertEquals(pshell.Rho(), rho)
         self.assertEquals(pshell.z1[0], -t / 2.)
-        self.assertEquals(pshell.z2[0],  t / 2.)
+        self.assertEquals(pshell.z2[0], t / 2.)
 
         # ctria3 / pcomp
         ctria3 = model.elements[eid + 1]
@@ -276,10 +277,12 @@ class TestShells(unittest.TestCase):
         Theta = [0.,10.,20.]
         T = [.1,.2,.3]
         Sout = ['YES', 'YES', 'NO']  # 0-NO, 1-YES
-        data = ['PCOMP', pid, z0, nsm, sb, ft, TRef, ge, lam,
-                Mid[0], T[0], Theta[0], Sout[0],
-                Mid[1], T[1], Theta[1], Sout[1],
-                Mid[2], T[2], Theta[2], Sout[2],]
+        data = [
+            'PCOMP', pid, z0, nsm, sb, ft, TRef, ge, lam,
+            Mid[0], T[0], Theta[0], Sout[0],
+            Mid[1], T[1], Theta[1], Sout[1],
+            Mid[2], T[2], Theta[2], Sout[2],
+        ]
         model = BDF()
         card = BDFCard(data)
         p = PCOMP(model)

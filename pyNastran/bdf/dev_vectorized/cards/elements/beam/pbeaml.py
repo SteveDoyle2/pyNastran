@@ -48,7 +48,7 @@ class PBEAML(object):
     def slice_by_index(self, i):
         i = asarray(i)
         obj = PBEAML(self.model)
-        asdf
+        raise NotImplementedError()
         return obj
 
     def __init__(self, model):

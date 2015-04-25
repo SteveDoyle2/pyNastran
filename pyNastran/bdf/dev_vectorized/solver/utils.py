@@ -72,7 +72,7 @@ def departition_dense_vector(n, IsVs):
         (Is, Vs) = IV
         for (i, v) in zip(Is, Vs):
             V[i] = v
-    return(V)
+    return V
 
 
 def reverse_dict(A):

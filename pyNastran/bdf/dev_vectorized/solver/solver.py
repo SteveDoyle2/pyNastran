@@ -2140,51 +2140,51 @@ class Solver(F06, OP2):
 
 def get_cards():
     cards_to_read = set([
-                      'PARAM',
-                      'GRID', 'GRDSET',
+        'PARAM',
+        'GRID', 'GRDSET',
 
-                      # elements
-                      'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        # elements
+        'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
 
-                      'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CONROD',  #'CBEND',
-                      'CTRIA3', 'CTRIA6',
-                      'CQUAD4', 'CQUAD8',
-                      'CTETRA', 'CPENTA', 'CHEXA',
-                      'CSHEAR',
+        'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CONROD',  #'CBEND',
+        'CTRIA3', 'CTRIA6',
+        'CQUAD4', 'CQUAD8',
+        'CTETRA', 'CPENTA', 'CHEXA',
+        'CSHEAR',
 
-                      # rigid elements - represent as MPCs???
-                      #'RBAR','RBAR1','RBE1','RBE2','RBE3',
+        # rigid elements - represent as MPCs???
+        #'RBAR','RBAR1','RBE1','RBE2','RBE3',
 
-                      # properties
-                      'PELAS',
-                      'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE',
-                      #'PBEND',
-                      'PSHELL', 'PCOMP', 'PSHEAR',  # 'PCOMPG',
-                      'PSOLID',
+        # properties
+        'PELAS',
+        'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE',
+        #'PBEND',
+        'PSHELL', 'PCOMP', 'PSHEAR',  # 'PCOMPG',
+        'PSOLID',
 
-                      # materials
-                      'MAT1', 'MAT2', 'MAT8',
+        # materials
+        'MAT1', 'MAT2', 'MAT8',
 
-                      # spc/mpc constraints
-                      'SPC', 'SPC1', 'SPCADD',
-                      'MPC','MPCADD',
+        # spc/mpc constraints
+        'SPC', 'SPC1', 'SPCADD',
+        'MPC','MPCADD',
 
-                      # loads
-                      'LOAD',
-                      'FORCE', 'FORCE1', 'FORCE2',
-                      'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-                      'MOMENT', 'MOMENT1', 'MOMENT2',
-                      'GRAV',
+        # loads
+        'LOAD',
+        'FORCE', 'FORCE1', 'FORCE2',
+        'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+        'MOMENT', 'MOMENT1', 'MOMENT2',
+        'GRAV',
 
-                      # coords
-                      'CORD1R', 'CORD1C', 'CORD1S',
-                      'CORD2R', 'CORD2C', 'CORD2S',
+        # coords
+        'CORD1R', 'CORD1C', 'CORD1S',
+        'CORD2R', 'CORD2C', 'CORD2S',
 
-                      # other
-                      'INCLUDE',
-                      'ENDDATA',
-                      ])
+        # other
+        'INCLUDE',
+        'ENDDATA',
+        ])
     return cards_to_read
 
 def main():

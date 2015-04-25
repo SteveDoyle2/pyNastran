@@ -89,7 +89,7 @@ class CELAS4(SpringElement):
             C1 = self.components[i, 1]
             for (eid, k, n0, n1, c0, c1, ge, s) in zip(self.element_id[i],
                     self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
-                card = ['CELAS4', eid, k, n0, c0, n1, c1, ge, s ]
+                card = ['CELAS4', eid, k, n0, c0, n1, c1, ge, s]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

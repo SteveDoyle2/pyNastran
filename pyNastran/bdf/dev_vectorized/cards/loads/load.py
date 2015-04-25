@@ -61,7 +61,7 @@ class LOAD(object):
         pass
 
     def resolve_loads(self):
-        asdf
+        raise NotImplementedError()
         types = [self.model.load, self.model.dload]
         types2 = [self.model.force,  #self.model.force1,  self.model.force2,
                   self.model.moment, ]#self.model.moment1, self.model.moment2]

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import StringIO, zip
 from itertools import count
@@ -463,6 +464,7 @@ class DeprecatedCompositeShellProperty(object):
 class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def __init__(self, card, data):
         ShellProperty.__init__(self, card, data)
+        self.nsm = 0.0
 
     def is_symmetrical(self):
         """
@@ -943,7 +945,7 @@ class PCOMPi(CompositeShellProperty):
 
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                  self.TRef, self.ge, self.lam, ]
+                       self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iply)

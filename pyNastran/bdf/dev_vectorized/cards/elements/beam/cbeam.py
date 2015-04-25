@@ -179,8 +179,8 @@ class CBEAM(Element):
 
         rho, E, J = self.model.Materials.get_rho_E_J(material_id)
         rho = self.model.Materials.get_rho(self.mid)
-        E   = self.model.Materials.get_E(self.mid)
-        J   = self.model.Materials.get_J(self.mid)
+        E = self.model.Materials.get_E(self.mid)
+        J = self.model.Materials.get_J(self.mid)
 
         mass = norm(L, axis=1) * A * rho + self.nsm
         if total:
@@ -249,4 +249,4 @@ class CBEAM(Element):
         return obj
 
     def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
-        return(K, dofs, nIJV)
+        return K, dofs, nIJV

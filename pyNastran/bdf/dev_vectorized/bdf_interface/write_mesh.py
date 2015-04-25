@@ -226,7 +226,6 @@ class WriteMesh(object):
                     #print eids
                     #print t.element_id
                     eids = array(list(eids) + list(t.element_id))
-                    #asdf
 
                 try:
                     pids = concatenate(pids, t.property_id)

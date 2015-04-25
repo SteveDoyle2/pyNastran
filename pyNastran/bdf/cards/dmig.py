@@ -657,36 +657,35 @@ class DMI(NastranMatrix):
                         i += 1
                         is_done_reading_floats = True
 
-    # def _read_complex(self, card):
-    #     msg = 'complex matrices not supported in the DMI reader...'
-    #     raise NotImplementedError(msg)
-    #     # column number
-    #     j = integer(card, 2, 'icol')
-    #
-    #     # counter
-    #     i = 0
-    #     fields = [interpret_value(field) for field in card[3:] ]
-    #
-    #     # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
-    #     while i < len(fields):
-    #         i1 = fields[i]
-    #         i += 1
-    #         isDoneReadingFloats = False
-    #         asdf
-    #         while not isDoneReadingFloats and i < len(fields):
-    #             #print("i=%s len(fields)=%s" %(i, len(fields)))
-    #             realValue = fields[i]
-    #             if isinstance(floatValue, int):
-    #                 isDoneReadingFloats = True
-    #             elif isinstance(realValue, float):
-    #                 complexValue = fields[i + 1]
-    #                 self.GCj.append(j)
-    #                 self.GCi.append(i1)
-    #                 self.Real.append(realValue)
-    #                 self.Complex.append(complexValue)
-    #                 i += 2
-    #             else:
-    #                 asdf
+    #def _read_complex(self, card):
+        #msg = 'complex matrices not supported in the DMI reader...'
+        #raise NotImplementedError(msg)
+        ## column number
+        #j = integer(card, 2, 'icol')
+    ##
+        ## counter
+        #i = 0
+        #fields = [interpret_value(field) for field in card[3:] ]
+    ##
+        ## Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
+        #while i < len(fields):
+            #i1 = fields[i]
+            #i += 1
+            #isDoneReadingFloats = False
+            #while not isDoneReadingFloats and i < len(fields):
+                ##print("i=%s len(fields)=%s" %(i, len(fields)))
+                #realValue = fields[i]
+                #if isinstance(floatValue, int):
+                    #isDoneReadingFloats = True
+                #elif isinstance(realValue, float):
+                    #complexValue = fields[i + 1]
+                    #self.GCj.append(j)
+                    #self.GCi.append(i1)
+                    #self.Real.append(realValue)
+                    #self.Complex.append(complexValue)
+                    #i += 2
+                #else:
+                      #raise NotImplementedError()
 
     def rename(self, newName):
         self.name = newName

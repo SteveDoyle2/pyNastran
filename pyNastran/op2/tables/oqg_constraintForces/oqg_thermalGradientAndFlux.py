@@ -54,7 +54,7 @@ class RealTemperatureGradientAndFlux(RealTableObject):
 
 class ComplexTemperatureGradientAndFlux(ComplexTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        asdf
+        raise NotImplementedError()
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):

@@ -40,6 +40,7 @@ class PLOAD2(object):
         raise RuntimeError('len(i) = 0')
 
     def __mul__(self, value):
+        raise NotImplementedError()
         f = PLOAD2(self.model)
         f.load_id = self.load_id
         f.element_id = self.element_id

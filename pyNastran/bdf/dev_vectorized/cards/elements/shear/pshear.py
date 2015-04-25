@@ -76,7 +76,7 @@ class PSHEAR(Property):
             if pids is None:
                 i = arange(self.n)
             else:
-                assert len(unique(pids))==len(pids), unique(pids)
+                assert len(unique(pids)) == len(pids), unique(pids)
                 i = searchsorted(self.property_id, pids)
 
                 #self.property_id = zeros(ncards, 'int32')

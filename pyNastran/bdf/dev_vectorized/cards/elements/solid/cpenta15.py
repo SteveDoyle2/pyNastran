@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import zip
 from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
 from numpy.linalg import norm
@@ -63,7 +64,7 @@ class CPENTA15(SolidElement):
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' % (i, nid)
         if xref:
             c = self.centroid()
             v = self.volume()

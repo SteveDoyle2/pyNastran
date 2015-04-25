@@ -326,9 +326,9 @@ class GRID(VectorizedCard):
             ps0 = -1
             seid0 = 0
             blank = ' '*8 if size==8 else ' ' * 16
-            Cp   = [cpi if cpi != cp0 else blank for cpi in self.cp[i]]
-            Cd   = [cdi if cdi != cd0 else blank for cdi in self.cd[i]]
-            Ps   = [psi if psi != ps0 else blank for psi in self.ps[i]]
+            Cp = [cpi if cpi != cp0 else blank for cpi in self.cp[i]]
+            Cd = [cdi if cdi != cd0 else blank for cdi in self.cd[i]]
+            Ps = [psi if psi != ps0 else blank for psi in self.ps[i]]
             Seid = [seidi if seidi != seid0 else blank for seidi in self.seid[i]]
             if size == 8:
                 for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):

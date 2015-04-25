@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import StringIO
 import unittest
 
@@ -40,8 +41,9 @@ class TestSolids(unittest.TestCase):
 
     def test_chexa_01(self):
         model = BDF()
-        lines = ['CHEXA,85,22,201,202,203,205,206,207,+PN2',
-                 '+PN2,209,210']
+        lines = [
+            'CHEXA,85,22,201,202,203,205,206,207,+PN2',
+            '+PN2,209,210']
         card = model.process_card(lines)
         card = BDFCard(card)
 
@@ -56,8 +58,9 @@ class TestSolids(unittest.TestCase):
 
     def test_chexa_02(self):
         model = BDF()
-        lines = ['CHEXA,85,22,201,202,203,205,206,207,+PN2',
-                 '+PN2,209,210,217,  ,  ,  ,213,214,218']
+        lines = [
+            'CHEXA,85,22,201,202,203,205,206,207,+PN2',
+            '+PN2,209,210,217,  ,  ,  ,213,214,218']
         card = model.process_card(lines)
         card = BDFCard(card)
 
@@ -123,16 +126,16 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
-            ['GRID', 21, 0, 0., 0., 0.,  0,],
-            ['GRID', 22, 0, 1., 0., 0.,  0,],
-            ['GRID', 23, 0, 1., 1., 0.,  0,],
-            ['GRID', 24, 0, 0., 0., 2.,  0,],
-            ['GRID', 25, 0, 1., 0., 2.,  0,],
-            ['GRID', 26, 0, 1., 1., 2.,  0,],
+            ['GRID', 21, 0, 0., 0., 0., 0,],
+            ['GRID', 22, 0, 1., 0., 0., 0,],
+            ['GRID', 23, 0, 1., 1., 0., 0,],
+            ['GRID', 24, 0, 0., 0., 2., 0,],
+            ['GRID', 25, 0, 1., 0., 2., 0,],
+            ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
 
             # static
@@ -208,16 +211,16 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
-            ['GRID', 21, 0, 0., 0., 0.,  0,],
-            ['GRID', 22, 0, 1., 0., 0.,  0,],
-            ['GRID', 23, 0, 1., 1., 0.,  0,],
-            ['GRID', 24, 0, 0., 0., 2.,  0,],
-            ['GRID', 25, 0, 1., 0., 2.,  0,],
-            ['GRID', 26, 0, 1., 1., 2.,  0,],
+            ['GRID', 21, 0, 0., 0., 0., 0,],
+            ['GRID', 22, 0, 1., 0., 0., 0,],
+            ['GRID', 23, 0, 1., 1., 0., 0,],
+            ['GRID', 24, 0, 0., 0., 2., 0,],
+            ['GRID', 25, 0, 1., 0., 2., 0,],
+            ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
 
             # hyperelastic
@@ -270,16 +273,16 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA',  7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
-            ['GRID',  21, 0, 0., 0., 0.,  0,],
-            ['GRID',  22, 0, 1., 0., 0.,  0,],
-            ['GRID',  23, 0, 1., 1., 0.,  0,],
-            ['GRID',  24, 0, 0., 0., 2.,  0,],
-            ['GRID',  25, 0, 1., 0., 2.,  0,],
-            ['GRID',  26, 0, 1., 1., 2.,  0,],
+            ['GRID', 21, 0, 0., 0., 0., 0,],
+            ['GRID', 22, 0, 1., 0., 0., 0,],
+            ['GRID', 23, 0, 1., 1., 0., 0,],
+            ['GRID', 24, 0, 0., 0., 2., 0,],
+            ['GRID', 25, 0, 1., 0., 2., 0,],
+            ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
 
             # static
@@ -321,16 +324,16 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA',  7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
-            ['GRID',  21, 0, 0., 0., 0.,  0,],
-            ['GRID',  22, 0, 1., 0., 0.,  0,],
-            ['GRID',  23, 0, 1., 1., 0.,  0,],
-            ['GRID',  24, 0, 0., 0., 2.,  0,],
-            ['GRID',  25, 0, 1., 0., 2.,  0,],
-            ['GRID',  26, 0, 1., 1., 2.,  0,],
+            ['GRID', 21, 0, 0., 0., 0., 0,],
+            ['GRID', 22, 0, 1., 0., 0., 0,],
+            ['GRID', 23, 0, 1., 1., 0., 0,],
+            ['GRID', 24, 0, 0., 0., 2., 0,],
+            ['GRID', 25, 0, 1., 0., 2., 0,],
+            ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
 
             # static
@@ -362,7 +365,6 @@ class TestSolids(unittest.TestCase):
         print(mat)
         print('E = %s' % mat.get_E_by_material_index())
         print('E = %s' % mat.get_E_by_material_id())
-
 
 
 if __name__ == '__main__':  # pragma: no cover

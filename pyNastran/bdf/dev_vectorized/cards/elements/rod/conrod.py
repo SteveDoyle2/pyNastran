@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import zip, range
 
 from numpy import arange, zeros, unique, asarray, dot, searchsorted, array, transpose

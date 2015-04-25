@@ -162,8 +162,8 @@ class MAT8(Material):
         i = where(self.material_id == material_id)[0]
         i = i[0]
         card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
-                        self.rho[i], self.a[i], self.TRef[i], self.ge[i],
-                        self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
+                self.rho[i], self.a[i], self.TRef[i], self.ge[i],
+                self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
         return card
 
     def _verify(self, xref=True):

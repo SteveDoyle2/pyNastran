@@ -232,7 +232,8 @@ class OP4(object):
         f.readline()
 
         #if rows == []:  # NULL matrix
-            #asdf
+            #raise NotImplementedError()
+
         rows = array(rows, dtype='int32') - 1
         cols = array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
@@ -768,7 +769,8 @@ class OP4(object):
             #print "-------------------------------"
 
         #if rows == []:  # NULL matrix
-            #asdf
+            #raise NotImplementedError()
+
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols),
                        dtype=dtype)
         f.read(4)

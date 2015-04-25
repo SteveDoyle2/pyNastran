@@ -87,7 +87,7 @@ class AERO(VectorizedCard):
         #symXY = set_blank_if_default(self.symXY, 0)
         if self.n:
             for acsid, V, c, rho, xz, xy in zip(self.acsid, self.velocity, self.cRef,
-                      self.rhoRef, self.symXZ, self.symXY):
+                                                self.rhoRef, self.symXZ, self.symXY):
 
                 list_fields = ['AERO', acsid, V, c, rho, xz, xy]
                 f.write(print_card_8(list_fields ))

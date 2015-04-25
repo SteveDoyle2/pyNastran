@@ -72,7 +72,7 @@ class TestRods(unittest.TestCase):
         nsm = 1.
         self.get_mass(nid1, nid2, xyz1, xyz2, eid, pid, mid, A, J, c, nsm, E, G, nu, rho, L)
 
-    def get_mass(self,nid1, nid2, xyz1, xyz2, eid, pid, mid, A, J, c, nsm, E, G, nu, rho, L):
+    def get_mass(self, nid1, nid2, xyz1, xyz2, eid, pid, mid, A, J, c, nsm, E, G, nu, rho, L):
         """tests a CROD and a CONROD"""
         card_count = {
             'CONROD' : 1,
@@ -131,7 +131,7 @@ class TestRods(unittest.TestCase):
         #self.assertEquals(conrod.Rho(), rho)
 
         # crod
-        conrod = model.conrod[eid+1]
+        crod = model.crod[eid+1]
         self.assertEquals(crod.get_element_id_by_element_index(), eid+1)
         self.assertEquals(crod.get_property_id_by_element_index(), pid)
         self.assertEquals(crod.get_material_id_by_element_index(), mid)

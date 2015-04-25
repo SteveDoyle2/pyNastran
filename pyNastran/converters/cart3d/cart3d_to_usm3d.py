@@ -14,7 +14,7 @@ def cart3d_to_usm3d_bc(cart3d, log=None, debug=False):
     :returns stl: an STLReader object
     """
     normals = cart3d.normals()
-    asdf
+    raise NotImplementedError()
     #stl = STLReader(log=log, debug=debug)
     #stl.nodes = nodes
     #stl.elements = elements

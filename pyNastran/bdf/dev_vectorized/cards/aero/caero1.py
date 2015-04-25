@@ -139,22 +139,22 @@ class CAERO1(VectorizedCard):
             else:
                 #assert len(unique(element_id))==len(element_id), unique(element_id)
                 i = searchsorted(self.element_id, element_id)
-            #print('i = %s' % i)
-            Cid    = [cid    if cid    !=0 else '' for cid    in self.coord_id[i]]
-            Nspan  = [nspan  if nspan  !=0 else '' for nspan  in self.nspan[i]]
-            Nchord = [nchord if nchord !=0 else '' for nchord in self.nchord[i]]
+
+            Cid = [cid if cid != 0 else '' for cid in self.coord_id[i]]
+            Nspan = [nspan if nspan != 0 else '' for nspan in self.nspan[i]]
+            Nchord = [nchord if nchord != 0 else '' for nchord in self.nchord[i]]
 
             Igid = self.igid[i]
-            Lspan  = [lspan  if lspan  !=0. else '' for lspan  in self.lspan[i]]
-            Lchord = [lchord if lchord !=0. else '' for lchord in self.lchord[i]]
+            Lspan = [lspan if lspan != 0. else '' for lspan in self.lspan[i]]
+            Lchord = [lchord if lchord != 0. else '' for lchord in self.lchord[i]]
 
             for (eid, pid, cid, nspan, nchord, lspan, lchord, igid,
-                    p1, x12, p4, x43) in zip(self.element_id[i], self.property_id[i],
-                    Cid, Nspan, Nchord, Lspan, Lchord, Igid,
-                    self.p1[i, :], self.x12[i], self.p4[i, :], self.x43[i]):
+                 p1, x12, p4, x43) in zip(self.element_id[i], self.property_id[i],
+                 Cid, Nspan, Nchord, Lspan, Lchord, Igid,
+                 self.p1[i, :], self.x12[i], self.p4[i, :], self.x43[i]):
                 card = ['CAERO1', eid, pid, cid, nspan, nchord, lspan, lchord, igid,
-                            p1[0], p1[1], p1[2], x12,
-                            p4[0], p4[1], p4[2], x43,]
+                        p1[0], p1[1], p1[2], x12,
+                        p4[0], p4[1], p4[2], x43,]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

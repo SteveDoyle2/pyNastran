@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import zip
 from numpy import zeros, where, arange, searchsorted, unique, asarray
 
@@ -132,14 +133,14 @@ class MAT1(Material):
             assert material_id is None
             #self.model.log.debug"n = %s" % self.n)
             #self.model.log.debug"mids MAT1 %s" % self.material_id)
-            Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho[i]]
-            A    = ['' if ai    == 0.0 else ai    for ai    in self.a[i]]
-            TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
-            ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge[i]]
 
-            St   = ['' if st    == 0.0 else st    for st    in self.St[i]]
-            Sc   = ['' if sc    == 0.0 else sc    for sc    in self.Sc[i]]
-            Ss   = ['' if ss    == 0.0 else ss    for ss    in self.Ss[i]]
+            Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho[i]]
+            A = ['' if ai == 0.0 else ai for ai in self.a[i]]
+            TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
+            ge = ['' if gei == 0.0 else gei for gei in self.ge[i]]
+            St = ['' if st == 0.0 else st for st in self.St[i]]
+            Sc = ['' if sc == 0.0 else sc for sc in self.Sc[i]]
+            Ss = ['' if ss == 0.0 else ss for ss in self.Ss[i]]
 
             card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
             f.write(print_card_8(card))

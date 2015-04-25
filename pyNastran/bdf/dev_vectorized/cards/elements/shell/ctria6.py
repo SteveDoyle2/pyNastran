@@ -72,7 +72,7 @@ class CTRIA6(ShellElement):
             if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_id))==len(element_id), unique(element_id)
+                assert len(unique(element_id)) == len(element_id), unique(element_id)
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n, zoffset, t_flag, thickness) in zip(
                 self.element_id[i], self.property_id[i], self.node_ids[i],

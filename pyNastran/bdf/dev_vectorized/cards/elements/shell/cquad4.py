@@ -34,10 +34,12 @@ class CQUAD4(ShellElement):
 
         self.property_id[i] = integer(card, 2, 'pid')
 
-        self.node_ids[i, :] = [integer(card, 3, 'n1'),
-                            integer(card, 4, 'n2'),
-                            integer(card, 5, 'n3'),
-                            integer(card, 6, 'n4')]
+        self.node_ids[i, :] = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+            integer(card, 6, 'n4')
+        ]
 
         #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
         #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)

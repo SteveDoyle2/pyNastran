@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import StringIO
 from numpy import zeros, searchsorted, where, asarray, array
 

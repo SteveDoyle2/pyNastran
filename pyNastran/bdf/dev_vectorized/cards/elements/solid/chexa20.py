@@ -204,7 +204,8 @@ class CHEXA20(SolidElement):
         .. note:: Volume for a CHEXA is the average area of two opposing faces
                   times the length between the centroids of those points
         """
-        n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        nodes = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = nodes
         volume = volume8(n1, n2, n3, n4, n5, n6, n7, n8)
         if total:
             volume = abs(volume).sum()
@@ -222,7 +223,8 @@ class CHEXA20(SolidElement):
 
         ..see:: CHEXA20.get_volume_by_element_id() and CHEXA20.get_centroid_by_element_id() for more information.
         """
-        n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        nodes = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = nodes
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
         (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
@@ -243,7 +245,8 @@ class CHEXA20(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be averaged (default=False)
         """
-        n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        nodes = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = nodes
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
         (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)

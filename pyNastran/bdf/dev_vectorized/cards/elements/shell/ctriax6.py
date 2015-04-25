@@ -1,6 +1,6 @@
 from six.moves import zip
 
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -108,9 +108,9 @@ class CTRIAX6(object):
                   must be calculated
         """
         mass, _area, _normal = self._mass_area_normal(element_id=element_id,
-            node_ids=node_ids, grids_cid0=grids_cid0,
-            calculate_mass=True, calculate_area=False,
-            calculate_normal=False)
+                                                      node_ids=node_ids, grids_cid0=grids_cid0,
+                                                      calculate_mass=True, calculate_area=False,
+                                                      calculate_normal=False)
 
         if total:
             return mass.sum()

@@ -1,18 +1,16 @@
-from six import iteritems
+from six import iteritems, string_types
 from six.moves import zip, range
 from itertools import count
+from numpy import argsort, array, zeros, unique, searchsorted, asarray, int64, where
 
-#from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_double, components_or_blank)
+from pyNastran.bdf.bdfInterface.assign_type import (double_or_blank,
+    components, components_or_blank, integer_double_or_blank, blank)
 
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_8 import (print_card_8,
+    set_blank_if_default, set_string8_blank_if_default)
+from pyNastran.bdf.field_writer_16 import print_card_16, set_string16_blank_if_default
 from pyNastran.bdf.field_writer_double import print_card_double
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
-
-from numpy import argsort, array, zeros, unique, searchsorted, asarray, int64
 
 #RigidElement
 class RBE3(object):
@@ -33,7 +31,7 @@ class RBE3(object):
         self.i = 0
 
     def shrink(self, refcheck=True):
-        i = where(self.element_id==0)[0]
+        i = where(self.element_id == 0)[0]
         self.resize(i[0], refcheck=refcheck)
 
     def __iter__(self):

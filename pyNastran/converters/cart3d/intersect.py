@@ -84,10 +84,10 @@ class Intersect(object):
                 nodes2 = elements[pt]
                 common_set = snodes.intersection(nodes2)
                 if not common_set:
-                    print '   c[%i]=%s alt[%i]=%s diff=%s gel2=%s valid=%s' % (i, list(nodes1),
+                    print('   c[%i]=%s alt[%i]=%s diff=%s gel2=%s valid=%s' % (i, list(nodes1),
                                                                                pt, list(nodes2),
                                                                                diff,
-                                                                               gel2[pt], diff<geli)
+                                                                               gel2[pt], diff < geli))
                     is_intersection = self.intersect(i, pt, nodes1, nodes2, nodes, n)
             #print centroid_tree.query(c, k=10)
             #break
@@ -118,7 +118,7 @@ class Intersect(object):
             print "     dvi = %s" % dvi2
             print "     sign_range = %s" % sign_range
             is_intersection = True
-            asdf
+            raise NotImplementedError()
         else:
             is_intersection = False
 

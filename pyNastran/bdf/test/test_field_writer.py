@@ -17,23 +17,23 @@ from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 class Testfield_writer_8(unittest.TestCase):
 
     def test_field_vals_8(self):
-        self.assertEqual(print_field(1e20),     '   1.+20',
+        self.assertEqual(print_field(1e20), '   1.+20',
                          print_field(1e20))
         self.assertEqual(print_field(-.723476), '-.723476',
                          print_field(-.723476))
-        self.assertEqual(print_field(125000.),  ' 125000.',
+        self.assertEqual(print_field(125000.), ' 125000.',
                          print_field(125000.))
-        self.assertEqual(print_field(12500000.),  '  1.25+7',
+        self.assertEqual(print_field(12500000.), '  1.25+7',
                          print_field(12500000.))
-        self.assertEqual(print_field(47.77267),  '47.77267',
+        self.assertEqual(print_field(47.77267), '47.77267',
                          print_field(47.77267))
-        self.assertEqual(print_field(.001),  '    .001',
+        self.assertEqual(print_field(.001), '    .001',
                          print_field(.001))
-        self.assertEqual(print_field(.0000001),  '.0000001',
+        self.assertEqual(print_field(.0000001), '.0000001',
                          print_field(.0000001))
-        self.assertEqual(print_field(-5.007e-3),  '-5.007-3',
+        self.assertEqual(print_field(-5.007e-3), '-5.007-3',
                          print_field(-5.007e-3))
-        self.assertEqual(print_field(-0.0748662),  '-.074866',
+        self.assertEqual(print_field(-0.0748662), '-.074866',
                          print_field(-0.0748662))
 
 
@@ -54,11 +54,11 @@ class Testfield_writer_8(unittest.TestCase):
         self.assertRaises(RuntimeError, print_field, '  asdf   ')
 
     def test_strings_16(self):
-        self.assertEqual(print_field_16(None),         '                ',
+        self.assertEqual(print_field_16(None), '                ',
                          print_field_16(None))
-        self.assertEqual(print_field_16('asdf'),       '            asdf',
+        self.assertEqual(print_field_16('asdf'), '            asdf',
                          print_field_16('asdf'))
-        self.assertEqual(print_field_16('  asdf  '),   '          asdf  ',
+        self.assertEqual(print_field_16('  asdf  '), '          asdf  ',
                          print_field_16('  asdf  '))
         self.assertRaises(RuntimeError, print_field_16, '          asdf   ')
 
@@ -164,15 +164,15 @@ class Testfield_writer_8(unittest.TestCase):
                          'I|%s|' % print_field(0.00012349))
         self.assertEqual(print_field(0.000012349), '1.2349-5',
                          'J|%s|' % print_field(0.000012349))
-        self.assertEqual(print_field(5e-08),       '    5.-8',
+        self.assertEqual(print_field(5e-08), '    5.-8',
                          'K|%s|' % print_field(5e-08))
 
         self.assertEqual(print_field(1e-20), '   1.-20',
                          'L|%s|' % print_field(1e-20))
 
-        self.assertEqual(print_field(0.0),  '      0.',
+        self.assertEqual(print_field(0.0), '      0.',
                          print_field(0.0))
-        self.assertEqual(print_field(1.0),  '      1.',
+        self.assertEqual(print_field(1.0), '      1.',
                          print_field(1.0))
 
     def test_floats_negative_8(self):
@@ -180,15 +180,15 @@ class Testfield_writer_8(unittest.TestCase):
                          print_field(-1.2))
         self.assertEqual(print_field(-1.23456789), '-1.23457',
                          print_field(-1.23456789))
-        self.assertEqual(print_field(-12.234568),  '-12.2346',
+        self.assertEqual(print_field(-12.234568), '-12.2346',
                          print_field(-12.234568))
-        self.assertEqual(print_field(-123.23457),  '-123.235',
+        self.assertEqual(print_field(-123.23457), '-123.235',
                          print_field(-123.23457))
         self.assertEqual(print_field(-1234.23468), '-1234.23',
                          print_field(-1234.23468))
-        self.assertEqual(print_field(-12345.238),  '-12345.2',
+        self.assertEqual(print_field(-12345.238), '-12345.2',
                          print_field(-12345.238))
-        self.assertEqual(print_field(-123456.28),  '-123456.',
+        self.assertEqual(print_field(-123456.28), '-123456.',
                          print_field(-123456.28))
         self.assertEqual(print_field(-1234567.25), '-1.235+6', # is this right?
                          print_field(-1234567.25))
@@ -217,11 +217,11 @@ class Testfield_writer_8(unittest.TestCase):
                          'I|%s|' % print_field(-0.00012349))
         self.assertEqual(print_field(-0.000012349), '-1.235-5',
                          'J|%s|' % print_field(-0.000012349))
-        self.assertEqual(print_field(-1e-5),  ' -.00001',
+        self.assertEqual(print_field(-1e-5), ' -.00001',
                          'K|%s|' % print_field(-1e-5))
-        self.assertEqual(print_field(-1e-6),  '   -1.-6',
+        self.assertEqual(print_field(-1e-6), '   -1.-6',
                          'L|%s|' % print_field(-1e-6))
-        self.assertEqual(print_field(-1e-7),  '   -1.-7',
+        self.assertEqual(print_field(-1e-7), '   -1.-7',
                          'M|%s|' % print_field(-1e-7))
         self.assertEqual(print_field(-1e-20), '  -1.-20',
                          'N|%s|' % print_field(-1e-20))
@@ -229,28 +229,24 @@ class Testfield_writer_8(unittest.TestCase):
     def test_print_card_8(self):
         self.assertEqual(print_card_8(['GRID',1]),'GRID           1\n')
         self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
-                                     None, None, 1]),
+                                       None, None, 1]),
                          'GRID           1\n               1\n',
                          print_card_8(['GRID', 1, None, None, None, None, None,
-                                     None, None, 1]))
+                                       None, None, 1]))
 
         self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
-                                     None, None,
-                                     1, None]),
+                                       None, None, 1, None]),
                          'GRID           1\n               1\n',
                          print_card_8(['GRID', 1, None, None, None, None, None,
-                                     None, None,
-                                     1, None]))
+                                       None, None, 1, None]))
 
         self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
-                                     None, None,
-                                     None,None,None,None,None,None,None,None,
-                                     1, None]),
+                                       None, None, None, None, None, None, None,
+                                       None, None, None, 1, None]),
                          'GRID           1\n+\n               1\n',
                          print_card_8(['GRID', 1, None, None, None, None, None,
-                                     None, None,
-                                     None,None,None,None,None,None,None,None,
-                                     1, None]))
+                                       None, None, None, None, None, None, None,
+                                       None, None, None, 1, None]))
 
     def test_same(self):
         self.assertTrue(is_same(1.0, 1.000))
@@ -337,8 +333,8 @@ class Testfield_writer_8(unittest.TestCase):
 
         nums = (
             [0., 0.000034, -0.000034] +
-            [ 9./11 * 10**x for x in range(small_exponent,large_exponent+1)] +
-            [-9./11 * 10**x for x in range(small_exponent,large_exponent+1)])
+            [ 9./11 * 10**x for x in range(small_exponent, large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent, large_exponent+1)])
 
         expected = [
             '      0.', ' .000034', '  -3.4-5',

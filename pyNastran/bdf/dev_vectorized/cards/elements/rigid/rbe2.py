@@ -33,7 +33,7 @@ class RBE2(object):
         self.i = 0
 
     def shrink(self, refcheck=True):
-        i = where(self.element_id==0)[0]
+        i = where(self.element_id == 0)[0]
         self.resize(i[0], refcheck=refcheck)
 
     def __iter__(self):
@@ -137,12 +137,12 @@ class RBE2(object):
             #self.alpha[i] = 0.0  # we don't need to set alpha
 
         j = 4
-        Gmi = []
+        gmis = []
         for k in range(len(card) - 4 - n):
             gmi = integer(card, j + k, 'Gm%i' % (k + 1))
             #print('GM%i = %s' % (k + 1, gmi))
-            Gmi.append(gmi)
-        self.gmi[i] = Gmi
+            gmis.append(gmi)
+        self.gmi[i] = gmis
         self.i += 1
 
         #self.gn = str(self.gn)
@@ -152,10 +152,10 @@ class RBE2(object):
         self.eid = data[0]
         self.gn = data[1]
         self.cm = data[2]
-        self.Gmi = data[3]
+        self.gmi = data[3]
         self.alpha = data[4]
         print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
-              % (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
+              % (self.eid, self.gn, self.cm, self.gmi, self.alpha))
         raise NotImplementedError('RBE2 data...')
 
         assert self.gn is not None, 'gn=%s' % self.gn

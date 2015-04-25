@@ -7,8 +7,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    components, components_or_blank)
+    double, double_or_blank, components, components_or_blank)
 
 
 class SPCD(object):
@@ -48,8 +47,10 @@ class SPCD(object):
         if self.constraint_id is None:
             self.constraint_id = constraint_id
         else:
-            raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
-            assert self.constraint_id == constraint_id, ''
+            msg = ('self.constraint_id == constraint_id; constraint_id=%r '
+                   'expected; found=%r' % (self.constraint_id. constraint_id))
+            raise RuntimeError(msg)
+            #assert self.constraint_id == constraint_id, ''
 
     def build(self):
         float_fmt = self.model.float

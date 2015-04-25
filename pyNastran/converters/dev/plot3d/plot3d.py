@@ -59,7 +59,7 @@ class Plot3d(object):
                 elif ixyz == 2:
                     self.z[iblock] = b
                 else:
-                    asdf
+                    raise RuntimeError()
 
                 # next block
                 nxyzi = 0
@@ -79,7 +79,7 @@ class Plot3d(object):
                     nxyz = len(block)
                     ixyz = 0
                 else:
-                    asdf
+                    raise NotImplementedError()
                 print("iblock=%s icoeff=%s nleft=%s" %(iblock, ixyz, nleft))
 
             elif nxyzi2 > nxyz:

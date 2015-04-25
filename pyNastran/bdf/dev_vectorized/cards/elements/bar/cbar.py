@@ -257,4 +257,4 @@ class CBAR(Element):
         return obj
 
     def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
-        return(K, dofs, nIJV)
+        return K, dofs, nIJV

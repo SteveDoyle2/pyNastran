@@ -38,7 +38,8 @@ class PropertiesBar(object):
         npbarl = self.pbarl.n
         self.n = npbar + npbarl
         #if npshell and npcomp and npcompg:
-            #asdf
+            #raise NotImplementedError()
+
         #if npshell and npcomp:
             #pid = concatenate(self.pshell.property_id, self.pcomp.property_id)
             #unique_pids = unique(pid)

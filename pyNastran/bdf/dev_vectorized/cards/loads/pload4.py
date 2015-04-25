@@ -38,6 +38,10 @@ class PLOAD4(object):
         return f
         #raise RuntimeError('len(i) = 0')
 
+    def __getitem__(self, load_id):
+        i = where(load_id == self.load_id)[0]
+        return slice_by_index(i)
+
     def __mul__(self, value):
         raise NotImplementedError()
         f = PLOAD4(self.model)
@@ -159,11 +163,6 @@ class PLOAD4(object):
             self.load_ids = unique(self.load_id)
         else:
             self.load_id = array([], dtype='int32')
-
-
-    def __getitem__(self, load_id):
-        i = where(load_id = self.load_id)[0]
-        return slice_by_index(i)
 
     #def build(self):
         # PLOAD2

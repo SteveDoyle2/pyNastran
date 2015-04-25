@@ -135,7 +135,6 @@ class PSOLID(Property):
                 fctn = set_blank_if_default(fctn, 'SMECH')
                 card = ['PSOLID', pid, mid, cordm, integ,
                         stress, isop, fctn]
-                #print card
                 f.write(print_card_8(card))
 
     def __getitem__(self, property_id):

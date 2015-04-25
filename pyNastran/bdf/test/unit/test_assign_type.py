@@ -111,7 +111,7 @@ class Test(ExtendedTestCase):
         with self.assertRaises(SyntaxError):
             double(BDFCard([None]), 0, 'field')
 
-        card =  [1.0, '2.0', '3.', 'C', None, '']
+        card = [1.0, '2.0', '3.', 'C', None, '']
         exact = [1.0, 2.0, 3.0, SyntaxError, SyntaxError, SyntaxError]
         self.run_function(double, card, exact)
 

@@ -20,11 +20,11 @@ class ElementsSolid(object):
 
         self.ctetra4 = CTETRA4(self.model)
         self.cpenta6 = CPENTA6(self.model)
-        self.chexa8  = CHEXA8(self.model)
+        self.chexa8 = CHEXA8(self.model)
 
         self.ctetra10 = CTETRA10(self.model)
         self.cpenta15 = CPENTA15(self.model)
-        self.chexa20  = CHEXA20(self.model)
+        self.chexa20 = CHEXA20(self.model)
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
@@ -123,7 +123,7 @@ class ElementsSolid(object):
         i = argsort(eid_pid[:, 0])
         eid_pid = eid_pid[i, :]
 
-        j = searchsorted(eid_pid[:,0], element_id)
+        j = searchsorted(eid_pid[:, 0], element_id)
         pids = eid_pid[j, 1]
         upids = unique(pids)
         ptypes = [

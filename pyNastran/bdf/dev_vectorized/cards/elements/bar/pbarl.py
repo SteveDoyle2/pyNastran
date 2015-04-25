@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip
 from itertools import count
@@ -207,7 +208,7 @@ class PBARL(Property):
 
             #self.model.log.debug('*pbarl write pids=%s' % self.property_id)
             for (j, pid, mid, group, Type, nsm) in zip(count(), self.property_id[i], self.material_id[i],
-                        self.group[i], self.Type[i], self.nsm[i]):
+                                                       self.group[i], self.Type[i], self.nsm[i]):
                 dim = self.dim[j]
                 sgroup = set_blank_if_default(group, 'MSCBMLO')
 
