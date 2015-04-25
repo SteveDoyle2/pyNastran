@@ -1,5 +1,4 @@
-# pylint: disable=C0103
-# R0904,R0902,C0111,
+# pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, integer_types
@@ -305,35 +304,35 @@ class Element(BaseCard, ElementDeprecated):
         """
         faces = {}
         nodes = self.node_ids
-        if self.type.startswith('HEX'):  # CHEXA
+        if self.type.startswith('CHEX'):  # CHEXA
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
             faces[3] = [nodes[1], nodes[2], nodes[6], nodes[5]]
             faces[4] = [nodes[2], nodes[3], nodes[7], nodes[6]]
             faces[5] = [nodes[3], nodes[0], nodes[4], nodes[7]]
             faces[6] = [nodes[4], nodes[5], nodes[6], nodes[7]]
-        elif self.type.startswith('TET'):  # CTETRA
+        elif self.type.startswith('CTET'):  # CTETRA
             faces[1] = [nodes[0], nodes[1], nodes[2]]
             faces[2] = [nodes[0], nodes[1], nodes[3]]
             faces[3] = [nodes[1], nodes[2], nodes[3]]
             faces[4] = [nodes[2], nodes[0], nodes[3]]
-        elif self.type.startswith('PYR'):  # PYRAMID
+        elif self.type.startswith('CPYR'):  # PYRAMID
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[4]]
             faces[3] = [nodes[1], nodes[2], nodes[4]]
             faces[4] = [nodes[2], nodes[3], nodes[4]]
             faces[5] = [nodes[3], nodes[0], nodes[4]]
-        elif self.type.startswith('PEN'):  # CPENTA
+        elif self.type.startswith('CPEN'):  # CPENTA
             faces[1] = [nodes[0], nodes[1], nodes[2]]
             faces[2] = [nodes[3], nodes[4], nodes[5]]
             faces[3] = [nodes[0], nodes[1], nodes[4], nodes[3]]
             faces[4] = [nodes[1], nodes[2], nodes[5], nodes[4]]
             faces[5] = [nodes[2], nodes[0], nodes[3], nodes[5]]
-        elif self.type.startswith('QUAD'):  # CQUADx
+        elif self.type.startswith('CQUAD'):  # CQUADx
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
-        elif self.type.startswith('TRI'):  # CTRIAx
+        elif self.type.startswith('CTRI'):  # CTRIAx
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2]]
             faces[2] = [nodes[1], nodes[0], nodes[2]]

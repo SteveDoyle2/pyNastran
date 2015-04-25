@@ -86,7 +86,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
 
     # build the kdtree
     try:
-        kdt = scipy.spatial.cKDTree(list(nodes_xyz))
+        kdt = scipy.spatial.cKDTree(nodes_xyz)
     except RuntimeError:
         print(nodes_xyz)
         raise RuntimeError(nodes_xyz)

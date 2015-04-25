@@ -70,10 +70,11 @@ BDF:
    - fixing deprecation messages; missed a few stack traces
 
 BDF API:
-   - build_thru(packs, maxDV=None) is now build_thru(packs, max_dv=None)
-   - build_thru_packs(packs, maxDV=None) is now build_thru_packs(packs, max_dv=None)
-   - build_thru_float(packs, maxDV=None) is now build_thru_float(packs, max_dv=None)
-   - build_table_lines(fields, nStart=1, nEnd=0) is now build_table_lines(fields, nstart=1, nend=0)
+   - these are internal methods
+     - build_thru(packs, maxDV=None) is now build_thru(packs, max_dv=None)
+     - build_thru_packs(packs, maxDV=None) is now build_thru_packs(packs, max_dv=None)
+     - build_thru_float(packs, maxDV=None) is now build_thru_float(packs, max_dv=None)
+     - build_table_lines(fields, nStart=1, nEnd=0) is now build_table_lines(fields, nstart=1, nend=0)
    - added get_points(...) function for CAERO5
    - subcases now support:
       ``if 'LOAD in subcase:``
@@ -88,10 +89,12 @@ OP2 API:
    - op2._found_results and op2._saved_results have been replaced by op2._results
      to prevent invalid results from being requested
 
+GUI:
+   - fixed nastran GUI loading issue (BDFs didn't show up in popup)
+
 -----------------------v0.7.1 released 2015/04/17-----------------------
 Relase notes:
    - removed deprecation crashes
-
 
 -----------------------v0.7.0 released 2015/04/17-----------------------
 Release notes:

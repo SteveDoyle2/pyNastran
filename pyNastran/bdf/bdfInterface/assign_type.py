@@ -813,7 +813,7 @@ def interpret_value(value_raw, card=''):
         factor = 1.
     else:
         msg = ('the only 2 cases for a float/scientific are +/- for v0...'
-               'valueRaw=%r v0=%r card=%s' % (value_raw, val0, card))
+               'valueRaw=%r val0=%r card=%s' % (value_raw, val0, card))
         raise SyntaxError(msg)
 
     # dont include the 1st character, find the exponent
