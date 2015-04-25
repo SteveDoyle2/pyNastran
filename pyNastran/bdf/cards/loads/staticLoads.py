@@ -341,13 +341,13 @@ class GRAV(BaseCard):
         momentConstraints = {}
         gravityLoad = self.transformLoad()
         return (typesFound, forceLoads, momentLoads,
-                           forceConstraints, momentConstraints,
-                           gravityLoad)
+                forceConstraints, momentConstraints,
+                gravityLoad)
 
     def transformLoad(self):
         g = self.GravityVector()
-        (g2, matrix) = self.cid.transformToGlobal(g)
-        return (g2)
+        g2, matrix = self.cid.transformToGlobal(g)
+        return g2
 
     #def writeCodeAster(self,mag):
         #p = self.GravityVector()
@@ -457,8 +457,9 @@ class ACCEL(BaseCard):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['ACCEL', self.sid, self.Cid(),
-                  self.N[0], self.N[1], self.N[2], self.dir, None, None,
+        list_fields = [
+            'ACCEL', self.sid, self.Cid(),
+            self.N[0], self.N[1], self.N[2], self.dir, None, None,
         ]
         for loc, val in zip(self.locs, self.vals):
             list_fields += [loc, val]
@@ -639,8 +640,7 @@ class Moment(Load):
 
     def getReducedLoads(self):
         scaleFactors = [1.]
-        loads = { self.node: self.M() }
-        print(loads)
+        loads = {self.node: self.M()}
         return(scaleFactors, loads)
 
     def organizeLoads(self, model):
@@ -1350,8 +1350,10 @@ class PLOAD1(Load):
 
                 assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
                 if  x1 == x2:
-                    msg = 'Point loads are not supported on...\n%sTry setting x1=%r very close to x2=%r and\n' % (repr(self), self.x1, self.x2)
-                    msg += 'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").' % (self.p1, self.p2)
+                    msg = ('Point loads are not supported on...\n%s'
+                           'Try setting x1=%r very close to x2=%r and\n'
+                           'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").'
+                           % (repr(self), self.x1, self.x2, self.p1, self.p2))
                     raise NotImplementedError(msg)
                     if p1 != p2:
                         msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  %(self.p1, self.p2, self.x1)
@@ -1405,7 +1407,7 @@ class PLOAD1(Load):
 
     def raw_fields(self):
         list_fields = ['PLOAD1', self.sid, self.Eid(), self.Type, self.scale,
-                  self.x1, self.p1, self.x2, self.p2]
+                       self.x1, self.p1, self.x2, self.p2]
         return list_fields
 
     def repr_fields(self):

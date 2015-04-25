@@ -3,8 +3,8 @@ from six.moves import zip, StringIO
 from numpy import array, dot, arange, zeros, unique, searchsorted
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card_8, print_float_8
-from pyNastran.bdf.fieldWriter16 import print_card_16, print_float_16
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
+from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)

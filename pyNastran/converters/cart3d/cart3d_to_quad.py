@@ -3,6 +3,7 @@ from numpy import cross, allclose
 from numpy import unique, zeros, dot, where
 from numpy.linalg import norm
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 def main():
     """tests getting the normal groups"""
@@ -48,7 +49,6 @@ def normal_groups_to_quads(elements, normals, normal_groups):
     return tris, quads
 
 def write_nastran_quads_tris(nodes, tris, quads, bdf_filename='tris_quads.bdf'):
-    from pyNastran.bdf.fieldWriter import print_card_8
     f = open(bdf_filename, 'wb')
     f.write('CEND\n')
     f.write('BEGIN BULK\n')

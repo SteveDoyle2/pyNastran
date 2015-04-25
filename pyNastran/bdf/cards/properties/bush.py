@@ -14,8 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank, blank, fields)
+    double, double_or_blank, string, string_or_blank, blank, fields)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -339,7 +338,7 @@ class PBUSH1D(BushingProperty):
 
     def raw_fields(self):
         list_fields = ['PBUSH1D', self.pid, self.k, self.c, self.m, None,
-                  self.sa, self.se, None]
+                       self.sa, self.se, None]
         for var in self.vars:
             if var == 'SHOCKA':
                 list_fields += self._shock_fields()

@@ -104,7 +104,7 @@ class ElementsSolid(object):
         #    element_property[n0:n0+n, 1] = element_property.property_id
         #    n0 += n
         #return element_property
-        adf
+        raise NotImplementedError()
         return None
 
     def get_material_id_by_element_id(self, element_id=None):
@@ -142,11 +142,6 @@ class ElementsSolid(object):
                     material_id[j] = mid
         self.model.log.debug('material_id = %s' % material_id)
         return material_id
-
-        #for elems in types:
-        #pid =
-        adf2
-        return None
 
     def get_mass_by_element_id(self, element_id=None, total=False):
         types = self._get_types()

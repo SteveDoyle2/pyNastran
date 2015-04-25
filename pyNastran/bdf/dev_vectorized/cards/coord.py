@@ -9,8 +9,8 @@ from pyNastran.bdf.cards.coordinateSystems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S)
 
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 def normalize(v):

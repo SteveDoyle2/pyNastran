@@ -69,12 +69,13 @@ class TestShells(unittest.TestCase):
             ['pshell', pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4],
 
             ['ctria3', eid + 1, pid + 1, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
-            ['pcomp', pid + 1, z0, nsm, sb, ft, Tref, ge, lam,
+            [
+                'pcomp', pid + 1, z0, nsm, sb, ft, Tref, ge, lam,
                 mid, t,     theta0, sout,
                 mid, 2 * t, theta1, sout,
                 mid, 3 * t, theta2, sout,
                 mid, 4 * t, theta3, sout,
-                ],
+            ],
             ['mat1',mid, E, G, nu, rho],
         ]
         for fields in cards:
@@ -280,10 +281,10 @@ class TestShells(unittest.TestCase):
         ft = 0.
         TRef = 0.
         ge = 0.
-        lam = 'NO'  # isSymmetrical YES/NO
-        Mid = [1,2,3]
-        Theta = [0.,10.,20.]
-        T = [.1,.2,.3]
+        lam = 'NO' # isSymmetrical YES/NO
+        Mid = [1, 2, 3]
+        Theta = [0., 10., 20.]
+        T = [.1, .2, .3]
         Sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
 

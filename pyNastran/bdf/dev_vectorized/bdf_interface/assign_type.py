@@ -35,7 +35,7 @@ def components(card, n, fieldname):
             raise SyntaxError(msg)
     svalue2 = str(value)
     svalue3 = ''.join(sorted(svalue2))
-    for i,v in enumerate(svalue3):
+    for i, v in enumerate(svalue3):
         if v not in '0123456':
             msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, n, v, card)
             raise SyntaxError(msg)
@@ -86,7 +86,9 @@ def blank(card, n, fieldname, default=None):
         if len(svalue) == 0:
            return default
     Type = _get_type(svalue)
-    raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
+    msg = ('%s = %r (field #%s) on card must be blank (not %s).\n'
+           'card=%s' % (fieldname, svalue, n, Type, card))
+    raise SyntaxError(msg)
 
 def field(card, n, fieldname):
     """

@@ -150,7 +150,6 @@ class NastranMatrix(BaseCard):
         """
         assume set 1 = MAAX1,MAAX2, etc. and 100/n % on each
         """
-
         # for real combination
         comm = 'K_Mtx_AB=COMB_MATR_ASSE(COMB_R=(\n'
         comm += '    _F(MATR_ASSE = K_Mtx_A,COEF_R = 1.),\n'

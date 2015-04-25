@@ -1,5 +1,5 @@
-from numpy import matrix, cos, sin
-from numpy.linalg import solve
+from numpy import matrix, cos, sin, zeros, array
+from numpy.linalg import solve, norm
 
 
 def T(alphaR):
@@ -29,9 +29,9 @@ def buildGlobalStiffness(elements):
         K = element.getStiffness()
 
         # put in global stiffness matrix
-        for (i, iNode) in enumerate(nodes):  # row
-            for (j, jNode) in enumerate(nodes):  # column
-                Kg[iNode, jNode] = K[i, j]
+        for (i, inode) in enumerate(nodes):  # row
+            for (j, jnode) in enumerate(nodes):  # column
+                Kg[inode, jnode] = K[i, j]
     return Kg
 
 # B - strain displacement matrix
@@ -47,6 +47,7 @@ class tri(object):
         """
         http://www.me.mtu.edu/~mavable/MEEM4405/Plane.pdf
         """
+        A = 1.0
         A = 1 / 2 * A
         m = matrix(([y23, 0, y31, 0, y12, 0],
                     [0, x32, 0, x13, 0, x21],
@@ -108,7 +109,7 @@ def frame3d():
 
 
 class rod(object):
-    def __init__(pA, pB, a, b, A, J, Ix, Iy):
+    def __init__(self, pA, pB, a, b, A, J, Ix, Iy):
         self.pA = pA
         self.pB = pB
         self.a = a

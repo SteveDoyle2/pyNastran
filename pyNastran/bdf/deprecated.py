@@ -36,6 +36,7 @@ class BaseCardDeprecated(object):
         return self.print_raw_card(size=size)
 
 class CoordDeprecated(object):
+    """defines deprecated methods for Coord"""
     def T(self):
         r"""
         Gets the 6 x 6 transformation
@@ -98,6 +99,7 @@ class CoordDeprecated(object):
 
 
 class AeroDeprecated(object):
+    """defines deprecated methods for Aero"""
     def IsSymmetricalXY(self):
         warnings.warn('deprecated; use is_symmetric_xy() instead of IsSymmetricalXY()',
                       DeprecationWarning, stacklevel=2)
@@ -130,6 +132,7 @@ class AeroDeprecated(object):
 
 
 class CAERO1Deprecated(object):
+    """defines deprecated methods for CAERO1"""
     def Points(self):
         warnings.warn('deprecated; use get_points() instead of Points()',
                       DeprecationWarning, stacklevel=2)
@@ -142,6 +145,7 @@ class CAERO1Deprecated(object):
 
 
 class CAERO2Deprecated(object):
+    """defines deprecated methods for CAERO2"""
     def Points(self):
         warnings.warn('deprecated; use get_points() instead of Points()',
                       DeprecationWarning, stacklevel=2)
@@ -154,7 +158,7 @@ class CAERO2Deprecated(object):
 
 
 class ElementDeprecated(object):
-
+    """defines deprecated methods for Element"""
     def nodePositions(self, nodes=None):
         #warnings.warn('deprecated; use get_node_positions(nodes) instead of nodePositions(nodes)',
                       #DeprecationWarning, stacklevel=2)
@@ -167,7 +171,7 @@ class ElementDeprecated(object):
 
 
 class BDFMethodsDeprecated(object):
-
+    """defines deprecated methods for BDFMethods"""
     def MassProperties(self):
         """
         .. seealso:: mass_properties
@@ -215,7 +219,7 @@ class BDFMethodsDeprecated(object):
 
 
 class GetMethodsDeprecated(object):
-
+    """defines deprecated methods for GetMethods"""
     def getElementIDsWithPID(self, pid):
         """
         Gets all the element IDs with a specific property ID

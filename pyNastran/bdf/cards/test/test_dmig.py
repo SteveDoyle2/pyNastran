@@ -25,9 +25,9 @@ class TestDMIG(unittest.TestCase):
         #print "---out---\n", out
 
         REALS_expected = [
-            [1.0,  0.5,  0.25],
-            [0.5,  2.0,  0.75],
-            [0.25, 0.75, 3.0 ],
+            [1.0,  0.5, 0.25],
+            [0.5,  2.0, 0.75],
+            [0.25, 0.75, 3.0],
         ]
         self.assertTrue(array_equal(REALS_expected, REALS_actual))
 

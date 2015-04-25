@@ -439,7 +439,8 @@ class PCOMP(CompositeShellProperty):
         try:
             ply = self.plies[ilayer]
         except IndexError:
-            msg = 'On PCOMP pid=%r, ply %i is not defined.  iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies))
+            msg = ('On PCOMP pid=%r, ply %i is not defined.  '
+                   'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
             raise IndexError(msg)
 
         # ply = [mid, t, theta, sout]
@@ -561,13 +562,13 @@ class PCOMP(CompositeShellProperty):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        isSym = self.isSymmetrical()
+        is_sym = self.isSymmetrical()
         nplies = self.nPlies()
         nsm = self.Nsm()
         mids = self.Mids()
 
         assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(isSym, bool), 'isSym=%r' % isSym
+        assert isinstance(is_sym, bool), 'is_sym=%r' % is_sym
         assert isinstance(nplies, int), 'nplies=%r' % nplies
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mids, list), 'mids=%r' % mids
@@ -634,7 +635,8 @@ class PCOMPG(CompositeShellProperty):
         try:
             ply = self.plies[ilayer]
         except IndexError:
-            msg = 'On PCOMPG pid=%r, ply %i is not defined.  iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies))
+            msg = ('On PCOMPG pid=%r, ply %i is not defined.  '
+                   'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
             raise IndexError(msg)
 
         #ply = [mid, thickness, theta, sout, gPlyID]

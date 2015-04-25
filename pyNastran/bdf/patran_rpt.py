@@ -1,5 +1,7 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import range
+from numpy import loadtxt, argsort, allclose, vstack, array, abs, where
 
 
 def rpt_read():
@@ -40,7 +42,7 @@ def rpt_read():
         i += nheader
         j += 1
         if int(float(data[0])) == 0:
-            asdf
+            raise NotImplementedError()
 
     key_map = {}
     for ikey, key in enumerate(headers):
@@ -71,7 +73,6 @@ def main():
         csv_simplify(csv_filename, None, ix, iname, tol=dx)
         #break
 
-from numpy import loadtxt, argsort, allclose, vstack, array, abs, where
 
 def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
     A = loadtxt(csv_filename, delimiter=',')
@@ -131,8 +132,8 @@ def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
                     response = response[j]
 
             #print response1, response2
-            #f.write( "%g,%g,%g,%g\n" % (x, response1, response2, response1/1e6, response2/1e6))
-            f.write( "%g,%g,%g\n" % (x, response, response/1e6))
+            #f.write("%g,%g,%g,%g\n" % (x, response1, response2, response1/1e6, response2/1e6))
+            f.write("%g,%g,%g\n" % (x, response, response / 1e6))
             #f.write("-------------------\n")
             x_orig = X[i]
             response = aResponse[i]

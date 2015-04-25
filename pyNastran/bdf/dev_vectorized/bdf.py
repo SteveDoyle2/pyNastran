@@ -13,7 +13,7 @@ from collections import defaultdict
 
 from numpy import unique, array
 
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
     parse_executive_control_deck, clean_empty_lines)
 from pyNastran.bdf.cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
@@ -242,7 +242,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             15 : 'CDAMP1', 16 : 'CDAMP2', 17 : 'CDAMP3', 18 : 'CDAMP4',
             19: 'CVISC', 20: 'CBUSH', 21: 'CBUSH1D', 23: 'CBUSH2D',
             30 : 'CMASS1', 31 : 'CMASS2', 32 : 'CMASS3', 33 : 'CMASS4',
-            34 : 'CONM1',  35 : 'CONM2',
+            34 : 'CONM1', 35 : 'CONM2',
 
             73 : 'CTRIA3', 74: 'CTRIA6', 75 : 'CTRIAX', 76: 'CTRIAX6',
             144 : 'CQUAD4', 145: 'CQUAD8', 146: 'CQUAD', 147: 'CQUADX',
@@ -2409,11 +2409,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         spc_out = []
         used_ids.append(spc_id)
         spcs = {
-             'SPCADD' : self.spcadd,
-             'SPC' : self.spc,
-             'SPC1' : self.spc1,
-             #'SPCAX' : self.spcax,
-             'SPCD' : self.spcd,
+            'SPCADD' : self.spcadd,
+            'SPC' : self.spc,
+            'SPC1' : self.spc1,
+            #'SPCAX' : self.spcax,
+            'SPCD' : self.spcd,
         }
 
         if not resolve:
@@ -2577,17 +2577,17 @@ def _clean_comment(comment, end=-1):
     :returns comment2: the updated comment
     """
     if comment[:end] in ['$EXECUTIVE CONTROL DECK',
-            '$CASE CONTROL DECK',
-            '$NODES', '$SPOINTS', '$ELEMENTS',
-            '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
-            '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
-            '$UNASSOCIATED_PROPERTIES',
-            '$MATERIALS', '$THERMAL MATERIALS',
-            '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
-            '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
-            '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
-            '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
-            '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
+                         '$CASE CONTROL DECK',
+                         '$NODES', '$SPOINTS', '$ELEMENTS',
+                         '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+                         '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+                         '$UNASSOCIATED_PROPERTIES',
+                         '$MATERIALS', '$THERMAL MATERIALS',
+                         '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+                         '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+                         '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+                         '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+                         '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
         comment = ''
     return comment
 

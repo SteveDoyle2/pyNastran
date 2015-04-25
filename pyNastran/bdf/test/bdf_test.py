@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import PY2
 import os
 import sys
-#import resource
 #import time
 
 from pyNastran.bdf.test.test_bdf import run_lots_of_files
@@ -20,6 +19,7 @@ def remove_marc_files(files):
     return files2
 
 def get_open_fds():
+    import resource
     fds = []
     soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
     for fd in range(0, soft):

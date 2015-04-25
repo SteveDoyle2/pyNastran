@@ -2,7 +2,7 @@ from six.moves import zip
 from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 

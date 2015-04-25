@@ -63,7 +63,7 @@ class LoadCase(object):
                         if load.type in ['FORCE', 'MOMENT']:
                             all_loads_out.append(sf * load)
                         else:
-                            asdfff
+                            raise NotImplementedError()
                 elif loads.type in ['FORCE', 'MOMENT', 'PLOAD1']:
                     all_loads_out.append(loads)
 

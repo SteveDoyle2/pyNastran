@@ -138,7 +138,7 @@ class CELAS1(SpringElement):
     def raw_fields(self):
         nodes = self.node_ids
         list_fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
-                  self.c1, nodes[1], self.c2]
+                       self.c1, nodes[1], self.c2]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

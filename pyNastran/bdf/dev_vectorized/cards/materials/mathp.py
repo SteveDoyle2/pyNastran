@@ -1,9 +1,9 @@
 from six.moves import zip
 from numpy import zeros, where, arange, searchsorted, unique, asarray, argsort
 
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank, blank)
@@ -180,24 +180,24 @@ class MATHP(Material):
             self.tabd = self.tabd[i]
             print('MATHP.material_id = %s' % self.material_id)
 
-    def get_D_matrix(self):
-        """
-        // The isotropic Elasticity matrix D is given by
-        //               -                                             -     -                        -
-        //               | 1-nu  nu   nu      0         0        0     |     | D0  D1  D1  0   0   0  |
-        //    young      |  nu  1-nu  nu      0         0        0     |     | D1  D0  D1  0   0   0  |
-        // ------------- |  nu   nu  1-nu     0         0        0     |     | D1  D1  D0  0   0   0  |
-        // (1+nu)(1-2nu) |  0    0   0    (1-2nu)/2     0        0     |  =  | 0   0   0   D2  0   0  |
-        //               |  0    0   0        0     (1-2nu)/2    0     |     | 0   0   0   0   D2  0  |
-        //               |  0    0   0        0         0    (1-2nu)/2 |     | 0   0   0   0   0   D2 |
-        //               -                                             -     -                        -
-        http://image.diku.dk/svn/OpenTissue/archieve/silcowitz/OpenTissue/dynamics/fem/fem_compute_isotropic_elasticity.h
-        """
-        poisson2 = 2.0*poisson
-        scale = young / ((1.0 + poisson) * (1.0 - poisson2))
-        D[0] = (1.0 - poisson) * scale
-        D[1] = poisson * scale
-        D[2] = young / (2.0  + poisson2)
+    #def get_D_matrix(self):
+        #"""
+        #// The isotropic Elasticity matrix D is given by
+        #//               -                                             -     -                        -
+        #//               | 1-nu  nu   nu      0         0        0     |     | D0  D1  D1  0   0   0  |
+        #//    young      |  nu  1-nu  nu      0         0        0     |     | D1  D0  D1  0   0   0  |
+        #// ------------- |  nu   nu  1-nu     0         0        0     |     | D1  D1  D0  0   0   0  |
+        #// (1+nu)(1-2nu) |  0    0   0    (1-2nu)/2     0        0     |  =  | 0   0   0   D2  0   0  |
+        #//               |  0    0   0        0     (1-2nu)/2    0     |     | 0   0   0   0   D2  0  |
+        #//               |  0    0   0        0         0    (1-2nu)/2 |     | 0   0   0   0   0   D2 |
+        #//               -                                             -     -                        -
+        #http://image.diku.dk/svn/OpenTissue/archieve/silcowitz/OpenTissue/dynamics/fem/fem_compute_isotropic_elasticity.h
+        #"""
+        #poisson2 = 2.0 * poisson
+        #scale = young / ((1.0 + poisson) * (1.0 - poisson2))
+        #D[0] = (1.0 - poisson) * scale
+        #D[1] = poisson * scale
+        #D[2] = young / (2.0  + poisson2)
 
     def _G_default(self, E, G, nu):
         if G == 0.0 or nu == 0.0:

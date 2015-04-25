@@ -136,16 +136,16 @@ class Materials(object):
 
     def get_density_E_by_material_id(self, material_id):
         n = len(material_id)
-        rho = zeros(n, dtype='float64')
+        density = zeros(n, dtype='float64')
         E = zeros(n, dtype='float64')
 
         for i, mid in enumerate(material_id):
             mat = self.get_structural_material(mid)
-            rho[i] = mat.rho
+            density[i] = mat.rho
             E[i] = mat.E()
         assert density.shape == (n, ), density.shape
         assert E.shape == (n, ), E.shape
-        return rho, E
+        return density, E
 
     def get_nonstructural_mass_by_material_id(self, material_id):
         n = len(material_id)

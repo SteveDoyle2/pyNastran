@@ -83,7 +83,7 @@ class AddMethods(object):
         if key in self.rigidElements and not allowOverwrites:
             print('eid=%s\noldElement=\n%snewElement=\n%s' % (
                 key, self.rigidElements[key], elem))
-            assert elem.eid not in self.rigidElements,'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigidElements[elem.eid], elem)
+            assert elem.eid not in self.rigidElements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigidElements[elem.eid], elem)
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
         self.rigidElements[key] = elem
 
@@ -94,7 +94,7 @@ class AddMethods(object):
     def add_DEQATN(self, deqatn, allowOverwrites=False):
         key = deqatn.eqID
         #if not allowOverwrites:
-        #    assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' % (prop.pid,self.properties[prop.pid], prop)
+        #    assert prop.pid not in self.properties, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (prop.pid,self.properties[prop.pid], prop)
         assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
         self.dequations[key] = deqatn
 
@@ -189,7 +189,7 @@ class AddMethods(object):
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.hyperelasticMaterials and not allowOverwrites:
-            if not material._is_same_card(self.hyperelasticMaterials [key]):
+            if not material._is_same_card(self.hyperelasticMaterials[key]):
                 assert key not in self.hyperelasticMaterials, 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.hyperelasticMaterials[key], material)
         else:
             self.hyperelasticMaterials[key] = material

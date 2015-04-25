@@ -1,8 +1,8 @@
 from six import iteritems
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
 
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.cards.properties.beam import PBEAM as vPBEAM

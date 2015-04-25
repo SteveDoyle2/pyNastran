@@ -4,8 +4,8 @@ from numpy import (zeros, arange, where, searchsorted, argsort, unique,
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
-from pyNastran.bdf.fieldWriter import print_card_8, print_float_8, print_int_card
-from pyNastran.bdf.fieldWriter16 import print_float_16, print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
+from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -276,6 +276,7 @@ class GRID(VectorizedCard):
         return xyz
 
     def get_position_wrt_by_node_id(self, node_id=None, coord_id=0):
+        msg = 'which is required by GRIDs'
         i = self.get_node_index_by_node_id(node_id, msg=msg)
 
     def get_position_wrt_by_node_index(self, i=None, coord_id=0):

@@ -29,12 +29,12 @@ class TestMaterials(unittest.TestCase):
         size = 8
         msg = mat1.write_card(size, 'dummy')
         self.assertEqual(msg,
-            'MAT1           1    2.+7    3.+7      .4   1.-50\n')
+                         'MAT1           1    2.+7    3.+7      .4   1.-50\n')
 
         size = 16
         msg = mat1.write_card(size, 'dummy')
         self.assertEqual(msg,
-            'MAT1*                  1       20000000.       30000000.              .4\n*                  1.-50\n')
+                         'MAT1*                  1       20000000.       30000000.              .4\n*                  1.-50\n')
 
     def test_mat5_01(self):
         #

@@ -2,15 +2,15 @@ from six.moves import zip
 from numpy import array, dot, arange, zeros, unique, searchsorted, full, nan, asarray, isnan
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank, blank)
 from pyNastran.bdf.cards.elements.bars import CBAROR
 
-from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
-from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
+from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
+from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 

@@ -1,7 +1,7 @@
 from six.moves import range, StringIO
 from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer, double_or_blank, components_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 def get_mpc_constraint(card):
     #: Set identification number. (Integer > 0)

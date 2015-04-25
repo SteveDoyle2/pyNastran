@@ -1,7 +1,7 @@
 from numpy import array, zeros
 
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string, string)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
@@ -160,7 +160,7 @@ class MATS1(Material):
         #raise NotImplementedError(msg)
         if self.h is None:
             if self.table_id:
-                E = self.tables[table_id].Value(strain)
+                E = self.tables[self.table_id].Value(stress)
             else:
                 if stress <= self.limit1:
                     return self.materials.mat1[mid].E()

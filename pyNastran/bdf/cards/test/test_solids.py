@@ -69,7 +69,7 @@ class TestSolids(unittest.TestCase):
 
             # static
             ['PSOLID', pid, mid, 0],
-            ['MAT1',  mid, 1.0, 2.0, 3.0, rho]
+            ['MAT1', mid, 1.0, 2.0, 3.0, rho]
         ]
         model = BDF(debug=False)
         for fields in cards:
@@ -123,7 +123,7 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
@@ -176,16 +176,16 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA',  7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
-            ['GRID',  21, 0, 0., 0., 0., 0,],
-            ['GRID',  22, 0, 1., 0., 0., 0,],
-            ['GRID',  23, 0, 1., 1., 0., 0,],
-            ['GRID',  24, 0, 0., 0., 2., 0,],
-            ['GRID',  25, 0, 1., 0., 2., 0,],
-            ['GRID',  26, 0, 1., 1., 2., 0,],
+            ['GRID', 21, 0, 0., 0., 0., 0,],
+            ['GRID', 22, 0, 1., 0., 0., 0,],
+            ['GRID', 23, 0, 1., 1., 0., 0,],
+            ['GRID', 24, 0, 0., 0., 2., 0,],
+            ['GRID', 25, 0, 1., 0., 2., 0,],
+            ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
 
             # static
@@ -217,16 +217,16 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA',  7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
-            ['GRID',  21, 0, 0., 0., 0., 0,],
-            ['GRID',  22, 0, 1., 0., 0., 0,],
-            ['GRID',  23, 0, 1., 1., 0., 0,],
-            ['GRID',  24, 0, 0., 0., 2., 0,],
-            ['GRID',  25, 0, 1., 0., 2., 0,],
-            ['GRID',  26, 0, 1., 1., 2., 0,],
+            ['GRID', 21, 0, 0., 0., 0., 0,],
+            ['GRID', 22, 0, 1., 0., 0., 0,],
+            ['GRID', 23, 0, 1., 1., 0., 0,],
+            ['GRID', 24, 0, 0., 0., 2., 0,],
+            ['GRID', 25, 0, 1., 0., 2., 0,],
+            ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
 
             # static
@@ -235,7 +235,7 @@ class TestSolids(unittest.TestCase):
             ['MATS1', mid, tableID, 'PLASTIC', 0.0, 1, 1, 100000., ],
             #['TABLEST'],
             ['TABLES1', tableID, 1, None, None, None, None, None, None,
-            1.0, 10.0, 2.0, 10.0, 'ENDT'],
+             1.0, 10.0, 2.0, 10.0, 'ENDT'],
         ]
         model = BDF(debug=False)
         for fields in cards:

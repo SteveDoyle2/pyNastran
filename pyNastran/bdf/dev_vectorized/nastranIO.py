@@ -205,8 +205,8 @@ class NastranIO(NastranIO_xref):
                 if (isinstance(element, LineElement) or
                       isinstance(element, SpringElement) or
                       element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                          'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                          'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
                         nodeIDs = element.nodeIDs()
                         if None in nodeIDs:
@@ -973,11 +973,11 @@ class NastranIO(NastranIO_xref):
                         for nid in node_ids[4:]:
                             pressures[eids.index(nid)] += k
             if loads[:, 0].min() != loads[:, 0].max():
-                cases[(subcaseID, 'LoadX Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,0]
+                cases[(subcaseID, 'LoadX Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:, 0]
             if loads[:, 1].min() != loads[:, 1].max():
-                cases[(subcaseID, 'LoadY Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,1]
+                cases[(subcaseID, 'LoadY Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:, 1]
             if loads[:, 2].min() != loads[:, 2].max():
-                cases[(subcaseID, 'LoadZ Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,2]
+                cases[(subcaseID, 'LoadZ Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:, 2]
 
     def load_nastran_results(self, op2_filename, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
@@ -1045,8 +1045,8 @@ class NastranIO(NastranIO_xref):
                 [model.displacements, 'Displacement'],
                 [model.velocities,    'Velocity'],
                 [model.accelerations, 'Acceleration'],
-                [model.spcForces,     'SPC Forces'],
-                [model.mpcForces,     'MPC Forces'],
+                [model.spcForces, 'SPC Forces'],
+                [model.mpcForces, 'MPC Forces'],
 
                 # untested
                 [model.loadVectors, 'loadVectors'],
@@ -1055,7 +1055,7 @@ class NastranIO(NastranIO_xref):
                 #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
             ]
             temperature_like = [
-                [model.temperatures,    'Temperature']
+                [model.temperatures, 'Temperature']
             ]
             nnodes = self.nNodes
 
@@ -1215,7 +1215,7 @@ class NastranIO(NastranIO_xref):
                            max(case.sxf[eid]))
                 o1i = max(case.smax[eid])
                 o3i =min(case.smin[eid])
-                ovmi =max(    max(case.smax[eid]),
+                ovmi =max(max(case.smax[eid]),
                           abs(min(case.smin[eid])))
                 for nid in node_ids:
                     oxx_dict[nid].append(oxxi)
@@ -1425,7 +1425,7 @@ class NastranIO(NastranIO_xref):
 
                 o1[eid2] = max(case.smax[eid])
                 o3[eid2] = min(case.smin[eid])
-                ovm[eid2] = max(    max(case.smax[eid]),
+                ovm[eid2] = max(max(case.smax[eid]),
                                 abs(min(case.smin[eid])))
 
         if subcaseID in model.plateStress:

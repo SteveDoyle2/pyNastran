@@ -4,8 +4,8 @@ from six.moves import range
 from numpy import zeros
 
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 class Cart3d_Mesher(Cart3DReader):
     def __init__(self, log=None, debug=False):

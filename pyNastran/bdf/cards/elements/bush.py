@@ -187,7 +187,7 @@ class CBUSH(BushElement):
         ocid = set_blank_if_default(self.OCid(), -1)
         s = set_blank_if_default(self.s, 0.5)
         list_fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] +
-                  x + [self.Cid(), s, ocid] + self.si)
+                       x + [self.Cid(), s, ocid] + self.si)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -264,7 +264,7 @@ class CBUSH1D(BushElement):
 
     def raw_fields(self):
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
-                  self.Cid()]
+                       self.Cid()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -351,7 +351,7 @@ class CBUSH2D(BushElement):
 
     def raw_fields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
-                  self.Cid(), self.plane, self.sptid]
+                       self.Cid(), self.plane, self.sptid]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

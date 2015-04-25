@@ -101,11 +101,11 @@ class TestSolids(unittest.TestCase):
         #card.rawFields()
         print(f.getvalue())
 
-    def test_solid_02(self):
+    def test_solid_01(self):
         """checks nonlinear static solid material"""
         pass
 
-    def test_solid_01(self):
+    def test_solid_02(self):
         """checks linear static solid material"""
         mid = 2
         pid = 4
@@ -191,7 +191,7 @@ class TestSolids(unittest.TestCase):
         self.assertEquals(element.get_mass_by_element_id(), mass)
         #self.assertEquals(element.get_mass_by_element_index(), mass)
 
-    def test_solid_02(self):
+    def test_solid_03(self):
         mid = 2
         pid = 4
         rho = 0.1
@@ -252,7 +252,7 @@ class TestSolids(unittest.TestCase):
         V = 2.0
         self.check_solid(model, eid, 'CHEXA8', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
 
-    def test_solid_03(self):
+    def test_solid_04(self):
         """checks linear static solid material"""
         mid = 2
         pid = 4

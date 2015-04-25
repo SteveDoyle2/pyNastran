@@ -331,9 +331,10 @@ class MPC(Constraint):
         return fields
 
     def write_card(self, size=8, is_double=False):
+        grids, constraints, enforceds = self.gids, self.constraints, self.enforced
         if size == 8:
             msg = 'MPC     %8s' % self.conid
-            for i, grid, component, enforced in zip(count(), self.gids, self.constraints, self.enforced):
+            for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
                 msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
                 if i % 2 == 1 and i > 0:
                     msg += '\n%8s%8s' % ('', '')
@@ -341,12 +342,12 @@ class MPC(Constraint):
             # TODO: we're sure MPCs support double precision?
             msg = 'MPC*    %16s' % self.conid
             if is_double:
-                for i, grid, component, enforced in zip(count(), self.gids, self.constraints, self.enforced):
+                for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
                     msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
                     if i % 2 == 1 and i > 0:
                         msg += '\n%8s%16s' % ('*', '')
             else:
-                for (i, grid, component, enforced) in zip(count(), self.gids, self.constraints, self.enforced):
+                for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
                     msg += '%16i%16s%16s' % (grid, component, print_float_16(enforced))
                     if i % 2 == 1 and i > 0:
                         msg += '\n%8s%16s' % ('*', '')
@@ -401,7 +402,7 @@ class SPC(Constraint):
         return self.gids
 
     def cross_reference(self, i, node):
-        dofCount = 0
+        dof_count = 0
         self.gids[i] = node
         #for (i,constraint) in enumerate(self.constraints):
         #    if self.constraint is None:
@@ -410,7 +411,7 @@ class SPC(Constraint):
         #            dofCount+=1
         #        else:
         #            dofCount+=6
-        return dofCount
+        return dof_count
 
     def raw_fields(self):
         fields = ['SPC', self.conid]
@@ -625,10 +626,10 @@ class SPCADD(ConstraintADD):
         Figures out magnitudes of the loads to be applied to the various nodes.
         This includes figuring out scale factors.
         """
-        positionSPCs = []
-        typesFound = ['SPCADD']
-        (scaleFactors, loads) = self.getReducedConstraints()
-        return (typesFound, positionSPCs)
+        position_spcs = []
+        types_found = ['SPCADD']
+        (scale_factors, loads) = self.getReducedConstraints()
+        return (types_found, position_spcs)
 
     def cross_reference(self, i, node):
         self.sets.sort()

@@ -964,9 +964,9 @@ class Solver(F06, OP2):
         stress.add_f06_data(data, dt)
 
         if elementType == 'CBEAM' and Type == 'stress':
-            self.beamStress[isubcase] = stress
+            self.cbeam_stress[isubcase] = stress
         elif elementType == 'CBEAM' and Type == 'strain':
-            self.beamStrain[isubcase] = stress
+            self.cbeam_strain[isubcase] = stress
         else:
             raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
         stress.dt = None
@@ -1015,7 +1015,7 @@ class Solver(F06, OP2):
         forces.add_f06_data(data, dt)
 
         if elementType == 'CBEAM':
-            self.beamForces[isubcase] = forces
+            self.cbeam_forces[isubcase] = forces
         else:
             raise NotImplementedError(elementType)
         #stress.dt = None
@@ -1061,7 +1061,7 @@ class Solver(F06, OP2):
         forces.add_f06_data(data, dt)
 
         if elementType == 'CSHEAR':
-            self.shearForces[isubcase] = forces
+            self.cshear_force[isubcase] = forces
         else:
             raise NotImplementedError(elementType)
         #stress.dt = None
@@ -1117,9 +1117,9 @@ class Solver(F06, OP2):
         stress.add_f06_data(data, dt)
 
         if Type == 'stress':
-            self.shearStress[isubcase] = stress
+            self.cshear_stress[isubcase] = stress
         elif Type == 'strain':
-            self.shearStrain[isubcase] = stress
+            self.cshear_strain[isubcase] = stress
         else:
             raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
         #stress.dt = None
@@ -1164,9 +1164,9 @@ class Solver(F06, OP2):
         stress.add_f06_data(data, dt)
 
         if Type == 'stress':
-            self.celasStress[isubcase] = stress
+            self.celas_stress[isubcase] = stress
         elif Type == 'strain':
-            self.celasStrain[isubcase] = stress
+            self.celas_strain[isubcase] = stress
         else:
             raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
         #stress.dt = None
@@ -1193,7 +1193,7 @@ class Solver(F06, OP2):
         forces.add_f06_data(data, dt)
 
         #if elementType == 'CELAS2':
-        self.springForces[isubcase] = forces
+        self.spring_forces[isubcase] = forces
         #else:
             #raise NotImplementedError(elementType)
         #stress.dt = None
@@ -1225,11 +1225,11 @@ class Solver(F06, OP2):
         forces.add_f06_data(data, dt)
 
         if elementType == 'CROD':
-            self.rodForces[isubcase] = forces
+            self.crod_force[isubcase] = forces
         elif elementType == 'CONROD':
-            self.conrodForces[isubcase] = forces
+            self.conrod_force[isubcase] = forces
         elif elementType == 'CTUBE':
-            self.ctubeForces[isubcase] = forces
+            self.ctube_force[isubcase] = forces
         else:
             raise NotImplementedError(elementType)
         #stress.dt = None
@@ -1731,7 +1731,7 @@ class Solver(F06, OP2):
             M = conm1.get_mass_matrix(i)
             i0 = index[conm1.node_id[i]]
             coord_id = conm1.coord_id[i]
-            assert coord_id == 0, 'CONM1 doesnt support coord_id != 0 for element %i' % (model.conm1.element_id[i], coord_id)
+            assert coord_id == 0, 'CONM1 doesnt support coord_id != 0 for element %i; coord_id=%i' % (model.conm1.element_id[i], coord_id)
             # CONM1 doesn't consider coord ID
             self.Mgg[i0:i0+6, i0:i0+6] += M[:, :]
             for ii1, i01 in arange(i0, i0+6):

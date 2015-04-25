@@ -31,11 +31,8 @@ from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Dep
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
-    integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank,
-    integer_or_string, double_string_or_blank,
-    blank, interpret_value)
+    integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
+    integer_or_string, double_string_or_blank, blank, interpret_value)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 class AEFACT(BaseCard):
@@ -1415,7 +1412,7 @@ class CAERO4(BaseCard):
         """
         list_fields = (['CAERO4', self.eid, self.Pid(), self.Cp(), self.nspan,
                         self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
-                        list(self.p4) + [self.x43])
+                       list(self.p4) + [self.x43])
         return list_fields
 
     def repr_fields(self):
@@ -1490,6 +1487,13 @@ class CAERO5(BaseCard):
         #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO5 (not added)
         self.cp = model.Coord(self.cp, msg=msg)
         self.lspan = model.AEFact(self.lspan, msg=msg)
+
+    def get_points(self):
+        p1, matrix = self.cp.transformToGlobal(self.p1)
+        p4, matrix = self.cp.transformToGlobal(self.p4)
+        p2 = p1 + array([self.x12, 0., 0.])
+        p3 = p4 + array([self.x43, 0., 0.])
+        return [p1, p2, p3, p4]
 
     def get_npanel_points_elements(self):
         msg = '%s eid=%s nspan=%s lspan=%s' % (self.type,

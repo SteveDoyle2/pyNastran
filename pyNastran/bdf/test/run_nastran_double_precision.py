@@ -54,9 +54,9 @@ def main(bdf_name, run_first_nastran=True, debug=True):
     model3.read_bdf(bdf_name)
     update_bdf(model3)
 
-    model3.write_bdf(out_bdf_8, size=8, precision='single')
-    model3.write_bdf(out_bdf_16s, size=16, precision='single')
-    model3.write_bdf(out_bdf_16, size=16, precision='double')
+    model3.write_bdf(out_bdf_8, size=8, is_double=False)
+    model3.write_bdf(out_bdf_16s, size=16, is_double=False)
+    model3.write_bdf(out_bdf_16, size=16, is_double=True)
     if debug:
         print("---wrote the bdf---")
     #===========================

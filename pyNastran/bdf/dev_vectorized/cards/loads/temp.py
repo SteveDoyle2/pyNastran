@@ -4,8 +4,8 @@ from collections import defaultdict
 from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append, array_equal
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
-from pyNastran.bdf.fieldWriter import print_float_8
-from pyNastran.bdf.fieldWriter16 import print_float_16
+from pyNastran.bdf.field_writer_8 import print_float_8
+from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 
