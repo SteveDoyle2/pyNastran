@@ -278,7 +278,7 @@ class OES(OP2Common):
         else:
             result_name = 'strain'
 
-        if result_name not in self._saved_results:
+        if self._results.is_not_saved(result_name):
             return len(data)
 
         if self.element_type in [1, 3, 10]:  # rods
@@ -321,9 +321,9 @@ class OES(OP2Common):
                     return self._not_implemented_or_skip(data, msg)
 
             result_name = result_vector_name
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
@@ -405,9 +405,9 @@ class OES(OP2Common):
                 result_vector_name = 'cbeam_strain'
             result_name = result_vector_name
 
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
 
@@ -522,9 +522,9 @@ class OES(OP2Common):
                 obj_vector_complex = ComplexShearStrainArray
                 result_vector_name = 'cshear_strain'
 
-            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
+            if self._results.is_not_saved(result_name) and self._results.is_not_saved(result_vector_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
@@ -614,9 +614,9 @@ class OES(OP2Common):
                     raise RuntimeError(self.element_type)
             slot = getattr(self, result_name)
 
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             if self.format_code == 1 and self.num_wide == 2:  # real
                 if self.isStress():
@@ -670,10 +670,10 @@ class OES(OP2Common):
             else:
                 result_vector_name = 'cbar_strain'
 
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
             result_name = result_vector_name
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
 
@@ -815,9 +815,9 @@ class OES(OP2Common):
                     return self._not_implemented_or_skip(data, msg)
 
             result_name = result_vector_name
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
@@ -966,9 +966,9 @@ class OES(OP2Common):
                 result_vector_name = 'cquad4_strain'
 
             result_name = result_vector_name
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
@@ -1092,9 +1092,9 @@ class OES(OP2Common):
                 result_vector_name = 'ctria3_strain'
             result_name = result_vector_name
 
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
@@ -1248,9 +1248,9 @@ class OES(OP2Common):
             result_name = result_vector_name
             slot = slot_vector
 
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             if self.element_type in [64, 82, 144]:
                 nnodes = 4 # + 1 centroid
@@ -1427,7 +1427,7 @@ class OES(OP2Common):
                     raise RuntimeError(self.element_type)
 
             slot = getattr(self, result_name)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             if self.format_code == 1 and self.num_wide == 13:  # real
                 if self.isStress():
@@ -1531,9 +1531,9 @@ class OES(OP2Common):
                     return self._not_implemented_or_skip(data, msg)
             result_name = result_vector_name
 
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             slot_vector = getattr(self, result_vector_name)
             slot = slot_vector
@@ -1626,7 +1626,7 @@ class OES(OP2Common):
                 result_name = 'ctriax_stress'
             else:
                 result_name = 'ctriax_strain'
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             if self.format_code == 1 and self.num_wide == 33: # real
                 if self.isStress():
                     self.create_transient_object(self.ctriax_stress, RealTriaxStress)
@@ -1723,7 +1723,7 @@ class OES(OP2Common):
                 result_name = 'cbush_stress'
             else:
                 result_name = 'cbush_strain'
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             if self.format_code == 1 and self.num_wide == 7:  # real
                 if self.isStress():
                     self.create_transient_object(self.cbush_stress, RealBushStress)
@@ -1792,7 +1792,7 @@ class OES(OP2Common):
                 result_name = 'cbush1d_stress_strain'
             else:
                 result_name = 'cbush1d_stress_strain'
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
             if self.format_code == 1 and self.num_wide == 8:  # real
                 if self.isStress():
@@ -1882,7 +1882,7 @@ class OES(OP2Common):
                 else:
                     msg = 'element_type=%s' % self.element_type
                     return self._not_implemented_or_skip(data, msg)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 7:  # real
@@ -1923,7 +1923,7 @@ class OES(OP2Common):
             else:
                 raise NotImplementedError('NonlinearSpringStrain')
 
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             if self.num_wide == numwide_real:
                 if self.isStress():
                     self.create_transient_object(slot, NonlinearSpringStress)
@@ -1966,7 +1966,7 @@ class OES(OP2Common):
                 result_name = 'nonlinear_cgap_stress'
             else:
                 result_name = 'nonlinear_cgap_strain'
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             if self.format_code == 1 and self.num_wide == 11:  # real?
                 if self.isStress():
                     self.create_transient_object(self.nonlinear_cgap_stress, NonlinearGapStress)
@@ -2006,7 +2006,7 @@ class OES(OP2Common):
                 slot = self.nonlinear_cbeam_strain
             result_vector_name = result_name
             slot_vector = slot
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
 
 
             if self.format_code == 1 and self.num_wide == numwide_real:
@@ -2230,7 +2230,7 @@ class OES(OP2Common):
                     msg = 'HyperelasticQuad???'
                     return self._not_implemented_or_skip(data, msg)
 
-                self._found_results.add(result_name)
+                self._results._found_result(result_name)
                 n = 0
                 ntotal = 120  # 36+28*3
                 s1 = Struct(b'i4si6f')  # 1 + 4+1+6 = 12
@@ -2447,10 +2447,10 @@ class OES(OP2Common):
         self.ctetra_stress. with RealSolidStressArray.  So we call:
 
         if self._is_vectorized(RealSolidStressArray, self.ctetra_stress):
-            if result_vector_name not in self._saved_results:
+            if self._results.is_not_saved(result_vector_name):
                 return len(data)
         else:
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
 
         auto_return = self._create_oes_object2(self, nelements,

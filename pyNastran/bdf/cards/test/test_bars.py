@@ -8,7 +8,11 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 bdf = BDF(debug=False)
 class TestBars(unittest.TestCase):
     def test_pbar_01(self):
-        fields = [u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14, 4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, 0.0]
+        fields = [
+            u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14,
+            4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0,  None, None, 0.0
+        ]
         card = print_card_8(fields)
         #print(card)
         card = print_card_8(fields)

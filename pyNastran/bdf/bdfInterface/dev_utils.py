@@ -141,7 +141,7 @@ def main():
     f.write(msg)
     f.close()
 
-    bdf_filename_out ='unique.bdf'
+    bdf_filename_out = 'unique.bdf'
     tol = 0.2
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 

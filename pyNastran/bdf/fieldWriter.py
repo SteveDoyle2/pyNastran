@@ -1,9 +1,9 @@
 """
 Defines legacy import functions
 """
-from field_writer_8 import print_card_8
-from field_writer_16 import print_card_16
-from field_writer_double import print_card_double
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 def print_card(fields, size=8, is_double=False):
     """
@@ -18,7 +18,7 @@ def print_card(fields, size=8, is_double=False):
               GRID or COORDx
     """
     if size == 8:
-        return print_card_8(card)
+        return print_card_8(fields)
     elif is_double:
-        return print_card_double(card)
-    return print_card_16(card)
+        return print_card_double(fields)
+    return print_card_16(fields)

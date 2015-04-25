@@ -299,27 +299,27 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2_filename)
         sys.exit('keyboard stop...')
-    except SortCodeError: # inherits from Runtime; comment this
-        isPassed = True
+    #except SortCodeError: # inherits from Runtime; comment this
+        #isPassed = True
 
-    #except RuntimeError: # the op2 is bad, not my fault
+    #except RuntimeError: # the op2 is bad, not my fault; comment this
         #isPassed = True
         #if stopOnFailure:
             #raise
         #else:
             #isPassed = True
 
-    except IOError: # missing file; this block should be commented
+    #except IOError: # missing file; this block should be commented
         #if stopOnFailure:
             #raise
-        isPassed = True
-    except UnicodeDecodeError:  # this block should be commented
-        isPassed = True
-    except FatalError:  # this block should be commented
-        if stopOnFailure:
-            raise
-        isPassed = True
-    #except AssertionError:
+        #isPassed = True
+    #except UnicodeDecodeError:  # this block should be commented
+        #isPassed = True
+    #except FatalError:  # this block should be commented
+        #if stopOnFailure:
+            #raise
+        #isPassed = True
+    #except AssertionError:  # comment this
     #    isPassed = True
     #except RuntimeError: #invalid analysis code; this block should be commented
     #    isPassed = True

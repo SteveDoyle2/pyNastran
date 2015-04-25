@@ -194,7 +194,7 @@ class CHEXA8(SolidElement):
         pid = self.Pid()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(self.node_ids):
+        for i, nid in enumerate(self.node_ids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -301,7 +301,7 @@ class CHEXA20(SolidElement):
         pid = self.Pid()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(self.node_ids):
+        for i, nid in enumerate(self.node_ids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             c = self.Centroid()
@@ -413,23 +413,25 @@ class CPENTA6(SolidElement):
         #  offset so it's easier to map the nodes with the QRG
         pack = [indx1 + 1, indx2 + 1]
         pack.sort()
-        mapper = {  # reverse points away from the element
-                    [1, 2]: [1, 2, 3],  # close
-                    [2, 3]: [1, 2, 3],
-                    [1, 3]: [1, 2, 3],
+        mapper = {
+            # reverse points away from the element
+            [1, 2]: [1, 2, 3],  # close
+            [2, 3]: [1, 2, 3],
+            [1, 3]: [1, 2, 3],
 
-                    [4, 5]: [4, 5, 6],  # far-reverse
-                    [5, 6]: [4, 5, 6],
-                    [4, 6]: [4, 5, 6],
+            [4, 5]: [4, 5, 6],  # far-reverse
+            [5, 6]: [4, 5, 6],
+            [4, 6]: [4, 5, 6],
 
-                    [1, 5]: [1, 2, 5, 4],  # bottom
-                    [2, 4]: [1, 2, 5, 4],
+            [1, 5]: [1, 2, 5, 4],  # bottom
+            [2, 4]: [1, 2, 5, 4],
 
-                    [1, 6]: [1, 3, 6, 4],  # left-reverse
-                    [3, 4]: [1, 3, 6, 4],
+            [1, 6]: [1, 3, 6, 4],  # left-reverse
+            [3, 4]: [1, 3, 6, 4],
 
-                    [2, 6]: [2, 5, 6, 3],  # right
-                    [3, 5]: [2, 3, 6, 5], }
+            [2, 6]: [2, 5, 6, 3],  # right
+            [3, 5]: [2, 3, 6, 5],
+        }
 
         pack2 = mapper[pack]
         if len(pack2) == 3:

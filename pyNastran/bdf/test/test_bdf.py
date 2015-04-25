@@ -62,8 +62,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             isPassed = True
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        except IOError:
-            pass
+        #except IOError:
+            #pass
         #except RuntimeError:  # only temporarily uncomment this when running lots of tests
             #pass
         #except AttributeError:  # only temporarily uncomment this when running lots of tests
@@ -506,15 +506,16 @@ def main():
     else:
         size = 8
 
-    run_bdf('.', data['BDF_FILENAME'],
-                 debug=not(data['--quiet']),
-                 xref =not(data['--xref' ]),
-                 check=not(data['--check']),
-                 punch=data['--punch'],
-                 reject=data['--reject'],
-                 size=size,
-                 is_double=is_double,
-                 sum_load=data['--loads']
+    run_bdf('.',
+            data['BDF_FILENAME'],
+            debug=not(data['--quiet']),
+            xref =not(data['--xref']),
+            check=not(data['--check']),
+            punch=data['--punch'],
+            reject=data['--reject'],
+            size=size,
+            is_double=is_double,
+            sum_load=data['--loads']
     )
     print("total time:  %.2f sec" % (time.time() - t0))
 

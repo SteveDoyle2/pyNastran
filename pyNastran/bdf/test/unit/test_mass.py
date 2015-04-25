@@ -95,7 +95,7 @@ class TestMass(unittest.TestCase):
         mass = 0.06
         area = 0.5
         centroid = array([2/3., 1/3., 0.])
-        normal = array([.0,  .0,    1.])
+        normal = array([.0, .0, 1.])
         self.verify_pcomp_element(tri, mass, area, centroid, normal)
 
         # tri - pshell, nsm=0

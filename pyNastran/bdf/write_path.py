@@ -1,10 +1,68 @@
+"""
+Defines following useful methods:
+  - write_include
+"""
 from __future__ import print_function
 import os
 
 
-def split_path(abspath):
+def write_include(filename, is_windows=True):
     """
-    Takes a path and splits it into the various components
+    Writes a bdf INCLUDE file line given an imported filename.
+
+    :param filename: the filename to write
+    :param is_windows: Windows has a special format for writing INCLUDE files
+                       so the format for a BDF that will run on Linux and
+                       Windows is different.  We could check the platform,
+                       but since you might need to change platforms, it's an
+                       option (default=True)
+
+    For a model that will run on Linux:
+
+    ..code-blocK:: python
+
+      fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
+      write_include(fname, is_windows=False)
+
+    We want:
+
+    ..code-blocK:: python
+
+      INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
+              pyNastran/bdf/model.inc
+    """
+    msg = 'INCLUDE '  # len=8
+    #nmax = 72 - 8 # 64
+
+    if is_windows:
+        marker = '\\'
+    else:
+        marker = '/'
+
+    sline = _split_path(filename)
+    print("sline = %s" % sline)
+    if len(filename) > 52: # 62
+        pth = ''
+        for p in sline:
+            if p == '/':
+                pth += '%s' % marker
+            else:
+                pth += '%s%s' % (p, marker)
+            if len(pth) > 52:
+                pth += '\n        '
+                msg += pth
+                pth = ''
+        pth = pth.rstrip(' /\\\n')
+    else:
+        pth = marker.join(sline)
+    return msg + pth
+
+
+def _split_path(abspath):
+    """
+    Takes a path and splits it into the various components.
+
+    This is a helper method for write_include
     """
     path = abspath
 
@@ -26,54 +84,6 @@ def split_path(abspath):
     basepaths.reverse()
     return basepaths
 
-def write_include(filename, is_windows=True):
-    """
-    Writes a bdf INCLUDE file line given an imported filename.
-
-    :param filename: the filename to write
-    :param is_windows: Windows has a special format for writing INCLUDE files
-                       so the format for a BDF that will run on Linux and
-                       Windows is different.  We could check the platform,
-                       but since you might need to change platforms, it's an
-                       option (default=True)
-
-    For a model that will run on Linux:
-
-    ..code-blocK:: python
-
-      fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
-      write_include(fname, is_windows=False)
-
-    ..code-blocK:: python
-
-      INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
-              pyNastran/bdf/model.inc
-    """
-    msg = 'INCLUDE '  # len=8
-    #nmax = 72 - 8 # 64
-
-    if is_windows:
-        marker = '\\'
-    else:
-        marker = '/'
-
-    sline = split_path(filename)
-    print("sline = %s" % sline)
-    if len(filename) > 52: # 62
-        pth = ''
-        for p in sline:
-            if p == '/':
-                pth += '%s' % marker
-            else:
-                pth += '%s%s' % (p, marker)
-            if len(pth) > 52:
-                pth += '\n        '
-                msg += pth
-                pth = ''
-        pth = pth.rstrip(' /\\\n')
-    else:
-        pth = marker.join(sline)
-    return msg + pth
 
 def main():
     include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'

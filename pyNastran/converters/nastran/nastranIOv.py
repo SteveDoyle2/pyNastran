@@ -54,6 +54,9 @@ except ImportError:
 
 
 class NastranIO(object):
+    """
+    Defines the GUI class for Nastran.
+    """
     def __init__(self):
         #: flips the nastran CAERO subpaneling
         #:   False -> borders of CAEROs can be seen
@@ -79,9 +82,9 @@ class NastranIO(object):
 
     def get_nastran_wildcard_geometry_results_functions(self):
         if is_geom:
-            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas, *.pch)'
+            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas; *.op2; *.pch)'
         else:
-            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas, *.op2, *.pch)'
+            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas; *.pch)'
 
         data = (
             'Nastran',
@@ -119,7 +122,8 @@ class NastranIO(object):
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
-            if cid in self.show_cids:  # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
+            if cid in self.show_cids:
+                # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
                 origin = coord.origin
                 beta = coord.beta()
                 Type = cid_types[coord.Type]
@@ -788,7 +792,7 @@ class NastranIO(object):
             icase += 1
 
         icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
-        #self._plot_applied_loads(model, cases)
+        #self._plot_applied_loads(model, cases, icase)
 
         if 0:
             nxs = []
@@ -826,13 +830,17 @@ class NastranIO(object):
 
     def _plot_pressures(self, model, cases, form0, icase, xref_loads):
         """
-        does pressure act normal or antinormal?
+        pressure act normal to the face (as opposed to anti-normal)
         """
         if not self.is_centroidal:
             return icase
         assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
+        try:
+            sucaseIDs = model.caseControlDeck.get_subcase_list()
+        except AttributeError:
+            return icase
+
         print('_plot_pressures')
-        sucaseIDs = model.caseControlDeck.get_subcase_list()
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
                 continue
@@ -890,10 +898,15 @@ class NastranIO(object):
                 icase += 1
         return icase
 
-    def _plot_applied_loads(self, model, cases):
+    def _plot_applied_loads(self, model, cases, icase):
         if not self.is_nodal:
             return
-        sucaseIDs = model.caseControlDeck.get_subcase_list()
+        try:
+            sucaseIDs = model.caseControlDeck.get_subcase_list()
+        except AttributeError:
+            return icase
+
+
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
                 continue
@@ -947,6 +960,9 @@ class NastranIO(object):
                 cases[(subcase_id, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 2]
 
     def load_nastran_results(self, op2_filename, dirname):
+        """
+        Loads the Nastran results into the GUI
+        """
         #gridResult.SetNumberOfComponents(self.nElements)
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
@@ -960,7 +976,7 @@ class NastranIO(object):
             model = OP2(log=self.log, debug=True)
 
             if 0:
-                model._saved_results = set([])
+                model._results.saved = set([])
                 all_results = model.get_all_results()
                 if self.is_nodal:
                     desired_results = [
@@ -1005,7 +1021,7 @@ class NastranIO(object):
                     ]
                 for result in desired_results:
                     if result in all_results:
-                        model._saved_results.add(result)
+                        model._results.saved.add(result)
             model.read_op2(op2_filename)
 
             self.log.info(model.get_op2_stats())
@@ -1019,7 +1035,8 @@ class NastranIO(object):
             #model.read_f06(op2_filename)
         else:
             print("error...")
-            raise NotImplementedError('extension=%r is not supported; filename=%r' % (ext, op2_filename))
+            msg = 'extension=%r is not supported; filename=%r' % (ext, op2_filename)
+            raise NotImplementedError(msg)
 
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
@@ -1042,6 +1059,9 @@ class NastranIO(object):
         self._finish_results_io2(form, cases)
 
     def fill_oug_oqg(self, cases, model, subcase_id, formi, icase):
+        """
+        loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
+        """
         nnodes = self.nNodes
         if self.is_nodal: # nodal results don't work with centroidal ones
             displacement_like = [
@@ -1199,6 +1219,9 @@ class NastranIO(object):
         return icase
 
     def _fill_stress_nodal(self, cases, model, subcase_id, formi, icase):
+        """
+        disabled...
+        """
         return icase
 
         is_stress = True
@@ -1474,6 +1497,9 @@ class NastranIO(object):
         return is_data, is_static, is_real, times
 
     def _get_stress_table_types(self):
+        """
+        Gets the list of Nastran stress objects that the GUI supports
+        """
         table_types = [
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
@@ -1661,6 +1687,9 @@ class NastranIO(object):
     def _get_nastran_time_centroidal_strain_energy(self, cases, model,
                                                    subcase_id, form, icase, itime, dt,
                                                    is_real=True, is_static=False):
+        """
+        Creates the time accurate strain energy objects for the pyNastranGUI
+        """
         oxx = zeros(self.nElements, dtype='float32')
         oyy = zeros(self.nElements, dtype='float32')
         ozz = zeros(self.nElements, dtype='float32')
@@ -1716,6 +1745,9 @@ class NastranIO(object):
 
     def _get_nastran_time_centroidal_stress(self, cases, model, subcase_id, form, icase, itime, dt,
                                             is_stress=True, is_real=True, is_static=False):
+        """
+        Creates the time accurate stress objects for the pyNastranGUI
+        """
         ncase = 0
         case = None
         assert isinstance(subcase_id, int), type(subcase_id)
@@ -2184,6 +2216,9 @@ class NastranIO(object):
         return icase, ncase, case, header, form0
 
 def main():
+    """
+    Tests Nastran GUI loading
+    """
     from pyNastran.gui.testing_methods import add_dummy_gui_functions
     test = NastranIO()
     test.is_nodal = False

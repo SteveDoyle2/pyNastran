@@ -470,11 +470,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |    string    | the path is used      |
         +--------------+-----------------------+
         """
-        sr = list(self._saved_results)
-        sr.sort()
         if self.read_mode in [0, 1]:
-            #self.log.debug('_saved_results = %s' % str(sr))
-            #self.log.info('_saved_results = %s' % str(sr))
+            #sr = list(self._results.saved)
+            #sr.sort()
+            #self.log.debug('_results.saved = %s' % str(sr))
+            #self.log.info('_results.saved = %s' % str(sr))
             pass
 
         if self.read_mode != 2:

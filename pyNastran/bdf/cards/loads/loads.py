@@ -75,8 +75,8 @@ class LoadCombination(Load):  # LOAD, DLOAD
             assert nLoads % 2 == 0
             for i in range(nLoads // 2):
                 n = 2 * i + 3
-                self.scaleFactors.append(double(card, n, 'scaleFactor'))
-                self.loadIDs.append(integer(card, n + 1, 'loadID'))
+                self.scaleFactors.append(double(card, n, 'scale_factor'))
+                self.loadIDs.append(integer(card, n + 1, 'load_id'))
         else:
             self.sid = data[0]
             self.scale = data[1]
@@ -87,8 +87,8 @@ class LoadCombination(Load):  # LOAD, DLOAD
     def cross_reference(self, model):
         loadIDs2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for loadID in self.loadIDs:
-            loadID2 = model.Load(loadID, msg=msg)
+        for load_id in self.loadIDs:
+            loadID2 = model.Load(load_id, msg=msg)
             loadIDs2.append(loadID2)
         self.loadIDs = loadIDs2
 

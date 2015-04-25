@@ -2,8 +2,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import unittest
-from numpy import allclose, array
-from numpy.linalg import norm
+#from numpy import allclose, array
+#from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
@@ -211,8 +211,8 @@ class TestOpenMDAO(unittest.TestCase):
             ['CPENTA', 9, 2, 10],  # 2 is property_id -> set to 10
             ['CPENTA', 9, 3, 20],  # 3 is node1 -> set to 20
             ['PSOLID', 4, 1, 2],   # 1 is material_id
-            ['PARAM','WTMASS', 1, 'WTMASs'],  # key
-            ['PARAM','WTMASS', 2, 0.0025],  # value1
+            ['PARAM', 'WTMASS', 1, 'WTMASs'],  # key
+            ['PARAM', 'WTMASS', 2, 0.0025],  # value1
             ['PCOMP', 1, 2, 1.],
             ['PCOMP', 1, 3, 2.],
             ['PCOMP', 1, 12, 'YES_A'],
@@ -260,7 +260,7 @@ class TestOpenMDAO(unittest.TestCase):
 
     def test_openmdao_bad_2(self):
         updates = [  # IndexError
-            ['PARAM','WTMASS', 3, 0.005],  # value2; invalid b/c WTMASS
+            ['PARAM', 'WTMASS', 3, 0.005],  # value2; invalid b/c WTMASS
             ['PCOMP', 1, 24, 'YES_D'],  # too many plies
         ]
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')

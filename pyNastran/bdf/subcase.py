@@ -42,7 +42,7 @@ class Subcase(object):
         ISOTROPIC - no fiber
 
         .. todo:: how does the MATERIAL bit get turned on?  I'm assuming it's
-         element dependent...
+                  element dependent...
         """
         stress_code = 0
         if 'VONMISES' in options:
@@ -114,6 +114,8 @@ class Subcase(object):
 
     def get_analysis_code(self, sol):
         """
+        Maps the solution number to the OP2 analysis code.
+
          * 8 - post-buckling (maybe 7 depending on NLPARM???)
 
         # not important
@@ -127,7 +129,7 @@ class Subcase(object):
             101: 1,  # staics
             103: 2,  # modes
             105: 7,  # pre-buckling
-            106: 10,  # nonlinear statics
+            106: 10, # nonlinear statics
             107: 9,  # complex eigenvalues
             108: 5,  # frequency
             111: 5,
@@ -143,9 +145,9 @@ class Subcase(object):
             153: 10,
             159: 6,  # transient thermal
         }
-        #print "sol=%s" %(sol)
+        #print("sol=%s" % sol)
         approach_code = codes[sol]
-        #print 'approach_code = ',approach_code
+        #print('approach_code = %s' % approach_code)
         return approach_code
 
     def get_table_code(self, sol, table_name, options):
@@ -172,7 +174,7 @@ class Subcase(object):
             (107, 'ACCELERATION'): 11,
             (108, 'ACCELERATION'): 11,
             (129, 'ACCELERATION'): 11,
-           #(144, 'ACCELERATION'): 11,
+            #(144, 'ACCELERATION'): 11,
             (145, 'ACCELERATION'): 11,
             (146, 'ACCELERATION'): 11,
 
@@ -186,7 +188,7 @@ class Subcase(object):
             (111, 'DISPLACEMENT'): 7,
             (112, 'DISPLACEMENT'): 1,
             (129, 'DISPLACEMENT'): 7,
-           #(144, 'DISPLACEMENT'): 1,
+            #(144, 'DISPLACEMENT'): 1,
             (145, 'DISPLACEMENT'): 1,
             (146, 'DISPLACEMENT'): 1,
 
@@ -254,7 +256,7 @@ class Subcase(object):
             (108, 'MPCFORCES'): 3,
             (112, 'MPCFORCES'): 3,
             (129, 'MPCFORCES'): 3,
-           #(144, 'MPCFORCES'): 3,
+            #(144, 'MPCFORCES'): 3,
             (145, 'MPCFORCES'): 3,
             (146, 'MPCFORCES'): 3,
 
@@ -267,7 +269,7 @@ class Subcase(object):
             (111, 'OLOAD'): 2,
             (112, 'OLOAD'): 2,
             (129, 'OLOAD'): 2,
-           #(144, 'OLOAD'): 2,
+            #(144, 'OLOAD'): 2,
             (145, 'OLOAD'): 2,
             (146, 'OLOAD'): 2,
 
@@ -281,7 +283,7 @@ class Subcase(object):
             (111, 'SPCFORCES'): 3,
             (112, 'SPCFORCES'): 3,
             (129, 'SPCFORCES'): 3,
-           #(144, 'SPCFORCES'): 3,
+            #(144, 'SPCFORCES'): 3,
             (145, 'SPCFORCES'): 3,
             (146, 'SPCFORCES'): 3,
 
@@ -330,41 +332,79 @@ class Subcase(object):
             (111, 'VELOCITY'): 10,
             (112, 'VELOCITY'): 10,
             (129, 'VELOCITY'): 10,
-           #(144, 'VELOCITY'): 10,
+            #(144, 'VELOCITY'): 10,
             (145, 'VELOCITY'): 10,
             (146, 'VELOCITY'): 10,
 
             (101, 'VUGRID'): 10,
         }
-        print("key=%s" % (str(key)))
+        print("key=%s" % str(key))
         if key not in tables:
             raise KeyError(key)
         table_code = tables[key]
         return table_code
 
-    def has_parameter(self, param_name):
+    def __contains__(self, param_name):
         """
         Checks to see if a parameter name is in the subcase.
 
         :param self:       the Subcase object
         :param param_name: the case control parameter to check for
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          case_control = model.caseControlDeck
+          subcase1 = case_control.subcases[1]
+          if 'LOAD' in subcase1:
+              print('found LOAD for subcase 1')
         """
         if param_name in self.params:
             return True
         return False
 
-    def get_parameter(self, param_name):
+    def has_parameter(self, param_name):  # possibly deprecate...
+        """see ``__contains__``"""
+        return self.__contains__(param_name)
+
+    def __getitem__(self, param_name):
         """
         Gets the [value, options] for a subcase.
 
         :param self:       the Subcase object
         :param param_name: the case control parameter to check for
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          case_control = model.caseControlDeck
+          subcase1 = case_control.subcases[1]
+          value, options = subcase1['LOAD']
         """
-        paramName = update_param_name(param_name)
-        if paramName not in self.params:
+        param_name = update_param_name(param_name)
+        if param_name not in self.params:
             raise KeyError('%s doesnt exist in subcase=%s in the case '
                            'control deck.' % (param_name, self.id))
         return self.params[param_name][0:2]
+
+    def get_parameter(self, param_name):  # possibly deprecate...
+        """
+        Gets the [value, options] for a subcase.
+
+        :param self:       the Subcase object
+        :param param_name: the case control parameter to check for
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          case_control = model.caseControlDeck
+          subcase1 = case_control.subcases[1]
+          value, options = subcase1['LOAD']
+        """
+        return self.__getitem__(param_name)
 
     def _add_data(self, key, value, options, param_type):
         key = update_param_name(key)
@@ -378,7 +418,7 @@ class Subcase(object):
 
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
-            #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
+            #print("adding isubcase=%s key=%r value=|%s| options=|%s| "
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             values2 = []
             for (i, ivalue) in enumerate(value):
@@ -401,15 +441,15 @@ class Subcase(object):
             return (key, values2, options)
 
         elif param_type == 'CSV-type':
-            #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
+            #print("adding isubcase=%s key=%r value=|%s| options=|%s| "
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
         else:
-            #a = 'key=|%s|'       % key
-            #b = 'value=|%s|'     % value
-            #c = 'options=|%s|'   % options
-            #d = 'param_type=|%s|' % param_type
+            #a = 'key=%r' % key
+            #b = 'value=%r' % value
+            #c = 'options=|%s|' % options
+            #d = 'param_type=%r' % param_type
             #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, int) or value is None:
                 pass
@@ -599,8 +639,8 @@ class Subcase(object):
         """
         print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
-            loadID = self.params['LOAD'][0]
-            loadObj = model.loads[loadID]
+            load_id = self.params['LOAD'][0]
+            loadObj = model.loads[load_id]
             loadObj.cross_reference(model)
         if 'SUPORT' in self.params:
             pass

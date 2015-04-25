@@ -162,16 +162,11 @@ def get_sub_dirs(dirname):
     print("dirname_check =", dirname)
 
     for idir in maybe_dirs:
-        #print "idir = ", idir
         dir2 = os.path.join(dirname, idir)
         if os.path.isdir(dir2):
             if idir not in ignore_dirs:
                 print("adding %s" % dir2)
                 dirs.append(dir2)
-
-    #dirs2 =
-    #print dirs
-    #asdf
     return dirs
 
 def run():

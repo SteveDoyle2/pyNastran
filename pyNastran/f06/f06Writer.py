@@ -7,6 +7,7 @@ from datetime import date
 
 import pyNastran
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
+from pyNastran.op2.result_set import ResultSet
 
 
 def make_stamp(Title, today=None):
@@ -173,15 +174,14 @@ class F06Writer(OP2_F06_Common):
         OP2_F06_Common.__init__(self)
         self.card_count = {}
 
-        self._found_results = set([])
-        self._saved_results = set(self.get_all_results())
+        self._results = ResultSet(self.get_all_results())
 
     def get_all_results(self):
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
         return all_results
 
     def _clear_results(self):
-        self._saved_results.clear()
+        self._results.clear()
 
     def add_results(self, results):
         if isinstance(results, string_types):
@@ -197,24 +197,24 @@ class F06Writer(OP2_F06_Common):
                     if 'stress' in result.lower():
                         stress_results.append(result)
                 #stress_results = [result if 'stress' in result.lower() for result in all_results]
-                self._saved_results.update(stress_results)
+                self._results.update(stress_results)
             elif 'strain' == result:
                 strain_results = []
                 for result in all_results:
                     if 'strain' in result.lower():
                         strain_results.append(result)
                 #strain_results = [result if 'strain' in result.lower() for result in all_results]
-                self._saved_results.update(strain_results)
+                self._results.update(strain_results)
             elif 'stress' in result.lower():
-                self._saved_results.add('stress')
+                self._results.add('stress')
             elif 'strain' in result.lower():
-                self._saved_results.add('strain')
+                self._results.add('strain')
             elif 'spc_forces' == result or 'mpc_forces' == result or 'constraint_forces' == result:
-                self._saved_results.add('constraint_forces')
+                self._results.add('constraint_forces')
             elif 'force' in result.lower(): # could use more validation...
-                self._saved_results.add('element_forces')
+                self._results.add('element_forces')
             # thermalLoad_VU_3D, thermalLoad_1D, thermalLoad_CONV, thermalLoad_2D_3D
-            self._saved_results.add(result)
+            self._results.add(result)
 
     def set_results(self, results):
         if isinstance(results, string_types):
@@ -223,17 +223,7 @@ class F06Writer(OP2_F06_Common):
         self.add_results(results)
 
     def remove_results(self, results):
-        all_results = self.get_all_results()
-        for result in results:
-            if result not in all_results:
-                raise RuntimeError('%r is not a valid result to remove; all_results=%s' % (result, all_results))
-
-        for result in results:
-            if result in self._saved_results:
-                self._saved_results.remove(result)
-        #disable_set = set(results)
-        #self._saved_results.difference(disable_set)
-        #print(self._saved_results)
+        self._results.remove(results)
 
     def make_f06_header(self):
         """If this class is inherited, the F06 Header may be overwritten"""

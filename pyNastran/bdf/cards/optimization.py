@@ -46,7 +46,7 @@ class DCONSTR(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DCONSTR', self.oid, self.rid, self.lid,
-                  self.uid, self.lowfq, self.highfq]
+                       self.uid, self.lowfq, self.highfq]
         return list_fields
 
     def repr_fields(self):
@@ -85,7 +85,7 @@ class DESVAR(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
-                  self.xub, self.delx, self.ddval]
+                       self.xub, self.delx, self.ddval]
         return list_fields
 
     def repr_fields(self):
@@ -93,7 +93,7 @@ class DESVAR(OptConstraint):
         xub = set_blank_if_default(self.xub, 1e20)
         delx = set_blank_if_default(self.delx, 1e20)
         list_fields = ['DESVAR', self.oid, self.label, self.xinit, xlb,
-                  xub, delx, self.ddval]
+                       xub, delx, self.ddval]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -406,7 +406,7 @@ class DRESP2(OptConstraint):
             except KeyError:
                 msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, valueList, self.oid)
                 raise KeyError(msg)
-            list_fields += build_table_lines(fields2, nStart=i, nEnd=j)
+            list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
 
     def raw_fields(self):
@@ -733,10 +733,10 @@ class DVPREL2(OptConstraint):
                        self.pNameFid, self.pMin, self.pMax, self.eqID, None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
-            list_fields += build_table_lines(fields2, nStart=1, nEnd=0)
+            list_fields += build_table_lines(fields2, nstart=1, nend=0)
         if self.labels:
             fields2 = ['DTABLE'] + self.labels
-            list_fields += build_table_lines(fields2, nStart=1, nEnd=0)
+            list_fields += build_table_lines(fields2, nstart=1, nend=0)
         return list_fields
 
     def repr_fields(self):

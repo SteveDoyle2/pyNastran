@@ -278,7 +278,7 @@ def get_f06_header(self, is_mag_phase=True):
 class ComplexSolidStrainArray(ComplexSolidArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
-        StressObject.__init__(self, data_code, isubcase)
+        StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']

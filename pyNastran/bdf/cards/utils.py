@@ -1,6 +1,6 @@
 from six import string_types
 
-def build_table_lines(fields, nStart=1, nEnd=0):
+def build_table_lines(fields, nstart=1, nend=0):
     """
     Builds a table of the form:
 
@@ -26,26 +26,25 @@ def build_table_lines(fields, nStart=1, nEnd=0):
     .. note:: will be used for DVPREL2, RBE1, RBE3
     .. warning:: only works for small field format???
     """
-    fieldsOut = []
-    n = 8 - nStart - nEnd
+    fields_out = []
+    n = 8 - nstart - nend
 
     # pack all the fields into a list.  Only consider an entry as isolated
     for (i, field) in enumerate(fields):
-        fieldsOut.append(field)
+        fields_out.append(field)
         if i > 0 and i % n == 0:  # beginning of line
-            #print("i=%s" %(i))
-            #pad = [None]*(i+j)
-            #fieldsOut += pad
-            fieldsOut += [None] * (nStart + nEnd)
+            #pad = [None] * (i + j)
+            #fields_out += pad
+            fields_out += [None] * (nstart + nend)
 
     # make sure they're aren't any trailing None's (from a new line)
-    fieldsOut = wipe_empty_fields(fieldsOut)
+    fields_out = wipe_empty_fields(fields_out)
 
     # push the next key (aka next fields[0]) onto the next line
-    nSpaces = 8 - (len(fieldsOut)) % 8  # puts UM onto next line
-    if nSpaces < 8:
-        fieldsOut += [None] * nSpaces
-    return fieldsOut
+    nspaces = 8 - (len(fields_out)) % 8  # puts UM onto next line
+    if nspaces < 8:
+        fields_out += [None] * nspaces
+    return fields_out
 
 
 def wipe_empty_fields(card):
@@ -53,21 +52,23 @@ def wipe_empty_fields(card):
     Removes an trailing Nones from the card.
     Also converts empty strings to None.
 
-    :param card:        the fields on the card as a list
-    :returns shortCard: the card with no trailing blank fields
+    :param card:         the fields on the card as a list
+    :returns short_card: the card with no trailing blank fields
+
+    .. todo:: run this in reverse to make it faster
     """
-    cardB = []
+    short_card = []
     for field in card:
         if isinstance(field, string_types):
             field = field.strip()
             if field == '':
                 field = None
-        cardB.append(field)
+        short_card.append(field)
 
     i = 0
-    iMax = 0
+    imax = 0
     while i < len(card):
-        if cardB[i] is not None:
-            iMax = i
+        if short_card[i] is not None:
+            imax = i
         i += 1
-    return cardB[:iMax + 1]
+    return short_card[:imax + 1]

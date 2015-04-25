@@ -84,9 +84,9 @@ from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FO
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11,
                                            MATHP, CREEP, EQUIV)
-from pyNastran.bdf.cards.material_deps import (MATT1, MATT2, MATT4, MATT5, MATS1)  # TODO: add MATT3, MATT8, MATT9
+from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1  # TODO: add MATT3, MATT8, MATT9
 
-from pyNastran.bdf.cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs
 from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                               DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
@@ -94,7 +94,7 @@ from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET,
                                           ASET1, BSET1, CSET1, QSET1,
                                           SET1, SET3, SESET, SEQSEP, RADSET)
-from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
+from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, RADM, RADBC,)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
@@ -116,6 +116,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
+    #: this is a nastran model
     modelType = 'nastran'
 
     #: required for sphinx bug
@@ -965,18 +966,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
 
-    #def _is_case_control_deck(self, line):
-        #lineUpper = line.upper().strip()
-        #if 'CEND' in line.upper():
-            #raise SyntaxError('invalid Case Control Deck card...CEND...')
-        #if '=' in lineUpper or ' ' in lineUpper:
-            #return True
-        #for card in self.uniqueBulkDataCards:
-            #lenCard = len(card)
-            #if card in lineUpper[:lenCard]:
-                #return False
-        #return True
-
     def _read_case_control_deck(self):
         """
         Reads the case control deck
@@ -1133,6 +1122,31 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         card[0] = card_name
         return card
 
+    def create_card_object(self, card_lines, card_name, is_list=True):
+        card_name = card_name.upper()
+        self._increase_card_count(card_name)
+        if card_name in ['DEQATN']:
+            card_obj = card_lines
+            card = card_lines
+        else:
+            if is_list:
+                fields = card_lines
+            else:
+                fields = to_fields(card_lines, card_name)
+
+            # apply OPENMDAO syntax
+            if self._is_dynamic_syntax:
+                fields = [self._parse_dynamic_syntax(field) if '%' in
+                          field[0:1] else field for field in fields]
+
+                card = wipe_empty_fields([interpret_value(field, fields)
+                                          if field is not None
+                                          else None for field in fields])
+            else:  # leave everything as strings
+                card = wipe_empty_fields(fields)
+            card_obj = BDFCard(card)
+        return card_obj, card
+
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
@@ -1167,27 +1181,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                   created.
         """
         card_name = card_name.upper()
-        self._increase_card_count(card_name)
-        if card_name in ['DEQATN']:
-            card_obj = card_lines
-            card = card_lines
-        else:
-            if is_list:
-                fields = card_lines
-            else:
-                fields = to_fields(card_lines, card_name)
-
-            # apply OPENMDAO syntax
-            if self._is_dynamic_syntax:
-                fields = [self._parse_dynamic_syntax(field) if '%' in
-                          field[0:1] else field for field in fields]
-
-                card = wipe_empty_fields([interpret_value(field, fields)
-                                          if field is not None
-                                          else None for field in fields])
-            else:  # leave everything as strings
-                card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card)
+        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
 
         if self._auto_reject:
             self.reject_cards.append(card)
@@ -1217,10 +1211,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         try:
             # cards that have their own method add_CARDNAME to add them
             if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
-              'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
-              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM', 'NLPCI', 'TSTEP',
-              'TSTEPNL', 'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK',
-              'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT']:
+                             'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
+                             'FLUTTER', 'FLFACT', 'GUST', 'NLPARM', 'NLPCI', 'TSTEP',
+                             'TSTEPNL', 'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK',
+                             'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT']:
                 try:
                     # PHBDY -> add_PHBDY
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
@@ -1247,7 +1241,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                  'CRAC2D', 'CRAC3D'],
                 'add_damper' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
                                 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
-                'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
+                'add_rigid_element' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
                 'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
                                   'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
                                   'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
@@ -1260,7 +1254,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                              'MAT9', 'MAT10', 'MAT11',
                                              'EQUIV'],
                 'add_hyperelastic_material' : ['MATHE', 'MATHP',],
-                'add_thermal_material'  : ['MAT4', 'MAT5'],
+                'add_thermal_material' : ['MAT4', 'MAT5'],
                 'add_material_dependence' : ['MATS1', 'MATS3', 'MATS8',
                                              'MATT1', 'MATT2', 'MATT3', 'MATT4',
                                              'MATT5', 'MATT8', 'MATT9'],
@@ -1284,8 +1278,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_PAERO' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
                 'add_MKAERO' : ['MKAERO1', 'MKAERO2'],
                 'add_FREQ' : ['FREQ', 'FREQ1', 'FREQ2'],
-                'add_ASET' : ['ASET', 'ASET1'], 'add_BSET' : ['BSET', 'BSET1'],
-                'add_CSET' : ['CSET', 'CSET1'], 'add_QSET' : ['QSET', 'QSET1'],
+                'add_ASET' : ['ASET', 'ASET1'],
+                'add_BSET' : ['BSET', 'BSET1'],
+                'add_CSET' : ['CSET', 'CSET1'],
+                'add_QSET' : ['QSET', 'QSET1'],
                 'add_SET' : ['SET1', 'SET3'],
                 'add_DRESP' : ['DRESP1', 'DRESP2'],
                 'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
@@ -1295,7 +1291,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                'TABLES1', 'TABLEST', 'TABDMP1'],
                 'add_random_table' : ['TABRND1', 'TABRNDG'],
                 'add_method' : ['EIGB', 'EIGR', 'EIGRL'],
-                'add_cmethod': ['EIGC', 'EIGP'],
+                'add_cmethod' : ['EIGC', 'EIGP'],
                 'add_DVMREL' : ['DVMREL1'],
             }
 
@@ -1319,7 +1315,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             }
             if card_name in _dct:
                 d = _dct[card_name]
-                self.add_element((d[1] if card_obj.nFields() == d[0]
+                self.add_element((d[1] if card_obj.nfields == d[0]
                                   else d[2])(card_obj, comment=comment))
                 return card_obj
 
@@ -1692,6 +1688,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             msg = "key=%r not found in keys=%s" % (key, self.dict_of_vars.keys())
             raise KeyError(msg)
         return self.dict_of_vars[key]
+
+    #def _is_case_control_deck(self, line):
+        #lineUpper = line.upper().strip()
+        #if 'CEND' in line.upper():
+            #raise SyntaxError('invalid Case Control Deck card...CEND...')
+        #if '=' in lineUpper or ' ' in lineUpper:
+            #return True
+        #for card in self.uniqueBulkDataCards:
+            #lenCard = len(card)
+            #if card in lineUpper[:lenCard]:
+                #return False
+        #return True
 
     def _read_bulk_data_deck(self):
         """

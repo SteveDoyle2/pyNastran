@@ -20,16 +20,16 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['REALS'].get_matrix(is_sparse=False)
 
-        REALS_actual, rowsReversed, colsReversed = out
-        #print "---REALS_actual---\n", REALS_actual
+        reals_actual, rows_reversed, cols_reversed = out
+        #print "---reals_actual---\n", reals_actual
         #print "---out---\n", out
 
-        REALS_expected = [
-            [1.0,  0.5,  0.25],
-            [0.5,  2.0,  0.75],
-            [0.25, 0.75, 3.0 ],
+        reals_expected = [
+            [1.0,  0.5, 0.25],
+            [0.5,  2.0, 0.75],
+            [0.25, 0.75, 3.0],
         ]
-        self.assertTrue(array_equal(REALS_expected, REALS_actual))
+        self.assertTrue(array_equal(reals_expected, reals_actual))
 
     def test_dmig_2(self):
         model = BDF(debug=False)
@@ -37,12 +37,12 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['REAL'].get_matrix(is_sparse=False)
-        REAL_actual, rowsReversed, colsReversed = out
+        REAL_actual, rows_reversed, cols_reversed = out
         #print "---REAL_actual---\n", REAL_actual
         REAL_expected = [
             [1.0, 0.5, 0.25],
             [0.0, 2.0, 0.75],
-            [0.0, 0.0, 3.0 ],
+            [0.0, 0.0, 3.0],
         ]
         self.assertTrue(array_equal(REAL_expected, REAL_actual))
 
@@ -56,17 +56,17 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
 
-        IMAG_actual, rowsReversed, colsReversed = out
+        IMAG_actual, rows_reversed, cols_reversed = out
         #print "---IMAG_actual---\n", IMAG_actual
         IMAG_expected_real = [
             [1.0, 0.5, 0.25],
             [0.0, 2.0, 0.75],
-            [0.0, 0.0, 3.0 ],
+            [0.0, 0.0, 3.0],
         ]
         IMAG_expected_imag = [
             [1.1, 0.51, 0.251],
-            [0.0, 2.1,  0.751],
-            [0.0, 0.0,  3.1 ],
+            [0.0, 2.1, 0.751],
+            [0.0, 0.0, 3.1],
         ]
         IMAG_expected = array(IMAG_expected_real) + array(IMAG_expected_imag)*1j
         self.assertTrue(array_equal(IMAG_expected, IMAG_actual))
@@ -77,17 +77,17 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
-        IMAGS_actual, rowsReversed, colsReversed = out
+        IMAGS_actual, rows_reversed, cols_reversed = out
         #print "---IMAGS_actual---\n", IMAGS_actual
         IMAGS_expected_real = [
             [1.0, 0.5, 0.25],
             [0.5, 2.0, 0.75],
-            [0.25, 0.75, 3.0 ],
+            [0.25, 0.75, 3.0],
         ]
         IMAGS_expected_imag = [
             [1.1, 0.51, 0.251],
             [0.51, 2.1, 0.751],
-            [0.251, 0.751, 3.1  ],
+            [0.251, 0.751, 3.1],
         ]
         IMAGS_expected = array(IMAGS_expected_real) + array(IMAGS_expected_imag)*1j
         msg  = '\n%s_actual\n%s\n\n----' % ('IMAGS', IMAGS_actual)
@@ -101,7 +101,7 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['POLE'].get_matrix(is_sparse=False)
 
-        POLE_actual, rowsReversed, colsReversed = out
+        POLE_actual, rows_reversed, cols_reversed = out
         #print "---POLE_actual---\n", POLE_actual
         mag_expected = array([
             [1.0, 4.0, 5.0],

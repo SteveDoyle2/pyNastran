@@ -179,12 +179,12 @@ class LOAD(LoadCombination):
         scale_factors = []
         loads = []
         load_scale = self.scale # global
-        for (loadsPack, i_scale) in zip(self.loadIDs, self.scaleFactors):
+        for (loads_pack, i_scale) in zip(self.loadIDs, self.scaleFactors):
             scale = i_scale * load_scale # actual scale = global * local
-            if isinstance(loadsPack, int):
+            if isinstance(loads_pack, int):
                 raise RuntimeError('the load have not been cross-referenced')
 
-            for load in loadsPack:
+            for load in loads_pack:
                 if (isinstance(load, Force) or isinstance(load, Moment) or
                     isinstance(load, PLOAD4) or isinstance(load, GRAV)):
                     loads.append(load)
@@ -194,8 +194,8 @@ class LOAD(LoadCombination):
                     (reduced_scale_factors, reduced_loads) = load_data
 
                     loads += reduced_loads
-                    scale_factors += [scale * j_scale for j_scale
-                                      in reduced_scale_factors]
+                    scale_factors += [scale * j_scale
+                                      for j_scale in reduced_scale_factors]
                 elif load.type in ['PLOAD']:
                     loads.append(load)
                     scale_factors.append(scale)
@@ -219,9 +219,9 @@ class LOAD(LoadCombination):
         #print("self.loadIDs = ",self.loadIDs)
 
         typesFound = set()
-        (scaleFactors, loads) = self.getReducedLoads()
+        (scale_factors, loads) = self.getReducedLoads()
 
-        for (scaleFactor, load) in zip(scaleFactors, loads):
+        for (scale_factor, load) in zip(scale_factors, loads):
             #print("*load = ",load)
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
@@ -229,37 +229,37 @@ class LOAD(LoadCombination):
                 (isLoad, node, vector) = out
                 if isLoad:  # load
                     if node not in forceLoads:
-                        forceLoads[node] = vector * scaleFactor
+                        forceLoads[node] = vector * scale_factor
                     else:
-                        forceLoads[node] += vector * scaleFactor
+                        forceLoads[node] += vector * scale_factor
                 else:  # constraint
                     if node not in forceLoads:
-                        forceConstraints[node] = vector * scaleFactor
+                        forceConstraints[node] = vector * scale_factor
                     else:
-                        forceConstraints[node] += vector * scaleFactor
+                        forceConstraints[node] += vector * scale_factor
 
             elif isinstance(load, Moment):
                 (isLoad, node, vector) = out
                 if isLoad:  # load
                     if node not in momentLoads:
-                        momentLoads[node] = vector * scaleFactor
+                        momentLoads[node] = vector * scale_factor
                     else:
-                        momentLoads[node] += vector * scaleFactor
+                        momentLoads[node] += vector * scale_factor
                 else:  # constraint
                     if node not in momentLoads:
-                        momentConstraints[node] = vector * scaleFactor
+                        momentConstraints[node] = vector * scale_factor
                     else:
-                        momentConstraints[node] += vector * scaleFactor
+                        momentConstraints[node] += vector * scale_factor
 
             elif isinstance(load, PLOAD4):
                 (isLoad, nodes, vectors) = out
                 for (nid, vector) in zip(nodes, vectors):
                     # not the same vector for all nodes
-                    forceLoads[nid] = vector * scaleFactor
+                    forceLoads[nid] = vector * scale_factor
 
             elif isinstance(load, GRAV):
                 #(grav) = out
-                gravityLoads.append(out * scaleFactor)  # grav
+                gravityLoads.append(out * scale_factor)  # grav
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
@@ -269,8 +269,8 @@ class LOAD(LoadCombination):
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
-            list_fields += [scaleFactor, self.LoadID(loadID)]
+        for (scale_factor, load_id) in zip(self.scaleFactors, self.loadIDs):
+            list_fields += [scale_factor, self.LoadID(load_id)]
         return list_fields
 
     def repr_fields(self):
@@ -341,13 +341,13 @@ class GRAV(BaseCard):
         momentConstraints = {}
         gravityLoad = self.transformLoad()
         return (typesFound, forceLoads, momentLoads,
-                           forceConstraints, momentConstraints,
-                           gravityLoad)
+                forceConstraints, momentConstraints,
+                gravityLoad)
 
     def transformLoad(self):
         g = self.GravityVector()
-        (g2, matrix) = self.cid.transformToGlobal(g)
-        return (g2)
+        g2, matrix = self.cid.transformToGlobal(g)
+        return g2
 
     #def writeCodeAster(self,mag):
         #p = self.GravityVector()
@@ -457,8 +457,9 @@ class ACCEL(BaseCard):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['ACCEL', self.sid, self.Cid(),
-                  self.N[0], self.N[1], self.N[2], self.dir, None, None,
+        list_fields = [
+            'ACCEL', self.sid, self.Cid(),
+            self.N[0], self.N[1], self.N[2], self.dir, None, None,
         ]
         for loc, val in zip(self.locs, self.vals):
             list_fields += [loc, val]
@@ -532,9 +533,10 @@ class ACCEL1(BaseCard):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['ACCEL1', self.sid, self.Cid(), self.scale,
-                       self.N[0], self.N[1], self.N[2], None, None
-                       ] + self.node_ids
+        list_fields = [
+            'ACCEL1', self.sid, self.Cid(), self.scale,
+            self.N[0], self.N[1], self.N[2], None, None
+            ] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -583,12 +585,12 @@ class Force(Load):
         return self.xyz * self.mag
 
     def getReducedLoads(self):
-        scaleFactors = [1.]
+        scale_factors = [1.]
         loads = self.F()
-        return(scaleFactors, loads)
+        return(scale_factors, loads)
 
     def organizeLoads(self, model):
-        (scaleFactors, forceLoads) = self.getReducedLoads()
+        (scale_factors, forceLoads) = self.getReducedLoads()
 
         typesFound = [self.type]
         momentLoads = {}
@@ -638,13 +640,12 @@ class Moment(Load):
         return [self]
 
     def getReducedLoads(self):
-        scaleFactors = [1.]
-        loads = { self.node: self.M() }
-        print(loads)
-        return(scaleFactors, loads)
+        scale_factors = [1.]
+        loads = {self.node: self.M()}
+        return(scale_factors, loads)
 
     def organizeLoads(self, model):
-        (scaleFactors, momentLoads) = self.getReducedLoads()
+        (scale_factors, momentLoads) = self.getReducedLoads()
 
         typesFound = [self.type]
         forceLoads = {}
@@ -1297,9 +1298,9 @@ class PLOAD1(Load):
         gravityLoads = []
 
         typesFound = set()
-        (scaleFactors, loads) = self.getReducedLoads()
+        (scale_factors, loads) = self.getReducedLoads()
 
-        for scaleFactor, load in zip(scaleFactors, loads):
+        for scale_factor, load in zip(scale_factors, loads):
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
 
@@ -1350,8 +1351,10 @@ class PLOAD1(Load):
 
                 assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
                 if  x1 == x2:
-                    msg = 'Point loads are not supported on...\n%sTry setting x1=%r very close to x2=%r and\n' % (repr(self), self.x1, self.x2)
-                    msg += 'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").' % (self.p1, self.p2)
+                    msg = ('Point loads are not supported on...\n%s'
+                           'Try setting x1=%r very close to x2=%r and\n'
+                           'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").'
+                           % (repr(self), self.x1, self.x2, self.p1, self.p2))
                     raise NotImplementedError(msg)
                     if p1 != p2:
                         msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  %(self.p1, self.p2, self.x1)
@@ -1388,7 +1391,6 @@ class PLOAD1(Load):
                         raise NotImplementedError(load_type)
                 else:
                     raise NotImplementedError(eType)
-
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
@@ -1405,7 +1407,7 @@ class PLOAD1(Load):
 
     def raw_fields(self):
         list_fields = ['PLOAD1', self.sid, self.Eid(), self.Type, self.scale,
-                  self.x1, self.p1, self.x2, self.p2]
+                       self.x1, self.p1, self.x2, self.p2]
         return list_fields
 
     def repr_fields(self):

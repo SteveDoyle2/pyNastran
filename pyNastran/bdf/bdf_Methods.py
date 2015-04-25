@@ -243,9 +243,9 @@ class BDFMethods(BDFMethodsDeprecated):
         pool = mp.Pool(num_cpus)
         result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in elements
                            if element.type not in ['CBUSH', 'CBUSH1D',
-                               'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                            ]])
+                                                   'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                                                   ]])
         result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
 
         mass = zeros((nelements), 'float64')
@@ -411,14 +411,14 @@ class BDFMethods(BDFMethodsDeprecated):
         else:
             p = array(p0)
 
-        loadCase = self.loads[loadcase_id]
-        #for (key, loadCase) in iteritems(self.loads):
+        load_case = self.loads[loadcase_id]
+        #for (key, load_case) in iteritems(self.loads):
             #if key != loadcase_id:
                 #continue
 
         scale_factors2 = []
         loads2 = []
-        for load in loadCase:
+        for load in load_case:
             if isinstance(load, LOAD):
                 scale_factors, loads = load.getReducedLoads()
                 scale_factors2 += scale_factors
@@ -523,13 +523,16 @@ class BDFMethods(BDFMethodsDeprecated):
                 elif load.scale == 'LEPR':
                     print('LEPR continue')
                     continue
-                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                    #raise NotImplementedError(msg)
                 elif load.scale == 'FRPR':
                     print('FRPR continue')
                     continue
-                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                    #raise NotImplementedError(msg)
                 else:
-                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                    raise NotImplementedError(msg)
 
                 if x1 != x2:
                     print('x1 != x2 continue')
@@ -817,7 +820,8 @@ class BDFMethods(BDFMethodsDeprecated):
                     axb = cross(n1 - n3, n2 - n4)
                     centroid = (n1 + n2 + n3 + n4) / 4.
                 else:
-                    raise RuntimeError('invalid number of nodes on PLOAD card; nodes=%s' % str(nodes))
+                    msg = 'invalid number of nodes on PLOAD card; nodes=%s' % str(nodes)
+                    raise RuntimeError(msg)
 
                 nunit = norm(axb)
                 area = 0.5 * nunit
@@ -863,13 +867,16 @@ class BDFMethods(BDFMethodsDeprecated):
                 elif load.scale == 'LEPR':
                     print('LEPR continue')
                     continue
-                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                    #raise NotImplementedError(msg)
                 elif load.scale == 'FRPR':
                     print('FRPR continue')
                     continue
-                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                    #raise NotImplementedError(msg)
                 else:
-                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                    raise NotImplementedError(msg)
 
                 if x1 != x2:
                     print('x1 != x2 continue')
@@ -1010,7 +1017,9 @@ class BDFMethods(BDFMethodsDeprecated):
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
-                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
+                        msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
+                               % (loadcase_id, eid, elem.type, load.type))
+                        self.log.debug(msg)
                         continue
                     r = centroid - p
                     f = pressure * area * n

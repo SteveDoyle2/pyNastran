@@ -98,8 +98,8 @@ class TestLoadSum(unittest.TestCase):
 
         self.assertTrue(allclose(p*A, F[2]), 'loadcase_id=%s p*A=%s F=%s' % (loadcase_id, p*A, F))
 
-        F_expected = array([0.,        0., 300.])
-        M_expected = array([1500., -1500.,   0.])
+        F_expected = array([0., 0., 300.])
+        M_expected = array([1500., -1500., 0.])
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
@@ -111,8 +111,8 @@ class TestLoadSum(unittest.TestCase):
 
         #---
         loadcase_id = 4
-        F_expected = array([0.,        0., 300.])
-        M_expected = array([1500., -1500.,   0.])
+        F_expected = array([0., 0., 300.])
+        M_expected = array([1500., -1500., 0.])
         F_expected *= 5.
         M_expected *= 5.
         F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
@@ -122,8 +122,8 @@ class TestLoadSum(unittest.TestCase):
 
         loadcase_id = 5
         F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F_expected = array([0.,        0., 300.])
-        M_expected = array([1500., -1500.,   0.])
+        F_expected = array([0., 0., 300.])
+        M_expected = array([1500., -1500., 0.])
         F_expected *= 7.
         M_expected *= 7.
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
@@ -131,8 +131,8 @@ class TestLoadSum(unittest.TestCase):
 
         loadcase_id = 6
         F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F_expected = array([0.,        0., 300.])
-        M_expected = array([1500., -1500.,   0.])
+        F_expected = array([0., 0., 300.])
+        M_expected = array([1500., -1500., 0.])
         F_expected *= 7. * 5.
         M_expected *= 7. * 5.
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
@@ -152,8 +152,8 @@ class TestLoadSum(unittest.TestCase):
 
         self.assertTrue(allclose(p*A, F[2]), 'loadcase_id=%s p*A=%s F=%s' % (loadcase_id, p*A, F))
 
-        F_expected = array([0.,    0., 12.])
-        M_expected = array([12., -12.,  0.])
+        F_expected = array([0., 0., 12.])
+        M_expected = array([12., -12., 0.])
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 

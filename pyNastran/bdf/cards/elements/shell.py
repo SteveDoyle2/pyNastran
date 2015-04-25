@@ -1320,7 +1320,8 @@ class CQUAD4(QuadShell):
     type = 'CQUAD4'
     asterType = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
-    _field_map = {1: 'eid', 2:'pid', 7:'thetaMcid', 8:'zOffset', 10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
+    _field_map = {1: 'eid', 2:'pid', 7:'thetaMcid', 8:'zOffset',
+                  10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
 
     def _update_field_helper(self, n, value):
         if n == 3:

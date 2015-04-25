@@ -113,9 +113,6 @@ class XrefMesh(object):
         """
         if xref:
             self.log.debug("Cross Referencing...")
-            #for key,e in iteritems(self.elements):
-                #print(e)
-
             self._cross_reference_nodes()
             self._cross_reference_coordinates()
 

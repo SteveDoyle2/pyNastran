@@ -77,11 +77,11 @@ def print_card_double(fields, wipe_fields=True):
     if wipe_fields:
         fields = wipe_empty_fields(fields)
     nfields_main = len(fields) - 1  # chop off the card name
-    nBDF_lines = nfields_main // 8
+    nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:
-        nBDF_lines += 1
-        nExtra_fields = 8 * nBDF_lines - nfields_main
-        fields += [None] * nExtra_fields
+        nbdf_lines += 1
+        nextra_fields = 8 * nbdf_lines - nfields_main
+        fields += [None] * nextra_fields
 
     try:
         out = '%-8s' % (fields[0] + '*')

@@ -192,9 +192,9 @@ class OUG(OP2Common):
         if self.thermal == 0:
             result_name = 'displacements'
             storage_obj = self.displacements
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
                                  RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code,
@@ -202,27 +202,27 @@ class OUG(OP2Common):
         elif self.thermal == 1:
             result_name = 'temperatures'
             storage_obj = self.temperatures
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperature, None,
                                  RealTemperatureArray, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             result_name = 'displacement_scaled_response_spectra_ABS'
             storage_obj = self.displacement_scaled_response_spectra_ABS
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
                                  RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
         elif self.thermal == 4:
             result_name = 'displacement_scaled_response_spectra_NRL'
             storage_obj = self.displacement_scaled_response_spectra_NRL
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
                                  RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
@@ -242,9 +242,9 @@ class OUG(OP2Common):
         if self.thermal == 0:
             real_obj = RealVelocity
             complex_obj = ComplexVelocity
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealVelocity, ComplexVelocity,
                                  RealVelocityArray, ComplexVelocityArray,
@@ -252,18 +252,18 @@ class OUG(OP2Common):
         elif self.thermal == 1:
             real_obj = RealThermalVelocityVector
             complex_obj = None
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealThermalVelocityVector, None,
                                  None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             result_name = 'velocity_scaled_response_spectra_ABS'
             storage_obj = self.velocity_scaled_response_spectra_ABS
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealVelocity, ComplexVelocity,
                                  RealVelocityArray, ComplexVelocityArray,
@@ -280,7 +280,7 @@ class OUG(OP2Common):
         if self.thermal == 0:
             result_name = 'accelerations'
             storage_obj = self.accelerations
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
@@ -289,18 +289,18 @@ class OUG(OP2Common):
         elif self.thermal == 1:
             result_name = 'accelerations'
             storage_obj = self.accelerations
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  None, None,
                                  None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             result_name = 'acceleration_scaled_response_spectra_ABS'
             storage_obj = self.acceleration_scaled_response_spectra_ABS
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
                                  RealAccelerationArray, ComplexAccelerationArray,
@@ -309,9 +309,9 @@ class OUG(OP2Common):
         elif self.thermal == 4:
             result_name = 'acceleration_scaled_response_spectra_NRL'
             storage_obj = self.acceleration_scaled_response_spectra_NRL
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
                                  RealAccelerationArray, ComplexAccelerationArray,
@@ -328,9 +328,9 @@ class OUG(OP2Common):
         result_name = 'eigenvectors'
         storage_obj = self.eigenvectors
         if self.thermal == 0:
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  Eigenvector, ComplexEigenvector,
                                  RealEigenvectorArray, ComplexEigenvectorArray, 'node')
@@ -350,9 +350,9 @@ class OUG(OP2Common):
         result_name = 'eigenvectors'
         storage_obj = self.eigenvectors
         if self.thermal == 0:
-            if result_name not in self._saved_results:
+            if self._results.is_not_saved(result_name):
                 return len(data)
-            self._found_results.add(result_name)
+            self._results._found_result(result_name)
             #if self.isRandomResponse():
             if self.isRandomResponse():
                 if self.format_code == 1 and self.num_wide == 8:  # real/random

@@ -35,6 +35,7 @@ class BaseCardDeprecated(object):
         return self.print_raw_card(size=size)
 
 class CoordDeprecated(object):
+    """defines deprecated methods for Coord"""
     def T(self):
         r"""
         Gets the 6 x 6 transformation
@@ -63,7 +64,8 @@ class CoordDeprecated(object):
         :retval p2: the xyz point in the global frame
         :retval matrix: the transformation matrix
         """
-        warnings.warn('deprecated; use p2=cid.transform_node_to_global(p);M=cid.beta() instead of (p2,M)=cid.transformToGlobal(p)',
+        warnings.warn('deprecated; use p2=cid.transform_node_to_global(p);'
+                      'M=cid.beta() instead of (p2,M)=cid.transformToGlobal(p)',
                       DeprecationWarning, stacklevel=2)
         if self.cid == 0:
             return p, array([[1., 0., 0.],
@@ -75,23 +77,28 @@ class CoordDeprecated(object):
         return p2, matrix
 
     def transformVectorToGlobal(self, p):
-        warnings.warn('deprecated; use transform_vector_to_global(p) instead of transformVectorToGlobal(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_vector_to_global(p) instead of transformVectorToGlobal(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_vector_to_global(p)
 
     def transformNodeToGlobal(self, p):
-        warnings.warn('deprecated; use transform_node_to_global(p) instead of transformVectorToGlobal(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_node_to_global(p) instead of transformVectorToGlobal(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_node_to_global(p)
 
     def transformToLocal(self, p, beta, debug=False):
-        warnings.warn('deprecated; use transform_node_to_local(p) instead of transformToLocal(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_node_to_local(p) instead of transformToLocal(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_node_to_local(p, debug)
 
     def transform_to_local(self, p, beta, debug=False):
-        warnings.warn('deprecated; use transform_node_to_local(p) instead of transform_to_local(p)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use transform_node_to_local(p) instead of transform_to_local(p)',
+                      DeprecationWarning, stacklevel=2)
         return self.transform_node_to_local(p, debug)
 
 
 class AeroDeprecated(object):
+    """defines deprecated methods for Aero"""
     def IsSymmetricalXY(self):
         warnings.warn('deprecated; use is_symmetric_xy() instead of IsSymmetricalXY()',
                       DeprecationWarning, stacklevel=2)
@@ -124,27 +131,33 @@ class AeroDeprecated(object):
 
 
 class CAERO1Deprecated(object):
+    """defines deprecated methods for CAERO1"""
     def Points(self):
-        warnings.warn('deprecated; use get_points() instead of Points()', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use get_points() instead of Points()',
+                      DeprecationWarning, stacklevel=2)
         return self.get_points()
 
     def SetPoints(self, points):
-        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)',
+                      DeprecationWarning, stacklevel=2)
         return self.set_points(points)
 
 
 class CAERO2Deprecated(object):
+    """defines deprecated methods for CAERO2"""
     def Points(self):
-        warnings.warn('deprecated; use get_points() instead of Points()', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use get_points() instead of Points()',
+                      DeprecationWarning, stacklevel=2)
         return self.get_points()
 
     def SetPoints(self, points):
-        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use set_points(points) instead of SetPoints(points)',
+                      DeprecationWarning, stacklevel=2)
         return self.set_points(points)
 
 
 class ElementDeprecated(object):
-
+    """defines deprecated methods for Element"""
     def nodePositions(self, nodes=None):
         #warnings.warn('deprecated; use get_node_positions(nodes) instead of nodePositions(nodes)',
                       #DeprecationWarning, stacklevel=2)
@@ -157,7 +170,7 @@ class ElementDeprecated(object):
 
 
 class BDFMethodsDeprecated(object):
-
+    """defines deprecated methods for BDFMethods"""
     def MassProperties(self):
         """
         .. seealso:: mass_properties
@@ -205,7 +218,7 @@ class BDFMethodsDeprecated(object):
 
 
 class GetMethodsDeprecated(object):
-
+    """defines deprecated methods for GetMethods"""
     def getElementIDsWithPID(self, pid):
         """
         Gets all the element IDs with a specific property ID
@@ -226,7 +239,8 @@ class GetMethodsDeprecated(object):
         """
         .. deprecated:: will be removed in version 0.8
         """
-        warnings.warn('deprecated; use FLFACT(sid) instead of Flfact(sid)', DeprecationWarning, stacklevel=2)
+        warnings.warn('deprecated; use FLFACT(sid) instead of Flfact(sid)',
+                      DeprecationWarning, stacklevel=2)
         return self.FLFACT(sid, msg)
 
     def getNodes(self):
@@ -244,13 +258,13 @@ class GetMethodsDeprecated(object):
     #------------------------------
     def nNodes(self):
         """deprecated"""
-        warnings.warn('deprecated; use node_ids instead of nNodes()',
+        warnings.warn('deprecated; use nnodes instead of nNodes()',
                       DeprecationWarning, stacklevel=2)
         return self.nnodes
 
     def get_nnodes(self):
         """deprecated"""
-        warnings.warn('deprecated; use node_ids instead of get_nnodes()',
+        warnings.warn('deprecated; use nnodes instead of get_nnodes()',
                       DeprecationWarning, stacklevel=2)
         return len(self.nodes)
 
@@ -295,7 +309,6 @@ class GetMethodsDeprecated(object):
     #------------------------------
     #def nProperties(self):
         #"""deprecated"""
-        #asdf
         #return self.nproperties
 
     #def elementIDs(self):
@@ -351,7 +364,8 @@ class GetMethodsDeprecated(object):
 
     def getElementIDsWithPIDs(self, pids, mode='list'):
         """deprecated"""
-        warnings.warn('deprecated; use get_element_ids_with_pids instead of getElementIDsWithPIDs()',
+        warnings.warn('deprecated; use get_element_ids_with_pids instead of '
+                      'getElementIDsWithPIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_element_ids_with_pids(pids, mode=mode)
 
@@ -367,37 +381,43 @@ class GetMethodsDeprecated(object):
 
     def getNodeIDToElementIDsMap(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_element_ids_with_pids instead of getNodeIDToElementIDsMap()',
+        warnings.warn('deprecated; use get_element_ids_with_pids instead of '
+                      'getNodeIDToElementIDsMap()',
                       DeprecationWarning, stacklevel=2)
         return self.get_node_id_to_element_ids_map()
 
     def getPropertyIDToElementIDsMap(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_property_id_to_element_ids_map instead of getPropertyIDToElementIDsMap()',
+        warnings.warn('deprecated; use get_property_id_to_element_ids_map '
+                      'instead of getPropertyIDToElementIDsMap()',
                       DeprecationWarning, stacklevel=2)
         return self.get_property_id_to_element_ids_map()
 
     def getMaterialIDToPropertyIDsMap(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_material_id_to_property_ids_map instead of getMaterialIDToPropertyIDsMap()',
+        warnings.warn('deprecated; use get_material_id_to_property_ids_map '
+                      'instead of getMaterialIDToPropertyIDsMap()',
                       DeprecationWarning, stacklevel=2)
         return self.get_material_id_to_property_ids_map()
 
     def structuralMaterialIDs(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_structural_material_ids instead of structuralMaterialIDs()',
+        warnings.warn('deprecated; use get_structural_material_ids instead of '
+                      'structuralMaterialIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_structural_material_ids()
 
     def thermalMaterialIDs(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_thermal_material_ids instead of thermalMaterialIDs()',
+        warnings.warn('deprecated; use get_thermal_material_ids instead of '
+                      'thermalMaterialIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_thermal_material_ids()
 
     def materialIDs(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_material_ids instead of materialIDs()',
+        warnings.warn('deprecated; use get_material_ids instead of '
+                      'materialIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_material_ids()
 

@@ -283,8 +283,7 @@ class LineProperty(Property):
             I2 = 1 / 12. * dim[1] * dim[0] ** 3
             I12 = 0.
         else:
-            msg = 'I1_I2_I12; Type=%s is not supported for %s class...' % (self.Type,
-                                                                self.type)
+            msg = 'I1_I2_I12; Type=%s is not supported for %s class...' % (self.Type, self.type)
             raise NotImplementedError(msg)
         return(I1, I2, I12)
 

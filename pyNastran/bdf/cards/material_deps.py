@@ -159,7 +159,7 @@ class MATS1(MaterialDependence):
 
     def raw_fields(self):
         list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
-                  self.h, self.yf, self.hr, self.limit1, self.limit2]
+                       self.h, self.yf, self.hr, self.limit1, self.limit2]
         return list_fields
 
     def repr_fields(self):
@@ -390,12 +390,13 @@ class MATT2(MaterialDependence):
         return self._get_table('_ss_table')
 
     def raw_fields(self):
-        list_fields = ['MATT2', self.Mid(), self.G11_table(), self.G12_table(),
-                       self.G13_table(), self.G22_table(), self.G23_table(),
-                       self.G33_table(), self.rho_table(), self.A1_table(),
-                       self.A2_table(), self.A3_table(), None, self.ge_table(),
-                       self.st_table(), self.sc_table(), self.ss_table()
-                       ]
+        list_fields = [
+            'MATT2', self.Mid(), self.G11_table(), self.G12_table(),
+            self.G13_table(), self.G22_table(), self.G23_table(),
+            self.G33_table(), self.rho_table(), self.A1_table(),
+            self.A2_table(), self.A3_table(), None, self.ge_table(),
+            self.st_table(), self.sc_table(), self.ss_table()
+        ]
         return list_fields
 
     def repr_fields(self):
@@ -469,10 +470,11 @@ class MATT4(MaterialDependence):
         return self._get_table('_Hgen_table')
 
     def raw_fields(self):
-        list_fields = ['MATT4', self.Mid(), self.K_table(), self.Cp_table(),
-                       None,
-                       self.H_table(), self.mu_table(), self.Hgen_table()
-                       ]
+        list_fields = [
+            'MATT4', self.Mid(), self.K_table(), self.Cp_table(),
+            None,
+            self.H_table(), self.mu_table(), self.Hgen_table()
+        ]
         return list_fields
 
     def repr_fields(self):

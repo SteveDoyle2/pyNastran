@@ -1,7 +1,31 @@
+"""
+Defines various utilities for BDF parsing including:
+ - to_fields
+ - parse_patran_syntax
+ - parse_patran_syntax_dict
+ - Position
+ - PositionWRT
+ - TransformLoadWRT
+"""
 from six import iteritems
 import os
 from numpy import unique, cross, dot, array
 
+_REMOVED_LINES = [
+    '$EXECUTIVE CONTROL DECK',
+    '$CASE CONTROL DECK',
+    '$NODES', '$SPOINTS', '$ELEMENTS',
+    '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+    '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+    '$UNASSOCIATED_PROPERTIES',
+    '$MATERIALS', '$THERMAL MATERIALS',
+    '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+    '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+    '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+    '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+    '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
+    '$PROPERTIES_MASS', '$MASSES',
+]
 
 def _clean_comment(comment, end=-1):
     """
@@ -9,25 +33,18 @@ def _clean_comment(comment, end=-1):
     created.
 
     :param comment: the comment to possibly remove
+    :param end: lets you remove trailing characters (e.g. a ``\n``; default=-1)
     """
-    if comment[:end] in ['$EXECUTIVE CONTROL DECK',
-            '$CASE CONTROL DECK',
-            '$NODES', '$SPOINTS', '$ELEMENTS',
-            '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
-            '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
-            '$UNASSOCIATED_PROPERTIES',
-            '$MATERIALS', '$THERMAL MATERIALS',
-            '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
-            '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
-            '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
-            '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
-            '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
-            '$PROPERTIES_MASS', '$MASSES']:
+    if comment[:end] in _REMOVED_LINES:
         comment = ''
     return comment
 
 
 class CardParseSyntaxError(SyntaxError):
+    """
+    Class that is used for testing.
+    Users should just treat this as a SyntaxError.
+    """
     pass
 
 
@@ -134,13 +151,13 @@ def get_include_filename(card_lines, include_dir=''):
     :param include_dir: the include directory (default='')
     :returns filename:  the INCLUDE filename
     """
-    cardLines2 = []
+    card_lines2 = []
     for line in card_lines:
         line = line.strip('\t\r\n ')
-        cardLines2.append(line)
+        card_lines2.append(line)
 
-    cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
-    filename = ''.join(cardLines2)
+    card_lines2[0] = card_lines2[0][7:].strip()  # truncate the cardname
+    filename = ''.join(card_lines2)
     filename = filename.strip('"').strip("'")
     if ':' in filename:
         ifilepaths = filename.split(':')
@@ -155,26 +172,26 @@ def parse_executive_control_deck(executive_control_lines):
     """
     sol = None
     method = None
-    iSolLine = None
+    isol_line = None
     for (i, eline) in enumerate(executive_control_lines):
         uline = eline.strip().upper()  # uppercase line
         uline = uline.split('$')[0].expandtabs()
         if uline[:4] in ['SOL ']:
             if ',' in uline:
                 sline = uline.split(',')  # SOL 600,method
-                solValue = sline[0].strip()
+                sol_value = sline[0].strip()
                 method = sline[1].strip()
             else:
-                solValue = uline
+                sol_value = uline
                 method = None
 
             if sol is None:
-                sol = solValue[3:].strip()
+                sol = sol_value[3:].strip()
             else:
                 raise ValueError('cannot overwrite solution existing='
                                  '|SOL %s| new =|%s|' % (sol, uline))
-            iSolLine = i
-    return sol, method, iSolLine
+            isol_line = i
+    return sol, method, isol_line
 
 
 def clean_empty_lines(lines):
@@ -205,8 +222,8 @@ def print_filename(filename, relpath):
     :param filename: a filename string
     :returns filename_string: a shortened representation of the filename
     """
-    driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
-    if driveLetter == os.path.splitdrive(os.curdir)[0] and relpath:
+    drive_letter = os.path.splitdrive(os.path.abspath(filename))[0]
+    if drive_letter == os.path.splitdrive(os.curdir)[0] and relpath:
         return os.path.relpath(filename)
     return filename
 
@@ -311,7 +328,7 @@ def parse_patran_syntax_dict(node_sets):
             else:
                 raise NotImplementedError(snode)
             if key is None:
-                msg =  'data must be of the form "Node 10:13", not "10:13"\n'
+                msg = 'data must be of the form "Node 10:13", not "10:13"\n'
                 msg += 'new_set=%s' % array(new_set, dtype='int32')
                 raise SyntaxError(msg)
             data[key] += new_set
@@ -383,11 +400,11 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     #     M = r x F
     if is_cid_int:
         cp = model.Coord(cid)
-        coordB = model.Coord(cid_new)
+        coord_to = model.Coord(cid_new)
     else:
         cp = cid
-        coordB = cid_new
-    r = cp.origin - coordB.origin
+        coord_to = cid_new
+    r = cp.origin - coord_to.origin
 
     # change R-theta-z to xyz
     Fxyz_local_1 = cp.coordToXYZ(F)
@@ -404,7 +421,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     # Flocal2 = (Flocal1 * beta1) * beta2.T
 
     Fxyz_global = dot(Fxyz_local_1, cp.beta())
-    Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coordB.beta().T)
+    Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coord_to.beta().T)
 
     # find the moment about the new origin due to the force
     Mxyz_global = cross(r, Fxyz_global)
@@ -412,7 +429,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
 
     # rotate the delta moment into the local frame
-    M_local = coordB.XYZtoCoord(Mxyz_local_2)
+    M_local = coord_to.XYZtoCoord(Mxyz_local_2)
 
     return Fxyz_local_2, Mxyz_local_2
 
@@ -440,10 +457,10 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
 
     if is_cid_int:
         cp = model.Coord(cid)
-        coordB = model.Coord(cid_new)
+        coord_to = model.Coord(cid_new)
     else:
         cp = cid
-        coordB = cid_new
+        coord_to = cid_new
 
     if 0:
         # pGlobal = pLocal1 * beta1 + porigin1
@@ -456,15 +473,15 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         p1_local = cp.coordToXYZ(xyz)
 
         # transform xyz_1 to xyz_2
-        p2_local = dot(dot(p1_local, cp.beta()) + cp.origin - coordB.origin, coordB.beta().T)
+        p2_local = dot(dot(p1_local, cp.beta()) + cp.origin - coord_to.origin, coord_to.beta().T)
 
         # convert xyz_2 to R-Theta-Z_2
-        xyz_local = coordB.XYZtoCoord(p2_local)
+        xyz_local = coord_to.XYZtoCoord(p2_local)
     else:
         # converting the xyz point arbitrary->global
-        xyz_global, matrixDum = cp.transformToGlobal(xyz)
+        xyz_global, matrix_dum = cp.transformToGlobal(xyz)
 
         # a matrix global->local matrix is found
-        matrix = coordB.beta()
-        xyz_local = coordB.transformToLocal(xyz_global, matrix)
+        matrix = coord_to.beta()
+        xyz_local = coord_to.transformToLocal(xyz_global, matrix)
     return xyz_local

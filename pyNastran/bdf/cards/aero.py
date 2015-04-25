@@ -31,11 +31,8 @@ from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Dep
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
-    integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank,
-    integer_or_string, double_string_or_blank,
-    blank, interpret_value)
+    integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
+    integer_or_string, double_string_or_blank, blank, interpret_value)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 class AEFACT(BaseCard):
@@ -1415,7 +1412,7 @@ class CAERO4(BaseCard):
         """
         list_fields = (['CAERO4', self.eid, self.Pid(), self.Cp(), self.nspan,
                         self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
-                        list(self.p4) + [self.x43])
+                       list(self.p4) + [self.x43])
         return list_fields
 
     def repr_fields(self):
@@ -1490,6 +1487,13 @@ class CAERO5(BaseCard):
         #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO5 (not added)
         self.cp = model.Coord(self.cp, msg=msg)
         self.lspan = model.AEFact(self.lspan, msg=msg)
+
+    def get_points(self):
+        p1, matrix = self.cp.transformToGlobal(self.p1)
+        p4, matrix = self.cp.transformToGlobal(self.p4)
+        p2 = p1 + array([self.x12, 0., 0.])
+        p3 = p4 + array([self.x43, 0., 0.])
+        return [p1, p2, p3, p4]
 
     def get_npanel_points_elements(self):
         msg = '%s eid=%s nspan=%s lspan=%s' % (self.type,
@@ -1759,8 +1763,8 @@ class FLFACT(BaseCard):
                 fmid = double(card, 6, 'fmid')
                 assert len(card) == 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
                 i = linspace(0, nf, nf, endpoint=False)
-                self.factors = ((f1*(fnf-fmid)*(nf-1) + fnf*(fmid-f1)*i)/
-                                   ((fnf-fmid)*(nf-1) +     (fmid-f1)*i))
+                self.factors = ((f1*(fnf - fmid) * (nf - 1) + fnf * (fmid - f1) * i) /
+                                   ((fnf - fmid) * (nf - 1) +       (fmid - f1) * i))
             else:
                 self.factors = fields(double, card, 'factors', i=2, j=len(card))
 
@@ -2411,7 +2415,7 @@ class PAERO3(BaseCard):
             self.ncontrol_surfaces = integer(card, 3, 'ncontrol_surfaces')
             self.x = []
             self.y = []
-            nfields = card.nFields()
+            nfields = card.nfields
 
             j = 0
             for i in range(6, nfields, 2):

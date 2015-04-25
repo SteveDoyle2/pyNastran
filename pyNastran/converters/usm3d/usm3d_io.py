@@ -67,7 +67,7 @@ class Usm3dIO(object):
                     #if n > nold:
                         #return n
                 #except:
-                    #asdf
+                    #raise NotImplementedError()
         #return None
 
     def load_usm3d_results(self, flo_filename, dirname):
