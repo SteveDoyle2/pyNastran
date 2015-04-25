@@ -302,7 +302,7 @@ class TestSolids(unittest.TestCase):
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
 
-    def test_solid_03(self):
+    def test_solid_05(self):
         """checks linear static solid material"""
         mid = 2
         pid = 4

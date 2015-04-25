@@ -2,7 +2,7 @@ from __future__ import print_function
 from numpy import array, allclose, array_equal, cross
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C #, CORD2S
 from pyNastran.bdf.utils import TransformLoadWRT
 
 bdf = BDF(debug=False)  # don't load this up with stuff

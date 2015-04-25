@@ -42,7 +42,7 @@ class TestDMIG(unittest.TestCase):
         REAL_expected = [
             [1.0, 0.5, 0.25],
             [0.0, 2.0, 0.75],
-            [0.0, 0.0, 3.0 ],
+            [0.0, 0.0, 3.0],
         ]
         self.assertTrue(array_equal(REAL_expected, REAL_actual))
 
@@ -61,12 +61,12 @@ class TestDMIG(unittest.TestCase):
         IMAG_expected_real = [
             [1.0, 0.5, 0.25],
             [0.0, 2.0, 0.75],
-            [0.0, 0.0, 3.0 ],
+            [0.0, 0.0, 3.0],
         ]
         IMAG_expected_imag = [
             [1.1, 0.51, 0.251],
-            [0.0, 2.1,  0.751],
-            [0.0, 0.0,  3.1 ],
+            [0.0, 2.1, 0.751],
+            [0.0, 0.0, 3.1],
         ]
         IMAG_expected = array(IMAG_expected_real) + array(IMAG_expected_imag)*1j
         self.assertTrue(array_equal(IMAG_expected, IMAG_actual))
@@ -82,12 +82,12 @@ class TestDMIG(unittest.TestCase):
         IMAGS_expected_real = [
             [1.0, 0.5, 0.25],
             [0.5, 2.0, 0.75],
-            [0.25, 0.75, 3.0 ],
+            [0.25, 0.75, 3.0],
         ]
         IMAGS_expected_imag = [
             [1.1, 0.51, 0.251],
             [0.51, 2.1, 0.751],
-            [0.251, 0.751, 3.1  ],
+            [0.251, 0.751, 3.1],
         ]
         IMAGS_expected = array(IMAGS_expected_real) + array(IMAGS_expected_imag)*1j
         msg  = '\n%s_actual\n%s\n\n----' % ('IMAGS', IMAGS_actual)

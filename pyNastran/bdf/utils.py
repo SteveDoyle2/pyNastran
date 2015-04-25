@@ -24,7 +24,7 @@ _REMOVED_LINES = [
     '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
     '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
     '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
-    '$PROPERTIES_MASS', '$MASSES'
+    '$PROPERTIES_MASS', '$MASSES',
 ]
 
 def _clean_comment(comment, end=-1):

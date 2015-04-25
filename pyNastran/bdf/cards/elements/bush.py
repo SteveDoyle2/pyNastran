@@ -175,7 +175,7 @@ class CBUSH(BushElement):
         else:
             x = self.x
         list_fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
-                  [self.Cid(), self.s, self.ocid] + self.si)
+                       [self.Cid(), self.s, self.ocid] + self.si)
         return list_fields
 
     def repr_fields(self):

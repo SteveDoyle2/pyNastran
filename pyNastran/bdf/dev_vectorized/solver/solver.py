@@ -725,7 +725,7 @@ class Solver(F06, OP2):
                     #print("n%s = %s" % (elementType.type, n))
                     if n:
                         elementType.displacement_stress(model, self.positions, q, self.nidComponentToID,
-                            ispring, o1, e1, f1)
+                                                        ispring, o1, e1, f1)
                         eids = elementType.element_id
                         self.log.info("eids = %s" % eids)
                     ispring += n
@@ -843,7 +843,7 @@ class Solver(F06, OP2):
                 self.log.info("nctria3 = %s" % nctria3s)
                 stress = zeros((nctria3s+ncquad4s, 3), 'float64')
                 strain = zeros((nctria3s+ncquad4s, 3), 'float64')
-                force  = zeros((nctria3s+ncquad4s, 3), 'float64')
+                force = zeros((nctria3s+ncquad4s, 3), 'float64')
 
             i0 = i
             if nctria3s:
@@ -880,17 +880,17 @@ class Solver(F06, OP2):
         self.log.info('finished SOL 101')
 
     def _op2_header(self, f, packing=True):
-        data = [4,3,4,
-         1,28,12,
-         4,7,4,   # 7
-         'NASTRAN FORT TAPE ID CODE - ',   # 28 = 7*4
-         4,2,4,   # 7
-         4,-1,4,
-         4,0,4,
-
-         4,2,4,
-         4,0,4,
-         4,2,4]
+        data = [
+            4, 3, 4,
+            1, 28, 12,
+            4, 7, 4,   # 7
+            'NASTRAN FORT TAPE ID CODE - ',   # 28 = 7*4
+            4, 2, 4,   # 7
+            4, -1, 4,
+            4, 0, 4,
+            4, 2, 4,
+            4, 0, 4,
+            4, 2, 4]
         if packing:
             f.write(pack('9i28s18i', *data))
         if not packing:
@@ -933,12 +933,13 @@ class Solver(F06, OP2):
         format_code = 1  # ???
         s_code = 1
 
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
-                    'element_name': elementType, 'format_code':format_code,
-                    's_code': s_code,
-                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+        data_code = {
+            'log': self.log, 'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
+            'element_name': elementType, 'format_code':format_code,
+            's_code': s_code,
+            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CBEAM':
                 stress = RealBeamStress(data_code, is_sort1, isubcase, dt=False)
@@ -956,10 +957,10 @@ class Solver(F06, OP2):
             n1, n2 = element.nodeIDs()
             self.log.info(n1, n2)
             #      (eid, grid, sd,  sxc,   sxd, sxe, sxf,  smax, smin, mst, msc) = out
-            line = [eid, n1,   0.0, axiali, 0., 0.0,  0.0, 0.0, 0.0,  0.0,  0.0]
+            line = [eid, n1, 0.0, axiali, 0., 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             data.append(line)
 
-            line = [eid, n2,   1.0, axiali, 0., 0.0,  0.0, 0.0, 0.0,  0.0,  0.0]
+            line = [eid, n2, 1.0, axiali, 0., 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             data.append(line)
         stress.add_f06_data(data, dt)
 
@@ -984,12 +985,13 @@ class Solver(F06, OP2):
         format_code = 1  # ???
         s_code = None
 
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
-                    'element_name': elementType, 'format_code':format_code,
-                    #'s_code': s_code,
-                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+        data_code = {
+            'log': self.log, 'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
+            'element_name': elementType, 'format_code':format_code,
+            #'s_code': s_code,
+            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
 
         if elementType == 'CBEAM':
             forces = RealCBeamForce(data_code, is_sort1, isubcase, dt=False)
@@ -1003,13 +1005,13 @@ class Solver(F06, OP2):
             n1, n2 = element.nodeIDs()
             self.log.info('***(*', n1, n2)
             #      [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-            line = [eid, n1, 0.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            line = [eid, n1, 0.0, 0., 0., 0., 0., 0., 0., 0.0]
             data.append(line)
-            line = [eid, n1, 1.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            line = [eid, n1, 1.0, 0., 0., 0., 0., 0., 0., 0.0]
             data.append(line)
-            line = [eid, n2, 0.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            line = [eid, n2, 0.0, 0., 0., 0., 0., 0., 0., 0.0]
             data.append(line)
-            line = [eid, n2, 1.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
+            line = [eid, n2, 1.0, 0., 0., 0., 0., 0., 0., 0.0]
             #data.append(line)
         self.log.info(data)
         forces.add_f06_data(data, dt)
@@ -1028,12 +1030,13 @@ class Solver(F06, OP2):
         format_code = 1  # ???
         s_code = None
 
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
-                    'element_name': elementType, 'format_code':format_code,
-                    #'s_code': s_code,
-                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+        data_code = {
+            'log': self.log, 'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
+            'element_name': elementType, 'format_code':format_code,
+            #'s_code': s_code,
+            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         return data_code
 
     def _store_cshear_oef(self, model, eids, force, case, elementType):
@@ -1087,12 +1090,13 @@ class Solver(F06, OP2):
         format_code = 1  # ???
         s_code = None
 
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
-                    'element_name': elementType, 'format_code':format_code,
-                    's_code': s_code,
-                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+        data_code = {
+            'log': self.log, 'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
+            'element_name': elementType, 'format_code':format_code,
+            's_code': s_code,
+            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
