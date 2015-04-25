@@ -44,10 +44,10 @@ class BSURF(BaseCard):
             #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
             #: Number (float)
-            n = card.nfields
+            nfields = card.nfields
             i = 2
             eid_data = []
-            while i < n:
+            while i < nfields:
                 d = integer_string_or_blank(card, i, 'field_%s' % i)
                 if d is not None:
                     eid_data.append(d)
@@ -196,10 +196,10 @@ class BCTSET(BaseCard):
             #: MAXDi Maximum search distance for contact. (Real) (Sol 101 only)
             self.max_distances = []
 
-            n = card.nfields
+            nfields = card.nfields
             i = 2
             j = 1
-            while i < n:
+            while i < nfields:
                 self.sids.append(integer(card, i, 'sid%s' % j))
                 self.tids.append(integer(card, i + 1, 'tid%s' % j))
                 self.frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))

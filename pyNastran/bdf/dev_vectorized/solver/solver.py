@@ -1945,9 +1945,9 @@ class Solver(F06, OP2):
         self.log.info('assemble forces')
         Fg = zeros(ndofs, 'float64')
         #print(model.loads)
-        (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
-        self.log.info("loadID = %s" % loadID)
-        loads = model.loadcase.resolve(int(loadID))
+        (load_id, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
+        self.log.info("load_id = %s" % load_id)
+        loads = model.loadcase.resolve(int(load_id))
 
         for load in loads:
             self.log.info(load)

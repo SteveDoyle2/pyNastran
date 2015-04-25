@@ -55,7 +55,7 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
@@ -217,7 +217,7 @@ class TestSolids(unittest.TestCase):
             ['GRID', 18, 0, 0., 1., 2., 0],
 
             # Solids
-            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16,  17, 18],
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes

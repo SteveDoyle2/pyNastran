@@ -51,7 +51,7 @@ class PCOMP(Property):
             property_id = array(property_id, dtype='int32')
         elif isinstance(property_id, int):
             property_id = array([property_id], dtype='int32')
-        #massPerArea = self.nsm + self.Rho() * self.t
+        #mass_per_area = self.nsm + self.Rho() * self.t
 
         n = len(property_id)
         self.model.log.debug('nthickness = %s' % n)
@@ -86,7 +86,7 @@ class PCOMP(Property):
     def get_mass_per_area_by_property_id(self, property_id=None):
         if property_id is None:
             property_id = self.property_id
-        #massPerArea = self.nsm + self.Rho() * self.t
+        #mass_per_area = self.nsm + self.Rho() * self.t
 
         n = len(property_id)
         mass_per_area = zeros(n, dtype='float64')
@@ -770,21 +770,21 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         nplies = len(self.plies)
         iply = self._adjust_ply_id(iply)
         if iply == 'all':  # get all layers
-            #massPerAreaTotal = m/A = sum(rho*t) + nsm
-            #massPerAreaTotal = mpa-nsm = sum(rho*t)
+            #mass_per_area_total = m/A = sum(rho*t) + nsm
+            #mass_per_area_total = mpa-nsm = sum(rho*t)
             #(m/A)i = rho*t + nsmi
             # where nsmi has two methods
-            massPerArea = 0.
+            mass_per_area = 0.
             nplies = len(self.plies)
             for iply in range(nplies):
                 #rho = self.get_density(iply)
                 rho = rhos[iply]
                 t = self.plies[iply][1]
-                massPerArea += rho * t
+                mass_per_area += rho * t
 
             if self.is_symmetrical():
-                return 2. * massPerArea + self.nsm
-            return massPerArea + self.nsm
+                return 2. * mass_per_area + self.nsm
+            return mass_per_area + self.nsm
         else:
             assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
             #rho = self.get_density(iply)
@@ -795,26 +795,26 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 # we divide by nplies b/c it's nsm per area and
                 # we're working on a per ply basis
                 # nsmi = nsmi/n  # smear based on nplies
-                massPerArea = rho * t + self.nsm / self.get_nplies()
+                mass_per_area = rho * t + self.nsm / self.get_nplies()
             elif method == 'rho*t':
                 # assume you smear the nsm mass based on rho*t distribution
                 #nsmi = rho*t / sum(rho*t) * nsm
                 #rho*t + nsmi = rho*t + rho*t/(sum(rho*t) + nsm - nsm) * nsm
-                #rho*t + nsmi = rho*t + rho*t/(massPerAreaTotal - nsm) * nsm
-                #             = rho*t * (1 + nsm/(massPerAreaTotal-nsm))
-                massPerAreaTotal = self.get_mass_per_area_rho(rhos, iply='all', method='nplies')
-                massPerArea = rho * t * (1.0 + self.nsm / (massPerAreaTotal - self.nsm))
+                #rho*t + nsmi = rho*t + rho*t/(mass_per_area_total - nsm) * nsm
+                #             = rho*t * (1 + nsm/(mass_per_area_total-nsm))
+                mass_per_area_total = self.get_mass_per_area_rho(rhos, iply='all', method='nplies')
+                mass_per_area = rho * t * (1.0 + self.nsm / (mass_per_area_total - self.nsm))
             elif method == 't':
                 # assume you smear the nsm mass based on t distribution
                 #nsmi = t / sum(t) * nsm
                 #rho*t + nsmi = rho*t + t/sum(t) * nsm
-                #rho*t + nsmi = rho*t + t/thicknessTotal * nsm
-                #             = t * (rho + nsm/thicknessTotal)
-                thicknessTotal = self.get_thickness()
-                massPerArea = t * (rho + self.nsm / thicknessTotal)
+                #rho*t + nsmi = rho*t + t/thickness_total * nsm
+                #             = t * (rho + nsm/thickness_total)
+                thickness_total = self.get_thickness()
+                mass_per_area = t * (rho + self.nsm / thickness_total)
             else:
                 raise NotImplementedError('method=%r is not supported' % method)
-            return massPerArea
+            return mass_per_area
 
 
 class PCOMPi(CompositeShellProperty):
@@ -860,27 +860,27 @@ class PCOMPi(CompositeShellProperty):
             assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
 
             # -8 for the first 8 fields (1st line)
-            nPlyFields = card.nfields - 9
+            nply_fields = card.nfields - 9
 
             # counting plies
-            nMajor = nPlyFields // 4
-            nLeftover = nPlyFields % 4
-            if nLeftover:
-                nMajor += 1
-            nplies = nMajor
+            nmajor = nply_fields // 4
+            nleftover = nply_fields % 4
+            if nleftover:
+                nmajor += 1
+            nplies = nmajor
             #print("nplies = ",nplies)
 
             plies = []
-            midLast = None
-            tLast = None
+            mid_last = None
+            thick_last = None
             ply = None
             iply = 1
 
             # supports single ply per line
             for i in range(9, 9 + nplies * 4, 4):
                 actual = card.fields(i, i + 4)
-                mid = integer_or_blank(card, i, 'mid', midLast)
-                t = double_or_blank(card, i + 1, 't', tLast)
+                mid = integer_or_blank(card, i, 'mid', mid_last)
+                t = double_or_blank(card, i + 1, 't', thick_last)
                 theta = double_or_blank(card, i + 2, 'theta', 0.0)
                 sout = string_or_blank(card, i + 3, 'sout', 'NO')
 
@@ -896,8 +896,8 @@ class PCOMPi(CompositeShellProperty):
                     #print('ply =', ply)
                     plies.append(ply)
                     iply += 1
-                midLast = mid
-                tLast = t
+                mid_last = mid
+                thick_last = t
             #print "nplies = ",nplies
 
             #: list of plies

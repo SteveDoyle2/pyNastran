@@ -637,8 +637,8 @@ class SPCADD(ConstraintADD):
 
     def raw_fields(self):
         fields = ['SPCADD', self.conid]  # +self.sets
-        for setID in self.sets:
-            fields.append(setID)
+        for set_id in self.sets:
+            fields.append(set_id)
         return fields
         #return self._reprSpcMpcAdd(fields)
 
@@ -675,8 +675,8 @@ class MPCADD(ConstraintADD):
 
     def raw_fields(self):
         fields = ['MPCADD', self.conid]  # +self.sets
-        for setID in self.sets:
-            fields.append(setID)
+        for set_id in self.sets:
+            fields.append(set_id)
         return fields
         #return self._reprSpcMpcAdd(fields)
 

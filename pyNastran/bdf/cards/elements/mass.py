@@ -734,7 +734,7 @@ class CONM2(PointMassElement):
         .. warning:: doesnt handle offsets or coordinate systems
         """
         I = self.I
-        A = [[ I[0], -I[1], -I[3]],
+        A = [[I[0], -I[1], -I[3]],
              [-I[1], I[2], -I[4]],
              [-I[3], -I[4], I[5]]]
         if self.Cid() in [0, -1]:

@@ -21,7 +21,8 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def C(self):
         """torsional constant"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.C()
 
     def Area(self):
@@ -31,43 +32,50 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def E(self):
         """returns the Young's Modulus, :math:`E`"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.E()
 
     def G(self):
         """returns the Shear Modulus, :math:`G`"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.G()
 
     def J(self):
         """returns the Polar Moment of Inertia, :math:`J`"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.J()
 
     def I11(self):
         """returns the Moment of Inertia, :math:`I_{11}`"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.I11()
 
     def I22(self):
         """returns the Moment of Inertia, :math:`I_{22}`"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.I22()
 
     def I12(self):
         """returns the Moment of Inertia, :math:`I_{12}`"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.I12()
 
     def Nu(self):
         """Get Poisson's Ratio, :math:`\nu`"""
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.nu
 
     def Rho(self):
@@ -75,7 +83,8 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         #print(str(self.pid), type(self.pid))
         #raise NotImplementedError('implement self.Rho() for %s' % self.type)
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.rho
 
     def Nsm(self):
@@ -87,7 +96,8 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         Get the mass per unit length, :math:`\frac{m}{L}`
         """
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.MassPerLength()
 
     def Mass(self):

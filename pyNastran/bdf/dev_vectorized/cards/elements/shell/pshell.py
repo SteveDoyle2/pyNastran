@@ -185,7 +185,7 @@ class PSHELL(Property):
         :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
-        #massPerArea = self.nsm + self.Rho() * self.t
+        #mass_per_area = self.nsm + self.Rho() * self.t
         if property_id is None:
             t = self.thickness
             nsm = self.nsm

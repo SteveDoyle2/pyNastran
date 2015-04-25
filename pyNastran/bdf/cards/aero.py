@@ -1763,8 +1763,8 @@ class FLFACT(BaseCard):
                 fmid = double(card, 6, 'fmid')
                 assert len(card) == 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
                 i = linspace(0, nf, nf, endpoint=False)
-                self.factors = ((f1*(fnf-fmid)*(nf-1) + fnf*(fmid-f1)*i)/
-                                   ((fnf-fmid)*(nf-1) +     (fmid-f1)*i))
+                self.factors = ((f1*(fnf - fmid) * (nf - 1) + fnf * (fmid - f1) * i) /
+                                   ((fnf - fmid) * (nf - 1) +       (fmid - f1) * i))
             else:
                 self.factors = fields(double, card, 'factors', i=2, j=len(card))
 

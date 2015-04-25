@@ -639,8 +639,8 @@ class Subcase(object):
         """
         print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
-            loadID = self.params['LOAD'][0]
-            loadObj = model.loads[loadID]
+            load_id = self.params['LOAD'][0]
+            loadObj = model.loads[load_id]
             loadObj.cross_reference(model)
         if 'SUPORT' in self.params:
             pass

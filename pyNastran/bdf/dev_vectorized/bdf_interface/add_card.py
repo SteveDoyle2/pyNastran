@@ -8,7 +8,7 @@ class AddCard(object):
             if not param._is_same_card(self.params[key]):
                 #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
                 self.log.warning('key=%s param=%s oldPARAM=%s' %
-                                (key, param, self.params[key]))
+                                 (key, param, self.params[key]))
                 self.params[key] = param
         else:
             self.params[key] = param

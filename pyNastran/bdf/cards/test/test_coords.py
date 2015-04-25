@@ -92,11 +92,11 @@ class TestCoords(unittest.TestCase):
             [5, 1, 1., 1., 0.],
         ]
         grids_expected = [
-            [1, 1,  0., 0., -1.],
-            [2, 1,  0., 1.,  0.],
-            [3, 1, -1., 0.,  0.],
+            [1, 1, 0., 0., -1.],
+            [2, 1, 0., 1., 0.],
+            [3, 1, -1., 0., 0.],
             [4, 1, -1., 1., -1.],
-            [5, 1, -1., 1.,  0.],
+            [5, 1, -1., 1., 0.],
         ]
 
         coords = [
@@ -116,14 +116,14 @@ class TestCoords(unittest.TestCase):
          ]
 
         coords = [
-                    # cid, rid, origin,     zaxis        xaxis
-                    [1, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=1
-                    [2, 1, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=2
-                   #[2, 1, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=2,equiv
+            # cid, rid, origin,     zaxis        xaxis
+            [1, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=1
+            [2, 1, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=2
+            #[2, 1, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=2,equiv
 
-                    [3, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
-                   #[3, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
-                  ]
+            [3, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
+            #[3, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
+        ]
         self.getNodes(grids, grids_expected, coords)
 
     def test_cord1r_01(self):
@@ -278,25 +278,31 @@ class TestCoords(unittest.TestCase):
         """
         model = BDF(debug=False)
         cards = [
-            [#'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
-            'CORD2R*               10               0             10.              5.',
-            '*                     3.   10.3420201433   4.53015368961   3.81379768136*       ',
-            '*          10.7198463104   5.68767171433   3.09449287122',],
-            [#'$ Femap with NX Nastran Coordinate System 11 : cylindrical defined in rectangular',
-            'CORD2C*               11               0              7.              3.',
-            '*                     9.   7.64278760969   2.73799736977   9.71984631039*       ',
-            '*          7.75440650673   3.37968226211   8.46454486422',],
-            [#'$ Femap with NX Nastran Coordinate System 12 : spherical defined in rectangular',
-            'CORD2S*               12               0             12.              8.',
-            '*                     5.   12.6427876097   7.86697777844   5.75440650673*       ',
-            '*          12.6634139482   8.58906867688   4.53861076379',],
+            [
+                #'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
+                'CORD2R*               10               0             10.              5.',
+                '*                     3.   10.3420201433   4.53015368961   3.81379768136*       ',
+                '*          10.7198463104   5.68767171433   3.09449287122',],
+            [
+                #'$ Femap with NX Nastran Coordinate System 11 : cylindrical defined in rectangular',
+                'CORD2C*               11               0              7.              3.',
+                '*                     9.   7.64278760969   2.73799736977   9.71984631039*       ',
+                '*          7.75440650673   3.37968226211   8.46454486422',],
+            [
+                #'$ Femap with NX Nastran Coordinate System 12 : spherical defined in rectangular',
+                'CORD2S*               12               0             12.              8.',
+                '*                     5.   12.6427876097   7.86697777844   5.75440650673*       ',
+                '*          12.6634139482   8.58906867688   4.53861076379',],
 
-            ['GRID*                 10              10   42.9066011565   34.2422137135',
-            '*          28.6442730262               0',],
-            ['GRID*                 11              11   48.8014631871   78.8394787869',
-            '*          34.6037164304               0',],
-            ['GRID*                 12              12   58.0775343829   44.7276544324',
-            '*          75.7955331161               0',],
+            [
+                'GRID*                 10              10   42.9066011565   34.2422137135',
+                '*          28.6442730262               0',],
+            [
+                'GRID*                 11              11   48.8014631871   78.8394787869',
+                '*          34.6037164304               0',],
+            [
+                'GRID*                 12              12   58.0775343829   44.7276544324',
+                '*          75.7955331161               0',],
         ]
         for lines in cards:
             card = model.process_card(lines)
@@ -313,34 +319,41 @@ class TestCoords(unittest.TestCase):
         """
         model = BDF(debug=False)
         cards = [
-            ['CORD2C*                1               0              0.              0.',
-            '*                     0.              0.              0.              1.*       ',
-            '*                     1.              0.              1.',],
-            [#'$ Femap with NX Nastran Coordinate System 20 : rectangular defined in cylindrical',
-            'CORD2R*               20               1              7.             20.',
-            '*                    -6.   7.07106781187   28.1301023542             -6.*       ',
-            '*          7.70710678119             20.  -5.29289321881',],
-            [#'$ Femap with NX Nastran Coordinate System 21 : cylindrical defined in cylindrical',
-            'CORD2C*               21               1             15.            -30.',
-            '*                    12.   14.6565766735  -30.3177805524   12.9355733712*       ',
-            '*          14.6234241583  -26.4257323272   11.9304419665',],
-            [#'$ Femap with NX Nastran Coordinate System 22 : spherical defined in cylindrical',
-            'CORD2S*               22               1              5.            -75.',
-            '*                    20.   5.66032384035  -82.9319986389   19.8502545865*       ',
-            '*          4.88876051026  -73.8006653677   19.0116094889',],
-            ['GRID*                 20              20   64.2559135157  -14.9400459772',
-            '*          27.3271005317               0',],
-            ['GRID*                 21              21   52.8328862418  -28.8729017195',
-            '*           34.615939507               0',],
-            ['GRID*                 22              22   61.1042111232   158.773483595',
-            '*           -167.4951724               0',],
+            [
+                'CORD2C*                1               0              0.              0.',
+                '*                     0.              0.              0.              1.*       ',
+                '*                     1.              0.              1.',],
+            [
+                #'$ Femap with NX Nastran Coordinate System 20 : rectangular defined in cylindrical',
+                'CORD2R*               20               1              7.             20.',
+                '*                    -6.   7.07106781187   28.1301023542             -6.*       ',
+                '*          7.70710678119             20.  -5.29289321881',],
+            [
+                #'$ Femap with NX Nastran Coordinate System 21 : cylindrical defined in cylindrical',
+                'CORD2C*               21               1             15.            -30.',
+                '*                    12.   14.6565766735  -30.3177805524   12.9355733712*       ',
+                '*          14.6234241583  -26.4257323272   11.9304419665',],
+            [
+                #'$ Femap with NX Nastran Coordinate System 22 : spherical defined in cylindrical',
+                'CORD2S*               22               1              5.            -75.',
+                '*                    20.   5.66032384035  -82.9319986389   19.8502545865*       ',
+                '*          4.88876051026  -73.8006653677   19.0116094889',],
+            [
+                'GRID*                 20              20   64.2559135157  -14.9400459772',
+                '*          27.3271005317               0',],
+            [
+                'GRID*                 21              21   52.8328862418  -28.8729017195',
+                '*           34.615939507               0',],
+            [
+                'GRID*                 22              22   61.1042111232   158.773483595',
+                '*           -167.4951724               0',],
         ]
         for lines in cards:
             card = model.process_card(lines)
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
-            a = array([30.,40.,50.])
+            a = array([30., 40., 50.])
             b = model.Node(nid).Position()
             self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 

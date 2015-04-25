@@ -34,7 +34,7 @@ class TestNodes(unittest.TestCase):
             ref = 'ERROR\n'
             if card != msg:
                 scard = card.split('\n')
-                smsg  = msg.split('\n')
+                smsg = msg.split('\n')
                 i = 0
                 print(scard)
                 print(smsg)

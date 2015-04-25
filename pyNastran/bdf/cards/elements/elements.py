@@ -130,7 +130,8 @@ class CGAP(Element):
         if xref:
             assert self.pid.type in ['PGAP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             if self.cid is not None and self.cid != 0:
-                assert self.cid.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C', 'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid.type)
+                assert self.cid.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C',
+                                         'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid.type)
 
     def cross_reference(self, model):
         msg = ' which is required by CGAP eid=%s' % self.eid

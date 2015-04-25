@@ -52,21 +52,23 @@ def wipe_empty_fields(card):
     Removes an trailing Nones from the card.
     Also converts empty strings to None.
 
-    :param card:        the fields on the card as a list
-    :returns shortCard: the card with no trailing blank fields
+    :param card:         the fields on the card as a list
+    :returns short_card: the card with no trailing blank fields
+
+    .. todo:: run this in reverse to make it faster
     """
-    cardB = []
+    short_card = []
     for field in card:
         if isinstance(field, string_types):
             field = field.strip()
             if field == '':
                 field = None
-        cardB.append(field)
+        short_card.append(field)
 
     i = 0
-    iMax = 0
+    imax = 0
     while i < len(card):
-        if cardB[i] is not None:
-            iMax = i
+        if short_card[i] is not None:
+            imax = i
         i += 1
-    return cardB[:iMax + 1]
+    return short_card[:imax + 1]

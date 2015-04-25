@@ -203,10 +203,10 @@ class NastranIO(NastranIO_xref):
         if 0:
             for (eid, element) in sorted(iteritems(model.elements)):
                 if (isinstance(element, LineElement) or
-                      isinstance(element, SpringElement) or
-                      element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                    isinstance(element, SpringElement) or
+                    element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                                     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
                         nodeIDs = element.nodeIDs()
                         if None in nodeIDs:
@@ -697,8 +697,8 @@ class NastranIO(NastranIO_xref):
                 elif (isinstance(element, LineElement) or
                       isinstance(element, SpringElement) or
                       element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                          'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                          'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
                     # TODO: verify
                     # CBUSH, CBUSH1D, CFAST, CROD, CELAS1, CELAS3
@@ -1043,7 +1043,7 @@ class NastranIO(NastranIO_xref):
         if self.is_nodal: # nodal results don't work with centroidal ones
             displacement_like = [
                 [model.displacements, 'Displacement'],
-                [model.velocities,    'Velocity'],
+                [model.velocities, 'Velocity'],
                 [model.accelerations, 'Acceleration'],
                 [model.spcForces, 'SPC Forces'],
                 [model.mpcForces, 'MPC Forces'],
@@ -1407,8 +1407,10 @@ class NastranIO(NastranIO_xref):
 
                 o1[eid2] = max(case.smax[eid])
                 o3[eid2] = min(case.smin[eid])
-                ovm[eid2] = max(    max(case.smax[eid]),
-                                abs(min(case.smin[eid])))
+                ovm[eid2] = max(
+                    max(case.smax[eid]),
+                    abs(min(case.smin[eid]))
+                )
 
         if subcaseID in model.beamStress:
             case = model.beamStress[subcaseID]
@@ -1418,15 +1420,19 @@ class NastranIO(NastranIO_xref):
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
 
-                oxx[eid2] = max(max(case.sxc[eid]),
-                                max(case.sxd[eid]),
-                                max(case.sxe[eid]),
-                                max(case.sxf[eid]))
+                oxx[eid2] = max(
+                    max(case.sxc[eid]),
+                    max(case.sxd[eid]),
+                    max(case.sxe[eid]),
+                    max(case.sxf[eid])
+                )
 
                 o1[eid2] = max(case.smax[eid])
                 o3[eid2] = min(case.smin[eid])
-                ovm[eid2] = max(max(case.smax[eid]),
-                                abs(min(case.smin[eid])))
+                ovm[eid2] = max(
+                    max(case.smax[eid]),
+                    abs(min(case.smin[eid]))
+                )
 
         if subcaseID in model.plateStress:
             case = model.plateStress[subcaseID]

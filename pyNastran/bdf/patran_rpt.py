@@ -30,7 +30,7 @@ def rpt_read():
         data = []
 
         for n in range(nheader):
-            data += lines[i+n].strip().split()
+            data += lines[i + n].strip().split()
         if "MSC.Patran" in data:
             res += 1
             i += 11

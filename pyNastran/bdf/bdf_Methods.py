@@ -243,9 +243,9 @@ class BDFMethods(BDFMethodsDeprecated):
         pool = mp.Pool(num_cpus)
         result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in elements
                            if element.type not in ['CBUSH', 'CBUSH1D',
-                               'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                            ]])
+                                                   'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                                                   ]])
         result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
 
         mass = zeros((nelements), 'float64')
@@ -411,14 +411,14 @@ class BDFMethods(BDFMethodsDeprecated):
         else:
             p = array(p0)
 
-        loadCase = self.loads[loadcase_id]
-        #for (key, loadCase) in iteritems(self.loads):
+        load_case = self.loads[loadcase_id]
+        #for (key, load_case) in iteritems(self.loads):
             #if key != loadcase_id:
                 #continue
 
         scale_factors2 = []
         loads2 = []
-        for load in loadCase:
+        for load in load_case:
             if isinstance(load, LOAD):
                 scale_factors, loads = load.getReducedLoads()
                 scale_factors2 += scale_factors

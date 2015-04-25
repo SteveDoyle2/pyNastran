@@ -49,8 +49,8 @@ class DLOAD(object):
         assert nLoads % 2 == 0
         for i in range(nLoads // 2):
             n = 2 * i + 3
-            self.scale_factors.append(double(card, n, 'scaleFactor'))
-            self.load_ids.append(integer(card, n + 1, 'loadID'))
+            self.scale_factors.append(double(card, n, 'scale_factor'))
+            self.load_ids.append(integer(card, n + 1, 'load_id'))
 
     def build(self):
         pass
@@ -67,6 +67,6 @@ class DLOAD(object):
 
     def write_bdf(self, f, size=8, lids=None):
         list_fields = ['DLOAD', self.load_id, self.scale]
-        for (scaleFactor, lid) in zip(self.scale_factors, self.load_ids):
-            list_fields += [scaleFactor, lid]
+        for (scale_factor, lid) in zip(self.scale_factors, self.load_ids):
+            list_fields += [scale_factor, lid]
         f.write(print_card(list_fields, size))

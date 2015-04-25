@@ -60,7 +60,7 @@ Cross-referencing allows you to easily jump across cards and also helps
 with calculating things like position, area, and mass.  The BDF is designed
 around the idea of cross-referencing, so it's recommended that you use it.
 """
-# pylint: disable=E1101,C0103,R0902,R0904,R0914,W0611
+# pylint: disable=E1101,C0103,R0902,R0904,R0914
 
 from __future__ import print_function
 from six import iteritems, itervalues
@@ -113,9 +113,6 @@ class XrefMesh(object):
         """
         if xref:
             self.log.debug("Cross Referencing...")
-            #for key,e in iteritems(self.elements):
-                #print(e)
-
             self._cross_reference_nodes()
             self._cross_reference_coordinates()
 

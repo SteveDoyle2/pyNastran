@@ -6,9 +6,8 @@ from six.moves import zip, range
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
 from pyNastran.bdf.field_writer_8 import print_card_8, print_int_card_blocks
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    components, components_or_blank, fields,
-    integer_or_string, string, string_or_blank,
-    integer_string_or_blank)
+    components, components_or_blank, fields, integer_or_string, string,
+    string_or_blank, integer_string_or_blank)
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""

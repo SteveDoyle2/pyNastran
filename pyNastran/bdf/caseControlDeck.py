@@ -675,32 +675,33 @@ def verify_card2(key, value, options, line):
         pass
 
     # weird cards
-    elif key in ['SUBTITLE', 'TITLE',
-                 'A2GG', 'M2GG', 'K2GG',
-                 'K2PP', 'M2PP',
-                 'K42GG',
+    elif key in [
+        'SUBTITLE', 'TITLE',
+        'A2GG', 'M2GG', 'K2GG',
+        'K2PP', 'M2PP',
+        'K42GG',
 
-                 'XMIN', 'XMAX', 'XTITLE', 'XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
-                 'YMIN', 'YMAX', 'YTITLE', 'YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
-                 'XTMIN', 'XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
-                 'YTMIN', 'YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
-                 'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
-                 'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
+        'XMIN', 'XMAX', 'XTITLE', 'XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
+        'YMIN', 'YMAX', 'YTITLE', 'YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
+        'XTMIN', 'XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
+        'YTMIN', 'YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
+        'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
+        'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
 
-                 'RIGHT TICS', 'UPPER TICS',
-                 'TRIGHT TICS',
-                 'BRIGHT TICS',
+        'RIGHT TICS', 'UPPER TICS',
+        'TRIGHT TICS',
+        'BRIGHT TICS',
 
-                 'PLOTTER', 'XYPLOT',
+        'PLOTTER', 'XYPLOT',
 
-                 'PTITLE',
-                 'HOUTPUT', 'PLOTID', '', '', '', '', '',
-                 'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
-                 'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
-                 'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
-                 'SUPER', 'MAXI DEFO', 'P2G',
-                 'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
-                 'DSYM', '', '', '']:
+        'PTITLE',
+        'HOUTPUT', 'PLOTID', '', '', '', '', '',
+        'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
+        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
+        'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
+        'SUPER', 'MAXI DEFO', 'P2G',
+        'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
+        'DSYM', '', '', '']:
         pass
     elif key == 'ANALYSIS':
         assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',

@@ -105,8 +105,8 @@ class StructuralModel(Model):
         and writes out a properly formatted card
         """
         cid = 0
-        scaleFactor = 1.
-        card = ['FORCE', loadCase, nid, cid, scaleFactor, Fx, Fy, Fz]
+        scale_factor = 1.
+        card = ['FORCE', loadCase, nid, cid, scale_factor, Fx, Fy, Fz]
         #comment += " card=%s" % (card)
         #out = printCard(card)[:-1]+  '   $ %s\n' % comment
         out = print_card(card, size=16)

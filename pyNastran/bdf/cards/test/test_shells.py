@@ -71,12 +71,12 @@ class TestShells(unittest.TestCase):
             ['ctria3', eid + 1, pid + 1, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
             [
                 'pcomp', pid + 1, z0, nsm, sb, ft, Tref, ge, lam,
-                mid, t,     theta0, sout,
+                mid, t, theta0, sout,
                 mid, 2 * t, theta1, sout,
                 mid, 3 * t, theta2, sout,
                 mid, 4 * t, theta3, sout,
             ],
-            ['mat1',mid, E, G, nu, rho],
+            ['mat1', mid, E, G, nu, rho],
         ]
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
@@ -111,7 +111,7 @@ class TestShells(unittest.TestCase):
         self.assertEqual(pshell.Thickness(), t)
         self.assertEqual(pshell.Rho(), rho)
         self.assertEqual(pshell.z1, -t / 2.)
-        self.assertEqual(pshell.z2,  t / 2.)
+        self.assertEqual(pshell.z2, t / 2.)
 
         # ctria3 / pcomp
         ctria3 = model.Element(eid + 1)
@@ -311,7 +311,7 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.Mid(3)
 
-        self.assertEqual(p.Mids(), [1,2,3])
+        self.assertEqual(p.Mids(), [1, 2, 3])
 
         self.assertEqual(p.sout(0), 'YES')
         self.assertEqual(p.sout(1), 'YES')

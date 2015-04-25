@@ -798,31 +798,31 @@ def interpret_value(value_raw, card=''):
         # word
         return value_in
 
-    v0 = value_in[0]
-    if '-' == v0 or '+' == v0:
+    val0 = value_in[0]
+    if '-' == val0 or '+' == val0:
         # truncate the sign for now
         value_left = value_in[1:]
     else:
         # inplied positive value
-        v0 = '+'
+        val0 = '+'
         value_left = value_in
 
-    if v0 == '-':
-        vactor = -1.
-    elif v0 == '+' or v0.isdigit():
-        vactor = 1.
+    if val0 == '-':
+        factor = -1.
+    elif val0 == '+' or val0.isdigit():
+        factor = 1.
     else:
         msg = ('the only 2 cases for a float/scientific are +/- for v0...'
-               'valueRaw=%r v0=%r card=%s' % (value_raw, v0, card))
+               'valueRaw=%r v0=%r card=%s' % (value_raw, val0, card))
         raise SyntaxError(msg)
 
     # dont include the 1st character, find the exponent
-    vm = value_in.find('-', 1)
-    vp = value_in.find('+', 1)
-    if vm > 0:
+    val_minus = value_in.find('-', 1)
+    val_plus = value_in.find('+', 1)
+    if val_minus > 0:
         sline = value_left.split('-')
         exp_factor = -1.
-    elif vp > 0:
+    elif val_plus > 0:
         sline = value_left.split('+')
         exp_factor = 1.
     else:
@@ -836,15 +836,15 @@ def interpret_value(value_raw, card=''):
         sline[0] = sline[0][:-1]
 
     try:
-        s0 = vactor * float(sline[0])
-        s1 = exp_factor * int(sline[1])
+        sci0 = factor * float(sline[0])
+        sci1 = exp_factor * int(sline[1])
     except ValueError:
-        msg = "vm=%s vp=%s value_raw=%r sline=%s" % (vm, vp, value_raw, sline)
+        msg = "vm=%s vp=%s value_raw=%r sline=%s" % (val_minus, val_plus, value_raw, sline)
         raise SyntaxError('cannot parse sline[0] into a float and sline[1] '
                           'into an integer\n%s\nYou HAVE mixed '
                           'tabs/spaces/commas!  Fix it!' % msg)
 
-    value = s0 * 10 ** (s1)
+    value = sci0 * 10 ** sci1
     # scientific
     return value
 

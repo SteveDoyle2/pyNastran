@@ -1,4 +1,4 @@
-# pylint: disable=W0212,C0103,W0633,W0611,W0201,C0301,R0915,R0912
+# pylint: disable=W0212,W0633,W0611,W0201,C0301,R0915,R0912
 # coding: utf-8
 """
 Main BDF class.  Defines:

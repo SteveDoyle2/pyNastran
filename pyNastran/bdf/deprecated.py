@@ -366,7 +366,8 @@ class GetMethodsDeprecated(object):
 
     def getElementIDsWithPIDs(self, pids, mode='list'):
         """deprecated"""
-        warnings.warn('deprecated; use get_element_ids_with_pids instead of getElementIDsWithPIDs()',
+        warnings.warn('deprecated; use get_element_ids_with_pids instead of '
+                      'getElementIDsWithPIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_element_ids_with_pids(pids, mode=mode)
 
@@ -382,37 +383,43 @@ class GetMethodsDeprecated(object):
 
     def getNodeIDToElementIDsMap(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_element_ids_with_pids instead of getNodeIDToElementIDsMap()',
+        warnings.warn('deprecated; use get_element_ids_with_pids instead of '
+                      'getNodeIDToElementIDsMap()',
                       DeprecationWarning, stacklevel=2)
         return self.get_node_id_to_element_ids_map()
 
     def getPropertyIDToElementIDsMap(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_property_id_to_element_ids_map instead of getPropertyIDToElementIDsMap()',
+        warnings.warn('deprecated; use get_property_id_to_element_ids_map '
+                      'instead of getPropertyIDToElementIDsMap()',
                       DeprecationWarning, stacklevel=2)
         return self.get_property_id_to_element_ids_map()
 
     def getMaterialIDToPropertyIDsMap(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_material_id_to_property_ids_map instead of getMaterialIDToPropertyIDsMap()',
+        warnings.warn('deprecated; use get_material_id_to_property_ids_map '
+                      'instead of getMaterialIDToPropertyIDsMap()',
                       DeprecationWarning, stacklevel=2)
         return self.get_material_id_to_property_ids_map()
 
     def structuralMaterialIDs(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_structural_material_ids instead of structuralMaterialIDs()',
+        warnings.warn('deprecated; use get_structural_material_ids instead of '
+                      'structuralMaterialIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_structural_material_ids()
 
     def thermalMaterialIDs(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_thermal_material_ids instead of thermalMaterialIDs()',
+        warnings.warn('deprecated; use get_thermal_material_ids instead of '
+                      'thermalMaterialIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_thermal_material_ids()
 
     def materialIDs(self):
         """deprecated"""
-        warnings.warn('deprecated; use get_material_ids instead of materialIDs()',
+        warnings.warn('deprecated; use get_material_ids instead of '
+                      'materialIDs()',
                       DeprecationWarning, stacklevel=2)
         return self.get_material_ids()
 

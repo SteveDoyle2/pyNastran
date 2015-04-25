@@ -281,7 +281,7 @@ class TestBeams(unittest.TestCase):
             for actual, expected in zip(lines_actual, lines_expected):
                 actual = str(actual)
                 expected = str(expected)
-                msg =  msgA + '\nactual   = %r\n' % actual
+                msg = msgA + '\nactual   = %r\n' % actual
                 msg += 'expected = %r' % expected
                 self.assertEqual(actual, expected, msg)
 

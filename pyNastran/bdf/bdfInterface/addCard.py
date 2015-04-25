@@ -32,7 +32,8 @@ class AddMethods(object):
         if key in self.params and not allowOverwrites:
             if not param._is_same_card(self.params[key]):
                 #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                self.log.warning('key=%s param=%s oldPARAM=%s' % (key, param, self.params[key]))
+                self.log.warning('key=%s param=%s oldPARAM=%s'
+                                 % (key, param, self.params[key]))
                 self.params[key] = param
         else:
             self.params[key] = param
@@ -41,7 +42,8 @@ class AddMethods(object):
         key = node.nid
         if key in self.nodes and not allowOverwrites:
             if not node._is_same_card(self.nodes[key]):
-                print('nid=%s\noldNode=\n%snewNode=\n%s' % (key, self.nodes[key], node))
+                print('nid=%s\noldNode=\n%snewNode=\n%s'
+                      % (key, self.nodes[key], node))
                 assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
             else:
                 #print('Node was duplicated...nid=%s; node=\n%s' % (key, node))

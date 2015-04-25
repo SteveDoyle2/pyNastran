@@ -300,16 +300,16 @@ class NastranMatrix(BaseCard):
         msg += 'POLAR defines the type (real/imag or mag/phase) complex) of the matrix.  POLAR=%r.' % self.polar
         raise ValueError(msg)
 
-    def getDType(self, Type):
-        if Type == 1:
+    def getDType(self, type_flag):
+        if type_flag == 1:
             dtype = 'float32'
-        elif Type == 2:
+        elif type_flag == 2:
             dtype = 'float64'
-        elif Type == 3:
+        elif type_flag == 3:
             dtype = 'complex64'
-        elif Type == 4:
+        elif type_flag == 4:
             dtype = 'complex128'
-        elif Type == 0:
+        elif type_flag == 0:
             if self.is_complex():
                 dtype = 'complex128'
             else:
@@ -396,7 +396,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
             rows[GCi] = i
             rows_reversed[i] = GCi
             i += 1
-    #nRows = len(rows2)
+    #nrows = len(rows2)
 
     j = 0
     cols = {}
@@ -406,7 +406,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
             cols[GCj] = j
             cols_reversed[j] = GCj
             j += 1
-    #nCols = len(cols2)
+    #ncols = len(cols2)
 
     #A = ss.lil_matrix((3,3), dtype='d') # double precision
 
@@ -452,16 +452,16 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
         # ,dtype=Format
         #print(rows2)
 
-        #print("nrows=%s ncols=%s" %(nrows, ncols))
+        #print("nrows=%s ncols=%s" % (nrows, ncols))
         if self.ifo in [1, 6]:
             nrows = max(nrows, ncols)
             ncols = nrows
-        #print("nrows=%s ncols=%s" %(nrows, ncols))
+        #print("nrows=%s ncols=%s" % (nrows, ncols))
 
-        dType = self.getDType(self.tin)
-        #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # test
+        dtype = self.getDType(self.tin)
+        #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype) # test
         M = coo_matrix((data, (self.GCi, self.GCj)),
-                       shape=(nrows, ncols), dtype=dType)
+                       shape=(nrows, ncols), dtype=dtype)
         #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
         #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
         #print(M.todense())
@@ -470,30 +470,29 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
         if self.is_complex():
             M = zeros((i, j), dtype='complex128')
             if self.ifo == 6 and apply_symmetry:  # symmetric
-                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[GCi]
-                    j = cols[GCj]
+                for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                    i = rows[gci]
+                    j = cols[gcj]
                     M[i, j] = complex(reali, complexi)
                     M[j, i] = complex(reali, complexi)
             else:
-                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[GCi]
-                    j = cols[GCj]
+                for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                    i = rows[gci]
+                    j = cols[gcj]
                     M[i, j] = complex(reali, complexi)
         else:
             M = zeros((i, j), dtype='float64')
             if self.ifo == 6 and apply_symmetry:  # symmetric
-                for (GCj, GCi, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[GCi]
-                    j = cols[GCj]
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[gci]
+                    j = cols[gcj]
                     M[i, j] = reali
                     M[j, i] = reali
             else:
-                for (GCj, GCi, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[GCi]
-                    j = cols[GCj]
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[gci]
+                    j = cols[gcj]
                     M[i, j] = reali
-
     #print(M)
     return (M, rows_reversed, cols_reversed)
 
@@ -705,11 +704,11 @@ class DMI(NastranMatrix):
                        self.tout, None, self.nRows, self.nCols]
 
         if self.is_complex():
-            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                list_fields += ['DMI', self.name, GCj, GCi, reali, imagi]
+            for (gci, gcj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
+                list_fields += ['DMI', self.name, gcj, gci, reali, imagi]
         else:
-            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
-                list_fields += ['DMI', self.name, GCj, GCi, reali]
+            for (gci, gcj, reali) in zip(self.GCi, self.GCj, self.Real):
+                list_fields += ['DMI', self.name, gcj, gci, reali]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -726,8 +725,8 @@ class DMI(NastranMatrix):
         #msg += self.print_card(list_fields,size=16,isD=False)
 
         if self.is_complex():
-            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                list_fields = ['DMI', self.name, GCj, GCi, reali, imagi]
+            for (gci, gcj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
+                list_fields = ['DMI', self.name, gcj, gci, reali, imagi]
                 if size == 8:
                     msg += print_card_8(list_fields)
                 elif is_double:
@@ -735,8 +734,8 @@ class DMI(NastranMatrix):
                 else:
                     msg += print_card_16(list_fields)
         else:
-            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
-                list_fields = ['DMI', self.name, GCj, GCi, reali]
+            for (gci, gcj, reali) in zip(self.GCi, self.GCj, self.Real):
+                list_fields = ['DMI', self.name, gcj, gci, reali]
                 if size == 8:
                     msg += print_card_8(list_fields)
                 elif is_double:

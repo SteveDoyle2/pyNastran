@@ -168,17 +168,14 @@ class PBEAM(IntegratedLineProperty):
 
             # ----------------------------------------------------------------
             for nrepeated in range(1, nmajor): # start at 1 to drop the header
-                #print("  adding a major")
                 # field 17 is the first possible so
                 if is_cdef:
                     nstart = nrepeated * 16 + 1
                 else:
                     nstart = nrepeated * 8 + 1
 
-                #propFields = []
-                #n = 1
-                so = string(card,  nstart, 'SO%i' % nrepeated)
-                xxb = double(card,  nstart + 1, 'x/xb%i' % nrepeated)
+                so = string(card, nstart, 'SO%i' % nrepeated)
+                xxb = double(card, nstart + 1, 'x/xb%i' % nrepeated)
                 A = double_or_blank(card, nstart + 2, 'Area%i' % nrepeated, 0.0)
                 i1 = double_or_blank(card, nstart + 3, 'I1 %i' % nrepeated, 0.0)
                 i2 = double_or_blank(card, nstart + 4, 'I2 %i' % nrepeated, 0.0)

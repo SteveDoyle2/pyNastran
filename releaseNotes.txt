@@ -60,6 +60,8 @@ BDF API:
  - build_thru(packs, maxDV=None) is now build_thru(packs, max_dv=None)
  - build_thru_packs(packs, maxDV=None) is now build_thru_packs(packs, max_dv=None)
  - build_thru_float(packs, maxDV=None) is now build_thru_float(packs, max_dv=None)
+ - build_table_lines(fields, nStart=1, nEnd=0) is now build_table_lines(fields, nstart=1, nend=0)
+ - added get_points(...) function for CAERO5
  - subcases now support ``in`` and subcase['LOAD']
  - deprecated echo_bdf
 

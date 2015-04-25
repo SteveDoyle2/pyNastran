@@ -169,17 +169,20 @@ class CBEAM(CBAR):
 
     def Mid(self):
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Mid()
 
     def Area(self):
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Area()
 
     def Nsm(self):
         if isinstance(self.pid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Nsm()
 
     def getOfft_Bit_defaults(self):
