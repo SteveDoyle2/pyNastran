@@ -149,9 +149,9 @@ class TEMP(object):
             t0 = self.model.tempd.cp
             seid0 = self.model.grdset.seid
 
-            Cp   = [cpi if cpi != cp0 else '' for cpi in self.cp]
-            Cd   = [cdi if cdi != cd0 else '' for cdi in self.cd]
-            Ps   = [psi if psi != ps0 else '' for psi in self.ps]
+            Cp = [cpi if cpi != cp0 else '' for cpi in self.cp]
+            Cd = [cdi if cdi != cd0 else '' for cdi in self.cd]
+            Ps = [psi if psi != ps0 else '' for psi in self.ps]
             Seid = [seidi if seidi != seid0 else '' for seidi in self.seid]
             for (nid, cp, xyz, cd, ps, seid) in zip(self.nid, Cp, self.xyz, Cd, Ps, Seid):
                 card = ['TEMP', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
