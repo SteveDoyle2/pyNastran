@@ -196,7 +196,7 @@ class BCTSET(BaseCard):
             #: MAXDi Maximum search distance for contact. (Real) (Sol 101 only)
             self.max_distances = []
 
-            n = card.nFields()
+            n = card.nfields
             i = 2
             j = 1
             while i < n:
@@ -400,7 +400,7 @@ class BCTADD(BaseCard):
 
             i = 1
             j = 1
-            while i < card.nFields():
+            while i < card.nfields:
                 s = integer(card, i, 'S%i' % j)
                 self.S.append(s)
                 i += 1

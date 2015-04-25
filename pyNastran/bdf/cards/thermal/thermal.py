@@ -734,7 +734,7 @@ class RADM(ThermalBC):
             self.absorb = double(card, 2, 'absorb')
             assert 0. <= self.absorb <= 1.0
 
-            nfields = card.nFields()
+            nfields = card.nfields
 
             self.emissivity = fields(double, card, 'emissivity', i=3, j=nfields)
         else:
@@ -782,7 +782,7 @@ class RADBC(ThermalBC):
             self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
             assert self.cntrlnd >= 0
 
-            nfields = card.nFields()
+            nfields = card.nfields
             eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
             #: CHBDYi element identification number
             self.eids = expand_thru_by(eids)

@@ -478,7 +478,7 @@ class PCOMP(CompositeShellProperty):
             assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
 
             # -8 for the first 8 fields (1st line)
-            nPlyFields = card.nFields() - 9
+            nPlyFields = card.nfields - 9
 
             # counting plies
             nMajor = nPlyFields // 4
