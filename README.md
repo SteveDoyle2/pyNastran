@@ -1,5 +1,5 @@
 # Documentation
-   * [v0.7] (http://pynastran-git.readthedocs.org/en/v0.7/index.html)
+   * [v0.7] (http://pynastran-git.readthedocs.org/en/v0.7.2/index.html)
    * [Master/Trunk](http://pynastran-git.readthedocs.org/en/latest/index.html)
 
 
@@ -19,11 +19,15 @@ for more detailed information.
 
 There is still a bit of updating left to do on the Wiki.  The outdated wiki pages will be updated soon.
 
-## pyNastran v0.7.1 has been Released (4/17/2015)
+## pyNastran v0.7.2 has been Released (4/25/2015)
 
 [Download pyNastran v0.7] (https://github.com/SteveDoyle2/pyNastran/releases)
 
-Some of the improvements include:
+This is a bug fix release.
+
+## pyNastran v0.7.1 has been Released (4/17/2015)
+
+Some of the changes include:
  * OP2
    * superelement support
    * vectorized support (uses much less memory; Element Forces not vectorized yet)
@@ -31,9 +35,9 @@ Some of the improvements include:
    * `PARAM,POST,-2` support
    * catching of most FATAL errors without needing to read the F06
  * F06
-   * improved F06 reader (the OP2 reader is still better)
+   * removed
  * BDF
-   * 20 new BDF cards
+   * 238 BDF cards
    * large field format and double precision writing
  * GUI
    * much improved GUI with transient support (real only), a results sidebar, logging, and scripting support
