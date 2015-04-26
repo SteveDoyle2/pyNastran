@@ -3,7 +3,7 @@ from six import iteritems, itervalues
 from six.moves import zip
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, hstack, array_equal, allclose, eye, ndarray, arange)
+                   cos, sin, hstack, array_equal, allclose, eye, ndarray, arange, sqrt)
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.coordinateSystems import (
@@ -153,9 +153,10 @@ class Coord(object):
             if coord.isResolved:
                 self.is_resolved[i] = True
                 self.origin[i, :] = coord.origin
-                self.T[i, :, :] = vstack([coord.i[:],
-                                          coord.j[:],
-                                          coord.k[:]] )
+                self.T[i, :, :] = vstack([
+                    coord.i[:],
+                    coord.j[:],
+                    coord.k[:]])
             else:
                 self.model.log.debug('need to resolve cid=%i rid=%i Type=%s' % (cid, coord.rid, coord.Type))
                 cids_to_resolve.append(cid)
@@ -395,7 +396,7 @@ class Coord(object):
             x = xyz[0]
             y = xyz[1]
             z = xyz[2]
-        theta = degrees(atan2(y, x))
+        theta = degrees(arctan2(y, x))
         R = sqrt(x * x + y * y)
         r_theta_z = vstack([R, theta, z])
         return r_theta_z
@@ -437,8 +438,8 @@ class Coord(object):
             y = xyz[1]
             z = xyz[2]
         R = sqrt(x * x + y * y + z * z)
-        phi = degrees(atan2(y, x))
-        theta = degrees(acos(z / R))
+        phi = degrees(arctan2(y, x))
+        theta = degrees(arccos(z / R))
         r_theta_phi = vstack([R, theta, phi])
         return r_theta_phi
 

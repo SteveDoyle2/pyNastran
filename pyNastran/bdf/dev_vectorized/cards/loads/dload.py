@@ -69,4 +69,4 @@ class DLOAD(object):
         list_fields = ['DLOAD', self.load_id, self.scale]
         for (scale_factor, lid) in zip(self.scale_factors, self.load_ids):
             list_fields += [scale_factor, lid]
-        f.write(print_card(list_fields, size))
+        f.write(print_card_8(list_fields, size))

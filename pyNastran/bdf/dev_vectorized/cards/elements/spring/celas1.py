@@ -73,7 +73,7 @@ class CELAS1(SpringElement):
                 i = searchsorted(self.element_id, self.eid)
 
             for (eid, pid, n, c) in zip(self.element_id[i], self.property_id[i], self.node_ids[i], self.components[i]):
-                card = ['CELAS1', eid, pid, n[0], n[1], c[0], c[1] ]
+                card = ['CELAS1', eid, pid, n[0], n[1], c[0], c[1]]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

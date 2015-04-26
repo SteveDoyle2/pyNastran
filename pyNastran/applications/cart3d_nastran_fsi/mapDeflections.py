@@ -42,12 +42,12 @@ class DeflectionReader(object):
         #print "defs[%s]-[%s,%s,%s,%s] = %s" %(ID, n0, n1, n2, n3, defs)
         return defs
 
-    def getDeflection(self,gridID):
+    def getDeflection(self, gridID):
         if self.deflections.has_key(gridID):
             return self.deflections[gridID]
-            #return [float(gridID),]*3 # test
+            #return [float(gridID),] * 3 # test
         else:
-            return [0.,0.,0.]
+            return [0., 0., 0.]
 
 #------------------------------------------------------------------
 
@@ -61,10 +61,10 @@ class DeflectionMapper(object):
         #self.setStructuralOutfile()
         #self.structuralOutfile = structuralOutfile
 
-    #def setAeroInfile(self,infile='cart3d.i.tri'):
+    #def setAeroInfile(self, infile='cart3d.i.tri'):
     #    self.aeroInfile = infile
 
-    #def setStructuralOutfile(self,outfile='fem.f06'):
+    #def setStructuralOutfile(self, outfile='fem.f06'):
     #    self.structuralOutfile = outfile
 
     def build_tetrahedralization(self):
@@ -84,7 +84,7 @@ class DeflectionMapper(object):
 
         tets = self.tets
         #startingTet = tets[1]
-        #closestTet = self.findClosestTet_recursion(m,startingTet,tets)
+        #closestTet = self.findClosestTet_recursion(m, startingTet, tets)
         #print "found tet = ",closestTet.ID
         #v1 = array([1.,0.,0.])
 
@@ -110,7 +110,7 @@ class DeflectionMapper(object):
             #print("excluded = ", len(excluded))
 
             counter += 1
-            if(counter == counterMax):
+            if counter == counterMax:
                 break
 
             if tetID in excluded:
@@ -282,16 +282,16 @@ class DeflectionMapper(object):
             #    if tet.isInternalNode(aeroNode):
             #        n0,n1,n2,n3 = tet.nodes
             #
-            #        deflectionsTet = [ d[n0],d[n1],d[n2],d[n3] ]
-            #        aeroNode2 = tet.mapDeflections(deflectionsTet,aeroNode)
+            #        deflectionsTet = [d[n0], d[n1], d[n2], d[n3]]
+            #        aeroNode2 = tet.mapDeflections(deflectionsTet, aeroNode)
             #break # uncomment to run one aeroNode
-            log.info("-"*80)
+            log.info("-" * 80)
             sys.stdout.flush()
         #return aeroNode2
         #for key,value in properTets.items():
         #    print("pointID=%s  -> tetID=%s" % (key, value))
         sys.stdout.flush()
-        return (aeroNodes2,properTets)
+        return aeroNodes2, properTets
 
     #def writeAeroInfile(self):
         #self.aeroModel.updateNodes(nodes)
@@ -304,7 +304,7 @@ def load_proper_tets(properTetFilename='properTets.in'):
 
     if os.path.exists(properTetFilename):
         log.info("loading tets from %r..." % properTetFilename)
-        infile = open(properTetFilename,'r')
+        infile = open(properTetFilename, 'r')
         lines = infile.readlines()
         for line in lines[1:]:
             #print
@@ -315,11 +315,11 @@ def load_proper_tets(properTetFilename='properTets.in'):
     return properTets
 
 def write_proper_tets(workpath, properTets):
-    outfilename = os.path.join(workpath,'properTets.in')
+    outfilename = os.path.join(workpath, 'properTets.in')
     if not(os.path.exists(outfilename)):
         log.info("writing tets...")
         msg = '#PointID    tetID\n'
-        for key,value in properTets.items():
+        for key, value in properTets.items():
             msg += "%5s  %5s\n" % (key, value)
         outfile = open(outfilename,'wb')
         outfile.write(msg)
@@ -327,32 +327,32 @@ def write_proper_tets(workpath, properTets):
 
 def test_Tet():
     b  = [10., 0., 0.]
-    a  = [ 0.,10., 0.]
-    c  = [ 0., 0.,10.]
-    d  = [ 0., 0., 0.]
-    m1 = [ 1., 1., 1.]
-    m2 = [ 2., 2., 2.]
+    a  = [0., 10., 0.]
+    c  = [0., 0., 10.]
+    d  = [0., 0., 0.]
+    m1 = [1., 1., 1.]
+    m2 = [2., 2., 2.]
     tet = Tet4(a,b,c,d)
-    #print("volume = ",tet.volume())
-    log.info("isInternal = \n%s\n" %(tet.is_internal_node(m1)))
-    log.info("isInternal = \n%s"   %(tet.is_internal_node(m2)))
+    #print("volume = ", tet.volume())
+    log.info("isInternal = \n%s\n" % (tet.is_internal_node(m1)))
+    log.info("isInternal = \n%s"   % (tet.is_internal_node(m2)))
 
 def test_deflections():
-    infilename = os.path.join('op2reader','solid_shell_bar.op2')
+    infilename = os.path.join('op2reader', 'solid_shell_bar.op2')
     deflections = {}
     op2 = DeflectionReader(infilename)
     #op2.printDisplacement()
     displacements = op2.convertDisplacements()
 
-    #for gridID,disp in sorted(displacements.items()):
-    #    print("gridID=%s disp=%s" %(gridID,disp))
+    #for gridID, disp in sorted(displacements.items()):
+    #    print("gridID=%s disp=%s" % (gridID, disp))
 
 #------------------------------------------------------------------
 
 #def makeGeometryMorphIn(basepath, bdfModel):
-#    args = ['junk',bdfModel,4,4,4,-10,10,-20,20,-30,30]
-#    premorphPath = os.path.join(basepath,'delauney','m4_premorph.exe')
-    runPremorph(args,bdfModel,premorphPath)
+#    args = ['junk', bdfModel, 4, 4, 4, -10, 10, -20, 20, -30, 30]
+#    premorphPath = os.path.join(basepath, 'delauney', 'm4_premorph.exe')
+    runPremorph(args, bdfModel ,premorphPath)
 
 
 def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf', op2Filename='test_tet10.op2',
@@ -361,7 +361,7 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf', op2Filename='test_t
                                   properTetFilename='properTets.in'):
     t0 = time()
     properTets = load_proper_tets(properTetFilename)
-    #makeGeometryMorphIn(basepath,bdfModel)
+    #makeGeometryMorphIn(basepath, bdfModel)
 
 
     # loading tetrahedra

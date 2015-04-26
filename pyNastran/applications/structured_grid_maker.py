@@ -102,7 +102,7 @@ def Grid(object):
             #edge3.sort()
             edges = [tuple(edge1), tuple(edge2), tuple(edge3)]
 
-            A = array([ (positions[nA] - positions[nB]) for (nA, nB) in edges] )
+            A = array([ (positions[nA] - positions[nB]) for (nA, nB) in edges])
             cosTs = dot(v12, A)/(n12*norm(A))
             thetas = acos(cosTs)
 

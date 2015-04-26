@@ -168,7 +168,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gni = []
         self.Cni = []
 
-        #fields = [interpret_value(field) for field in card[2:] ]
+        #fields = [interpret_value(field) for field in card[2:]]
         iUm = card.index('UM')
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'

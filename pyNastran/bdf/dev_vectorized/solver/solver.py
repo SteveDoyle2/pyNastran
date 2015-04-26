@@ -1249,12 +1249,13 @@ class Solver(F06, OP2):
         format_code = 1  # ???
         s_code = None
 
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 1, 'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
-                    'element_name': elementType, 'format_code':format_code,
-                    's_code': s_code,
-                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+        data_code = {
+            'log': self.log, 'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
+            'element_name': elementType, 'format_code':format_code,
+            's_code': s_code,
+            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CROD':
                 stress = RealRodStress(data_code, is_sort1, isubcase, dt=False)
@@ -1321,7 +1322,7 @@ class Solver(F06, OP2):
             nid = model.grid.node_id[ni]
             line = [nid, 'G']
             xyz = U[i:i + 6]  # 1,2,3,4,5,6
-            self.log.info("nid=%s txyz,rxyz=%s" % ( nid, xyz))
+            self.log.info("nid=%s txyz,rxyz=%s" % (nid, xyz))
             line += xyz
             i += 6
             data.append(line)
@@ -1418,10 +1419,11 @@ class Solver(F06, OP2):
         #print('dinner =', diag(Mt_bar))
         delta = norm(diag(Mt_bar))
         #print('einner =', Mt_bar - diag(Mt_bar))
-        epsilon = norm([Mt_bar[0, 1],
-                        Mt_bar[0, 2],
-                        Mt_bar[1, 2],
-                        ])
+        epsilon = norm([
+            Mt_bar[0, 1],
+            Mt_bar[0, 2],
+            Mt_bar[1, 2],
+        ])
         if epsilon / delta > 0.001:
             # user warning 3042
             pass
@@ -1450,9 +1452,9 @@ class Solver(F06, OP2):
         #if min(mass) == 0.:
             #raise RuntimeError('mass = %s' % mass)
         cg = array([
-            [ Mtr[0, 0], -Mtr[0, 2],  Mtr[0, 1] ],
-            [ Mtr[1, 2],  Mtr[1, 1], -Mtr[1, 0] ],
-            [-Mtr[2, 1],  Mtr[2, 0],  Mtr[2, 2] ],
+            [ Mtr[0, 0], -Mtr[0, 2],  Mtr[0, 1]],
+            [ Mtr[1, 2],  Mtr[1, 1], -Mtr[1, 0]],
+            [-Mtr[2, 1],  Mtr[2, 0],  Mtr[2, 2]],
         ], dtype='float32')
         if mass[0] != 0.:
             cg[0, :] /= Mx
@@ -1596,7 +1598,7 @@ class Solver(F06, OP2):
             #dof1i = self.nidComponentToID[dof1]
             for j, dof2 in enumerate(dofs):
                 if abs(K[i, j]) > 0.0:
-                    self.log.info('i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (i, j, dof1, dof2, K[i,j]/self.knorm))
+                    self.log.info('i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (i, j, dof1, dof2, K[i, j]/self.knorm))
                     #dof2i = self.nidComponentToID[dof2]
                     #assert isinstance(dof1i, int), dof1i
                     #assert isinstance(dof2i, int), dof2i
@@ -1813,7 +1815,7 @@ class Solver(F06, OP2):
             ## todo:  is this correct???
         else:
             # get the value, 1 is the options (SPC has no options)
-            spc_ids = [ case.get_parameter('SPC')[0] ]
+            spc_ids = [case.get_parameter('SPC')[0]]
 
         if case.has_parameter('SPC') or has_spcs:
             for spc_id in spc_ids:
@@ -1880,27 +1882,27 @@ class Solver(F06, OP2):
         self.iUl = self.iUc + self.iUlm
 
         # t = l + r
-        self.Ut  = self.Ul  + self.Ur
+        self.Ut = self.Ul + self.Ur
         self.iUt = self.iUl + self.iUr
 
         # a = t + q
-        self.Ua  = self.Ut  + self.Uq
+        self.Ua = self.Ut + self.Uq
         self.iUa = self.iUt + self.iUq
 
         # d = a + e
-        self.Ud  = self.Ua  + self.Ue
+        self.Ud = self.Ua + self.Ue
         self.iUd = self.iUa + self.iUe
 
         # f = a + o
-        self.Uf  = self.Ua  + self.Uo
+        self.Uf = self.Ua + self.Uo
         self.iUf = self.iUa + self.iUo
 
         # fe = f + e
-        self.Ufe  = self.Uf  + self.Ue
+        self.Ufe = self.Uf + self.Ue
         self.iUfe = self.iUf + self.iUe
 
         # n = f + s
-        self.Un  = self.Uf  + self.Us
+        self.Un = self.Uf + self.Us
         self.iUn = self.iUf + self.iUs
 
         # ne = n + e
@@ -1908,32 +1910,32 @@ class Solver(F06, OP2):
         self.iUne = self.iUn + self.iUe
 
         # m = mp + mr
-        self.Um  = self.Ump  + self.Umr
+        self.Um = self.Ump + self.Umr
         self.iUm = self.iUmp + self.iUmr
         self.jUm = self.jUmp + self.jUmr
 
         # g = n + m
-        self.Ug  = self.Un  + self.Um
+        self.Ug = self.Un + self.Um
         self.iUg = self.iUn + self.iUm
 
         # p = g + e
-        self.Up  = self.Ug  + self.Ue
+        self.Up = self.Ug + self.Ue
         self.iUp = self.iUg + self.iUe
 
         # ks = k + sa
-        self.Uks  = self.Uk  + self.Usa
+        self.Uks = self.Uk + self.Usa
         self.iUks = self.iUk + self.iUsa
 
         # js = j + sa
-        self.Ujs  = self.Uj  + self.Usa
+        self.Ujs = self.Uj + self.Usa
         self.iUjs = self.iUj + self.iUsa
 
         # fr = o + l = f - q - r
-        self.Ufr  = self.Uo  + self.Ul
+        self.Ufr = self.Uo + self.Ul
         self.iUfr = self.iUo + self.iUl
 
         # v = o + c + r
-        self.Uv  = self.Uo  + self.Uc  + self.Ur
+        self.Uv = self.Uo + self.Uc + self.Ur
         self.iUv = self.iUo + self.iUc + self.iUr
         return
 
@@ -2168,7 +2170,7 @@ def get_cards():
 
         # spc/mpc constraints
         'SPC', 'SPC1', 'SPCADD',
-        'MPC','MPCADD',
+        'MPC', 'MPCADD',
 
         # loads
         'LOAD',

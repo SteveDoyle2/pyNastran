@@ -113,7 +113,7 @@ class PropertiesShell(object):
 
     def _getmethod(self, property_id, method):
         #types = self._get_types(nlimit=True)
-        #data = hstack([getattr(ptype, method)() for ptype in types] )
+        #data = hstack([getattr(ptype, method)() for ptype in types])
         #if property_ids is None:
             #return data
 

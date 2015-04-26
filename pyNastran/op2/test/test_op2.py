@@ -237,7 +237,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
 
     try:
-        #op2.read_bdf(op2.bdfFileName, includeDir=None, xref=False)
+        #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
         op2.read_op2(op2_filename, vectorized=is_vector)
         print("---stats for %s---" % op2_filename)
         #op2.get_op2_stats()

@@ -6,8 +6,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, string_or_blank, blank)
+    double, double_or_blank, string, string_or_blank, blank)
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.dev_vectorized.cards.materials.material import Material
@@ -225,7 +224,7 @@ class MATHP(Material):
             #self.model.log.debug"n = %s" % self.n)
             #self.model.log.debug"mids MAT1 %s" % self.material_id)
 
-            Rho  = ['' if rhoi == 0.0 else rhoi for rhoi in self.rho[i]]
+            Rho = ['' if rhoi == 0.0 else rhoi for rhoi in self.rho[i]]
             A = ['' if ai == 0.0 else ai for ai in self.a[i]]
             TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
             ge = ['' if gei == 0.0 else gei for gei in self.ge[i]]
@@ -237,9 +236,9 @@ class MATHP(Material):
             f.write(print_card_8(card))
             card = ['$', 'st', 'sc', 'ss', 'mcsid']
             f.write(print_card_8(card))
-            for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
-                 self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
-                 TRef, ge, St, Sc, Ss, self.mcsid[i]):
+            for(mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
+                self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
+                TRef, ge, St, Sc, Ss, self.mcsid[i]):
 
                 #Gdefault = self.getG_default()
                 Gdefault = self._G_default(E, G, nu)
@@ -314,7 +313,7 @@ class MATHP(Material):
         obj.a01 = self.a01[i]
         obj.d1 =  self.d1[i]
         obj.rho = self.rho[i]
-        obj.av =  self.av[i]
+        obj.av = self.av[i]
         obj.TRef = self.TRef[i]
         obj.ge = self.ge[i]
 

@@ -219,8 +219,7 @@ if __name__ == '__main__':  # pragma: no cover
     assert displacement.ntimes == 1, displacement.ntimes
 
     # get all the nodes for element 1
-    inode1 = data.getNodeIndex( [1] )
-    # [itransient, node, t1/t2]
+    inode1 = data.getNodeIndex([1]])    # [itransient, node, t1/t2]
     datai = data[0, inode1, :]
     grid_typei = grid_type[inode]
 
@@ -234,34 +233,34 @@ if __name__ == '__main__':  # pragma: no cover
     assert solid_stress.ntimes == 1, solid_stress.ntimes
 
     # get the indexs for cid, element 1
-    ielem1 = solid_stress.getElementPropertiesIndex( [1] )  # element-specific properties
+    ielem1 = solid_stress.getElementPropertiesIndex([1])  # element-specific properties
     datai = cid[ielem1]
 
     # get all the nodes for element 1
-    ielem1 = solid_stress.getElementIndex( [1] )
+    ielem1 = solid_stress.getElementIndex([1])
     # [itransient, elem*node, oxx/oyy, etc.]
     datai = data[0, ielem1, :]
 
     # get all the nodes for element 1
-    ielem1 = solid_stress.getElementIndex( [1] )
+    ielem1 = solid_stress.getElementIndex([1])
     # [itransient, elem*node, oxx/oyy, etc.]
     datai = data[0, ielem1, :]
 
     # get all the nodes for element 4 and 5
-    ielem45 = solid_stress.getElementIndex( [[1, 4, 5]] )
+    ielem45 = solid_stress.getElementIndex([[1, 4, 5]])
     datai = data[0, ielem45, :]
 
     # get the index for element 1, centroid
-    ielem1_centroid = solid_stress.getElementNodeIndex( [[1, 0]] )
+    ielem1_centroid = solid_stress.getElementNodeIndex([[1, 0]])
     datai = data[0, ielem1_centroid, :]
 
     # get the index for element 1, node 1
-    ielem1_node1 = solid_stress.getElementNodeIndex( [[1, 1]] )
+    ielem1_node1 = solid_stress.getElementNodeIndex([[1, 1]])
     datai = data[0, ielem1_node1, :]
 
     # get the index for element 1, node 1 and element 1, node 2
-    ielem1_node12 = solid_stress.getElementNodeIndex( [[1, 1],
-                                                       [1, 2],])
+    ielem1_node12 = solid_stress.getElementNodeIndex([[1, 1],
+                                                      [1, 2],])
     datai = data[0, ielem1_node12, :]
 
     # ============plate stress=================
@@ -273,7 +272,7 @@ if __name__ == '__main__':  # pragma: no cover
     assert plate_stress.ntimes == 1, plate_stress.ntimes
 
     # get all the nodes for element 1
-    ielem1 = plate_stress.getElementIndex( [1] )
+    ielem1 = plate_stress.getElementIndex([1])
     # [itransient, elem*node, oxx/oyy, etc.]
     datai = plate_stress[0, ielem1, :]
 
@@ -284,25 +283,25 @@ if __name__ == '__main__':  # pragma: no cover
     cid = model.plateStress[isubcase].cid
 
     # get the indexs for cid, element 1
-    ielem1 = comp_plate_stress.getElementPropertiesIndex( [1] )  # element-specific properties
+    ielem1 = comp_plate_stress.getElementPropertiesIndex([1])  # element-specific properties
     datai = cid[ielem1]
 
     # oxx, oyy, ozz, txy, tyz, txz
     assert comp_plate_stress.ntimes == 1, comp_plate_stress.ntimes
 
     # get all the nodes/layers for element 1
-    ielem1 = comp_plate_stress.getElementIndex( [1] )
+    ielem1 = comp_plate_stress.getElementIndex([1])
     # [itransient, elem*node*layer, oxx/oyy, etc.]
     datai = data[0, ielem1, :]
 
     # get all the layers for element 1, centroid, and all the layers
-    ielem1_centroid = solid_stress.getElementNodeIndex( [[1, 0]] )
+    ielem1_centroid = solid_stress.getElementNodeIndex([[1, 0]])
     datai = data[0, ielem1_centroid, :]
 
     # get the index for element 1, centroid, layer 0
-    ielem1_centroid_layer = solid_stress.getElementNodeLayerIndex( [[1, 0, 0]] )
+    ielem1_centroid_layer = solid_stress.getElementNodeLayerIndex([[1, 0, 0]])
     datai = data[0, ielem1_centroid_layer, :]
 
     # get the index for element 1, layer 0, and all the nodes
-    ielem1_layer = solid_stress.getElementLayerIndex( [[1, 0]] )
+    ielem1_layer = solid_stress.getElementLayerIndex([[1, 0]])
     datai = data[0, ielem1_layer, :]

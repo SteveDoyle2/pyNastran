@@ -140,7 +140,7 @@ class TestSolids(unittest.TestCase):
 
             # static
             ['PSOLID', pid, mid, 0],
-            ['MAT1',  mid, 1.0, 2.0, 3.0, rho]
+            ['MAT1', mid, 1.0, 2.0, 3.0, rho]
         ]
         card_count = {
             'GRID' : 14,
@@ -310,7 +310,7 @@ class TestSolids(unittest.TestCase):
         mid = 2
         pid = 4
         rho = 0.1
-        tableID = 42
+        table_id = 42
         cards = [
             #$ Solid Nodes
             ['GRID', 11, 0, 0., 0., 0., 0],
@@ -339,9 +339,9 @@ class TestSolids(unittest.TestCase):
             # static
             ['PSOLID', pid, mid, 0],
             ['MAT1', mid, 1.0, 2.0, 3.0, rho],
-            ['MATS1', mid, tableID, 'PLASTIC', 0.0, 1, 1, 100000., ],
+            ['MATS1', mid, table_id, 'PLASTIC', 0.0, 1, 1, 100000., ],
             #['TABLEST'],
-            ['TABLES1', tableID, 1, None, None, None, None, None, None,
+            ['TABLES1', table_id, 1, None, None, None, None, None, None,
             1.0, 10.0, 2.0, 10.0, 'ENDT'],
         ]
         card_count = {

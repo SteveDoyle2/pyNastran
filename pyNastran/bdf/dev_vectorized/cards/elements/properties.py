@@ -1,6 +1,6 @@
 from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
                    hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
-                   arange, nan, full, ravel, asarray)
+                   arange, nan, full, ravel, asarray, where)
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
@@ -186,7 +186,7 @@ def group_elements_by_property_type_and_element_type(elements, pid_data):
     #self.model.log.debug("pid_eType = \n%s\n" % str(pid_eType))
     for (pid, eType) in pid_eType:
         if pid not in elements.property_ids:
-            self.model.log.debug('Property pid=%s does not exist' % pid)
+            print('Property pid=%s does not exist' % pid)
             #continue
         i = where(pid_data[:, 1] == pid)[0]
         #self.model.log.debug("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))

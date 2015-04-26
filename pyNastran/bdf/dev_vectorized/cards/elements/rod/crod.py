@@ -209,7 +209,7 @@ class CROD(RodElement):
 
             #print('i =', i, type(i))
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CROD', eid, pid, n[0], n[1] ]
+                card = ['CROD', eid, pid, n[0], n[1]]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

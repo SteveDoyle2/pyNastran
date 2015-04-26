@@ -14,24 +14,24 @@ testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
 class TestMass(unittest.TestCase):
 
     def verify_pcomp_element(self, element, prop, nsm, thickness, mass, area, centroid, normal):
-        #prop = str(prop)
-        #print('----------------------------')
         assert not isinstance(element, list), element
         #print(object_methods(element, 'all'))
-        self.assertAlmostEqual(element.get_area_by_element_id()[0], area, msg='PCOMP: area=%s expected=%s\n%s%s' % (element.get_area_by_element_id(), area, element, prop))
-        self.assertAlmostEqual(element.get_thickness_by_element_id()[0], thickness, msg='PCOMP: thickness=%s expected=%s\n%s%s' % (element.get_thickness_by_element_id(), thickness, element, prop))
-        self.assertAlmostEqual(element.get_nonstructural_mass_by_element_id()[0], nsm, msg='PCOMP: nsm=%s expected=%s\n%s%s' % (element.get_nonstructural_mass_by_element_id(), nsm, element, prop))
-        self.assertTrue(all(element.get_centroid_by_element_id()[0] == centroid), msg='PCOMP: centroid=%s expected=%s\n%s%s' % (element.get_centroid_by_element_id(), centroid, element, prop))
-        self.assertTrue(all(element.get_normal_by_element_id()[0] == normal), msg='PCOMP: normal=%s expected=%s\n%s%s' % (element.get_normal_by_element_id(), normal, element, prop))
-        self.assertAlmostEqual(element.get_mass_by_element_id()[0], mass, msg='PCOMP: mass=%s expected=%s\n%s%s' % (element.get_mass_by_element_id(), mass, element, prop))
+        self.assertAlmostEqual(element.get_area_by_element_id()[0], area, msg=
+                               'PCOMP: area=%s expected=%s\n%s%s' % (element.get_area_by_element_id(), area, element, prop))
+        self.assertAlmostEqual(element.get_thickness_by_element_id()[0], thickness,
+                               msg='PCOMP: thickness=%s expected=%s\n%s%s' % (element.get_thickness_by_element_id(), thickness, element, prop))
+        self.assertAlmostEqual(element.get_nonstructural_mass_by_element_id()[0], nsm,
+                               msg='PCOMP: nsm=%s expected=%s\n%s%s' % (element.get_nonstructural_mass_by_element_id(), nsm, element, prop))
+        self.assertTrue(all(element.get_centroid_by_element_id()[0] == centroid),
+                        msg='PCOMP: centroid=%s expected=%s\n%s%s' % (element.get_centroid_by_element_id(), centroid, element, prop))
+        self.assertTrue(all(element.get_normal_by_element_id()[0] == normal),
+                        msg='PCOMP: normal=%s expected=%s\n%s%s' % (element.get_normal_by_element_id(), normal, element, prop))
+        self.assertAlmostEqual(element.get_mass_by_element_id()[0], mass,
+                               msg='PCOMP: mass=%s expected=%s\n%s%s' % (element.get_mass_by_element_id(), mass, element, prop))
 
     def verify_pshell_element(self, element, prop, mat, rho, mass, area, centroid, normal, nsm):
-        #print('----------------------------')
         assert not isinstance(element, list), element
         #print(object_methods(element, 'all'))
-        #print(element)
-        #print(prop)
-        #print(mat)
         #print("nsm = %s" % element.get_nonstructural_mass_by_element_id()[0])
         #print("density = %s" % element.get_density_by_element_id())
         if rho is not None:
@@ -55,7 +55,8 @@ class TestMass(unittest.TestCase):
             #self.assertEqual(element.pid.mid.type, 'MAT1', msg='mass=%s expected=%s' % (element.pid.mid.type, 'MAT1'))
             #self.assertAlmostEqual(element.pid.mid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.mid.Rho(), rho))
 
-        self.assertAlmostEqual(element.get_mass_by_element_id(), mass, msg='mass=%s expected=%s' % (element.get_mass_by_element_id(), mass))
+        self.assertAlmostEqual(element.get_mass_by_element_id(), mass,
+                               msg='mass=%s expected=%s' % (element.get_mass_by_element_id(), mass))
 
         #if E:
             #self.assertAlmostEqual(element.E(), E, msg='E=%s expected=%s' % (element.E(), E))

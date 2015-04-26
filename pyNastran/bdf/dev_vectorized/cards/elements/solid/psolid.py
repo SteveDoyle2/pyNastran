@@ -127,9 +127,9 @@ class PSOLID(Property):
     def write_bdf(self, f, size=8, property_id=None):
         if self.n:
             #print "PSOLID.property_id =", self.property_id
-            for (pid, mid, cordm, integ, stress, isop, fctn) in zip(
-                 self.property_id, self.material_id, self.cordm,
-                 self.integ, self.stress, self.isop, self.fctn):
+            for(pid, mid, cordm, integ, stress, isop, fctn) in zip(
+                self.property_id, self.material_id, self.cordm,
+                self.integ, self.stress, self.isop, self.fctn):
 
                 cordm = set_blank_if_default(cordm, 0)
                 fctn = set_blank_if_default(fctn, 'SMECH')

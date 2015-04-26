@@ -138,7 +138,7 @@ class NastranIO(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        #skipReading = self.removeOldGeometry(bdfFileName)
+        #skipReading = self.removeOldGeometry(bdf_filename)
         #if skipReading:
             #return
         if bdf_filename is None or bdf_filename is '':
@@ -447,7 +447,7 @@ class NastranIO(object):
                 #a = [0,2,4]
                 #msg = "CTRIAX6 %i %i %i" %(nidMap[nodeIDs[a[0]]],
                 #                           nidMap[nodeIDs[a[1]]],
-                #                           nidMap[nodeIDs[a[2]]] )
+                #                           nidMap[nodeIDs[a[2]]])
                 #raise RuntimeError(msg)
                 #sys.stdout.flush()
 

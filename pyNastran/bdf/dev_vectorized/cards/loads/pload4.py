@@ -116,12 +116,12 @@ class PLOAD4(object):
                 self.pressures[i, :] = p
 
                 self.element_ids[i] = [eid]
-                if (integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
-                    integer_or_blank(card, 8, 'eid2')):  # plates
+                if(integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
+                   integer_or_blank(card, 8, 'eid2')):  # plates
                     eid2 = integer(card, 8, 'eid2')
                     if eid2:
                         self.element_ids[i] = list(unique(expand_thru([self.eid, 'THRU', eid2],
-                                            set_fields=False, sort_fields=False)))
+                                                   set_fields=False, sort_fields=False)))
                     #self.g1 = None
                     #self.g34 = None
                 else:
@@ -135,9 +135,10 @@ class PLOAD4(object):
                 #: Coordinate system identification number. See Remark 2.
                 #: (Integer >= 0;Default=0)
                 self.cid[i] = integer_or_blank(card, 9, 'cid', 0)
-                self.NVector[i, :] = [double_or_blank(card, 10, 'N1', 0.0),
-                                      double_or_blank(card, 11, 'N2', 0.0),
-                                      double_or_blank(card, 12, 'N3', 0.0), ]
+                self.NVector[i, :] = [
+                    double_or_blank(card, 10, 'N1', 0.0),
+                    double_or_blank(card, 11, 'N2', 0.0),
+                    double_or_blank(card, 12, 'N3', 0.0), ]
                 self.sorl[i] = string_or_blank(card, 13, 'sorl', 'SURF')
                 self.ldir[i] = string_or_blank(card, 14, 'ldir', 'NORM')
                 assert len(card) <= 15, 'len(PLOAD4 card) = %i' % len(card)

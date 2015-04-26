@@ -116,7 +116,7 @@ class GRID(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def shrink(self, refcheck=True):
-        i = where(self.node_id==0)[0]
+        i = where(self.node_id == 0)[0]
         self.resize(i[0], refcheck=refcheck)
 
     def allocate(self, card_count):
@@ -325,7 +325,7 @@ class GRID(VectorizedCard):
             cd0 = 0
             ps0 = -1
             seid0 = 0
-            blank = ' '*8 if size==8 else ' ' * 16
+            blank = ' ' * 8 if size == 8 else ' ' * 16
             Cp = [cpi if cpi != cp0 else blank for cpi in self.cp[i]]
             Cd = [cdi if cdi != cd0 else blank for cdi in self.cd[i]]
             Ps = [psi if psi != ps0 else blank for psi in self.ps[i]]

@@ -933,6 +933,12 @@ class CAERO1(BaseCard, CAERO1Deprecated):
             self.lspan = model.AEFact(self.lspan, msg)
 
     def get_points(self):
+        """
+        Get the 4 corner points for the CAERO card
+
+        :param self: the CAERO object
+        :returns p1234: list for 4 points; a point is a (3,) ndarray
+        """
         p1, matrix = self.cp.transformToGlobal(self.p1)
         p4, matrix = self.cp.transformToGlobal(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
@@ -940,6 +946,14 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         return [p1, p2, p3, p4]
 
     def get_npanel_points_elements(self):
+        """
+        Gets the number of sub-points and sub-elements for the CAERO card
+
+        :param self: the CAERO object
+
+        :param npoints: the number of nodes for the CAERO
+        :param nelements: the number of elements for the CAERO
+        """
         msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
                                                                    self.eid,
                                                                    self.nchord,
@@ -965,15 +979,19 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         return npoints, nelements
 
     def panel_points_elements(self):
-        p1, p2, p3, p4 = self.Points()
+        """
+        Gets the sub-points and sub-elements for the CAERO card
 
+        :param points: an (nnodes,3) ndarray of floats
+        :param elements: an (nelements,4) ndarray of integers
+        """
+        p1, p2, p3, p4 = self.Points()
         msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
                                                                    self.eid,
                                                                    self.nchord,
                                                                    self.nspan,
                                                                    self.lchord,
                                                                    self.lspan)
-
         if self.nchord == 0:
             x = self.lchord.Di
             nchord = len(x) - 1

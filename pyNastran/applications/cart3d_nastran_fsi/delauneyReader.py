@@ -164,9 +164,9 @@ class Tet4(object):
         return isContained, min(gammas)
 
         a = Tet4(self.p0, self.p1, self.p2, pAero,ID='a',nodes=[0,1,2,'p'])
-        b = Tet4(self.p0, self.p1, pAero,self.p3, ID='b',nodes=[0,1,'p',3] )
-        c = Tet4(pAero,self.p0, self.p2, self.p3, ID='c',nodes=['p',0,2,3] )
-        d = Tet4(self.p1,pAero, self.p2, self.p3, ID='d',nodes=[1,'p',2,3] )
+        b = Tet4(self.p0, self.p1, pAero,self.p3, ID='b',nodes=[0,1,'p',3])
+        c = Tet4(pAero,self.p0, self.p2, self.p3, ID='c',nodes=['p',0,2,3])
+        d = Tet4(self.p1,pAero, self.p2, self.p3, ID='d',nodes=[1,'p',2,3])
 
         #aVol = a.volume()
         #if aVol >= 0:

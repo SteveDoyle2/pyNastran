@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf import BDF, ShellElement
 
 
 class PanelBuckling(object):
-    def __init__(self, bdfFileName):
+    def __init__(self, bdf_filename):
         """
         Preliminary work on a panel buckling code
         Assumptions:
@@ -20,7 +20,7 @@ class PanelBuckling(object):
         3. only CTRIA3, CQUAD4 elements
         """
         self.bdf = BDF(debug=True, log=None)
-        self.bdf.readBDF(bdfFileName, xref=True)
+        self.bdf.readBDF(bdf_filename, xref=True)
         self.maxAngle = 10.
 
     def makePanels(self):

@@ -66,12 +66,13 @@ class ElementsShell(object):
         self.ctria6.add(card, comment)
 
     def add_cquad(self, card, comment):
-        #self.cquad.add(card, comment)
-        pass
+        self.cquad.add(card, comment)
 
     def add_cquadx(self, card, comment):
-        #self.cquadx.add(card, comment)
-        pass
+        self.cquadx.add(card, comment)
+
+    def add_cquadr(self, card, comment):
+        self.cquadr.add(card, comment)
 
     def add_cquad4(self, card, comment):
         self.cquad4.add(card, comment)
@@ -80,8 +81,7 @@ class ElementsShell(object):
         self.cquad8.add(card, comment)
 
     def add_cquad9(self, card, comment):
-        #self.cquad9.add(card, comment)
-        pass
+        self.cquad9.add(card, comment)
 
     def add_ctriax(self, card, comment):
         self.ctriax.add(card, comment)

@@ -876,21 +876,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
         self._break_comment = False
-        lineUpper = ''
-        while('CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and
-              'BULK' not in lineUpper):
+        line_upper = ''
+        while('CEND' not in line_upper[:4] and 'BEGIN' not in line_upper and
+              'BULK' not in line_upper):
             (i, line, comment) = self._get_line()
             line = line.rstrip('\n\r\t ')
 
-            lineUpper = line.upper()
-            if lineUpper == '$EXECUTIVE CONTROL DECK':
+            line_upper = line.upper()
+            if line_upper == '$EXECUTIVE CONTROL DECK':
                 continue  # skip this comment
 
             if len(line) > 0:
                 self.executive_control_lines.append(line)
-            lineUpper = lineUpper.split('$')[0]
+            line_upper = line_upper.split('$')[0]
 
-        if 'CEND' in lineUpper[:4]:
+        if 'CEND' in line_upper[:4]:
             self.has_case_control_deck = True
         else:
             self.has_case_control_deck = False
@@ -979,13 +979,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         line = ''
         while self.active_filename:  # keep going until finished
             #lines = []
-            (i, lineIn, comment) = self._get_line()
-            if lineIn is None:
+            (i, line_in, comment) = self._get_line()
+            if line_in is None:
                 return  # file was closed
-            line = lineIn.strip().split('$')[0].strip()
-            lineUpper = line.upper()
+            line = line_in.strip().split('$')[0].strip()
+            line_upper = line.upper()
 
-            if lineUpper.startswith('INCLUDE'):
+            if line_upper.startswith('INCLUDE'):
                 try:
                     (i, next_line, comment) = self._get_line()
                 except:
@@ -1006,9 +1006,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                                 include_dir=self.include_dir)
                 self._open_file(filename)
             else:
-                self.case_control_lines.append(lineUpper)
+                self.case_control_lines.append(line_upper)
 
-            if 'BEGIN' in lineUpper and ('BULK' in lineUpper or 'SUPER' in lineUpper):
+            if 'BEGIN' in line_upper and ('BULK' in line_upper or 'SUPER' in line_upper):
                 self.log.debug('found the end of the Case Control Deck!')
                 break
         self.log.debug("finished with Case Control Deck...")
@@ -1690,14 +1690,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return self.dict_of_vars[key]
 
     #def _is_case_control_deck(self, line):
-        #lineUpper = line.upper().strip()
+        #line_upper = line.upper().strip()
         #if 'CEND' in line.upper():
             #raise SyntaxError('invalid Case Control Deck card...CEND...')
-        #if '=' in lineUpper or ' ' in lineUpper:
+        #if '=' in line_upper or ' ' in line_upper:
             #return True
         #for card in self.uniqueBulkDataCards:
             #lenCard = len(card)
-            #if card in lineUpper[:lenCard]:
+            #if card in line_upper[:lenCard]:
                 #return False
         #return True
 

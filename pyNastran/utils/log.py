@@ -145,6 +145,7 @@ def get_logger(log=None, level='debug'):
 def get_logger2(log=None, debug=True):
     """
     This function is useful as it will instantiate a SimpleLogger object if log=None.
+
     :param log:   a python logging module object;
                   if log is set, debug is ignored and uses the
                   settings the logging object has

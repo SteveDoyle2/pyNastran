@@ -17,7 +17,7 @@ class TestCoords(unittest.TestCase):
         ]
         grids_expected = grids
         coords = []
-        self.getNodes(grids, grids_expected, coords)
+        self._get_nodes(grids, grids_expected, coords)
 
     def test_shift(self):
         grids = [
@@ -35,10 +35,11 @@ class TestCoords(unittest.TestCase):
             [5, 1, 2., 2., 1.],
         ]
 
-        coords = [  # cid,rid, origin,      zaxis,     xaxis
+        coords = [
+            # cid,rid, origin,      zaxis,     xaxis
             [1, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],
         ]
-        self.getNodes(grids, grids_expected, coords)
+        self._get_nodes(grids, grids_expected, coords)
 
     def test_rotate(self):
         grids = [
@@ -50,9 +51,9 @@ class TestCoords(unittest.TestCase):
         ]
         grids_expected = [
             #     y    z   x
-            [1, 1., 1.,  0., 0.],
+            [1, 1., 1., 0., 0.],
             [2, 1., 0., -1., 0.],
-            [3, 1., 0.,  0., 1.],
+            [3, 1., 0., 0., 1.],
             [4, 1., 1., -1., 1.],
             [5, 1., 0., -1., 1.],
         ]
@@ -61,7 +62,7 @@ class TestCoords(unittest.TestCase):
             # cid, rid, origin,      zaxis,     xaxis
             [1, 0, [0., 0., 0.], [1., 0., 0.], [0., 0., 1.]],
         ]
-        self.getNodes(grids, grids_expected, coords)
+        self._get_nodes(grids, grids_expected, coords)
 
     def test_rotate2(self):
         grids = [
@@ -72,9 +73,9 @@ class TestCoords(unittest.TestCase):
             [5, 1, 1., 1., 0.],
         ]
         grids_expected = [
-            [1, 1, 0.,  0., -1.],
+            [1, 1, 0., 0., -1.],
             [2, 1, 0., -1., 0.],
-            [3, 1, 1.,  0., 0.],
+            [3, 1, 1., 0., 0.],
             [4, 1, 1., -1., -1.],
             [5, 1, 1., -1., 0.],
         ]
@@ -83,7 +84,7 @@ class TestCoords(unittest.TestCase):
             # cid, rid, origin,     zaxis        xaxis
             [1, 0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],
         ]
-        self.getNodes(grids, grids_expected, coords)
+        self._get_nodes(grids, grids_expected, coords)
 
     def test_rotate3(self):
         grids = [
@@ -94,8 +95,8 @@ class TestCoords(unittest.TestCase):
             [5, 1, 1., 1., 0.],
         ]
         grids_expected = [
-            [1, 1,  0., 0., -1.],
-            [2, 1,  0., 1., 0.],
+            [1, 1, 0., 0., -1.],
+            [2, 1, 0., 1., 0.],
             [3, 1, -1., 0., 0.],
             [4, 1, -1., 1., -1.],
             [5, 1, -1., 1., 0.],
@@ -105,7 +106,7 @@ class TestCoords(unittest.TestCase):
             # cid, rid, origin,      zaxis          xaxis
             [1, 0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
         ]
-        self.getNodes(grids, grids_expected, coords)
+        self._get_nodes(grids, grids_expected, coords)
 
     def test_rid_1(self):
         grids = [
@@ -126,7 +127,7 @@ class TestCoords(unittest.TestCase):
             [3, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
             #[3, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
         ]
-        self.getNodes(grids, grids_expected, coords)
+        self._get_nodes(grids, grids_expected, coords)
 
     def test_cord1r_01(self):
         lines = ['cord1r,2,1,4,3']
@@ -311,9 +312,9 @@ class TestCoords(unittest.TestCase):
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
-            a = array([30.,40.,50.])
+            a = array([30., 40., 50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord2_rcs_02(self):
         """
@@ -355,9 +356,9 @@ class TestCoords(unittest.TestCase):
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
-            a = array([30.,40.,50.])
+            a = array([30., 40., 50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord2_rcs_03(self):
         """
@@ -399,9 +400,9 @@ class TestCoords(unittest.TestCase):
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
-            a = array([30.,40.,50.])
+            a = array([30., 40., 50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
@@ -454,7 +455,7 @@ class TestCoords(unittest.TestCase):
         coord.T()
         self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
-    def getNodes(self, grids, grids_expected, coords):
+    def _get_nodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
 
         for grid in grids:
@@ -467,9 +468,8 @@ class TestCoords(unittest.TestCase):
             coordObj = model.Coord(cid)
 
         model.cross_reference()
-
-        for (i, grid) in enumerate(grids_expected):
-            (nid, cid, x, y, z) = grid
+        for i, grid in enumerate(grids_expected):
+            nid, cid, x, y, z = grid
             node = model.Node(nid)
             pos = node.Position()
             n = array([x, y, z])

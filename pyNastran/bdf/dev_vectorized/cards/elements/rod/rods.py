@@ -24,13 +24,16 @@ class ElementsRod(object):
 
         self.crod = CROD(self.model)
         self.conrod = CONROD(self.model)
+        self.ctube = CTUBE(self.model)
 
     def build(self):
         self.crod.build(self._crod)
         self.conrod.build(self._conrod)
+        self.ctube.build(self._ctube)
 
         ncrod = len(self.crod.eid)
         nconrod = len(self.conrod.eid)
+        nctube = len(self.ctube.eid)
 
         if npshell and npcomp:
             eid = concatenate(self.pshell.eid, self.pcomp.eid)
@@ -47,9 +50,12 @@ class ElementsRod(object):
     def add_crod(self, card, comment):
         self.crod.add(card, comment)
 
+    def add_ctube(self, card, comment):
+        self.ctube.add(card, comment)
+
     def get_stats(self):
         msg = []
-        types = [self.crod, conrod]
+        types = [self.crod, self.conrod, self.ctube]
         for elem in types:
             nele = len(elem.eid)
             if nele:

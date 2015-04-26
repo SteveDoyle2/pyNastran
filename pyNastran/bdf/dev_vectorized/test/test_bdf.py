@@ -37,9 +37,9 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     filenames2 = []
     diffCards = []
     for filename in filenames:
-        if (filename.endswith('.bdf') or filename.endswith('.dat') or
-            filename.endswith('.nas') or filename.endswith('.nas')):
-            filenames2.append(filename)
+        if(filename.endswith('.bdf') or filename.endswith('.dat') or
+           filename.endswith('.nas') or filename.endswith('.nas')):
+           filenames2.append(filename)
 
     failedFiles = []
     n = 1
@@ -101,14 +101,14 @@ def memory_usage_psutil():
     mem = process.get_memory_info()[0] / float(2 ** 20)
     return mem
 
-def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
+def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, precision='single',
             reject=False, dynamic_vars={}):
-    bdfModel = str(bdfFilename)
+    bdfModel = str(bdf_filename)
     print("bdfModel = %r" % bdfModel)
     if isFolder:
-        bdfModel = os.path.join(test_path, folder, bdfFilename)
+        bdfModel = os.path.join(test_path, folder, bdf_filename)
 
     assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
 
@@ -123,9 +123,9 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     fem2 = None
     diffCards = []
     try:
-        (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid)
-        (fem2)     = run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
-        (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid)
+        fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
+        diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
@@ -353,7 +353,7 @@ def get_matrix_stats(fem1, fem2):
                       "matrix.type=%s matrix.name=%s" % (dmig.type, dmig.name))
         except:
             print("*stats - matrix.type=%s name=%s  matrix=\n%s"
-                % (dmig.type, dmig.name, str(dmig)))
+                  % (dmig.type, dmig.name, str(dmig)))
             raise
 
 
@@ -378,7 +378,7 @@ def compare_params(fem1, fem2):
 def print_points(fem1, fem2):
     for (nid, n1) in sorted(iteritems(fem1.nodes)):
         print("%s   xyz=%s  n1=%s  n2=%s" % (nid, n1.xyz, n1.Position(True),
-                                            fem2.Node(nid).Position()))
+                                             fem2.Node(nid).Position()))
         break
     coord = fem1.Coord(5)
     print(coord)
@@ -446,7 +446,7 @@ def main():
     run_bdf('.',
             data['BDF_FILENAME'],
             debug=not(data['--quiet']),
-            xref=not(data['--xref' ]),
+            xref=not(data['--xref']),
             check=not(data['--check']),
             punch=data['--punch'],
             reject=data['--reject'],

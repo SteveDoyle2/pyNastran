@@ -241,11 +241,12 @@ class BDFMethods(BDFMethodsDeprecated):
 
         self.log.debug("Creating %i-process pool!" % num_cpus)
         pool = mp.Pool(num_cpus)
-        result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in elements
-                           if element.type not in ['CBUSH', 'CBUSH1D',
-                                                   'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                                                   ]])
+        result = pool.imap(_mass_properties_mass_mp_func,
+                           [(element) for element in elements
+                            if element.type not in ['CBUSH', 'CBUSH1D',
+                                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                                                    ]])
         result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
 
         mass = zeros((nelements), 'float64')

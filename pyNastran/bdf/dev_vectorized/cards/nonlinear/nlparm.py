@@ -82,13 +82,13 @@ class NLPARM(object):
         maxLs = set_blank_if_default(self.maxLs, 4)
         fStress = set_blank_if_default(self.fStress, 0.2)
         lsTol = set_blank_if_default(self.lsTol, 0.5)
-        maxBisect = set_blank_if_default(self.maxBisect, 5)
+        max_bisect = set_blank_if_default(self.maxBisect, 5)
         maxR = set_blank_if_default(self.maxR, 20.)
         rTolB = set_blank_if_default(self.rTolB, 20.)
 
         list_fields = ['NLPARM', self.nlparm_id, ninc, dt, kMethod, kStep, maxIter,
                        conv, intOut, epsU, epsP, epsW, maxDiv, maxQn, maxLs,
-                       fStress, lsTol, maxBisect, None, None, None, maxR, None,
+                       fStress, lsTol, max_bisect, None, None, None, maxR, None,
                        rTolB]
         return list_fields
 

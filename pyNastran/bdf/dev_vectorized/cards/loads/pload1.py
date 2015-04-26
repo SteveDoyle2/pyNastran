@@ -11,7 +11,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 class PLOAD1(object):
     type = 'PLOAD1'
     valid_types = ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE',
-                  'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
+                   'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
     valid_scales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
     def __init__(self, model):
@@ -83,8 +83,8 @@ class PLOAD1(object):
         for i, card in enumerate(cards):
             self.load_id[i] = integer(card, 1, 'load_id')
             self.element_id[i] = integer(card, 2, 'eid')
-            Type = string(card, 3,  'Type ("%s")' % '",  "'.join(self.valid_types) )
-            scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.valid_scales) )
+            Type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.valid_types))
+            scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.valid_scales))
             self.x1[i] = double(card, 5, 'x1')
             self.p1[i] = double(card, 6, 'p1')
             self.x2[i] = double_or_blank(card, 7, 'x2', self.x1)

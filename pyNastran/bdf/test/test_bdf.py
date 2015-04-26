@@ -104,16 +104,16 @@ def memory_usage_psutil():
     mem = process.get_memory_info()[0] / float(2 ** 20)
     return mem
 
-def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
+def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
             reject=False, nastran='', dynamic_vars=None):
     if dynamic_vars is None:
         dynamic_vars = {}
-    bdfModel = str(bdfFilename)
+    bdfModel = str(bdf_filename)
     print("bdfModel = %s" % bdfModel)
     if isFolder:
-        bdfModel = os.path.join(test_path, folder, bdfFilename)
+        bdfModel = os.path.join(test_path, folder, bdf_filename)
 
     assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
 

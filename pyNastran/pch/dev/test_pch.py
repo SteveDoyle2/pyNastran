@@ -90,7 +90,7 @@ def run_pch(pch_filename, makeGeom=False, writeBDF=False, write_f06=True,
         pch = PCH(makeGeom=makeGeom, debug=debug)
         pch.set_subcases(iSubcases)
 
-        #pch.read_bdf(pch.bdfFileName,includeDir=None,xref=False)
+        #pch.read_bdf(pch.bdf_filename, includeDir=None, xref=False)
         #pch.write_bdf_as_patran()
         pch.read_pch(pch_filename)
         print("---stats for %s---" % pchFileName)

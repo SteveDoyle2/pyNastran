@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import sys
 from pyNastran.bdf.bdf import BDF, to_fields, BDFCard, interpret_value
 from pyNastran.bdf.cards.utils import wipe_empty_fields

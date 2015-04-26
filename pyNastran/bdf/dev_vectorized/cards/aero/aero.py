@@ -1,6 +1,7 @@
 from six.moves import range
 from numpy import zeros
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import integer_or_blank
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -36,7 +37,6 @@ class AERO(VectorizedCard):
     def allocate(self, ncards):
         self.n = ncards
         self.model.log.debug('AERO.n=%s' % self.n)
-        bb
         if self.n:
             float_fmt = self.model.float
             self.acsid = zeros(ncards, dtype='int32')
@@ -59,7 +59,7 @@ class AERO(VectorizedCard):
         assert len(card) <= 7, 'len(AERO card) = %i' % len(card)
         self.i += 1
 
-    def add_op2(data):
+    def add_op2(self, data):
         self.acsid = data[0]
         self.velocity = data[1]
         self.cRef = data[2]

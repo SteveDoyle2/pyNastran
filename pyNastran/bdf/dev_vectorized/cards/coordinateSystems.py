@@ -48,7 +48,7 @@ class Coord(BaseCard):
 
     def __repr__(self):
         aaa
-        return write_bdf(size=8, is_double=False)
+        return self.write_bdf(size=8, is_double=False)
 
     def __str__(self):
         return self.__repr__()

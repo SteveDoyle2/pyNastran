@@ -500,7 +500,7 @@ class CONM1(PointMassElement):
             self._comment = comment
         m = zeros((6, 6))
         if card:
-            #self.nids  = [ card[1] ]
+            #self.nids  = [card[1]]
             #del self.nids
             #self.pid = None
             self.eid = integer(card, 1, 'eid')

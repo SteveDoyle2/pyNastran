@@ -19,7 +19,7 @@ def makeT(v1, v2):
     return t
 
 
-def buildGlobalStiffness(elements):
+def build_global_stiffness(elements):
     nElements = len(elements)
 
     Kg = matrix(zeros((nElements, nElements), 'd'))
@@ -58,7 +58,7 @@ class tri(object):
 
 
 def doProblem(elements):
-    Kg = buildGlobalStiffness()     # global  stiffness (Kg)
+    Kg = build_global_stiffness()     # global  stiffness (Kg)
     Kr = applyBoundaryConditions()  # reduced stiffness (Kr)
 
     #F = K*x

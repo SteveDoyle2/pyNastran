@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 
@@ -5,7 +6,7 @@ import pyNastran
 from docopt import docopt
 
 def run_arg_parse(mode=''):
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
     msg += "  pyNastran%s BDFNAME [--old=<OLD>] [--out=<OUT>]\n" % mode
     msg += '              [--k=<K_MATRIX>] [--m=<MASS_MATRIX>] [--f=<F_MATRIX>]\n'
     msg += '  pyNastran%s -h | --help\n' % mode

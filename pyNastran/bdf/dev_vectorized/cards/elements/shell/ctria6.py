@@ -44,7 +44,7 @@ class CTRIA6(ShellElement):
             integer_or_blank(card, 8, 'node_id6', 0)]
 
         #self.thetaMcid[i] = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
-        self.offset[i] = double_or_blank(card, 10, 'zOffset', 0.0)
+        self.zoffset[i] = double_or_blank(card, 10, 'zoffset', 0.0)
 
         self.thickness[i] = [
             double_or_blank(card, 11, 'T1', 1.0),

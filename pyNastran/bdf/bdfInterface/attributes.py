@@ -70,7 +70,7 @@ class BDFAttributes(object):
         return self.materials.keys()
 
     @material_ids.setter
-    def coord_ids(self, value):
+    def material_ids(self, value):
         raise ValueError("You cannot set material IDs like this...modify the materials objects")
 
     @property

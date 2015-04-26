@@ -147,6 +147,7 @@ class TestRods(unittest.TestCase):
         #self.assertEquals(crod.Nu(), nu)
 
         # prod
+        prod = model.prod[pid]
         self.assertEquals(prod.Pid(), pid)
         self.assertEquals(prod.Mid(), mid)
         self.assertEquals(prod.Nsm(), nsm)
@@ -159,6 +160,7 @@ class TestRods(unittest.TestCase):
 
         # ctube
         if 0:
+            ctube = model.ctube[eid+2]
             self.assertEquals(ctube.Eid(), eid+2)
             self.assertEquals(ctube.Pid(), pid+1)
             self.assertEquals(ctube.Mid(), mid)
@@ -172,6 +174,7 @@ class TestRods(unittest.TestCase):
             self.assertEquals(ctube.Rho(), rho)
 
         # ptube
+        ptube = model.ptube[pid+1]
         self.assertEquals(ptube.Pid(), pid+1)
         self.assertEquals(ptube.Mid(), mid)
         self.assertEquals(ptube.Nsm(), nsm)

@@ -52,10 +52,11 @@ class PLOAD(object):
     def add(self, card, comment=None):
         self.load_id.append(integer(card, 1, 'sid'))
         self.pressure.append(double(card, 2, 'p'))
-        node_ids.append([integer(card, 3, 'n1'),
-                      integer(card, 4, 'n2'),
-                      integer(card, 5, 'n3'),
-                      integer_or_blank(card, 6, 'n4', 0)])
+        node_ids.append([
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+            integer_or_blank(card, 6, 'n4', 0)])
         self.node_ids.append(node_ids)
         assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
         self._comments.append(comment)
@@ -87,7 +88,7 @@ class PLOAD(object):
                 i = searchsorted(load_ids, self.load_id)
 
             n3 = ['' if n3i == 0 else n3i for n3i in self.node_ids[i, 3]]
-            for (load_id, p, n, n3i) in zip(self.load_id[i], self.pressure[i],self.node_ids[i, :2], n3):
+            for (load_id, p, n, n3i) in zip(self.load_id[i], self.pressure[i], self.node_ids[i, :2], n3):
                 card = ['PLOAD', load_id, p, n[0], n[1], n[2], n3i]
                 if size == 8:
                     f.write(print_card_8(card))

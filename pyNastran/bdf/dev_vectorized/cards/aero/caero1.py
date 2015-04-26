@@ -1,6 +1,7 @@
 from six.moves import zip
 
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import (array, zeros, arange, concatenate, searchsorted, where,
+                   unique, cross)
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -209,10 +210,11 @@ class CAERO1(VectorizedCard):
             calculate_area=False,
             calculate_normal=True)
 
-        if total:
-            return area.sum()
-        else:
-            return area
+        return normal
+        #if total:
+            #return area.sum()
+        #else:
+            #return area
 
     def _area_normal(self, element_id=None, node_ids=None, grids_cid0=None,
                           calculate_area=True,

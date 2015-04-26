@@ -10,7 +10,6 @@ class LoadCase(object):
 
     def __getitem__(self, key):
         self.model.log.debug("loadcase %s" % key)
-        aaa
         return self.resolve(key)
 
     def add(self, load):
