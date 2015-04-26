@@ -75,7 +75,7 @@ class TestCoords(unittest.TestCase):
             [2, 1, 0., -1., 0.],
             [3, 1, 1., 0., 0.],
             [4, 1, 1., -1., -1.],
-            [5, 1, 1., -1.,  0.],
+            [5, 1, 1., -1., 0.],
         ]
 
         coords = [  # cid, rid, origin,     zaxis        xaxis
@@ -311,7 +311,7 @@ class TestCoords(unittest.TestCase):
         for nid in model.nodes:
             a = array([30., 40., 50.])
             b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a - b))
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 
     def test_cord2_rcs_02(self):
         """
@@ -397,7 +397,7 @@ class TestCoords(unittest.TestCase):
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
-            a = array([30.,40.,50.])
+            a = array([30., 40., 50.])
             b = model.Node(nid).Position()
             self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
 

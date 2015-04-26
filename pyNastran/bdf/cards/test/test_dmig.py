@@ -25,8 +25,8 @@ class TestDMIG(unittest.TestCase):
         #print "---out---\n", out
 
         reals_expected = [
-            [1.0,  0.5, 0.25],
-            [0.5,  2.0, 0.75],
+            [1.0, 0.5, 0.25],
+            [0.5, 2.0, 0.75],
             [0.25, 0.75, 3.0],
         ]
         self.assertTrue(array_equal(reals_expected, reals_actual))
@@ -90,7 +90,7 @@ class TestDMIG(unittest.TestCase):
             [0.251, 0.751, 3.1],
         ]
         IMAGS_expected = array(IMAGS_expected_real) + array(IMAGS_expected_imag)*1j
-        msg  = '\n%s_actual\n%s\n\n----' % ('IMAGS', IMAGS_actual)
+        msg = '\n%s_actual\n%s\n\n----' % ('IMAGS', IMAGS_actual)
         msg += '\n%s_expected\n%s\n----' % ('IMAGS', IMAGS_expected)
         msg += '\n%s_delta\n%s\n----' % ('IMAGS', IMAGS_actual-IMAGS_expected)
         self.assertTrue(array_equal(IMAGS_expected, IMAGS_actual), msg)
@@ -112,7 +112,7 @@ class TestDMIG(unittest.TestCase):
         B_expected = mag_expected * sin(radians(45))
         POLE_expected = A_expected + B_expected * 1j
 
-        msg  = '\n%s_actual\n%s\n\n----' % ('POLE', POLE_actual)
+        msg = '\n%s_actual\n%s\n\n----' % ('POLE', POLE_actual)
         msg += '\n%s_expected\n%s\n----' % ('POLE', POLE_expected)
         msg += '\n%s_delta\n%s\n----' % ('POLE', POLE_actual-POLE_expected)
         self.assertTrue(array_equal(POLE_expected, POLE_actual), msg)

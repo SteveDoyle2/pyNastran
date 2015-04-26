@@ -1117,7 +1117,7 @@ class NastranIO(NastranIO_xref):
     def finish_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        print("caseKeys = ",self.caseKeys)
+        print("caseKeys = ", self.caseKeys)
 
         if len(self.resultCases) == 0:
             self.nCases = 1
@@ -1214,9 +1214,9 @@ class NastranIO(NastranIO_xref):
                            max(case.sxe[eid]),
                            max(case.sxf[eid]))
                 o1i = max(case.smax[eid])
-                o3i =min(case.smin[eid])
-                ovmi =max(max(case.smax[eid]),
-                          abs(min(case.smin[eid])))
+                o3i = min(case.smin[eid])
+                ovmi = max(max(case.smax[eid]),
+                           abs(min(case.smin[eid])))
                 for nid in node_ids:
                     oxx_dict[nid].append(oxxi)
                     o1_dict[nid].append(o1i)

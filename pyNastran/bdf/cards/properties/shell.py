@@ -31,6 +31,9 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def __init__(self, card, data):
         ShellProperty.__init__(self, card, data)
 
+        #: list of plies
+        self.plies = []
+
     def cross_reference(self, model):
         """
         Links the Material IDs to the materials.
@@ -448,7 +451,7 @@ class PCOMP(CompositeShellProperty):
         ply[slot] = value
 
     def __init__(self, card=None, data=None, comment=''):  # not done, cleanup
-        ShellProperty.__init__(self, card, data)
+        CompositeShellProperty.__init__(self, card, data)
 
         if comment:
             self._comment = comment
@@ -489,7 +492,6 @@ class PCOMP(CompositeShellProperty):
             nplies = nmajor
             #print("nplies = ",nplies)
 
-            plies = []
             mid_last = None
             thick_last = None
             ply = None
@@ -513,14 +515,11 @@ class PCOMP(CompositeShellProperty):
                 if actual != [None, None, None, None]:
                     ply = [mid, t, theta, sout]
                     #print('ply =', ply)
-                    plies.append(ply)
+                    self.plies.append(ply)
                     iply += 1
                 mid_last = mid
                 thick_last = t
             #print "nplies = ",nplies
-
-            #: list of plies
-            self.plies = plies
 
             #self.plies = []
             #if self.lam == 'SYM':
@@ -644,7 +643,7 @@ class PCOMPG(CompositeShellProperty):
         ply[slot] = value
 
     def __init__(self, card=None, data=None, comment=''):
-        ShellProperty.__init__(self, card, data)
+        CompositeShellProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -662,7 +661,6 @@ class PCOMPG(CompositeShellProperty):
             T = 0.  # thickness
             mid_last = None
             thick_last = None
-            self.plies = []
 
             i = 0
             #n = 0

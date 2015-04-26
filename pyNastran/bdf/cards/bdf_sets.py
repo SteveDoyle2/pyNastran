@@ -256,7 +256,14 @@ class CSET1(Set):
             self.components = '123456'
         else:
             self.components = components(card, 1, 'components')
+
+            IDs2 = []
+            ii = 1
+            for i in range(2, len(card)):
+                integer_or_string(card, ifield, 'ID' % ii)
+                ii += 1
             IDs = fields(integer_or_string, 'ID', i=2, j=len(card))
+            assert IDs2 == IDs
             self.IDs = expand_thru(IDs)
 
     def raw_fields(self):

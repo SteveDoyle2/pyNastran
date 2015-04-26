@@ -219,7 +219,7 @@ if __name__ == '__main__':  # pragma: no cover
     assert displacement.ntimes == 1, displacement.ntimes
 
     # get all the nodes for element 1
-    inode1 = data.getNodeIndex([1]])    # [itransient, node, t1/t2]
+    inode1 = data.getNodeIndex([1])    # [itransient, node, t1/t2]
     datai = data[0, inode1, :]
     grid_typei = grid_type[inode]
 

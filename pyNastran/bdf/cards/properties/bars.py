@@ -816,8 +816,16 @@ class PBARL(LineProperty):
             ndim = self.validTypes[self.Type]
             j = 9 + ndim + 1
 
+            #self.dim = fields(double_or_blank, card, 'dim', i=9, j=j)
+            dims = []
+            ii = 1
+            for i in range(9, j):
+                dim = double_or_blank(card, ifield, 'dim%i' % ii)
+                ii += 1
+                dims.append(dim)
+            assert len(dim) == ndim, len(dim)
             #: dimension list
-            self.dim = fields(double_or_blank, card, 'dim', i=9, j=j)
+            self.dim = dims
 
             #: non-structural mass
             self.nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
