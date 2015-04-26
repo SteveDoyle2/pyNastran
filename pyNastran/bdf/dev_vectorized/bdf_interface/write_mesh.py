@@ -561,12 +561,16 @@ class WriteMesh(object):
         Writes the rejected (processed) cards and the rejected unprocessed
         cardLines
         """
+        if size == 8:
+            print_func = print_card_8
+        else:
+            print_func = print_card_16
         msg = []
         if self.reject_cards:
             msg.append('$REJECTS\n')
             for reject_card in self.reject_cards:
                 try:
-                    msg.append(print_card(reject_card))
+                    msg.append(print_func(reject_card))
                 except RuntimeError:
                     for field in reject_card:
                         if field is not None and '=' in field:

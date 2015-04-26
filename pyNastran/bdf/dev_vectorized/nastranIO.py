@@ -728,10 +728,10 @@ class NastranIO(NastranIO_xref):
                         elem = vtk.vtkVertex()
                         elem.GetPointIds().SetId(0, j)
 
-                        elem = vtk.vtkSphere()
-                        if d == 0.:
-                            d = sphere_size
-                        elem.SetRadius(d)
+                        #elem = vtk.vtkSphere()
+                        #if d == 0.:
+                            #d = sphere_size
+                        #elem.SetRadius(d)
                     else:
                         # 2 points
                         #d = norm(element.nodes[0].Position() - element.nodes[1].Position())

@@ -3,7 +3,8 @@ from six import iteritems, itervalues
 from six.moves import zip
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, hstack, array_equal, allclose, eye, ndarray, arange, sqrt)
+                   cos, sin, arccos, hstack, array_equal, allclose, eye, ndarray,
+                   arange, sqrt)
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.coordinateSystems import (
@@ -325,7 +326,6 @@ class Coord(object):
             #assert array_equal(t123, _t123), "t123=\n%s\n\n_t123=\n%s" % (t123, _t123)
 
             #e123 = dot(T, t123).T
-            bbb
             e123 = dot(T, self.spherical_to_rectangular(pts).T).T
             #assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
             e1 = e123[0, :]

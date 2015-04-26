@@ -1452,9 +1452,9 @@ class Solver(F06, OP2):
         #if min(mass) == 0.:
             #raise RuntimeError('mass = %s' % mass)
         cg = array([
-            [ Mtr[0, 0], -Mtr[0, 2],  Mtr[0, 1]],
-            [ Mtr[1, 2],  Mtr[1, 1], -Mtr[1, 0]],
-            [-Mtr[2, 1],  Mtr[2, 0],  Mtr[2, 2]],
+            [Mtr[0, 0], -Mtr[0, 2], Mtr[0, 1]],
+            [Mtr[1, 2], Mtr[1, 1], -Mtr[1, 0]],
+            [-Mtr[2, 1], Mtr[2, 0], Mtr[2, 2]],
         ], dtype='float32')
         if mass[0] != 0.:
             cg[0, :] /= Mx
@@ -1874,11 +1874,11 @@ class Solver(F06, OP2):
 
     def build_dof_sets(self):
         # s = sb + sg
-        self.Us  = self.Usb  + self.Usg
+        self.Us = self.Usb + self.Usg
         self.iUs = self.iUsb + self.iUsg
 
         # l = b + c + lm
-        self.Ul  = self.Uc  + self.Ulm
+        self.Ul = self.Uc + self.Ulm
         self.iUl = self.iUc + self.iUlm
 
         # t = l + r
@@ -1906,7 +1906,7 @@ class Solver(F06, OP2):
         self.iUn = self.iUf + self.iUs
 
         # ne = n + e
-        self.Une  = self.Un  + self.Ue
+        self.Une = self.Un + self.Ue
         self.iUne = self.iUn + self.iUe
 
         # m = mp + mr

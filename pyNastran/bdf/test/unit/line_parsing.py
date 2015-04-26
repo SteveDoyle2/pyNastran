@@ -93,9 +93,9 @@ def _parseEntry(lines):
     for letter in line:
         if letter == '=':
             equalsCount += 1
-    lineUpper = line.upper()
+    line_upper = line.upper()
 
-    if lineUpper.startswith('SUBCASE'):
+    if line_upper.startswith('SUBCASE'):
         #print("line = |%r|" % line)
         line2 = line.replace('=', '')
         sline = line2.split()
@@ -107,8 +107,8 @@ def _parseEntry(lines):
         value = int(isubcase)
         #self. subcase = int(isubcase)
         paramType = 'SUBCASE-type'
-    elif (lineUpper.startswith(('LABEL', 'SUBTITLE')) or
-          lineUpper.startswith('TITLE')):
+    elif (line_upper.startswith(('LABEL', 'SUBTITLE')) or
+          line_upper.startswith('TITLE')):
         eIndex = line.index('=')
         key = line[0:eIndex].strip()
         value = line[eIndex + 1:].strip()
@@ -158,14 +158,14 @@ def _parseEntry(lines):
             else:
                 value = interpret_value(value)
 
-    elif lineUpper.startswith('BEGIN'):  # begin bulk
+    elif line_upper.startswith('BEGIN'):  # begin bulk
         try:
-            (key, value) = lineUpper.split(' ')
+            (key, value) = line_upper.split(' ')
         except:
             msg = 'excepted "BEGIN BULK" found=|%r|' % (line)
             raise RuntimeError(msg)
         paramType = 'BEGIN_BULK-type'
-    elif 'PARAM' in lineUpper:  # param
+    elif 'PARAM' in line_upper:  # param
         sline = line.split(',')
         if len(sline) != 3:
             raise SyntaxError("Param Parse: trying to parse %r..." % line)

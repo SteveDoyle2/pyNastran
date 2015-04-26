@@ -60,6 +60,11 @@ BDF API:
  - deprecated echo_bdf
 
 -----------------------v0.7.2 released 2015/04/xx-----------------------
+
+BDF:
+  - fixed model.material_ids
+
+-----------------------v0.7.2 released 2015/04/25-----------------------
 Relase notes:
    - This is a bug fix release
    - improved documentation

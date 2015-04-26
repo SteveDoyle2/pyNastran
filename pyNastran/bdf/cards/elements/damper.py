@@ -286,7 +286,7 @@ class CDAMP3(LineDamper):
 
     @property
     def node_ids(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
     @node_ids.setter
     def node_ids(self, value):

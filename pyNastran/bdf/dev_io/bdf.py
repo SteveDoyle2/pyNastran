@@ -1749,14 +1749,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return self.dict_of_vars[key]
 
     #def _is_case_control_deck(self, line):
-        #lineUpper = line.upper().strip()
+        #line_upper = line.upper().strip()
         #if 'CEND' in line.upper():
             #raise SyntaxError('invalid Case Control Deck card...CEND...')
-        #if '=' in lineUpper or ' ' in lineUpper:
+        #if '=' in line_upper or ' ' in line_upper:
             #return True
         #for card in self.uniqueBulkDataCards:
             #lenCard = len(card)
-            #if card in lineUpper[:lenCard]:
+            #if card in line_upper[:lenCard]:
                 #return False
         #return True
 

@@ -1,5 +1,5 @@
 from six.moves import zip
-from numpy import zeros
+from numpy import zeros, where, unique, transpose, dot, array
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -124,7 +124,7 @@ class TEMP(object):
     def positions(self, nids=None):
         if nids is None:
             nids = self.nids
-        xyz = xyz.copy()
+        xyz = self.xyz.copy()
 
         n = arange(self.n)
         i = where(self.cid != 0)[0]

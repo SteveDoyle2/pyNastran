@@ -54,10 +54,10 @@ class BaseCard(BaseCardDeprecated):
             self._update_field_helper(n, value)
 
     def _update_field_helper(self, n, value):
-        raise NotImplementedError()
+        raise IndexError('%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__)
 
     def _get_field_helper(self, n):
-        raise NotImplementedError()
+        raise IndexError('%s has not overwritten _get_field_helper; out of range' % self.__class__.__name__)
 
     def get_field(self, n):
         """

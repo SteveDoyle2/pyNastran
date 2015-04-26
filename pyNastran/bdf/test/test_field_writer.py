@@ -98,7 +98,7 @@ class Testfield_writer_8(unittest.TestCase):
         self.assertEqual(print_field(12345678), '12345678', 'b')
         self.assertRaises(RuntimeError, print_field, 123456789)
         self.assertEqual(print_field('12345678'), '12345678', 'c')
-        self.assertEqual(print_field('1       '),'1       ',
+        self.assertEqual(print_field('1       '), '1       ',
                          '|%s|' %(print_field('1       ')))
 
     def test_ints_16(self):
@@ -110,8 +110,8 @@ class Testfield_writer_8(unittest.TestCase):
         #msg = print_field_16('12345678        ')
         #msg = '|%s| len(msg)=%s' %(msg, len(msg))
         #self.assertEqual(print_field_16('12345678'), '12345678        ',msg)
-        self.assertEqual(print_field_16('1               '),'1               ',
-                          '|%s|' %(print_field('1       ')))
+        self.assertEqual(print_field_16('1               '), '1               ',
+                          '|%s|' % (print_field('1       ')))
 
     def test_floats_positive_8(self):
         # ideal
@@ -192,7 +192,7 @@ class Testfield_writer_8(unittest.TestCase):
                          print_field(-123456.28))
         self.assertEqual(print_field(-1234567.25), '-1.235+6', # is this right?
                          print_field(-1234567.25))
-        self.assertEqual(print_field(-12345678.),  '-1.235+7', # is this right?
+        self.assertEqual(print_field(-12345678.), '-1.235+7', # is this right?
                          '|%s|' % print_field(-12345678.))
         self.assertEqual(print_field(-123456789.), '-1.235+8', # is this right?
                          '|%s|' % print_field(-123456789.))
@@ -227,7 +227,7 @@ class Testfield_writer_8(unittest.TestCase):
                          'N|%s|' % print_field(-1e-20))
 
     def test_print_card_8(self):
-        self.assertEqual(print_card_8(['GRID',1]),'GRID           1\n')
+        self.assertEqual(print_card_8(['GRID', 1]), 'GRID           1\n')
         self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
                                        None, None, 1]),
                          'GRID           1\n               1\n',
@@ -255,7 +255,7 @@ class Testfield_writer_8(unittest.TestCase):
         self.assertFalse(is_same('MAT', 'MAT1'))
 
     def test_card_double(self):
-        card = print_card_double(['GRID', 1, None, 120.322,-4.82872,1.13362])
+        card = print_card_double(['GRID', 1, None, 120.322, -4.82872, 1.13362])
         card_expected = 'GRID*                  1                1.2032200000D+02-4.828720000D+00\n'
         card_expected += '*       1.1336200000D+00\n'
         self.assertEqual(card, card_expected)
@@ -284,7 +284,7 @@ class Testfield_writer_8(unittest.TestCase):
 
         #=============================
         #                            mid   E1      E2      nu12 G12      G1z      G2z      rho
-        card = print_card_8(['MAT8', 6,    1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., .0001712,
+        card = print_card_8(['MAT8', 6, 1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., 0.0001712,
         #                            a1    a2    TRef
                                      None, 71.33])
         card_expected = ''
@@ -293,7 +293,7 @@ class Testfield_writer_8(unittest.TestCase):
         self.assertEqual(card, card_expected)
 
 
-        card = print_card_16(['MAT8', 6,    1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., .0001712,
+        card = print_card_16(['MAT8', 6, 1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., 0.0001712,
         #                            a1    a2    TRef
                                      None, 71.33])
 
@@ -333,7 +333,7 @@ class Testfield_writer_8(unittest.TestCase):
 
         nums = (
             [0., 0.000034, -0.000034] +
-            [ 9./11 * 10**x for x in range(small_exponent, large_exponent+1)] +
+            [9./11 * 10**x for x in range(small_exponent, large_exponent+1)] +
             [-9./11 * 10**x for x in range(small_exponent, large_exponent+1)])
 
         expected = [
@@ -355,8 +355,8 @@ class Testfield_writer_8(unittest.TestCase):
         ]
         for x, expectedi in zip(nums, expected):
             output = print_float_8(x)
-            self.assertEqual(len(output), 8, msg='output=%r len(output)=%i' % (output, len(output) ))
-            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi ))
+            self.assertEqual(len(output), 8, msg='output=%r len(output)=%i' % (output, len(output)))
+            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
 
     def test_scientific_16(self):
         small_exponent = -17
@@ -365,8 +365,8 @@ class Testfield_writer_8(unittest.TestCase):
         nums = (
             [0.,
              0.000034, -0.000034] +
-            [ 9./11 * 10**x for x in range(small_exponent,large_exponent+1)] +
-            [-9./11 * 10**x for x in range(small_exponent,large_exponent+1)])
+            [9./11 * 10**x for x in range(small_exponent, large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent, large_exponent+1)])
 
         expected = [
             '              0.',
@@ -395,8 +395,8 @@ class Testfield_writer_8(unittest.TestCase):
             '-8.1818181818+13', '-8.1818181818+14', '-8.1818181818+15', '-8.1818181818+16', ]
         for x, expectedi in zip(nums, expected):
             output = print_scientific_16(x)
-            self.assertEqual(len(output), 16, msg='output=%r len(output)=%i' % (output, len(output) ))
-            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi ))
+            self.assertEqual(len(output), 16, msg='output=%r len(output)=%i' % (output, len(output)))
+            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
             #print('%16s %r' % (x, output))
 
     def test_float_16(self):
@@ -405,8 +405,8 @@ class Testfield_writer_8(unittest.TestCase):
 
         nums = (
             [0., 0.000034, -0.000034] +
-            [ 9./11 * 10**x for x in range(small_exponent,large_exponent+1)] +
-            [-9./11 * 10**x for x in range(small_exponent,large_exponent+1)])
+            [9./11 * 10**x for x in range(small_exponent, large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent, large_exponent+1)])
 
         expected = [
             '              0.', '         .000034', '        -.000034',
@@ -433,11 +433,11 @@ class Testfield_writer_8(unittest.TestCase):
         ]
         for x, expectedi in zip(nums, expected):
             output = print_float_16(x)
-            self.assertEqual(len(output), 16, msg='output=%r len(output)=%i' % (output, len(output) ))
-            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi ))
+            self.assertEqual(len(output), 16, msg='output=%r len(output)=%i' % (output, len(output)))
+            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
 
         if 0:
-            nums = [.99999999999999 * 10**x for x in range(small_exponent,large_exponent+1)]
+            nums = [0.99999999999999 * 10**x for x in range(small_exponent, large_exponent+1)]
             positive_output = [print_float_16(x) for x in nums]
             negative_output = [print_float_16(-x) for x in nums]
 

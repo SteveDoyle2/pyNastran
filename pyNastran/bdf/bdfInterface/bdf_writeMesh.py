@@ -8,7 +8,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, itervalues, PY2
 from codecs import open
-import warnings
 
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog

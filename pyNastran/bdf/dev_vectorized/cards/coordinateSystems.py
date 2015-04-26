@@ -47,7 +47,6 @@ def normalize(v):
 class Coord(BaseCard):
 
     def __repr__(self):
-        aaa
         return self.write_bdf(size=8, is_double=False)
 
     def __str__(self):
@@ -337,9 +336,9 @@ class Coord(BaseCard):
         .. math:: [\lambda] = [B_{ij}]
         """
         if self.cid == 0:
-            return p, array([[1., 0., 0.],
-                             [0., 1., 0.],
-                             [0., 0., 1.]], dtype='float64')
+            return array([[1., 0., 0.],
+                          [0., 1., 0.],
+                          [0., 0., 1.]], dtype='float64')
         matrix = vstack([self.i, self.j, self.k])
         return matrix
 

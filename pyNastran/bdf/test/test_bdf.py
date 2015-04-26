@@ -223,7 +223,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
             msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
             raise NotImplementedError(msg)
         #fem1.writeAsCTRIA3(outModel)
-    return (outModel)
+    return outModel
 
 
 def run_fem2(bdfModel, outModel, xref, punch,
@@ -256,7 +256,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
     fem2.write_bdf(outModel2, interspersed=False, size=size, is_double=is_double)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
-    return (fem2)
+    return fem2
 
 
 def divide(value1, value2):
@@ -451,7 +451,7 @@ def print_points(fem1, fem2):
 
 def main():
     from docopt import docopt
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] BDF_FILENAME\n" #
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-d] BDF_FILENAME\n" #
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-l] BDF_FILENAME\n" #
@@ -509,7 +509,7 @@ def main():
     run_bdf('.',
             data['BDF_FILENAME'],
             debug=not(data['--quiet']),
-            xref =not(data['--xref']),
+            xref=not(data['--xref']),
             check=not(data['--check']),
             punch=data['--punch'],
             reject=data['--reject'],

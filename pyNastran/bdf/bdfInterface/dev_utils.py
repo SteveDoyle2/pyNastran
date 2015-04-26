@@ -3,7 +3,7 @@ from six import iteritems, itervalues
 from six.moves import zip
 import scipy
 from pyNastran.bdf.bdf import BDF
-from numpy import array, zeros, unique, where, arange, hstack, vstack, searchsorted
+from numpy import array, unique, where, arange, hstack, vstack, searchsorted
 
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
@@ -102,7 +102,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     # get the ids of the duplicate nodes
     slots = where(ieq[:, 1:] < nnodes)
     irows, icols = slots
-    replacer = unique(ieq[slots])
+    #replacer = unique(ieq[slots])
 
     skip_nodes = []
     for (irow, icol) in zip(irows, icols):

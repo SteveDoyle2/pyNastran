@@ -702,18 +702,18 @@ class Subcase(object):
                     pass  # dont write global subcase parameters
                 else:
                     #print("key=%s param=%s" %(key, param))
-                    (value, options, paramType) = param
-                    #print("  *key=|%s| value=|%s| options=%s "
-                          #"paramType=|%s|" % (key, value, options, paramType))
+                    (value, options, param_type) = param
+                    #print("  *key=%r value=|%s| options=%s "
+                          #"param_type=|%s|" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
                     #print ""
             if nparams == 0:
                 for (key, param) in self.subcase_sorted(self.params.items()):
                     #print("key=%s param=%s" %(key, param))
-                    (value, options, paramType) = param
-                    #print("  *key=|%s| value=|%s| options=%s "
-                          #"paramType=|%s|" % (key, value, options, paramType))
+                    (value, options, param_type) = param
+                    #print("  *key=%r value=|%s| options=%s "
+                          #"param_type=|%s|" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
                 assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id

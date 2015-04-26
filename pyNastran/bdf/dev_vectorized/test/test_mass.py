@@ -135,7 +135,7 @@ class TestMass(unittest.TestCase):
         ###########
         # TRIS
         centroid = array([2., 1., 0.]) / 3.
-        normal   = array([.0, .0, 1.])
+        normal = array([.0, .0, 1.])
         ###########
         # tri - pcomp
         tri = model.elements[2]

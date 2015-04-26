@@ -311,7 +311,7 @@ class MATHP(Material):
 
         obj.a10 = self.a10[i]
         obj.a01 = self.a01[i]
-        obj.d1 =  self.d1[i]
+        obj.d1 = self.d1[i]
         obj.rho = self.rho[i]
         obj.av = self.av[i]
         obj.TRef = self.TRef[i]

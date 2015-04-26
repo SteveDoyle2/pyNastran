@@ -1,7 +1,7 @@
 from six.moves import range
 from numpy import zeros
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
-from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import integer_or_blank
+from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import integer_or_blank, double_or_blank, double
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.utils import wipe_empty_fields
