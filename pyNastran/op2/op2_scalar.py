@@ -1,4 +1,4 @@
-#pylint: disable=C0301,C0103,W0613,C0111,W0612,R0913
+#pylint: disable=C0301,W0613,W0612,R0913
 """
 Defines the OP2 class.
 """
@@ -41,20 +41,168 @@ class TrashWriter(object):
     A dummy file that just trashes all data
     """
     def __init__(self, *args, **kwargs):
+        """does nothing"""
         pass
     def open(self, *args, **kwargs):
+        """does nothing"""
         pass
     def write(self, *args, **kwargs):
+        """does nothing"""
         pass
     def close(self, *args, **kwargs):
+        """does nothing"""
         pass
 
+GEOM_TABLES = [
+     b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4',  # regular
+     b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
+     b'GEOM1N', b'GEOM1VU', b'GEOM2VU',
+     b'GEOM1OLD', b'GEOM2OLD', b'GEOM4OLD',
+
+     b'EPT', b'EPTS', b'EPTOLD',
+     b'EDTS',
+     b'MPT', b'MPTS',
+
+     b'PVT0', b'CASECC',
+     b'EDOM', b'OGPFB1',
+     b'BGPDT', b'BGPDTS', b'BGPDTOLD',
+     b'DYNAMIC', b'DYNAMICS',
+     b'EQEXIN', b'EQEXINS',
+     b'GPDT', b'ERRORN',
+     b'DESTAB', b'R1TABRG', b'HISADD',
+
+     # eigenvalues
+     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
+     # strain energy
+     b'ONRGY1',
+     # grid point weight
+     b'OGPWG', b'OGPWGM',
+
+     # other
+     b'CONTACT', b'VIEWTB',
+     b'KDICT', b'MONITOR', b'PERF',
+]
+
+RESULT_TABLES = [
+    # stress
+    b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
+    b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
+    b'OESNL1X', b'OESRT',
+    # strain
+    b'OSTR1X', b'OSTR1C',
+    # forces
+    b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
+    # spc forces - gset - sort 1
+    b'OQG1', b'OQGV1',
+    # mpc forces - gset - sort 1
+    b'OQMG1',
+    # ??? forces
+    b'OQP1',
+    # displacement/velocity/acceleration/eigenvector/temperature
+    b'OUG1', b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
+
+    b'ROUGV1', b'TOUGV1', b'RSOUGV1', b'RESOES1', b'RESEF1',
+
+    # applied loads
+    b'OPNL1', # nonlinear applied loads - sort 1
+    b'OPG1', b'OPGV1', # applied loads - gset? - sort 1
+    b'OPG2', # applied loads - sort 2 - v0.8
+
+    # grid point stresses
+    b'OGS1', # grid point stresses/strains - sort 1
+
+    # other
+    b'OPNL1', b'OFMPF2M',
+    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
+
+    b'OAGPSD2', b'OAGCRM2', b'OAGRMS2', b'OAGATO2', b'OAGNO2',
+    b'OESPSD2', b'OESCRM2', b'OESRMS2', b'OESATO2', b'OESNO2',
+    b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
+    b'OPGPSD2', b'OPGCRM2', b'OPGRMS2', b'OPGATO2', b'OPGNO2',
+    b'OQGPSD2', b'OQGCRM2', b'OQGRMS2', b'OQGATO2', b'OQGNO2',
+    b'OQMPSD2', b'OQMCRM2', b'OQMRMS2', b'OQMATO2', b'OQMNO2',
+    b'OUGPSD2', b'OUGCRM2', b'OUGRMS2', b'OUGATO2', b'OUGNO2',
+    b'OVGPSD2', b'OVGCRM2', b'OVGRMS2', b'OVGATO2', b'OVGNO2',
+    b'OSTRPSD2', b'OSTRCRM2', b'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
+    b'OCRUG',
+    b'OCRPG',
+    b'STDISP',
+
+    # autoskip
+    b'MATPOOL',
+    b'CSTM',
+    b'AXIC',
+    b'BOPHIG',
+    b'HOEF1',
+    b'ONRGY2',
+
+    #------------------------------------------
+    # new skipped - v0.8
+
+    # buggy
+    b'IBULK',
+    b'FRL',
+    b'TOL',
+    b'DSCM2', # normalized design sensitivity coeff. matrix
+
+    # dont seem to crash
+    b'DESCYC',
+    b'DBCOPT', # design optimization history for post-processing
+    b'PVT',    # table containing PARAM data
+    b'XSOP2DIR',
+    b'ONRGY',
+    #b'CLAMA',
+    b'DSCMCOL', # design sensitivity parameters
+    b'CONTACTS',
+    b'EDT', # aero and element deformations
+    b'EXTDB',
+
+
+    b'OQG2', # single point forces - sort 2 - v0.8
+    b'OBC1', b'OBC2', # contact pressures and tractions at grid points
+    b'OBG1', # glue normal and tangential tractions at grid points in basic coordinate system
+    b'OES2', # element stresses - sort 2 - v0.8
+    b'OEF2', # element forces - sort 2 - v0.8
+    b'OPG2', # applied loads - sort 2 - v0.8
+    b'OUGV2', # absolute displacements/velocity/acceleration - sort 2
+
+    # contact
+    b'OSPDSI1', # intial separation distance
+    b'OSPDS1',  # final separation distance
+    b'OQGCF1', b'OQGCF2', # contact force at grid point
+    b'OQGGF1', b'OQGGF2', # glue forces in grid point basic coordinate system
+
+    b'OUGRMS1',
+    b'OESRMS1',
+    b'OUGNO1',
+    b'OESNO1',
+
+    b'OSPDSI2',
+    b'OSPDS2',
+    b'OSTR2',
+    b'OESNLXR2',
+
+    b'CMODEXT',
+    b'ROUGV2',  # relative displacement
+    b'CDDATA',  # cambpell diagram table
+    b'OEKE1',
+    b'OES1MX', # extreme stresses?
+    b'OESNLBR2',
+    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
+]
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
     """
+    def set_as_nx(self):
+        self.is_nx = True
+        self.is_msc = False
+
+    def set_as_msc(self):
+        self.is_nx = False
+        self.is_msc = True
 
     def __init__(self, debug=False, log=None, debug_file=None):
         """
@@ -106,6 +254,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.make_geom = False
 
     def set_as_vectorized(self, vectorized=False, ask=False):
+        """don't call this...testing"""
         if vectorized is True:
             msg = 'OP2_Scalar class doesnt support vectorization.  Use OP2 '
             msg += 'from pyNastran.op2.op2 instead.'
@@ -167,6 +316,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RSOUGV1': [self._table_passer, self._table_passer],
             b'RESOES1': [self._table_passer, self._table_passer],
             b'RESEF1' : [self._table_passer, self._table_passer],
+            b'DESCYC' : [self._table_passer, self._table_passer],
             #=======================
             # OEF
             # element forces
@@ -239,9 +389,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
             #=======================
             # eigenvalues
-            b'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4],  # buckling eigenvalues
-            b'CLAMA': [self._read_complex_eigenvalue_3,  self._read_complex_eigenvalue_4],   # complex eigenvalues
-            b'LAMA' : [self._read_real_eigenvalue_3,     self._read_real_eigenvalue_4],      # eigenvalues
+            b'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
+            b'CLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
+            b'LAMA' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
 
             # ===geom passers===
             # geometry
@@ -423,13 +573,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #asf
 
     def _not_available(self, data):
+        """testing function"""
         if len(data) > 0:
             raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, len(data)))
 
     def _table_passer(self, data):
+        """auto-table skipper"""
         return len(data)
 
     def _validate_op2_filename(self, op2_filename):
+        """
+        Pops a GUI if the op2_filename hasn't been set.
+
+        :param op2_filename:  the filename to check (None -> gui)
+        :returns op2_filename:  a valid file string
+        """
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
@@ -441,6 +599,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return op2_filename
 
     def _create_binary_debug(self):
+        """
+        Instatiates the ``self.binary_debug`` variable/file
+        """
         if hasattr(self, 'binary_debug') and self.binary_debug is not None:
             self.binary_debug.close()
             del self.binary_debug
@@ -563,18 +724,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self._mpt_map
         #self._table_mapper
 
-    def remove_unpickable_data(self):
-        del self.f
-        del self.binary_debug
-        del self._geom1_map
-        del self._geom2_map
-        del self._geom3_map
-        del self._geom4_map
-        del self._dit_map
-        del self._dynamics_map
-        del self._ept_map
-        del self._mpt_map
-        del self._table_mapper
+    #def remove_unpickable_data(self):
+        #del self.f
+        #del self.binary_debug
+        #del self._geom1_map
+        #del self._geom2_map
+        #del self._geom3_map
+        #del self._geom4_map
+        #del self._dit_map
+        #del self._dynamics_map
+        #del self._ept_map
+        #del self._mpt_map
+        #del self._table_mapper
 
     def _read_tables(self, table_name):
         """
@@ -598,34 +759,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             if 0:
                 self._skip_table(table_name)
             else:
-                if table_name in [b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4',  # regular
-                                  b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
-                                  b'GEOM1N',
-                                  b'GEOM1OLD', b'GEOM2OLD', b'GEOM4OLD',
-
-                                  b'EPT', b'EPTS', b'EPTOLD',
-                                  b'EDTS',
-                                  b'MPT', b'MPTS',
-
-                                  b'PVT0', b'CASECC',
-                                  b'EDOM', b'OGPFB1',
-                                  b'BGPDT', b'BGPDTS', b'BGPDTOLD',
-                                  b'DYNAMIC', b'DYNAMICS',
-                                  b'EQEXIN', b'EQEXINS',
-                                  b'GPDT', b'ERRORN',
-                                  b'DESTAB', b'R1TABRG', b'HISADD',
-
-                                   # eigenvalues
-                                   b'BLAMA', b'LAMA',
-                                   # strain energy
-                                   b'ONRGY1',
-                                   # grid point weight
-                                   b'OGPWG', b'OGPWGM',
-
-                                   # other
-                                   b'CONTACT', b'VIEWTB',
-                                   b'KDICT', b'MONITOR', b'PERF',
-                                  ]:
+                if table_name in GEOM_TABLES:
                     self._read_geom_table()  # DIT (agard)
                 elif table_name in [b'GPL', ]:
                     self._read_gpl()
@@ -648,59 +782,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_fol()
                 elif table_name in [b'SDF', b'PMRF']:  #, 'PERF'
                     self._read_sdf()
-                elif table_name in [
-                                    # stress
-                                    b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
-                                    b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
-                                    b'OESNL1X', b'OESRT',
-                                    # strain
-                                    b'OSTR1X', b'OSTR1C',
-                                    # forces
-                                    b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
-                                    # spc forces
-                                    b'OQG1', b'OQGV1',
-                                    # mpc forces
-                                    b'OQMG1',
-                                    # ??? forces
-                                    b'OQP1',
-                                    # displacement/velocity/acceleration/eigenvector/temperature
-                                    b'OUG1', b'OUGV1',b'BOUGV1', b'OUPV1', b'OUGV1PAT',
-
-                                    b'ROUGV1', b'TOUGV1', b'RSOUGV1', b'RESOES1', b'RESEF1',
-                                    # applied loads
-                                    b'OPG1', b'OPGV1', b'OPNL1', #b'OPG2',
-
-                                    # grid point stresses
-                                    b'OGS1',
-
-                                    # other
-                                    b'OPNL1', b'OFMPF2M',
-                                    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
-
-                                    b'OAGPSD2', b'OAGCRM2', b'OAGRMS2', b'OAGATO2', b'OAGNO2',
-                                    b'OESPSD2', b'OESCRM2', b'OESRMS2', b'OESATO2', b'OESNO2',
-                                    b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
-                                    b'OPGPSD2', b'OPGCRM2', b'OPGRMS2', b'OPGATO2', b'OPGNO2',
-                                    b'OQGPSD2', b'OQGCRM2', b'OQGRMS2', b'OQGATO2', b'OQGNO2',
-                                    b'OQMPSD2', b'OQMCRM2', b'OQMRMS2', b'OQMATO2', b'OQMNO2',
-                                    b'OUGPSD2', b'OUGCRM2', b'OUGRMS2', b'OUGATO2', b'OUGNO2',
-                                    b'OVGPSD2', b'OVGCRM2', b'OVGRMS2', b'OVGATO2', b'OVGNO2',
-                                    b'OSTRPSD2', b'OSTRCRM2', b'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
-                                    b'OCRUG',
-                                    b'OCRPG',
-                                    b'STDISP',
-
-                                    # autoskip
-                                    b'MATPOOL',
-                                    b'CSTM',
-                                    b'AXIC',
-                                    b'BOPHIG',
-                                    b'HOEF1',
-                                    b'ONRGY2',
-                                    ]:
+                elif table_name in RESULT_TABLES:
                     self._read_results_table()
                 else:
-                    raise NotImplementedError('%r' % table_name)
+                    raise NotImplementedError('geom/results split: %r' % table_name)
 
             table_name = self.read_table_name(rewind=True, stop_on_failure=False)
         return table_names
@@ -861,7 +946,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #print "n=%s" % (self.n)
         #strings, ints, floats = self.show(100)
-        pass
 
     def _skip_pcompts(self):
         """
@@ -905,37 +989,37 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         self._skip_pcompts()
         return
-        if self.read_mode == 1:
-            return
-        self.log.debug("table_name = %r" % self.table_name)
-        table_name = self.read_table_name(rewind=False)
+        #if self.read_mode == 1:
+            #return
+        #self.log.debug("table_name = %r" % self.table_name)
+        #table_name = self.read_table_name(rewind=False)
 
-        self.read_markers([-1])
-        data = self._read_record()
+        #self.read_markers([-1])
+        #data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        table_name, = unpack(b'8s', data)
-        #print "table_name = %r" % table_name
+        #self.read_markers([-2, 1, 0])
+        #data = self._read_record()
+        #table_name, = unpack(b'8s', data)
+        ##print "table_name = %r" % table_name
 
-        self.read_markers([-3, 1, 0])
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [-4]:
-            data = self._read_record()
+        #self.read_markers([-3, 1, 0])
+        #markers = self.get_nmarkers(1, rewind=True)
+        #if markers != [-4]:
+            #data = self._read_record()
 
-        self.read_markers([-4, 1, 0])
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [0]:
-            data = self._read_record()
-        else:
-            self.read_markers([0])
-            return
+        #self.read_markers([-4, 1, 0])
+        #markers = self.get_nmarkers(1, rewind=True)
+        #if markers != [0]:
+            #data = self._read_record()
+        #else:
+            #self.read_markers([0])
+            #return
 
-        self.read_markers([-5, 1, 0])
-        data = self._read_record()
+        #self.read_markers([-5, 1, 0])
+        #data = self._read_record()
 
-        self.read_markers([-6, 1, 0])
-        self.read_markers([0])
+        #self.read_markers([-6, 1, 0])
+        #self.read_markers([0])
 
     def read_table_name(self, rewind=False, stop_on_failure=True):
         """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
@@ -964,7 +1048,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     # if we hit this block, we have a FATAL error
                     raise FatalError('last table=%r' % self.table_name)
                 table_name = None
-                rewind = False  # we're done reading, so we're going to ignore the rewind
+
+                # we're done reading, so we're going to ignore the rewind
+                rewind = False
 
         if rewind:
             self.n = ni
@@ -1098,6 +1184,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #raise NotImplementedError(self.table_name)
 
     def _read_intmod(self):
+        """reads the INTMOD table"""
         self.table_name = self.read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % self.table_name)
         if self.debug:
@@ -1116,7 +1203,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #print('intmod data2')
         #self.show_data(data)
 
-        for n in [-3, -4, -5, -6, -7,-8,]:
+        for n in [-3, -4, -5, -6, -7, -8,]:
             self.read_markers([n, 1, 1])
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
@@ -1133,6 +1220,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 
     def _read_hisadd(self):
+        """preliminary reader for the HISADD table"""
         self.table_name = self.read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % self.table_name)
         if self.debug:
@@ -1159,7 +1247,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.n += nbytes
         self.show_data(data[4:-4])
         #self.show(100)
-        data
         datai = data[:-4]
 
         irec = data[:32]
@@ -1170,32 +1257,41 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             iconvergence = 'hard'
 
         if conv_result == 0:
-             conv_result = 'no'
+            conv_result = 'no'
         elif conv_result == 1:
-             conv_result = 'soft'
+            conv_result = 'soft'
         elif conv_result == 2:
-             conv_result = 'hard'
+            conv_result = 'hard'
 
         print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
         self.show_data(datai[32:])
-        asdf
-        for n in [-3, -4, -5, -6, -7,-8,]:
-            self.read_markers([n, 1, 1])
-            markers = self.get_nmarkers(1, rewind=False)
-            #print('markers =', markers)
-            nbytes = markers[0]*4 + 12
-            data = self.f.read(nbytes)
-            #print('intmod data%i' % n)
-            #self.show_data(data)
-            self.n += nbytes
+        raise NotImplementedError()
+        #for n in [-3, -4, -5, -6, -7, -8,]:
+            #self.read_markers([n, 1, 1])
+            #markers = self.get_nmarkers(1, rewind=False)
+            ##print('markers =', markers)
+            #nbytes = markers[0]*4 + 12
+            #data = self.f.read(nbytes)
+            ##print('intmod data%i' % n)
+            ##self.show_data(data)
+            #self.n += nbytes
 
-        n = -9
-        self.read_markers([n, 1, 0, 0])
+        #n = -9
+        #self.read_markers([n, 1, 0, 0])
 
-    def get_marker_n(self, n):
+    def get_marker_n(self, nmarkers):
+        """
+        Gets N markers
+
+        A marker is a flag that is used.  It's a series of 3 ints (4, n, 4)
+        where n changes from marker to marker.
+
+        :param nmarkers:  the number of markers to read
+        :returns markers:  a list of nmarker integers
+        """
         markers = []
         s = Struct('3i')
-        for i in range(n):
+        for i in range(nmarkers):
             block = self.f.read(12)
             marker = s.unpack(block)
             markers.append(marker)
@@ -1204,7 +1300,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_geom_table(self):
         """
         Reads a geometry table
-        :param self:    the OP2 object pointer
+
+        :param self:  the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
         if self.debug:
@@ -1328,12 +1425,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.obj = None
 
 
-if __name__ == '__main__':  # pragma: no conver
+def main():
+    """testing pickling"""
     from pickle import dumps, dump, load, loads
     txt_filename = 'solid_shell_bar.txt'
     f = open(txt_filename, 'wb')
     op2_filename = 'solid_shell_bar.op2'
-    op2 = OP2()
+    op2 = OP2_Scalar()
     op2.read_op2(op2_filename)
     print(op2.displacements[1])
     dump(op2, f)
@@ -1348,8 +1446,12 @@ if __name__ == '__main__':  # pragma: no conver
     #import sys
     #op2_filename = sys.argv[1]
 
-    #o = OP2(op2_filename)
+    #o = OP2_Scalar()
     #o.read_op2(op2_filename)
     #(model, ext) = os.path.splitext(op2_filename)
     #f06_outname = model + '.test_op2.f06'
     #o.write_f06(f06_outname)
+
+
+if __name__ == '__main__':  # pragma: no conver
+    main()

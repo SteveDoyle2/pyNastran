@@ -15,7 +15,7 @@ class OP2(OP2_Scalar):
 
     def __init__(self,
                  debug=True, log=None,
-                 debug_file=None):
+                 debug_file=None, mode='msc'):
         """
         Initializes the OP2 object
 
@@ -24,11 +24,20 @@ class OP2(OP2_Scalar):
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
+        self.set_mode(mode)
         make_geom = False
         assert make_geom == False, make_geom
         OP2_Scalar.__init__(self,
                      debug=debug, log=log, debug_file=debug_file)
         self.ask = False
+
+    def set_mode(self, mode):
+        if mode.lower() == 'msc':
+            self.set_as_msc()
+        elif mode.lower() == 'nx':
+            self.set_as_nx()
+        else:
+            raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
 
     def set_as_vectorized(self, ask=False):
         """

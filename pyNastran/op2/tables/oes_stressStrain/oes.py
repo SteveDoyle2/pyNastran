@@ -2380,6 +2380,8 @@ class OES(OP2Common):
             # 233-TRIARLC
             # 235-CQUADR
             return len(data)
+        #elif self.element_type in [255]:
+            #return len(data)
         else:
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, msg)

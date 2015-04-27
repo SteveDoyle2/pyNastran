@@ -314,7 +314,7 @@ class Op2Codes(object):
         """
         device_code = self.device_code
         #analysis_code = self.analysis_code
-        #table_code    = self.table_code
+        #table_code = self.table_code
         sort_code = self.sort_code
 
         format_code = None
@@ -382,7 +382,7 @@ class Op2Codes(object):
         elif format_code == 3:
             formatWord = "Magnitude/Phase"
         else:
-            formatWord = '\n%18s1 - Real\n%18s2-Real/Imaginary\n%18s3-Magnitude/Phase\n' % ('','','')
+            formatWord = '\n%18s1 - Real\n%18s2-Real/Imaginary\n%18s3-Magnitude/Phase\n' % ('', '', '')
             #msg = 'unsupported format_code:  format_code=%s\n' % format_code
             #raise InvalidFormatCodeError(msg)
 
@@ -612,7 +612,7 @@ class Op2Codes(object):
         return False
 
     def is_sort2(self):
-        return not(self.is_sort1())
+        return not self.is_sort1()
 
     #----
     # sort_code 1
@@ -624,7 +624,7 @@ class Op2Codes(object):
         return False
 
     def is_real_imaginary(self):  # format_code=2...does that dominate?
-        return not(self.isReal())
+        return not self.isReal()
 
     #----
     # sort_code 2
@@ -634,7 +634,7 @@ class Op2Codes(object):
         return False
 
     def isRandomResponse(self):
-        return not(self.isSortedResponse())
+        return not self.isSortedResponse()
 
     #----
     # combos

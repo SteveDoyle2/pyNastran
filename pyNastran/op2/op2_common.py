@@ -357,6 +357,65 @@ class OP2Common(Op2Codes, F06Writer):
             234: '???',
             235: 'CQUADR',  # was blank in DMAP, found reference in OEF table
             236: 'CTRIAR',  # was blank in DMAP, found reference in OEF table
+
+            #--------------------------------------------------
+            # per NX 8.5 DMAP
+            240 : 'CTRIA6',
+            241 : 'CQUAD8',
+            242 : 'CTRAX3',
+            243 : 'CQUADX4',
+            244 : 'CTRAX6',
+            245 : 'CQUADX8',
+            246 : 'CTRAX3',
+            247 : 'CQUADX4',
+            248 : 'CTRAX6',
+            249 : 'CQUADX8',
+            #250 : '',
+            #251 : '',
+            #252 : '',
+            #253 : '',
+            #254 : '',
+            255 : 'CPYRAM',
+            256 : 'CPYRAM',
+            257 : 'CPYRAMFD',
+            258 : 'CPYRAMFD',
+            #259 : '',
+            #260 : '',
+            261 : 'CTRAX3FD',
+            262 : 'CQUADX4FD',
+            263 : 'CTRAX6FD',
+            264 : 'CQUADX8FD',
+            #265 : '',
+            266 : 'CQUADX8FD',
+
+            271 : 'CPSTN3',
+            272 : 'CPSTN4',
+            273 : 'CPSTN6',
+            274 : 'CPSTN8',
+            275 : 'CPSTN3',
+            276 : 'CPSTN4',
+            277 : 'CPSTN6',
+            278 : 'CPSTN8',
+
+            281 : 'CPSTN3',
+            #282
+            283 : 'CPSTN6',
+            284 : 'CPSTN8',
+            285 : 'CPSTN3',
+            #286 : 'CPSTN',
+            287 : 'CPSTN6',
+            288 : 'CPSTN8',
+            289 : 'CPSTN4',
+
+            290 : 'CPSTN4',
+            291 : 'CPSTN3',
+            292 : 'CPSTN4',
+            293 : 'CPSTN6',
+            294 : 'CPSTN8',
+            295 : 'CPSTN3',
+            296 : 'CPSTN4',
+            297 : 'CPSTN6',
+            298 : 'CPSTN8',
         }
         pass
 

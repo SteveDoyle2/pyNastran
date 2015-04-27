@@ -121,17 +121,28 @@ class OQG(OP2Common):
         if self._results.is_not_saved(result_name):
             return len(data)
 
-        if self.table_code == 3:   # SPC Forces
-            assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_spc_forces(data)
-        elif self.table_code == 39:  # MPC Forces
-            assert self.table_name in [b'OQMG1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_mpc_forces(data)
+        if self.is_msc:
+            if self.table_code == 3:   # SPC Forces
+                assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                n = self._read_spc_forces(data)
+            elif self.table_code == 39:  # MPC Forces
+                assert self.table_name in [b'OQMG1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                n = self._read_mpc_forces(data)
+            else:
+                msg = 'table_code=%s' % self.table_code
+                return self._not_implemented_or_skip(data, msg)
+        elif self.is_nx:
+            if self.table_code == 3:   # SPC Forces
+                if self.table_name in [b'OQG1', b'OQGV1', b'OQP1']:
+                    n = self._read_spc_forces(data)
+                elif self.table_name == b'OQMG1':
+                    n = self._read_mpc_forces(data)
+                else:
+                    msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                    return self._not_implemented_or_skip(data, msg)
         else:
             msg = 'table_code=%s' % self.table_code
             return self._not_implemented_or_skip(data, msg)
-        #else:
-            #self._not_implemented_or_skip('bad OQG table')
         return n
 
     def _read_spc_forces(self, data):

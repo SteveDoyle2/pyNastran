@@ -114,11 +114,11 @@ class ComplexEigenvalues(BaseScalarObject):
         return True
 
     def addF06Line(self, data):
-        (rootNum, extractOrder, eigr, eigi, cycle, damping) = data
-        self.extractionOrder[rootNum] = extractOrder
-        self.eigenvalues[rootNum] = array([eigr, eigi])
-        self.cycles[rootNum] = cycle
-        self.damping[rootNum] = damping
+        (root_num, extract_order, eigr, eigi, cycle, damping) = data
+        self.extractionOrder[root_num] = extract_order
+        self.eigenvalues[root_num] = array([eigr, eigi])
+        self.cycles[root_num] = cycle
+        self.damping[root_num] = damping
 
     def add_f06_data(self, data):
         for line in data:
@@ -132,15 +132,15 @@ class ComplexEigenvalues(BaseScalarObject):
                         '0                ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING\n',
                         '                  NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT\n']
 
-        for (iMode, order) in sorted(iteritems(self.extractionOrder)):
-            eigr = self.eigenvalues[iMode][0]
-            eigi = self.eigenvalues[iMode][1]
+        for (imode, order) in sorted(iteritems(self.extractionOrder)):
+            eigr = self.eigenvalues[imode][0]
+            eigi = self.eigenvalues[imode][1]
 
-            freq = self.cycles[iMode]
-            damping = self.damping[iMode]
+            freq = self.cycles[imode]
+            damping = self.damping[imode]
             ([eigr, eigi, freq, damping], is_all_zeros) = writeFloats13E([eigr, eigi, freq, damping])
             #            imode order      eigr     eigi          freq        damping
-            msg.append(' %22s  %10s         %-15s  %-13s         %-13s         %s\n' % (iMode, order, eigr, eigi, freq, damping))
+            msg.append(' %22s  %10s         %-15s  %-13s         %-13s         %s\n' % (imode, order, eigr, eigi, freq, damping))
 
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
@@ -149,11 +149,11 @@ class ComplexEigenvalues(BaseScalarObject):
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
         msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
-        for rootNum, extractOrder in sorted(iteritems(self.extractionOrder)):
-            eigenvalue = self.eigenvalues[rootNum]
-            cycle = self.cycles[rootNum]
-            damping = self.damping[rootNum]
-            msg += '%-7s %15s %15s %10s %10s %10s\n' % (rootNum, extractOrder,
+        for imode, extractOrder in sorted(iteritems(self.extractionOrder)):
+            eigenvalue = self.eigenvalues[imode]
+            cycle = self.cycles[imode]
+            damping = self.damping[imode]
+            msg += '%-7s %15s %15s %10s %10s %10s\n' % (imode, extractOrder,
                                                         eigenvalue[0], eigenvalue[1], cycle, damping)
         return msg
 
