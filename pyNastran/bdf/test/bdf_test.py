@@ -37,6 +37,7 @@ def get_file_names_from_file_number(fds):
     return names
 
 def main():
+    # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test
     files = get_files_of_type('tests', '.bdf')
     files += get_files_of_type('tests', '.dat')
     foldersFile = 'tests/foldersRead.txt'
@@ -45,10 +46,10 @@ def main():
     debug = False
 
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
     nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
-    nastran = ''
+    nastran = 'nastran '
 
     if regenerate:
         files2 = get_all_files(foldersFile, '.bdf')
@@ -77,8 +78,13 @@ def main():
     check = True
     xref = True
     debug = False
+    size = [16]
+    is_double = [False]
+    post = -1
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
-                                     check=check, cid=cid, nastran=nastran)
+                                     check=check, cid=cid,
+                                     nastran=nastran,
+                                     size=size, is_double=is_double, post=post)
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed

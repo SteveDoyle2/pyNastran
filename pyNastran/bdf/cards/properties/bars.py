@@ -815,27 +815,21 @@ class PBARL(LineProperty):
 
             ndim = self.validTypes[self.Type]
             j = 9 + ndim + 1
-
             #self.dim = fields(double_or_blank, card, 'dim', i=9, j=j)
             dims = []
-            ii = 1
-            for i in range(9, j):
-                dim = double_or_blank(card, ifield, 'dim%i' % ii)
-                ii += 1
+            dim_old = None
+            for i in range(ndim):
+                dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
                 dims.append(dim)
-            assert len(dim) == ndim, len(dim)
+
             #: dimension list
             self.dim = dims
+            assert len(dims) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dims))
+            assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
             #: non-structural mass
             self.nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
 
-            if ndim > 0:
-                self.nsm = set_default_if_blank(self.dim.pop(), 0.0)
-            else:
-                self.nsm = 0.0
-
-            assert isinstance(self.nsm, float), 'nsm=%r' % self.nsm
         else:
             self.pid = data[0]
             self.mid = data[1]

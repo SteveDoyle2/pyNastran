@@ -32,9 +32,36 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
-                      punch=False, cid=None, nastran=''):
+                      punch=False, cid=None, nastran='',
+                      size=None, is_double=None, post=None):
     filenames = list(set(filenames))
     filenames.sort()
+
+    if size is None:
+        sizes = [8]
+    elif isinstance(size, int):
+        sizes = [size]
+    else:
+        sizes = size
+
+    if is_double is None:
+        is_doubles = [8]
+    elif isinstance(is_double, bool):
+        is_doubles = [is_double]
+    else:
+        is_doubles = is_double
+
+    if post is None:
+        posts = [-1]
+    elif isinstance(post, int):
+        posts = [post]
+    else:
+        posts = post
+
+    size_doubles_post = []
+    print('posts=%s' % posts)
+    for size, is_double, post in zip(sizes, is_doubles, posts):
+        size_doubles_post.append((size, is_double, post))
 
     #debug = True
     filenames2 = []
@@ -52,12 +79,13 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             print("filename = %s" % abs_filename)
         isPassed = False
         try:
-            fem1, fem2, diffCards2 = run_bdf(folder, filename, debug=debug,
-                                             xref=xref, check=check, punch=punch,
-                                             cid=cid, isFolder=True, dynamic_vars={},
-                                             nastran=nastran)
-            del fem1
-            del fem2
+            for size, is_double, post in size_doubles_post:
+                fem1, fem2, diffCards2 = run_bdf(folder, filename, debug=debug,
+                                                 xref=xref, check=check, punch=punch,
+                                                 cid=cid, isFolder=True, dynamic_vars={},
+                                                 nastran=nastran, size=size, is_double=is_double, post=post)
+                del fem1
+                del fem2
             diffCards += diffCards
             isPassed = True
         except KeyboardInterrupt:
@@ -107,7 +135,7 @@ def memory_usage_psutil():
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
-            reject=False, nastran='', dynamic_vars=None):
+            reject=False, nastran='', post=-1, dynamic_vars=None):
     if dynamic_vars is None:
         dynamic_vars = {}
     bdfModel = str(bdf_filename)
@@ -132,42 +160,59 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     diffCards = []
 
     try:
-        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
-        fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
-        diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
-        nastran = 'nastran scr=yes bat=no old=no '
-        if nastran and 0:
+        #nastran = 'nastran scr=yes bat=no old=no news=no '
+        nastran = ''
+        try:
+            outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
+            fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
+            diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        #except:
+            #return 1, 2, 3
+        if nastran:
             dirname = os.path.dirname(bdfModel)
             basename = os.path.basename(bdfModel).split('.')[0]
 
-            op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
+            f04_model = os.path.join(dirname, 'out_%s.f04' % basename)
+            f06_model = os.path.join(dirname, 'out_%s.f06' % basename)
+            op2_model = os.path.join(dirname, 'out_%s.f06' % basename)
+            log_model = os.path.join(dirname, 'out_%s.log' % basename)
+            xdb_model = os.path.join(dirname, 'out_%s.xdb' % basename)
+            pch_model = os.path.join(dirname, 'out_%s.pch' % basename)
+            asm_model = os.path.join(dirname, 'out_%s.asm' % basename)
+            master_model = os.path.join(dirname, 'out_%s.master' % basename)
+            #op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
 
-            cwd = os.getcwd()
+            #cwd = os.getcwd()
+            cwd = dirname
             bdf_model2 = os.path.join(cwd, 'out_%s.bdf' % basename)
-            op2_model2 = os.path.join(cwd, 'out_%s.op2' % basename)
-            f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
+            #op2_model2 = os.path.join(cwd, 'out_%s.op2' % basename)
+            #f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
             print(bdf_model2)
-            if os.path.exists(bdf_model2):
-                os.remove(bdf_model2)
+            #if os.path.exists(bdf_model2):
+                #os.remove(bdf_model2)
 
             # make sure we're writing an OP2
             bdf = BDF()
-            bdf.read_bdf(outModel)
+            bdf.read_bdf(bdfModel)
             if 'POST' in bdf.params:
-                post = bdf.params['POST']
+                param_post = bdf.params['POST']
                 #print('post = %s' % post)
-                post.update_values(value1=-1)
+                param_post.update_values(value1=post)
                 #print('post = %s' % post)
             else:
-                card = ['PARAM', 'POST', -1]
+                card = ['PARAM', 'POST', post]
                 bdf.add_card(card, 'PARAM', is_list=True)
-            bdf.write_bdf(bdf_model2)
+            bdf.write_bdf(bdf_model2, size=size, is_double=is_double)
 
             #os.rename(outModel, outModel2)
-            os.system(nastran + bdf_model2)
+            if not os.path.exists(f06_model):
+                os.system(nastran + bdf_model2)
+            for fnamei in [f04_model, log_model, xdb_model, pch_model, asm_model, master_model]:
+                if os.path.exists(fnamei):
+                    os.remove(fnamei)
             op2 = OP2()
-            if not os.path.exists(op2_model2):
-                raise RuntimeError('%s failed' % f06_model2)
+            if not os.path.exists(op2_model):
+                raise RuntimeError('%s failed' % op2_model)
             op2.read_op2(op2_model2)
             print(op2.get_op2_stats())
 
