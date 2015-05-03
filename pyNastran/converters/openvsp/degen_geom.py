@@ -1,7 +1,10 @@
 from six import iteritems
+from copy import deepcopy
 from collections import defaultdict
 from numpy import zeros
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.converters.panair.panairGrid import PanairGrid, PanairPatch
+
 
 class Geom(object):
     def __init__(self, name, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny):
@@ -10,32 +13,30 @@ class Geom(object):
         self.lifting_surface_nx = lifting_surface_nx
         self.lifting_surface_ny = lifting_surface_ny
 
-    def write_bdf_file_obj(self, bdf_file, nid=1, eid=1, pid=1):
+    def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):
         nx = self.lifting_surface_nx
         ny = self.lifting_surface_ny
-
+        nxy = nx * ny
         cp = None
-        for ni, (x, y, z) in enumerate(self.lifting_surface_xyz):
-            card = ['GRID', nid + ni, cp, x, y, z]
-            bdf_file.write(print_card_8(card))
 
+        for ni in range(nxy):
+            x, y, z = self.lifting_surface_xyz[ni, :]
+            card = ['GRID', nid0 + ni, cp, x, y, z]
+            bdf_file.write(print_card_8(card))
+        #print('ni', ni, self.lifting_surface_xyz.shape)
         eidi = 0
-        for j in range(ny - 1):
-            for i in range(nx - 1):
-                # this is wrong...
-                g1 = nid + i
-                g2 = nid + i + 1
-                g3 = nid + nx + i + 1
-                g4 = nid + nx + i
+        for i in range(nx - 1):
+            for j in range(ny - 1):
+                g1 = nid0 + i*ny + j
+                g2 = nid0 + i*ny + j + 1
+                g3 = nid0 + (i+1) * ny + j + 1
+                g4 = nid0 + (i+1) * ny + j
                 card = ['CQUAD4', eid + eidi, pid, g1, g2, g3, g4]
                 bdf_file.write(print_card_8(card))
                 eidi += 1
-            nid += nx
-        print(nx, ny)
-        print(eidi)
-        nid += ni + 1
+        nid0 += ni + 1
         eid += eidi + 1
-        return nid, eid, pid
+        return nid0, eid, pid
 
 class DegenGeom(object):
     def __init__(self, log=None, debug=False):
@@ -62,10 +63,81 @@ class DegenGeom(object):
         bdf_file.write(print_card_8(card))
         for name, comps in sorted(iteritems(self.components)):
             bdf_file.write('$ name = %r\n' % name)
-            card = ['PSHELL', pid, mid, t]
-            bdf_file.write(print_card_8(card))
             for comp in comps:
+                card = ['PSHELL', pid, mid, t]
+                bdf_file.write(print_card_8(card))
                 nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
+                pid += 1
+
+    def write_panair(self, panair_filename, panair_case_filename):
+        #panair_file = open(panair_filename, 'wb')
+        pan = PanairGrid()
+        pan.mach = 0.5
+        pan.isEnd = True
+        pan.ncases = 2
+        pan.alphas = [0., 5.]
+
+
+        i = 0
+        pan.nNetworks = 1
+        kt = 1
+        cpNorm = 1
+        for name, comps in sorted(iteritems(self.components)):
+            #panair_file.write('$ name = %r\n' % name)
+            for comp in comps:
+                namei = name + str(i)
+                x = deepcopy(comp.lifting_surface_xyz[:, 0])
+                y = deepcopy(comp.lifting_surface_xyz[:, 1])
+                z = deepcopy(comp.lifting_surface_xyz[:, 2])
+                x = x.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
+                y = y.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
+                z = z.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
+                patch = PanairPatch(pan.nNetworks, namei, kt, cpNorm, x, y, z, self.log)
+                pan.patches[i] = patch
+                pan.nNetworks += 1
+                i += 1
+
+                if 'wing' in name.lower():  # make a wing cap
+                    namei = 'cap%i' % i
+                    #assert comp.lifting_surface_nx == 6, comp.lifting_surface_nx
+                    assert comp.lifting_surface_ny == 33, comp.lifting_surface_ny
+                    #print(x.shape)
+                    xend = deepcopy(x[-1, :])
+                    print(xend)
+                    yend = deepcopy(y[-1, :])
+                    zend = deepcopy(z[-1, :])
+                    imid = comp.lifting_surface_ny // 2
+                    x = zeros((imid+1, 2), dtype='float32')
+                    y = zeros((imid+1, 2), dtype='float32')
+                    z = zeros((imid+1, 2), dtype='float32')
+                    print(imid, xend[imid], xend.min())
+                    xflip = list(xend[0:imid+1])
+                    yflip = list(yend[0:imid+1])
+                    zflip = list(zend[0:imid+1])
+                    x[:, 0] = xflip[::-1]
+                    y[:, 0] = yflip[::-1]
+                    z[:, 0] = zflip[::-1]
+                    x[:, 1] = xend[imid:]
+                    y[:, 1] = yend[imid:]
+                    z[:, 1] = zend[imid:]
+                    print x
+
+                    #x = xend[0:imid:-1].extend(x[imid:])
+                    #y = yend[0:imid:-1].extend(y[imid:])
+                    #z = zend[0:imid:-1].extend(z[imid:])
+                    #print(x)
+                    x = x.reshape((2, imid+1))
+                    y = y.reshape((2, imid+1))
+                    z = z.reshape((2, imid+1))
+
+                    #print(xend)
+                    patch = PanairPatch(pan.nNetworks, namei, kt, cpNorm, x.T, y.T, z.T, self.log)
+                    pan.patches[i] = patch
+                    pan.nNetworks += 1
+                    i += 1
+                #i += 1
+        pan.write_panair(panair_filename)
+        #self.nNetworks = i
 
     def read_degen_geom(self, degen_geom_csv):
         f = open(degen_geom_csv)
@@ -175,6 +247,10 @@ def main():
     d = DegenGeom()
     d.read_degen_geom(degen_geom_csv)
     d.write_bdf('model.bdf')
+
+    panair_filename = 'panair.inp'
+    panair_case_filename = 'model_DegenGeom.vspaero'
+    d.write_panair(panair_filename, panair_case_filename)
 
 
 if __name__ == '__main__':
