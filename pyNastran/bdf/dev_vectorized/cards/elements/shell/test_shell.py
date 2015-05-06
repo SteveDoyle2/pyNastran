@@ -33,7 +33,7 @@ class TestShells(unittest.TestCase):
         ]
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-        model.cross_reference()
+        model.build()
         cquad4 = model.elements[eid]
 
         # cquad4 / pshell
@@ -81,7 +81,7 @@ class TestShells(unittest.TestCase):
         ]
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-        model.cross_reference()
+        model.build()
 
         # ctria3 / pshell
         ctria3 = model.elements[eid]
@@ -422,7 +422,7 @@ class TestShells(unittest.TestCase):
         self.assertTrue(p.is_symmetrical_by_property_index())
         self.assertEqual(p.get_nplies_by_property_id(), 6)
 
-        self.assertAlmostEqual(p.get_thickness_by_property_id(), 1.2)
+        self.assertAlmostEqual(p.get_thickness_by_property_id()[0], 1.2)
         self.assertAlmostEqual(p.get_thickness_by_property_id_ply(pid, 0), 0.1)
         self.assertAlmostEqual(p.get_thickness_by_property_id_ply(pid, 1), 0.2)
         self.assertAlmostEqual(p.get_thickness_by_property_id_ply(pid, 2), 0.3)

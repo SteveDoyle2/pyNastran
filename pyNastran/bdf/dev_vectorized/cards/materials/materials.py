@@ -111,6 +111,7 @@ class Materials(object):
         #return rho
 
     def get_density_by_material_id(self, material_id):
+        int_flag = True if isinstance(material_id, int) else False
         if isinstance(material_id, int):
             material_id = array([material_id], dtype='int32')
 
@@ -132,9 +133,10 @@ class Materials(object):
                     i = where(mid == material_id)[0]
                     density[i] = rho
         assert density.shape == (n, ), density.shape
-        return density
+        return density[0] if int_flag else density
 
     def get_density_E_by_material_id(self, material_id):
+        int_flag = True if isinstance(material_id, int) else False
         n = len(material_id)
         density = zeros(n, dtype='float64')
         E = zeros(n, dtype='float64')
@@ -145,7 +147,7 @@ class Materials(object):
             E[i] = mat.E()
         assert density.shape == (n, ), density.shape
         assert E.shape == (n, ), E.shape
-        return density, E
+        return density[0], E[0] if int_flag else density, E
 
     def get_nonstructural_mass_by_material_id(self, material_id):
         n = len(material_id)

@@ -120,8 +120,10 @@ from .cards.constraints.mpc import MPC, get_mpc_constraint
 from .cards.constraints.mpcadd import MPCADD
 
 
-from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
-                                      CORD2R, CORD2C, CORD2S, CORD3G)
+from pyNastran.bdf.dev_vectorized.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
+                                                                  CORD2R, CORD2C, CORD2S, CORD3G)
+#from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
+#                                      CORD2R, CORD2C, CORD2S, CORD3G) old...
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from .bdf_methods import BDFMethods
@@ -250,6 +252,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             60 : 'CTETRA4', 61 : 'CTETRA10',
             62 : 'CPENTA6', 63 : 'CPENTA15',
             64 : 'CHEXA8', 65 : 'CHEXA20',
+
+            # ???
+            100 : 'CAERO1'
         }
         self._element_name_to_element_type_mapper = {
             v:k for k, v in iteritems(self._element_type_to_element_name_mapper)}
@@ -962,7 +967,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 self.log.debug('---skipping executive & case control decks---')
 
             self._read_bulk_data_deck()
-            self.cross_reference(xref=xref)
+            self.build(xref=xref)
             self._xref = xref
             self._cleanup_file_streams()
         except:

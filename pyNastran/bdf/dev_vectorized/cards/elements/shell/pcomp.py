@@ -46,6 +46,8 @@ class PCOMP(Property):
         #self._comments.append(comment)
 
     def get_thickness_by_property_id(self, property_id=None):
+        int_flag = True if isinstance(property_id, int) else False
+
         if property_id is None:
             property_id = self.property_id
         elif isinstance(property_id, list):
@@ -68,10 +70,27 @@ class PCOMP(Property):
                 if material_id == 0:
                     break
                 t += ti
-            self.model.log.debug('t = %s' % t)
-            self.model.log.debug('i = %s' % i)
+            self.model.log.debug('t[pid=%s] = %s' % (pid, t))
+            self.model.log.debug('i[pid=%s] = %s' % (pid, i))
             thickness[i] = t
-        return thickness
+        return thickness[0] if int_flag else thickness
+
+    def get_nonstructural_mass_by_property_id(self, property_id=None):
+        """
+        Gets the nonstructural mass of the PHSELLs.
+
+        :param self: the PSHELL object
+        :param property_id: the property IDs to consider (default=None -> all)
+        """
+        int_flag = True if isinstance(property_id, int) else False
+        #print('get_nonstructural_mass; pids = %s' % property_ids)
+        if property_id is None:
+            nsm = self.nsm
+        else:
+            i = self.get_property_index_by_property_id(property_id)
+            #print('i = %s' % i)
+            nsm = self.nsm[i]
+        return nsm[0] if int_flag else nsm
 
     #def get_nonstructural_mass_by_property_id(self, property_id=None):
         #props = self.get_properties(property_id)
@@ -148,6 +167,7 @@ class PCOMP(Property):
         return mid
 
     def get_thickness_by_property_id_ply(self, property_id, j):
+        int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
         if j < 0:
             msg = 'invalid jply=%s' % (j)
@@ -157,9 +177,10 @@ class PCOMP(Property):
         if thickness.min() <= 0.0:
             msg = 'invalid jply=%s; thickness=%s' % (j, thickness)
             raise IndexError(msg)
-        return thickness
+        return thickness[0] if int_flag else thickness
 
     def get_density_by_property_id_ply(self, property_id, j):
+        int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
         if j < 0:
             msg = 'invalid jply=%s' % (j)
@@ -177,7 +198,7 @@ class PCOMP(Property):
         #if density <= 0.0:
             #msg = 'invalid jply=%s; density=%s' % (j, density)
             #raise IndexError(msg)
-        return density
+        return density[0] if int_flag else density
 
     def get_theta_by_property_id_ply(self, property_id, j):
         i = self.get_property_index_by_property_id(property_id)

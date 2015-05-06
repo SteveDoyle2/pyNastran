@@ -154,7 +154,7 @@ class TestSolids(unittest.TestCase):
         model.allocate(card_count)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-        model.cross_reference()
+        model.build()
 
         # CTETRA
         eid = 8
@@ -239,7 +239,7 @@ class TestSolids(unittest.TestCase):
         model.allocate(card_count)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-        model.cross_reference()
+        model.build()
 
         # CTETRA
         eid = 8
@@ -303,7 +303,7 @@ class TestSolids(unittest.TestCase):
         model.allocate(card_count)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-        model.cross_reference()
+        model.build()
 
     def test_solid_05(self):
         """checks linear static solid material"""
@@ -358,7 +358,7 @@ class TestSolids(unittest.TestCase):
         model.allocate(card_count)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-        model.cross_reference()
+        model.build()
 
         mat = model.materials[mid]
         print('----MAT----', type(mat))

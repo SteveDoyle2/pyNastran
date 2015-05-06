@@ -45,7 +45,6 @@ def normalize(v):
 
 
 class Coord(BaseCard):
-
     def __repr__(self):
         return self.write_bdf(size=8, is_double=False)
 
@@ -77,17 +76,23 @@ class Coord(BaseCard):
 
     def setup(self, debug=False):
         """
-        .. math:: e_{13} = e_3 - e_1
+        .. math::
+          e_{13} = e_3 - e_1
 
-        .. math:: e_{12} = e_2 - e_1
+        .. math::
+          e_{12} = e_2 - e_1
 
-        .. math:: k = \frac{e_{12}}{|e_{12}|}
+        .. math::
+          k = \frac{e_{12}}{\lvert e_{12} \rvert}
 
-        .. math:: j_{dir} = k \times e_{13}
+        .. math::
+          j_{dir} = k \times e_{13}
 
-        .. math:: j = \frac{j_{dir}}{|j_{dir}|}
+        .. math::
+          j = \frac{j_{dir}}{\lvert j_{dir} \rvert}
 
-        .. math:: i = j \times k
+        .. math::
+          i = j \times k
         """
         try:
             assert len(self.e1) == 3, self.e1
@@ -183,6 +188,7 @@ class Coord(BaseCard):
         except RuntimeError:
             print("---InvalidUnitVectorError---")
             print("Cp  = %s" % (self.Cid()))
+            print("Rid = %s" % (self.Rid()))
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
@@ -213,6 +219,9 @@ class Coord(BaseCard):
             print('-----')
 
     def transformToGlobal(self, p, debug=False):
+        self.transform_node_to_global(self, p, debug=debug)
+
+    def transform_node_to_global(self, p, debug=False):
         r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
@@ -355,141 +364,8 @@ class Coord(BaseCard):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
 
-    def T(self):
-        r"""
-        Gets the 6 x 6 transformation
-
-        .. math:: [\lambda] = [B_{ij}]
-
-        .. math::
-          [T] =
-          \left[
-            \begin{array}{cc}
-            \lambda  & 0 \\
-            0  & \lambda \\
-            \end{array}
-          \right]
-        """
-        return self.beta_n(2)
-
     def repr_fields(self):
         return self.raw_fields()
-
-
-class RectangularCoord(object):
-    def coordToXYZ(self, p):
-        """
-        :param self:  the coordinate system object
-        :returns xyz: the point in the local coordinate system
-        """
-        return p
-
-    def XYZtoCoord(self, p):
-        """
-        :param self:  the coordinate system object
-        :returns xyz: the delta xyz point in the local coordinate system
-        """
-        return p
-
-
-class CylindricalCoord(object):
-    r"""
-    .. math:: r      = \sqrt(x^2+y^2)
-    .. math:: \theta = tan^{-1}\left(\frac{y}{x}\right)
-    .. math:: z      = z
-
-    .. math:: x = r cos(\theta)
-    .. math:: y = r sin(\theta)
-    .. math:: z = z
-    .. math:: p = [x,y,z] + e_1
-
-    http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
-
-    .. note:: :math`\phi` and :math:`\theta` are flipped per wikipedia
-              to be consistent with nastran's documentation
-
-    .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
-    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
-    """
-    def coordToXYZ(self, p):
-        r"""
-        ::
-
-          y       R
-          |     /
-          |   /
-          | / theta
-          *------------x
-
-        .. math:: x = R \cos(\theta)
-        .. math:: y = R \sin(\theta)
-
-        :param self:  the coordinate system object
-        :returns xyz: the point in the local coordinate system
-        """
-        R = p[0]
-        theta = radians(p[1])
-        x = R * cos(theta)
-        y = R * sin(theta)
-        return array([x, y, p[2]], dtype='float64')
-
-    def XYZtoCoord(self, p):
-        """
-        :param self:  the coordinate system object
-        :returns xyz: the delta xyz point in the local coordinate system
-        """
-        (x, y, z) = p
-        theta = degrees(atan2(y, x))
-        R = sqrt(x * x + y * y)
-        return array([R, theta, z], dtype='float64')
-
-
-class SphericalCoord(object):
-    r"""
-    .. math:: r = \rho = \sqrt(x^2+y^2+z^2)
-
-    .. math:: \theta   = \cos^{-1}\left(\frac{z}{r}\right)
-
-    .. math:: \phi     = \tan^{-1}\left(\frac{y}{x}\right)
-
-    .. math:: x = r \sin(\theta)\cos(\phi)
-
-    .. math:: y = r \sin(\theta)\sin(\phi)
-
-    .. math:: z = r \cos(\theta)
-
-    .. math:: p = [x,y,z]
-
-    .. seealso:: http://en.wikipedia.org/wiki/Spherical_coordinate_system
-
-    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
-    """
-    def XYZtoCoord(self, p):
-        """
-        :param self:  the coordinate system object
-        :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
-        """
-        (x, y, z) = p
-        R = sqrt(x * x + y * y + z * z)
-        phi = degrees(atan2(y, x))
-        if R > 0:
-            theta = degrees(acos(z / R))
-        else:
-            theta = 0.
-        return array([R, theta, phi], dtype='float64')
-
-    def coordToXYZ(self, p):
-        """
-        :param self:  the coordinate system object
-        :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
-        """
-        R = p[0]
-        theta = radians(p[1])
-        phi = radians(p[2])
-        x = R * sin(theta) * cos(phi)
-        y = R * sin(theta) * sin(phi)
-        z = R * cos(theta)
-        return array([x, y, z], dtype='float64')
 
 
 class Cord2x(Coord):
@@ -533,9 +409,9 @@ class Cord2x(Coord):
             self.e3 = array(data[8:11], dtype='float64')
             assert len(data) == 11, 'data = %s' % (data)
 
-        assert len(self.e1) == 3
-        assert len(self.e2) == 3
-        assert len(self.e3) == 3
+        assert len(self.e1) == 3, self.e1
+        assert len(self.e2) == 3, self.e2
+        assert len(self.e3) == 3, self.e3
 
         #: the global axes
         self.i = None
@@ -546,13 +422,11 @@ class Cord2x(Coord):
             self.isResolved = True
             self.setup()
 
-    def _verify(self, xref):
+    def _verify(self):
         """
         Verifies all methods for this object work
 
         :param self: the CORD2x object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
         """
         cid = self.Cid()
         rid = self.Rid()
@@ -563,6 +437,8 @@ class Cord2x(Coord):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
+        elif is_double:
+            return self.comment() + print_card_double(card)
         return self.comment() + print_card_16(card)
 
     def cross_reference(self, model):
@@ -572,8 +448,8 @@ class Cord2x(Coord):
         :param self:  the coordinate system object
         :param model: the BDF object
         .. warning:: Doesn't set rid to the coordinate system if it's in the
-                     global.  This isn't a problem, it's meant to speed up the
-                     code in order to resolve extra coordinate systems.
+                    global.  This isn't a problem.  It's meant to speed up the
+                    code in order to resolve extra coordinate systems.
         """
         if self.rid != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
@@ -663,31 +539,14 @@ class Cord1x(Coord):
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
         model.coords[self.cid] = coord
 
-    def _verify(self, xref):
+    def _verify(self):
         """
         Verifies all methods for this object work
 
         :param self: the CORD1x object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
         """
         cid = self.Cid()
         assert isinstance(cid, int), 'cid=%r' % cid
-
-    def cross_reference(self, model):
-        """
-        Links self.rid to a coordinate system.
-
-        :param self:  the coordinate system object
-        :param model: the BDF object
-        """
-        msg = ' which is required by %s cid=%s' % (self.type, self.cid)
-        #: grid point 1
-        self.g1 = model.Node(self.g1, msg=msg)
-        #: grid point 2
-        self.g2 = model.Node(self.g2, msg=msg)
-        #: grid point 3
-        self.g3 = model.Node(self.g3, msg=msg)
 
     def setup(self, debug=False):
         """
@@ -746,12 +605,14 @@ class CORD3G(Coord):  # not done
     Defines a general coordinate system using three rotational angles as
     functions of coordinate values in the reference coordinate system.
     The CORD3G entry is used with the MAT9 entry to orient material principal
-    axes for 3-D composite analysis.::
+    axes for 3-D composite analysis.
 
-      CORD3G CID METHOD FORM THETAID1 THETAID2 THETAID3 CIDREF
-      CORD3G 100 E313   EQN  110      111      112      0
+    +--------+-----+--------+------+----------+----------+----------+--------+
+    | CORD3G | CID | METHOD | FORM | THETAID1 | THETAID2 | THETAID3 | CIDREF |
+    +--------+-----+--------+------+----------+----------+----------+--------+
+    | CORD3G | 100 |  E313  | EQN  |    110   |    111   |    112   |   0    |
+    +--------+-----+--------+------+----------+----------+----------+--------+
     """
-
     type = 'CORD3G'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -813,32 +674,33 @@ class CORD3G(Coord):  # not done
                 ct = cos(radians(theta))
                 st = sin(radians(theta))
                 if   rotation == 1:
-                    p = dot(self.RotationX(ct, st), p)
+                    p = dot(self.rotation_x(ct, st), p)
                 elif rotation == 2:
-                    p = dot(self.RotationY(ct, st), p)
+                    p = dot(self.rotation_y(ct, st), p)
                 elif rotation == 3:
-                    p = dot(self.RotationZ(ct, st), p)
+                    p = dot(self.rotation_z(ct, st), p)
                 else:
                     raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
         elif self.methodES == 'S':
             raise RuntimeError('Space-Fixed rotation hasnt been implemented')
         else:
-            raise RuntimeError('Invalid method; Use Euler or Space-Fixed.  MethodES=%r' % self.methodES)
+            msg = 'Invalid method; Use Euler or Space-Fixed.  MethodES=%r' % self.methodES
+            raise RuntimeError(msg)
         return p
 
-    def RotationX(self, ct, st):
+    def rotation_x(self, ct, st):
         matrix = array([[1., 0., 0.],
                         [ct, 0., -st],
                         [-st, 0., ct]])
         return matrix
 
-    def RotationY(self, ct, st):
+    def rotation_y(self, ct, st):
         matrix = array([[ct, 0., st],
                         [0., 1., 0.],
                         [-st, 0., ct]])
         return matrix
 
-    def RotationZ(self, ct, st):
+    def rotation_z(self, ct, st):
         matrix = array([[ct, st, 0.],
                         [-st, ct, 0.],
                         [0., 0., 1.]])
@@ -847,26 +709,23 @@ class CORD3G(Coord):  # not done
     def raw_fields(self):
         method = self.methodES + str(self.methodInt)
         list_fields = (['CORD3G', self.cid, method, self.form] + self.thetas +
-                  [self.Rid()])
+                       [self.Rid()])
         return list_fields
 
 
-class CORD1R(Cord1x, RectangularCoord):
-    """
-    ::
-
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
-    +=======+======+=====+=====+======+======+=====+======+=====+
-    |CORD1R | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    """
+class CORD1R(Cord1x):
     type = 'CORD1R'
     Type = 'R'
 
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
+
+        +-------+------+-----+-----+------+------+-----+------+-----+
+        |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+        +=======+======+=====+=====+======+======+=====+======+=====+
+        |CORD1R | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+        +-------+------+-----+-----+------+------+-----+------+-----+
 
         :param self:   the CORD1R coordinate system object
         :param nCoord: the coordinate location on the line
@@ -881,16 +740,35 @@ class CORD1R(Cord1x, RectangularCoord):
         list_fields = ['CORD1R', self.cid] + self.NodeIDs()
         return list_fields
 
+    def coordToXYZ(self, p):
+        """
+        :param self:  the coordinate system object
+        :returns xyz: the point in the local coordinate system
+        """
+        return p
 
-class CORD1C(Cord1x, CylindricalCoord):
-    """
-    ::
+    def XYZtoCoord(self, p):
+        """
+        :param self:  the coordinate system object
+        :returns xyz: the delta xyz point in the local coordinate system
+        """
+        return p
 
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
-    +=======+======+=====+=====+======+======+=====+======+=====+
-    |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
-    +-------+------+-----+-----+------+------+-----+------+-----+
+class CORD1C(Cord1x):
+    r"""
+    .. math:: r      = \sqrt(x^2+y^2)
+    .. math:: \theta = tan^{-1}\left(\frac{y}{x}\right)
+    .. math:: z      = z
+
+    .. math:: x = r cos(\theta)
+    .. math:: y = r sin(\theta)
+    .. math:: z = z
+    .. math:: p = [x,y,z] + e_1
+
+    http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
+
+    .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
+    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
     type = 'CORD1C'
     Type = 'C'
@@ -898,6 +776,12 @@ class CORD1C(Cord1x, CylindricalCoord):
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
+
+        +-------+------+-----+-----+------+------+-----+------+-----+
+        |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+        +=======+======+=====+=====+======+======+=====+======+=====+
+        |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+        +-------+------+-----+-----+------+------+-----+------+-----+
 
         :param self:   the CORD1C coordinate system object
         :param card:   a BDFCard object
@@ -913,16 +797,58 @@ class CORD1C(Cord1x, CylindricalCoord):
         list_fields = ['CORD1C', self.cid] + self.NodeIDs()
         return list_fields
 
+    def coordToXYZ(self, p):
+        r"""
+        ::
 
-class CORD1S(Cord1x, SphericalCoord):
-    """
-    ::
+          y       R
+          |     /
+          |   /
+          | / theta
+          *------------x
 
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
-    +=======+======+=====+=====+======+======+=====+======+=====+
-    |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
-    +-------+------+-----+-----+------+------+-----+------+-----+
+        .. math:: x = R \cos(\theta)
+        .. math:: y = R \sin(\theta)
+
+        :param self:  the coordinate system object
+        :returns xyz: the point in the local coordinate system
+        """
+        R = p[0]
+        theta = radians(p[1])
+        x = R * cos(theta)
+        y = R * sin(theta)
+        return array([x, y, p[2]], dtype='float64')
+
+    def XYZtoCoord(self, p):
+        """
+        :param self:  the coordinate system object
+        :returns xyz: the delta xyz point in the local coordinate system
+        """
+        (x, y, z) = p
+        theta = degrees(atan2(y, x))
+        R = sqrt(x * x + y * y)
+        return array([R, theta, z], dtype='float64')
+
+
+class CORD1S(Cord1x):
+    r"""
+    .. math:: r = \rho = \sqrt(x^2+y^2+z^2)
+
+    .. math:: \theta   = \cos^{-1}\left(\frac{z}{r}\right)
+
+    .. math:: \phi     = \tan^{-1}\left(\frac{y}{x}\right)
+
+    .. math:: x = r \sin(\theta)\cos(\phi)
+
+    .. math:: y = r \sin(\theta)\sin(\phi)
+
+    .. math:: z = r \cos(\theta)
+
+    .. math:: p = [x,y,z]
+
+    .. seealso:: http://en.wikipedia.org/wiki/Spherical_coordinate_system
+
+    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
     type = 'CORD1S'
     Type = 'S'
@@ -930,6 +856,12 @@ class CORD1S(Cord1x, SphericalCoord):
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1S
+
+        +-------+------+-----+-----+------+------+-----+------+-----+
+        |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+        +=======+======+=====+=====+======+======+=====+======+=====+
+        |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+        +-------+------+-----+-----+------+------+-----+------+-----+
 
         :param self:   the CORD1S coordinate system object
         :param card:   a BDFCard object
@@ -945,8 +877,35 @@ class CORD1S(Cord1x, SphericalCoord):
         list_fields = ['CORD1S', self.cid] + self.NodeIDs()
         return list_fields
 
+    def XYZtoCoord(self, p):
+        r"""
+        :param self:  the coordinate system object
+        :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
+        """
+        (x, y, z) = p
+        R = sqrt(x * x + y * y + z * z)
+        phi = degrees(atan2(y, x))
+        if R > 0:
+            theta = degrees(acos(z / R))
+        else:
+            theta = 0.
+        return array([R, theta, phi], dtype='float64')
 
-class CORD2R(Cord2x, RectangularCoord):
+    def coordToXYZ(self, p):
+        r"""
+        :param self:  the coordinate system object
+        :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
+        """
+        R = p[0]
+        theta = radians(p[1])
+        phi = radians(p[2])
+        x = R * sin(theta) * cos(phi)
+        y = R * sin(theta) * sin(phi)
+        z = R * cos(theta)
+        return array([x, y, z], dtype='float64')
+
+
+class CORD2R(Cord2x):
     type = 'CORD2R'
     Type = 'R'
 
@@ -960,8 +919,8 @@ class CORD2R(Cord2x, RectangularCoord):
         +========+=====+=====+=====+====+=====+====+====+=====+
         | CORD2R | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-        |        | B3  | C1  | C2  | C3 |
-        +--------+-----+-----+-----+----+
+        |        | B3  | C1  | C2  | C3 |     |    |    |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
 
         :param self: the CORD2R coordinate system object
         :param card: a BDFCard object
@@ -971,13 +930,11 @@ class CORD2R(Cord2x, RectangularCoord):
         if comment:
             self._comment = comment
 
-    def _verify(self, xref):
+    def _verify(self):
         """
         Verifies all methods for this object work
 
         :param self: the CORD2R object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
         """
         cid = self.Cid()
         rid = self.Rid()
@@ -990,8 +947,37 @@ class CORD2R(Cord2x, RectangularCoord):
             self.e2) + list(self.e3)
         return list_fields
 
+    def coordToXYZ(self, p):
+        """
+        :param self:  the coordinate system object
+        :returns xyz: the point in the local coordinate system
+        """
+        return p
 
-class CORD2C(Cord2x, CylindricalCoord):
+    def XYZtoCoord(self, p):
+        """
+        :param self:  the coordinate system object
+        :returns xyz: the delta xyz point in the local coordinate system
+        """
+        return p
+
+
+class CORD2C(Cord2x):
+    r"""
+    .. math:: r      = \sqrt(x^2+y^2)
+    .. math:: \theta = tan^{-1}\left(\frac{y}{x}\right)
+    .. math:: z      = z
+
+    .. math:: x = r cos(\theta)
+    .. math:: y = r sin(\theta)
+    .. math:: z = z
+    .. math:: p = [x,y,z] + e_1
+
+    http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
+
+    .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
+    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
+    """
     type = 'CORD2C'
     Type = 'C'
 
@@ -1004,8 +990,8 @@ class CORD2C(Cord2x, CylindricalCoord):
         +========+=====+=====+=====+====+=====+====+====+=====+
         | CORD2C | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-        |        | B3  | C1  | C2  | C3 |
-        +--------+-----+-----+-----+----+
+        |        | B3  | C1  | C2  | C3 |     |    |    |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
 
         :param self: the CORD2C coordinate system object
         :param card: a BDFCard object
@@ -1021,22 +1007,73 @@ class CORD2C(Cord2x, CylindricalCoord):
                        list(self.e2) + list(self.e3))
         return list_fields
 
+    def coordToXYZ(self, p):
+        r"""
+        ::
 
-class CORD2S(Cord2x, SphericalCoord):
+          y       R
+          |     /
+          |   /
+          | / theta
+          *------------x
+
+        .. math:: x = R \cos(\theta)
+        .. math:: y = R \sin(\theta)
+
+        :param self:  the coordinate system object
+        :returns xyz: the point in the local coordinate system
+        """
+        R = p[0]
+        theta = radians(p[1])
+        x = R * cos(theta)
+        y = R * sin(theta)
+        return array([x, y, p[2]], dtype='float64')
+
+    def XYZtoCoord(self, p):
+        """
+        :param self:  the coordinate system object
+        :returns xyz: the delta xyz point in the local coordinate system
+        """
+        (x, y, z) = p
+        theta = degrees(atan2(y, x))
+        R = sqrt(x * x + y * y)
+        return array([R, theta, z], dtype='float64')
+
+
+class CORD2S(Cord2x):
+    r"""
+    .. math:: r = \rho = \sqrt(x^2+y^2+z^2)
+
+    .. math:: \theta   = \cos^{-1}\left(\frac{z}{r}\right)
+
+    .. math:: \phi     = \tan^{-1}\left(\frac{y}{x}\right)
+
+    .. math:: x = r \sin(\theta)\cos(\phi)
+
+    .. math:: y = r \sin(\theta)\sin(\phi)
+
+    .. math:: z = r \cos(\theta)
+
+    .. math:: p = [x,y,z]
+
+    .. seealso:: http://en.wikipedia.org/wiki/Spherical_coordinate_system
+
+    .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
+    """
     type = 'CORD2S'
     Type = 'S'
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        Intilizes the CORD2R
+        Intilizes the CORD2S
 
         +--------+-----+-----+-----+----+-----+----+----+-----+
         |    1   |   2 |  3  |  4  |  5 |  6  |  7 |  8 |  9  |
         +========+=====+=====+=====+====+=====+====+====+=====+
         | CORD2S | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-        |        | B3  | C1  | C2  | C3 |
-        +--------+-----+-----+-----+----+
+        |        | B3  | C1  | C2  | C3 |     |    |    |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
 
         :param self: the CORD2S coordinate system object
         :param card: a BDFCard object
@@ -1051,3 +1088,30 @@ class CORD2S(Cord2x, SphericalCoord):
         list_fields = (['CORD2S', self.cid, rid] + list(self.e1) +
                        list(self.e2) + list(self.e3))
         return list_fields
+
+    def XYZtoCoord(self, p):
+        r"""
+        :param self:  the coordinate system object
+        :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
+        """
+        (x, y, z) = p
+        R = sqrt(x * x + y * y + z * z)
+        phi = degrees(atan2(y, x))
+        if R > 0:
+            theta = degrees(acos(z / R))
+        else:
+            theta = 0.
+        return array([R, theta, phi], dtype='float64')
+
+    def coordToXYZ(self, p):
+        r"""
+        :param self:  the coordinate system object
+        :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
+        """
+        R = p[0]
+        theta = radians(p[1])
+        phi = radians(p[2])
+        x = R * sin(theta) * cos(phi)
+        y = R * sin(theta) * sin(phi)
+        z = R * cos(theta)
+        return array([x, y, z], dtype='float64')

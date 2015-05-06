@@ -1,5 +1,5 @@
 from six.moves import range
-from numpy import unique, array
+from numpy import unique, array, ndarray
 
 def slice_to_iter(ids):
     """
@@ -38,8 +38,10 @@ def slice_to_iter(ids):
             ids2 = range(ids.start, ids.stop, ids.step)
     elif ids is None:
         raise TypeError('cannot turn None into an iterable')
-    else: # list, ndarray
+    elif isinstance(ids, list) or isinstance(ids, ndarray):
         ids2 = ids
+    else:
+        raise KeyError(ids)
     return ids2, int_flag
 
 #def unique_rows(data):

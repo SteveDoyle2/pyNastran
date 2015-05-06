@@ -156,13 +156,14 @@ class PSHELL(Property):
         :param property_id: the property IDs to consider (default=None -> all)
         """
         #print('get_nonstructural_mass; pids = %s' % property_ids)
+        int_flag = True if isinstance(property_id, int) else False
         if property_id is None:
             nsm = self.nsm
         else:
             i = self.get_property_index_by_property_id(property_id)
             #print('i = %s' % i)
             nsm = self.nsm[i]
-        return nsm
+        return nsm[0] if int_flag else nsm
 
     def get_thickness_by_property_id(self, property_id=None):
         """
@@ -171,12 +172,13 @@ class PSHELL(Property):
         :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
+        int_flag = True if isinstance(property_id, int) else False
         if property_id is None:
             t = self.thickness
         else:
             i = self.get_property_index_by_property_id(property_id)
             t = self.thickness[i]
-        return t
+        return t[0] if int_flag else t
 
     def get_mass_per_area_by_property_id(self, property_id=None):
         """
@@ -204,6 +206,7 @@ class PSHELL(Property):
         :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
+        int_flag = True if isinstance(property_id, int) else False
         material_id = self.material_id
         j = where(material_id == 0)[0]
         material_ids = material_id.copy()
@@ -214,7 +217,7 @@ class PSHELL(Property):
             material_ids = material_ids[i]
 
         density = self.model.materials.get_density_by_material_id(material_ids)
-        return density
+        return density[0] if int_flag else density
 
     def get_material_id_by_property_id(self, property_id=None):
         """

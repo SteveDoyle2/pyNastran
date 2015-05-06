@@ -17,8 +17,15 @@ class SolidElement(Element):
          - elements[[1,2,5]]
          - elements[array([1,2,5])]
         """
-        i = searchsorted(self.element_id, element_ids)
-        return self.slice_by_index(i)
+        try:
+            i = searchsorted(self.element_id, element_ids)
+            elements = self.slice_by_index(i)
+        except TypeError:
+            msg = 'Error with Solid slice; did you mean to use slice_by_index?\n'
+            msg += '  self.element_id=%s\n' % self.element_id
+            msg += '  element_ids=%s\n' % element_ids
+            raise TypeError(msg)
+        return elements
 
     def __repr__(self):
         f = StringIO()
@@ -151,7 +158,11 @@ class SolidElement(Element):
         #obj_class = type(name, (SolidElement, ), {})
         obj_class = self.__class__#.__class__
         obj = obj_class(self.model)
-        n = len(i)
+        try:
+            n = len(i)
+        except TypeError:
+            msg = 'i=%s; self.n=%s' % (i, self.n)
+            raise TypeError(msg)
         obj.n = n
         obj.i = n
         #obj._cards = self._cards[i]

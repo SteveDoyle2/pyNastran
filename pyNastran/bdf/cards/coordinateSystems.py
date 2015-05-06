@@ -11,8 +11,8 @@ All coordinate cards are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from six.moves import zip, range
+from math import sqrt, degrees, radians, atan2, acos, sin, cos
 
 from numpy import array, cross, dot, transpose, zeros, vstack, ndarray
 from numpy.linalg import norm
@@ -1119,19 +1119,18 @@ class CORD3G(Coord):  # not done
 
 
 class CORD1R(Cord1x, RectangularCoord):
-    """
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
-    +=======+======+=====+=====+======+======+=====+======+=====+
-    |CORD1R | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    """
     type = 'CORD1R'
     Type = 'R'
 
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
+
+        +-------+------+-----+-----+------+------+-----+------+-----+
+        |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+        +=======+======+=====+=====+======+======+=====+======+=====+
+        |CORD1R | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+        +-------+------+-----+-----+------+------+-----+------+-----+
 
         :param self:   the CORD1R coordinate system object
         :param nCoord: the coordinate location on the line
@@ -1146,19 +1145,18 @@ class CORD1R(Cord1x, RectangularCoord):
 
 
 class CORD1C(Cord1x, CylindricalCoord):
-    """
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
-    +=======+======+=====+=====+======+======+=====+======+=====+
-    |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    """
     type = 'CORD1C'
     Type = 'C'
 
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1R
+
+        +-------+------+-----+-----+------+------+-----+------+-----+
+        |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+        +=======+======+=====+=====+======+======+=====+======+=====+
+        |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+        +-------+------+-----+-----+------+------+-----+------+-----+
 
         :param self:   the CORD1C coordinate system object
         :param card:   a BDFCard object
@@ -1174,19 +1172,18 @@ class CORD1C(Cord1x, CylindricalCoord):
 
 
 class CORD1S(Cord1x, SphericalCoord):
-    """
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
-    +=======+======+=====+=====+======+======+=====+======+=====+
-    |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
-    +-------+------+-----+-----+------+------+-----+------+-----+
-    """
     type = 'CORD1S'
     Type = 'S'
 
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
         Intilizes the CORD1S
+
+        +-------+------+-----+-----+------+------+-----+------+-----+
+        |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+        +=======+======+=====+=====+======+======+=====+======+=====+
+        |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+        +-------+------+-----+-----+------+------+-----+------+-----+
 
         :param self:   the CORD1S coordinate system object
         :param card:   a BDFCard object

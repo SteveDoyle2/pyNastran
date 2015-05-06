@@ -112,7 +112,7 @@ class TestRods(unittest.TestCase):
         lines = ['grid,%i, %i, %f, %f, %f' % (nid2, 0, xyz2[0], xyz2[1], xyz2[2])]
         model.add_card(lines, 'grid', is_list=False)
 
-        model.cross_reference()
+        model.build()
         mass = L * (rho * A + nsm)
 
         # conrod

@@ -20,7 +20,6 @@ def normalize(v):
     return v / norm(v, axis=0)
 
 # .. todo:: incomplete
-
 class Coord(object):
     def get_global_position_by_node_id(self, node_id, cp):
         i = self.model.grid.get_node_index_by_node_id(node_id)

@@ -89,7 +89,7 @@ class MATS1(Material):
         self.material_id[i] = integer(card, 1, 'mid')
         #: Identification number of a TABLES1 or TABLEST entry. If H is
         #: given, then this field must be blank.
-        self.table_id[i] = integer_or_blank(card, 2, 'tid')
+        self.table_id[i] = integer_or_blank(card, 2, 'tid', 0)
         #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
         #: or 'PLASTIC' for elastoplastic.)
         self.Type[i] = string(card, 3, 'Type')

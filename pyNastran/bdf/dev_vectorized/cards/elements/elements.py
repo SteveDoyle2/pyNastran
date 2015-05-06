@@ -822,7 +822,7 @@ class Elements(object):
         element_ids2, int_flag = slice_to_iter(element_ids)
 
         out = []
-        #print('element_ids = %s' % element_ids2)
+        #print('element_ids_getitem = %s' % element_ids2)
         for eid in element_ids2:
             #obj = None
             for Type, eids in iteritems(self.element_groups):

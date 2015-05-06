@@ -8,7 +8,7 @@ class XRefMesh(object):
     def __init__(self):
         pass
 
-    def cross_reference(self, xref=True):
+    def build(self, xref=True):
         if xref:
             self.grid.build()
             self.point.build()

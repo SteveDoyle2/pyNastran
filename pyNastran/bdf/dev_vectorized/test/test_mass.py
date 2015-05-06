@@ -175,9 +175,9 @@ class TestMass(unittest.TestCase):
         with self.assertRaises(TypeError):
             print(model.elements[None])
 
-        #print(model.get_elements('cat'))
+        #print('elements = %r' % model.elements['cat'])
         with self.assertRaises(KeyError):
-            model.get_elements('cat')
+            model.elements['cat']
 
     def test_combo_1(self):
         model = BDF(debug=False, log=None)
@@ -235,7 +235,7 @@ class TestMass(unittest.TestCase):
         self.verify_psolid_element(hexa, mass, volume, centroid, rho, E, G, nu)
 
         # tetra - psolid
-        tetra = model.get_elements(8)
+        tetra = model.elements[8]
         mass = 1/30.
         volume = 1/3. # 1/3 * b * h = 1/3 * 0.5 * 2.0
         rho = 0.1
@@ -243,10 +243,10 @@ class TestMass(unittest.TestCase):
         G = 2.0
         nu = 3.0
         centroid = array([0.5, 0.25, 0.5])
-        self.verify_psolid_element(tetra[0], mass, volume, centroid, rho, E, G, nu)
+        self.verify_psolid_element(tetra, mass, volume, centroid, rho, E, G, nu)
 
         # penta - psolid
-        penta = model.get_elements(9)
+        penta = model.elements[9]
         mass = 0.1
         volume = 1.0 # b * h = 0.5 * 2
         rho = 0.1
@@ -254,7 +254,7 @@ class TestMass(unittest.TestCase):
         G = 2.0
         nu = 3.0
         centroid = array([2/3., 1/3., 1.])
-        self.verify_psolid_element(penta[0], mass, volume, centroid, rho, E, G, nu)
+        self.verify_psolid_element(penta, mass, volume, centroid, rho, E, G, nu)
 
 
 if __name__ == '__main__':  # pragma: no cover
