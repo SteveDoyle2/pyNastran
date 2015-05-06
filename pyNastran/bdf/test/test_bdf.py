@@ -162,10 +162,10 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     try:
         #nastran = 'nastran scr=yes bat=no old=no news=no '
         nastran = ''
-        try:
-            outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
-            fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
-            diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        #try:
+        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
+        fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
+        diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
         #except:
             #return 1, 2, 3
         if nastran:

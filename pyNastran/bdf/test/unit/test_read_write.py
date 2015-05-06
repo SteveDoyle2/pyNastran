@@ -109,27 +109,21 @@ class TestReadWrite(unittest.TestCase):
             os.remove(out_filename)
 
     def test_include_end(self):
-        """this test fails incorrectly"""
         if PY2:
-            f = open('a.bdf', 'wb')
+            wb = 'wb'
         else:
-            f = open('a.bdf', 'w')
+            wb = 'w'
+        f = open('a.bdf', wb)
         f.write('CEND\n')
         f.write('BEGIN BULK\n')
         f.write('GRID,1\n')
         f.write("INCLUDE 'b.bdf'\n\n")
 
-        if PY2:
-            f = open('b.bdf', 'wb')
-        else:
-            f = open('b.bdf', 'w')
+        f = open('b.bdf', wb)
         f.write('GRID,2\n')
         f.write("INCLUDE 'c.bdf'\n\n")
 
-        if PY2:
-            f = open('c.bdf', 'wb')
-        else:
-            f = open('c.bdf', 'w')
+        f = open('c.bdf', wb)
         f.write('GRID,3\n\n')
         f.write("ENDDATA\n")
         f.close()
@@ -143,6 +137,7 @@ class TestReadWrite(unittest.TestCase):
         os.remove('c.bdf')
         os.remove('a.out.bdf')
         self.assertEqual(len(model.nodes), 3)
+        self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
 
     def test_read_bad_01(self):
         model = BDF()

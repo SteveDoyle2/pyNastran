@@ -7,26 +7,24 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdf import BDF, to_fields
 
+
 class BDFReplacer(BDF):
     """
     This class demonstates OpenMDAO find-replace streaming coupled with some
     Python black magic (see _read_bulk_data_deck).
-
-    TODO: this needs to be tested with include files...
     """
     def __init__(self, bdf_out_filename, debug=True, log=None):
         BDF.__init__(self, debug=debug, log=log)
-        self._auto_reject = True
         self.bdf_out_filename = bdf_out_filename
-        if PY2:
-            self.bdf_out_file = open(self.bdf_out_filename, 'wb')
-        else:
-            self.bdf_out_file = open(self.bdf_out_filename, 'w')
 
     def is_reject(self, card_name):
         return False
 
     def _start_writing(self):
+        if PY2:
+            self.bdf_out_file = open(self.bdf_out_filename, 'wb')
+        else:
+            self.bdf_out_file = open(self.bdf_out_filename, 'w')
         self._write_header(self.bdf_out_file)
 
     def _read_bulk_data_deck(self):
