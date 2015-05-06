@@ -1,17 +1,19 @@
 from pyNastran.op2.fortran_format import FortranFormat
 from struct import unpack
-from numpy import degrees, array, allclose, zeros, hstack, vstack
+from numpy import degrees, array, allclose, zeros, hstack, vstack, where
+from pyNastran.utils.log import get_logger2
 
 
 class ADB_Reader(FortranFormat):
-    def __init__(self, log=None, debug=None):
-        self.log = log
+    def __init__(self, log=None, debug=None, batch=False):
+        self.log = get_logger2(log, debug)
         self.debug = debug
         self.n = 0
         #self.p_inf =
         self.rho_inf = 0.002377
         self.v_inf = 100.
         self.q_inf = 0.5 * self.rho_inf * self.v_inf ** 2
+        self.batch = batch
 
     @property
     def nnodes(self):
@@ -21,14 +23,15 @@ class ADB_Reader(FortranFormat):
         self.f = open(adb_filename, 'rb')
         n = 4
         data = self.f.read(4)
-        version_code_small, = unpack('>i', data)
-        version_code_large, = unpack('<i', data)
-        if version_code_small == -123789456:
+        version_code_big, = unpack('>i', data)
+        version_code_little, = unpack('<i', data)
+        if version_code_big == -123789456:
             endian = '>'
-        elif version_code_large == -123789456:
+        elif version_code_little == -123789456:
             endian = '<'
         else:
-            print(version_code_small, version_code_large)
+            print(version_code_little, version_code_big)
+            raise RuntimeError('incorrect endian')
 
         self.n = 4
         n = 40
@@ -36,6 +39,7 @@ class ADB_Reader(FortranFormat):
         nnodes, ntris, nmach, nalpha, sref, cref, bref, xcg, ycg, zcg = unpack(endian + '4i6f', data)
         print('nnodes=%s ntris=%s nmach=%s nalpha=%s' % (nnodes, ntris, nmach, nalpha))
         print('sref=%s cref=%s bref=%s cg=(%s, %s, %s)' % (sref, cref, bref, xcg, ycg, zcg))
+        self.cg = array([xcg, ycg, zcg], dtype='float32')
         self.n += 40
         assert self.n == self.f.tell(), 'n=%s tell=%s' % (self.n, self.f.tell())
 
@@ -130,8 +134,10 @@ class ADB_Reader(FortranFormat):
         n = 8
         data = self.f.read(n)
         self.n += n
-        #p0, q0 = unpack(endian + '2f', data)
-        #print('p0=%s q0=%s qinf=%s' % (p0, q0, self.q_inf))
+        p0, q0 = unpack(endian + '2f', data)
+        print('p0=%s q0=%s qinf=%s' % (p0, q0, self.q_inf))
+        assert p0 == 1000., p0 # this is hardcoded in the VSP solver
+        assert q0 == 100000., q0 # this is hardcoded in the VSP solver
 
         fmt = '%s%if' % (endian, ntris)
         data = self.f.read(4 * ntris)
@@ -141,35 +147,64 @@ class ADB_Reader(FortranFormat):
         data = self.f.read(4)
         self.n += 4
         nwakes, = unpack(endian + 'i', data)
+        #nwakes -= 2
         X = []
         Y = []
         Z = []
         wakes = []
         iwake_node = nnodes
-        for i in range(nwakes):
+        self.log.debug('nwakes = %s' % nwakes)
+        for iwake in range(nwakes):
             data = self.f.read(4)
-            j, = unpack(endian + 'i', data)
-            print('j = %r' % j)
+            nsub_vortex_nodes, = unpack(endian + 'i', data)
+            print('nsub_vortex_nodes = %r' % nsub_vortex_nodes)
             self.n += 4
-            assert 0 < j < 1000, j
-            for ji in range(j):
+            assert 0 < nsub_vortex_nodes < 1000, nsub_vortex_nodes
+            for ji in range(nsub_vortex_nodes - 1):
                 data = self.f.read(12)
                 x, y, z = unpack(endian + '3f', data)
                 self.n += 12
                 X.append(x)
                 Y.append(y)
                 Z.append(z)
-            wake = [iwake_node, iwake_node + j]
-            iwake_node += j + 1
+
+            if 1:
+                # there is a trailing infinity node that I don't want to save
+                data = self.f.read(12)
+                x, y, z = unpack(endian + '3f', data)
+                self.n += 12
+                nsub_vortex_nodes -= 1
+            #wake = [iwake_node - 1, iwake_node + nsub_vortex_nodes - 1]
+            wake = [iwake_node, iwake_node + nsub_vortex_nodes]
+            iwake_node += nsub_vortex_nodes #+ 1
             wakes.append(wake)
+        assert iwake_node - nnodes == len(X), 'inode=%s nx=%s' % (iwake_node, len(X))
         X = array(X, dtype='float32')
         Y = array(Y, dtype='float32')
         Z = array(Z, dtype='float32')
+        ix = where(X > 1000.)[0]
+        iy = where(Y > 1000.)[0]
+        iz = where(Z > 1000.)[0]
+        if self.batch:
+            print('ix=%s' % ix)
+            print('iy=%s' % iy)
+            print('iz=%s' % iz)
+        else:
+            X[ix] = 0.
+            Y[iy] = 0.
+            Z[iz] = 0.
         self.wake_xyz = vstack([X, Y, Z]).T
+        print('X.max=%s X.min=%s' % (X.max(), X.min()))
+        print('Y.max=%s Y.min=%s' % (Y.max(), Y.min()))
+        print('Z.max=%s Z.min=%s' % (Z.max(), Z.min()))
         self.wake_elements = wakes
-        print('X', X)
-        print('Z', Z)
+        #print('X', X)
+        #print('Z', Z)
         assert self.wake_xyz.shape[1] == 3, self.wake_xyz.shape
+
+        # shift to the reference point
+        self.nodes -= self.cg
+        self.wake_xyz -= self.cg
         #print(X.max(), X.min())
         #print(Y.max(), Y.min())
         #print(Z.max(), Z.min())
@@ -206,7 +241,7 @@ class ADB_Reader(FortranFormat):
 
 def main():
     adb_filename = 'model_DegenGeom.adb'
-    a = ADB_Reader()
+    a = ADB_Reader(batch=True)
     a.read_adb(adb_filename)
 
 if __name__ == '__main__':

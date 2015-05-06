@@ -62,8 +62,12 @@ class ADB_IO(object):
         if skipReading:
             return
 
-        plot_wakes = False
-        #plot_wakes = True # doesn't work
+        if self.is_centroidal:
+            plot_wakes = False
+            #plot_wakes = False  # does this work right?
+        else:
+            plot_wakes = True # doesn't work perfectly
+
         model = ADB_Reader(log=self.log, debug=False)
         self.modelType = 'vspaero'
         #self.modelType = model.modelType
@@ -74,14 +78,13 @@ class ADB_IO(object):
         nxyz_elements = model.tris.shape[0]
         nwake_elements = max(0, model.wake_xyz.shape[0] - 1)
         if plot_wakes:
-            self.nNodes = nxyz_nodes + nwake_nodes
-            self.nElements = nxyz_elements + nwake_elements
+            nnodes = nxyz_nodes + nwake_nodes
+            nelements = nxyz_elements + nwake_elements
         else:
-            self.nNodes = nxyz_nodes
-            self.nElements = nxyz_elements
-
-        #print("nNodes = ",self.nNodes)
-        #print("nElements = ", self.nElements)
+            nnodes = nxyz_nodes
+            nelements = nxyz_elements
+        self.nNodes = nnodes
+        self.nElements = nelements
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
@@ -92,7 +95,6 @@ class ADB_IO(object):
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
-        #elem.SetNumberOfPoints(nNodes)
 
         assert nodes is not None
 
@@ -111,9 +113,8 @@ class ADB_IO(object):
         self.log.info('nxyz_elements=%s nwake_elements=%s total=%s' % (
             nxyz_elements, nwake_elements, nxyz_elements + nwake_elements))
 
-        nelements = elements.shape[0]
         elements -= 1
-        for eid in range(nelements):
+        for eid in range(nxyz_elements):
             elem = vtkTriangle()
             node_ids = elements[eid, :]
             elem.GetPointIds().SetId(0, node_ids[0])
@@ -131,27 +132,23 @@ class ADB_IO(object):
                 i0, i1 = wake
                 #node_ids = range(i0, i1 + 1)
                 #elem.SetPoints(points[i0:i1 + 1])
-                for ii in range(i0, i1):
+                print(i0, i1)
+                for ii in range(i0+1, i1):
                     elem = vtk.vtkLine()
-                    elem.GetPointIds().SetId(0, ii)
-                    elem.GetPointIds().SetId(1, ii + 1)
+                    elem.GetPointIds().SetId(0, ii - 1)
+                    elem.GetPointIds().SetId(1, ii)
                     self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 eid += 1
+                #break
+            #assert i1 == nelements, 'ii=%s nelements=%s' % (ii, nelements)
 
         self.grid.SetPoints(points)
-        #self.grid2.SetPoints(points2)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print(dir(self.grid) #.SetNumberOfComponents(0))
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
-        #self.grid2.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            #self.grid2.Update()
         print("updated grid")
 
-        # loadCart3dResults - regions/loads
+        # load results - regions/loads
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
@@ -165,7 +162,6 @@ class ADB_IO(object):
         ID = 1
 
         form, cases = self._fill_adb_case(cases, ID, model, plot_wakes)
-        #self._finish_results_io(cases)
         self._finish_results_io2(form, cases)
 
     #def clear_adb(self):
@@ -188,8 +184,8 @@ class ADB_IO(object):
         if plot_wakes:
             nnodes = nxyz_nodes + nwake_nodes
             nelements = nxyz_elements + nwake_elements
-            assert nnodes == 408 + 1584, nnodes
-            assert nelements == 2223, nelements
+            #assert nnodes == 408 + 1584, nnodes
+            #assert nelements == 2223, nelements
         else:
             nnodes = nxyz_nodes
             nelements = nxyz_elements
@@ -232,18 +228,6 @@ class ADB_IO(object):
                 cases[(ID, 2, 'Area', 1, 'centroid', '%.3f')] = area
 
             i = 3
-            #if 0:
-                #from pyNastran.converters.cart3d.cart3d_to_quad import get_normal_groups
-                #normal, normal_groups = get_normal_groups(nodes, elements)
-                #groups = zeros(nelements, dtype='int32')
-                #for igroup, normal_group in enumerate(normal_groups):
-                    #if igroup % 2 == 0:
-                        #continue
-                    #for ni in normal_group:
-                        #groups[ni] = igroup + 1
-                #cases[(ID, 2, 'Quad Group', 1, 'centroid', '%i')] = groups
-                #geometry_form.append('Quad Group', 2, [])
-
             if is_normals:
                 geometry_form.append(('Normal X', i, []))
                 geometry_form.append(('Normal Y', i + 1, []))
@@ -267,6 +251,7 @@ class ADB_IO(object):
                 cases_new[i] = (Cp, 'Cp', 1, 'centroid', '%.3f')
             else:
                 cases[(ID, 3, 'Cp', 1, 'centroid', '%.3f')] = Cp
+            results_form.append(('Cp', i, []))
             i += 1
 
         elif self.is_nodal:
@@ -308,8 +293,6 @@ class ADB_IO(object):
                 surf_id = hstack([surf_id, izero_pad])
                 area = hstack([area, izero_pad])
 
-            #area = model.area
-            #region = model.surf_id
             Cp_nodes = zeros(nnodes, dtype='float32')
             area_nodes = zeros(nnodes, dtype='float32')
             region_nodes = zeros(nnodes, dtype='int32')
@@ -355,15 +338,6 @@ class ADB_IO(object):
             results_form.append(('Area', i  + 1, []))
             geometry_form.append(('SurfaceID', i + 2, []))
             i += 3
-            #for result_name in result_names:
-            #    if result_name in loads:
-            #        nodal_data = loads[result_name]
-            #        if new:
-            #            cases_new[i] = (result, result_name, 1, 'node', '%.3f')
-            #        else:
-            #            cases[(ID, i, result_name, 1, 'node', '%.3f')] = nodal_data
-            #        results_form.append((result_name, i, []))
-            #        i += 1
 
         form = [
             ('Geometry', None, geometry_form),
