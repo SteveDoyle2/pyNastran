@@ -33,7 +33,7 @@ class FortranFormat(object):
         return strings, ints, floats
 
     def show_data(self, data, types='ifs'):
-        return self.write_data(sys.stdout, data, types)
+        return self.write_data(sys.stdout, data, types=types)
 
     def write_data(self, f, data, types='ifs'):
         """
