@@ -107,3 +107,13 @@ except ImportError:
             pass
     is_usm3d = False
 
+try:
+    from pyNastran.converters.openvsp.adb_io import ADB_IO
+    is_openvsp = True
+except ImportError:
+    #raise
+    class ADB_IO(object):
+        def __init__(self):
+            pass
+    is_openvsp = False
+
