@@ -917,7 +917,7 @@ class CTRIAX6(TriShell):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
-            assert self.mid.type in ['MAT1'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
+            assert self.mid.type in ['MAT1', 'MAT4'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
             #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             #if not self.pid.type in ['PLPLANE']:
                 #t = self.Thickness()

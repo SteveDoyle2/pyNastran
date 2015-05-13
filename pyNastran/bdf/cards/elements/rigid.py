@@ -284,7 +284,7 @@ class RBE2(RigidElement):
         :type field:  varies
         """
         if n > 3 and n <= 3 + len(self.Gmi):
-            self.Gmi[n-4] = value
+            self.Gmi[n - 4] = value
         elif n == 4 + len(self.Gmi):
             self.alpha = value
         else:
@@ -376,21 +376,21 @@ class RBE2(RigidElement):
                 card += [gm, cm, Ai]
         return card
 
-    def convert_to_RBE3(self):
-        raise NotImplementedError()
-        eid = self.eid
-        ref_node = self.gn
-        dof = self.cm
-        wf = 1.0
-        sDof = 123  # this is probably wrong...
-        boundary_nodes = self.Gmi
+    #def convert_to_RBE3(self):
+        #raise NotImplementedError()
+        #eid = self.eid
+        #ref_node = self.gn
+        #dof = self.cm
+        #wf = 1.0
+        #sDof = 123  # this is probably wrong...
+        #boundary_nodes = self.Gmi
 
-        # this is to get the farthest nodes for the UM card
-        boundary_nodes.sort()
-        rbe3_nodes = boundary_nodes
+        ## this is to get the farthest nodes for the UM card
+        #boundary_nodes.sort()
+        #rbe3_nodes = boundary_nodes
 
-        rbe3 = ['RBE3', eid, ref_node, dof, wf, sDof] + rbe3_nodes
-        return rbe3
+        #rbe3 = ['RBE3', eid, ref_node, dof, wf, sDof] + rbe3_nodes
+        #return rbe3
 
     def write_code_aster(self):
         """

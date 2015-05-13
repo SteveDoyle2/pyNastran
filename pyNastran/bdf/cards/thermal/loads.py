@@ -238,6 +238,15 @@ class QHBDY(ThermalLoad):
     Defines a uniform heat flux into a set of grid points.
     """
     type = 'QHBDY'
+    flag_to_nnodes = {
+        'POINT' : 1,
+        'LINE' : 2,
+        'REV' : 2,
+        'AREA3' : 3,
+        'AREA4' : 4,
+        'AREA6' : 6,
+        'AREA8' : 8,
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         ThermalLoad.__init__(self, card, data)
@@ -259,12 +268,14 @@ class QHBDY(ThermalLoad):
             self.af = double_or_blank(card, 4, 'af')
             nfields = card.nfields
 
-            #: grids
-            self.grids = fields(integer, card, 'grid', i=5, j=nfields)
+            nnodes = self.flag_to_nnodes[self.flag]
 
             #: Grid point identification of connected grid points.
             #: (Integer > 0 or blank)
-            self.grids = expand_thru_by(self.grids)
+            self.grids = []
+            for i in range(nnodes):
+                grid = integer(card, 5 + i, 'grid%i' % (i + 1))
+                self.grids.append(grid)
         else:
             self.sid = data[0]
             self.flag = data[1]

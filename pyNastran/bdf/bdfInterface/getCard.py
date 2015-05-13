@@ -13,6 +13,56 @@ class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         pass
 
+    def get_cards_by_card_types(self, card_types=None, reset_type_to_slot_map=False):
+        """
+        :param card_types: the list of keys to consider
+        :param reset_type_to_slot_map:
+            should the mapping dictionary be rebuilt (default=False);
+            set to True if you added cards
+        :retval out: the key=card_type, value=the card object
+        """
+        #self._type_to_id_map = {
+        #    'CQUAD4' : [1, 2, 3]
+        #}
+        #self._slot_to_type_map = {'elements' : [CQUAD4, CTRIA3]}
+        if reset_type_to_slot_map or self._type_to_slot_map is None:
+            rslot_map = {}
+            for key, values in iteritems(self._slot_to_type_map):
+                for value in values:
+                    rslot_map[value] = key
+            self._type_to_slot_map = rslot_map
+        else:
+            rslot_map = self._type_to_slot_map
+
+        if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
+            raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
+
+        for card_type in card_types:
+            if card_type not in self.card_count:
+                raise KeyError('card_type=%r does not exist in card_count' % card_type)
+
+        out = {}
+        for card_type in card_types:
+            key = rslot_map[card_type]
+            slot = getattr(self, key)
+            ids = self._type_to_id_map[card_type]
+            cards = []
+            for id in ids:
+                try:
+                    card = slot[id]
+                except KeyError:
+                    msg = 'key=%s id=%s cannot be found' % (key, id)
+                    raise KeyError(msg)
+
+                if isinstance(card, list):
+                    for cardi in card:  # loads/spc/mpc
+                        if cardi.type == card_type: # loads
+                            cards.append(cardi)
+                else:
+                    cards.append(card)
+            out[card_type] = cards
+        return out
+
     def get_node_ids_with_element(self, eid, msg=''):
         return self.get_node_ids_with_elements([eid], msg=msg)
 

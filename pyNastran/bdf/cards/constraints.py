@@ -473,7 +473,7 @@ class SPCAX(Constraint):
     def __init__(self, card=None, data=None, comment=''):
         # defines everything :) at least until cross-referencing methods are
         # implemented
-        SPC.__init__(self, card, data)
+        Constraint.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:

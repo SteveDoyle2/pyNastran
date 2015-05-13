@@ -3,7 +3,7 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function
-from six import string_types, iteritems
+from six import string_types, integer_types, iteritems
 
 class Subcase(object):
     """
@@ -446,12 +446,13 @@ class Subcase(object):
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
         else:
-            #a = 'key=%r' % key
-            #b = 'value=%r' % value
-            #c = 'options=|%s|' % options
-            #d = 'param_type=%r' % param_type
-            #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
-            if isinstance(value, int) or value is None:
+            if 0:
+                a = 'key=%r' % key
+                b = 'value=%r' % value
+                c = 'options=%r' % options
+                d = 'param_type=%r' % param_type
+                print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
+            if isinstance(value, integer_types) or value is None:
                 pass
             elif value.isdigit():  # STRESS = ALL
                 value = value

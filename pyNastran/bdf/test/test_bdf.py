@@ -166,6 +166,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
         fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
         diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        test_get_cards_by_card_types(fem2)
         #except:
             #return 1, 2, 3
         if nastran:
@@ -313,6 +314,33 @@ def divide(value1, value2):
         except ZeroDivisionError:
             v = 0.
     return v
+
+
+def test_get_cards_by_card_types(model):
+    card_types = model.card_count.keys()
+    removed_cards = []
+    for card_type in ['ENDDATA', 'INCLUDE', 'JUNK']:
+        if card_type in model.card_count:
+            removed_cards.append(card_type)
+    for removed_card in removed_cards:
+        card_types.remove(removed_card)
+
+    removed_cards = []
+    for card_type in card_types:
+        if card_type not in model.cards_to_read:
+            try:
+                removed_cards.append(card_type)
+                #print('removed %s' % card_type)
+            except ValueError:
+                msg = 'card_type=%s cant be removed' % card_type
+                raise ValueError(msg)
+    for removed_card in removed_cards:
+        card_types.remove(removed_card)
+
+    card_dict = model.get_cards_by_card_types(card_types, reset_reversed_slot_map=False)
+    for card_type, cards in iteritems(card_dict):
+        for card in cards:
+            assert card_type == card.type, 'this should never crash here...card_type=%s card.type=%s' % (card_type, card.type)
 
 
 def compare_card_count(fem1, fem2, print_stats=False):

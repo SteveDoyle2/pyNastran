@@ -132,7 +132,7 @@ class CBUSH(BushElement):
         pid = self.Pid()
         #si = self.si
         assert isinstance(ga, int), 'ga=%r' % ga
-        assert isinstance(gb, int), 'gb=%r' % gb
+        assert isinstance(gb, int) or gb is None, 'gb=%r' % gb
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(cid, int) or cid is None, 'cid=%r' % cid
         assert isinstance(ocid, int), 'ocid=%r' % ocid
@@ -164,7 +164,8 @@ class CBUSH(BushElement):
     def cross_reference(self, model):
         msg = ' which is required by CBUSH eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
+        if self.gb is not None:
+            self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)

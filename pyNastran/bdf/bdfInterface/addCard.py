@@ -10,22 +10,27 @@ class AddMethods(object):
     def add_DMI(self, dmi, allowOverwrites=False):
         name = dmi.name
         self.dmis[name] = dmi
+        self._type_to_id_map[dmi.type].append(name)
 
     def add_DMIG(self, dmig, allowOverwrites=False):
         name = dmig.name
         self.dmigs[name] = dmig
+        self._type_to_id_map[dmig.type].append(name)
 
     def add_DMIJ(self, dmij, allowOverwrites=False):
         name = dmij.name
         self.dmijs[name] = dmij
+        self._type_to_id_map[dmij.type].append(name)
 
     def add_DMIJI(self, dmiji, allowOverwrites=False):
         name = dmiji.name
         self.dmijis[name] = dmiji
+        self._type_to_id_map[dmiji.type].append(name)
 
     def add_DMIK(self, dmik, allowOverwrites=False):
         name = dmik.name
         self.dmiks[name] = dmik
+        self._type_to_id_map[dmik.type].append(name)
 
     def add_PARAM(self, param, allowOverwrites=False):
         key = param.key
@@ -35,8 +40,10 @@ class AddMethods(object):
                 self.log.warning('key=%s param=%s oldPARAM=%s'
                                  % (key, param, self.params[key]))
                 self.params[key] = param
+                #self._type_to_id_map[key] = param
         else:
             self.params[key] = param
+            self._type_to_id_map[param.type].append(key)
 
     def add_node(self, node, allowOverwrites=False):
         key = node.nid
@@ -51,6 +58,7 @@ class AddMethods(object):
         else:
             assert key > 0, 'nid=%s node=%s' % (key, node)
             self.nodes[key] = node
+            self._type_to_id_map[node.type].append(key)
 
     def add_SPOINT(self, spoint):
         if self.spoints is None:
@@ -66,6 +74,7 @@ class AddMethods(object):
                 self._duplicate_elements.append(elem)
         else:
             self.elements[key] = elem
+            self._type_to_id_map[elem.type].append(key)
 
     def add_mass(self, mass, allowOverwrites=False):
         key = mass.eid
@@ -75,6 +84,7 @@ class AddMethods(object):
                 self._duplicate_masses.append(mass)
         else:
             self.masses[key] = mass
+            self._type_to_id_map[mass.type].append(key)
 
     def add_damper(self, elem, allowOverwrites=False):
         """.. warning:: can dampers have the same ID as a standard element?"""
@@ -88,6 +98,7 @@ class AddMethods(object):
             assert elem.eid not in self.rigidElements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigidElements[elem.eid], elem)
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
         self.rigidElements[key] = elem
+        self._type_to_id_map[elem.type].append(key)
 
     def add_thermal_element(self, elem):
         """same as add_element at the moment..."""
@@ -99,6 +110,7 @@ class AddMethods(object):
         #    assert prop.pid not in self.properties, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (prop.pid,self.properties[prop.pid], prop)
         assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
         self.dequations[key] = deqatn
+        self._type_to_id_map[deqatn.type].append(key)
 
     def add_property(self, prop, allowOverwrites=False):
         key = prop.pid
@@ -109,6 +121,7 @@ class AddMethods(object):
                 self._duplicate_properties.append(prop)
         else:
             self.properties[key] = prop
+            self._type_to_id_map[prop.type].append(key)
 
     def add_property_mass(self, prop, allowOverwrites=False):
         key = prop.pid
@@ -119,6 +132,7 @@ class AddMethods(object):
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.properties_mass[key] = prop
+            self._type_to_id_map[prop.type].append(key)
 
     def add_PBUSHT(self, prop, allowOverwrites=False):
         key = prop.pid
@@ -130,24 +144,37 @@ class AddMethods(object):
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pbusht[key] = prop
+            self._type_to_id_map[prop.type].append(key)
 
     def add_BCRPARA(self, card, allowOverwrites=False):
-        self.bcrparas[card.crid] = card
+        key = card.crid
+        self.bcrparas[key] = card
+        self._type_to_id_map[card.type].append(key)
 
     def add_BCTADD(self, card, allowOverwrites=False):
-        self.bctadds[card.csid] = card
+        key = card.csid
+        self.bctadds[key] = card
+        self._type_to_id_map[card.type].append(key)
 
     def add_BCTPARA(self, card, allowOverwrites=False):
-        self.bctparas[card.csid] = card
+        key = card.csid
+        self.bctparas[key] = card
+        self._type_to_id_map[card.type].append(key)
 
     def add_BCTSET(self, card, allowOverwrites=False):
-        self.bctsets[card.csid] = card
+        key = card.csid
+        self.bctsets[key] = card
+        self._type_to_id_map[card.type].append(key)
 
     def add_BSURF(self, card, allowOverwrites=False):
-        self.bsurf[card.sid] = card
+        key = card.sid
+        self.bsurf[key] = card
+        self._type_to_id_map[card.type].append(key)
 
     def add_BSURFS(self, card, allowOverwrites=False):
-        self.bsurfs[card.id] = card
+        key = card.id
+        self.bsurfs[key] = card
+        self._type_to_id_map[card.type].append(key)
 
     def add_PDAMPT(self, prop, allowOverwrites=False):
         key = prop.pid
@@ -158,16 +185,18 @@ class AddMethods(object):
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pdampt[key] = prop
+            self._type_to_id_map[prop.type].append(key)
 
     def add_PELAST(self, prop, allowOverwrites=False):
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.pelast and not allowOverwrites:
             if not prop._is_same_card(self.pelast[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pelast[key],prop))
                 assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key], prop)
         else:
-            self.pdampt[key] = prop
+            self.pelast[key] = prop
+            self._type_to_id_map[prop.type].append(key)
 
     def add_structural_material(self, material, allowOverwrites=False):
         key = material.mid
@@ -177,6 +206,7 @@ class AddMethods(object):
                 self._duplicate_materials.append(material)
         else:
             self.materials[key] = material
+            self._type_to_id_map[material.type].append(key)
 
     def add_thermal_material(self, material, allowOverwrites=False):
         key = material.mid
@@ -186,6 +216,7 @@ class AddMethods(object):
                 self._duplicate_thermal_materials.append(material)
         else:
             self.thermalMaterials[key] = material
+            self._type_to_id_map[material.type].append(key)
 
     def add_hyperelastic_material(self, material, allowOverwrites=False):
         key = material.mid
@@ -195,6 +226,7 @@ class AddMethods(object):
                 assert key not in self.hyperelasticMaterials, 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.hyperelasticMaterials[key], material)
         else:
             self.hyperelasticMaterials[key] = material
+            self._type_to_id_map[material.type].append(key)
 
     def add_material_dependence(self, material, allowOverwrites=False):
         Type = material.type
@@ -219,6 +251,7 @@ class AddMethods(object):
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
             slot[key] = material
+            self._type_to_id_map[material.type].append(key)
 
     def add_creep_material(self, material, allowOverwrites=False):
         """
@@ -232,6 +265,7 @@ class AddMethods(object):
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
             self.creepMaterials[key] = material
+            self._type_to_id_map[material.type].append(key)
 
     def add_coord(self, coord, allowOverwrites=False):
         key = coord.cid
@@ -242,6 +276,7 @@ class AddMethods(object):
                 self._duplicate_coords.append(coord)
         else:
             self.coords[key] = coord
+            self._type_to_id_map[coord.type].append(key)
 
     def add_load(self, load):
         key = load.sid
@@ -249,21 +284,24 @@ class AddMethods(object):
             self.loads[key].append(load)
         else:
             self.loads[key] = [load]
+            self._type_to_id_map[load.type].append(key)
 
-    def add_dload(self, dload):
-        key = dload.sid
+    def add_dload(self, load):
+        key = load.sid
         if key in self.dloads:
-            self.dloads[key].append(dload)
+            self.dloads[key].append(load)
         else:
-            self.dloads[key] = [dload]
+            self.dloads[key] = [load]
+            self._type_to_id_map[load.type].append(key)
 
-    def add_dload_entry(self, dload):
-        print(dload)
-        key = dload.sid
+    def add_dload_entry(self, load):
+        #print(load)
+        key = load.sid
         if key in self.dload_entries:
-            self.dload_entries[key].append(dload)
+            self.dload_entries[key].append(load)
         else:
-            self.dload_entries[key] = [dload]
+            self.dload_entries[key] = [load]
+            self._type_to_id_map[load.type].append(key)
 
     def add_LSEQ(self, load):
         key = load.sid
@@ -271,24 +309,30 @@ class AddMethods(object):
             self.loads[key].append(load)
         else:
             self.loads[key] = [load]
+            self._type_to_id_map[load.type].append(key)
 
     def add_thermal_load(self, load):  # same function at the moment...
         key = load.sid
-        assert key > 0
+        assert key > 0, key
         if key in self.loads:
             self.loads[key].append(load)
         else:
             self.loads[key] = [load]
+            self._type_to_id_map[load.type].append(key)
 
     def add_PHBDY(self, prop):
-        assert prop.pid > 0
-        assert prop.pid not in self.phbdys
-        self.phbdys[prop.pid] = prop
+        key = prop.pid
+        assert key > 0, key
+        assert key not in self.phbdys, key
+        self.phbdys[key] = prop
+        self._type_to_id_map[prop.type].append(key)
 
     def add_convection_property(self, prop):
-        assert prop.pconid > 0
-        assert prop.pconid not in self.convectionProperties
-        self.convectionProperties[prop.pconid] = prop
+        key = prop.pconid
+        assert key > 0, key
+        assert key not in self.convectionProperties, key
+        self.convectionProperties[key] = prop
+        self._type_to_id_map[prop.type].append(key)
 
     def add_thermal_BC(self, bc, key):
         assert key > 0
@@ -296,38 +340,50 @@ class AddMethods(object):
             self.bcs[key].append(bc)
         else:
             self.bcs[key] = [bc]
+            self._type_to_id_map[bc.type].append(key)
 
     def add_constraint_MPCADD(self, constraint):
+        raise RuntimeError('is this used?')
         if constraint.conid in self.mpcadds:
             raise RuntimeError('must have unique MPCADD IDs')
-        self.mpcadds[constraint.conid] = constraint
+        key = constraint.conid
+        self.mpcadds[key] = constraint
+        self._type_to_id_map[constraint.type].append(key)
 
     def add_constraint_MPC(self, constraint):
-        if constraint.conid in self.mpcs:
-            self.mpcs[constraint.conid].append(constraint)
+        key = constraint.conid
+        if key in self.mpcs:
+            self.mpcs[key].append(constraint)
         else:
-            self.mpcs[constraint.conid] = [constraint]
+            self.mpcs[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
 
     def add_constraint_SPCADD(self, constraint):
-        if constraint.conid in self.spcadds:
+        raise RuntimeError('is this used?')
+        key = constraint.conid
+        if key in self.spcadds:
             raise RuntimeError('must have unique SPCADD IDs')
-        self.spcadds[constraint.conid] = constraint
+        self.spcadds[key] = constraint
+        self._type_to_id_map[constraint.type].append(key)
 
     def add_constraint_SPC(self, constraint):
-        if constraint.conid in self.spcs:
-            self.spcs[constraint.conid].append(constraint)
-        else:
-            self.spcs[constraint.conid] = [constraint]
-
-    def add_constraint(self, constraint):
         key = constraint.conid
-
-        if constraint.conid in self.spcs:
+        if key in self.spcs:
             self.spcs[key].append(constraint)
         else:
             self.spcs[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
+
+    def add_constraint(self, constraint):
+        key = constraint.conid
+        if key in self.spcs:
+            self.spcs[key].append(constraint)
+        else:
+            self.spcs[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
 
     def add_suport(self, suport):
+        self._type_to_id_map[suport.type].append(len(self.suports))
         self.suports.append(suport)
 
     def add_DAREA(self, darea, allowOverwrites=False):
@@ -338,18 +394,21 @@ class AddMethods(object):
         else:
             assert darea.sid > 0
             self.dareas[key] = darea
+            self._type_to_id_map[darea.type].append(key)
 
     def add_AERO(self, aero):
         key = aero.acsid
         assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (aero, self.aero[key])
         assert key >= 0
         self.aero[key] = aero
+        self._type_to_id_map[aero.type].append(key)
 
     def add_AEROS(self, aero):
         key = aero.acsid
         assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (aero, self.aeros[key])
         assert key >= 0
         self.aeros[key] = aero
+        self._type_to_id_map[aero.type].append(key)
 
     def add_AEFACT(self, aefact, allowOverwrites=False):
         key = aefact.sid
@@ -359,12 +418,14 @@ class AddMethods(object):
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
             self.aefacts[key] = aefact
+            self._type_to_id_map[aefact.type].append(key)
 
     def add_AELIST(self, aelist):
         key = aelist.sid
         assert key not in self.aelists, '\naelist=\n%s oldAELIST=\n%s' % (aelist, self.aelists[key])
         assert key >= 0
         self.aelists[key] = aelist
+        self._type_to_id_map[aelist.type].append(key)
 
     def add_AELINK(self, aelink):
         key = aelink.id
@@ -372,6 +433,7 @@ class AddMethods(object):
         if key not in self.aelinks:
             self.aelinks[key] = []
         self.aelinks[key].append(aelink)
+        self._type_to_id_map[aelink.type].append(key)
         #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
 
     def add_AEPARM(self, aeparam):
@@ -379,6 +441,7 @@ class AddMethods(object):
         assert key not in self.aeparams, '\naeparam=\n%s oldAEPARM=\n%s' % (aeparam, self.aeparams[key])
         assert key >= 0
         self.aeparams[key] = aeparam
+        self._type_to_id_map[aeparam.type].append(key)
 
     def add_AESTAT(self, aestat):
         key = aestat.id
@@ -386,6 +449,7 @@ class AddMethods(object):
             aestat, self.aestats[key])
         assert key >= 0
         self.aestats[key] = aestat
+        self._type_to_id_map[aestat.type].append(key)
 
     def add_AESURF(self, aesurf):
         key = aesurf.aesid
@@ -393,6 +457,7 @@ class AddMethods(object):
             aesurf, self.aesurfs[key])
         assert key >= 0
         self.aesurfs[key] = aesurf
+        self._type_to_id_map[aesurf.type].append(key)
 
     def add_CAERO(self, caero):
         key = caero.eid
@@ -400,6 +465,7 @@ class AddMethods(object):
             caero, self.caeros[key])
         assert key > 0
         self.caeros[key] = caero
+        self._type_to_id_map[caero.type].append(key)
 
     def add_PAERO(self, paero):
         key = paero.pid
@@ -407,17 +473,21 @@ class AddMethods(object):
             paero, self.paeros[key])
         assert key > 0, 'paero.pid = %r' % (key)
         self.paeros[key] = paero
+        self._type_to_id_map[paero.type].append(key)
 
     def add_SPLINE(self, spline):
         assert spline.eid not in self.splines
         assert spline.eid > 0
-        self.splines[spline.eid] = spline
+        key = spline.eid
+        self.splines[key] = spline
+        self._type_to_id_map[spline.type].append(key)
 
     def add_GUST(self, gust):
         key = gust.sid
         assert key not in self.gusts
         assert key > 0
         self.gusts[key] = gust
+        self._type_to_id_map[gust.type].append(key)
 
     def add_TRIM(self, trim, allowOverwrites=False):
         key = trim.sid
@@ -425,18 +495,21 @@ class AddMethods(object):
             assert key not in self.trims, 'trim=%s oldTrim=\n%snewProperty=\n%s' % (key, self.trims[key], trim)
         assert key > 0, 'key=%r trim=\n%s' % (key, trim)
         self.trims[key] = trim
+        self._type_to_id_map[trim.type].append(key)
 
     def add_FLUTTER(self, flutter):
         key = flutter.sid
         assert key not in self.flutters
         assert key > 0
         self.flutters[key] = flutter
+        self._type_to_id_map[flutter.type].append(key)
 
     def add_FLFACT(self, flfact):
         key = flfact.sid
         #assert key not in self.flfacts
         assert key > 0
         self.flfacts[key] = flfact  # set id...
+        self._type_to_id_map[flfact.type].append(key)
 
     def add_DCONSTR(self, dconstr):
         key = (dconstr.oid, dconstr.rid)
@@ -444,54 +517,63 @@ class AddMethods(object):
         assert dconstr.oid > 0
         assert dconstr.rid > 0
         self.dconstrs[key] = dconstr
+        self._type_to_id_map[dconstr.type].append(key)
 
     def add_DESVAR(self, desvar):
         key = desvar.oid
         assert key not in self.desvars
         assert key > 0
         self.desvars[key] = desvar
+        self._type_to_id_map[desvar.type].append(key)
 
     def add_DDVAL(self, ddval):
         key = ddval.oid
         assert key not in self.ddvals
         assert key > 0
         self.ddvals[key] = ddval
+        self._type_to_id_map[ddval.type].append(key)
 
     def add_DLINK(self, dlink):
         key = dlink.oid
         assert key not in self.dlinks
         assert key > 0
         self.dlinks[key] = dlink
+        self._type_to_id_map[dlink.type].append(key)
 
     def add_DRESP(self, dresp):
         key = dresp.oid
         assert key not in self.dresps
         assert key > 0
         self.dresps[key] = dresp
+        self._type_to_id_map[dresp.type].append(key)
 
     def add_DVMREL(self, dvmrel):
         key = dvmrel.oid
         assert key not in self.dvmrels
         assert key > 0
         self.dvmrels[key] = dvmrel
+        self._type_to_id_map[dvmrel.type].append(key)
 
     def add_DVPREL(self, dvprel):
         key = dvprel.oid
         assert key not in self.dvprels
         assert key > 0
         self.dvprels[key] = dvprel
+        self._type_to_id_map[dvprel.type].append(key)
 
     def add_NLPARM(self, nlparm):
         key = nlparm.nid
         assert key not in self.nlparms
         assert key > 0
         self.nlparms[key] = nlparm
+        self._type_to_id_map[nlparm.type].append(key)
 
     def add_NLPCI(self, nlpci):
         key = nlpci.nlparm_id
         assert key not in self.nlpcis
         assert key > 0
         self.nlpcis[key] = nlpci
+        self._type_to_id_map[nlpci.type].append(key)
 
     def add_TSTEP(self, tstep, allowOverwrites=False):
         key = tstep.sid
@@ -501,6 +583,7 @@ class AddMethods(object):
         else:
             assert key > 0, 'sid=%s tstep=\n%s' % (key, tstep)
             self.tsteps[key] = tstep
+            self._type_to_id_map[tstep.type].append(key)
 
     def add_TSTEPNL(self, tstepnl, allowOverwrites=False):
         key = tstepnl.sid
@@ -510,6 +593,7 @@ class AddMethods(object):
         else:
             assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)
             self.tstepnls[key] = tstepnl
+            self._type_to_id_map[tstepnl.type].append(key)
 
     def add_FREQ(self, freq):
         key = freq.sid
@@ -518,6 +602,7 @@ class AddMethods(object):
             self.frequencies[key].add_frequency_object(freq)
         else:
             self.frequencies[key] = freq
+            self._type_to_id_map[freq.type].append(key)
 
     def add_SET(self, set_obj):
         key = set_obj.sid
@@ -526,6 +611,7 @@ class AddMethods(object):
             self.sets[key].add_set(set_obj)
         else:
             self.sets[key] = set_obj
+            self._type_to_id_map[set_obj.type].append(key)
 
     def add_ASET(self, set_obj):
         self.asets.append(set_obj)
@@ -546,6 +632,7 @@ class AddMethods(object):
             old_set = self.setsSuper[key]
             set_obj.add_SESET_Object(old_set)
         self.setsSuper[key] = set_obj
+        self._type_to_id_map[set_obj.type].append(key)
 
     def add_table(self, table):
         key = table.tid
@@ -553,6 +640,7 @@ class AddMethods(object):
             table, self.tables[key])
         assert key > 0
         self.tables[key] = table
+        self._type_to_id_map[table.type].append(key)
 
     def add_random_table(self, table):
         key = table.tid
@@ -560,6 +648,7 @@ class AddMethods(object):
             table, self.randomTables[key])
         assert key > 0
         self.randomTables[key] = table
+        self._type_to_id_map[table.type].append(key)
 
     def add_method(self, method, allowOverwrites=False):
         key = method.sid
@@ -569,15 +658,17 @@ class AddMethods(object):
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, method)
             self.methods[key] = method
+            self._type_to_id_map[method.type].append(key)
 
-    def add_cmethod(self, cMethod, allowOverwrites=False):
-        key = cMethod.sid
+    def add_cmethod(self, method, allowOverwrites=False):
+        key = method.sid
         if key in self.cMethods and not allowOverwrites:
-            if not cMethod._is_same_card(self.cMethods[key]):
-                assert key not in self.cMethods, 'sid=%s\noldCMethod=\n%snewCMethod=\n%s' % (key, self.cMethods[key], cMethod)
+            if not method._is_same_card(self.cMethods[key]):
+                assert key not in self.cMethods, 'sid=%s\noldCMethod=\n%snewCMethod=\n%s' % (key, self.cMethods[key], method)
         else:
-            assert key > 0, 'sid=%s cMethod=\n%s' % (key, cMethod)
-            self.cMethods[key] = cMethod
+            assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)
+            self.cMethods[key] = method
+            self._type_to_id_map[method.type].append(key)
 
     def add_MKAERO(self, mkaero):
         self.mkaeros.append(mkaero)

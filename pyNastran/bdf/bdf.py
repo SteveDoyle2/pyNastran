@@ -7,6 +7,7 @@ Main BDF class.  Defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, itervalues, next
+from collections import defaultdict
 
 #from codecs import open as codec_open
 import io
@@ -567,6 +568,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.bsets = []
         self.csets = []
         self.qsets = []
+        self.usets = []
         #: SESETx
         self.setsSuper = {}
 
@@ -658,6 +660,199 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.bctsets = {}
         self.bsurf = {}
         self.bsurfs = {}
+
+        # ---------------------------------------------------------------------
+        self._type_to_id_map = defaultdict(list)
+        self._reversed_slot_map = None
+        self._slot_map = {
+            'params' : ['PARAM'],
+            'nodes' : ['GRID', 'SPOINT', ], # 'RINGAX',
+            'gridSet' : ['GRDSET'],
+            #'POINT', 'POINTAX', 'RINGAX',
+
+            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
+
+            'elements' : [
+                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                # 'CELAS5',
+                'CBUSH', 'CBUSH1D', 'CBUSH2D',
+
+                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                'CFAST',
+
+                'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+                'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+                'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+                'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
+                'CGAP',
+
+                # thermal
+                'CHBDYE', 'CHBDYG', 'CHBDYP',
+            ],
+            'rigidElements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',],
+
+            'mass_properties' : ['PMASS'],
+            'properties' : [
+                'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
+                'PBUSH', 'PBUSH1D',
+                'PDAMP', 'PDAMP5', 'PDAMPT',
+                'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
+                'PBEAML',  # not fully supported
+                # 'PBEAM3',
+
+                'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+                'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
+            ],
+
+
+            # materials
+            'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11'],
+            'hyperelasticMaterials' : ['MATHP',],
+            'creepMaterials' : ['CREEP'],
+            'MATT1' : ['MATT1'],
+            'MATT2' : ['MATT2'],
+            'MATT3' : ['MATT3'],
+            'MATT4' : ['MATT4'], # thermal
+            'MATT5' : ['MATT5'], # thermal
+            'MATT8' : ['MATT8'],
+            'MATT9' : ['MATT9'],
+            'MATS1' : ['MATS1'],
+            'MATS3' : ['MATS3'],
+            'MATS8' : ['MATS8'],
+
+            # 'MATHE'
+            #'EQUIV', # testing only, should never be activated...
+
+            # thermal materials
+            'thermalMaterials' : ['MAT4', 'MAT5',],
+
+            # spc/mpc constraints - TODO: is this correct?
+            'spcs' : ['SPC', 'SPC1', 'SPCD', 'SPCAX', 'SPCADD'],
+            #'spcadds' : ['SPCADD'],
+            #'mpcadds' : ['MPCADD'],
+            'mpcs' : ['MPC', 'MPCADD'],
+            'suports' : ['SUPORT', 'SUPORT1',],
+
+            # loads
+            'loads' : [
+                'LOAD', 'LSEQ', 'RANDPS',
+                'FORCE', 'FORCE1', 'FORCE2',
+                'MOMENT', 'MOMENT1', 'MOMENT2',
+                'GRAV', 'ACCEL', 'ACCEL1',
+                'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+                'PLOADX1', 'RFORCE', 'SLOAD',
+
+                # thermal
+                'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
+                ],
+            'dloads' : ['DLOAD', ],
+            # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
+            'dload_entries' : ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
+
+            # aero cards
+            'aero' : ['AERO'],
+            'aeros' : ['AEROS'],
+            'gusts' : ['GUST'],
+            'flutters' : ['FLUTTER'],
+            'flfacts' : ['FLFACT'],
+            'mkaeros' : ['MKAERO1', 'MKAERO2'],
+            'aefacts' : ['AEFACT'],
+            'aelinks' : ['AELINK'],
+            'aelists' : ['AELIST'],
+            'aeparams' : ['AEPARM'],
+            'aesurfs' : ['AESURF'],
+            'aestats' : ['AESTAT'],
+            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',], # 'CAERO5',
+            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3',], # 'PAERO4', 'PAERO5',
+            'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
+            #'SPLINE3', 'SPLINE6', 'SPLINE7',
+            'trims' : ['TRIM',],
+
+            # coords
+            'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
+                        'CORD2R', 'CORD2C', 'CORD2S',],
+
+            # temperature cards
+            # 'TEMPD',
+
+            'phbdys' : ['PHBDY'],
+            'convectionProperties' : ['PCONV', 'PCONVM'],
+
+            # stores thermal boundary conditions
+            'bcs' : ['CONV', 'RADBC', 'RADM'],
+
+
+            # dynamic cards
+            'dareas' : ['DAREA'],
+            'nlparms' : ['NLPARM'],
+            'nlpcis' : ['NLPCI'],
+            'tsteps' : ['TSTEP'],
+            'tstepnls' : ['TSTEPNL'],
+
+            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2'],
+
+            # direct matrix input cards
+            'dmigs' : ['DMIG'],
+            'dmijs' : ['DMIJ'],
+            'dmijis' : ['DMIJI'],
+            'dmiks' : ['DMIK'],
+            'dmis' : ['DMI'],
+            'dequations' : ['DEQATN'],
+
+            # optimization cards
+            'dconstrs' : ['DCONSTR'],
+            'desvars' : ['DESVAR'],
+            'ddvals' : ['DDVAL'],
+            'dlinks' : ['DLINK'],
+            'dresps' : ['DRESP1', 'DRESP2', 'DRESP3',],
+            'dvprels' : ['DVPREL1', 'DVPREL2'],
+            'dvmrels' : ['DVMREL1', 'DVMREL2'],
+            'doptprm' : ['DOPTPRM'],
+            'dscreen' : ['DSCREEN'],
+
+
+            # sets
+            'asets' : ['ASET', 'ASET1'],
+            'bsets' : ['BSET', 'BSET1',],
+            'qsets' : ['QSET', 'QSET1'],
+            'csets' : ['CSET', 'CSET1',],
+            'usets' : ['USET', 'USET1',],
+            'sets' : ['SET1', 'SET3',],
+
+            # super-element sets
+            'setsSuper' : ['SESET'],
+
+            'tables' : [
+                'DTABLE', 'TABLEHT', 'TABRNDG',
+                'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+                'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+                'TABDMP1',
+                'TABLES1', 'TABLEST',
+                ],
+            'randomTables' : ['TABRND1', 'TABRNDG',],
+
+            # initial conditions - sid (set ID)
+            ##'TIC',  (in bdf_tables.py)
+
+            # methods
+            'methods' : ['EIGB', 'EIGR', 'EIGRL',],
+
+            # cMethods
+            'cMethods' : ['EIGC', 'EIGP',],
+
+            # contact
+            'bctparas' : ['BCTPARA'],
+            'bcrparas' : ['BCRPARA'],
+            'bctadds' : ['BCTADD'],
+            'bctsets' : ['BCTSET'],
+            'bsurf' : ['BSURF'],
+            'bsurfs' : ['BSURFS'],
+
+            ## other
+            #'INCLUDE',  # '='
+            #'ENDDATA',
+        }
 
     def set_error_storage(self, nparse_errors=100, stop_on_parsing_error=True,
                           nxref_errors=100, stop_on_xref_error=True):
@@ -998,7 +1193,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 include_lines = [line]
                 while '\\' in next_line or '/' in next_line:  # more includes
                     include_lines.append(next_line)
-                    # TODO: should this be next_line instead of line_next???
                     (i, line_next, comment) = self._get_line()
                     next_line = next_line.strip().split('$')[0].strip()
                 self.case_control_lines.append(next_line)
