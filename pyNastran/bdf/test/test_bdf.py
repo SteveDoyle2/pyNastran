@@ -337,7 +337,7 @@ def test_get_cards_by_card_types(model):
     for removed_card in removed_cards:
         card_types.remove(removed_card)
 
-    card_dict = model.get_cards_by_card_types(card_types, reset_reversed_slot_map=False)
+    card_dict = model.get_cards_by_card_types(card_types, reset_type_to_slot_map=False)
     for card_type, cards in iteritems(card_dict):
         for card in cards:
             assert card_type == card.type, 'this should never crash here...card_type=%s card.type=%s' % (card_type, card.type)

@@ -663,8 +663,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         # ---------------------------------------------------------------------
         self._type_to_id_map = defaultdict(list)
-        self._reversed_slot_map = None
-        self._slot_map = {
+        self._type_to_slot_map = None
+        self._slot_to_type_map = {
             'params' : ['PARAM'],
             'nodes' : ['GRID', 'SPOINT', ], # 'RINGAX',
             'gridSet' : ['GRDSET'],
