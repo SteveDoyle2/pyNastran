@@ -209,12 +209,41 @@ class ADB_Reader(FortranFormat):
         #print(Y.max(), Y.min())
         #print(Z.max(), Z.min())
 
+        n = 4
+        data = self.f.read(n)
+        self.n += n
+        npropulsion_elements, = unpack(endian + 'i', data)
+        if npropulsion_elements != 0:
+            raise NotImplementedError(npropulsion_elements)
 
+        n = 4
+        data = self.f.read(n)
+        self.n += n
+        edges = []
+        edge_surf_ids = []
+        nmesh_levels, = unpack(endian + 'i', data)
+        if nmesh_levels != 0:
+            data = self.f.read(4)
+            self.n += 4
+            nedges, = unpack(endian + 'i', data)
+            for iedge in range(nedges):
+                data = self.f.read(12)
+                self.n += 12
+                surf_idi, n1, n2 = unpack(endian + '3i', data)
+                edge = [n1, n2]
+                edges.append(edge)
+                edge_surf_ids.append(surf_idi)
+        print edge_surf_ids
+        print edges
+
+        self.edges = array(edges, dtype='int32')
+        self.edge_surf_id = array(edge_surf_ids, dtype='int32')
 
         n = 64
         data = self.f.read(n)
         self.n += n
         self.show_data(data, types='ifs')
+        self.show_ndata(200, types='ifs')
         print('--------')
 
         if 0:

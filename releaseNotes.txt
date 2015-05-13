@@ -54,6 +54,14 @@ Solver
 
 -----------------------v0.8.0 released 2015/04/xx-----------------------
 BDF:
+ - added bdf.get_cards_by_card_types to get list of cards by card type easily
+  - self._type_to_id_map
+  - self._type_to_slot_map
+  - self._slot_to_type_map
+ - fixed bug in SPCAX with init
+ - fixed bug in CBUSH with GB of None
+ - QHBDY handles missing nodes better
+
 OP2:
 
 BDF API:

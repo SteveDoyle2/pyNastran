@@ -81,8 +81,8 @@ class LaWGS_IO(object):
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid2.Modified()
-        self.grid.Update()
         if hasattr(self.grid, 'Update'):
+            self.grid.Update()
             self.grid2.Update()
             print("updated grid")
 
