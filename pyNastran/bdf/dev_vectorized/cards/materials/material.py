@@ -7,28 +7,20 @@ class Material(VectorizedCard):
         VectorizedCard.__init__(self, model)
         self.material_id = array([], dtype='int32')
 
-    def __getitem__(self, material_id):
-        #self.model.log.debug('self.material_id = %s' % self.material_id)
-        #self.model.log.debug('material_id = %s' % material_id)
-        #material_id = slice_to_iter(material_id)
-        i = where(self.material_id == material_id)[0]
+    def __getitem__(self, i):
         return self.slice_by_index(i)
 
     def __iter__(self):
-        mids = self.material_id
-        for mid in mids:
-            yield mid
+        for i in range(self.n):
+            yield i
 
     def values(self):
-        mids = self.material_id
-        for mid in mids:
-            yield self.__getitem__(mid)
+        for i in range(self.n):
+            yield self.__getitem__([i])
 
     def items(self):
-        mids = self.material_id
-        #self.model.log.debug('mids = %s' % mids)
-        for mid in mids:
-            yield mid, self.__getitem__(mid)
+        for i in range(self.n):
+            yield i, self.__getitem__([i])
 
     def iteritems(self):
         return self.items()
@@ -36,10 +28,21 @@ class Material(VectorizedCard):
     def iterkeys(self):
         return self.keys()
 
+    def slice_by_material_id(self, material_id):
+        """
+        Allows for slicing:
+         - materials[1:10]
+         - materials[4]
+         - materials[1:10:2]
+         - materials[[1,2,5]]
+         - materials[array([1,2,5])]
+        """
+        i = self.get_material_index_by_material_id(material_id)
+        return self.slice_by_index(i)
+
     def get_material_index_by_material_id(self, material_id=None):
         if material_id is None:
             return slice(None)
         i = searchsorted(self.material_id, material_id)
         return i
-
 

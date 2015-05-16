@@ -492,8 +492,8 @@ class PCOMPi(CompositeShellProperty):
             self.ge = double_or_blank(card, 7, 'ge', 0.0)
 
             #: symmetric flag - default = No Symmetry (NO)
-            self.lam = string_or_blank(card, 8, 'lam')
-            assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
+            self.lam = string_or_blank(card, 8, 'lam', 'BLANK')
+            assert self.lam in ['BLANK', 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
 
             # -8 for the first 8 fields (1st line)
             nply_fields = card.nfields - 9

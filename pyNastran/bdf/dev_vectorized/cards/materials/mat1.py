@@ -213,13 +213,17 @@ class MAT1(Material):
         self.nu[i] = nu
 
     def slice_by_index(self, i):
-        i = asarray(i)
-        #self.model.log.debug('i = %s' % i)
+        #i = asarray(i)
+        #assert not isinstance(i, int), type(i)
+        #self.model.log.info('i=%s; mids=%s type(i)=%s' % (i, self.material_id, type(i)))
+        i = self._validate_slice(i)
+
         obj = MAT1(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
+
         obj.material_id = self.material_id[i]
         obj.rho = self.rho[i]
         obj.E = self.E[i]

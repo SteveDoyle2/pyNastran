@@ -1,5 +1,5 @@
 from six.moves import zip, StringIO
-from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange, asarray
+from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -240,8 +240,15 @@ class PSHELL(Property):
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
+
         obj = PSHELL(self.model)
+        try:
+            obj.n = len(i)
+        except TypeError:
+            msg = 'i=%s type(i)=%s' % (i, type(i))
+            raise TypeError(msg)
+
         obj.n = len(i)
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]

@@ -14,11 +14,9 @@ class CTRIAX6(object):
         self.model = model
         self.n = 0
         self._cards = []
-        self._comments = []
 
     def add(self, card, comment=''):
         self._cards.append(card)
-        self._comments.append(comment)
 
     def build(self):
         cards = self._cards

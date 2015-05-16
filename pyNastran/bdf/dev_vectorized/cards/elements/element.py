@@ -5,19 +5,19 @@ class Element(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def __iter__(self):
-        eids = self.element_id
-        for eid in eids:
-            yield eid
+        for i in self.n:
+            yield i
 
     def values(self):
-        eids = self.element_id
-        for eid in eids:
-            yield self.__getitem__(eid)
+        for i in self.n:
+            yield self.__getitem__([i])
 
     def items(self):
-        eids = self.element_id
-        for eid in eids:
-            yield eid, self.__getitem__(eid)
+        for i in self.n:
+            yield i, self.__getitem__([i])
+
+    def __getitem__(self, i):
+        return self.slice_by_index(i)
 
     def get_element_id_by_element_index(self, i=None):
         #i = self._get_sorted_index(self.element_id, element_id, self.n,

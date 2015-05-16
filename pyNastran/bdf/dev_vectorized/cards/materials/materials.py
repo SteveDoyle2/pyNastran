@@ -123,7 +123,7 @@ class Materials(object):
             material_id = array([material_id], dtype='int32')
 
         n = len(material_id)
-        self.model.log.debug('material_id =%s' % material_id)
+        self.model.log.debug('material_id=%s' % material_id)
         umids = unique(material_id)
         umids_found = zeros(len(umids), dtype='int32')
 
@@ -211,45 +211,45 @@ class Materials(object):
 
     def get_structural_material(self, material_id):
         if material_id in self.mat1:
-            return self.mat1[material_id]
+            return self.mat1.get_material_by_material_id(material_id)
         elif material_id in self.mat8:
-            return self.mat2[material_id]
+            return self.mat2.get_material_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_shell_material(self, material_id):
         #if material_id in self.mats1:
-            #return self.mats1[material_id]
+            #return self.mats1.get_material_by_material_id(material_id)
         if material_id in self.mat1:
-            return self.mat1[material_id]
+            return self.mat1.get_material_by_material_id(material_id)
         elif material_id in self.mat2:
-            return self.mat2[material_id]
+            return self.mat2.get_material_by_material_id(material_id)
         elif material_id in self.mat8:
-            return self.mat8[material_id]
+            return self.mat8.get_material_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_solid_material(self, material_id):
         #if material_id in self.mats1:
-            #return self.mats1[material_id]
+            #return self.mats1.get_material_by_material_id(material_id)
         #if material_id in self.mat11:
-            #return self.mat11[material_id]
+            #return self.mat11.get_material_by_material_id(material_id)
         if material_id in self.mat1:
-            return self.mat1[material_id]
+            return self.mat1.get_material_by_material_id(material_id)
         elif material_id in self.mat9:
-            return self.mat9[material_id]
+            return self.mat9.get_material_by_material_id(material_id)
         elif material_id in self.mat10:
-            return self.mat10[material_id]
+            return self.mat10.get_material_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_axial_material(self, material_id):
         if material_id in self.mat3:
-            return self.mat3[material_id]
+            return self.mat3.get_material_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_thermal_material(self, material_id):
         if material_id in self.mat4:
-            return self.mat4[material_id]
+            return self.mat4.get_material_by_material_id(material_id)
         elif material_id in self.mat5:
-            return self.mat5[material_id]
+            return self.mat5.get_material_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def __getitem__(self, material_id):
@@ -274,7 +274,7 @@ class Materials(object):
                     if mid in mids:
                         self.model.log.debug(' *mid=%i Type=%s was found' % (mid, Type))
                         i = where(mid == mids)[0]
-                        obj = mdict[mid]  #[i]
+                        obj = mdict.slice_by_material_id([mid])
                         break
                     else:
                         self.model.log.debug('  mid=%i Type=%s was not found' % (mid, Type))

@@ -549,11 +549,14 @@ class Elements(object):
 
                 if pid in pids:
                     i = where(pid == pids)[0]
-                    pids_extract = pids[i]
                     #print('i = %s, shape=%s' % (i, i.shape))
                     #print('pids_extract = %s' % pids_extract)
                     #obj = TypeMap[Type].slice_by_index(i)
-                    obj = TypeMap[Type][pids_extract]
+
+                    pids_extract = pids[i]
+                    #i = TypeMap[Type].get_property_index_by_property_id(pids_extract)
+                    #obj = TypeMap[Type][i]
+                    obj = TypeMap[Type].slice_by_property_id(pids_extract)
                     out.append(obj)
         #return out
         #self.model.log.debug('out[0] = %s' % out[0])

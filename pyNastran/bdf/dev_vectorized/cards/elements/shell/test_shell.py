@@ -1,8 +1,9 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
+from collections import defaultdict
 import unittest
-from numpy import array
+from numpy import array, allclose
 
 from pyNastran.bdf.dev_vectorized.bdf import BDF, BDFCard
 from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
@@ -79,8 +80,13 @@ class TestShells(unittest.TestCase):
                 ],
             ['mat1', mid, E, G, nu, rho],
         ]
-        for fields in cards:
-            model.add_card(fields, fields[0], is_list=True)
+        card_count = defaultdict(int)
+        for card in cards:
+            card_count[card[0].upper()] += 1
+        model.allocate(card_count)
+
+        for card in cards:
+            model.add_card(card, card[0], is_list=True)
         model.build()
 
         # ctria3 / pshell
@@ -128,8 +134,7 @@ class TestShells(unittest.TestCase):
 
         # pcomp
         pcomp_pid = pid + 1
-        pcomp = model.properties[pcomp_pid]
-        pcomp = pcomp[pcomp_pid]
+        pcomp = model.properties.properties_shell.pcomp.slice_by_property_id(pcomp_pid)
         #print('pcomp =', type(pcomp))
         #self.assertEquals(pcomp.get_property_id()[0], pcomp_pid)
         self.assertEquals(pcomp.get_property_id_by_property_index(), pcomp_pid)
@@ -137,8 +142,8 @@ class TestShells(unittest.TestCase):
         self.assertEquals(pcomp.get_nplies_by_property_index(), 4)
 
         self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 0), mid)
-        self.assertEquals(pcomp.get_non_structural_mass_by_property_id(), nsm)
-        self.assertEquals(pcomp.get_non_structural_mass_by_property_index(), nsm)
+        self.assertEquals(pcomp.get_nonstructural_mass_by_property_id(), nsm)
+        self.assertEquals(pcomp.get_nonstructural_mass_by_property_index(), nsm)
 
         with self.assertRaises(IndexError):
             self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, -1), mid)
@@ -347,10 +352,10 @@ class TestShells(unittest.TestCase):
             p.get_material_id_by_property_id_ply(pid, 3)
 
         #print('get_material_id_by_property_id = ', p.get_material_id_by_property_id(pid))
-        self.assertEqual(p.get_material_id_by_property_id(pid)[0], 1)
-        self.assertEqual(p.get_material_id_by_property_id(pid)[0], 1)
-        self.assertEqual(p.get_material_id_by_property_id(pid)[1], 2)
-        self.assertEqual(p.get_material_id_by_property_id(pid)[2], 3)
+        self.assertEqual(p.get_material_ids_by_property_id(pid)[0], 1)
+        self.assertEqual(p.get_material_ids_by_property_id(pid)[0], 1)
+        self.assertEqual(p.get_material_ids_by_property_id(pid)[1], 2)
+        self.assertEqual(p.get_material_ids_by_property_id(pid)[2], 3)
 
         self.assertEqual(p.get_sout_by_property_id_ply(pid, 0), 'YES')
         self.assertEqual(p.get_sout_by_property_id_ply(pid, 1), 'YES')
@@ -447,18 +452,43 @@ class TestShells(unittest.TestCase):
         TRef = 0.
         ge = 0.
         lam = 'SYM'  # isSymmetrical SYM
-        Mid = [1,2,3]
-        Theta = [0.,10.,20.]
-        T = [.1,.2,.3]
+        Mid = [1, 2, 3]
+        Theta = [0., 10., 20.]
+        T = [.1, .2, .3]
         Sout = ['YES', 'YES', 'NO']  # 0-NO, 1-YES
-        card = ['PCOMP', pid, z0, nsm, sb, ft, TRef, ge, lam,
+        pcomp = ['PCOMP', pid, z0, nsm, sb, ft, TRef, ge, lam,
                 Mid[0], T[0], Theta[0], Sout[0],
                 Mid[1], T[1], Theta[1], Sout[1],
                 Mid[2], T[2], Theta[2], Sout[2]]
-        card = BDFCard(card)
-        p = PCOMP(model)
-        p.add(card)
-        p.build()
+
+        #----
+
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = None
+        rho = 1.0
+        a = None
+        St = None
+        Sc = None
+        Ss = None
+        Mcsid = None
+        mat1_a = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+
+        card_count = {
+            'PCOMP' : 1,
+            'MAT1' : 3,
+        }
+        model.allocate(card_count)
+        model.add_card(pcomp, pcomp[0], is_list=True)
+        model.add_card(mat1_a, 'MAT1', is_list=True)
+        model.add_card(mat1_b, 'MAT1', is_list=True)
+        model.add_card(mat1_c, 'MAT1', is_list=True)
+        model.build()
+
+        p = model.properties.properties_shell.pcomp[0]
         self.assertTrue(p.is_symmetrical_by_property_id())
         self.assertTrue(p.is_symmetrical_by_property_index())
         self.assertEqual(p.get_nplies_by_property_id(), 6)
@@ -471,7 +501,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.get_thickness_by_property_id_ply(pid, 4), 0.2)
         self.assertAlmostEqual(p.get_thickness_by_property_id_ply(pid, 5), 0.3)
         with self.assertRaises(IndexError):
-            p.Thickness(6)
+            p.get_thickness_by_property_id_ply(pid, 6)
 
         self.assertAlmostEqual(p.get_theta_by_property_id_ply(pid, 0), 0.)
         self.assertAlmostEqual(p.get_theta_by_property_id_ply(pid, 1), 10.)
@@ -491,7 +521,10 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.get_material_id_by_property_id_ply(pid, 6)
 
-        self.assertEqual(p.get_material_ids_by_property_id(), [1,2,3,1,2,3])
+        self.assertTrue(allclose(
+            p.get_material_ids_by_property_id(pid),
+            [1, 2, 3, 1, 2, 3])
+        )
 
         self.assertEqual(p.get_sout_by_property_id_ply(pid, 0), 'YES')
         self.assertEqual(p.get_sout_by_property_id_ply(pid, 1), 'YES')
@@ -502,60 +535,46 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.get_sout_by_property_id_ply(pid, 6)
 
-
-        mid = 1
-        E = None
-        G = None
-        nu = None
-        rho = 1.0
-        a = None
-        St = None
-        Sc = None
-        Ss = None
-        Mcsid = None
-        mat1 = [mid,E,G,nu,rho,a,TRef, ge, St, Sc, Ss, Mcsid]
-        m = MAT1(data=mat1)
-        for iply in range(len(p.plies)):
-            mid = p.plies[iply][0]
-            p.plies[iply][0] = m # MAT1
+        #---------------
 
         #Rho
-        self.assertAlmostEqual(p.Rho(0), 1.0)
-        self.assertAlmostEqual(p.Rho(1), 1.0)
-        self.assertAlmostEqual(p.Rho(2), 1.0)
-        self.assertAlmostEqual(p.Rho(3), 1.0)
-        self.assertAlmostEqual(p.Rho(4), 1.0)
-        self.assertAlmostEqual(p.Rho(5), 1.0)
+        self.assertAlmostEqual(p.get_density_by_property_id_ply(pid, 0), 1.0)
+        self.assertAlmostEqual(p.get_density_by_property_id_ply(pid, 1), 1.0)
+        self.assertAlmostEqual(p.get_density_by_property_id_ply(pid, 2), 1.0)
+        self.assertAlmostEqual(p.get_density_by_property_id_ply(pid, 3), 1.0)
+        self.assertAlmostEqual(p.get_density_by_property_id_ply(pid, 4), 1.0)
+        self.assertAlmostEqual(p.get_density_by_property_id_ply(pid, 5), 1.0)
         with self.assertRaises(IndexError):
-            p.Rho(6)
+            p.get_density_by_property_id_ply(pid, 6)
 
         # MassPerArea
-        self.assertAlmostEqual(p.MassPerArea(), 1.2)
-        self.assertAlmostEqual(p.MassPerArea(0), 0.1)
-        self.assertAlmostEqual(p.MassPerArea(1), 0.2)
-        self.assertAlmostEqual(p.MassPerArea(2), 0.3)
-        self.assertAlmostEqual(p.MassPerArea(3), 0.1)
-        self.assertAlmostEqual(p.MassPerArea(4), 0.2)
-        self.assertAlmostEqual(p.MassPerArea(5), 0.3)
+        #self.assertAlmostEqual(p.get_mass_per_area_by_property_id(), 1.2)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id(pid), 1.2)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 0), 0.1)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 1), 0.2)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 2), 0.3)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 3), 0.1)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 4), 0.2)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 5), 0.3)
         with self.assertRaises(IndexError):
-            p.MassPerArea(6)
+            p.get_mass_per_area_by_property_id_ply(pid, 6)
 
-        self.assertEqual(p.Nsm(), 0.0)
+        self.assertEqual(p.get_nonstructural_mass_by_property_id(pid), 0.0)
         #----------------------
         # change the nsm to 1.0
-        p.nsm = 1.0
+        p.set_nonstructural_mass_by_property_id(pid, 1.0)
 
-        self.assertEqual(p.Nsm(), 1.0)
+        self.assertEqual(p.get_nonstructural_mass_by_property_id(pid), 1.0)
         # MassPerArea
-        self.assertAlmostEqual(p.MassPerArea(), 2.2)
-        self.assertAlmostEqual(p.MassPerArea(0, method='nplies'), 0.1+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(1, method='nplies'), 0.2+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(2, method='nplies'), 0.3+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(3, method='nplies'), 0.1+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(4, method='nplies'), 0.2+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(5, method='nplies'), 0.3+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id(pid), 2.2)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 0, method='nplies'), 0.1+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 1, method='nplies'), 0.2+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 2, method='nplies'), 0.3+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 3, method='nplies'), 0.1+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 4, method='nplies'), 0.2+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 5, method='nplies'), 0.3+1/6.)
         with self.assertRaises(IndexError):
-            p.MassPerArea(6)
+            p.get_mass_per_area_by_property_id_ply(pid, 6)
 
 
 if __name__ == '__main__':  # pragma: no cover

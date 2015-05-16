@@ -43,6 +43,8 @@ class TestMass(unittest.TestCase):
         self.assertTrue(all(element.get_centroid_by_element_id()[0] == centroid), msg='PSHELL: centroid=%s expected=%s\n%s%s%s' % (element.get_centroid_by_element_id(), centroid, element, prop, mat))
         self.assertTrue(all(element.get_normal_by_element_id()[0] == normal), msg='PSHELL: normal=%s expected=%s\n%s%s%s' % (element.get_normal_by_element_id(), normal, element, prop, mat))
 
+        assert mat is None
+
     def verify_psolid_element(self, element, mass, volume, centroid, rho, E=None, G=None, nu=None):
         assert not isinstance(element, list), element
         #print(object_methods(element, 'all'))
@@ -88,7 +90,8 @@ class TestMass(unittest.TestCase):
         ###########
         # quad - pcomp
         quad = model.elements[1]
-        prop = model.properties_shell.pcomp[quad.property_id]
+        i = model.properties_shell.pcomp.get_property_index_by_property_id(quad.property_id)
+        prop = model.properties_shell.pcomp[i]
         #mat = model.properties_shell.pshell[prop.material_id]
         mass = 0.12
         area = 1.0
@@ -110,8 +113,9 @@ class TestMass(unittest.TestCase):
         eid = 3
         pid = 2
         quad = model.elements[eid]
-        prop = model.properties_shell.pshell[pid]
-        mat = model.materials[prop.material_id]
+        prop = model.properties_shell.pshell.slice_by_property_id(pid)
+        #mat = model.materials[prop.material_id]  # good?
+        mat = None
         rho = 0.1
         mass = 0.0125
         t = 0.125
@@ -126,8 +130,9 @@ class TestMass(unittest.TestCase):
 
         # quad - pshell, nsm=1
         quad = model.elements[5]
-        prop = model.properties_shell.pshell[quad.property_id]
-        mat = model.properties_shell.pshell[prop.material_id]
+        prop = model.properties_shell.pshell.slice_by_property_id(quad.property_id)
+        #mat = model.properties_shell.pshell[prop.material_id]
+        mat = None
         mass = 1.0125 # mass w/o nsm + 1.0 b/c area=1
         nsm = 1.
         self.verify_pshell_element(quad, prop, mat, rho, mass, area, centroid, normal, nsm)
@@ -139,7 +144,7 @@ class TestMass(unittest.TestCase):
         ###########
         # tri - pcomp
         tri = model.elements[2]
-        prop = model.properties_shell.pcomp[tri.property_id]
+        prop = model.properties_shell.pcomp.slice_by_property_id(tri.property_id)
         #mat = model.properties_shell.pshell[prop.material_id]
         mass = 0.06
         area = 0.5
@@ -149,16 +154,19 @@ class TestMass(unittest.TestCase):
 
         # tri - pshell, nsm=0
         tri = model.elements[4]
-        prop = model.properties_shell.pshell[tri.property_id]
-        mat = model.properties_shell.pshell[prop.material_id]
+        i = model.properties_shell.pshell.get_property_index_by_property_id(tri.property_id)
+        prop = model.properties_shell.pshell[i]
+        #mat = model.properties_shell.pshell[prop.material_id]
+        mat = None
         mass = 0.00625
         nsm = 0.
         self.verify_pshell_element(tri, prop, mat, rho, mass, area, centroid, normal, nsm)
 
         # tri - pshell, nsm=1
         tri = model.elements[6]
-        prop = model.properties_shell.pshell[tri.property_id]
-        mat = model.properties_shell.pshell[prop.material_id]
+        prop = model.properties_shell.pshell.slice_by_property_id(tri.property_id)
+        #mat = model.properties_shell.pshell[prop.material_id]
+        mat = None
         mass = 0.50625 # mass w/o nsm + 0.5 b/c area=0.5
         nsm = 1.
         self.verify_pshell_element(tri, prop, mat, rho, mass, area, centroid, normal, nsm)

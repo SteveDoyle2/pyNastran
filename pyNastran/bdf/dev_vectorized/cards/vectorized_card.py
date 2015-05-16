@@ -62,6 +62,23 @@ class VectorizedCard(object):
         self.write_bdf(f)
         return f.getvalue().rstrip()
 
+    def _validate_slice(self, i):
+        if self.n == 0:
+            raise RuntimeError('%s has not been allocated or built' % self.type)
+        if isinstance(i, int):
+            i2 = array([i], dtype='int32')
+        elif isinstance(i, list):
+            i2 = asarray(i)
+        elif i is None:
+            i2 = slice(None)
+        elif len(i.shape) == 1:
+            i2 = i
+        else:
+            #print(i, type(i), i.shape)
+            i2 = i
+        #print('shape=%s' % str(i2.shape))
+        return i2
+
     def _get_sorted_index(self, sorted_array, unsorted_array, n, field_name, msg, check=True):
         if not array_equal(argsort(sorted_array), arange(len(sorted_array))):
             msg2 = '%s is not sorted\nsorted_array=%s' % (msg, sorted_array)

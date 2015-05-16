@@ -1,4 +1,4 @@
-from numpy import searchsorted
+from numpy import array, searchsorted
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 class Property(VectorizedCard):
@@ -15,12 +15,11 @@ class Property(VectorizedCard):
 
     def values(self):
         for i in range(self.n):
-            yield self.__getitem__(i)
+            yield self.__getitem__([i])
 
     def items(self):
-        pids = self.property_id
         for i in range(self.n):
-            yield i, self.__getitem__(pids[i])
+            yield i, self.__getitem__([i])
 
     def __getitem__(self, i):
         return self.slice_by_index(i)
@@ -34,7 +33,7 @@ class Property(VectorizedCard):
          - properties[[1,2,5]]
          - properties[array([1,2,5])]
         """
-        i = searchsorted(self.property_id, property_id)
+        i = self.get_property_index_by_property_id(property_id)
         return self.slice_by_index(i)
 
     def get_property_id_by_property_index(self, i=None):

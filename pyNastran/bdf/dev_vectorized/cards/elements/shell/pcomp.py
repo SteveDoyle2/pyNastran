@@ -101,6 +101,9 @@ class PCOMP(Property):
                 t += ti
             #self.model.log.debug('t[pid=%s] = %s' % (pid, t))
             #self.model.log.debug('i[pid=%s] = %s' % (pid, i))
+            sym = self.lam[i]
+            if sym == 'SYM':
+                t *= 2.0
             thickness[i] = t
         return thickness[0] if int_flag else thickness
 
@@ -151,13 +154,17 @@ class PCOMP(Property):
         for pid in upid:
             j = searchsorted(self.property_id, pid)
             i = where(pid == property_id)[0]
-            mpa = self.nsm[i]
+            mpa = zeros(n, dtype='float64')
             for material_id, thickness in zip(self.material_id[j, :], self.t[j, :]):
                 if material_id == 0:
                     break
                 rho = self.model.materials.get_density_by_material_id(material_id)
                 mpa += rho * thickness
+            if self.lam[i] == 'SYM':
+                mpa *= 2.0
+
             mass_per_area[i] = mpa
+        mass_per_area += self.nsm[i]
         return mass_per_area[0] if int_flag else mass_per_area
 
     #def get_property_id_by_property_index(self):
@@ -186,8 +193,8 @@ class PCOMP(Property):
 
     def set_nonstructural_mass_by_property_id(self, property_id, value):
         i = self.get_property_index_by_property_id(property_id)
-        print(i)
-        print('nsm = %s' % self.nsm)
+        #print(i)
+        #print('nsm = %s' % self.nsm)
         return self.set_nonstructural_mass_by_property_index(i, value)
 
     def get_nonstructural_mass_by_property_id(self, property_id=None):
@@ -238,26 +245,45 @@ class PCOMP(Property):
     def get_material_id_by_property_id_ply(self, property_id, jply):
         int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
-        if jply < 0:
-            msg = 'invalid jply=%s' % (jply)
-            raise IndexError(msg)
-        mid = self.material_id[i, jply]
+        jply2, nplies = self._adjust_ply_id(i, jply)
+        mid = self.material_id[i, jply2]
 
         if mid.min() <= 0:
-            msg = 'invalid jply=%s; material_id=%s' % (jply, mid)
+            msg = 'invalid jply=%s; mid=%s mats=%s' % (jply, mid, self.material_id[i, :])
             raise IndexError(msg)
         return mid[0] if int_flag else mid
 
-    def get_thickness_by_property_id_ply(self, property_id, jply):
-        int_flag = True if isinstance(property_id, int) else False
-        i = self.get_property_index_by_property_id(property_id)
+    def _adjust_ply_id(self, i, jply):
+        nplies = self.nplies[i]
         if jply < 0:
             msg = 'invalid jply=%s' % (jply)
             raise IndexError(msg)
-        thickness = self.t[i, jply]
+        elif jply >= nplies:
+            msg = 'invalid jply=%s' % (jply)
+            raise IndexError(msg)
+        else:
+            if self.lam[i] == 'SYM':
+                if jply >= nplies // 2:
+                    jply2 = jply - nplies // 2
+                    #print('valid ply %s -> %s' % (jply, jply2))
+                else:
+                    #print('valid ply', jply)
+                    jply2 = jply
+            else:
+                jply2 = jply
+        return jply2, nplies
+
+    def get_thickness_by_property_id_ply(self, property_id, jply):
+        int_flag = True if isinstance(property_id, int) else False
+        assert int_flag == True, property_id
+
+        i = self.get_property_index_by_property_id(property_id)
+
+        jply2, nplies = self._adjust_ply_id(i, jply)
+        thickness = self.t[i, jply2]
 
         if thickness.min() <= 0.0:
-            msg = 'invalid jply=%s; thickness=%s' % (jply, thickness)
+            msg = 'invalid jply=%s; nplies=%s thickness=%s' % (jply, nplies, thickness)
             raise IndexError(msg)
         return thickness[0] if int_flag else thickness
 
@@ -268,7 +294,8 @@ class PCOMP(Property):
             msg = 'invalid jply=%s' % (jply)
             raise IndexError(msg)
 
-        mid = self.material_id[i, jply]
+        jply2, nplies = self._adjust_ply_id(i, jply)
+        mid = self.material_id[i, jply2]
 
         if mid.min() <= 0:
             msg = 'invalid jply=%s; material_id=%s' % (jply, mid)
@@ -285,11 +312,9 @@ class PCOMP(Property):
     def get_theta_by_property_id_ply(self, property_id, jply):
         int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
-        if jply < 0:
-            msg = 'invalid jply=%s' % (jply)
-            raise IndexError(msg)
 
-        theta = self.theta[i, jply]
+        jply2, nplies = self._adjust_ply_id(i, jply)
+        theta = self.theta[i, jply2]
         return theta[0] if int_flag else theta
         #if mid.min() <= 0:
             #msg = 'invalid jply=%s; material_id=%s' % (j, mid)
@@ -298,11 +323,9 @@ class PCOMP(Property):
     def get_sout_by_property_id_ply(self, property_id, jply):
         int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
-        if jply < 0:
-            msg = 'invalid jply=%s' % (jply)
-            raise IndexError(msg)
 
-        sout = self.sout[i, jply]
+        jply2, nplies = self._adjust_ply_id(i, jply)
+        sout = self.sout[i, jply2]
         return sout[0] if int_flag else sout
         #if mid.min() <= 0:
             #msg = 'invalid jply=%s; material_id=%s' % (j, mid)
@@ -311,12 +334,10 @@ class PCOMP(Property):
     def get_mass_per_area_by_property_id_ply(self, property_id, jply, method='nplies'):
         int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
-        if jply < 0:
-            msg = 'invalid jply=%s' % (jply)
-            raise IndexError(msg)
+        jply2, nplies = self._adjust_ply_id(i, jply)
 
-        mid = self.material_id[i, jply]
-        thickness = self.t[i, jply]
+        mid = self.material_id[i, jply2]
+        thickness = self.t[i, jply2]
         if mid.min() <= 0:
             msg = 'invalid jply=%s; material_id=%s' % (jply, mid)
             raise IndexError(msg)
@@ -356,19 +377,24 @@ class PCOMP(Property):
 
         return mass_per_area[0] if int_flag else mass_per_area
 
-    def get_material_id_by_property_id(self, property_id=None):
-        int_flag = True if isinstance(property_id, int) else False
+    def get_material_ids_by_property_id(self, property_id=None):
+        #int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
         #if j < 0:
             #msg = 'invalid jply=%s' % (j)
             #raise IndexError(msg)
+
         jplies = self.nplies[i]
-        mid = self.material_id[i, :jplies]
+        jply2, nplies = self._adjust_ply_id(i, jplies - 1)
+
+        mid = self.material_id[i, :jply2 + 1]
+        is_sym = True
         self.model.log.debug('PCOMP.mid = %s' % mid)
         if mid.min() <= 0:
-            msg = 'invalid jply=%s; mid=%s' % (j, mid)
+            msg = 'invalid jply=%s; mid=%s mats=%s' % (j, mid, self.material_id[i, :])
             raise IndexError(msg)
-        return mid[0] if int_flag else mid
+        return mid if not is_sym else hstack(list(mid) * 2)
+        #return mid[0] if int_flag else mid
 
     def make_nplies(self, property_id):
         n = len(property_id)
@@ -425,7 +451,7 @@ class PCOMP(Property):
             self.ge = zeros(n, dtype=float_fmt)
 
             #: symmetric flag - default = No Symmetry (NO)
-            self.lam = zeros(n, dtype='S8')
+            self.lam = zeros(n, dtype='|S8')
 
             self.material_id = zeros((n, nplies), dtype='int32')
             self.t = zeros((n, nplies), dtype=float_fmt)
@@ -466,29 +492,14 @@ class PCOMP(Property):
             for pid, pcomp in sorted(iteritems(self.properties)):
                 f.write(pcomp.write_bdf(size, print_card_16))
 
-    #def __getitem_old__(self, property_id):
-        #property_id, int_flag = slice_to_iter(property_id)
-        #obj = PCOMP(self.model)
-
-        #properties = {}
-        #for pid in sorted(property_id):
-            #properties[pid] = self.properties[pid]
-        #obj.n = len(property_id)
-        #obj.properties = properties
-        #obj.property_id = sorted(self.properties.keys())
-        ##obj._comments = obj._comments[index]
-        ##obj.comments = obj.comments[index]
-        #return obj
-
-    #def __getitem__(self, property_id):
-        #property_id, int_flag = slice_to_iter(property_id)
-        #i = searchsorted(self.property_id, property_id)
-        #return self.slice_by_index(i)
-
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = PCOMP(self.model)
-        obj.n = len(i)
+        try:
+            obj.n = len(i)
+        except TypeError:
+            msg = 'i=%s type(i)=%s shape=%s' % (i, type(i), str(i.shape))
+            raise TypeError(msg)
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
@@ -511,15 +522,6 @@ class PCOMP(Property):
         for pid in obj.property_id:
             obj.properties[pid] = self.properties[pid]
         return obj
-
-    #def __getitem__(self, property_id):
-        #print('PCOMP.property_id = %s' % property_id)
-        #property_id, int_flag = slice_to_iter(property_id)
-        #properties = {}
-        #for pid in sorted(property_id):
-            #properties[pid] = self.properties[pid]
-        ##print('intflag', int_flag)
-        #return properties[pid] if int_flag else properties
 
     def __repr__(self):
         f = StringIO()

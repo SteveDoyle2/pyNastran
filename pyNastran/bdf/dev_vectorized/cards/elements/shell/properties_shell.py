@@ -60,7 +60,6 @@ class PropertiesShell(object):
         self.pcomp.add(card, comment)
 
     def add_pcompg(self, card, comment):
-        raise NotImplementedError(card)
         self.pcompg.add(card, comment)
 
     #=========================================================================
