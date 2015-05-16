@@ -9,6 +9,7 @@ class VectorizedCard(object):
         self.model = model
         self.n = 0
         self.i = 0
+        self._comments = {}
         if self.type in model._element_name_to_element_type_mapper:
             self.op2_id = model._element_name_to_element_type_mapper[self.type]
         else:

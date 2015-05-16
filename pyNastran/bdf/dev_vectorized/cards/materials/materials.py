@@ -22,20 +22,20 @@ class Materials(object):
     def __init__(self, model):
         self.model = model
         self.n = 0
+        self.is_built = False
 
         self.mat1 = MAT1(model)
         self.mats1 = MATS1(model)
-        #self.mat2 = {}
-        #self.mat4 = {}
-        #self.mat5 = {}
-        #self.mat10 = {}
-        #self.mat2 = MAT1(model)
-        #self.mat4 = MAT1(model)
+        #self.mat2 = MAT2(model)
+        #self.mat4 = MAT4(model)
+        #self.mat5 = MAT5(model)
         self.mat8 = MAT8(model)
-        #self.mat10 = MAT1(model)
+        #self.mat10 = MAT10(model)
+        #self.mat11 = MAT11(model)
         self.mathp = MATHP(model)
 
     def add_mat1(self, card, comment):
+        print('adding mat1')
         #self.mat1.add(card, comment)
         #mid = integer(card, 1, 'material_id')
         self.mat1.add(card=card, comment=comment)
@@ -49,11 +49,17 @@ class Materials(object):
     def add_mat4(self, card, comment):
         self.mat4.add(card, comment)
 
+    def add_mat5(self, card, comment):
+        self.mat5.add(card, comment)
+
     def add_mat8(self, card, comment):
         self.mat8.add(card, comment)
 
     def add_mat10(self, card, comment):
         self.mat10.add(card, comment)
+
+    def add_mat11(self, card, comment):
+        self.mat11.add(card, comment)
 
     def add_mathp(self, card, comment):
         self.mathp.add(card, comment)
@@ -73,6 +79,7 @@ class Materials(object):
         #aaa
 
     def build(self):
+        self.is_built = True
         n = 0
         types = self._get_types()
         names = self._get_type_names()
@@ -80,8 +87,8 @@ class Materials(object):
         for name, mat in zip(names, types):
             ni = len(mat)
             n += ni
-            self.model.log.debug('    building %s; n=%s' % (mat.__class__.__name__, ni))
             mat.build()
+            self.model.log.debug('    building %s; n=%s' % (mat.__class__.__name__, ni))
         self.n = n
 
     def get_stats(self):
@@ -118,6 +125,7 @@ class Materials(object):
         n = len(material_id)
         self.model.log.debug('material_id =%s' % material_id)
         umids = unique(material_id)
+        umids_found = zeros(len(umids), dtype='int32')
 
         density = zeros(n, dtype='float64')
         mat_types = [
@@ -127,15 +135,24 @@ class Materials(object):
             self.mathp,
         ]
         for mat_type in mat_types:
-            for mid in umids:
+            for iumid, mid in enumerate(umids):
                 if mid in mat_type.material_id:
                     rho = mat_type.get_density_by_material_id([mid])
                     i = where(mid == material_id)[0]
                     density[i] = rho
+                    umids_found[iumid] = 1
+                #else:
+                    #print('mid=%s not found in Type=%s materials=%s' % (mid, mat_type.type, mat_type.material_id))
         assert density.shape == (n, ), density.shape
+
+        if umids_found.min() == 0:
+            izero = where(umids_found == 0)[0]
+            msg = 'mids=%s not found' % umids[izero]
+            raise RuntimeError(msg)
         return density[0] if int_flag else density
 
     def get_density_E_by_material_id(self, material_id):
+        assert self.is_built, self.is_built
         int_flag = True if isinstance(material_id, int) else False
         n = len(material_id)
         density = zeros(n, dtype='float64')
@@ -149,7 +166,17 @@ class Materials(object):
         assert E.shape == (n, ), E.shape
         return density[0], E[0] if int_flag else density, E
 
+    #def _get_param_by_material_id(self, material_id, name):
+        #n = len(material_id)
+        #nsm = zeros(n)
+        #for i, mid in enumerate(material_id):
+            #mat = self.get_structural_material(mid)
+            #nsm[i] = getattr(mat, name)
+        #assert nsm.shape == (n, ), nsm.shape
+        #return nsm
+
     def get_nonstructural_mass_by_material_id(self, material_id):
+        #return _get_param_by_material_id(material_id, 'nsm')
         n = len(material_id)
         nsm = zeros(n)
         for i, mid in enumerate(material_id):
@@ -159,6 +186,7 @@ class Materials(object):
         return nsm
 
     def get_E_by_material_id(self, material_id):
+        #return _get_param_by_material_id(material_id, 'E')
         n = len(material_id)
         E = zeros(n)
         for i, mid in enumerate(material_id):
@@ -249,7 +277,7 @@ class Materials(object):
                         obj = mdict[mid]  #[i]
                         break
                     else:
-                        #self.model.log.debug('  mid=%i Type=%s was not found' % (mid, Type))
+                        self.model.log.debug('  mid=%i Type=%s was not found' % (mid, Type))
                         pass
             out.append(obj)
         return out[0] if int_flag else out

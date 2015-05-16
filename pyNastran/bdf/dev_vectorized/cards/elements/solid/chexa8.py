@@ -75,8 +75,8 @@ class CHEXA8(SolidElement):
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
-        #if comment:
-            #self._comments[eid] = comment
+        if comment:
+            self._comments[eid] = comment
 
         #: Element ID
         self.element_id[i] = eid
@@ -323,6 +323,8 @@ class CHEXA8(SolidElement):
                 i = searchsorted(self.element_id, element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                if eid in self._comments:
+                    f.write(self._comments[eid])
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
                 f.write(print_card_8(card))
 

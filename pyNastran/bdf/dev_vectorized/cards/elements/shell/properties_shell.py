@@ -33,9 +33,9 @@ class PropertiesShell(object):
 
     def build(self):
         for prop in [self.pshell, self.pcomp, self.pcompg]:
-            if hasattr(prop, 'n'):
-                self.model.log.debug('    building %s' % prop.__class__.__name__)
             prop.build()
+            if hasattr(prop, 'n'):
+                self.model.log.debug('    building %s; n=%s' % (prop.__class__.__name__, prop.n))
             self.n += prop.n
 
         npshell = self.pshell.n

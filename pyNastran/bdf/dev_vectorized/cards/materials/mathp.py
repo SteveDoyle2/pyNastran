@@ -24,7 +24,7 @@ class MATHP(Material):
     |     | ST  | SC  | SS  | MCSID |     |      |      |     |
     +-----+-----+-----+-----+-------+-----+------+------+-----+
     """
-    type = 'MAT1'
+    type = 'MATHP'
     def __init__(self, model):
         Material.__init__(self, model)
 

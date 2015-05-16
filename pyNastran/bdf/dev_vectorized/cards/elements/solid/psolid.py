@@ -130,6 +130,8 @@ class PSOLID(Property):
             for(pid, mid, cordm, integ, stress, isop, fctn) in zip(
                 self.property_id, self.material_id, self.cordm,
                 self.integ, self.stress, self.isop, self.fctn):
+                if eid in self._comments:
+                    f.write(self._comments[eid])
 
                 cordm = set_blank_if_default(cordm, 0)
                 fctn = set_blank_if_default(fctn, 'SMECH')

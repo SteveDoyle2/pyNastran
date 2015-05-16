@@ -102,6 +102,8 @@ class PLSOLID(Property):
             #print "PSOLID.property_id =", self.property_id
             for (pid, mid, stress) in zip(
                  self.property_id, self.material_id, self.stress_strain):
+                if eid in self._comments:
+                    f.write(self._comments[eid])
                 stress_strain = set_blank_if_default(stress_strain, 'GRID')
                 card = ['PLSOLID', pid, mid, stress_strain]
                 f.write(print_card_8(card))

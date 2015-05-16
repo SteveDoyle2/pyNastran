@@ -8,7 +8,10 @@ class SolidElement(Element):
     def __init__(self, model):
         Element.__init__(self, model)
 
-    def __getitem__(self, element_ids):
+    def __getitem__(self, i):
+        return self.slice_by_index(i)
+
+    def slice_by_element_id(self, element_ids):
         """
         Allows for slicing:
          - elements[1:10]

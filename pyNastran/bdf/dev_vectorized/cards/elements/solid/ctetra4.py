@@ -37,8 +37,8 @@ class CTETRA4(SolidElement):
 
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
-        #if comment:
-            #self._comments[eid] = comment
+        if comment:
+            self._comments[eid] = comment
 
         #: Element ID
         self.element_id[i] = eid
@@ -367,12 +367,12 @@ class CTETRA4(SolidElement):
             centroid = centroid.mean(axis=0)
         return centroid
 
-    def get_face_nodes(self, nid, nid_opposite):
-        raise NotImplementedError()
-        nids = self.nodeIDs()[:4]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+    #def get_face_nodes(self, nid, nid_opposite):
+        #raise NotImplementedError()
+        #nids = self.nodeIDs()[:4]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
     def write_bdf(self, f, size=8, element_id=None):
         if self.n:
@@ -382,6 +382,8 @@ class CTETRA4(SolidElement):
                 i = searchsorted(self.element_id, element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
+                if eid in self._comments:
+                    f.write(self._comments[eid])
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card_8(card))
 

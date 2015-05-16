@@ -32,7 +32,10 @@ class ShellElement(Element):
         """Find all the j-indicies where seid=seidi for some given subset of i-indicies"""
         return self._get_index_by_param('property_id', self.property_id, property_id, i)
 
-    def __getitem__(self, element_id):
+    def __getitem__(self, i):
+        return self.slice_by_index(i)
+
+    def slice_by_element_id(self, element_id):
         """
         Allows for slicing:
          - elements[1:10]

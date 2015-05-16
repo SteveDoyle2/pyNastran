@@ -28,8 +28,8 @@ class CPENTA15(SolidElement):
 
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
-        #if comment:
-            #self._comments[eid] = comment
+        if comment:
+            self._comments[eid] = comment
 
         #: Element ID
         self.element_id[i] = eid
@@ -153,6 +153,8 @@ class CPENTA15(SolidElement):
             else:
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
+                if eid in self._comments:
+                    f.write(self._comments[eid])
                 n = [ni if ni != 0 else None for ni in n]
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14]]

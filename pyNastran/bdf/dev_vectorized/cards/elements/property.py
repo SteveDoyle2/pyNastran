@@ -10,28 +10,29 @@ class Property(VectorizedCard):
         self.resize(i[0], refcheck=refcheck)
 
     def __iter__(self):
-        pids = self.property_id
-        for pid in pids:
-            yield pid
+        for i in range(self.n):
+            yield i
 
     def values(self):
-        pids = self.property_id
-        for pid in pids:
-            yield self.__getitem__(pid)
+        for i in range(self.n):
+            yield self.__getitem__(i)
 
     def items(self):
         pids = self.property_id
-        for pid in pids:
-            yield pid, self.__getitem__(pid)
+        for i in range(self.n):
+            yield i, self.__getitem__(pids[i])
 
-    def __getitem__(self, property_id):
+    def __getitem__(self, i):
+        return self.slice_by_index(i)
+
+    def slice_by_property_id(self, property_id):
         """
         Allows for slicing:
-         - elements[1:10]
-         - elements[4]
-         - elements[1:10:2]
-         - elements[[1,2,5]]
-         - elements[array([1,2,5])]
+         - properties[1:10]
+         - properties[4]
+         - properties[1:10:2]
+         - properties[[1,2,5]]
+         - properties[array([1,2,5])]
         """
         i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)

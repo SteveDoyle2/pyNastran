@@ -130,7 +130,7 @@ class TestShells(unittest.TestCase):
         pcomp_pid = pid + 1
         pcomp = model.properties[pcomp_pid]
         pcomp = pcomp[pcomp_pid]
-        print('pcomp =', type(pcomp))
+        #print('pcomp =', type(pcomp))
         #self.assertEquals(pcomp.get_property_id()[0], pcomp_pid)
         self.assertEquals(pcomp.get_property_id_by_property_index(), pcomp_pid)
         self.assertEquals(pcomp.get_nplies_by_property_id(), 4)
@@ -198,7 +198,7 @@ class TestShells(unittest.TestCase):
             'MAT1': 1,
             'MAT8': 1,
         }
-        print('starting BDF1')
+        #print('starting BDF1')
         model = BDF(debug=True)
         model.allocate(card_count)
         self._make_cquad4(model, rho, nu, G, E, t, nsm)
@@ -212,7 +212,7 @@ class TestShells(unittest.TestCase):
             'MAT1': 1,
             'MAT8': 1,
         }
-        print('starting BDF2')
+        #print('starting BDF2')
         model = BDF(debug=True)
         model.allocate(card_count1)
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
@@ -226,7 +226,7 @@ class TestShells(unittest.TestCase):
             'MAT1': 1,
             'MAT8': 1,
         }
-        print('starting BDF3')
+        #print('starting BDF3')
         nsm = 1.0
         model = BDF(debug=False)
         model.allocate(card_count)
@@ -241,7 +241,7 @@ class TestShells(unittest.TestCase):
             'MAT1': 1,
             'MAT8': 1,
         }
-        print('starting BDF4')
+        #print('starting BDF4')
         model = BDF(debug=False)
         model.allocate(card_count)
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
@@ -273,22 +273,57 @@ class TestShells(unittest.TestCase):
         ge = 0.
         #lam = 'NO'  # isSymmetrical YES/NO
         lam = 'BEND'  # isSymmetrical YES/NO
-        Mid = [1,2,3]
-        Theta = [0.,10.,20.]
-        T = [.1,.2,.3]
+        Mid = [1, 2, 3]
+        Theta = [0., 10., 20.]
+        T = [.1, .2, .3]
         Sout = ['YES', 'YES', 'NO']  # 0-NO, 1-YES
-        data = [
+        card_lines = [
             'PCOMP', pid, z0, nsm, sb, ft, TRef, ge, lam,
             Mid[0], T[0], Theta[0], Sout[0],
             Mid[1], T[1], Theta[1], Sout[1],
             Mid[2], T[2], Theta[2], Sout[2],
         ]
         model = BDF()
-        card = BDFCard(data)
-        p = PCOMP(model)
+        card_count = {
+            'PCOMP' : 1,
+            'MAT1' : 3,
+        }
+        model.allocate(card_count)
+
+        model.add_card(card_lines, 'PCOMP', comment='', is_list=True)
+
+
+        # material...
+        mid = 1
+        E = 1e7
+        G = None
+        nu = None
+        rho = 1.0
+        a = None
+        St = None
+        Sc = None
+        Ss = None
+        Mcsid = None
+        mat1_a = ['MAT1', mid,     E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        model.add_card(mat1_a, 'MAT1', comment='', is_list=True)
+        model.add_card(mat1_b, 'MAT1', comment='', is_list=True)
+        model.add_card(mat1_c, 'MAT1', comment='', is_list=True)
+        #card = BDFCard(mat1)
+        #m = MAT1(model)
+        #m.allocate(1)
+        #m.add(card)
+        #m.build()
+
+        model.build()
+        #card = BDFCard(data)
+        #p = PCOMP(model)
         #p = model.properties.pcomp
-        p.add(card)
-        p.build()
+        #p.add(card)
+        #p.build()
+        p = model.properties_shell.pcomp
+        m = model.materials.mat1
         #self.assertFalse(p.is_symmetrical())
         self.assertEqual(p.get_nplies_by_property_id(), 3)
 
@@ -311,11 +346,11 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.get_material_id_by_property_id_ply(pid, 3)
 
-        print('get_material_ids_by_property_id = ', p.get_material_ids_by_property_id(pid))
-        self.assertEqual(p.get_material_ids_by_property_id(pid)[0][0], 1)
-        self.assertEqual(p.get_material_ids_by_property_id(pid)[0][0], 1)
-        self.assertEqual(p.get_material_ids_by_property_id(pid)[0][1], 2)
-        self.assertEqual(p.get_material_ids_by_property_id(pid)[0][2], 3)
+        #print('get_material_id_by_property_id = ', p.get_material_id_by_property_id(pid))
+        self.assertEqual(p.get_material_id_by_property_id(pid)[0], 1)
+        self.assertEqual(p.get_material_id_by_property_id(pid)[0], 1)
+        self.assertEqual(p.get_material_id_by_property_id(pid)[1], 2)
+        self.assertEqual(p.get_material_id_by_property_id(pid)[2], 3)
 
         self.assertEqual(p.get_sout_by_property_id_ply(pid, 0), 'YES')
         self.assertEqual(p.get_sout_by_property_id_ply(pid, 1), 'YES')
@@ -323,27 +358,25 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.get_sout_by_property_id_ply(pid, 3)
 
-        # material...
-        mid = 1
-        E = 1e7
-        G = None
-        nu = None
-        rho = 1.0
-        a = None
-        St = None
-        Sc = None
-        Ss = None
-        Mcsid = None
-        mat1 = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
-        card = BDFCard(mat1)
-        m = MAT1(model)
-        m.allocate(1)
-        m.add(card)
-        m.build()
         #for iply in range(len(p.plies)):
             #mid = p.plies[iply][0]
             #p.plies[iply][0] = m # MAT1
             ##p.mids = [m, m, m]
+
+        from StringIO import StringIO
+        f = StringIO()
+
+        #print(m.write_bdf(f, size=8, material_id=None))
+        p.write_bdf(f)
+        m.write_bdf(f)
+        print(f.getvalue())
+
+        #Mid
+        self.assertAlmostEqual(p.get_material_id_by_property_id_ply(pid, 0), 1)
+        self.assertAlmostEqual(p.get_material_id_by_property_id_ply(pid, 1), 2)
+        self.assertAlmostEqual(p.get_material_id_by_property_id_ply(pid, 2), 3)
+        with self.assertRaises(IndexError):
+            p.get_density_by_property_id_ply(pid, 3)
 
         #Rho
         self.assertAlmostEqual(p.get_density_by_property_id_ply(pid, 0), 1.0)
@@ -354,42 +387,50 @@ class TestShells(unittest.TestCase):
 
         # MassPerArea
         self.assertAlmostEqual(p.get_mass_per_area_by_property_id(), 0.6)
-        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_iply(pid, 0), 0.1)
-        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_iply(pid, 1), 0.2)
-        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_iply(pid, 2), 0.3)
-        with self.assertRaises(IndexError):
-            p.MassPerArea(3)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id(pid), 0.6)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id([pid]), 0.6)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 0), 0.1)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 1), 0.2)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 2), 0.3)
+        #with self.assertRaises(IndexError):
+            #p.MassPerArea(3)
 
         #----------------------
         # change the nsm to 1.0
-        p.nsm = 1.0
+        p.set_nonstructural_mass_by_property_id(pid, 1.0)
 
-        self.assertEqual(p.Nsm(), 1.0)
+        self.assertEqual(p.get_nonstructural_mass_by_property_id(), 1.0)
         # MassPerArea
-        self.assertAlmostEqual(p.MassPerArea(), 1.6)
-        self.assertAlmostEqual(p.MassPerArea(0, method='nplies'), 0.1+1/3.)
-        self.assertAlmostEqual(p.MassPerArea(1, method='nplies'), 0.2+1/3.)
-        self.assertAlmostEqual(p.MassPerArea(2, method='nplies'), 0.3+1/3.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id(), 1.6)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 0, method='nplies'), 0.1+1/3.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 1, method='nplies'), 0.2+1/3.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 2, method='nplies'), 0.3+1/3.)
 
-        self.assertAlmostEqual(p.MassPerArea(0, method='rho*t'), 0.1+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(1, method='rho*t'), 0.2+2/6.)
-        self.assertAlmostEqual(p.MassPerArea(2, method='rho*t'), 0.3+3/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 0, method='t'), 0.1+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 1, method='t'), 0.2+2/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 2, method='t'), 0.3+3/6.)
 
-        self.assertAlmostEqual(p.MassPerArea(0, method='t'), 0.1+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(1, method='t'), 0.2+2/6.)
-        self.assertAlmostEqual(p.MassPerArea(2, method='t'), 0.3+3/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 0, method='rho*t'), 0.1+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 1, method='rho*t'), 0.2+2/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 2, method='rho*t'), 0.3+3/6.)
+
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 0, method='t'), 0.1+1/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 1, method='t'), 0.2+2/6.)
+        self.assertAlmostEqual(p.get_mass_per_area_by_property_id_ply(pid, 2, method='t'), 0.3+3/6.)
         with self.assertRaises(IndexError):
-            p.MassPerArea(3, method='nplies')
+            p.get_mass_per_area_by_property_id_ply(pid, 3, method='nplies')
 
-        z = p.get_z_locations()
+        z0 = p.get_z0_by_property_id(pid)
+
+        z = p.get_z_locations_by_property_id(pid)
         z_expected = array([0., T[0], T[0]+T[1], T[0]+T[1]+T[2]])
         for za, ze in zip(z, z_expected):
             self.assertAlmostEqual(za, ze)
 
         #z0  =
-        p.z0 = 1.0
+        p.z0[0] = 1.0
         z_expected = 1.0 + z_expected
-        z = p.get_z_locations()
+        z = p.get_z_locations_by_property_id(pid)
         for za, ze in zip(z, z_expected):
             self.assertAlmostEqual(za, ze)
 

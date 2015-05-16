@@ -45,10 +45,13 @@ class MAT1(Material):
         self.n = ncards
 
     def add(self, card, comment=''):
+        assert self.n > 0, 'self.n=%s self.i=%s' % (self.n, self.i)
         i = self.i
-        #if comment:
-        #    self._comment = comment
-        self.material_id[i] = integer(card, 1, 'mid')
+        print('i=%s' % i)
+        mid = integer(card, 1, 'mid')
+        if comment:
+            self._comments[mid] = comment
+        self.material_id[i] = mid
         self.set_E_G_nu(i, card)
         self.rho[i] = double_or_blank(card, 5, 'rho', 0.)
         self.a[i] = double_or_blank(card, 6, 'a', 0.0)
@@ -59,11 +62,13 @@ class MAT1(Material):
         self.Ss[i] = double_or_blank(card, 11, 'Ss', 0.0)
         self.mcsid[i] = integer_or_blank(card, 12, 'Mcsid', 0)
         assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
+        assert self.material_id[i] > 0, self.material_id
         self.i += 1
 
 
     def build(self):
         if self.n:
+            print('MAT1.materialsA = %s' % self.material_id)
             i = self.material_id.argsort()
             self.material_id = self.material_id[i]
             self.E = self.E[i]
@@ -76,7 +81,8 @@ class MAT1(Material):
             self.Sc = self.Sc[i]
             self.Ss = self.Ss[i]
             self.mcsid = self.mcsid[i]
-            print('MAT1.materials = %s' % self.material_id)
+            print('MAT1.materialsB = %s' % self.material_id)
+            assert self.material_id.min() > 0, 'MAT1.materials = %s' % self.material_id
 
     def get_D_matrix(self):
         """
