@@ -104,7 +104,9 @@ def memory_usage_psutil():
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, precision='single',
-            reject=False, dynamic_vars={}):
+            reject=False, dynamic_vars=None):
+    if dynamic_vars is None:
+        dynamic_vars = {}
     bdfModel = str(bdf_filename)
     print("bdfModel = %r" % bdfModel)
     if isFolder:
