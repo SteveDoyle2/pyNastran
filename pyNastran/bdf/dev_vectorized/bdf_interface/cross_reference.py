@@ -43,6 +43,7 @@ class XRefMesh(object):
         else:
             self.crod.build()
             self.conrod.build()
+            self.ctube.build()
 
             self.elements_spring.build()
 

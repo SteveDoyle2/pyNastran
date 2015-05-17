@@ -62,6 +62,8 @@ from pyNastran.bdf.dev_vectorized.cards.elements.rigid.rbe3 import RBE3
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.prod import PROD
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.crod import CROD
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import CONROD
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.ptube import PTUBE
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.ctube import CTUBE
 
 # shear
 from pyNastran.bdf.dev_vectorized.cards.elements.shear.cshear import CSHEAR
@@ -236,15 +238,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         self._element_type_to_element_name_mapper = {
             1 : 'CROD',
-            2 : 'CBEAM', 3 : 'CBAR',
+            2 : 'CBEAM', 34 : 'CBAR',
             4 : 'CSHEAR',
-            10: 'CONROD',
+            10 : 'CONROD',
+            3 : 'CTUBE',
 
             11 : 'CELAS1', 12 : 'CELAS2', 13 : 'CELAS3', 14 : 'CELAS4',
             15 : 'CDAMP1', 16 : 'CDAMP2', 17 : 'CDAMP3', 18 : 'CDAMP4',
-            19: 'CVISC', 20: 'CBUSH', 21: 'CBUSH1D', 23: 'CBUSH2D',
+            19 : 'CVISC', 20 : 'CBUSH', 21 : 'CBUSH1D', 23 : 'CBUSH2D',
             30 : 'CMASS1', 31 : 'CMASS2', 32 : 'CMASS3', 33 : 'CMASS4',
-            34 : 'CONM1', 35 : 'CONM2',
+
+            35 : 'CONM1', # ???
+            36 : 'CONM2', # ???
 
             73 : 'CTRIA3', 74: 'CTRIA6', 75 : 'CTRIAX', 76: 'CTRIAX6',
             144 : 'CQUAD4', 145: 'CQUAD8', 146: 'CQUAD', 147: 'CQUADX',
@@ -607,6 +612,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.conrod = CONROD(model)
         self.prod = PROD(model)
         self.crod = CROD(model)
+        self.ptube = PTUBE(model)
+        self.ctube = CTUBE(model)
 
         # mass
         #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5, PMASS
@@ -2333,7 +2340,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         msg += self.crod.get_stats()
         msg += self.prod.get_stats()
         msg += self.conrod.get_stats()
-        #msg += self.ctube.get_stats()
+        msg += self.ctube.get_stats()
+        msg += self.ptube.get_stats()
 
         msg += self.cbar.get_stats()
         msg += self.properties_bar.get_stats()
@@ -2496,7 +2504,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.mass,
 
             # 1-D
-            self.cbar, self.conrod, self.crod, #self.ctube,
+            self.cbar, self.conrod, self.crod, self.ctube,
             self.cbeam, self.cbeam3, self.cbend,
 
             # 2-D
@@ -2535,7 +2543,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.cdamp1, self.cdamp2, self.cdamp3, self.cdamp4, self.cdamp5,
 
             # 1-D
-            self.cbar, self.conrod, self.crod,
+            self.cbar, self.conrod, self.crod, self.ctube,
 
             # 2-D
             self.elements_shell,

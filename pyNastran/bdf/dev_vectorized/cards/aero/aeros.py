@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import range
 from numpy import zeros
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
@@ -85,6 +86,8 @@ class AEROS(VectorizedCard):
 
 
     def write_bdf(self, f, size, is_double):
+        if self.n == 0:
+            return
         for acsid, rcsid, c, b, S, symXZ, symXY in zip(self.acsid,
             self.rcsid, self.cRef, self.bRef, self.SRef, self.symXZ, self.symXY):
 

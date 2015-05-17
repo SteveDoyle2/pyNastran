@@ -37,5 +37,15 @@ class Element(VectorizedCard):
         return self.element_id[i]
 
     def get_element_index_by_element_id(self, element_id=None, msg=''):
+        print('Type=%s' % self.type)
+        print('element_id = %s' % element_id)
+        if isinstance(element_id, int):
+            assert element_id > 0, element_id
+        elif element_id is None:
+            pass
+        elif isinstance(element_id, list):
+            assert min(element_id) > 0, element_id
+        else:
+            assert element_id.min() > 0, element_id
         i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
         return i

@@ -55,6 +55,8 @@ class Elements(object):
         self.conrod = model.conrod
         self.prod = model.prod
         self.crod = model.crod
+        self.ctube = model.ctube
+        self.ptube = model.ptube
 
         # mass
         #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5, PMASS
@@ -197,6 +199,7 @@ class Elements(object):
             'CBUSH2D'  : self.cbush2d,
 
             'CROD'  : self.crod,
+            'CTUBE'  : self.ctube,
             'CONROD'  : self.conrod,
             'CSHEAR'  : self.cshear,
 
@@ -230,7 +233,7 @@ class Elements(object):
             self.elements_spring.celas1, self.elements_spring.celas2,
             self.elements_spring.celas3, self.elements_spring.celas4,
             self.cshear,
-            self.crod, self.conrod,
+            self.crod, self.conrod, self.ctube,
             self.cbar, self.cbeam,
             self.elements_shell.ctria3, self.elements_shell.cquad4,
             self.elements_shell.ctria6, self.elements_shell.cquad8,
@@ -360,6 +363,7 @@ class Elements(object):
 
             'CROD' : self.crod,
             'CONROD' : self.conrod,
+            'CTUBE' : self.ctube,
             'CSHEAR' : self.cshear,
 
             'CQUAD4' : self.elements_shell.cquad4,
@@ -594,7 +598,7 @@ class Elements(object):
         """
         :param nlimit: limit the outputs to objects with data
         """
-        types = [self.crod, self.conrod,
+        types = [self.crod, self.conrod, self.ctube,
                  self.cbar, self.cbeam,
                  self.cshear,
 
@@ -645,7 +649,7 @@ class Elements(object):
             self.pbush,
 
             # 1D
-            self.prod,
+            self.prod, self.ptube,
             #self.properties_bar.pbar, self.properties_bar.pbarl,
             #self.properties_beam.pbeam, self.properties_beam.pbeaml,
             self.properties_bar, self.properties_beam,
@@ -730,6 +734,7 @@ class Elements(object):
 
             # 1D
             'PROD'  : self.prod,
+            'PTUBE'  : self.ptube,
 
             'PBAR'  : self.properties_bar.pbar,
             'PBARL'  : self.properties_bar.pbarl,
@@ -779,11 +784,13 @@ class Elements(object):
     def _write_alternating_elements_properties_1d(self, f, size, is_double):
         #self.properties_rods.write_bdf(f)
         #self.elements_rods.write_bdf(f)
-        if self.conrod.n or self.crod.n or self.prod.n:
+        if self.conrod.n or self.crod.n or self.prod.n or self.ctube.n or self.ptube.n:
             f.write('$ Rods-----------------------------------------------------\n')
             self.conrod.write_bdf(f)
             self.crod.write_bdf(f)
             self.prod.write_bdf(f)
+            self.ctube.write_bdf(f)
+            self.ptube.write_bdf(f)
 
         if self.cbush.n or self.pbush.n:
             f.write('$ Bush-----------------------------------------------------\n')

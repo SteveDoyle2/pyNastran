@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import array, searchsorted
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 

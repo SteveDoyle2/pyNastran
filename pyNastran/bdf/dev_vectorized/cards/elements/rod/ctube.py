@@ -12,19 +12,19 @@ from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodElement
 
-class CROD(RodElement):
-    type = 'CROD'
+class CTUBE(RodElement):
+    type = 'CTUBE'
     def __init__(self, model):
         """
-        Defines the CROD object.
+        Defines the CTUBE object.
 
-        :param self: the CROD object
+        :param self: the CTUBE object
         :param model: the BDF object
         """
         RodElement.__init__(self, model)
 
     def allocate(self, ncards):
-        self.model.log.debug('  nCROD=%s' % ncards)
+        self.model.log.debug('  nCTUBE=%s' % ncards)
         self.n = ncards
         #: Element ID
         self.element_id = zeros(ncards, 'int32')
@@ -34,7 +34,7 @@ class CROD(RodElement):
         self.node_ids = zeros((ncards, 2), 'int32')
 
     def add(self, card, comment=''):
-        self.model.log.debug('  adding CROD')
+        self.model.log.debug('  adding CTUBE')
         i = self.i
         eid = integer(card, 1, 'element_id')
         #if comment:
@@ -44,12 +44,12 @@ class CROD(RodElement):
         self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
         self.node_ids[i] = [integer(card, 3, 'n1'),
                             integer(card, 4, 'n2')]
-        assert len(card) == 5, 'len(CROD card) = %i' % len(card)
+        assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
         self.i += 1
 
     def build(self):
         """
-        :param self: the CROD object
+        :param self: the CTUBE object
         """
         if self.n:
             i = self.element_id.argsort()
@@ -59,7 +59,7 @@ class CROD(RodElement):
 
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
-                raise RuntimeError('There are duplicate CROD IDs...')
+                raise RuntimeError('There are duplicate CTUBE IDs...')
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
@@ -120,41 +120,41 @@ class CROD(RodElement):
     #=========================================================================
 
     def get_area_by_property_id(self, property_id=None):
-        A = self.model.prod.get_area_by_property_id(property_id)
+        A = self.model.ptube.get_area_by_property_id(property_id)
         return A
 
     def get_E_by_property_id(self, property_id=None):
-        E = self.model.prod.get_E_by_property_id(property_id)
+        E = self.model.ptube.get_E_by_property_id(property_id)
         return E
 
     def get_G_by_property_id(self, property_id=None):
-        G = self.model.prod.get_G_by_property_id(property_id)
+        G = self.model.ptube.get_G_by_property_id(property_id)
         return G
 
     def get_J_by_property_id(self, property_id=None):
-        J = self.model.prod.get_J_by_property_id(property_id)
+        J = self.model.ptube.get_J_by_property_id(property_id)
         return J
 
     def get_c_by_property_id(self, property_ids=None):
-        c = self.model.prod.get_c(property_ids)
+        c = self.model.ptube.get_c(property_ids)
         return c
 
     def get_non_structural_mass_by_property_id(self, property_id=None):
-        c = self.model.prod.get_non_structural_mass_by_property_id(property_id)
+        c = self.model.ptube.get_non_structural_mass_by_property_id(property_id)
         return c
 
     def get_density_by_property_id(self, property_id=None):
-        density = self.model.prod.get_density_by_property_id(property_id)
+        density = self.model.ptube.get_density_by_property_id(property_id)
         return density
 
     #=========================================================================
     def get_material_id_by_element_index(self, i=None):
         pid = self.get_property_id_by_element_index(i)
-        mid = self.model.prod.get_material_id_by_property_id(pid)
+        mid = self.model.ptube.get_material_id_by_property_id(pid)
         return mid
 
     def get_material_id_by_property_id(self, property_id=None):
-        mid = self.model.prod.get_material_id_by_property_id(property_id)
+        mid = self.model.ptube.get_material_id_by_property_id(property_id)
         return mid
 
     def get_length_by_element_id(self, element_id=None, grid_cid0=None):
@@ -163,8 +163,8 @@ class CROD(RodElement):
         return L
 
     def get_length_by_element_index(self, i=None, grid_cid0=None):
-        if i is None:
-            i = arange(self.n)
+        #if i is None:
+            #i = arange(self.n)
 
         if grid_cid0 is None:
             grid_cid0 = self.model.grid.get_position_by_node_id()
@@ -208,6 +208,15 @@ class CROD(RodElement):
         return n1, n2
 
     def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+        if isinstance(element_id, int):
+            assert element_id > 0, element_id
+        elif element_id is None:
+            pass
+        elif isinstance(element_id, list):
+            assert min(element_id) > 0, element_id
+        else:
+            assert element_id.min() > 0, element_id
+
         i = self.get_element_index_by_element_id(element_id)
         return self.get_mass_by_element_index(i, xyz_cid0=None, total=False)
 
@@ -223,10 +232,10 @@ class CROD(RodElement):
         #assert i is None, i
         n1, n2 = self._node_locations(xyz_cid0, i)
         L = norm(n2 - n1, axis=1)
-        i = self.model.prod.get_property_index_by_property_id(self.property_id)
-        A = self.model.prod.A[i]
-        mid = self.model.prod.material_id[i]
-        J = self.model.prod.get_J_by_property_id(self.property_id)
+        i = self.model.ptube.get_property_index_by_property_id(self.property_id)
+        A = self.model.ptube.get_area_by_property_index(i)
+        mid = self.model.ptube.material_id[i]
+        J = self.model.ptube.get_J_by_property_id(self.property_id)
 
         #rho, E = self.model.materials.get_density_E(mid)
         rho = self.model.materials.get_density_by_material_id(mid)
@@ -254,9 +263,9 @@ class CROD(RodElement):
                  [ 2 1 ]
           M = mi [ 1 2 ]
         """
-        i = self.model.prod.get_index(self.property_id)
-        A = self.model.prod.A[i]
-        mid = self.model.prod.material_id[i]
+        i = self.model.ptube.get_index(self.property_id)
+        A = self.model.ptube.A[i]
+        mid = self.model.ptube.material_id[i]
         rho = self.model.materials.get_density_by_material_id(mid)
         #========================
         xyz_cid0 = None
@@ -274,7 +283,7 @@ class CROD(RodElement):
         v1 = p1 - p2
         L = norm(v1)
         if L == 0.0:
-            msg = 'invalid CROD length=0.0\n%s' % self.__repr__()
+            msg = 'invalid CTUBE length=0.0\n%s' % self.__repr__()
             raise ZeroDivisionError(msg)
         #========================
         nsm = self.get_non_structural_mass(self.property_id[i])
@@ -313,7 +322,7 @@ class CROD(RodElement):
 
             #print('i =', i, type(i))
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CROD', eid, pid, n[0], n[1]]
+                card = ['CTUBE', eid, pid, n[0], n[1]]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:
@@ -465,7 +474,7 @@ class CROD(RodElement):
             v1 = p1 - p2
             L = norm(p1 - p2)
             if L == 0.0:
-                msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
+                msg = 'invalid CTUBE length=0.0\n%s' % (self.__repr__())
                 raise ZeroDivisionError(msg)
 
             #========================
@@ -561,9 +570,7 @@ class CROD(RodElement):
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
-        #if i is None:
-            #return self
-        obj = CROD(self.model)
+        obj = CTUBE(self.model)
         n = len(i)
         obj.n = n
         obj.i = n

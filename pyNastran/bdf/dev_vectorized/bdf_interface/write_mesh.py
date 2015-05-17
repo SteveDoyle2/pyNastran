@@ -2,9 +2,11 @@
 This file defines:
   - WriteMesh
 """
-from six import string_types, iteritems
+from six import string_types, iteritems, StringIO
 from pyNastran.bdf.utils import print_filename
 from numpy import array, unique, concatenate, intersect1d, where
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class WriteMesh(object):
@@ -49,7 +51,10 @@ class WriteMesh(object):
             title = 'Save BDF/DAT/PCH'
             out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
             assert out_filename is not None, out_filename
-        if not isinstance(out_filename, string_types):
+
+        if isinstance(out_filename, StringIO):
+            pass
+        elif not isinstance(out_filename, string_types):
             raise TypeError('out_filename=%r must be a string' % out_filename)
 
         if size == 8:
@@ -91,7 +96,10 @@ class WriteMesh(object):
             double = False
         is_double = False
 
-        outfile = open(out_filename, 'wb')
+        if isinstance(out_filename, StringIO):
+            outfile = out_filename
+        else:
+            outfile = open(out_filename, 'wb')
         self._write_header(outfile)
         self._write_params(outfile, size, is_double)
 
@@ -107,7 +115,8 @@ class WriteMesh(object):
         self._write_rejects(outfile, size)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             outfile.write('ENDDATA\n')
-        outfile.close()
+        if not isinstance(outfile, StringIO):
+            outfile.close()
 
     def _write_header(self, outfile):
         """

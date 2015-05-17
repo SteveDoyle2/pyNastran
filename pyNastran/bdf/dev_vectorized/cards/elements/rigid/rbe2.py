@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip, range
 from itertools import count
@@ -191,6 +192,8 @@ class RBE2(object):
         #return list_fields
 
     def write_bdf(self, f, size, is_double):
+        if self.n == 0:
+            return
         if size == 8:
             for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
                 gmi = self.gmi[j]

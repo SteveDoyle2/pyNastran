@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six.moves import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
-                   arange, ndarray, asarray)
+                   arange, ndarray, asarray, int64)
 from pyNastran.utils import object_attributes
 
 class VectorizedCard(object):
@@ -72,12 +72,12 @@ class VectorizedCard(object):
     def _validate_slice(self, i):
         if self.n == 0:
             raise RuntimeError('%s has not been allocated or built' % self.type)
-        if isinstance(i, int):
+        if isinstance(i, int) or isinstance(i, int64):
             i2 = array([i], dtype='int32')
         elif isinstance(i, list):
             i2 = asarray(i)
         elif i is None:
-            i2 = slice(None)
+            i2 = None  # slice(None)
         elif len(i.shape) == 1:
             i2 = i
         else:
@@ -101,7 +101,15 @@ class VectorizedCard(object):
             i = searchsorted(sorted_array, unsorted_array)
             i.astype('int32')
             if check:
-                if not array_equal(sorted_array[i], unsorted_array):
+                try:
+                    sorted_array_i = sorted_array[i]
+                except IndexError:
+                    msg = 'sorted_array_i = sorted_array[i] - %s\n' % field_name
+                    msg += 'sorted_array=%s\n' % sorted_array
+                    msg += 'i=%s' % (i)
+                    raise IndexError(msg)
+
+                if not array_equal(sorted_array_i, unsorted_array):
                     # undefined nodes/elements
                     #print('unsorted %s' % unsorted_array)
                     #print('sorted %s' % sorted_array)

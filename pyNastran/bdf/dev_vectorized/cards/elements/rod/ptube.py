@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six.moves import zip
 
-from numpy import array, zeros, unique, searchsorted, arange
+from numpy import array, zeros, unique, searchsorted, arange, pi
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
@@ -11,14 +11,14 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank)
 
 
-class PROD(Property):
-    type = 'PROD'
+class PTUBE(Property):
+    type = 'PTUBE'
 
     def __init__(self, model):
         """
-        Defines the PROD object.
+        Defines the PTUBE object.
 
-        :param self: the PROD object
+        :param self: the PTUBE object
         :param model: the BDF object
         """
         Property.__init__(self, model)
@@ -30,9 +30,9 @@ class PROD(Property):
         #: Property ID
         self.property_id = zeros(ncards, 'int32')
         self.material_id = zeros(ncards, 'int32')
-        self.A = zeros(ncards, float_fmt)
-        self.J = zeros(ncards, float_fmt)
-        self.c = zeros(ncards, float_fmt)
+
+        self.OD = zeros((ncards, 2), float_fmt)
+        self.t = zeros(ncards, float_fmt)
         self.nsm = zeros(ncards, float_fmt)
 
     def add(self, card, comment=''):
@@ -40,30 +40,33 @@ class PROD(Property):
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
-        self.A[i] = double(card, 3, 'A')
-        self.J[i] = double_or_blank(card, 4, 'J', 0.0)
-        self.c[i] = double_or_blank(card, 5, 'c', 0.0)
-        self.nsm[i] = double_or_blank(card, 6, 'nsm', 0.0)
-        assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
+        OD1 = double(card, 3, 'OD1')
+        t = double_or_blank(card, 4, 't')
+        if t is None:
+            t = OD1 / 2.
+        self.t[i] = t
+        self.nsm[i] = double_or_blank(card, 5, 'nsm', 0.0)
+        OD2 = double_or_blank(card, 6, 'OD2', OD1)
+        self.OD[i, :] = [OD1, OD2]
+        assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
         self.i += 1
 
     def build(self):
         """
-        :param self: the PROD object
-        :param cards: the list of PROD cards
+        :param self: the PTUBE object
+        :param cards: the list of PTUBE cards
         """
         if self.n:
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]
-            self.A = self.A[i]
-            self.J = self.J[i]
-            self.c = self.c[i]
+            self.OD = self.OD[i, :]
+            self.t = self.t[i]
             self.nsm = self.nsm[i]
 
             unique_pids = unique(self.property_id)
             if len(unique_pids) != len(self.property_id):
-                raise RuntimeError('There are duplicate PROD IDs...')
+                raise RuntimeError('There are duplicate PTUBE IDs...')
             self._cards = []
             self._comments = []
         else:
@@ -73,10 +76,7 @@ class PROD(Property):
 
     def get_mass_per_length_by_property_id(self, property_id=None):
         # L * (A * rho + nsm)
-        if property_id is None:
-            i = arange(self.n)
-        else:
-            i = self.get_property_index_by_property_id(property_id)
+        i = self.get_property_index_by_property_id(property_id)
         A = self.A[i]
         mid = self.material_id[i]
         #mat = self.model.materials.get_material(mid)
@@ -89,8 +89,29 @@ class PROD(Property):
         return self.get_area_by_property_index(i)
 
     def get_area_by_property_index(self, i=None):
-        A = self.A[i]
-        return A
+        area = zeros(len(i), dtype='float64')
+        for ni, ii in enumerate(i):
+            A = (self._area1(ii) + self._area2(ii)) / 2.
+            area[ni] = A
+        return area
+
+    def _area1(self, i):
+        """Gets the Area of Section 1 of the CTUBE."""
+        Dout = self.OD[i, 0]
+        if self.t[i] == 0:
+            return pi / 4. * Dout**2
+        Din = Dout - 2 * self.t
+        A1 = pi / 4. * (Dout * Dout - Din * Din)
+        return A1
+
+    def _area2(self, i):
+        """Gets the Area of Section 2 of the CTUBE."""
+        Dout = self.OD[i, 1]
+        if self.t[i] == 0:
+            return pi / 4. * Dout**2
+        Din = Dout - 2 * self.t
+        A2 = pi / 4. * (Dout * Dout - Din * Din)
+        return A2
 
     def get_non_structural_mass_by_property_id(self, property_id=None):
         i = self.get_property_index_by_property_id(property_id)
@@ -114,8 +135,18 @@ class PROD(Property):
         return self.get_J_by_property_index(i)
 
     def get_J_by_property_index(self, i=None):
-        J = self.J[i]
-        return J
+        J = []
+        for ni, ii in enumerate(i):
+            Ji = self._Ji(ii)
+            J.append(Ji)
+        return array(J, dtype='float64')
+
+    def _Ji(self, i):
+        Dout = self.OD[i, 0]
+        if self.t[0] == 0.0:
+            return pi / 8. * Dout**4
+        Din = Dout - 2 * self.t[i]
+        return pi / 8. * (Dout**4 - Din**2)
 
     def get_c_by_property_id(self, property_id=None):
         i = self.get_property_index_by_property_id(property_id)
@@ -163,21 +194,20 @@ class PROD(Property):
                 else:
                     assert len(unique(property_id)) == len(property_id), unique(property_id)
                     i = searchsorted(self.property_id, property_id)
-            for (pid, mid, A, J, c, nsm) in zip(
-                 self.property_id, self.material_id[i], self.A[i], self.J[i], self.c[i], self.nsm[i]):
 
-                #self.mid = integer(card, 4, 'mid')
-                #self.A = double(card, 5, 'A')
-                #self.j = double_or_blank(card, 6, 'j', 0.0)
-                #self.c = double_or_blank(card, 7, 'c', 0.0)
-                #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
+            for (pid, mid, (OD1, OD2), t, nsm) in zip(
+                 self.property_id, self.material_id[i], self.OD[i, :], self.t[i], self.nsm[i]):
 
-                card = ['PROD', pid, mid, A, J, c, nsm]
+                #t = set_blank_if_default(t, OD1 / 2.)
+                #nsm = set_blank_if_default(nsm, 0.0)
+                #OD2 = set_blank_if_default(OD2, OD1)
+
+                card = ['PTUBE', pid, mid, OD1, t, nsm, OD2]
                 f.write(print_card_8(card))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
-        obj = PROD(self.model)
+        obj = PTUBE(self.model)
         n = len(i)
         obj.n = n
         obj.i = n
@@ -186,8 +216,7 @@ class PROD(Property):
         #obj.comments = obj.comments[i]
         obj.property_id = self.property_id[i]
         obj.material_id = self.material_id[i]
-        obj.A = self.A[i]
-        obj.J = self.J[i]
-        obj.c = self.c[i]
+        obj.OD = self.OD[i, :]
+        obj.t = self.t[i]
         obj.nsm = self.nsm[i]
         return obj

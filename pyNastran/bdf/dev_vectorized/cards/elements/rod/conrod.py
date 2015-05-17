@@ -109,11 +109,17 @@ class CONROD(RodElement):
     #def get_E_from_index(self, i):
         #return self.a[i]
 
-    def get_length_by_element_index(self, i=None, positions=None):
+    def get_length_by_element_id(self, element_id=None, grid_cid0=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_length_by_element_index(i, grid_cid0)
+
+    def get_length_by_element_index(self, i=None, grid_cid0=None):
         if i is None:
             i = arange(self.n)
 
-        assert positions is not None
+        if grid_cid0 is None:
+            grid_cid0 = self.model.grid.get_position_by_node_id()
+        assert grid_cid0 is not None
         #if positions is None:
 
         print("i = %s" % i)
@@ -122,13 +128,21 @@ class CONROD(RodElement):
             i = i[0]
         n1 = self.node_ids[i, 0]
         n2 = self.node_ids[i, 1]
+        n1i = self.model.grid.get_node_index_by_node_id(n1)
+        n2i = self.model.grid.get_node_index_by_node_id(n2)
+
         #n1, n2 = self.node_ids[i, :]
-        p1 = positions[n1]
-        p2 = positions[n2]
+        print('grids\n%s' % grid_cid0)
+        p1 = grid_cid0[n1i, :]
+        p2 = grid_cid0[n2i, :]
         v1 = p1 - p2
-        L = norm(p1 - p2)
+        L = norm(p1 - p2, axis=1)
         assert L.shape == (n,), L.shape
         return L
+
+    def get_material_id_by_element_id(self, element_id=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_material_id_by_element_index(i)
 
     def get_material_id_by_element_index(self, i=None):
         return self.material_id[i]
@@ -136,31 +150,35 @@ class CONROD(RodElement):
     def get_material_from_index(self, i):
         return self.model.materials.mat1
 
-    def get_area_by_element_id(self, property_id=None):
-        A = self.A
+    def get_area_by_element_id(self, element_id=None):
+        i = self.get_element_index_by_element_id(element_id, msg='')
+        return self.get_area_by_element_index(i)
+
+    def get_area_by_element_index(self, i=None):
+        A = self.A[i]
         return A
 
-    def get_E_by_element_id(self, property_id=None):
-        mat = self.model.materials.mat1[self.material_id[i]]
+    def get_E_by_element_id(self, element_id=None):
+        mat = self.model.materials.mat1.slice_by_material_id(self.material_id[i])
         E = mat.E()
         G = mat.G()
         return E
 
-    def get_G_by_element_id(self, property_id=None):
-        mat = self.model.materials.mat1[self.material_id[i]]
+    def get_G_by_element_id(self, element_id=None):
+        mat = self.model.materials.mat1.slice_by_material_id(self.material_id[i])
         E = mat.E()
         G = mat.G()
         return G
 
-    def get_J_by_element_id(self, property_id=None):
-        J = self.model.prod.get_J(property_id)
+    def get_J_by_element_id(self, element_id=None):
+        J = self.model.prod.get_J_by_property_id(property_id)
         return J
 
-    def get_c_by_element_id(self, property_id=None):
-        c = self.model.prod.get_c(property_id)
+    def get_c_by_element_id(self, element_id=None):
+        c = self.model.prod.get_c_by_property_id(property_id)
         return c
 
-    def get_node_indicies(self, i=None):
+    def get_node_indicies_by_element_index(self, i=None):
         if i is None:
             i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0])
             i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1])
@@ -169,7 +187,24 @@ class CONROD(RodElement):
             i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 1])
         return i1, i2
 
-    def get_mass_by_element_id(self, total=False, i=None):
+    def get_density_by_element_id(self, element_id=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_density_by_element_index(i)
+
+    def get_density_by_element_index(self, i=None):
+        j = self.material_id[i]
+        rho = self.model.materials.get_density_by_material_id(j)
+        return rho
+
+    def get_non_structural_mass_by_element_id(self, element_id=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_non_structural_mass_by_element_index(i)
+
+    def get_non_structural_mass_by_element_index(self, i=None):
+        return self.nsm[i]
+
+    #def get_mass_by_element_index(self, total=False, i=None):
+    def get_mass_by_element_index(self, total=False, i=None):
         """
         mass = rho * A * L + nsm
         """
@@ -190,7 +225,7 @@ class CONROD(RodElement):
         #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_node_index_by_node_id())
         try:
             msg = ', which is required by CONROD get_mass'
-            i1, i2, i3, i4 = self.get_node_indicies(i)
+            i1, i2 = self.get_node_indicies_by_element_index(i)
             #n1 = xyz_cid0[i1, :]
             #n2 = xyz_cid0[i2, :]
             p1 = self.model.grid.get_position_by_node_index(i1)
@@ -204,10 +239,16 @@ class CONROD(RodElement):
                 p1 = self.model.grid.get_position_by_node_index(i1)
                 p2 = self.model.grid.get_position_by_node_index(i2)
 
+        L = norm(p2 - p1, axis=1)
+        rho = self.model.materials.get_density_by_material_id(self.material_id[i])
+        #rho = self.get_element_id_by_element_index(self.material_id)
 
-        L = p2 - p1
-        rho = self.model.materials.get_density_by_material_id(self.material_id)
-        mass = norm(L, axis=1) * self.A * rho + self.nsm
+        print('*L = ', L)
+        print('*rho = ', rho)
+        print('*A = ', self.A[i])
+        print('*nsm = ', self.nsm[i])
+        mass = L * (rho * self.A[i] + self.nsm[i])
+        print('*mass =', mass)
         if total:
             return mass.sum()
         else:

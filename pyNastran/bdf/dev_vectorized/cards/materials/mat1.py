@@ -127,6 +127,10 @@ class MAT1(Material):
         i = self.get_material_index_by_material_id(material_id)
         return self.get_density_by_material_index(i)
 
+    def get_G_by_material_id(self, material_id=None):
+        i = self.get_material_index_by_material_id(material_id)
+        return self.G[i]
+
     def write_bdf(self, f, size=8, material_id=None):
         if self.n:
             if material_id is None:
@@ -221,6 +225,7 @@ class MAT1(Material):
         #assert not isinstance(i, int), type(i)
         #self.model.log.info('i=%s; mids=%s type(i)=%s' % (i, self.material_id, type(i)))
         i = self._validate_slice(i)
+        #print('MAT1.slice.i = %s' % i, type(i))
 
         obj = MAT1(self.model)
         obj.n = len(i)

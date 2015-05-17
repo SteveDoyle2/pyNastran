@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import StringIO
 from math import pi, sqrt
 #from itertools import count
@@ -91,17 +92,17 @@ class TestRods(unittest.TestCase):
         lines = ['crod,%i, %i, %i, %i' % (eid+1, pid, nid1, nid2)]
         model.add_card(lines, 'crod', is_list=False)
 
-        #lines = ['ctube,%i, %i, %i, %i' % (eid+2, pid+1, nid1, nid2)]
-        #model.add_card(lines, 'ctube', is_list=False)
+        lines = ['ctube,%i, %i, %i, %i' % (eid+2, pid+1, nid1, nid2)]
+        model.add_card(lines, 'ctube', is_list=False)
 
         lines = ['prod,%i, %i, %f, %f, %f, %f' % (pid, mid, A, J, c, nsm)]
         model.add_card(lines, 'prod', is_list=False)
 
-        OD1 = sqrt(4*A/pi)
+        OD1 = sqrt(4 * A / pi)
         t = 0.
         OD2 = OD1
-        #lines = ['ptube,%i, %i, %f, %f, %f, %f' % (pid+1, mid, OD1, t, nsm, OD2)]
-        #model.add_card(lines, 'ptube', is_list=False)
+        lines = ['ptube,%i, %i, %f, %f, %f, %f' % (pid+1, mid, OD1, t, nsm, OD2)]
+        model.add_card(lines, 'ptube', is_list=False)
 
         lines = ['mat1,%i, %.2e, %.2e, %f, %f' % (mid, E, G, nu, rho)]
         model.add_card(lines, 'mat1', is_list=False)
@@ -115,35 +116,69 @@ class TestRods(unittest.TestCase):
         model.build()
         mass = L * (rho * A + nsm)
 
+        f = StringIO()
+        model.write_bdf(out_filename=f, interspersed=True, size=8,
+                       precision='single',
+                       enddata=None)
+        print(f.getvalue())
         #positions = model.get_positions()
-        positions = None
+        grid_cid0 = None
 
         # conrod
         conrod = model.conrod.slice_by_element_id(eid)
         self.assertEquals(conrod.get_element_id_by_element_index(), eid)
-        #self.assertEquals(conrod.get_property_id_by_element_index(), None)
-        self.assertEquals(conrod.get_material_id_by_element_index(), mid)
-        self.assertEquals(conrod.get_length_by_element_index(i=None, positions=positions), L)
+        #self.assertEquals(conrod.get_property_id_by_element_id(), None)
+        self.assertEquals(conrod.get_material_id_by_element_id(eid), mid)
+        self.assertEquals(conrod.get_length_by_element_index(i=None, grid_cid0=grid_cid0), L)
         #self.assertEquals(conrod.Nsm(), nsm)
-        self.assertEquals(conrod.get_mass_by_element_index(), mass)
+
+
+        rhoi = conrod.get_density_by_element_id(eid)
+        Ai = conrod.get_area_by_element_id(eid)
+        Li = conrod.get_length_by_element_id(eid, grid_cid0=grid_cid0)
+        nsmi = conrod.get_non_structural_mass_by_element_id(eid)
+        massa = conrod.get_mass_by_element_index()
+        mass_msg_conrod = 'mass = L * (rho * A + nsm)\n'
+        mass_msg_conrod += 'L=%s expected=%s\n' % (Li, L)
+        mass_msg_conrod += 'rho=%s expected=%s\n' % (rhoi, rho)
+        mass_msg_conrod += 'A=%s expected=%s\n' % (Ai, A)
+        mass_msg_conrod += 'nsm=%s expected=%s\n' % (nsmi, nsm)
+        mass_msg_conrod += 'mass=%s actual=%s expected=%s\n' % (Li * (rhoi*Ai + nsmi), massa, mass)
+        #mass_msg_conrod += 'mass=%s expected=%s\n' % (Li * (rhoi*Ai + nsmi), mass)
+
+        self.assertEquals(massa, mass, mass_msg_conrod)
         #self.assertEquals(conrod.E(), E)
         #self.assertEquals(conrod.G(), G)
-        #self.assertEquals(conrod.Area(), A)
+        #self.assertEquals(conrod.area(), A)
         #self.assertEquals(conrod.J(), J)
         #self.assertEquals(conrod.C(), c)
         #self.assertEquals(conrod.Rho(), rho)
 
         # crod
-        crod = model.crod.slice_by_element_id([eid+1])
-        self.assertEquals(crod.get_element_id_by_element_index(), eid+1)
-        self.assertEquals(crod.get_property_id_by_element_index(), pid)
-        self.assertEquals(crod.get_material_id_by_element_index(), mid)
-        self.assertEquals(crod.get_length_by_element_index(), L)
+        crod_eid = eid + 1
+        crod = model.crod.slice_by_element_id([crod_eid])
+        self.assertEquals(crod.get_element_id_by_element_index(), crod_eid)
+        self.assertEquals(crod.get_property_id_by_element_id(crod_eid), pid)
+        self.assertEquals(crod.get_material_id_by_element_id(crod_eid), mid)
+        rhoi = crod.get_density_by_element_id(crod_eid)
+        Ai = crod.get_area_by_element_id(crod_eid)
+        Li = crod.get_length_by_element_id(crod_eid, grid_cid0=grid_cid0)
+        nsmi = crod.get_non_structural_mass_by_element_id(crod_eid)
+        self.assertEquals(Li, L)
         #self.assertEquals(crod.Nsm(), nsm)
-        self.assertEquals(crod.get_mass_by_element_index(), mass)
+
+
+        massa = crod.get_mass_by_element_id(crod_eid)
+        mass_msg_crod = 'mass = L * (rho * A + nsm)\n'
+        mass_msg_crod += 'L=%s expected=%s\n' % (Li, L)
+        mass_msg_crod += 'rho=%s expected=%s\n' % (rhoi, rho)
+        mass_msg_crod += 'A=%s expected=%s\n' % (Ai, A)
+        mass_msg_crod += 'nsm=%s expected=%s\n' % (nsmi, nsm)
+        mass_msg_crod += 'mass=%s actual=%s expected=%s\n' % (Li * (rhoi*Ai + nsmi), massa, mass)
+        self.assertEquals(massa, mass, mass_msg_crod)
         #self.assertEquals(crod.E(), E)
         #self.assertEquals(crod.G(), G)
-        #self.assertEquals(crod.Area(), A)
+        #self.assertEquals(crod.area(), A)
         #self.assertEquals(crod.J(), J)
         #self.assertEquals(crod.C(), c)
         #self.assertEquals(crod.Rho(), rho)
@@ -151,41 +186,45 @@ class TestRods(unittest.TestCase):
 
         # prod
         prod = model.prod.slice_by_property_id([pid])
-        self.assertEquals(prod.Pid(), pid)
-        self.assertEquals(prod.Mid(), mid)
-        self.assertEquals(prod.Nsm(), nsm)
-        self.assertEquals(prod.E(), E)
-        self.assertEquals(prod.G(), G)
-        self.assertEquals(prod.Area(), A)
-        self.assertEquals(prod.J(), J)
-        self.assertEquals(prod.C(), c)
-        self.assertEquals(prod.Rho(), rho)
+        self.assertEquals(prod.property_id[0], pid)
+        self.assertEquals(prod.get_material_id_by_property_id(pid), mid)
+        self.assertEquals(prod.get_non_structural_mass_by_property_id(pid), nsm)
+        self.assertEquals(prod.get_E_by_property_id(pid), E)
+        self.assertEquals(prod.get_G_by_property_id(pid), G)
+        self.assertEquals(prod.get_area_by_property_id(pid), A)
+        self.assertEquals(prod.get_J_by_property_id(pid), J)
+        self.assertEquals(prod.get_c_by_property_id(pid), c)
+        self.assertEquals(prod.get_density_by_property_id(pid), rho)
 
         # ctube
-        if 0:
-            ctube = model.ctube.slice_by_element_id(eid+2)
-            self.assertEquals(ctube.Eid(), eid+2)
-            self.assertEquals(ctube.Pid(), pid+1)
-            self.assertEquals(ctube.Mid(), mid)
-            self.assertEquals(ctube.Length(), L)
-            self.assertEquals(ctube.Nsm(), nsm)
-            self.assertAlmostEquals(ctube.Mass(), mass, 5)
-            self.assertEquals(ctube.E(), E)
-            self.assertEquals(ctube.G(), G)
-            self.assertAlmostEquals(ctube.Area(), A, 5)
-            ctube.J()
-            self.assertEquals(ctube.Rho(), rho)
+        if 1:
+            ctube_eid = eid + 2
+            ptube_pid = pid + 1
+            assert ctube_eid == 12, ctube_eid
+            assert ptube_pid == 68, ptube_pid
+            ctube = model.ctube.slice_by_element_id(ctube_eid)
+            self.assertEquals(ctube.get_element_id_by_element_index(), ctube_eid)
+            self.assertEquals(ctube.get_property_id_by_element_id(ctube_eid), ptube_pid)
+            self.assertEquals(ctube.get_material_id_by_element_id(ctube_eid), mid)
+            self.assertEquals(ctube.get_length_by_element_id(ctube_eid, grid_cid0), L)
+            self.assertEquals(ctube.get_non_structural_mass_by_element_id(ctube_eid), nsm)
+            self.assertAlmostEquals(ctube.get_mass_by_element_id(ctube_eid), mass, 5)
+            self.assertEquals(ctube.get_E_by_element_id(ctube_eid), E)
+            self.assertEquals(ctube.get_G_by_element_id(ctube_eid), G)
+            self.assertAlmostEquals(ctube.get_area_by_element_id(ctube_eid), A, 5)
+            ctube.get_J_by_element_id(ctube_eid)
+            self.assertEquals(ctube.get_density_by_element_id(), rho)
 
-        # ptube
-        ptube = model.ptube.slice_by_property_id(pid+1)
-        self.assertEquals(ptube.Pid(), pid+1)
-        self.assertEquals(ptube.Mid(), mid)
-        self.assertEquals(ptube.Nsm(), nsm)
-        self.assertEquals(ptube.E(), E)
-        self.assertEquals(ptube.G(), G)
-        self.assertAlmostEquals(ptube.Area(), A, 5)
-        ptube.J()
-        self.assertEquals(ptube.Rho(), rho)
+            # ptube
+            ptube = model.ptube.slice_by_property_id(pid+1)
+            self.assertEquals(ptube.get_property_id_by_property_index(), pid+1)
+            self.assertEquals(ptube.get_material_id_by_property_id(), mid)
+            self.assertEquals(ptube.get_non_structural_mass_by_property_id(), nsm)
+            self.assertEquals(ptube.get_E_by_property_id(), E)
+            self.assertEquals(ptube.get_G_by_property_id(), G)
+            self.assertAlmostEquals(ptube.get_area_by_property_id(), A, 5)
+            ptube.get_J_by_property_id()
+            self.assertEquals(ptube.get_density_by_property_id(), rho)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -192,7 +192,7 @@ class Materials(object):
         E = zeros(n)
         for i, mid in enumerate(material_id):
             mat = self.get_shell_material(mid)
-            E[i] = mat.E()
+            E[i] = mat.get_E_by_material_id(mid)
         assert E.shape == (n, ), E.shape
         return E
 
@@ -201,7 +201,7 @@ class Materials(object):
         G = zeros(n)
         for i, mid in enumerate(material_id):
             mat = self.get_shell_material(mid)
-            G[i] = mat.G()
+            G[i] = mat.get_G_by_material_id(mid)
         assert G.shape == (n, ), G.shape
         return G
 
@@ -212,45 +212,45 @@ class Materials(object):
 
     def get_structural_material(self, material_id):
         if material_id in self.mat1:
-            return self.mat1.get_material_by_material_id(material_id)
+            return self.mat1.slice_by_material_id(material_id)
         elif material_id in self.mat8:
-            return self.mat2.get_material_by_material_id(material_id)
+            return self.mat2.slice_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_shell_material(self, material_id):
-        #if material_id in self.mats1:
-            #return self.mats1.get_material_by_material_id(material_id)
-        if material_id in self.mat1:
-            return self.mat1.get_material_by_material_id(material_id)
-        elif material_id in self.mat2:
-            return self.mat2.get_material_by_material_id(material_id)
-        elif material_id in self.mat8:
-            return self.mat8.get_material_by_material_id(material_id)
+        #if material_id in self.mats1.material_id:
+            #return self.mats1.slice_by_material_id(material_id)
+        if material_id in self.mat1.material_id:
+            return self.mat1.slice_by_material_id(material_id)
+        #elif material_id in self.mat2.material_id:
+            #return self.mat2.slice_by_material_id(material_id)
+        elif material_id in self.mat8.material_id:
+            return self.mat8.slice_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_solid_material(self, material_id):
         #if material_id in self.mats1:
-            #return self.mats1.get_material_by_material_id(material_id)
+            #return self.mats1.slice_by_material_id(material_id)
         #if material_id in self.mat11:
-            #return self.mat11.get_material_by_material_id(material_id)
-        if material_id in self.mat1:
-            return self.mat1.get_material_by_material_id(material_id)
-        elif material_id in self.mat9:
-            return self.mat9.get_material_by_material_id(material_id)
-        elif material_id in self.mat10:
-            return self.mat10.get_material_by_material_id(material_id)
+            #return self.mat11.slice_by_material_id(material_id)
+        if material_id in self.mat1.material_id:
+            return self.mat1.slice_by_material_id(material_id)
+        elif material_id in self.mat9.material_id:
+            return self.mat9.slice_by_material_id(material_id)
+        elif material_id in self.mat10.material_id:
+            return self.mat10.slice_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_axial_material(self, material_id):
-        if material_id in self.mat3:
-            return self.mat3.get_material_by_material_id(material_id)
+        if material_id in self.mat3.material_id:
+            return self.mat3.slice_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_thermal_material(self, material_id):
-        if material_id in self.mat4:
-            return self.mat4.get_material_by_material_id(material_id)
-        elif material_id in self.mat5:
-            return self.mat5.get_material_by_material_id(material_id)
+        if material_id in self.mat4.material_id:
+            return self.mat4.slice_by_material_id(material_id)
+        elif material_id in self.mat5.material_id:
+            return self.mat5.slice_by_material_id(material_id)
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def __getitem__(self, material_id):
