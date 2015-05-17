@@ -7,7 +7,8 @@ Defines various utilities for BDF parsing including:
  - PositionWRT
  - TransformLoadWRT
 """
-from six import iteritems
+from __future__ import print_function
+from six import iteritems, StringIO
 import os
 from numpy import unique, cross, dot, array
 
@@ -222,6 +223,8 @@ def print_filename(filename, relpath):
     :param filename: a filename string
     :returns filename_string: a shortened representation of the filename
     """
+    if isinstance(filename, StringIO):
+        return '<StringIO>'
     drive_letter = os.path.splitdrive(os.path.abspath(filename))[0]
     if drive_letter == os.path.splitdrive(os.curdir)[0] and relpath:
         return os.path.relpath(filename)
