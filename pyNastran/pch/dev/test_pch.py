@@ -31,8 +31,10 @@ def get_failed_files(filename):
 
 def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
                       write_matlab=True, delete_f06=True, print_results=True,
-                      debug=True, saveCases=True, skipFiles=[],
+                      debug=True, saveCases=True, skipFiles=None,
                       stopOnFailure=False, nStart=0, nStop=1000000000):
+    if skipFiles is None:
+        skipFiles = []
     n = ''
     iSubcases = []
     failedCases = []

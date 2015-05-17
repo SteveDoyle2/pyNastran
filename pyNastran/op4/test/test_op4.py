@@ -10,8 +10,10 @@ from pyNastran.op4.op4 import OP4
 
 
 def run_lots_of_files(files, write_op4=True,
-                   debug=True, saveCases=True, skipFiles=[],
+                   debug=True, saveCases=True, skipFiles=None,
                    stopOnFailure=False, nStart=0, nStop=1000000000):
+    if skipFiles is None:
+        skipFiles = []
     n = ''
     iSubcases = []
     failedCases = []
