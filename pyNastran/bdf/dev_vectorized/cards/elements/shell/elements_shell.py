@@ -1,4 +1,4 @@
-from numpy import array, zeros, searchsorted, unique, concatenate, argsort, hstack
+from numpy import array, zeros, searchsorted, unique, argsort
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import CTRIA3
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria6 import CTRIA6
@@ -180,9 +180,9 @@ class ElementsShell(object):
                 mass = elems.get_mass_by_element_id()
                 massi[n0:n0 + elems.n] = elems.get_mass_by_element_id()
             except TypeError:  # .. todo:: remove this
-                 massi[n0] = 1.
+                massi[n0] = 1.
             except ValueError:  # .. todo:: remove this
-                 massi[n0] = 1.
+                massi[n0] = 1.
             n0 += elems.n
         assert massi.sum() > 0, elems.type
         #print("massii =", massi)

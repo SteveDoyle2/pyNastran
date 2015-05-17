@@ -1,12 +1,11 @@
 from six.moves import zip
 
-from numpy import (array, zeros, arange, concatenate, searchsorted, where,
-                   unique, cross)
+from numpy import zeros, arange, searchsorted, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+    double_or_blank)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
@@ -57,7 +56,7 @@ class CAERO1(VectorizedCard):
 
         self.igid[i] = integer(card, 8, 'igid')
 
-        self.p1[i, :] = [double_or_blank(card, 9,  'x1', 0.0),
+        self.p1[i, :] = [double_or_blank(card, 9, 'x1', 0.0),
                          double_or_blank(card, 10, 'y1', 0.0),
                          double_or_blank(card, 11, 'z1', 0.0)]
         self.x12[i] = double_or_blank(card, 12, 'x12', 0.)

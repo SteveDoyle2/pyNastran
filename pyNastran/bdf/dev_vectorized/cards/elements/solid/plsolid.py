@@ -1,11 +1,10 @@
 from six.moves import zip, StringIO
-from numpy import zeros, unique, where, searchsorted, asarray, array
+from numpy import zeros, unique, searchsorted, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, integer_string_or_blank,
-    string_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    string_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
@@ -23,7 +22,7 @@ class PLSOLID(Property):
 
     def allocate(self, ncards):
         self.n = ncards
-        float_fmt = self.model.float
+        #float_fmt = self.model.float
         #: Property ID
         self.property_id = zeros(ncards, dtype='int32')
         #: Material ID
@@ -113,7 +112,7 @@ class PLSOLID(Property):
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = PLSOLID(self.model)
         obj.n = len(i)
         #obj._comments = obj._comments[i]

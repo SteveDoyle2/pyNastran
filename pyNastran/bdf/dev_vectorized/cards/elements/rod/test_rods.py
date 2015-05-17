@@ -1,15 +1,15 @@
 from six.moves import StringIO
 from math import pi, sqrt
-from itertools import count
+#from itertools import count
 
 import unittest
 
-from pyNastran.bdf.dev_vectorized.bdf import BDF, BDFCard, CROD, CONROD
+from pyNastran.bdf.dev_vectorized.bdf import BDF #, BDFCard, CROD, CONROD
 #from pyNastran.bdf.dev_vectorized.cards.elements.rod.rods import (
 #    CROD, CONROD, PROD)
 #CTUBE, PTUBE, GRID, MAT1
 
-from pyNastran.bdf.fieldWriter import print_card
+#from pyNastran.bdf.fieldWriter import print_card
 
 debug = True
 class TestRods(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestRods(unittest.TestCase):
         size = 8
         f = StringIO()
         #card = CROD(card)
-        card = model.crod[10]
+        card = model.crod.slice_by_element_id([10])
         card.write_bdf(f, size)
         #card.rawFields()
         self.assertEquals(card.get_element_id_by_element_index(), 10)
@@ -41,7 +41,7 @@ class TestRods(unittest.TestCase):
         model.add_card(lines, 'CONROD', is_list=False)
 
         size = 8
-        card = model.conrod[eid]
+        card = model.conrod.slice_by_element_id([eid])
         f = StringIO()
         card.write_bdf(f, size)
         #card.rawFields()
@@ -115,12 +115,15 @@ class TestRods(unittest.TestCase):
         model.build()
         mass = L * (rho * A + nsm)
 
+        #positions = model.get_positions()
+        positions = None
+
         # conrod
-        conrod = model.conrod[eid]
+        conrod = model.conrod.slice_by_element_id(eid)
         self.assertEquals(conrod.get_element_id_by_element_index(), eid)
         #self.assertEquals(conrod.get_property_id_by_element_index(), None)
         self.assertEquals(conrod.get_material_id_by_element_index(), mid)
-        self.assertEquals(conrod.get_length_by_element_index(), L)
+        self.assertEquals(conrod.get_length_by_element_index(i=None, positions=positions), L)
         #self.assertEquals(conrod.Nsm(), nsm)
         self.assertEquals(conrod.get_mass_by_element_index(), mass)
         #self.assertEquals(conrod.E(), E)
@@ -131,7 +134,7 @@ class TestRods(unittest.TestCase):
         #self.assertEquals(conrod.Rho(), rho)
 
         # crod
-        crod = model.crod[eid+1]
+        crod = model.crod.slice_by_element_id([eid+1])
         self.assertEquals(crod.get_element_id_by_element_index(), eid+1)
         self.assertEquals(crod.get_property_id_by_element_index(), pid)
         self.assertEquals(crod.get_material_id_by_element_index(), mid)
@@ -147,7 +150,7 @@ class TestRods(unittest.TestCase):
         #self.assertEquals(crod.Nu(), nu)
 
         # prod
-        prod = model.prod[pid]
+        prod = model.prod.slice_by_property_id([pid])
         self.assertEquals(prod.Pid(), pid)
         self.assertEquals(prod.Mid(), mid)
         self.assertEquals(prod.Nsm(), nsm)
@@ -160,7 +163,7 @@ class TestRods(unittest.TestCase):
 
         # ctube
         if 0:
-            ctube = model.ctube[eid+2]
+            ctube = model.ctube.slice_by_element_id(eid+2)
             self.assertEquals(ctube.Eid(), eid+2)
             self.assertEquals(ctube.Pid(), pid+1)
             self.assertEquals(ctube.Mid(), mid)
@@ -174,7 +177,7 @@ class TestRods(unittest.TestCase):
             self.assertEquals(ctube.Rho(), rho)
 
         # ptube
-        ptube = model.ptube[pid+1]
+        ptube = model.ptube.slice_by_property_id(pid+1)
         self.assertEquals(ptube.Pid(), pid+1)
         self.assertEquals(ptube.Mid(), mid)
         self.assertEquals(ptube.Nsm(), nsm)
@@ -183,6 +186,7 @@ class TestRods(unittest.TestCase):
         self.assertAlmostEquals(ptube.Area(), A, 5)
         ptube.J()
         self.assertEquals(ptube.Rho(), rho)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

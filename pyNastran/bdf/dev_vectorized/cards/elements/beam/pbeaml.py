@@ -1,5 +1,5 @@
 from six import  iteritems
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
+from numpy import array, asarray
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

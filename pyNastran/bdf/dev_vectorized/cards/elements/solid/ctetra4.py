@@ -1,12 +1,10 @@
 from six.moves import zip, range
 from itertools import count
 
-from numpy import zeros, arange, dot, cross, searchsorted, array, where, asarray, eye, ones
-from numpy.linalg import norm
+from numpy import zeros, arange, dot, cross, searchsorted, array, eye, ones
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
@@ -57,7 +55,7 @@ class CTETRA4(SolidElement):
         self.i += 1
 
     def get_mass_matrix(self, i, model, positions, index0s):
-        """
+        r"""
         A mass matrix is a discrete representation of a continuous mass distribution.
         To compute our mass matrix for a tetrahedral element with linear shape
         functions we need the formula (pp. 266 in Cook)

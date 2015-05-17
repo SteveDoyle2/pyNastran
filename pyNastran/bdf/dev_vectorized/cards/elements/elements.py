@@ -1,6 +1,7 @@
-from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
-                   hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
-                   arange, nan, full, ravel, asarray, any, ndarray)
+from __future__ import print_function
+from numpy import (array, zeros, searchsorted, unique, argsort,
+                   hstack, where, vstack, ones, intersect1d, setdiff1d,
+                   nan, full, ravel, ndarray, asarray)
 from six import iteritems
 from six.moves import zip
 from numpy.linalg import norm
@@ -258,7 +259,7 @@ class Elements(object):
         Types, eids, pids = self.get_element_properties(exclude_types)
 
         # remove undefined properties
-        existing_pids = setdiff1d(unique(pids), self.property_ids, assume_unique=True)
+        #existing_pids = setdiff1d(unique(pids), self.property_ids, assume_unique=True)
         #print('pids = %s' % pids)
         #print('self.property_ids = %s' % self.property_ids)
         #print('existing_pids = %s' % existing_pids)

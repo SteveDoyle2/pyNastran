@@ -1,10 +1,11 @@
 from __future__ import print_function
 from six.moves import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
-                   arange, ndarray, nan)
+                   arange, ndarray, asarray)
 from pyNastran.utils import object_attributes
 
 class VectorizedCard(object):
+    type = 'VectorizedCard'
     def __init__(self, model):
         self.model = model
         self.n = 0
@@ -61,6 +62,12 @@ class VectorizedCard(object):
         f = StringIO()
         self.write_bdf(f)
         return f.getvalue().rstrip()
+
+    def write_bdf(self, f, size=8, is_double=False):
+        raise NotImplementedError(self.type)
+
+    def _verify(self, xref=True):
+        raise NotImplementedError(self.type)
 
     def _validate_slice(self, i):
         if self.n == 0:

@@ -1,9 +1,8 @@
-from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
-                   hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
-                   arange, nan, full, ravel, asarray, where)
-from numpy.linalg import norm
+from __future__ import print_function
+from numpy import (array,
+                   where, where)
 
-from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
+from pyNastran.bdf.dev_vectorized.utils import unique2d
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid
@@ -143,7 +142,7 @@ def check_duplicate(name, objs):
         if hasattr(obj, name):
             vals = getattr(obj, name)
             if len(vals):
-                self.model.log.debug("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
+                #self.model.log.debug("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
                 unique_vals.update(list(vals))
             #print unique_vals
         else:

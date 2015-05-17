@@ -4,7 +4,7 @@ import unittest
 
 from pyNastran.bdf.dev_vectorized.bdf import BDF, BDFCard
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.elements_solid import (
-    ElementsSolid, CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20)
+    CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20)
 
 class TestSolids(unittest.TestCase):
 

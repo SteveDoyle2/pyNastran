@@ -1,13 +1,13 @@
 from six import iteritems
 from six.moves import zip
 from collections import defaultdict
-from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append, array_equal
+from numpy import zeros, array
 
-from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
+from pyNastran.bdf.cards.baseCard import expand_thru
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, blank, integer_or_string)
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    double, double_or_blank)
 
 from .loads import VectorizedCardDict
 
@@ -50,9 +50,9 @@ class TEMP(object):
 
     def write_bdf(self, f, size=8, is_double=False):
         #nids = ['%8i' % node_id for node_id in self.node_id]
-        #temps = [print_float_8(tempi) % temp for temp in self.temperature]
         nleftover = self.n // 3 * 3
         if size == 8:
+            temps = [print_float_8(tempi) % temp for temp in self.temperature]
             for i in range(0, self.n, 3):
                 f.write('TEMP    %8i%8i%s %8i%s%8i%s' % (self.temp_id,
                                                          self.node_id[i], print_float_8(temps[i]),
@@ -64,6 +64,7 @@ class TEMP(object):
             if self.is_default:
                 f.write('TEMPD   %8i%s\n' % (self.temp_id, print_float_8(self.default)))
         else:
+            temps = [print_float_16(tempi) % temp for temp in self.temperature]
             for i in range(0, self.n, 3):
                 f.write('TEMP*   %16i%16i%s\n' % (self.temp_id,
                                                   self.node_id[i], print_float_16(temps[i])))

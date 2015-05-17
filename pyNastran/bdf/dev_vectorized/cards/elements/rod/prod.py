@@ -1,15 +1,14 @@
 from __future__ import print_function
 from six.moves import zip
 
-from numpy import array, zeros, unique, searchsorted, arange, asarray
+from numpy import array, zeros, unique, searchsorted, arange
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
+#from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, integer_double_or_blank, integer_string_or_blank,
-    string_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    double, double_or_blank)
 
 
 class PROD(Property):
@@ -132,7 +131,7 @@ class PROD(Property):
                 if property_id is None:
                     i = arange(self.n)
                 else:
-                    assert len(unique(property_id))==len(property_id), unique(property_id)
+                    assert len(unique(property_id)) == len(property_id), unique(property_id)
                     i = searchsorted(self.property_id, property_id)
             for (pid, mid, A, J, c, nsm) in zip(
                  self.property_id, self.material_id[i], self.A[i], self.J[i], self.c[i], self.nsm[i]):
@@ -147,8 +146,7 @@ class PROD(Property):
                 f.write(print_card_8(card))
 
     def slice_by_index(self, i):
-        print('slice PROD')
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = PROD(self.model)
         n = len(i)
         obj.n = n

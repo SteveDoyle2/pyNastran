@@ -9,10 +9,10 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
+#from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
+#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
-from numpy import argsort, array, zeros, unique, searchsorted, asarray, int64, where
+from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 
 #RigidElement
 class RBE2(object):

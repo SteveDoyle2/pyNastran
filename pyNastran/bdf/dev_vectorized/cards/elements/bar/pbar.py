@@ -1,11 +1,11 @@
 from six.moves import zip
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
+from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    integer_double_or_blank, double_or_blank)
 
 class PBAR(Property):
     type = 'PBAR'
@@ -32,15 +32,15 @@ class PBAR(Property):
         #: material ID
         self.material_id = zeros(ncards, 'int32')
         #: Area
-        self.area = zeros(ncards, 'float64')
+        self.area = zeros(ncards, float_fmt)
         #: I1
-        self.I1 = zeros(ncards, 'float64')
+        self.I1 = zeros(ncards, float_fmt)
         #: I2
-        self.I2 = zeros(ncards, 'float64')
+        self.I2 = zeros(ncards, float_fmt)
         #: Polar Moment of Inertia J -> use J()
         #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
-        self.J = zeros(ncards, 'float64')
-        self.nsm = zeros(ncards, 'float64')
+        self.J = zeros(ncards, float_fmt)
+        self.nsm = zeros(ncards, float_fmt)
 
     def add(self, card, comment=''):
         i = self.i
@@ -144,7 +144,7 @@ class PBAR(Property):
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         #print('pbar i = %s' % i)
         obj = PBAR(self.model)
         obj.n = len(i)

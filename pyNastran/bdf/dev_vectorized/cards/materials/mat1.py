@@ -1,14 +1,13 @@
 from __future__ import print_function
 from six.moves import zip
-from numpy import zeros, where, arange, searchsorted, unique, asarray
+from numpy import zeros, where, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank, blank)
+    double_or_blank)
 
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+#from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.dev_vectorized.cards.materials.material import Material
 
 
@@ -139,7 +138,7 @@ class MAT1(Material):
             #self.model.log.debug"n = %s" % self.n)
             #self.model.log.debug"mids MAT1 %s" % self.material_id)
 
-            Rho = ['' if rhoi  == 0.0 else rhoi for rhoi in self.rho[i]]
+            Rho = ['' if rhoi == 0.0 else rhoi for rhoi in self.rho[i]]
             A = ['' if ai == 0.0 else ai for ai in self.a[i]]
             TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
             ge = ['' if gei == 0.0 else gei for gei in self.ge[i]]
@@ -147,10 +146,16 @@ class MAT1(Material):
             Sc = ['' if sc == 0.0 else sc for sc in self.Sc[i]]
             Ss = ['' if ss == 0.0 else ss for ss in self.Ss[i]]
 
-            card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
-            f.write(print_card_8(card))
-            card = ['$', 'st', 'sc', 'ss', 'mcsid']
-            f.write(print_card_8(card))
+            card_a = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
+            card_b = ['$', 'st', 'sc', 'ss', 'mcsid']
+            if size == 8:
+                fmt_card = print_card_8
+            else:
+                fmt_card = print_card_16
+
+            f.write(fmt_card(card_a))
+            f.write(fmt_card(card_b))
+
             for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
                  self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
                  TRef, ge, St, Sc, Ss, self.mcsid[i]):
@@ -167,7 +172,7 @@ class MAT1(Material):
                 #ss = set_blank_if_default(ss, 0.)
                 mcsid = set_blank_if_default(mcsid, 0)
                 card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
-                f.write(print_card_8(card))
+                f.write(fmt_card(card))
 
     def repr_fields(self, material_id):
         i = where(self.material_id == material_id)[0]
@@ -213,7 +218,6 @@ class MAT1(Material):
         self.nu[i] = nu
 
     def slice_by_index(self, i):
-        #i = asarray(i)
         #assert not isinstance(i, int), type(i)
         #self.model.log.info('i=%s; mids=%s type(i)=%s' % (i, self.material_id, type(i)))
         i = self._validate_slice(i)

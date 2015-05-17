@@ -1,11 +1,11 @@
 from six.moves import zip, StringIO
-from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange
+from numpy import array, zeros, searchsorted, unique, where
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
-    double_or_blank, string_or_blank)
+    double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
@@ -70,8 +70,8 @@ class PSHELL(Property):
         self.nsm[i] = double_or_blank(card, 8, 'nsm', 0.0)
 
         tOver2 = self.thickness[i] / 2.
-        self.z1[i] = double_or_blank(card, 9,  'z1', -tOver2)
-        self.z2[i] = double_or_blank(card, 10, 'z2',  tOver2)
+        self.z1[i] = double_or_blank(card, 9, 'z1', -tOver2)
+        self.z2[i] = double_or_blank(card, 10, 'z2', tOver2)
         self.material_id4[i] = integer_or_blank(card, 11, 'material_id4', -1)
 
         #if self.material_id2 is None:
@@ -132,7 +132,7 @@ class PSHELL(Property):
             Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
             Nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
             Tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
-            TwelveIt3 = ['' if tw   == 1.0 else tw for tw in self.twelveIt3[i]]
+            TwelveIt3 = ['' if tw == 1.0 else tw for tw in self.twelveIt3[i]]
 
             to2 = self.thickness[i] / 2
             Z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
@@ -140,7 +140,7 @@ class PSHELL(Property):
 
             for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
                     self.property_id[i], self.material_id[i], self.thickness[i], Mid2,
-                    TwelveIt3, Mid3, Tst, Nsm,  Z1, Z2, Mid4):
+                    TwelveIt3, Mid3, Tst, Nsm, Z1, Z2, Mid4):
                 card = ['PSHELL', pid, mid, t, mid2, twelveIt3, mid3,
                         tst, nsm, z1, z2, mid4]
                 if size == 8:

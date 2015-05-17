@@ -1,10 +1,9 @@
 from __future__ import print_function
 from six import iteritems, itervalues
 from six.moves import zip
-from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
+from numpy import (array, searchsorted, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, arccos, hstack, array_equal, allclose, eye, ndarray,
-                   arange, sqrt)
+                   cos, sin, arccos, hstack, eye, ndarray, arange, sqrt)
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.coordinateSystems import (
@@ -57,7 +56,7 @@ class Coord(object):
 
         if self.n:
             #if coord_id is None:
-            i = arange(self.n)
+            #i = arange(self.n)
             #else:
                 #assert len(unique(coord_id))==len(coord_id), unique(coord_id)
                 #i = searchsorted(self.coord_id, coord_id)
@@ -497,7 +496,9 @@ class Coord(object):
 
     def iterkeys(self):
         return self.keys()
+
     def itervalues(self):
         return self.values()
+
     def iteritems(self):
         return self.items()

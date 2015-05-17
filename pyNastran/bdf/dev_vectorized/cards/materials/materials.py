@@ -1,6 +1,7 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip
-from numpy import zeros, where, array, nan, unique, concatenate
+from numpy import zeros, where, array, unique, concatenate
 
 #from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
 #from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
@@ -17,7 +18,7 @@ from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
 from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
 from pyNastran.bdf.dev_vectorized.cards.materials.mathp import MATHP
 
-from pyNastran.bdf.bdfInterface.assign_type import integer
+
 class Materials(object):
     def __init__(self, model):
         self.model = model
@@ -278,17 +279,16 @@ class Materials(object):
                         break
                     else:
                         self.model.log.debug('  mid=%i Type=%s was not found' % (mid, Type))
-                        pass
             out.append(obj)
         return out[0] if int_flag else out
 
-    def __getitem2__(self, material_id):
-        assert isinstance(material_id, int), 'material_id=%r' % material_id
-        types = self._get_types()
-        for mat in types:
-            if material_id in mat.material_id:
-                return mat
-        raise RuntimeError('Could not find material_id=%r' % material_id)
+    #def __getitem2__(self, material_id):
+        #assert isinstance(material_id, int), 'material_id=%r' % material_id
+        #types = self._get_types()
+        #for mat in types:
+            #if material_id in mat.material_id:
+                #return mat
+        #raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def __len__(self):
         types = self._get_types()

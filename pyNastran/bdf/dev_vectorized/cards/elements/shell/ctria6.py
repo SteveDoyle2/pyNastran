@@ -1,15 +1,13 @@
 from six.moves import zip
 
-from numpy import (array, zeros, arange, concatenate, searchsorted, where,
-                   unique, cross, asarray)
-from numpy.linalg import norm
+from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import ShellElement
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+    double_or_blank)
 
 class CTRIA6(ShellElement):
     type = 'CTRIA6'
@@ -167,7 +165,7 @@ class CTRIA6(ShellElement):
         return (n1 + n2 + n3) / 3.
 
     #def slice_by_index(self, i):
-        #i = asarray(i)
+        #i = self._validate_slice(i)
         #obj = CTRIA6(self.model)
         #obj.n = len(i)
         ##obj._cards = self._cards[i]

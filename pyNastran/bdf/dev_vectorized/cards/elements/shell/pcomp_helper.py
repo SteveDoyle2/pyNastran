@@ -1,8 +1,10 @@
+from __future__ import print_function
+from numpy import array
 #from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     #double_or_blank, integer_double_or_blank, blank, string_or_blank)
 from pyNastran.bdf.bdfInterface.assign_type import integer, double_or_blank, string_or_blank, integer_or_blank
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.fieldWriter import print_card
 
 
 class BaseCard(object):
@@ -602,7 +604,7 @@ class PCOMPi(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 

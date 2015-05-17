@@ -1,4 +1,5 @@
-from numpy import array, searchsorted
+from numpy import where
+
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 class Property(VectorizedCard):
@@ -6,7 +7,7 @@ class Property(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def shrink(self, refcheck=True):
-        i = where(self.property_id==0)[0]
+        i = where(self.property_id == 0)[0]
         self.resize(i[0], refcheck=refcheck)
 
     def __iter__(self):

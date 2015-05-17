@@ -1,12 +1,12 @@
 from six import string_types
 from six.moves import zip, StringIO
-from numpy import array, dot, arange, zeros, unique, searchsorted, nan, full, asarray
+from numpy import array, dot, arange, zeros, unique, searchsorted, nan, full
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, string_or_blank, blank,
+    double_or_blank, integer_double_or_blank,
     double_string_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
@@ -226,7 +226,7 @@ class CBEAM(Element):
                 f.write(print_card_8(card))
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = CBEAM(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

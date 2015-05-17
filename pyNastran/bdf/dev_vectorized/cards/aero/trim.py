@@ -4,12 +4,11 @@ from numpy import array, pi, linspace
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank, integer_or_string,
-    double_string_or_blank, blank)
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+#from pyNastran.bdf.field_writer_8 import set_blank_if_default
+##from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    double, double_or_blank, string, string_or_blank)
+#from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 class TRIM(object):
     def __init__(self, model):

@@ -1,11 +1,11 @@
 from six.moves import zip
-from numpy import zeros, where, arange, searchsorted, unique, asarray
+from numpy import zeros, where, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
+#from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    double, double_or_blank, string_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.materials.material import Material
 
@@ -201,7 +201,7 @@ class MAT8(Material):
         self.nu[i] = nu
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         #self.model.log.debug('i = %s' % i)
         obj = MAT8(self.model)
         obj.n = len(i)

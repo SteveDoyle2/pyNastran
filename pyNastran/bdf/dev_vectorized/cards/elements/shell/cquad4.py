@@ -1,13 +1,12 @@
 from six.moves import zip, range
-from numpy import (array, zeros, arange, concatenate, searchsorted,
-    where, unique, cross, dot, asarray)
+from numpy import array, zeros, arange, searchsorted, unique, cross
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import ShellElement
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+    double_or_blank)
 
 
 class CQUAD4(ShellElement):
@@ -160,7 +159,7 @@ class CQUAD4(ShellElement):
             if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_ids))==len(element_id), unique(element_id)
+                assert len(unique(element_id)) == len(element_id), unique(element_id)
                 i = searchsorted(self.element_id, element_id)
             #if len(i) == 1:
                 #i = i[0]
@@ -198,7 +197,7 @@ class CQUAD4(ShellElement):
         return positions
 
     #def slice_by_index(self, i):
-        #i = asarray(i)
+        #i = self._validate_slice(i)
         #obj = CQUAD4(self.model)
         #obj.n = len(i)
         #obj._cards = self._cards[i]

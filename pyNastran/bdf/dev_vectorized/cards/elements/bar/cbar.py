@@ -1,16 +1,16 @@
 from six.moves import zip, StringIO
-from numpy import array, dot, arange, zeros, unique, searchsorted, full, nan, asarray
+from numpy import array, arange, zeros, unique, searchsorted, full, nan
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, string_or_blank, blank)
+    double_or_blank, integer_double_or_blank, string_or_blank)
 from pyNastran.bdf.cards.elements.bars import CBAROR
 
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
+#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
@@ -193,8 +193,8 @@ class CBAR(Element):
 
         rho, E, J = self.model.Materials.get_rho_E_J(material_id)
         rho = self.model.Materials.get_rho(self.mid)
-        E   = self.model.Materials.get_E(self.mid)
-        J   = self.model.Materials.get_J(self.mid)
+        E = self.model.Materials.get_E(self.mid)
+        J = self.model.Materials.get_J(self.mid)
 
         mass = norm(L, axis=1) * A * rho + self.nsm
         if total:
@@ -238,7 +238,7 @@ class CBAR(Element):
                     f.write(print_card_16(card))
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = CBAR(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

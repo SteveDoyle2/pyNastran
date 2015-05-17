@@ -6,10 +6,10 @@ from numpy import argsort, array, zeros, unique, searchsorted, asarray, int64, w
 from pyNastran.bdf.bdfInterface.assign_type import (double_or_blank,
     components, components_or_blank, integer_double_or_blank, blank, integer)
 
-from pyNastran.bdf.field_writer_8 import (print_card_8,
-    set_blank_if_default, set_string8_blank_if_default)
-from pyNastran.bdf.field_writer_16 import print_card_16, set_string16_blank_if_default
-from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.bdf.field_writer_8 import (print_card_8, set_blank_if_default,
+                                          #set_string8_blank_if_default
+                                          )
+#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 
 #RigidElement
@@ -233,25 +233,25 @@ class RBE3(object):
         #list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         #return list_fields
 
-    def write_bdf(self, f, size, is_double):
+    def write_bdf(self, f, size=True, is_double=False):
         if self.n:
             if size == 8:
                 for j, eid, alpha in zip(count(), self.element_id, self.alpha):
                     salpha = set_blank_if_default(alpha, 0.)
                     list_fields = ['RBE2', eid] + [salpha]
                     f.write(print_card_8(list_fields))
-            #elif is_double:
-                #for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
-                    #gmi = self.gmi[j]
-                    #salpha = set_blank_if_default(alpha, 0.)
-                    #list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                    #f.write(print_card_16(list_fields))
-            #else:
-                #for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
-                    #gmi = self.gmi[j]
-                    #salpha = set_blank_if_default(alpha, 0.)
-                    #list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                    #f.write(print_card_double(list_fields))
+            elif is_double:
+                for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
+                    gmi = self.gmi[j]
+                    salpha = set_blank_if_default(alpha, 0.)
+                    list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
+                    f.write(print_card_16(list_fields))
+            else:
+                for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
+                    gmi = self.gmi[j]
+                    salpha = set_blank_if_default(alpha, 0.)
+                    list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
+                    f.write(print_card_double(list_fields))
 
 
         #card = self.repr_fields()

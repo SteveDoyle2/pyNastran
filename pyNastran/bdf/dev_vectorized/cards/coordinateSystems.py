@@ -75,7 +75,7 @@ class Coord(BaseCard):
         return self.cid
 
     def setup(self, debug=False):
-        """
+        r"""
         .. math::
           e_{13} = e_3 - e_1
 
@@ -397,7 +397,7 @@ class Cord2x(Coord):
                              double_or_blank(card, 8, 'e2z', 0.0)],
                             dtype='float64')
             #: a point on the xz-plane relative to the rid coordinate system
-            self.e3 = array([double_or_blank(card, 9,  'e3x', 0.0),
+            self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
                              double_or_blank(card, 10, 'e3y', 0.0),
                              double_or_blank(card, 11, 'e3z', 0.0)],
                             dtype='float64')
@@ -910,7 +910,7 @@ class CORD2R(Cord2x):
     Type = 'R'
 
     def __init__(self, card=None,
-                 data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.], comment=''):
+                 data=None, comment=''):
         """
         Intilizes the CORD2R
 
@@ -926,6 +926,8 @@ class CORD2R(Cord2x):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2R only)
         """
+        if data is None:
+            data = [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
         Cord2x.__init__(self, card, data)
         if comment:
             self._comment = comment

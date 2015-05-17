@@ -1,5 +1,5 @@
 from six.moves import zip, range
-from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, asarray, int64
+from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import _Lambda
@@ -7,8 +7,7 @@ from pyNastran.utils.dev import list_print
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodElement
 
@@ -68,6 +67,43 @@ class CROD(RodElement):
     def get_property_id_by_element_index(self, i=None):
         return self.property_id[i]
 
+    def get_property_id_by_element_id(self, element_id):
+        i = self.get_element_index_by_element_id(element_id)
+        pid = self.get_property_id_by_element_index(i)
+        return pid
+
+    def get_E_by_element_id(self, element_id):
+        pid = get_property_id_by_element_id(element_id)
+        E = self.get_E_by_property_id(pid)
+        return E
+
+    def get_G_by_element_id(self, element_id):
+        pid = get_property_id_by_element_id(element_id)
+        G = self.get_G_by_property_id(pid)
+        return G
+
+    def get_J_by_element_id(self, element_id):
+        pid = get_property_id_by_element_id(element_id)
+        J = self.get_J_by_property_id(pid)
+        return J
+
+    def get_c_by_element_id(self, element_id):
+        pid = get_property_id_by_element_id(element_id)
+        c = self.get_c_by_property_id(pid)
+        return c
+
+    def get_Area_by_element_id(self, element_id):
+        pid = get_property_id_by_element_id(element_id)
+        area = self.get_Area_by_property_id(pid)
+        return area
+
+    def get_non_structural_mass_by_element_id(self, element_id):
+        pid = get_property_id_by_element_id(element_id)
+        nsm = self.get_non_structural_mass_by_property_id(pid)
+        return nsm
+
+    #=========================================================================
+
     def get_Area_by_property_id(self, property_id):
         A = self.model.prod.get_Area_by_property_id(property_id)
         return A
@@ -123,11 +159,11 @@ class CROD(RodElement):
         i = self.model.prod.get_index(self.property_id)
         A = self.model.prod.A[i]
         mid = self.model.prod.material_id[i]
-        J   = self.model.prod.get_J_by_property_id(self.property_id)
+        J = self.model.prod.get_J_by_property_id(self.property_id)
 
         #rho, E = self.model.materials.get_density_E(mid)
         rho = self.model.materials.get_density_by_material_id(mid)
-        #E   = self.model.materials.get_E(mid)
+        #E = self.model.materials.get_E(mid)
         #return 0. if total else [0.]
 
         mass = norm(L, axis=1) * A * rho + self.get_non_structural_mass_by_property_id()
@@ -456,7 +492,7 @@ class CROD(RodElement):
                 f1, f4)
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = CROD(self.model)
         n = len(i)
         obj.n = n

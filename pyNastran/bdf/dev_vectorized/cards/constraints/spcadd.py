@@ -1,14 +1,12 @@
 from six.moves import StringIO
-from collections import defaultdict
-from itertools import count
+#from itertools import count
 
-from numpy import array
+#from numpy import array
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.baseCard import expand_thru
-from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components, components_or_blank)
+from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import integer
 
 def get_spcadd_constraint(card):
     constraint_id = integer(card, 1, 'constraint_id')

@@ -1,10 +1,9 @@
 from six.moves import zip
-from numpy import zeros, arange, unique, dot, cross, abs, searchsorted, array, where, asarray
+from numpy import arange, cross, abs, searchsorted, array
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank, fields)
+from pyNastran.bdf.bdfInterface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
@@ -74,7 +73,7 @@ class CPENTA6(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.centroid()
@@ -106,7 +105,7 @@ class CPENTA6(SolidElement):
         :param xyz_cid0: the node positions as a dictionary
         """
         grid = self.model.grid
-        get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
+        #get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
         node_ids = self.node_ids
 
         msg = ', which is required by %s' % self.type

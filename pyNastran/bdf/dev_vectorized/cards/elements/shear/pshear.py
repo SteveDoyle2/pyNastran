@@ -1,5 +1,5 @@
-from six.moves import zip, StringIO
-from numpy import array, zeros, unique, asarray, searchsorted, arange
+from six.moves import zip
+from numpy import array, zeros, unique, searchsorted, arange
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
@@ -64,7 +64,7 @@ class PSHEAR(Property):
             i = arange(n)
         else:
             print('property_id =', property_id)
-            n = len(property_ids)
+            n = len(property_id)
             i = searchsorted(self.property_id, property_id)
         mpa = zeros(n, dtype='float64')
         rho = self.model.materials.get_density_by_material_id(self.material_id)
@@ -106,7 +106,7 @@ class PSHEAR(Property):
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = PSHEAR(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

@@ -59,7 +59,7 @@ class SolidElement(Element):
 
     def allocate(self, ncards):
         self.n = ncards
-        float_fmt = self.model.float
+        #float_fmt = self.model.float
         self.element_id = zeros(ncards, 'int32')
         self.property_id = zeros(ncards, 'int32')
         self.node_ids = zeros((ncards, self.nnodes), 'int32')

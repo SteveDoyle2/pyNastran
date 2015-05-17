@@ -1,7 +1,4 @@
-from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange
-
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
-    double_or_blank, string_or_blank)
+from numpy import concatenate, unique
 
 
 def divide_2d_array_by_column_vector(array_obj, vector):
@@ -35,8 +32,8 @@ class ElementsRod(object):
         nconrod = len(self.conrod.eid)
         nctube = len(self.ctube.eid)
 
-        if npshell and npcomp:
-            eid = concatenate(self.pshell.eid, self.pcomp.eid)
+        if ncrod or nconrod or nctube:
+            eid = concatenate(self.crod.eid, self.conrod.eid, self.ctube.eid)
             unique_eids = unique(eid)
             if len(unique_eids) != len(eid):
                 raise RuntimeError('There are duplicate CROD/CONROD IDs...')
@@ -66,3 +63,4 @@ class ElementsRod(object):
         #f.write('$PROPERTIES\n')
         self.crod.write_bdf(f, size=size, eid=eid)
         self.conrod.write_bdf(f, size=size, eid=eid)
+        self.ctube.write_bdf(f, size=size, eid=eid)

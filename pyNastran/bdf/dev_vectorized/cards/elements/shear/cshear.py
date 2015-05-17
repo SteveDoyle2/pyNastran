@@ -1,10 +1,9 @@
-from six.moves import zip, StringIO
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, cross
+from six.moves import zip
+from numpy import array, zeros, arange, searchsorted, unique, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
@@ -181,7 +180,7 @@ class CSHEAR(Element):
         if calculate_area:
             A = 0.5 * n
         if calculate_mass:
-            t = self.model.pid.get_thickness_by_property_id(self.pid)
+            t = self.model.pid.get_thickness_by_property_id(self.property_id)
             massi = A * t
         return massi
 

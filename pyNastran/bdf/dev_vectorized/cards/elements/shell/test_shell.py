@@ -5,9 +5,9 @@ from collections import defaultdict
 import unittest
 from numpy import array, allclose
 
-from pyNastran.bdf.dev_vectorized.bdf import BDF, BDFCard
-from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
+from pyNastran.bdf.dev_vectorized.bdf import BDF
+#from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
 
 class TestShells(unittest.TestCase):
@@ -309,7 +309,7 @@ class TestShells(unittest.TestCase):
         Sc = None
         Ss = None
         Mcsid = None
-        mat1_a = ['MAT1', mid,     E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1_a = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
         mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
         mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
         model.add_card(mat1_a, 'MAT1', comment='', is_list=True)

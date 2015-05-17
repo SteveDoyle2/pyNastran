@@ -1,4 +1,4 @@
-from numpy import array, where, searchsorted
+from numpy import array, searchsorted
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 

@@ -1,13 +1,13 @@
 from six.moves import zip
-from itertools import count
+#from itertools import count
 
-from numpy import array, zeros, unique, searchsorted, arange
+from numpy import array
 
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components, components_or_blank)
+#from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_16 import print_card_16
+
+#from pyNastran.bdf.bdfInterface.assign_type import (
+    #components_or_blank)
 
 
 class SPCD(object):
@@ -53,7 +53,7 @@ class SPCD(object):
             #assert self.constraint_id == constraint_id, ''
 
     def build(self):
-        float_fmt = self.model.float
+        #float_fmt = self.model.float
         self.n = len(self.self.constraint_id)
 
         self.grid_id = array(self.grid_id)
@@ -65,4 +65,4 @@ class SPCD(object):
             fields = ['SPCD', self.constraint_id]
             for (nid, constraint, enforced) in zip(self.gids, self.components, self.enforced_motion):
                 fields += [nid, constraint, enforced]
-            f.write(card)
+            f.write(fields)

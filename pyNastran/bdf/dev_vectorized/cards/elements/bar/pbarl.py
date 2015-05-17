@@ -2,17 +2,17 @@ from __future__ import print_function
 from six import iteritems
 from six.moves import zip
 from itertools import count
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
+from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8, set_default_if_blank
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
+#from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
+#from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
+#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, string, double_or_blank, string_or_blank, fields)
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
@@ -115,6 +115,7 @@ class PBARL(Property):
         self.i += 1
 
     def add_op2(self, data):
+        i = self.i
         self.property_id[i] = data[0]
         self.material_id[i] = data[1]
         self.group[i] = data[2].strip()
@@ -139,6 +140,7 @@ class PBARL(Property):
                 self.valid_types[Type])
             raise RuntimeError(msg)
         assert None not in dim
+        self.i += 1
 
     def build(self):
         if self.n:
@@ -220,7 +222,7 @@ class PBARL(Property):
                     f.write(print_card_16(list_fields))
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = PBARL(self.model)
         obj.n = len(i)
         #obj._comments = obj._comments[i]

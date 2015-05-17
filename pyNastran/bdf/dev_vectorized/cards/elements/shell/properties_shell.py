@@ -1,5 +1,5 @@
 from six import  iteritems
-from numpy import (concatenate, hstack, argsort, searchsorted, ndarray, unique,
+from numpy import (concatenate, hstack, unique,
                    array, nan, full, where, isnan)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
@@ -39,7 +39,7 @@ class PropertiesShell(object):
             self.n += prop.n
 
         npshell = self.pshell.n
-        npcomp  = self.pcomp.n
+        npcomp = self.pcomp.n
         npcompg = self.pcompg.n
 
         self.n = npshell + npcomp + npcompg

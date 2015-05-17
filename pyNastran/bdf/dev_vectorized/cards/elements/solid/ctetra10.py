@@ -1,12 +1,11 @@
 from six.moves import zip
-from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
-from numpy.linalg import norm
+from numpy import zeros, arange, dot, cross, searchsorted, array
+#from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
+#from pyNastran.bdf.field_writer_16 import print_card_16
 
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
 def volume4(n1, n2, n3, n4):
@@ -120,6 +119,8 @@ class CTETRA10(SolidElement):
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
+        if total:
+            V = V.sum()
         return V
 
     def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
@@ -210,7 +211,7 @@ class CTETRA10(SolidElement):
                 f.write(print_card_8(card))
 
     #def slice_by_index(self, i):
-        #i = asarray(i)
+        #i = self._validate_slice(i)
         #obj = CTETRA10(self.model)
         #obj.n = len(i)
         ##obj._cards = self._cards[i]

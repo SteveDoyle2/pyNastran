@@ -5,13 +5,13 @@ This file defines:
     - f1
     - f2
 """
+from __future__ import print_function
 from six.moves import zip, range
-from numpy import zeros, arange, unique, dot, cross, abs, searchsorted, array, where, asarray
+from numpy import arange, cross, abs, searchsorted, array, ones, eye
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank, fields)
+from pyNastran.bdf.bdfInterface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
@@ -45,7 +45,7 @@ def quad_area_centroid(n1, n2, n3, n4):
         msg += 'c2=%r\narea2=%r' % (c2, area2)
         raise FloatingPointError(msg)
     except ValueError:
-        msg  = 'c1    = %s\n' % str(c1.shape)
+        msg = 'c1    = %s\n' % str(c1.shape)
         msg += 'c2    = %s\n' % str(c2.shape)
         msg += 'area1 = %s\n' % str(area1.shape)
         msg += 'area2 = %s\n' % str(area2.shape)
@@ -172,7 +172,7 @@ class CHEXA8(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.centroid()

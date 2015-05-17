@@ -1,9 +1,7 @@
 from six import  iteritems
 from six.moves import StringIO
 from collections import defaultdict
-from numpy import array, intersect1d, union1d, asarray
-
-from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
+from numpy import array, union1d
 
 from .load import LOAD
 from .dload import DLOAD

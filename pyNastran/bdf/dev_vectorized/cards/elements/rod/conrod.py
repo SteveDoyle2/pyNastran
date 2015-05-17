@@ -1,13 +1,12 @@
 from __future__ import print_function
 from six.moves import zip, range
 
-from numpy import arange, zeros, unique, asarray, dot, searchsorted, array, transpose
+from numpy import arange, zeros, unique, dot, array, transpose
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, blank, integer_or_string)
+from pyNastran.bdf.bdfInterface.assign_type import integer, double, double_or_blank
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodElement
 
@@ -113,6 +112,8 @@ class CONROD(RodElement):
     def get_length_by_element_index(self, i=None, positions=None):
         if i is None:
             i = arange(self.n)
+
+        assert positions is not None
         #if positions is None:
 
         print("i = %s" % i)
@@ -222,7 +223,7 @@ class CONROD(RodElement):
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
 
-                card = ['CONROD', eid, n12[0], n12[1], mid, A, J, c, nsm ]
+                card = ['CONROD', eid, n12[0], n12[1], mid, A, J, c, nsm]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:
@@ -517,7 +518,7 @@ class CONROD(RodElement):
                 f1, f4)
 
     def slice_by_index(self, i):
-        i = asarray(i)
+        i = self._validate_slice(i)
         obj = CONROD(self.model)
         n = len(i)
         obj.n = n

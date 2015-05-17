@@ -9,7 +9,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.spring.spring_element import Sp
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, integer_double_or_blank, blank)
+    double, double_or_blank)
 
 class CELAS2(SpringElement):
     type = 'CELAS2'
@@ -89,7 +89,7 @@ class CELAS2(SpringElement):
             C1 = self.components[i, 1]
             for (eid, k, n0, n1, c0, c1, ge, s) in zip(self.element_id[i],
                     self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
-                card = ['CELAS2', eid, k, n0, c0, n1, c1, ge, s ]
+                card = ['CELAS2', eid, k, n0, c0, n1, c1, ge, s]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

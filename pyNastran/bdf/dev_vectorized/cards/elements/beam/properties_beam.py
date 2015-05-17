@@ -1,5 +1,3 @@
-from numpy import concatenate, argsort, searchsorted, ndarray
-
 from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeam import PBEAM
 from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeaml import PBEAML
 

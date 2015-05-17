@@ -1,4 +1,4 @@
-from numpy import concatenate, argsort, searchsorted, ndarray, hstack, full, nan, unique, where
+from numpy import searchsorted, hstack, full, nan, unique, where
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.psolid import PSOLID
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.plsolid import PLSOLID
@@ -35,7 +35,7 @@ class PropertiesSolid(object):
             prop.build()
             self.n += prop.n
 
-        npsolid = self.psolid.n
+        #npsolid = self.psolid.n
 
         self.property_id = hstack([self.psolid.property_id, self.plsolid.property_id])
         #self.model.log.debug('dtype property_id=%s' % str(self.property_id.dtype))

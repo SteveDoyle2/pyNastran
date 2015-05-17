@@ -69,7 +69,7 @@ class MPC(object):
             raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
 
     def build(self):
-        float_fmt = self.model.float
+        #float_fmt = self.model.float
         self.n = len(self.constraints)
 
     def write_bdf(self, f, size=8):

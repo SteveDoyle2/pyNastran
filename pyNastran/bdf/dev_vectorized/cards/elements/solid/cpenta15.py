@@ -1,11 +1,10 @@
 from __future__ import print_function
 from six.moves import zip
-from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
+from numpy import arange, searchsorted, array
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
@@ -63,7 +62,7 @@ class CPENTA15(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' % (i, nid)
         if xref:
             c = self.centroid()
@@ -161,7 +160,7 @@ class CPENTA15(SolidElement):
                 f.write(print_card_8(card).rstrip() + '\n')
 
     #def slice_by_index(self, i):
-        #i = asarray(i)
+        #i = self._validate_slice(i)
         #obj = CPENTA15(self.model)
         #obj.n = len(i)
         ##obj._cards = self._cards[i]

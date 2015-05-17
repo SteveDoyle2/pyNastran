@@ -1,5 +1,3 @@
-from numpy import concatenate, argsort, searchsorted, ndarray
-
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbar import PBAR
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbarl import PBARL
 

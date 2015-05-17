@@ -1,10 +1,9 @@
 from six.moves import zip
-from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
+from numpy import arange, searchsorted, array, eye, ones
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid, volume8
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
@@ -141,7 +140,7 @@ class CHEXA20(SolidElement):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             c = self.centroid()

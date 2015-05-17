@@ -1,8 +1,6 @@
-from numpy import zeros, array
-
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.baseCard import expand_thru, collapse_thru
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, integer_or_string)
+from pyNastran.bdf.bdfInterface.assign_type import integer_or_string
 
 class SPOINT(object):
     type = 'SPOINT'

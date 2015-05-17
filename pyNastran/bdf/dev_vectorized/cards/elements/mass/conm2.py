@@ -1,13 +1,12 @@
-from six.moves import zip, StringIO
+from six.moves import zip
 
-from numpy import array, dot, arange, zeros, unique, searchsorted
-from numpy.linalg import norm
+from numpy import array, arange, zeros, unique, searchsorted
 
-from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
-from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16
+from pyNastran.bdf.field_writer_8 import print_float_8
+from pyNastran.bdf.field_writer_16 import print_float_16
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+    double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 

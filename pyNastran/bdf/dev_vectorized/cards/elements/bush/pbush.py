@@ -1,13 +1,12 @@
 from six import iteritems
 from six.moves import StringIO
-from numpy import array, zeros, arange, searchsorted, where, unique, hstack, concatenate
+from numpy import array, zeros, arange, unique, concatenate
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import integer
 from pyNastran.bdf.cards.properties.bush import PBUSH as vPBUSH
 
 class PBUSH(object):
@@ -79,7 +78,7 @@ class PBUSH(object):
                 f.write(pcomp.write_bdf(size, print_card_16))
 
     #def slice_by_index(self, i):
-        #i = asarray(i)
+        #i = self._validate_slice(i)
         #return self.__getitem__()
 
     def __getitem__(self, property_ids):

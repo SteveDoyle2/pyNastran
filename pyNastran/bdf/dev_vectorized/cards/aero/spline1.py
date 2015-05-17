@@ -79,7 +79,8 @@ class SPLINE1(VectorizedCard):
         assert len(card) <= 11, 'len(SPLINE1 card) = %i' % len(card)
         self.i += 1
 
-    def add_op2(self, card, comment=''):
+    def add_op2(self, data, comment=''):
+        i = self.i
         self.element_id[i] = data[0]
         self.caero[i] = data[1]
         self.box1[i] = data[2]
@@ -91,6 +92,7 @@ class SPLINE1(VectorizedCard):
         self.nelements[i] = data[8]
         self.melements[i] = data[9]
         assert len(data) == 10, 'data = %s' % data
+        self.i += 1
 
     def build(self):
         if self.n:
@@ -129,4 +131,4 @@ class SPLINE1(VectorizedCard):
                 list_fields = ['SPLINE1', eid, caero, box1, box2,
                   setg, sdz, smethod, susage, snelements, smelements]
                 list_fields = wipe_empty_fields(list_fields)
-                f.write(print_card_8(list_fields ))
+                f.write(print_card_8(list_fields))

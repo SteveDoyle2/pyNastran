@@ -1,10 +1,10 @@
 from six.moves import zip
-from numpy import zeros, where, unique, transpose, dot, array
+from numpy import zeros, where, unique, transpose, dot, array, arange
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, blank, integer_or_string)
+    double, double_or_blank)
 
 
 class TEMPD(object):
@@ -49,7 +49,7 @@ class TEMPD(object):
 
     def write_bdf(self, f, size=8):
         if self.n:
-            n = 0
+            #n = 0
             for lid, t in zip(self.load_id, self.temperature_default):
                 card = ['TEMPD', lid, t]
                 if size == 8:
@@ -146,9 +146,11 @@ class TEMP(object):
 
     def write_bdf(self, f, size=8):
         if self.n:
-            t0 = self.model.tempd.cp
+            #t0 = self.model.tempd.cp
             seid0 = self.model.grdset.seid
-
+            ps0 = self.model.grdset.ps
+            cd0 = self.model.grdset.cd
+            cp0 = self.mdoel.grdset.cp
             Cp = [cpi if cpi != cp0 else '' for cpi in self.cp]
             Cd = [cdi if cdi != cd0 else '' for cdi in self.cd]
             Ps = [psi if psi != ps0 else '' for psi in self.ps]

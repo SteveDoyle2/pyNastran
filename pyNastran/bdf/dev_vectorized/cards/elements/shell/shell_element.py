@@ -1,4 +1,4 @@
-from numpy import zeros, searchsorted, where, asarray, nan, isnan
+from numpy import searchsorted, asarray, isnan
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 

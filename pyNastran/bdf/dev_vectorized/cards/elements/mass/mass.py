@@ -1,4 +1,4 @@
-from numpy import zeros, array, union1d, searchsorted, concatenate, argsort
+from numpy import union1d, concatenate, argsort
 from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm1 import CONM1
 from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm2 import CONM2
 

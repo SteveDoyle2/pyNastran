@@ -1,6 +1,6 @@
-from six.moves import zip, StringIO
+from six.moves import zip
 
-from numpy import zeros, array, arange, unique, searchsorted, where
+from numpy import zeros, array, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -85,11 +85,13 @@ class CONM1(VectorizedCard):
 
             Cid = [cid if cid != 0 else '' for cid in self.coord_id[i]]
             for (eid, nid, cid, m) in zip(self.element_id[i], self.node_id[i], Cid, self.mass_matrix):
-                    card = ['CONM1', eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
-                            m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
-                            m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
-                            m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
-                    if size == 8:
-                        f.write(print_card_8(card))
-                    else:
-                        f.write(print_card_16(card))
+                card = [
+                    'CONM1', eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
+                    m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
+                    m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
+                    m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]
+                ]
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
