@@ -72,13 +72,9 @@ class WriteMesh(WriteMeshDeprecated):
             raise TypeError('out_filename=%r must be a string' % out_filename)
 
         if size == 8:
-            assert is_double == False, 'is_double=%r' % is_double
+            assert is_double is False, 'is_double=%r' % is_double
         elif size == 16:
             assert is_double in [True, False], 'is_double=%r' % is_double
-            if is_double == False:
-                assert is_double == False, 'is_double=%r' % is_double
-            else:
-                assert is_double == True, 'is_double=%r' % is_double
         else:
             assert size in [8, 16], size
 
