@@ -146,7 +146,7 @@ def areaWeight(n, n1, n2, n3):
     Finds the weightings based on the barycentric coordinates weighted average method
     http://www.ems-i.com/smshelp/Data_Module/Interpolation/Inverse_Distance_Weighted.htm
     """
-    a = area(n1, n2, n3)
+    #a = area(n1, n2, n3)
     a1 = area(a, a2, a3)
     a2 = area(a, a1, a3)
     a3 = area(a, a1, a2)
