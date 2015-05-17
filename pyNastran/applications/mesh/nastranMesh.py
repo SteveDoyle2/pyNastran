@@ -11,7 +11,7 @@ class NastranMesh(BDF):
         BDF.__init__(self)
 
     def tank_fill(self, mFuel, percent_start=.50, rho_fuel=51.19,
-                 tank_elements=[], gravity=None,
+                 tank_elements=None, gravity=None,
                  mass_tol=0.05, nIterMax=10, add_elements=True):
         """
         Fills a single fuel tank in consistent units
@@ -51,6 +51,8 @@ class NastranMesh(BDF):
            4.  percentStart < 1.
            5.  massTol < 0.20
         """
+        if tank_elements is None:
+            tank_elements = []
         assert percent_start < 1.
         assert mass_tol < 0.20
         percent_starts = []

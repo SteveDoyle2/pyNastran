@@ -1,8 +1,9 @@
-from numpy import array,cross,allclose
+from __future__ import print_function
+from numpy import array, cross, allclose
 from numpy.linalg import norm, solve
 
 #------------------------------------------------------------------
-def is_list_ranged(a,List,b):
+def is_list_ranged(a, List, b):
     """
     Returns true if a<= x <= b
     or a-x < 0 < b-x
@@ -17,12 +18,12 @@ def is_float_ranged(a, x, b):
     Returns true if a<= x <= b
     or a-x < 0 < b-x
     """
-    if not a<x:
-        if not allclose(x,a):
+    if not a < x:
+        if not allclose(x, a):
            return False
 
-    if not x<b:
-        if not allclose(x,b):
+    if not x < b:
+        if not allclose(x, b):
             return False
     return True
 
@@ -30,26 +31,26 @@ def is_float_ranged(a, x, b):
 def printMatrix(A):
     msg = ''
     for row in A:
-        msg += ListPrint(row)+'\n'
+        msg += ListPrint(row) + '\n'
     return msg
 
 def ListPrint(listA):
-    if len(listA)==0:
+    if len(listA) == 0:
         return '[]'
 
     msg = '['
     for a in listA:
-        if isinstance(a,str):
-            msg += ' %s,' %(a)
-        elif isinstance(a,float):
-            msg += ' %-4.2f,' %(a)
-        elif isinstance(a,int):
-            msg += ' %g,' %(a)
+        if isinstance(a, str):
+            msg += ' %s,' % (a)
+        elif isinstance(a, float):
+            msg += ' %-4.2f,' % (a)
+        elif isinstance(a, int):
+            msg += ' %g,' % (a)
         else:
             try:
-                msg += ' %g,' %(a)
+                msg += ' %g,' % (a)
             except TypeError:
-                print("a = |%s|" %(a))
+                print("a = |%s|" % (a))
                 raise
 
     msg = msg[:-1]
@@ -99,7 +100,7 @@ def shepard_SMS_weight(n, nodes):
     """
     dists = []
     for nodei in nodes:
-        hi = distance(n,nodei)
+        hi = distance(n, nodei)
         dists.append(hi)
     R = min(dists)
 
@@ -145,7 +146,7 @@ def areaWeight(n, n1, n2, n3):
     Finds the weightings based on the barycentric coordinates weighted average method
     http://www.ems-i.com/smshelp/Data_Module/Interpolation/Inverse_Distance_Weighted.htm
     """
-    #a = area(n1, n2, n3)
+    a = area(n1, n2, n3)
     a1 = area(a, a2, a3)
     a2 = area(a, a1, a3)
     a3 = area(a, a1, a2)
@@ -156,7 +157,7 @@ def areaWeight(n, n1, n2, n3):
 
     x = b1 * x1 + b2 * x2 + b3 * x3
     #x = (a1 * x1 + a2 * x2 + a3 * x3) / a
-    return(w1, w2, w3)
+    return w1, w2, w3
 
 def get_triangle_weights(n, n1, n2, n3):
     """
@@ -165,9 +166,9 @@ def get_triangle_weights(n, n1, n2, n3):
     on the 3 nodes of a triangle
     """
     weights = shepard_weight(n, [n1, n2, n3])
-    (w1, w2, w3) = weights
-    #(w1, w2, w3) = areaWeight(n, n1, n2, n3)
-    return(w1, w2, w3)
+    w1, w2, w3 = weights
+    #w1, w2, w3 = areaWeight(n, n1, n2, n3)
+    return w1, w2, w3
 
 def Area(a, b):
     return 0.5 * norm(cross(a, b))
@@ -190,19 +191,19 @@ def AreaNormal(nodes):
     length = norm(vector)
     normal = vector / length
     area = 0.5 * length
-    if allclose(norm(normal), 1.) == False:
+    if not allclose(norm(normal), 1.):
         print("a = ", a)
         print("b = ", b)
         print("normal = ", normal)
         print("length = ", length)
         sys.exit('check...')
-    return (area,normal)
+    return area, normal
 
 def Triangle_AreaCentroidNormal(nodes):
     """Returns area,centroid,unitNormal"""
     (area, normal) = AreaNormal(nodes)
     centroid = Centroid(*nodes)
-    return (area, centroid, normal)
+    return area, centroid, normal
 
 def Normal(a, b):
     """finds the unit normal vector of 2 vectors"""
@@ -219,18 +220,21 @@ def Centroid(A, B, C):
 
 #------------------------------------------------------------------
 
-if __name__=='__main__':
-    n1 = array([0.,0.,0.])
-    n2 = array([1.,1.,1.])
-    n3 = array([1.,0.,0.])
-    n4 = array([5.,3.,0.])
-    n5 = array([2.,0.,4.])
+def main():
+    n1 = array([0., 0., 0.])
+    n2 = array([1., 1., 1.])
+    n3 = array([1., 0., 0.])
+    n4 = array([5., 3., 0.])
+    n5 = array([2., 0., 4.])
 
-    n2 = array([0.,1.,0.])
-    c1 = Centroid(n1,n2,n3)
-    n = Normal(n5,n2)
-    print("norm = ",n,norm(n))
+    n2 = array([0., 1., 0.])
+    c1 = Centroid(n1, n2, n3)
+    n = Normal(n5, n2)
+    print("norm = ", n, norm(n))
 
-    (area,centroid,normal) = Triangle_AreaCentroidNormal([n1,n2,n3])
-    print("area=%s centroid=%s normal=%s" %(area,centroid,normal))
+    area, centroid, normal = Triangle_AreaCentroidNormal([n1, n2, n3])
+    print("area=%s centroid=%s normal=%s" % (area, centroid, normal))
 
+
+if __name__ == '__main__':
+    main()

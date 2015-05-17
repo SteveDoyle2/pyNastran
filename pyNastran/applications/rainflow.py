@@ -1,6 +1,6 @@
+from __future__ import print_function
 # this needs some serious TLC
 
-import sys
 from six.moves import range
 from six import iteritems
 from numpy import where, array, vstack, savetxt, loadtxt
@@ -78,8 +78,8 @@ def ASTM_E1049_rainflow(stress_in):
         temp_stress = stress_in.pop(0)
         stress[i] = temp_stress
         if i > 1:
-            if ((stress[i] - stress[i-1] >= 0 and stress[i-1] - stress[i-2] >= 0) or
-                (stress[i] - stress[i-1] <= 0 and stress[i-1] - stress[i-2] <  0)):
+            if((stress[i] - stress[i-1] >= 0 and stress[i-1] - stress[i-2] >= 0) or
+               (stress[i] - stress[i-1] <= 0 and stress[i-1] - stress[i-2] < 0)):
                 del stress[i]
                 i -= 1
                 stress[i] = temp_stress
@@ -178,7 +178,7 @@ def rainflow_from_csv(input_csv, casenames, features,
         plt.figure(ifeature)
         legend = []
         for case_name, min_index, max_index in casenames:
-            csv_out = 'feature%i_%s_%s.csv'  %(ifeature, case_name, feature_name)
+            csv_out = 'feature%i_%s_%s.csv'  % (ifeature, case_name, feature_name)
             print(csv_out)
 
             stress_case = A[min_index:max_index, ifeature]
@@ -211,10 +211,10 @@ def rainflow_from_csv(input_csv, casenames, features,
 def main():
     input_csv = 'test.csv'
     n = 700
-    n1 = int(n/3)
+    n1 = n // 3
     casenames = {
-       ('normal',  0,  n1),
-       ('impulse',  n1,  n-1),
+       ('normal', 0, n1),
+       ('impulse', n1, n - 1),
     }
 
     import os

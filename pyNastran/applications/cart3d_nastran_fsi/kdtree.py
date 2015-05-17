@@ -41,12 +41,12 @@ class KdTree(object):
             raise RuntimeError(msg)
 
         nodes = []
-        for node_id,xyz in sorted(iteritems(pointsList)):
+        for node_id, xyz in sorted(iteritems(pointsList)):
             n = list(xyz) + [node_id]
             nodes.append(n)
-        self.tree = self.buildTree(nodes,nClose)
+        self.tree = self.buildTree(nodes, nClose)
 
-    def getCloseElementIDs(self,point):
+    def getCloseElementIDs(self, point):
         closeNodesDists = self.nNearestPoints(point, self.nClose)
         close_ids = []
         dists = []
@@ -57,12 +57,12 @@ class KdTree(object):
             dists.append(dist)
         return close_ids, dists
 
-    def buildTree(self,pointList, depth=0):
+    def buildTree(self, pointList, depth=0):
         if not pointList:
             return None
 
         # Select axis based on depth so that axis cycles through all valid values
-        k = len(pointList[0])-1 # Assumes all points have the same dimension, and that
+        k = len(pointList[0]) - 1 # Assumes all points have the same dimension, and that
         # the last element in a point is an identifier
         axis = depth % k
 
@@ -72,53 +72,55 @@ class KdTree(object):
 
         # Create node and construct subtrees
         node = Node()
-        node.location   = pointList[median]
-        node.leftChild  = self.buildTree(pointList[:median], depth+1)
+        node.location = pointList[median]
+        node.leftChild = self.buildTree(pointList[:median], depth+1)
         node.rightChild = self.buildTree(pointList[median+1:], depth+1)
         return node
 
-    def InCircle(self,p,q,radius):
+    def InCircle(self, p, q, radius):
         d = 0.
         for i in range(len(p)):
-            d = d+(p[i]-q[i])**2
-        if d<=radius**2:
+            d = d + (p[i] - q[i])**2
+        if d <= radius**2:
             return True
         return False
 
-    def Distance(self,p,q):
+    def Distance(self, p, q):
         d = 0.
         for i in range(len(p)):
-            d += (p[i]-q[i])**2
+            d += (p[i] - q[i])**2
         return d**0.5
 
-    def PointsInSphere(self,tree,p,radius,depth=0,ptlist=[]):
-        if depth==0:
+    def PointsInSphere(self, tree, p, radius, depth=0, ptlist=None):
+        if ptlist is None:
+            ptlist = []
+        if depth == 0:
             ptlist = []
 
         k = len(p)
-        axis = depth%k
-        distance = self.Distance(p,tree.location)
-        if distance<=radius:
-            ptlist.append((tree.location,distance))
+        axis = depth % k
+        distance = self.Distance(p, tree.location)
+        if distance <= radius:
+            ptlist.append((tree.location, distance))
         if tree.leftChild:
-            if tree.location[axis]>=p[axis]-radius:
-                self.PointsInSphere(tree.leftChild,p,radius,depth+1,ptlist)
+            if tree.location[axis] >= p[axis] - radius:
+                self.PointsInSphere(tree.leftChild, p, radius, depth + 1, ptlist)
         if tree.rightChild:
-            if tree.location[axis]<=p[axis]+radius:
-                self.PointsInSphere(tree.rightChild,p,radius,depth+1,ptlist)
+            if tree.location[axis] <= p[axis] + radius:
+                self.PointsInSphere(tree.rightChild, p, radius, depth + 1, ptlist)
         return ptlist
 
-    def nNearestPoints(self,p,n):
+    def nNearestPoints(self, p, n):
         tree = self.tree
         ptlist = None
         self.radius_guess = 0.
         npts = 0
-        while npts<n:
-            if self.radius_guess>0.:
-                self.radius_guess = self.radius_guess*2.
+        while npts < n:
+            if self.radius_guess > 0.:
+                self.radius_guess = self.radius_guess * 2.
             else:
                 self.radius_guess = 0.001
-            ptlist = self.PointsInSphere(tree,p,self.radius_guess)
+            ptlist = self.PointsInSphere(tree, p, self.radius_guess)
             npts = len(ptlist)
         ptlist.sort(key=lambda x: x[1])
         self.radius_guess = ptlist[n-1][1]

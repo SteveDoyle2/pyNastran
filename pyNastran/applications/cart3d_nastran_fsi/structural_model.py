@@ -1,3 +1,4 @@
+from __future__ import print_function
 from model import Model
 
 from pyNastran.bdf.field_writer_8 import print_card
@@ -17,9 +18,9 @@ class StructuralModel(Model):
         if self.debug:
             print("*StructuralModel.init")
         self.fem = fem
-        #nodes    = fem.getNodes()
+        #nodes = fem.getNodes()
         #elements = fem.getElements()
-        nodeIDs    = fem.nodeIDs()
+        nodeIDs = fem.nodeIDs()
         elementIDs = fem.elementIDs()
 
         self.nNodes = len(nodeIDs)
@@ -36,11 +37,11 @@ class StructuralModel(Model):
     def get_element_properties(self, eid):
         """Returns area, centroid, normal"""
         e = self.fem.Element(eid)
-        (area, centroid, normal) = e.AreaCentroidNormal()
-        return (area, centroid, normal)
+        area, centroid, normal = e.AreaCentroidNormal()
+        return area, centroid, normal
 
     def ElementIDs(self):
-        #(elements, eids) = getElementsWithPIDs(self,properties)
+        #(elements, eids) = getElementsWithPIDs(self, properties)
         eids = self.fem.elementIDs()
         return eids
 
@@ -65,7 +66,7 @@ class StructuralModel(Model):
         e = self.fem.Element(eid)
         nodes = []
         for n in e.nodes:
-             nodes.append(n.Position())
+            nodes.append(n.Position())
         return nodes
 
     def Centroid(self, eid):
@@ -76,8 +77,8 @@ class StructuralModel(Model):
 
     def Centroid_Area(self, eid, nodes):
         e = self.fem.Element(eid)
-        raise Exception('not implemented')
-        return (centroid, area)
+        raise NotImplementedError('not implemented')
+        #return centroid, area
 
     def Area(self, eid):
         nodes = self.fem.nodes

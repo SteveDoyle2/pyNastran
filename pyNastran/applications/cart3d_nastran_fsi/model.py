@@ -2,7 +2,7 @@ class Model(object):
     def __init__(self):
         pass
 
-    def getNodeIDLocations(self,nIDs):
+    def getNodeIDLocations(self, nIDs):
         nodes = []
         for nid in nIDs:
             node = self.Node(nid)
@@ -15,5 +15,5 @@ class Model(object):
     def NodeIDs(self):
         raise NotImplementedError('overwrite this method...')
 
-    def Node(self,nid):
+    def Node(self, nid):
         raise NotImplementedError('overwrite this method...')

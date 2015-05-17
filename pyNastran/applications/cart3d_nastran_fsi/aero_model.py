@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import range
 from model import Model
 from numpy import array, cross, ndarray
@@ -73,7 +74,7 @@ class AeroModel(Model):
 
             eidi = eid + 1
             if centroid is not None:
-                assert len(centroid)==3, "eid=%s centroid=%s n1=%s n2=%s n3=%s" %(eidi, centroid, n1, n2, n3)
+                assert len(centroid) == 3, "eid=%s centroid=%s n1=%s n2=%s n3=%s" % (eidi, centroid, n1, n2, n3)
 
             self.areas[eidi] = area
             self.centroids[eidi] = centroid
@@ -132,24 +133,24 @@ class AeroModel(Model):
 
         nodes = self.get_element_nodes(eid)
         #print("nodes[%s]=%s" % (eid, nodes))
-        (area, normal) = AreaNormal(nodes)
+        area, normal = AreaNormal(nodes)
         return area
 
     def Normal(self, eid):
         return self.normals[eid]
 
         nodes = self.get_element_nodes(eid)
-        (area, normal) = AreaNormal(nodes)
+        area, normal = AreaNormal(nodes)
         return normal
 
-    def area_normal_centroid(self,eid):
+    def area_normal_centroid(self, eid):
         area = self.areas[eid]
         normal = self.normals[eid]
         centroid = self.centroids[eid]
 
         #nodes = self.get_element_nodes(eid)
-        #(area, normal, centroid) = Triangle_AreaNormalCentroid(nodes)
-        return (area, normal, centroid)
+        #area, normal, centroid = Triangle_AreaNormalCentroid(nodes)
+        return area, normal, centroid
 
     def NodeIDs(self):
         nNodes = self.nNodes()
@@ -168,17 +169,17 @@ class AeroModel(Model):
 
     def get_element_node_ids(self, eid):
         e = self.Element(eid)
-        (nid1, nid2, nid3) = e
-        return (nid1, nid2, nid3)
+        nid1, nid2, nid3 = e
+        return nid1, nid2, nid3
 
     def get_element_nodes(self, eid):
-        (nid1, nid2, nid3) = self.get_element_node_ids(eid)
+        nid1, nid2, nid3 = self.get_element_node_ids(eid)
         n1 = self.Node(nid1)
         n2 = self.Node(nid2)
         n3 = self.Node(nid3)
         #print("nids[%s] = %s %s %s" %(eid, nid1, nid2, nid3))
         #print("n[%s]=%s n[%s]=%s n[%s]=%s\n" %(nid1, n1, nid2, n2, nid3, n3))
-        return (n1, n2, n3)
+        return n1, n2, n3
 
     def get_element_properties(self, eid):
         """

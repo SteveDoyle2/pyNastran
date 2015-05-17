@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip
 from math import sqrt, log10
@@ -8,7 +9,7 @@ from pyNastran.op2.op2 import OP2
 
 
 class MarginChecker(object):
-    def __init__(self, filenames=['fem.bdf'], subcases=[1], IDs=[None]):
+    def __init__(self, filenames=None, subcases=None, IDs=None):
         """
         Performs load case combination for:
         @param filenames  list of filenames that the subcase result will come from
@@ -45,6 +46,13 @@ class MarginChecker(object):
              caseNames = ['Case1','Case2']  # only for VM``
         @endcode
         """
+        if filenames is None:
+            filenames = ['fem.bdf']
+        if subcases is None:
+            subcases = [1]
+        if IDs is None:
+            IDs = [None]
+
         self.filenames = filenames
         self.subcases = subcases
         self.IDs = IDs
@@ -73,8 +81,8 @@ class MarginChecker(object):
             #self.solidStressResults[fname] = None
             #self.plateStressResults[fname] =
 
-        #print "self.subcases2 = ",self.subcases
-        for (fname, subcaseID, ID) in zip(self.filenames, self.subcases, self.IDs):
+        #print('self.subcases2 = ', self.subcases)
+        for fname, subcaseID, ID in zip(self.filenames, self.subcases, self.IDs):
             self.cases[fname].append(subcaseID)
 
         for key in self.cases:
@@ -89,7 +97,7 @@ class MarginChecker(object):
 
             op2 = OP2(debug=False)
             op2.set_subcases(subcaseList)
-            op2.read_op2(fname)
+            op2.read_op2(fname, vectorized=False)
 
             for subcaseID in subcaseList:
                 print("subcaseID = %s" % subcaseID)
@@ -159,7 +167,7 @@ class MarginChecker(object):
                     deflect = self.displacementResults[jfact]
                     trans = deflect.translations[nid] * factor
                     deflection += trans
-                #print("deflection[%s][%s][%s] = %s" % (icase,jfact,nid,str(deflection)))
+                #print("deflection[%s][%s][%s] = %s" % (icase, jfact, nid, str(deflection)))
                 deflectionDict[icase][nid] = deflection
 
         deflectionMargin = {}
@@ -180,7 +188,7 @@ class MarginChecker(object):
             print("case=%-6s minMargin[%s] = %g" % (
                 self.caseNames[case], nid, minMargin))
 
-    def check_von_mises(self, vmFactors=[[1.]], caseNames=['Case1'], Fty=100.):
+    def check_von_mises(self, vmFactors=None, caseNames=None, Fty=100.):
         r"""
         currently only handles von mises stress for solid elements...
         @param self the object pointer
@@ -191,6 +199,10 @@ class MarginChecker(object):
         \f[ \sigma_v^2 = \tfrac{1}{2}[(\sigma_{11} - \sigma_{22})^2 + (\sigma_{22} - \sigma_{33})^2 + (\sigma_{11} - \sigma_{33})^2 + 6(\sigma_{23}^2 + \sigma_{31}^2 + \sigma_{12}^2)]  \f]
         \f[ \sigma_v   = \sqrt{\frac{(\sigma_1 - \sigma_2)^2 + (\sigma_2 - \sigma_3)^2 + (\sigma_1 - \sigma_3)^2 } {2}} \f]
         """
+        if vmFactors is None:
+            vmFactors = [[1.]]
+        if caseNames is None:
+            caseNames = ['Case1']
         self.vmFactors = vmFactors
         self.caseNames = caseNames
         self.Fty = Fty  # ksi
@@ -395,8 +407,8 @@ class MarginChecker(object):
         Se = 0.5 * Sut  # ksi
         a = (0.9 * Sut) * 2 / Se
         b = -(log10(0.9 * Sut / Se)) / 3.
-        #logSf = log10(a) + b*log10(N)
-        #logN = (logSf-log10(a) )/b
+        #logSf = log10(a) + b * log10(N)
+        #logN = (logSf - log10(a) )/b
         Ncycles = 10. ** logN
 
         return Ncycles

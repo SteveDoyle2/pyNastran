@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 from six import iteritems
@@ -35,9 +36,9 @@ def validate_inputs(inputs):
 
 
 def load_inputs():
-    basepath    = os.path.normpath(os.getcwd())
-    configpath  = os.path.join(basepath, 'inputs')
-    workpath    = os.path.join(basepath, 'outputsFinal')
+    basepath = os.path.normpath(os.getcwd())
+    configpath = os.path.join(basepath, 'inputs')
+    workpath = os.path.join(basepath, 'outputsFinal')
 
     log.info("basepath = %s" % basepath)
     print("os.getcwd() = %s" % os.getcwd())
@@ -78,13 +79,13 @@ def run_mapping():
     print("structural_call = %r" % structural_call)
 
     # load mapping
-    cart3dLoads = os.path.join(workpath,  'Cart3d_35000_0.825_10_0_0_0_0.i.triq')
-    bdfModel    = os.path.join(configpath,'aeroModel_mod.bdf')
-    bdfModelOut = os.path.join(workpath,  'fem_loads_3.bdf')
+    cart3dLoads = os.path.join(workpath, 'Cart3d_35000_0.825_10_0_0_0_0.i.triq')
+    bdfModel = os.path.join(configpath, 'aeroModel_mod.bdf')
+    bdfModelOut = os.path.join(workpath, 'fem_loads_3.bdf')
     # mappingMatrix.new.out - stored in workpath
 
     # deflection mapping
-    cart3dGeom  = os.path.join(configpath, 'Cart3d_bwb.i.tri')
+    cart3dGeom = os.path.join(configpath, 'Cart3d_bwb.i.tri')
     cart3dGeom2 = os.path.join(workpath, 'Components.i.tri')
     bdf = os.path.join(workpath, 'fem3.bdf')
     #op2 = os.path.join(workpath, 'fem3.op2')
@@ -97,7 +98,12 @@ def run_mapping():
     os.chdir(workpath)
     copyFile(cart3dGeom, 'Components.i.tri')
 
-    nodeList = [20037, 21140, 21787, 21028, 1151, 1886, 2018, 1477, 1023, 1116, 1201, 1116, 1201, 1828, 2589, 1373, 1315, 1571, 1507, 1532, 1317, 1327, 2011, 1445, 2352, 1564, 1878, 1402, 1196, 1234, 1252, 1679, 1926, 1274, 2060, 2365, 21486, 20018, 20890, 20035, 1393, 2350, 1487, 1530, 1698, 1782]
+    nodeList = [
+        20037, 21140, 21787, 21028, 1151, 1886, 2018, 1477, 1023, 1116, 1201,
+        1116, 1201, 1828, 2589, 1373, 1315, 1571, 1507, 1532, 1317, 1327, 2011,
+        1445, 2352, 1564, 1878, 1402, 1196, 1234, 1252, 1679, 1926, 1274, 2060,
+        2365, 21486, 20018, 20890, 20035, 1393, 2350, 1487, 1530, 1698, 1782
+    ]
     outfile = open('convergeDeflections.out', 'ab')
 
     maxADeflectionOld = 0.
@@ -115,7 +121,7 @@ def run_mapping():
             assert failFlag == 0, 'Cart3d ./COMMAND failed on iteration #%s' % i
             moveFile('Components.i.triq', cart3dLoads)
             copyFile(cart3dLoads, cart3dLoads+strI)
-            copyFile('forces.dat',  'forces.dat'  + strI)
+            copyFile('forces.dat', 'forces.dat' + strI)
             copyFile('moments.dat', 'moments.dat' + strI)
             copyFile('loadsCC.dat', 'loadsCC.dat' + strI)
             copyFile('history.dat', 'history.dat' + strI)
@@ -139,8 +145,10 @@ def run_mapping():
         #(wA, wS) = run_map_deflections(nodeList, bdf, op2, cart3dGeom, cart3dGeom2, log=log)
         assert os.path.exists('Components.i.tri')
 
-        os.remove(bdfModelOut) # cleans up fem_loads.bdf
-        if 0:  # disabled b/c nastran isn't on this computer
+        # cleans up fem_loads.bdf
+        os.remove(bdfModelOut)
+        if 0:
+            # disabled b/c nastran isn't on this computer
             os.remove(op2) # verifies new fem3.op2 was created
             os.remove(f06) # verifies new fem3.f06 was created
 
@@ -148,13 +156,13 @@ def run_mapping():
         (maxAID, maxADeflection) = maxDict(wA)
         maxSID = '???'
         maxADeflection = wA[maxAID]
-        maxSDeflection = max(wS)[0,0]
+        maxSDeflection = max(wS)[0, 0]
         log.info(     "AERO      - i=%s maxAID=%s maxADeflection=%s"   % (i, maxAID, maxADeflection))
         log.info(     "STRUCTURE - i=%s maxSID=%s maxSDeflection=%s"   % (i, maxSID, maxSDeflection))
         outfile.write("AERO      - i=%s maxAID=%s maxADeflection=%s\n" % (i, maxAID, maxADeflection))
         outfile.write("STRUCTURE - i=%s maxSID=%s maxSDeflection=%s\n" % (i, maxSID, maxSDeflection))
 
-        msg  = '\n'+'*'*80+'\n'
+        msg = '\n'+'*'*80 + '\n'
         msg += 'finished iteration #%s\n' %(i)
         msg += '*'*80+'\n'
         log.info(msg)
@@ -180,7 +188,7 @@ def maxDict(dictA):
 
 def moveFile(a, b):
     assert a != b, 'a=b=True  a=%r b=%r' % (a, b)
-    assert os.path.exists(a),'fileA=%s does not exist...' % a
+    assert os.path.exists(a), 'fileA=%s does not exist...' % a
     if os.path.exists(b):
         os.remove(b)
     shutil.move(a, b)
@@ -188,14 +196,14 @@ def moveFile(a, b):
 
 
 def copyFile(a, b):
-    assert a!=b, 'a=b=True  a=%r b=%r' % (a, b)
-    assert os.path.exists(a),'fileA=%r does not exist...' % a
+    assert a != b, 'a=b=True  a=%r b=%r' % (a, b)
+    assert os.path.exists(a), 'fileA=%r does not exist...' % a
     if os.path.exists(b):
         os.remove(b)
     shutil.copyfile(a, b)
     assert os.path.exists(b), 'fileB=%r was not copied...' % b
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     run_mapping()
 
