@@ -47,5 +47,5 @@ class Element(VectorizedCard):
             assert min(element_id) > 0, element_id
         else:
             assert element_id.min() > 0, element_id
-        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
+        i = self._get_sorted_index(self.element_id, element_id, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
         return i

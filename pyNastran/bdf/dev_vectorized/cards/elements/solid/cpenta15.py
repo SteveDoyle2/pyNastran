@@ -144,8 +144,8 @@ class CPENTA15(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_bdf(self, f, size=8, element_id=None):
-        self.model.log.debug('CPENTA15.write_bdf; n=%s' % self.n)
+    def write_card(self, f, size=8, element_id=None):
+        self.model.log.debug('CPENTA15.write_card; n=%s' % self.n)
         if self.n:
             if element_id is None:
                 i = arange(self.n)

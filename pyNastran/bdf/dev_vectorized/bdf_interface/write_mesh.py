@@ -107,7 +107,7 @@ class WriteMesh(object):
         self._write_nodes(outfile, size, is_double)
 
         self.write_elements_properties(outfile, size, is_double, interspersed)
-        self.materials.write_bdf(outfile, size, is_double)
+        self.materials.write_card(outfile, size, is_double)
         self._write_common(outfile, size, is_double)
 
         #self._write_constraints(outfile, size)
@@ -208,7 +208,7 @@ class WriteMesh(object):
             f.write('$MISSING_ELEMENTS because there are no properties\n')
             for t in etypes:
                 #print "t.type =", t.type
-                t.write_bdf(f, size=size)
+                t.write_card(f, size=size)
             return
 
         # there are properties
@@ -262,7 +262,7 @@ class WriteMesh(object):
                 for t in ptypes:
                     if t.n and pid in t.property_id:
                         self.model.log.debug("prop.type = %s" % t.type)
-                        t.write_bdf(f, size=size, property_ids=[pid])
+                        t.write_card(f, size=size, property_ids=[pid])
                         pids_set.remove(pid)
                 n = 0
                 for t in etypes:
@@ -284,7 +284,7 @@ class WriteMesh(object):
                     else:
                         continue
                     try:
-                        t.write_bdf(f, size=size, element_ids=eids3)
+                        t.write_card(f, size=size, element_ids=eids3)
                     except TypeError:
                         print("t.type = %s" % t.type)
                         raise
@@ -300,15 +300,15 @@ class WriteMesh(object):
             for pid in pids_list:
                 for t in ptypes:
                     if t.n and pid in t.property_id:
-                        t.write_bdf(f, size=size, property_ids=[pid])
+                        t.write_card(f, size=size, property_ids=[pid])
 
         #.. todo:: finish...
         f.write('$UNASSOCIATED_ELEMENTS\n')
         # missing elements...
 
     def write_elements_properties(self, f, size, is_double, interspersed):
-        self.elements.write_bdf(f, size=size, is_double=is_double,
-                                include_properties=True, interspersed=interspersed)
+        self.elements.write_card(f, size=size, is_double=is_double,
+                                 include_properties=True, interspersed=interspersed)
 
     def _write_aero(self, outfile, size, is_double):
         """Writes the aero cards"""
@@ -316,38 +316,38 @@ class WriteMesh(object):
             #or self.paeros or self.trims):
             #msg = ['$AERO\n']
             #for (unused_id, caero) in sorted(iteritems(self.caeros)):
-                #msg.append(caero.write_bdf(size, card_writer))
+                #msg.append(caero.write_card(size, card_writer))
             #for (unused_id, paero) in sorted(iteritems(self.paeros)):
-                #msg.append(paero.write_bdf(size, card_writer))
+                #msg.append(paero.write_card(size, card_writer))
             #for (unused_id, spline) in sorted(iteritems(self.splines)):
-                #msg.append(spline.write_bdf(size, card_writer))
+                #msg.append(spline.write_card(size, card_writer))
             #for (unused_id, trim) in sorted(iteritems(self.trims)):
-                #msg.append(trim.write_bdf(size, card_writer))
+                #msg.append(trim.write_card(size, card_writer))
 
             #for (unused_id, aero) in sorted(iteritems(self.aero)):
-                #msg.append(aero.write_bdf(size, card_writer))
+                #msg.append(aero.write_card(size, card_writer))
             #for (unused_id, aero) in sorted(iteritems(self.aeros)):
-                #msg.append(aero.write_bdf(size, card_writer))
+                #msg.append(aero.write_card(size, card_writer))
 
             #for (unused_id, gust) in sorted(iteritems(self.gusts)):
-                #msg.append(gust.write_bdf(size, card_writer))
+                #msg.append(gust.write_card(size, card_writer))
             #outfile.write(''.join(msg))
 
-        #self.paero.write_bdf(f, size)
-        #self.caero.write_bdf(f, size)
+        #self.paero.write_card(f, size)
+        #self.caero.write_card(f, size)
         #for key, trim in sorted(iteritems(self.trim)):
-            #trim.write_bdf(f, size)
-        self.aero.write_bdf(outfile, size, is_double)
-        self.aeros.write_bdf(outfile, size, is_double)
-        self.caero1.write_bdf(outfile, size, is_double)
-        self.paero1.write_bdf(outfile, size, is_double)
-        self.spline1.write_bdf(outfile, size, is_double)
+            #trim.write_card(f, size)
+        self.aero.write_card(outfile, size, is_double)
+        self.aeros.write_card(outfile, size, is_double)
+        self.caero1.write_card(outfile, size, is_double)
+        self.paero1.write_card(outfile, size, is_double)
+        self.spline1.write_card(outfile, size, is_double)
 
-        #self.caero2.write_bdf(f, size, is_double)
-        #self.paero2.write_bdf(f, size, is_double)
+        #self.caero2.write_card(f, size, is_double)
+        #self.paero2.write_card(f, size, is_double)
 
-        #self.caero3.write_bdf(f, size, is_double)
-        #self.paero3.write_bdf(f, size, is_double)
+        #self.caero3.write_card(f, size, is_double)
+        #self.paero3.write_card(f, size, is_double)
 
     def _write_aero_control(self, outfile, size, card_writer):
         """Writes the aero control surface cards"""
@@ -356,18 +356,18 @@ class WriteMesh(object):
             msg = ['$AERO CONTROL SURFACES\n']
             for (unused_id, aelinks) in sorted(iteritems(self.aelinks)):
                 for aelink in aelinks:
-                    msg.append(aelink.write_bdf(size, card_writer))
+                    msg.append(aelink.write_card(size, card_writer))
             for (unused_id, aeparam) in sorted(iteritems(self.aeparams)):
-                msg.append(aeparam.write_bdf(size, card_writer))
+                msg.append(aeparam.write_card(size, card_writer))
             for (unused_id, aestat) in sorted(iteritems(self.aestats)):
-                msg.append(aestat.write_bdf(size, card_writer))
+                msg.append(aestat.write_card(size, card_writer))
 
             for (unused_id, aelist) in sorted(iteritems(self.aelists)):
-                msg.append(aelist.write_bdf(size, card_writer))
+                msg.append(aelist.write_card(size, card_writer))
             for (unused_id, aesurf) in sorted(iteritems(self.aesurfs)):
-                msg.append(aesurf.write_bdf(size, card_writer))
+                msg.append(aesurf.write_card(size, card_writer))
             for (unused_id, aefact) in sorted(iteritems(self.aefacts)):
-                msg.append(aefact.write_bdf(size, card_writer))
+                msg.append(aefact.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_common(self, outfile, size, is_double):
@@ -380,8 +380,8 @@ class WriteMesh(object):
         is_double = False
         self._write_rigid_elements(outfile, size, is_double)
         #self._write_dmigs(outfile, size, card_writer)
-        self.loads.write_bdf(outfile, size, is_double, sort_data=False)
-        self.temps.write_bdf(outfile, size, is_double, sort_data=False)
+        self.loads.write_card(outfile, size, is_double, sort_data=False)
+        self.temps.write_card(outfile, size, is_double, sort_data=False)
 
         #self._write_dynamic(outfile, size, card_writer)
         self._write_aero(outfile, size, is_double)
@@ -421,7 +421,7 @@ class WriteMesh(object):
                     for t in types:
                         for constraint_id, constraint in sorted(iteritems(t)):
                             if ID == constraint_id:
-                                constraint.write_bdf(f, size=size)
+                                constraint.write_card(f, size=size)
 
     def _write_contact(self, outfile, size, card_writer):
         """Writes the contact cards sorted by ID"""
@@ -429,23 +429,23 @@ class WriteMesh(object):
             or self.bsurf or self.bsurfs):
             msg = ['$CONTACT\n']
             for (unused_id, bcrpara) in sorted(iteritems(self.bcrparas)):
-                msg.append(bcrpara.write_bdf(size, card_writer))
+                msg.append(bcrpara.write_card(size, card_writer))
             for (unused_id, bctadds) in sorted(iteritems(self.bctadds)):
-                msg.append(bctadds.write_bdf(size, card_writer))
+                msg.append(bctadds.write_card(size, card_writer))
             for (unused_id, bctpara) in sorted(iteritems(self.bctparas)):
-                msg.append(bctpara.write_bdf(size, card_writer))
+                msg.append(bctpara.write_card(size, card_writer))
 
             for (unused_id, bctset) in sorted(iteritems(self.bctsets)):
-                msg.append(bctset.write_bdf(size, card_writer))
+                msg.append(bctset.write_card(size, card_writer))
             for (unused_id, bsurfi) in sorted(iteritems(self.bsurf)):
-                msg.append(bsurfi.write_bdf(size, card_writer))
+                msg.append(bsurfi.write_card(size, card_writer))
             for (unused_id, bsurfsi) in sorted(iteritems(self.bsurfs)):
-                msg.append(bsurfsi.write_bdf(size, card_writer))
+                msg.append(bsurfsi.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_coords(self, outfile, size, is_double):
         """Writes the coordinate cards in a sorted order"""
-        self.coords.write_bdf(outfile, size, is_double)
+        self.coords.write_card(outfile, size, is_double)
 
     def _write_dmigs(self, outfile, size, card_writer):
         """
@@ -457,15 +457,15 @@ class WriteMesh(object):
         """
         msg = []
         for (unused_name, dmig) in sorted(iteritems(self.dmigs)):
-            msg.append(dmig.write_bdf(size, card_writer))
+            msg.append(dmig.write_card(size, card_writer))
         for (unused_name, dmi) in sorted(iteritems(self.dmis)):
-            msg.append(dmi.write_bdf(size, card_writer))
+            msg.append(dmi.write_card(size, card_writer))
         for (unused_name, dmij) in sorted(iteritems(self.dmijs)):
-            msg.append(dmij.write_bdf(size, card_writer))
+            msg.append(dmij.write_card(size, card_writer))
         for (unused_name, dmiji) in sorted(iteritems(self.dmijis)):
-            msg.append(dmiji.write_bdf(size, card_writer))
+            msg.append(dmiji.write_card(size, card_writer))
         for (unused_name, dmik) in sorted(iteritems(self.dmiks)):
-            msg.append(dmik.write_bdf(size, card_writer))
+            msg.append(dmik.write_card(size, card_writer))
         outfile.write(''.join(msg))
 
     def _write_dynamic(self, outfile, size, card_writer):
@@ -474,21 +474,21 @@ class WriteMesh(object):
             self.cMethods or self.tsteps or self.tstepnls):
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
-                msg.append(method.write_bdf(size, card_writer))
+                msg.append(method.write_card(size, card_writer))
             for (unused_id, cMethod) in sorted(iteritems(self.cMethods)):
-                msg.append(cMethod.write_bdf(size, card_writer))
+                msg.append(cMethod.write_card(size, card_writer))
             for (unused_id, darea) in sorted(iteritems(self.dareas)):
-                msg.append(darea.write_bdf(size, card_writer))
+                msg.append(darea.write_card(size, card_writer))
             for (unused_id, nlparm) in sorted(iteritems(self.nlparms)):
-                msg.append(nlparm.write_bdf(size, card_writer))
+                msg.append(nlparm.write_card(size, card_writer))
             for (unused_id, nlpci) in sorted(iteritems(self.nlpcis)):
-                msg.append(nlpci.write_bdf(size, card_writer))
+                msg.append(nlpci.write_card(size, card_writer))
             for (unused_id, tstep) in sorted(iteritems(self.tsteps)):
-                msg.append(tstep.write_bdf(size, card_writer))
+                msg.append(tstep.write_card(size, card_writer))
             for (unused_id, tstepnl) in sorted(iteritems(self.tstepnls)):
-                msg.append(tstepnl.write_bdf(size, card_writer))
+                msg.append(tstepnl.write_card(size, card_writer))
             for (unused_id, freq) in sorted(iteritems(self.frequencies)):
-                msg.append(freq.write_bdf(size, card_writer))
+                msg.append(freq.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_flutter(self, outfile, size, card_writer):
@@ -497,11 +497,11 @@ class WriteMesh(object):
             msg = ['$FLUTTER\n']
             for (unused_id, flfact) in sorted(iteritems(self.flfacts)):
                 #if unused_id != 0:
-                msg.append(flfact.write_bdf(size, card_writer))
+                msg.append(flfact.write_card(size, card_writer))
             for (unused_id, flutter) in sorted(iteritems(self.flutters)):
-                msg.append(flutter.write_bdf(size, card_writer))
+                msg.append(flutter.write_card(size, card_writer))
             for mkaero in self.mkaeros:
-                msg.append(mkaero.write_bdf(size, card_writer))
+                msg.append(mkaero.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_masses(self, outfile, size, card_writer):
@@ -513,19 +513,19 @@ class WriteMesh(object):
 
         :param self: the BDF object
         """
-        self.grdset.write_bdf(f, size=size, is_double=is_double)
-        self.grid.write_bdf(f, size=size, is_double=is_double)
-        self.point.write_bdf(f, size=size, is_double=is_double)
-        self.epoint.write_bdf(f, size=size, is_double=is_double)
-        self.spoint.write_bdf(f, size=size, is_double=is_double)
-        self.pointax.write_bdf(f, size=size, is_double=is_double)
+        self.grdset.write_card(f, size=size, is_double=is_double)
+        self.grid.write_card(f, size=size, is_double=is_double)
+        self.point.write_card(f, size=size, is_double=is_double)
+        self.epoint.write_card(f, size=size, is_double=is_double)
+        self.spoint.write_card(f, size=size, is_double=is_double)
+        self.pointax.write_card(f, size=size, is_double=is_double)
 
     def _write_nonlinear(self, f, size):
         for key, card in sorted(iteritems(self.nlparm)):
-            card.write_bdf(f, size)
+            card.write_card(f, size)
         for key, card in sorted(iteritems(self.nlpci)):
-            card.write_bdf(f, size)
-        #self.tables1.write_bdf(f, size)
+            card.write_card(f, size)
+        #self.tables1.write_card(f, size)
 
     def _write_optimization(self, outfile, size, card_writer):
         """Writes the optimization cards sorted by ID"""
@@ -534,23 +534,23 @@ class WriteMesh(object):
             or self.ddvals):
             msg = ['$OPTIMIZATION\n']
             for (unused_id, dconstr) in sorted(iteritems(self.dconstrs)):
-                msg.append(dconstr.write_bdf(size, card_writer))
+                msg.append(dconstr.write_card(size, card_writer))
             for (unused_id, desvar) in sorted(iteritems(self.desvars)):
-                msg.append(desvar.write_bdf(size, card_writer))
+                msg.append(desvar.write_card(size, card_writer))
             for (unused_id, ddval) in sorted(iteritems(self.ddvals)):
-                msg.append(ddval.write_bdf(size, card_writer))
+                msg.append(ddval.write_card(size, card_writer))
             for (unused_id, dlink) in sorted(iteritems(self.dlinks)):
-                msg.append(dlink.write_bdf(size, card_writer))
+                msg.append(dlink.write_card(size, card_writer))
             for (unused_id, dresp) in sorted(iteritems(self.dresps)):
-                msg.append(dresp.write_bdf(size, card_writer))
+                msg.append(dresp.write_card(size, card_writer))
             for (unused_id, dvmrel) in sorted(iteritems(self.dvmrels)):
-                msg.append(dvmrel.write_bdf(size, card_writer))
+                msg.append(dvmrel.write_card(size, card_writer))
             for (unused_id, dvprel) in sorted(iteritems(self.dvprels)):
-                msg.append(dvprel.write_bdf(size, card_writer))
+                msg.append(dvprel.write_card(size, card_writer))
             for (unused_id, equation) in sorted(iteritems(self.dequations)):
                 msg.append(str(equation))
             if self.doptprm is not None:
-                msg.append(self.doptprm.write_bdf(size, card_writer))
+                msg.append(self.doptprm.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_params(self, outfile, size, is_double):
@@ -562,7 +562,7 @@ class WriteMesh(object):
         if self.params:
             msg = ['$PARAMS\n']
             for (unused_key, param) in sorted(iteritems(self.params)):
-                msg.append(param.write_bdf(size))
+                msg.append(param.write_card(size))
             outfile.write(''.join(msg))
 
     def _write_rejects(self, outfile, size):
@@ -601,8 +601,8 @@ class WriteMesh(object):
 
     def _write_rigid_elements(self, outfile, size, is_double):
         """Writes the rigid elements in a sorted order"""
-        self.rbe2.write_bdf(outfile, size, is_double)
-        self.rbe3.write_bdf(outfile, size, is_double)
+        self.rbe2.write_card(outfile, size, is_double)
+        self.rbe3.write_card(outfile, size, is_double)
 
     def _write_sets(self, outfile, size, card_writer):
         """Writes the SETx cards sorted by ID"""
@@ -610,17 +610,17 @@ class WriteMesh(object):
             self.csets or self.qsets):
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
-                msg.append(set_obj.write_bdf(size, card_writer))
+                msg.append(set_obj.write_card(size, card_writer))
             for set_obj in self.asets:  # list
-                msg.append(set_obj.write_bdf(size, card_writer))
+                msg.append(set_obj.write_card(size, card_writer))
             for set_obj in self.bsets:  # list
-                msg.append(set_obj.write_bdf(size, card_writer))
+                msg.append(set_obj.write_card(size, card_writer))
             for set_obj in self.csets:  # list
-                msg.append(set_obj.write_bdf(size, card_writer))
+                msg.append(set_obj.write_card(size, card_writer))
             for set_obj in self.qsets:  # list
-                msg.append(set_obj.write_bdf(size, card_writer))
+                msg.append(set_obj.write_card(size, card_writer))
             for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
-                msg.append(set_obj.write_bdf(size, card_writer))
+                msg.append(set_obj.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_tables(self, outfile, size, card_writer):
@@ -628,13 +628,13 @@ class WriteMesh(object):
         if self.tables:
             msg = ['$TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.tables)):
-                msg.append(table.write_bdf(size, card_writer))
+                msg.append(table.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
         if self.randomTables:
             msg = ['$RANDOM TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.randomTables)):
-                msg.append(table.write_bdf(size, card_writer))
+                msg.append(table.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_thermal(self, outfile, size, card_writer):
@@ -645,17 +645,17 @@ class WriteMesh(object):
             msg = ['$THERMAL\n']
 
             for (unused_key, phbdy) in sorted(iteritems(self.phbdys)):
-                msg.append(phbdy.write_bdf(size, card_writer))
+                msg.append(phbdy.write_card(size, card_writer))
 
             #for unused_key, prop in sorted(iteritems(self.thermalProperties)):
             #    msg.append(str(prop))
             for (unused_key, prop) in sorted(iteritems(self.convectionProperties)):
-                msg.append(prop.write_bdf(size, card_writer))
+                msg.append(prop.write_card(size, card_writer))
 
             # BCs
             for (unused_key, bcs) in sorted(iteritems(self.bcs)):
                 for bc in bcs:  # list
-                    msg.append(bc.write_bdf(size, card_writer))
+                    msg.append(bc.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_thermal_materials(self, outfile, size, card_writer):
@@ -663,6 +663,6 @@ class WriteMesh(object):
         if self.thermalMaterials:
             msg = ['$THERMAL MATERIALS\n']
             for (mid, material) in sorted(iteritems(self.thermalMaterials)):
-                msg.append(material.write_bdf(size, card_writer))
+                msg.append(material.write_card(size, card_writer))
             outfile.write(''.join(msg))
 

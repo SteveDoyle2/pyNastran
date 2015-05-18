@@ -116,7 +116,7 @@ class FORCE(object):
             msg.append('  %-8s: %i' % ('FORCE', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, is_double=False, load_id=None):
+    def write_card(self, f, size=8, is_double=False, load_id=None):
         if self.n:
             if load_id is None:
                 for (lid, nid, cid, mag, xyz) in zip(
@@ -141,5 +141,5 @@ class FORCE(object):
 
     def __repr__(self):
         f = StringIO()
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue().rstrip()

@@ -24,13 +24,13 @@ class Nodes(object):
         self.grid.build()
         self.point.build()
 
-    def write_bdf(self, f, node_id=None, size=8, is_double=False, write_header=True):
+    def write_card(self, bdf_file, node_id=None, size=8, is_double=False, write_header=True):
         if write_header:
-            f.write('$NODES\n')
-        self.spoint.write_bdf(f, node_id, size, is_double, write_header)
-        self.grdset.write_bdf(f, size, size, is_double, write_header)
-        self.grid.write_bdf(f, size, size, is_double, write_header)
-        self.point.write_bdf(f, size, size, is_double, write_header)
+            bdf_file.write('$NODES\n')
+        self.spoint.write_card(bdf_file, node_id, size, is_double, write_header)
+        self.grdset.write_card(bdf_file, size, size, is_double, write_header)
+        self.grid.write_card(bdf_file, size, size, is_double, write_header)
+        self.point.write_card(bdf_file, size, size, is_double, write_header)
 
     def ndofs(self, sol):
         if self.model.sol in [101, 103, 144, 145]:
@@ -86,7 +86,7 @@ class GRDSET(object):
         self.ps = integer_or_blank(card, 7, 'ps', -1)
         self.seid = integer_or_blank(card, 8, 'seid', 0)
 
-    def write_bdf(self, f, size=8, is_double=False):
+    def write_card(self, f, size=8, is_double=False):
         if self.n:
             card = ['GRDSET', None, self.cp, None, None, None, self.cd, self.seid]
             if size == 8:
@@ -179,32 +179,25 @@ class GRID(VectorizedCard):
         #i_too_large = where(self.node_id[-1] < node_id)[0]
         #if len(i_too_large):
             #raise RuntimeError('Cannot find GRID %s, %s' % (node_id[i_too_large], msg))
-        #return self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID', check=True)
+        #return self._get_sorted_index(self.node_id, node_id, 'node_id in GRID', check=True)
+
+    def get_node_id_by_node_index(self, i=None, msg=''):
+        return self.node_id[i]
 
     def get_node_index_by_node_id(self, node_id=None, msg=''):
         #assert msg != ''
-        i = self._get_sorted_index(self.node_id, node_id, self.n, 'node_id', 'node_id in GRID%s' % msg, check=True)
+        i = self._get_sorted_index(self.node_id, node_id, 'node_id', 'node_id in GRID%s' % msg, check=True)
         return i
-        #if node_id is None:
-            #out_index = None
-        #else:
-            #if isinstance(node_id, int):
-                #node_id = array([node_id])
-            #out_index = searchsorted(self.node_id, node_id)
-            #assert array_equal(self.node_id[out_index], node_id)
-            #self.model.log.debug('node_id = %s' % node_id)
-            ##assert len(node_id) == len(n), 'n1=%s n2=%s'  %(len(node_id), len(n))  # TODO: what is this for?
-        #return out_index
 
-    def get_index_by_cp(self, cp=None, i=None):
+    def get_node_index_by_cp(self, cp=None, i=None):
         """Find all the j-indicies where cp=cpi for some given subset of i-indicies"""
         return self._get_index_by_param('cp', self.cp, cp, i)
 
-    def get_index_by_cd(self, cd=None, i=None):
+    def get_node_index_by_cd(self, cd=None, i=None):
         """Find all the j-indicies where cd=cdi for some given subset of i-indicies"""
         return self._get_index_by_param('cd', self.cd, cd, i)
 
-    def get_index_by_seid(self, seid=None, i=None):
+    def get_node_index_by_seid(self, seid=None, i=None):
         """Find all the j-indicies where seid=seidi for some given subset of i-indicies"""
         return self._get_index_by_param('seid', self.seid, seid, i)
 
@@ -289,13 +282,13 @@ class GRID(VectorizedCard):
             msg.append('  %-8s: %i' % ('GRID', self.n))
         return msg
 
-    def write_bdf(self, f, node_id=None, size=8, is_double=False, write_header=True):
+    def write_card(self, bdf_file, node_id=None, size=8, is_double=False, write_header=True):
         #self.model.log.debug('GRID node_id = %s' % node_id)
         #self.model.log.debug('GRID self.node_id = %s' % self.node_id)
-        i = self.get_node_index_by_node_id(node_id, msg='GRID.write_bdf')
-        return self.write_bdf_by_index(f, i, size, is_double, write_header)
+        i = self.get_node_index_by_node_id(node_id, msg='GRID.write_card')
+        return self.write_card_by_index(bdf_file, i, size, is_double, write_header)
 
-    def write_bdf_by_index(self, f, i=None, size=8, is_double=False, write_header=True):
+    def write_card_by_index(self, bdf_file, i=None, size=8, is_double=False, write_header=True):
         """
         Write the BDF cards
 
@@ -309,7 +302,7 @@ class GRID(VectorizedCard):
             i = slice(None, None)
         if self.n:
             if write_header:
-                f.write('$GRID\n')
+                bdf_file.write('$GRID\n')
             #self.model.log.debug('GRID i = %s' % i)
 
             # default to the GRDSET defaults
@@ -335,7 +328,7 @@ class GRID(VectorizedCard):
                             print_float_8(xyz[1]),
                             print_float_8(xyz[2]),
                             cd, ps, seid)).rstrip() + '\n'
-                    f.write(msg)
+                    bdf_file.write(msg)
             else:
                 if is_double:
                     for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
@@ -347,7 +340,7 @@ class GRID(VectorizedCard):
                                 '*',
                                 print_scientific_double(xyz[2]),
                                 cd, ps, seid))).rstrip() + '\n'
-                        f.write(msg)
+                        bdf_file.write(msg)
                 else:
                     for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
                         msg = (('%-8s%16i%16s%16s%16s\n'
@@ -358,15 +351,20 @@ class GRID(VectorizedCard):
                                 '*',
                                 print_float_16(xyz[2]),
                                 cd, ps, seid))).rstrip() + '\n'
-                        f.write(msg)
+                        bdf_file.write(msg)
             #return self.comment() + msg.rstrip() + '\n'
 
 
     def __repr__(self):
         msg = "<GRID>\n"
         msg += '  nGRID = %i' % self.n
+        return msg
 
     def __getitem__(self, node_id):
+        raise NotImplmementedError()
+        return self.slice_by_index(i)
+
+    def slice_by_node_id(self, node_id=None):
         self.model.log.debug('self.node_id = %s' % self.node_id)
         self.model.log.debug('node_id = %s' % node_id)
         #node_id = slice_to_iter(node_id)

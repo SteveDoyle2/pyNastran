@@ -25,7 +25,7 @@ class TestRods(unittest.TestCase):
         f = StringIO()
         #card = CROD(card)
         card = model.crod.slice_by_element_id([10])
-        card.write_bdf(f, size)
+        card.write_card(f, size)
         #card.rawFields()
         self.assertEquals(card.get_element_id_by_element_index(), 10)
         self.assertEquals(card.get_property_id_by_element_index(), 100)
@@ -44,7 +44,7 @@ class TestRods(unittest.TestCase):
         size = 8
         card = model.conrod.slice_by_element_id([eid])
         f = StringIO()
-        card.write_bdf(f, size)
+        card.write_card(f, size)
         #card.rawFields()
         self.assertEquals(card.get_element_id_by_element_index(), eid)
         self.assertEquals(card.get_material_id_by_element_index(), mid)

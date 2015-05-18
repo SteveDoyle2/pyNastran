@@ -110,7 +110,7 @@ class PSHELL(Property):
             self.property_id = array([], dtype='int32')
             self.material_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, property_id=None):
+    def write_card(self, f, size=8, property_id=None):
         """
         Writes the PSHELL properties.
 
@@ -270,5 +270,5 @@ class PSHELL(Property):
     def __repr__(self):
         f = StringIO()
         f.write('<PSHELL object> n=%s\n' % self.n)
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue()

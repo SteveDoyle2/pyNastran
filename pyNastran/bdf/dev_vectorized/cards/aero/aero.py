@@ -81,7 +81,7 @@ class AERO(VectorizedCard):
             self.symXZ = self.symXZ[i]
             self.symXY = self.symXY[i]
 
-    def write_bdf(self, f, size, is_double):
+    def write_card(self, f, size, is_double):
         #card = self.repr_fields()
         #symXZ = set_blank_if_default(self.symXZ, 0)
         #symXY = set_blank_if_default(self.symXY, 0)

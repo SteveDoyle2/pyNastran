@@ -233,7 +233,7 @@ class RBE3(object):
         #list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         #return list_fields
 
-    def write_bdf(self, f, size=True, is_double=False):
+    def write_card(self, f, size=True, is_double=False):
         if self.n:
             if size == 8:
                 for j, eid, alpha in zip(count(), self.element_id, self.alpha):

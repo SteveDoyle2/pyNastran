@@ -85,7 +85,7 @@ class AEROS(VectorizedCard):
             self.symXY = self.symXY[i]
 
 
-    def write_bdf(self, f, size, is_double):
+    def write_card(self, f, size, is_double):
         if self.n == 0:
             return
         for acsid, rcsid, c, b, S, symXZ, symXY in zip(self.acsid,

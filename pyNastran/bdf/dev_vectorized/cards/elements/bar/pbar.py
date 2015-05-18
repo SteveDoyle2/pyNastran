@@ -108,7 +108,7 @@ class PBAR(Property):
         return indexs
 
     #=========================================================================
-    def write_bdf(self, f, size=8, property_id=None):
+    def write_card(self, f, size=8, property_id=None):
         if self.n:
             if property_id is None:
                 i = arange(self.n)

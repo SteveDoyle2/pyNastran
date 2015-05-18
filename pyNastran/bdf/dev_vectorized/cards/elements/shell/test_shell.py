@@ -371,9 +371,9 @@ class TestShells(unittest.TestCase):
         from StringIO import StringIO
         f = StringIO()
 
-        #print(m.write_bdf(f, size=8, material_id=None))
-        p.write_bdf(f)
-        m.write_bdf(f)
+        #print(m.write_card(f, size=8, material_id=None))
+        p.write_card(f)
+        m.write_card(f)
         print(f.getvalue())
 
         #Mid

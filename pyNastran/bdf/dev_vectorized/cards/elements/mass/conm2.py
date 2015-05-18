@@ -98,7 +98,7 @@ class CONM2(VectorizedCard):
             msg.append('  %-8s: %i' % ('CONM2', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, is_double=False, element_id=None):
+    def write_card(self, f, size=8, is_double=False, element_id=None):
         assert self.n > 0, self.n
         if self.n:
             if element_id is None:

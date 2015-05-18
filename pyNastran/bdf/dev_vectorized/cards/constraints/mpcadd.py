@@ -33,7 +33,7 @@ class MPCADD(object):
     def build(self):
         self.mpc_ids.sort()
 
-    def write_bdf(self, f, size=8):
+    def write_card(self, f, size=8):
         card = ['MPCADD', self.constraint_id] + self.mpc_ids
         if size == 8:
             f.write(print_card_8(card))
@@ -42,5 +42,5 @@ class MPCADD(object):
 
     def __repr__(self):
         f = StringIO()
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue()

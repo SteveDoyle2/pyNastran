@@ -56,7 +56,7 @@ class SPC1(object):
             nodes2.sort()
             self.components[comp] = nodes2
 
-    def write_bdf(self, f, size=8):
+    def write_card(self, f, size=8):
         for comp, nodes in iteritems(self.components):
             card = ['SPC1', self.constraint_id, comp] + list(nodes)
             if size == 8:
@@ -66,5 +66,5 @@ class SPC1(object):
 
     def __repr__(self):
         f = StringIO()
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue().rstrip()

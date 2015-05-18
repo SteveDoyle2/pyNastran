@@ -191,7 +191,7 @@ class RBE2(object):
         #list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         #return list_fields
 
-    def write_bdf(self, f, size, is_double):
+    def write_card(self, f, size, is_double):
         if self.n == 0:
             return
         if size == 8:

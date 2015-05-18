@@ -80,7 +80,7 @@ class PLOAD(object):
             msg.append('  %-8s: %i' % ('PLOAD', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, load_ids=None):
+    def write_card(self, f, size=8, load_ids=None):
         if self.n:
             if load_ids is None:
                 i = arange(self.n)

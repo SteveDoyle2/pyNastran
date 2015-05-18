@@ -482,13 +482,13 @@ class PCOMP(Property):
             self.property_id = array([], dtype='int32')
             #self.material_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, property_id=None):
+    def write_card(self, f, size=8, property_id=None):
         if size == 8:
             for pid, pcomp in sorted(iteritems(self.properties)):
-                f.write(pcomp.write_bdf(size, print_card_8))
+                f.write(pcomp.write_card(size, print_card_8))
         else:
             for pid, pcomp in sorted(iteritems(self.properties)):
-                f.write(pcomp.write_bdf(size, print_card_16))
+                f.write(pcomp.write_card(size, print_card_16))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
@@ -524,6 +524,6 @@ class PCOMP(Property):
     def __repr__(self):
         f = StringIO()
         f.write('<PCOMP object> n=%s\n' % self.n)
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue()
 

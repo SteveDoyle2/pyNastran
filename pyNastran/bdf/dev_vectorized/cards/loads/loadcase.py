@@ -41,7 +41,7 @@ class LoadCase(object):
         #self.model.log.debug("**********")
         f = StringIO()
         for load in all_loads:
-            load.write_bdf(f)
+            load.write_card(f)
         #print(f.getvalue())
         #print("**********")
 
@@ -89,7 +89,7 @@ class LoadCase(object):
         #print("resolved LoadCase i=", i)
         f = StringIO()
         for load in all_loads_out:
-            load.write_bdf(f)
+            load.write_card(f)
         #print(f.getvalue())
         #print('------------------')
         return all_loads_out

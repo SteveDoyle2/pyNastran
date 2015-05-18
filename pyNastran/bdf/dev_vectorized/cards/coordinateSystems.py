@@ -25,7 +25,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
-
+asdf
 
 def normalize(v):
     r"""
@@ -46,12 +46,12 @@ def normalize(v):
 
 class Coord(BaseCard):
     def __repr__(self):
-        return self.write_bdf(size=8, is_double=False)
+        return self.write_card(size=8, is_double=False)
 
     def __str__(self):
         return self.__repr__()
 
-    def __init__(self, card, data):
+    def __init__(self, card, data, comment):
         """
         Defines a general CORDxx object
 
@@ -59,6 +59,9 @@ class Coord(BaseCard):
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
+        if comment:
+            self._comment = comment
+
         #: have all the transformation matricies been determined
         self.isResolved = False
         self.cid = None
@@ -74,152 +77,54 @@ class Coord(BaseCard):
         """Gets the coordinate ID"""
         return self.cid
 
-    def setup(self, debug=False):
-        r"""
-        .. math::
-          e_{13} = e_3 - e_1
 
-        .. math::
-          e_{12} = e_2 - e_1
+    #def transform_force_to_global(self, F, M):
+        #raise NotImplementedError('transform_force_to_global')
+        #Fg = self.transform_vector_to_global(self, F)
+        #Mg = self.transform_vector_to_global(self, M)
 
-        .. math::
-          k = \frac{e_{12}}{\lvert e_{12} \rvert}
+        #r = self.origin #  maybe a minus sign?
+        #Mdelta = cross(r, Fg)
+        #return Fg, Mg + Mdelta
 
-        .. math::
-          j_{dir} = k \times e_{13}
-
-        .. math::
-          j = \frac{j_{dir}}{\lvert j_{dir} \rvert}
-
-        .. math::
-          i = j \times k
+    def transform_vector_to_global(self, p, debug=False):
         """
-        try:
-            assert len(self.e1) == 3, self.e1
-            assert len(self.e2) == 3, self.e2
-            assert len(self.e3) == 3, self.e3
-        except AssertionError:
-            msg = 'Invalid Vector Length\n'
-            msg += "type = %s\n" % (self.type)
-            msg += "cid  = %s\n" % (self.Cid())
-            msg += "e1 = %s\n" % str(self.e1)
-            msg += "e2 = %s\n" % str(self.e2)
-            msg += "e3 = %s\n" % str(self.e3)
-            raise RuntimeError(msg)
+        Transforms a generalized vector from the local frame to the
+        global frame.  A generalized vector is unchanged when you shift
+        it's point of application.  So:
+          - Generalized Vectors (Force, Moment about the origin)
+          - Not Generalized Vectors (node xyz, displacement, Moment)
 
-        if self.Cid() == 0:
-            self.origin = array([0., 0., 0.], dtype='float64')
-            self.i = array([1., 0., 0.], dtype='float64')
-            self.j = array([0., 1., 0.], dtype='float64')
-            self.k = array([0., 0., 1.], dtype='float64')
-            return
+        :param p: the vector in the local frame
+        :param debug: debug flag (default=False; unused)
+        :retval p3: the vector in the global frame
+
+        .. note:: Shifting the load application point of a force creates
+                  a moment, but the force will be the same.
+        """
+        if self.cid == 0:
+            return p
 
         if not self.isResolved:
-            self.rid.setup()
+            if isinstance(self.rid, int) and self.rid != 0:
+                raise RuntimeError("BDF has not been cross referenced.")
+            if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                self.rid.setup()
+            else:
+                self.setup()
 
-        if self.Rid() == 0:
-            self.origin = self.e1
-            e1 = self.e1
-            e2 = self.e2
-            e3 = self.e3
-        else:
-            self.origin, rid_matrix = self.rid.transformToGlobal(self.e1)
-            e1 = self.origin
-            e2, rid_matrix = self.rid.transformToGlobal(self.e2)
-            e3, rid_matrix = self.rid.transformToGlobal(self.e3)
+        # the ijk axes arent resolved as R-theta-z, only points
+        p2 = self.coordToXYZ(p)
 
-        try:
-            # e_{13}
-            e13 = e3 - e1
-            # e_{12}
-            e12 = e2 - e1
-            #print("e13 = %s" % e13)
-            #print("e12 = %s" % e12)
-        except TypeError:
-            msg = ''
-            msg += "\ntype = %s\n" % (self.type)
-            msg += "\ncid  = %s\n" % (self.Cid())
-            msg += "e1 = %s\n" % str(e1)
-            msg += "e2 = %s\n" % str(e2)
-            msg += "e3 = %s\n" % str(e3)
-            raise TypeError(msg)
+        if self.i is None:
+            msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
+                self.type, self.cid, self.rid)
+            raise RuntimeError(msg)
+        matrix = vstack([self.i, self.j, self.k])
 
-        try:
-            #: k = (G3 cross G1) normalized
-            self.k = normalize(e12)
-        except RuntimeError:
-            print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e1* = %s" % (e1))
-            print("e2* = %s" % (e2))
-            print("e3* = %s" % (e3))
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
-            print("k = normalize(e12)")
-            raise
-
-        try:
-            # j = (k cross e13) normalized
-            self.j = normalize(cross(self.k, e13))
-        except RuntimeError:
-            print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e1* = %s" % (e1))
-            print("e2* = %s" % (e2))
-            print("e3* = %s" % (e3))
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
-            print("k = norm(e12)")
-            print("k   = %s\n" % (self.k))
-            print("j* = cross(k,e13)")
-            print("j*  = %s" % (cross(self.k, e13)))
-            print("j = norm(cross(k,e13))\n")
-            raise
-
-        try:
-            #: i = j cross k
-            self.i = cross(self.j, self.k)
-        except RuntimeError:
-            print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
-            print("Rid = %s" % (self.Rid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
-            print("k = normalize(e12)")
-            print("k   = %s\n" % (self.k))
-            print("j = norm(cross(k,e13))")
-            print("j   = %s" % (self.j))
-            raise
-
-        if debug:
-            print("\nCid = %s" % (self.Cid()))
-            print("Rid = %s" % (self.Rid()))
-            print("e1 = %s" % (self.e1))
-            print("e2 = %s" % (self.e2))
-            print("e3 = %s" % (self.e3))
-            print("e1* = [%g, %g, %g]" % tuple(e1))
-            print("e2* = [%g, %g, %g]" % tuple(e2))
-            print("e3* = [%g, %g, %g]" % tuple(e3))
-            print('-----')
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
-            print('-----')
-            print("i   = %s len=%s"   % (str(self.i), norm(self.i)))
-            print("j   = %s len=%s"   % (str(self.j), norm(self.j)))
-            print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
-            print('-----')
-
-    def transformToGlobal(self, p, debug=False):
-        self.transform_node_to_global(self, p, debug=debug)
+        # rotate point p2 from the local frame to the global frame
+        p3 = dot(p2, matrix)
+        return p3
 
     def transform_node_to_global(self, p, debug=False):
         r"""
@@ -253,58 +158,30 @@ class Coord(BaseCard):
         .. warning:: you probably shouldnt call this, call the Node methods
                      Position and PositionWRT
         """
-        if debug:
-            print("p = %s" % p)
-
         if self.cid == 0:
-            return p, array([[1., 0., 0.],
-                             [0., 1., 0.],
-                             [0., 0., 1.]], dtype='float64')
-        if not self.isResolved:
-            self.rid.setup()
+            return p
+        return self.transform_vector_to_global(p) + self.origin
 
-        # the ijk axes arent resolved as R-theta-z, only points
-        p2 = self.coordToXYZ(p)
-
-        if self.i is None:
-            raise RuntimeError("Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (self.type, self.cid, self.rid))
-        # Bij = Bip*j
-        #i = self.i
-        #j = self.j
-        #k = self.k
-        #gx = array([1., 0., 0.], dtype='float64')
-        #gy = array([0., 1., 0.], dtype='float64')
-        #gz = array([0., 0., 1.], dtype='float64')
-
-        #matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
-        #                [dot(gx, j), dot(gy, j), dot(gz, j)],
-        #                [dot(gx, k), dot(gy, k), dot(gz, k)]], dtype='float64')
-        matrix = vstack([self.i, self.j, self.k])
-
-        # rotate point p2 from the local frame to the global frame
-        # shift point p by origin is in global coordinates
-        #p3 = p2[0]*self.i + p2[1]*self.j + p2[2]*self.k + self.origin
-        p3 = dot(p2, matrix) + self.origin
-
+    def _transform_node_to_local(self, p, beta, debug=False):
+        #betaT = hstack([self.i,self.j,self.k])  # verify
+        #pGlobal = self.transform_node_to_global(p, debug=False)
+        if self.origin is None:
+            raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
+        pCoord = dot(p - self.origin, transpose(beta))
+        pLocal = self.XYZtoCoord(pCoord)
         if debug:
-            print("Cp = ", self.Cid())
-            print("p = %s" % (list_print(p)))
-            print("matrix = \n", matrix)
-            print("e1 = %s" % (list_print(self.e1)))
-            print("p2 = %s" % (list_print(p2)))
-            print('------------------------')
-            print("p3 = %s" % (list_print(p3)))
+            print("p        = %s" % p)
+            print("p-origin = %s" % (p - self.origin))
+            print("pCoord = %s" % pCoord)
+            print("pLocal = %s\n" % pLocal)
+        return pLocal
 
-        return (p3, matrix)
-
-    def transformToLocal(self, p, beta, debug=False):
+    def transform_node_to_local(self, p, debug=False):
         r"""
         Transforms the global point p to the local coordinate system
 
         :param self:   the coordinate system object
         :param p:      the point to transform
-        :param beta:   the transformation matrix to apply - created by
-                       transformToGlobal
         :param debug:  developer debug
 
         .. note::  uses the matrix as there is no linking from a global
@@ -325,17 +202,16 @@ class Coord(BaseCard):
         Where transform(x) depends on the rectangular, cylindrical, or
         spherical coordinate system
         """
-        #betaT = hstack([self.i,self.j,self.k])  # verify
-        #pGlobal = self.transformToGlobal(p, debug=False)
-        if self.origin is None:
-            raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
-        pCoord = dot(p - self.origin, transpose(beta))
+        beta = self.beta()
+        return self._transform_node_to_local(p, beta, debug)
+
+    def transform_vector_to_local(self, p, debug=False):
+        """
+        see transform_node_to_local, but set the origin to <0, 0, 0>
+        """
+        beta = self.beta()
+        pCoord = dot(p, transpose(beta))
         pLocal = self.XYZtoCoord(pCoord)
-        if debug:
-            print("p        = %s" % p)
-            print("p-origin = %s" % (p - self.origin))
-            print("pCoord = %s" % pCoord)
-            print("pLocal = %s\n" % pLocal)
         return pLocal
 
     def beta(self):
@@ -369,7 +245,7 @@ class Coord(BaseCard):
 
 
 class Cord2x(Coord):
-    def __init__(self, card, data):
+    def __init__(self, card, data, comment):
         """
         Defines the CORD2x class
 
@@ -378,7 +254,7 @@ class Cord2x(Coord):
         :param data: a list analogous to the card
         """
         self.isResolved = False
-        Coord.__init__(self, card, data)
+        Coord.__init__(self, card, data, comment)
 
         if card:
             #: coordinate system ID
@@ -433,7 +309,7 @@ class Cord2x(Coord):
         assert isinstance(cid, int), 'cid=%r' % cid
         assert isinstance(rid, int), 'rid=%r' % rid
 
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -469,8 +345,8 @@ class Cord1x(Coord):
         """Gets the reference coordinate system self.rid"""
         return self.rid
 
-    def __init__(self, card, nCoord, data):
-        Coord.__init__(self, card, data)
+    def __init__(self, card, nCoord, data, comment):
+        Coord.__init__(self, card, data, comment)
         self.isResolved = False
         if nCoord is not None:
             assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
@@ -502,39 +378,42 @@ class Cord1x(Coord):
         self.j = None
         self.k = None
 
-    def to_CORD2x(self, model):
+    def to_CORD2x(self, model, rid=0):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 
         :param self:  the coordinate system object
         :param model: a BDF model
+        :param rid:
+          The relative coordinate system (default=0 -> Global);
+          TYPE = INT.
         """
         rid1 = self.g1.cid
         rid2 = self.g2.cid
         rid3 = self.g2.cid
-        type1 = self.g1.type
-        #type2 = self.g2.type
-        #type3 = self.g3.type
 
+        # assume the points are in rid
         p1 = self.g1.xyz
-        if rid2 == rid1 and rid3 == rid1:
-            # if all the same coordinate system, make them coord 2
-            # the types are automatically the same then
-            p2 = self.g2.xyz
-            p3 = self.g3.xyz
-        else:
-            # otherwise make them the same rid as g1
-            p2 = self.g2.PositionWRT(model, rid1)
-            p3 = self.g3.PositionWRT(model, rid1)
+        p2 = self.g2.xyz
+        p3 = self.g3.xyz
 
+        # move the nodes in necessary into rid system
+        if rid != rid1:
+            p1 = self.g1.get_position_wrt(model, rid)
+        if rid != rid2:
+            p2 = self.g2.get_position_wrt(model, rid)
+        if rid != rid3:
+            p3 = self.g3.get_position_wrt(model, rid)
+
+        type1 = self.type.replace('1', '2')
         data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
-        if type1 == 'CORD2R':
+        if self.type == 'CORD1R':
             coord = CORD2R(card=None, data=data, comment=self.comment())
-        elif type1 == 'CORD2C':
-            coord = CORD2R(card=None, data=data, comment=self.comment())
-        elif type1 == 'CORD2C':
-            coord = CORD2R(card=None, data=data, comment=self.comment())
+        elif self.type == 'CORD1C':
+            coord = CORD2C(card=None, data=data, comment=self.comment())
+        elif self.type == 'CORD1S':
+            coord = CORD2S(card=None, data=data, comment=self.comment())
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
         model.coords[self.cid] = coord
@@ -548,54 +427,18 @@ class Cord1x(Coord):
         cid = self.Cid()
         assert isinstance(cid, int), 'cid=%r' % cid
 
-    def setup(self, debug=False):
-        """
-        Finds the position of the nodes used define the coordinate system
-        and sets the ijk vectors
-
-        :param self: the coordinate system object
-        """
-        if self.isResolved:
-            return
-
-        #: the origin
-        self.e1 = self.g1.Position()
-
-        #: a point on the z-axis
-        self.e2 = self.g2.Position()
-
-        #: a point on the xz-plane
-        self.e3 = self.g3.Position()
-
-        # rid is resolved b/c e1, e2, & e3 are in global coordinates
-        self.isResolved = True
-        self.Coord.setup(debug=debug)
 
     def G1(self):
-        if isinstance(self.g1, int):
-            return self.g1
-        return self.g1.nid
+        return self.g1
 
     def G2(self):
-        if isinstance(self.g2, int):
-            return self.g2
-        return self.g2.nid
+        return self.g2
 
     def G3(self):
-        if isinstance(self.g3, int):
-            return self.g3
-        return self.g3.nid
+        return self.g3
 
-    def NodeIDs(self):
-        """
-        Gets the integers for the node [g1,g2,g3]
 
-        :param self: the coordinate system object
-        """
-        grids = [self.G1(), self.G2(), self.G3()]
-        return grids
-
-    def write_bdf(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -645,14 +488,8 @@ class CORD3G(Coord):  # not done
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']
 
-    def cross_reference(self, model):
-        msg = ' which is required by %s cid=%s' % (self.type, self.cid)
-        self.rid = model.Coord(self.rid, msg=msg)
-
     def Rid(self):
-        if isinstance(self.rid, int):
-            return self.rid
-        return self.rid.cid
+        return self.rid
 
     def coord3g_transformToGlobal(self, p, debug=False):
         """
@@ -789,12 +626,10 @@ class CORD1C(Cord1x):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self, card, nCoord, data)
-        if comment:
-            self._comment = comment
+        Cord1x.__init__(self, card, nCoord, data, comment)
 
     def raw_fields(self):
-        list_fields = ['CORD1C', self.cid] + self.NodeIDs()
+        list_fields = ['CORD1C', self.cid] + self.node_ids
         return list_fields
 
     def coordToXYZ(self, p):
@@ -869,12 +704,10 @@ class CORD1S(Cord1x):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1S only)
         """
-        Cord1x.__init__(self, card, nCoord, data)
-        if comment:
-            self._comment = comment
+        Cord1x.__init__(self, card, nCoord, data, comment)
 
     def raw_fields(self):
-        list_fields = ['CORD1S', self.cid] + self.NodeIDs()
+        list_fields = ['CORD1S', self.cid] + self.node_ids
         return list_fields
 
     def XYZtoCoord(self, p):
@@ -909,8 +742,7 @@ class CORD2R(Cord2x):
     type = 'CORD2R'
     Type = 'R'
 
-    def __init__(self, card=None,
-                 data=None, comment=''):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD2R
 
@@ -925,12 +757,11 @@ class CORD2R(Cord2x):
         :param self: the CORD2R coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2R only)
+                     default=None -> [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
         """
         if data is None:
             data = [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
-        Cord2x.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        Cord2x.__init__(self, card, data, comment)
 
     def _verify(self):
         """
@@ -1081,9 +912,7 @@ class CORD2S(Cord2x):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2S only)
         """
-        Cord2x.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        Cord2x.__init__(self, card, data, comment)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)

@@ -14,7 +14,7 @@ class ShellElement(Element):
         return element_id
 
     def get_element_index_by_element_id(self, element_id=None, msg=''):
-        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
+        i = self._get_sorted_index(self.element_id, element_id, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
         return i
 
     def get_property_id_by_element_id(self, element_id=None):

@@ -203,7 +203,7 @@ class CBAR(Element):
             return mass
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_card(self, f, size=8, element_ids=None):
         if self.n:
             if element_ids is None:
                 i = arange(self.n)

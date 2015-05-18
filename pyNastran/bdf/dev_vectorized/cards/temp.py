@@ -47,7 +47,7 @@ class TEMPD(object):
         self.load_id = array(self.load_id)
         self.temperature_default = array(self.temperature_default)
 
-    def write_bdf(self, f, size=8):
+    def write_card(self, f, size=8):
         if self.n:
             #n = 0
             for lid, t in zip(self.load_id, self.temperature_default):
@@ -144,7 +144,7 @@ class TEMP(object):
             msg.append('  %-8s: %i' % ('TEMP', self.n))
         return msg
 
-    def write_bdf(self, f, size=8):
+    def write_card(self, f, size=8):
         if self.n:
             #t0 = self.model.tempd.cp
             seid0 = self.model.grdset.seid

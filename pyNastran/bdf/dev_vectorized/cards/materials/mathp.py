@@ -213,7 +213,7 @@ class MATHP(Material):
         i = self.get_material_index_by_material_id(material_id)
         return self.get_density_by_index(i)
 
-    def write_bdf(self, f, size=8, material_id=None):
+    def write_card(self, f, size=8, material_id=None):
         if self.n:
             if material_id is None:
                 i = arange(self.n)

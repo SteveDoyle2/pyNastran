@@ -327,8 +327,8 @@ class Materials(object):
         for mid, material in sorted(iteritems(self.mat1)):
             material._verify(xref)
 
-    def write_bdf(self, f, size=8, is_double=False, material_id=None):
-        self.model.log.debug('Materials.write_bdf.n=%s' % self.n)
+    def write_card(self, f, size=8, is_double=False, material_id=None):
+        self.model.log.debug('Materials.write_card.n=%s' % self.n)
         if self.n:
             f.write('$MATERIALS\n')
             types = [
@@ -342,4 +342,4 @@ class Materials(object):
             for materials in types:
                 if materials.n:
                     self.model.log.debug('    writing %s' % materials.type)
-                    materials.write_bdf(f, size=size, material_id=material_id)
+                    materials.write_card(f, size=size, material_id=material_id)

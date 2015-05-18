@@ -97,7 +97,7 @@ class MOMENT(object):
             msg.append('  %-8s: %i' % ('MOMENT', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, lids=None):
+    def write_card(self, f, size=8, lids=None):
         if self.n:
             for (lid, nid, cid, mag, xyz) in zip(
                  self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
@@ -110,5 +110,5 @@ class MOMENT(object):
 
     def __repr__(self):
         f = StringIO()
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue().rstrip()

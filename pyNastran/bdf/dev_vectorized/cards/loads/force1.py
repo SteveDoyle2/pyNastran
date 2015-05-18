@@ -97,7 +97,7 @@ class FORCE1(VectorizedCard):
             self._cards = []
             self._comments = []
 
-    def write_bdf(self, f, size=8, lids=None):
+    def write_card(self, f, size=8, lids=None):
         if self.n:
             for (lid, nid, cid, mag, xyz) in zip(
                  self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):

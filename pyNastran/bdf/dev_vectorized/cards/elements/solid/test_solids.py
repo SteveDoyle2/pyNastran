@@ -19,7 +19,7 @@ class TestSolids(unittest.TestCase):
         penta = CPENTA6(model)
         penta.allocate(1)
         penta.add(card)
-        penta.write_bdf(f, size)
+        penta.write_card(f, size)
         #card.rawFields()
         print(f.getvalue())
 
@@ -35,7 +35,7 @@ class TestSolids(unittest.TestCase):
         penta = CPENTA15(model)
         penta.allocate(1)
         penta.add(card)
-        penta.write_bdf(f, size)
+        penta.write_card(f, size)
         #card.rawFields()
         print(f.getvalue())
 
@@ -52,7 +52,7 @@ class TestSolids(unittest.TestCase):
         hexa = CHEXA8(model)
         hexa.allocate(1)
         hexa.add(card)
-        hexa.write_bdf(f, size)
+        hexa.write_card(f, size)
         #card.rawFields()
         print(f.getvalue())
 
@@ -69,7 +69,7 @@ class TestSolids(unittest.TestCase):
         hexa = CHEXA20(model)
         hexa.allocate(1)
         hexa.add(card)
-        hexa.write_bdf(f, size)
+        hexa.write_card(f, size)
         #card.rawFields()
         print(f.getvalue())
 
@@ -84,7 +84,7 @@ class TestSolids(unittest.TestCase):
         hexa = CTETRA4(model)
         hexa.allocate(1)
         hexa.add(card)
-        hexa.write_bdf(f, size)
+        hexa.write_card(f, size)
         #card.rawFields()
         print(f.getvalue())
 
@@ -100,7 +100,7 @@ class TestSolids(unittest.TestCase):
         hexa = CTETRA10(model)
         hexa.allocate(1)
         hexa.add(card)
-        hexa.write_bdf(f, size)
+        hexa.write_card(f, size)
         #card.rawFields()
         print(f.getvalue())
 

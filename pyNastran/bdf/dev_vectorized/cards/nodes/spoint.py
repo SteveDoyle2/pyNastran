@@ -48,7 +48,7 @@ class SPOINT(object):
         if self.n:
             self._comments = []
 
-    def write_bdf(self, f, size=8, is_double=False):
+    def write_card(self, f, size=8, is_double=False):
         #.. todo:: collapse the IDs
         if self.n:
             spoint = list(self.spoint)

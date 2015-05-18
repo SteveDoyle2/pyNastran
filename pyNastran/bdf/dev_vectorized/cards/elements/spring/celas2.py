@@ -76,7 +76,7 @@ class CELAS2(SpringElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, eids=None):
+    def write_card(self, f, size=8, eids=None):
         if self.n:
             if eids is None:
                 i = arange(self.n)

@@ -59,8 +59,8 @@ class ElementsRod(object):
                 msg.append('  %-8s: %i' % (elem.type, nele))
         return msg
 
-    def write_bdf(self, f, size=8, eids=None):
+    def write_card(self, f, size=8, eids=None):
         #f.write('$PROPERTIES\n')
-        self.crod.write_bdf(f, size=size, eid=eid)
-        self.conrod.write_bdf(f, size=size, eid=eid)
-        self.ctube.write_bdf(f, size=size, eid=eid)
+        self.crod.write_card(f, size=size, eid=eid)
+        self.conrod.write_card(f, size=size, eid=eid)
+        self.ctube.write_card(f, size=size, eid=eid)

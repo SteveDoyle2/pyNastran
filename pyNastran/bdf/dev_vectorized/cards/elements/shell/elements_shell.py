@@ -192,13 +192,13 @@ class ElementsShell(object):
             mass = massi
         return mass
 
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_card(self, f, size=8, element_id=None):
         f.write('$ELEMENTS_SHELL\n')
         types = self._get_types(nlimit=True)
         for element in types:
             if element.n:
                 self.model.log.debug(element.type)
-                element.write_bdf(f, size=size, element_id=element_id)
+                element.write_card(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         types = [self.ctria3, self.cquad4, self.ctria6, self.cquad8, self.ctriax6] #, cquad8

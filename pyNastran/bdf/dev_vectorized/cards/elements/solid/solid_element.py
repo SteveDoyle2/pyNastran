@@ -33,16 +33,16 @@ class SolidElement(Element):
     def __repr__(self):
         f = StringIO()
         f.write('<%s object> n=%s\n' % (self.type, self.n))
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue()
 
     def get_property_id_by_element_index(self, i=None):
-        #i = self._get_sorted_index(self.element_id, element_id, self.n,
+        #i = self._get_sorted_index(self.element_id, element_id,
         #                           'element_id', 'element_id in %s' % self.type, check=True)
         return self.property_id[i]
 
     def get_property_id_by_element_id(self, element_id=None):
-        i = self._get_sorted_index(self.element_id, element_id, self.n,
+        i = self._get_sorted_index(self.element_id, element_id,
                                    'element_id', 'element_id in %s' % self.type, check=True)
         return self.get_property_id_by_element_index(i)
 
@@ -50,7 +50,7 @@ class SolidElement(Element):
         return self.model.elements.elements_solid.get_material_id_by_element_id(element_id)
 
     def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
-        i = self._get_sorted_index(self.element_id, element_id, self.n,
+        i = self._get_sorted_index(self.element_id, element_id,
                                    'element_id', 'element_id in %s' % self.type, check=True)
         self.model.log.debug('ielem = %s' % i)
         if xyz_cid0 is None:

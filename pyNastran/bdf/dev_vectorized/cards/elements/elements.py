@@ -752,13 +752,13 @@ class Elements(object):
         }
         return TypeMap
 
-    def write_bdf(self, f, size=8, is_double=True, include_properties=False, interspersed=True):
+    def write_card(self, f, size=8, is_double=True, include_properties=False, interspersed=True):
         interspersed = False
         include_properties = True
         if interspersed:
             #raise NotImplementedError('interspersed=False')
             self._write_interspersed_elements_properties(f, size)
-            self.conrod.write_bdf(f, size)
+            self.conrod.write_card(f, size)
         else:
             self._write_alternating_elements_properties(f, size, is_double)
 
@@ -770,60 +770,60 @@ class Elements(object):
         f.write('$----------------------------------------------------------\n')
 
     def _write_alternating_elements_properties_0d(self, f, size, is_double):
-        #self.properties_springs.write_bdf(f)
-        self.elements_spring.write_bdf(f)
-        self.pelas.write_bdf(f, size)
+        #self.properties_springs.write_card(f)
+        self.elements_spring.write_card(f)
+        self.pelas.write_card(f, size)
 
-        #self.elements_damper.write_bdf(f)
-        #self.pdamp.write_bdf(f, size)
+        #self.elements_damper.write_card(f)
+        #self.pdamp.write_card(f, size)
 
         if self.mass.n:
             f.write('$ Mass-----------------------------------------------------\n')
-            self.mass.write_bdf(f, size)
+            self.mass.write_card(f, size)
 
     def _write_alternating_elements_properties_1d(self, f, size, is_double):
-        #self.properties_rods.write_bdf(f)
-        #self.elements_rods.write_bdf(f)
+        #self.properties_rods.write_card(f)
+        #self.elements_rods.write_card(f)
         if self.conrod.n or self.crod.n or self.prod.n or self.ctube.n or self.ptube.n:
             f.write('$ Rods-----------------------------------------------------\n')
-            self.conrod.write_bdf(f)
-            self.crod.write_bdf(f)
-            self.prod.write_bdf(f)
-            self.ctube.write_bdf(f)
-            self.ptube.write_bdf(f)
+            self.conrod.write_card(f)
+            self.crod.write_card(f)
+            self.prod.write_card(f)
+            self.ctube.write_card(f)
+            self.ptube.write_card(f)
 
         if self.cbush.n or self.pbush.n:
             f.write('$ Bush-----------------------------------------------------\n')
-            self.cbush.write_bdf(f, size)
-            self.pbush.write_bdf(f, size)
+            self.cbush.write_card(f, size)
+            self.pbush.write_card(f, size)
 
         if self.cbar.n or self.properties_bar.n:
             f.write('$ Bars-----------------------------------------------------\n')
-            #self.elements_bars.write_bdf(f)
-            self.properties_bar.write_bdf(f, size)
-            self.cbar.write_bdf(f, size)
+            #self.elements_bars.write_card(f)
+            self.properties_bar.write_card(f, size)
+            self.cbar.write_card(f, size)
 
         if self.cbeam.n or self.properties_beam.n:
             f.write('$ Beams----------------------------------------------------\n')
-            self.properties_beam.write_bdf(f, size)
-            self.cbeam.write_bdf(f, size)
+            self.properties_beam.write_card(f, size)
+            self.cbeam.write_card(f, size)
 
     def _write_alternating_elements_properties_2d(self, f, size, is_double):
         if self.cshear.n or self.pshear.n:
             f.write('$ Shear----------------------------------------------------\n')
-            self.pshear.write_bdf(f, size)
-            self.cshear.write_bdf(f, size)
+            self.pshear.write_card(f, size)
+            self.cshear.write_card(f, size)
 
         if self.elements_shell.n or self.properties_shell.n:
             f.write('$ Shell----------------------------------------------------\n')
-            self.properties_shell.write_bdf(f, size)
-            self.elements_shell.write_bdf(f)
+            self.properties_shell.write_card(f, size)
+            self.elements_shell.write_card(f)
 
     def _write_alternating_elements_properties_3d(self, f, size, is_double):
         if self.elements_solid.n or self.properties_solid.n:
             f.write('$ Solid----------------------------------------------------\n')
-            self.properties_solid.write_bdf(f, size)
-            self.elements_solid.write_bdf(f)
+            self.properties_solid.write_card(f, size)
+            self.elements_solid.write_card(f)
 
     def __len__(self):
         return self.ne

@@ -48,7 +48,7 @@ class TEMP(object):
         self.default = temperature
         self.is_default = True
 
-    def write_bdf(self, f, size=8, is_double=False):
+    def write_card(self, f, size=8, is_double=False):
         #nids = ['%8i' % node_id for node_id in self.node_id]
         nleftover = self.n // 3 * 3
         if size == 8:
@@ -135,7 +135,7 @@ class TEMPP1(object):
         #assert len(card) <= 7, len(card)
         self.eids = None
 
-    def write_bdf(self, f, size=8, is_double=False):
+    def write_card(self, f, size=8, is_double=False):
         if self.n:
             if size == 8:
                 for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
@@ -180,9 +180,9 @@ class TEMPs(VectorizedCardDict):
     def add_tempp1(self, card, comment):
         self._tempp1.add(card, comment)
 
-    def write_bdf(self, f, size=8, is_double=False, load_id=None, sort_data=False):
+    def write_card(self, f, size=8, is_double=False, load_id=None, sort_data=False):
         #self.model.log.debug('TEMPs keys=%s' % self._objs.keys())
         for load_id, load in sorted(iteritems(self._objs)):
-            #self.model.log.debug('TEMPs write_bdf load_id=%s' % load_id)
-            load.write_bdf(f, size=size, is_double=is_double)
-        self._tempp1.write_bdf(f, size=size, is_double=is_double)
+            #self.model.log.debug('TEMPs write_card load_id=%s' % load_id)
+            load.write_card(f, size=size, is_double=is_double)
+        self._tempp1.write_card(f, size=size, is_double=is_double)

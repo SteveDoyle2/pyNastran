@@ -102,7 +102,7 @@ class VectorizedCardDict(object):
     def __repr__(self):
         f = StringIO()
         f.write('<%s object> n=%s\n' % (self.type, self.n))
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue()
 
 class LOADs(VectorizedCardDict):
@@ -126,7 +126,7 @@ class LOADs(VectorizedCardDict):
         #self.loads.load.add(card, comment=comment)
         self.n += 1
 
-    def write_bdf(self, f, size=8, is_double=False, load_id=None):
+    def write_card(self, f, size=8, is_double=False, load_id=None):
         if load_id is None:
             load_id = self.get_load_ids()
         #if isinstance(load_id, int):
@@ -137,7 +137,7 @@ class LOADs(VectorizedCardDict):
         #print('load_ids xx = %s' % load_id, type(load_id), load_id.shape)
         for lid in sorted(load_id):
             for load in self._objs[lid]:
-                load.write_bdf(f, size=size, is_double=is_double, load_id=lid)
+                load.write_card(f, size=size, is_double=is_double, load_id=lid)
 
 class Loads(object):
     def __init__(self, model):
@@ -191,7 +191,7 @@ class Loads(object):
     def __getitem__(self, value):
         pass
 
-    def write_bdf(self, f, size=8, is_double=False, sort_data=False):
+    def write_card(self, f, size=8, is_double=False, sort_data=False):
         sort_data = True
         if sort_data:
             types = self._get_load_types(nlimit=True)
@@ -205,50 +205,50 @@ class Loads(object):
                 for load_type in types:
                     if load_id in load_type:
                         #print('******** load-type = %s' % load_type.type)
-                        load_type.write_bdf(f, size=size, is_double=is_double, load_id=load_id)
+                        load_type.write_card(f, size=size, is_double=is_double, load_id=load_id)
 
         else:
-            #self.loadcase.write_bdf(f, size)
+            #self.loadcase.write_card(f, size)
             for load_id, loads in sorted(iteritems(self.load)):
                 for load in loads:
-                    load.write_bdf(f, size)
+                    load.write_card(f, size)
 
             for load_id, loads in sorted(iteritems(self.dload)):
                 for load in loads:
-                    load.write_bdf(f, size)
+                    load.write_card(f, size)
 
             #for load_id, loads in sorted(iteritems(self.sload)):
                 #for load in loads:
-                    #load.write_bdf(f, size)
+                    #load.write_card(f, size)
 
             #for load_id, loads in sorted(iteritems(self.lseq)):
                 #for load in loads:
-                    #load.write_bdf(f, size)
+                    #load.write_card(f, size)
 
-            #self.loadset.write_bdf(f, size)
-            self.force.write_bdf(f, size)
-            #self.force1.write_bdf(f, size)
-            #self.force2.write_bdf(f, size)
-            self.moment.write_bdf(f, size)
-            #self.moment1.write_bdf(f, size)
-            #self.moment2.write_bdf(f, size)
+            #self.loadset.write_card(f, size)
+            self.force.write_card(f, size)
+            #self.force1.write_card(f, size)
+            #self.force2.write_card(f, size)
+            self.moment.write_card(f, size)
+            #self.moment1.write_card(f, size)
+            #self.moment2.write_card(f, size)
 
-            self.pload.write_bdf(f, size)
-            self.pload1.write_bdf(f, size)
-            self.pload2.write_bdf(f, size)
-            #self.pload3.write_bdf(f, size)
-            self.pload4.write_bdf(f, size)
+            self.pload.write_card(f, size)
+            self.pload1.write_card(f, size)
+            self.pload2.write_card(f, size)
+            #self.pload3.write_card(f, size)
+            self.pload4.write_card(f, size)
 
-            self.ploadx1.write_bdf(f, size)
-            self.grav.write_bdf(f, size)
-            self.rforce.write_bdf(f, size)
+            self.ploadx1.write_card(f, size)
+            self.grav.write_card(f, size)
+            self.rforce.write_card(f, size)
 
-            #self.accel1.write_bdf(f, size)
+            #self.accel1.write_card(f, size)
 
-            #self.tload1.write_bdf(f, size)
-            #self.tload2.write_bdf(f, size)
-            #self.rload1.write_bdf(f, size)
-            #self.rload2.write_bdf(f, size)
-            #self.randps.write_bdf(f, size)
+            #self.tload1.write_card(f, size)
+            #self.tload2.write_card(f, size)
+            #self.rload1.write_card(f, size)
+            #self.rload2.write_card(f, size)
+            #self.randps.write_card(f, size)
 
             # DAREA

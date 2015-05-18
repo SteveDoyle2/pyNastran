@@ -96,7 +96,7 @@ class PLSOLID(Property):
         #self.model.log.debug('rho = %s' % rho)
         #return rho
 
-    def write_bdf(self, f, size=8, property_id=None):
+    def write_card(self, f, size=8, property_id=None):
         if self.n:
             #print "PSOLID.property_id =", self.property_id
             for (pid, mid, stress) in zip(
@@ -125,6 +125,6 @@ class PLSOLID(Property):
     def __repr__(self):
         f = StringIO()
         f.write('<PLSOLID object> n=%s\n' % self.n)
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue()
 

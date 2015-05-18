@@ -80,7 +80,7 @@ class LOAD(object):
         msg.append('  %-8s: %i' % ('LOAD[%s]' % self.load_id))
         return msg
 
-    def write_bdf(self, f, size=8, is_double=False, load_id=None):
+    def write_card(self, f, size=8, is_double=False, load_id=None):
         if load_id is None:
             load_id = self.load_id
         load_id = asarray(load_id)

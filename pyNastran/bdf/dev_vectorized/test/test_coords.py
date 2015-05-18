@@ -3,9 +3,9 @@ from six.moves import StringIO
 from numpy import array, allclose, array_equal
 import unittest
 
-from pyNastran.bdf.dev_vectorized.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+from pyNastran.bdf.dev_vectorized.bdf import BDF
 
-bdf = BDF(debug=False)  # don't load this up with stuff
+
 class TestCoords(unittest.TestCase):
     def test_same(self):  # passes
         grids = [
@@ -48,6 +48,7 @@ class TestCoords(unittest.TestCase):
             [3, 1, 1., 0., 0.],
             [4, 1, 1., 1., 1.],
             [5, 1, 1., 1., 0.],
+
         ]
         grids_expected = [
             #     y    z   x
@@ -130,43 +131,62 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1r_01(self):
         lines = ['cord1r,2,1,4,3']
-        card = bdf.process_card(lines)
-        card = BDFCard(card)
+
+        grids = [
+            ['GRID', 4, 0],
+            ['GRID', 3, 0],
+            ['GRID', 1, 0],
+        ]
+        card_count = {
+            'CORD1R' : 1,
+            'GRID' : 3,
+        }
+
+        model = BDF()
+        model.allocate(card_count)
+        model.add_card(lines, 'CORD1R', is_list=False)
+        for grid in grids:
+            model.add_card(grid, 'GRID', is_list=True)
+        model.build()
 
         size = 8
-        card = CORD1R(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
-        card.raw_fields()
+        coords = model.coords
+        self.assertEquals(coords.get_cid_by_coord_id(2), 2)
+        self.assertEquals(coords.get_rid_by_coord_id(2), 0)
+
+        bdf_file = StringIO()
+        coords.write_card(bdf_file, size=8, is_double=False)
 
     def test_cord2c_01(self):
-        lines = [
+        lines_a = [
             'CORD2C*                3               0              0.              0.',
             '*                     0.              0.              0.              1.*',
             '*                     1.              0.              1.'
         ]
-        model = BDF(debug=False)
-        card = model.process_card(lines)
-        card = BDFCard(card)
-        model.coords.add_cord2c(card)
-
-        lines = [
+        lines_b = [
             'CORD2R         4       3     10.      0.      5.     10.     90.      5.',
             '             10.      0.      6.'
         ]
-        card = model.process_card(lines)
-        card = BDFCard(card)
-        model.coords.add_cord2r(card)
+        card_count = {
+            'CORD2C' : 1,
+            'CORD2R' : 1,
+        }
+
+        model = BDF(debug=False)
+        model.allocate(card_count)
+        card = model.add_card(lines_a, 'CORD2C', is_list=False)
+        card = model.add_card(lines_b, 'CORD2R', is_list=False)
         model.build()
 
-        cord2r = model.Coord(3)
-        self.assertEquals(cord2r.Cid(), 3)
-        self.assertEquals(cord2r.Rid(), 0)
+        cord2r = model.coords.slice_by_coord_id(3)
+        print(type(cord2r))
+        self.assertEquals(cord2r.get_cid_by_coord_id(), 3)
+        self.assertEquals(cord2r.get_rid_by_coord_id(), 0)
 
-        cord2r = model.Coord(4)
-        self.assertEquals(cord2r.Cid(), 4)
-        self.assertEquals(cord2r.Rid(), 3)
+        cord2r = model.coords.slice_by_coord_id(4)
+        print(type(cord2r))
+        self.assertEquals(cord2r.get_cid_by_coord_id(), 4)
+        self.assertEquals(cord2r.get_rid_by_coord_id(), 3)
 
         msg = 'i=%s expected=(0., 0., 1.)'  % cord2r.i
         self.assertTrue(allclose(cord2r.i, array([0., 0., 1.])), msg)
@@ -189,12 +209,13 @@ class TestCoords(unittest.TestCase):
         model.allocate(card_count)
         for card in cards:
             model.add_card(card, card[0], comment='comment', is_list=True)
+        model.build()
         #+------+-----+----+----+----+----+----+----+------+
         #|   0  |  1  | 2  | 3  | 4  | 5  |  6 | 7  |  8   |
         #+======+=====+====+====+====+====+====+====+======+
         #| GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
         #+------+-----+----+----+----+----+----+----+------+
-        node = model.Node(4)
+        node = model.grid.slice_by_node_id(4)
         #self.assertEqual(node.get_field(1), 4)
         #self.assertEqual(node.get_field(2), 0)
         #self.assertEqual(node.get_field(3), 1.)
@@ -217,10 +238,10 @@ class TestCoords(unittest.TestCase):
         #with self.assertRaises(KeyError):
             #node.get_field(9)
 
-    def test_cord1_01(self):
+    def test_cord1r_02(self):
         model = BDF(debug=False)
         card_count = {
-            'CCORD1R' : 1,
+            'CORD1R' : 1,
             'GRID' : 3,
         }
         model.allocate(card_count)
@@ -232,23 +253,26 @@ class TestCoords(unittest.TestCase):
         ]
         for card in cards:
             model.add_card(card, card[0], comment='comment\n', is_list=True)
-        c1 = model.Coord(1)
-        print(c1)
-        print(type(c1))
-        self.assertEquals(c1.G1(), 1)
-        self.assertEquals(c1.G2(), 2)
-        self.assertEquals(c1.G3(), 3)
-
         model.build()
-        self.assertEquals(c1.G1(), 1)
-        self.assertEquals(c1.G2(), 2)
-        self.assertEquals(c1.G3(), 3)
+        c1 = model.coords.slice_by_coord_id(1)
 
-        #self.assertEquals(c1.get_node_ids(), [1, 2, 3])
-        self.assertEquals(c1.node_ids, [1, 2, 3])
+    def test_cord2r_bad_01(self):
+        model = BDF(debug=True)
 
-    def test_cord2_bad_01(self):
-        model = BDF(debug=False)
+        card_count = {
+            'GRID' : 4,
+            'CORD2R' : 3,
+        }
+        model.allocate(card_count)
+        grids = [
+            ['GRID', 1, 0],
+            ['GRID', 20, 0],
+            ['GRID', 30, 0],
+            ['GRID', 11, 5],
+        ]
+        for grid in grids:
+            model.add_card(grid, 'GRID', is_list=True)
+
         cards = [
             ['CORD2R', 1, 0, 0., 0., 0.,
                              0., 0., 0.,
@@ -273,16 +297,30 @@ class TestCoords(unittest.TestCase):
                     model.add_card(card, card[0], is_list=True)
             else:
                 model.add_card(card, card[0], is_list=True)
+        model.build()
 
         # this runs because it's got rid=0
-        cord4 = model.Coord(4)
-        cord4.transformToGlobal([0., 0., 0.])
+        coords = model.coords #.slice_by_coord_id(4)
+        coords.transform_node_id_to_global_xyz(30) # nid
+        coords.transform_node_id_to_global_xyz([30, 1, 11]) # [nid, nid, nid]
+        coords.transform_node_id_to_local_by_coord_id([30, 1, 11], 4)  # [nid, ...], cp_goal
+        coords.transform_node_id_to_local_by_coord_id([30, 1, 11], 0)  # [nid, ...], cp_goal
+
+        xyz = [0., 0., 0.]
+        coords.transform_xyz_to_global_by_coord_id(xyz, 4) # [xyz], cp_initial
+        xyz = [
+            [0., 0., 0.],
+            [1., 1., 1.],
+        ]
+        coords.transform_xyz_to_global_by_coord_id(xyz, 4) # [xyz], cp_initial
+
+        # global from global
+        coords.transform_xyz_to_global_by_coord_id(xyz, 0) # [xyz], cp_initial
 
         # this doesn't run because rid != 0
-        cord5 = model.Coord(5)
         with self.assertRaises(RuntimeError):
-            cord5.transformToGlobal([0., 0., 0.])
-        model.build()
+            # cp=0 doesn't exist
+            coords.transform_xyz_to_global_by_coord_id(xyz, 2)
 
     def test_cord2_rcs_01(self):
         """
@@ -437,29 +475,56 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
-        card = bdf.process_card(lines)
-        card = BDFCard(card)
+        grids = [
+            ['GRID',1,],
+            ['GRID',3,],
+            ['GRID',4,],
+        ]
+
+        card_count = {
+            'CORD1C' : 1,
+            'GRID' : 3,
+        }
+
+        model = BDF()
+        model.allocate(card_count)
+        model.add_card(lines, 'CORD1C', is_list=False)
+        for grid in grids:
+            model.add_card(grid, grid[0], is_list=True)
+        model.build()
 
         size = 8
-        f = StringIO()
-        card = CORD1C(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
-        card.write_bdf(f, size)
-        card.raw_fields()
+        bdf_file = StringIO()
+        card = model.coords.slice_by_coord_id(2)
+        self.assertEquals(card.get_cid_by_coord_id(), 2)
+        self.assertEquals(card.get_rid_by_coord_id(), 0)
+        card.write_card(bdf_file, size=8, is_double=False)
 
     def test_cord1s_01(self):
-        lines = ['cord1s,2,1,4,3']
-        card = bdf.process_card(lines)
-        card = BDFCard(card)
+        lines = ['cord1s,2, 1,4,3']
+        grids = [
+            ['GRID',1,],
+            ['GRID',3,],
+            ['GRID',4,],
+        ]
+        card_count = {
+            'CORD1S' : 1,
+            'GRID' : 3,
+        }
+        model = BDF()
+        model.allocate(card_count)
+        model.add_card(lines, 'CORD1S', is_list=False)
+        for grid in grids:
+            model.add_card(grid, grid[0], is_list=True)
+        model.build()
 
         size = 8
-        f = StringIO()
-        card = CORD1S(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
-        card.write_bdf(f, size)
-        card.raw_fields()
+        bdf_file = StringIO()
+        card = model.coords.slice_by_coord_id(2)
+        self.assertEquals(card.get_cid_by_coord_id(), 2)
+        self.assertEquals(card.get_rid_by_coord_id(), 0)
+        card.write_card(bdf_file, size=8, is_double=False)
+        #card.raw_fields()
 
     def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
@@ -480,7 +545,7 @@ class TestCoords(unittest.TestCase):
         model.add_card(card, card[0])
         model.build()
 
-        g = model.Node(20143)
+        g = model.grid.slice_by_node_id(20143)
         #xyz = g.Position()
         xyz = model.coords.get_global_position_by_node_id(20143, g.cp[0])[0]
 
@@ -491,9 +556,9 @@ class TestCoords(unittest.TestCase):
 
         msg = '\nexpected=%s \nactual  =%s \ndiff    =%s' % (expected, xyz, diff)
         assert allclose(diff, 0.), msg
-        coord = model.Coord(7)
-        coord.T()
-        self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
+        coord = model.coords.slice_by_coord_id(7)
+        T = coord.T[0, :, :]
+        #self.assertTrue(array_equal(T, coord.beta_n(2)))
 
     def _get_nodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
@@ -510,7 +575,7 @@ class TestCoords(unittest.TestCase):
         for coord in coords:
             cid, rid, x, y, z = coord
             model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
-            #coordObj = model.Coord(cid)
+            #coordObj = model.coords.slice_by_coord_id(cid)
 
         model.build()
 

@@ -65,7 +65,7 @@ class CTRIAX6(object):
             return arange(self.n)
         return searchsorted(element_id, self.element_id)
 
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_card(self, f, size=8, element_id=None):
         if self.n:
             i = self.get_index_by_element_id(element_id)
             Theta = [theta if theta != 0.0 else '' for theta in self.theta[i]]

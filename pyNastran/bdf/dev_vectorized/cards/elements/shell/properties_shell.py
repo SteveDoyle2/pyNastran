@@ -167,9 +167,9 @@ class PropertiesShell(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_bdf(self, f, size=8, property_id=None):
+    def write_card(self, f, size=8, property_id=None):
         f.write('$PROPERTIES_SHELL\n')
         types = self._get_types()
         for prop in types:
             #print('*SHELL', prop.type)
-            prop.write_bdf(f, size=size, property_id=property_id)
+            prop.write_card(f, size=size, property_id=property_id)

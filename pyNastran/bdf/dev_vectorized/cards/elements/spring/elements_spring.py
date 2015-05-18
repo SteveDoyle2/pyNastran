@@ -57,11 +57,11 @@ class ElementsSpring(object):
         self.celas4.add(card, comment)
         raise NotImplementedError()
 
-    def write_bdf(self, f, size=8, eids=None):
+    def write_card(self, f, size=8, eids=None):
         f.write('$ELEMENTS\n')
         types = self._get_types()
         for element in types:
-            element.write_bdf(f, size=size, eids=eids)
+            element.write_card(f, size=size, eids=eids)
 
     def _get_types(self, nlimit=True):
         types = [self.celas1,

@@ -194,7 +194,7 @@ class PBARL(Property):
         #return obj
 
     #=========================================================================
-    def write_bdf(self, f, size=8, property_id=None):
+    def write_card(self, f, size=8, property_id=None):
         #print('PBARL.n = %s' % self.n)
         if self.n:
             if property_id is None:

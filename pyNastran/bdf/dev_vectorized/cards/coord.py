@@ -1,9 +1,10 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from six import iteritems, itervalues
 from six.moves import zip
 from numpy import (array, searchsorted, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, arccos, hstack, eye, ndarray, arange, sqrt)
+                   cos, sin, arccos, hstack, eye, ndarray, arange, sqrt, unique,
+                   transpose, asarray)
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.coordinateSystems import (
@@ -13,13 +14,15 @@ from pyNastran.bdf.cards.coordinateSystems import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+
 
 def normalize(v):
     print(v)
     return v / norm(v, axis=0)
 
 # .. todo:: incomplete
-class Coord(object):
+class Coord(VectorizedCard):
     def get_global_position_by_node_id(self, node_id, cp):
         i = self.model.grid.get_node_index_by_node_id(node_id)
         self.model.log.info('i = %s; type=%s' % (i, type(i)))
@@ -50,7 +53,7 @@ class Coord(object):
         assert xyz.shape == xyz2.shape, "xyz.shape=%s xyz2.shape=%s" % (xyz.shape, xyz2.shape)
         return xyz2
 
-    def write_bdf(self, f, size, is_double, coord_id=None):
+    def write_card(self, f, size, is_double, coord_id=None):
         assert size in [8, 16], size
         assert is_double in [True, False], is_double
 
@@ -62,33 +65,83 @@ class Coord(object):
                 #i = searchsorted(self.coord_id, coord_id)
 
             if size == 8:
-                for cid, coord in iteritems(self.coords):
-                    if cid > 0:
-                        list_fields = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
-                        f.write(print_card_8(list_fields))
+                print_cardi = print_card_8
+            elif is_double:
+                print_cardi = print_card_double
             else:
-                if is_double:
-                    for cid, coord in iteritems(self.coords):
-                        if cid > 0:
-                            list_fields = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
-                            f.write(print_card_16(list_fields))
-                else:
-                    for cid, coord in iteritems(self.coords):
-                        if cid > 0:
-                            list_fields = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
-                            f.write(print_card_double(list_fields))
+                print_cardi = print_card_16
 
+            for cid, coord in iteritems(self.coords):
+                if cid > 0:
+                    if coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
+                        card = [coord.type, cid, coord.g1, coord.g2, coord.g3]
+                    else:
+                        card = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
+                    f.write(print_card_8(card))
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        msg = '<Coord object>; Instead call:'
+        msg = '<Coord object>; Instead call:\n'
         msg += '>>> coords[coord_id]'
         return msg
 
-    def __getitem__(self, value):
-        return self.coords[value]
+    def __getitem__(self, i):
+        #i = self.get_coord_index_for_coord_id()
+        #return self.coords[value]
+        return self.slice_by_index(i)
+
+    def get_coord_index_by_coord_id(self, coord_id=None, msg=''):
+        i = self._get_sorted_index(self.coord_id, coord_id, 'coord_id', 'coord_id in %s%s' % (self.type, msg), check=True)
+        return i
+
+    def slice_by_coord_id(self, coord_id=None):
+        #print('coord_id =', coord_id)
+        #print('self.coord_id =', self.coord_id)
+        i = self.get_coord_index_by_coord_id(coord_id)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = self._validate_slice(i)
+        #print('i**** = ', i)
+        assert i.max() < self.n, 'i=%s n=%s i.shape=%s' % (i, self.n, i.shape)
+        obj = Coord(self.model)
+        obj.n = len(i)
+        obj.coord_id = self.coord_id[i]
+        for coord_id in obj.coord_id:
+            obj.coords[coord_id] = self.coords[coord_id]
+        obj.Type = self.Type[i]
+        obj.origin = self.origin[i, :]
+        obj.is_resolved = self.is_resolved[i]
+        obj.T = self.T[i, :, :]
+        return obj
+
+    def get_cid_by_coord_id(self, coord_id=None):
+        i = self.get_coord_index_by_coord_id(coord_id, msg='')
+        return self.get_cid_by_coord_index(i)
+
+    def get_cid_by_coord_index(self, i=None):
+        return self.coord_id[i]
+
+    def get_coord_id_by_coord_index(self, i):
+        return self.coord_id[i]
+
+    def get_rid_by_coord_id(self, coord_id=None):
+        #i = self.get_coord_index_by_coord_id(coord_id, msg='')
+        #return self.get_rid_by_coord_index(i)
+        if coord_id is None:
+            coord_id = self.coord_id
+        coord_id = self._set_as_array(coord_id)
+        rids = []
+        for cid in coord_id:
+            rid = self.coords[cid].Rid()
+            rids.append(rid)
+        return array(rids, dtype='int32')
+
+    def get_rid_by_coord_index(self, i=None):
+        coord_id = self.get_coord_id_by_coord_index(i)
+        return self.get_rid_by_coord_id(coord_id)
 
     def allocate(self, ncards=None, card_count=None):
         float_fmt = self.model.float
@@ -98,6 +151,7 @@ class Coord(object):
                       for name in ['CORD1R', 'CORD1C', 'CORD1S',
                                    'CORD2R', 'CORD2C', 'CORD2S']
                       if name in card_count], dtype='int32').sum() + 1
+        #ncards += 1
         self.model.log.debug('nCOORDcards = %s' % ncards)
         #print('ncards coord = %s' % ncards)
         self.coord_id = zeros(ncards, dtype='int32')
@@ -105,6 +159,12 @@ class Coord(object):
         self.T = full((ncards, 3, 3), nan, dtype=float_fmt)
         self.origin = full((ncards, 3), nan, dtype=float_fmt)
         self.is_resolved = full(ncards, False, dtype='bool')
+
+        self.Type[0] = 'R'
+        self.T[0, :, :] = eye(3)
+        self.origin[0, :] = [0., 0., 0.]
+        self.is_resolved[0] = True
+        self.i = 1
 
     def __init__(self, model):
         """
@@ -116,7 +176,7 @@ class Coord(object):
         :param pcomps: the list of PCOMP cards
         :param pshears: the list of PSHEAR cards
         """
-        self.model = model
+        VectorizedCard.__init__(self, model)
         float_fmt = self.model.float
 
         self.n = 1
@@ -187,9 +247,10 @@ class Coord(object):
                                             j, ref_coord_type, ref_coord)
                 elif n == '1':
                     g123 = array([coord.g1, coord.g2, coord.g3])
-                    inode = searchsorted(self.model.grid.node_id, g123)
-                    node_cids = self.model.grid.cp[inode]
-                    xyz = self.model.grid.xyz[inode, :]
+                    grids = self.model.grid
+                    inode = grids.get_node_index_by_node_id(g123)
+                    node_cids = grids.cp[inode]
+                    xyz = grids.xyz[inode, :]
                     print('need to resolve cid=%s node_cps=%s...' % (cid, node_cids))
                     j = searchsorted(self.coord_id, node_cids)
                     is_resolved = self.is_resolved[j].all()
@@ -367,9 +428,7 @@ class Coord(object):
         self.is_resolved[i] = True
         self.origin[i] = e1
         self.T[i, :, :] = vstack([coord.i, coord.j, coord.k])
-
         coord.origin = e1
-
 
     def cylindrical_to_rectangular(self, r_theta_z):
         if len(r_theta_z.shape) == 2:
@@ -472,6 +531,55 @@ class Coord(object):
         self.coords[coord.cid] = coord
         self.n += 1
 
+    def transform_xyz_to_global_by_coord_id(self, xyz, cp):
+        xyz = _check_xyz_shape(xyz)
+        icp = self.get_coord_index_by_coord_id(cp)
+        T = self.T[icp, :, :].reshape(3, 3)
+        origin = self.origin[icp, :]
+        xyz_global = dot(xyz - origin, transpose(T))
+        return xyz_global
+
+    def transform_node_id_to_local_by_coord_id(self, node_id, cp_local):
+        xyz_global = self.transform_node_id_to_global_xyz(node_id)
+        icp = self.get_coord_index_by_coord_id(cp_local)
+        T = self.T[icp, :, :].reshape(3, 3)
+        origin = self.origin[icp, :]
+        xyz_local = dot(xyz_global - origin, transpose(T))
+        return xyz_local
+
+    def transform_node_id_to_global_xyz(self, node_id):
+        coord = self.coords[0]
+
+        grids = self.model.grid
+        inode = grids.get_node_index_by_node_id(node_id)
+        cp = grids.cp[inode]
+        ucp = unique(cp)
+        node_id = self._set_as_array(node_id)
+        nnodes = len(node_id)
+        print('node_id = ', node_id)
+        print('inode = ', inode)
+
+        xyz = zeros((nnodes, 3), dtype='float64')
+        print('cp = %s' % cp)
+        print('********')
+        print('ucp = %s' % ucp)
+        for cpi in ucp:
+            print('-----------')
+            print('cpi = %s' % cpi)
+            inodei = where(cpi == cp)[0]
+            xyzi = grids.xyz[inodei, :]
+            if cpi == 0:
+                xyz[inodei, :] = xyzi
+            else:
+                icp = self.get_coord_index_by_coord_id(cpi)
+                print('icp = %s' % icp)
+                T = self.T[icp, :, :].reshape(3, 3)
+                origin = self.origin[icp, :]
+                # dot(p - self.origin, transpose(beta))
+                xyz[inodei, :] = dot(xyzi - origin, transpose(T))
+        return xyz
+        #return self.transform_vector_to_global(p) + self.origin
+
     def transform(self, cp):
         #print('cp = %s' % cp)
         return self.coords[cp].beta()
@@ -487,12 +595,12 @@ class Coord(object):
             yield cid
 
     def values(self):
-        for coord in itervalues(self.coords):
-            yield coord
+        for i in range(self.n):
+            yield self.__getitem__(i)
 
     def items(self):
-        for cid, coord in iteritems(self.coords):
-            yield cid, coord
+        for i in range(self.n):
+            yield i, self.__getitem__(i)
 
     def iterkeys(self):
         return self.keys()
@@ -502,3 +610,10 @@ class Coord(object):
 
     def iteritems(self):
         return self.items()
+
+def _check_xyz_shape(xyz):
+    xyz = asarray(xyz)
+    ndim = len(xyz.shape)
+    if ndim == 1:
+        xyz = xyz.reshape((1, 3))
+    return xyz

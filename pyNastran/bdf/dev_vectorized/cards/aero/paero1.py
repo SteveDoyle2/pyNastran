@@ -43,7 +43,7 @@ class PAERO1(VectorizedCard):
     #def get_bodies(self):
         #return self.Bi
 
-    def write_bdf(self, f, size, is_double, property_id=None):
+    def write_card(self, f, size, is_double, property_id=None):
         if self.n:
             assert size in [8, 16], size
             assert is_double in [True, False], is_double

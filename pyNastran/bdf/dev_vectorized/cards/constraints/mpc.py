@@ -72,7 +72,7 @@ class MPC(object):
         #float_fmt = self.model.float
         self.n = len(self.constraints)
 
-    def write_bdf(self, f, size=8):
+    def write_card(self, f, size=8):
         if self.n:
             for constraint in self.constraints:
                 card = ['MPC', self.constraint_id]
@@ -85,5 +85,5 @@ class MPC(object):
 
     def __repr__(self):
         f = StringIO()
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue()

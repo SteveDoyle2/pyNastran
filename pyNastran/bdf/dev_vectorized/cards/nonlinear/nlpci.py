@@ -30,7 +30,7 @@ class NLPCI(object):
         #minalr = set_blank_if_default(self.minalr, 0.25)
         return self.raw_fields()
 
-    def write_bdf(self, f, size=8):
+    def write_card(self, f, size=8):
         card = ['NLPCI', self.nlpci_id, self.Type, self.minalr,
                 self.maxalr, self.scale, None, self.desiter, self.mxinc]
         if size == 8:

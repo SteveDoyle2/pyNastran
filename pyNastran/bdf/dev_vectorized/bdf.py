@@ -23,7 +23,7 @@ from pyNastran.utils.dev import list_print, object_attributes
 from pyNastran.utils.log import get_logger
 from pyNastran.utils.gui_io import load_file_dialog
 
-
+# coords
 from .cards.coord import Coord
 
 # nodes
@@ -122,8 +122,8 @@ from .cards.constraints.mpc import MPC, get_mpc_constraint
 from .cards.constraints.mpcadd import MPCADD
 
 
-from pyNastran.bdf.dev_vectorized.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
-                                                                  CORD2R, CORD2C, CORD2S, CORD3G)
+#from pyNastran.bdf.dev_vectorized.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
+                                                                  #CORD2R, CORD2C, CORD2S, CORD3G)
 #from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
 #                                      CORD2R, CORD2C, CORD2S, CORD3G) old...
 from pyNastran.bdf.cards.params import PARAM

@@ -44,7 +44,7 @@ class SPCADD(object):
     def build(self):
         self.spc_ids.sort()
 
-    def write_bdf(self, f, size=8):
+    def write_card(self, f, size=8):
         card = ['SPCADD', self.spc_id] + self.spc_ids
         #print "card = ", card
         if size == 8:
@@ -54,5 +54,5 @@ class SPCADD(object):
 
     def __repr__(self):
         f = StringIO()
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue().rstrip()

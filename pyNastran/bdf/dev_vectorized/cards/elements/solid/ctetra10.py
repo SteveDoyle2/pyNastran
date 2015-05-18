@@ -197,7 +197,7 @@ class CTETRA10(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_card(self, f, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)

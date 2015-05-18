@@ -301,7 +301,7 @@ class CROD(RodElement):
         return(M, dofs, nIJV)
 
     #=========================================================================
-    def write_bdf(self, f, size=8, is_double=False, element_id=None):
+    def write_card(self, f, size=8, is_double=False, element_id=None):
         if self.n:
             #print('eid %s' % element_id)
             if element_id is None:

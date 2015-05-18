@@ -60,10 +60,10 @@ class VectorizedCard(object):
 
     def __repr__(self):
         f = StringIO()
-        self.write_bdf(f)
+        self.write_card(f)
         return f.getvalue().rstrip()
 
-    def write_bdf(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         raise NotImplementedError(self.type)
 
     def _verify(self, xref=True):
@@ -86,15 +86,36 @@ class VectorizedCard(object):
         #print('shape=%s' % str(i2.shape))
         return i2
 
-    def _get_sorted_index(self, sorted_array, unsorted_array, n, field_name, msg, check=True):
+    def _set_as_array(self, i):
+        if isinstance(i, int) or isinstance(i, int64):
+            i = array([i], dtype='int32')
+        elif isinstance(i, list):
+            i = array(i, dtype='int32')
+        elif i is None:
+            raise RuntimeError(i)
+        elif len(i.shape) == 1:
+            pass
+        else:
+            print('???', i, type(i))
+        return i
+
+    def _get_sorted_index(self, sorted_array, unsorted_array, field_name, msg, check=True):
+        if field_name == 'coord_id':
+            if sorted_array.min() < 0:
+                msg = '%s.min()=%s; did you allocate & build it?\n' % (field_name, sorted_array.min())
+                raise RuntimeError(msg)
+        else:
+            if sorted_array.min() < 1:
+                msg = '%s.min()=%s; did you allocate & build it?\n' % (field_name, sorted_array.min())
+                raise RuntimeError(msg)
         if not array_equal(argsort(sorted_array), arange(len(sorted_array))):
             msg2 = '%s is not sorted\nsorted_array=%s' % (msg, sorted_array)
             raise RuntimeError(msg2)
-        assert isinstance(n, int64) or isinstance(n, int), 'field_name=%s n=%s type=%s' % (field_name, n, type(n))
+        assert isinstance(self.n, int64) or isinstance(self.n, int), 'field_name=%s n=%s type=%s' % (field_name, self.n, type(self.n))
         assert isinstance(check, bool)
         if unsorted_array is None:
             i = slice(None)
-            if n == 1:
+            if self.n == 1:
                 i = array([0], dtype='int32')
             return i
         else:
@@ -104,8 +125,8 @@ class VectorizedCard(object):
                 try:
                     sorted_array_i = sorted_array[i]
                 except IndexError:
-                    msg = 'sorted_array_i = sorted_array[i] - %s\n' % field_name
-                    msg += 'sorted_array=%s\n' % sorted_array
+                    #msg = 'sorted_array_i = sorted_array[i] - %s\n' % field_name
+                    msg = 'sorted_%s=%s\n' % (field_name, sorted_array)
                     msg += 'i=%s' % (i)
                     raise IndexError(msg)
 

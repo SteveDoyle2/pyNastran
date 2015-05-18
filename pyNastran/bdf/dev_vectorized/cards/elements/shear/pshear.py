@@ -71,7 +71,7 @@ class PSHEAR(Property):
         mpa = rho * self.thickness[i] + self.nsm[i]
         return mpa
 
-    def write_bdf(self, f, size=8, pids=None):
+    def write_card(self, f, size=8, pids=None):
         if self.n:
             if pids is None:
                 i = arange(self.n)

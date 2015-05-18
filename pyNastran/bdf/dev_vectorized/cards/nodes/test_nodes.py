@@ -23,20 +23,20 @@ class TestNodes(unittest.TestCase):
 
         #print n1
         f = StringIO()
-        nodes.write_bdf(f, size=8, write_header=False)
-        nodes.write_bdf(f, size=16, write_header=False)
-        nodes.write_bdf(f, size=16, is_double=True, write_header=False)
+        nodes.write_card(f, size=8, write_header=False)
+        nodes.write_card(f, size=16, write_header=False)
+        nodes.write_card(f, size=16, is_double=True, write_header=False)
 
         # small field
         f = StringIO()
-        nodes.write_bdf(f, size=8, write_header=False)
+        nodes.write_card(f, size=8, write_header=False)
         msg = f.getvalue()
         card = 'GRID           1       2      0.      0.      0.\n'
         self.assertCardEqual(msg, card)
 
         # large field
         f = StringIO()
-        nodes.write_bdf(f, size=16, write_header=False)
+        nodes.write_card(f, size=16, write_header=False)
         card = ('GRID*                  1               2              0.              0.\n'
                 '*                     0.\n')
         msg = f.getvalue()
@@ -60,7 +60,7 @@ class TestNodes(unittest.TestCase):
         nodes.add(data1)
         nodes.add(data2)
         f = StringIO()
-        nodes.write_bdf(f, size=8, write_header=False)
+        nodes.write_card(f, size=8, write_header=False)
         #print(f.getvalue())
 
     def test_grid_03(self):
@@ -85,7 +85,7 @@ class TestNodes(unittest.TestCase):
         #print('nodes.node_id = %s' % nodes.node_id)
         nodes.add(data3)
         f = StringIO()
-        nodes.write_bdf(f, size=8, write_header=False)
+        nodes.write_card(f, size=8, write_header=False)
         #print(f.getvalue())
 
     def test_grid_04(self):
@@ -126,7 +126,7 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(nodes.i, 4)
 
         f = StringIO()
-        nodes.write_bdf(f, size=8, write_header=False)
+        nodes.write_card(f, size=8, write_header=False)
         #print(f.getvalue())
 
         nodes.resize(2, refcheck=False)
@@ -135,7 +135,7 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(nodes.i, 2)
 
         f = StringIO()
-        nodes.write_bdf(f, size=8, write_header=False)
+        nodes.write_card(f, size=8, write_header=False)
         #print(f.getvalue())
 
     def test_spoint_01(self):
@@ -154,28 +154,28 @@ class TestNodes(unittest.TestCase):
         spoints.add(data2)
 
         f = StringIO()
-        spoints.write_bdf(f, size=8)
+        spoints.write_card(f, size=8)
         #print('spoints %s' % f.getvalue())
         self.assertEqual(len(spoints), 4)
         self.assertEqual(spoints.n, 4)
 
         spoints.add(data3)
         f = StringIO()
-        spoints.write_bdf(f, size=8)
+        spoints.write_card(f, size=8)
         #print('spoints %s' % f.getvalue())
         self.assertEqual(len(spoints), 6)
         self.assertEqual(spoints.n, 6)
 
         spoints.add(data4)
         f = StringIO()
-        spoints.write_bdf(f, size=16)
+        spoints.write_card(f, size=16)
         #print('spoints %s' % f.getvalue())
         self.assertEqual(len(spoints), 17)
         self.assertEqual(spoints.n, 17)
 
         spoints.add(data4)
         f = StringIO()
-        spoints.write_bdf(f, size=16)
+        spoints.write_card(f, size=16)
         #print('spoints %s' % f.getvalue())
         self.assertEqual(spoints.max(), 40)
         self.assertEqual(spoints.min(), 1)
@@ -192,7 +192,7 @@ class TestNodes(unittest.TestCase):
         data5 = BDFCard(['SPOINT', 50, 'THRU', 55, 59, '61', 'THRU', '64'])
         spoints.add(data5)
         f = StringIO()
-        spoints.write_bdf(f, size=16)
+        spoints.write_card(f, size=16)
         #print('spoints %s' % f.getvalue())
         self.assertEqual(spoints.max(), 64)
         self.assertEqual(spoints.min(), 1)
@@ -201,7 +201,7 @@ class TestNodes(unittest.TestCase):
         spoints.remove([1, 2, 64])
         #self.assertRaises(KeyError, spoints.remove([1, 2]))
         f = StringIO()
-        spoints.write_bdf(f, size=16)
+        spoints.write_card(f, size=16)
         #print('spoints %s' % f.getvalue())
         self.assertEqual(spoints.n, 25)
 

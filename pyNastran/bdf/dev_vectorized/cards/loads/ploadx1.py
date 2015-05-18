@@ -112,7 +112,7 @@ class PLOADX1(object):
         #    i = searchsorted(load_ids, self.load_id)
         return i
 
-    def write_bdf(self, f, size=8, load_ids=None):
+    def write_card(self, f, size=8, load_ids=None):
         if self.n:
             i = self.get_index(load_ids)
             for (lid, eid, p, n, theta) in zip(self.load_id[i],
