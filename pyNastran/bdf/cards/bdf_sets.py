@@ -421,10 +421,16 @@ class SET3(Set):
         self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
-    def symmetric_difference(self, set1):
-        s1 = set(self.IDs)
-        s2 = set(set1.IDs)
-        return s1.symmetric_difference(s2)
+    def union(self, s2):
+        assert self.desc == s2.desc, 'self.desc=%r set2.desc=%r' % (self.desc, s2.desc)
+        ids1 = set(self.IDs)
+        ids2 = set(s2.IDs)
+        self.IDs = list(ids1.union(ids2))
+
+    def symmetric_difference(self, s2):
+        ids1 = set(self.IDs)
+        ids2 = set(s2.IDs)
+        return ids1.symmetric_difference(ids2)
 
     def IsGrid(self):
         if self.desc == 'GRID':

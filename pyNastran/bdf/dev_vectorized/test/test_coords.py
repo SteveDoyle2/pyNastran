@@ -133,9 +133,9 @@ class TestCoords(unittest.TestCase):
         lines = ['cord1r,2,1,4,3']
 
         grids = [
-            ['GRID', 4, 0],
-            ['GRID', 3, 0],
-            ['GRID', 1, 0],
+            ['GRID', 4, 0, 0.0, 0., 0.],
+            ['GRID', 3, 0, 0.0, 0., 1.],
+            ['GRID', 1, 0, 0.0, 1., 0.],
         ]
         card_count = {
             'CORD1R' : 1,
@@ -179,21 +179,26 @@ class TestCoords(unittest.TestCase):
         model.build()
 
         cord2r = model.coords.slice_by_coord_id(3)
-        print(type(cord2r))
+        #print(type(cord2r))
         self.assertEquals(cord2r.get_cid_by_coord_id(), 3)
         self.assertEquals(cord2r.get_rid_by_coord_id(), 0)
 
         cord2r = model.coords.slice_by_coord_id(4)
-        print(type(cord2r))
+        #print(type(cord2r))
         self.assertEquals(cord2r.get_cid_by_coord_id(), 4)
         self.assertEquals(cord2r.get_rid_by_coord_id(), 3)
 
-        msg = 'i=%s expected=(0., 0., 1.)'  % cord2r.i
-        self.assertTrue(allclose(cord2r.i, array([0., 0., 1.])), msg)
-        delta = cord2r.j - array([1., 1., 0.]) / 2**0.5
-        self.assertTrue(allclose(cord2r.j, array([1., 1., 0.]) / 2**0.5), str(delta))
-        delta = cord2r.k - array([-1., 1., 0.]) / 2**0.5
-        self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
+        i = model.coords.get_coord_index_by_coord_id(4)
+        T = model.coords.T[i, :, :].reshape(3, 3)
+        Ti = T[0, :]
+        Tj = T[1, :]
+        Tk = T[2, :]
+        msg = 'i=%s expected=(0., 0., 1.)'  % Ti
+        self.assertTrue(allclose(Ti, array([0., 0., 1.])), msg)
+        delta = Tj - array([1., 1., 0.]) / 2**0.5
+        self.assertTrue(allclose(Tj, array([1., 1., 0.]) / 2**0.5), str(delta))
+        delta = Tk - array([-1., 1., 0.]) / 2**0.5
+        self.assertTrue(allclose(Tk, array([-1., 1., 0.]) / 2**0.5), str(delta))
 
     def test_grid_01(self):
         model = BDF(debug=False)
@@ -476,9 +481,9 @@ class TestCoords(unittest.TestCase):
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
         grids = [
-            ['GRID',1,],
-            ['GRID',3,],
-            ['GRID',4,],
+            ['GRID', 4, 0, 0.0, 0., 0.],
+            ['GRID', 3, 0, 0.0, 0., 1.],
+            ['GRID', 1, 0, 0.0, 1., 0.],
         ]
 
         card_count = {
@@ -503,9 +508,9 @@ class TestCoords(unittest.TestCase):
     def test_cord1s_01(self):
         lines = ['cord1s,2, 1,4,3']
         grids = [
-            ['GRID',1,],
-            ['GRID',3,],
-            ['GRID',4,],
+            ['GRID', 4, 0, 0.0, 0., 0.],
+            ['GRID', 3, 0, 0.0, 0., 1.],
+            ['GRID', 1, 0, 0.0, 1., 0.],
         ]
         card_count = {
             'CORD1S' : 1,
@@ -585,7 +590,7 @@ class TestCoords(unittest.TestCase):
             pos = nodes.get_position_by_node_id([nid])[0]
             n = array([x, y, z])
             msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)
-            print(msg)
+            #print(msg)
             assert allclose(n, pos), msg
 
 

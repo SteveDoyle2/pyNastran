@@ -149,8 +149,21 @@ class CQUAD4(ShellElement):
             i = None
         else:
             i = searchsorted(self.element_id, element_id)
+        return self.get_centroid_by_element_index(i, xyz_cid0)
+
+    def get_centroid_by_element_index(self, i=None, xyz_cid0=None):
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3 + n4) / 4.
+
+    def get_area_by_element_index(self, i=None, xyz_cid0=None):
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
+        normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=False)
+        return A
+
+    def get_normal_by_element_index(self, i=None, xyz_cid0=None):
+        n1, n2, n3 = self._node_locations(xyz_cid0, i)
+        normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=False, normalize=True)
+        return normal
 
     #=========================================================================
     def write_card(self, f, size=8, element_id=None):

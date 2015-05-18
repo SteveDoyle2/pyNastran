@@ -1,6 +1,7 @@
 # pylint: disable=W0212,C0103,W0633,W0611,W0201,C0301,R0915,R0912
 """
-Main BDF class
+Main BDF class.  Defines:
+  - BDF
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -139,6 +140,8 @@ from .bdf_interface.cross_reference import XRefMesh
 # old
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
+# sets
+from pyNastran.bdf.cards.bdf_sets import SET3
 
 def class_obj_defaultdict(class_obj, *args, **kwargs):
 
@@ -420,8 +423,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                 'TEMP', 'TSTEPNL', 'INCLUDE'])
-        self.uniqueBulkDataCards = self.cards_to_read.difference(
-            caseControlCards)
+        self.uniqueBulkDataCards = self.cards_to_read.difference(caseControlCards)
 
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
@@ -449,12 +451,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         disableSet = set(cards)
         self.cards_to_read.difference(disableSet)
-
-    #def _is_special_card(self, cardName):
-        #"""These cards are listed in the case control and the bulk data deck"""
-        #if cardName in self.specialCards:
-            #return True
-        #return False
 
     def __init_attributes(self):
         """
@@ -763,13 +759,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # ----------------------------------------------------------------
         #: SETx
-        self.sets = {}
-        self.asets = []
-        self.bsets = []
-        self.csets = []
-        self.qsets = []
+        self.set1 = {}
+        self.set2 = {}
+        self.set3 = {}
+        self.aset = {}
+        self.bset = {}
+        self.cset = {}
+        self.qset = {}
         #: SESETx
-        self.setsSuper = {}
+        self.seset = {}
 
         # ----------------------------------------------------------------
         #: tables
@@ -1863,7 +1861,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         elif name == 'SET1':
-            pass
+            set1 = SET1(card_obj)
+            key = set1.sid
+            if key in self.set1:
+                set1_base = self.set1[key]
+                set1_base.union(set1)
+            else:
+                self.set1[key] = set1
+        elif name == 'SET3':
+            set3 = SET3(card_obj)
+            key = set3.sid
+            if key in self.set3:
+                set3_base = self.set3[key]
+                set3_base.union(set3)
+            else:
+                self.set3[key] = set3
         elif name == 'ASET1':
             pass
         elif name == 'QSET1':

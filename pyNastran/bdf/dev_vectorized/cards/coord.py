@@ -4,7 +4,7 @@ from six.moves import zip
 from numpy import (array, searchsorted, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
                    cos, sin, arccos, hstack, eye, ndarray, arange, sqrt, unique,
-                   transpose, asarray)
+                   transpose, asarray, isnan, array_equal)
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.coordinateSystems import (
@@ -18,8 +18,15 @@ from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
 def normalize(v):
-    print(v)
-    return v / norm(v, axis=0)
+    #print('-----------')
+    #print('normalize(v); v=%s ' % v)
+    ni = norm(v, axis=0)
+    #print('isnan', isnan(ni))
+    if ni.min() == 0.0:
+        msg = 'v=%s\n' % v
+        msg = 'ni=%s\n' % ni
+        raise RuntimeError(msg)
+    return v / ni
 
 # .. todo:: incomplete
 class Coord(VectorizedCard):
@@ -226,8 +233,8 @@ class Coord(VectorizedCard):
     def resolve_coords(self, cids_to_resolve):
         while cids_to_resolve:
             cids_to_resolve2 = []
-            print('need to resolve cids=%s' % cids_to_resolve)
-            print('is_resolved=%s' % self.is_resolved)
+            #print('need to resolve cids=%s' % cids_to_resolve)
+            #print('is_resolved=%s' % self.is_resolved)
             #i = where(self.is_resolved == False)[0]
             #cids_to_resolve = self.coord_id[i]
             for cid in cids_to_resolve:
@@ -236,10 +243,10 @@ class Coord(VectorizedCard):
                 n = coord.type[-2]
                 if n == '2':
                     rid = coord.rid
-                    print('need to resolve rid=%s...' % rid)
+                    #print('need to resolve rid=%s...' % rid)
                     j = where(self.coord_id == rid)[0]
                     is_resolved = self.is_resolved[j]
-                    print('  is rid=%i resolved -> %s' % (rid, is_resolved))
+                    #print('  is rid=%i resolved -> %s' % (rid, is_resolved))
                     if is_resolved:
                         ref_coord = self.coords[rid]
                         ref_coord_type = self.Type[j][0]
@@ -248,14 +255,15 @@ class Coord(VectorizedCard):
                 elif n == '1':
                     g123 = array([coord.g1, coord.g2, coord.g3])
                     grids = self.model.grid
+                    #print('COORD1 grids = %s' % g123)
                     inode = grids.get_node_index_by_node_id(g123)
                     node_cids = grids.cp[inode]
                     xyz = grids.xyz[inode, :]
-                    print('need to resolve cid=%s node_cps=%s...' % (cid, node_cids))
+                    #print('need to resolve cid=%s node_cps=%s...' % (cid, node_cids))
                     j = searchsorted(self.coord_id, node_cids)
                     is_resolved = self.is_resolved[j].all()
                     if is_resolved:
-                        print('  resolved -> True is_resolved=%s' % is_resolved)
+                        #print('  resolved -> True is_resolved=%s' % is_resolved)
                         ref_coord = [
                             self.coords[node_cids[0]],
                             self.coords[node_cids[1]],
@@ -268,7 +276,7 @@ class Coord(VectorizedCard):
                         self.resolve_coord1(i, coord, xyz,
                                             j, ref_coord_type, ref_coord)
                 else:
-                    print('rid=%s is not resolved' % rid)
+                    #print('rid=%s is not resolved' % rid)
                     cids_to_resolve2.append(cid)
             assert len(cids_to_resolve) < cids_to_resolve2, 'circular reference...\ncoord_ids=%s\n' % (cids_to_resolve2)
             cids_to_resolve = cids_to_resolve2
@@ -279,13 +287,13 @@ class Coord(VectorizedCard):
 
     def resolve_coord1(self, i, coord, xyz,
                        r, ref_coord_type, ref_coord):
-        print('  resolving cid=%s' % coord.cid)
+        #print('  resolving cid=%s' % coord.cid)
         # get the reference transform
         T1 = self.T[r[0], :, :].reshape(3, 3)
         T2 = self.T[r[1], :, :].reshape(3, 3)
         T3 = self.T[r[2], :, :].reshape(3, 3)
 
-        e2 = []
+        e = []
         T = [T1, T2, T3]
         for Ti, xyzi, ri, ref_coord_typei, ref_coordi in zip(T, xyz, r, ref_coord_type, ref_coord):
             #print("  xyzi = %s" % xyzi)
@@ -293,38 +301,38 @@ class Coord(VectorizedCard):
             #print("  ri = %s" % ri)
             #print("  refi = %s" % ref_coordi)
             if ref_coord_typei == 'R':  # Rectangular
-                ei2 = dot(Ti, xyzi)
+                ei = dot(Ti, xyzi)
             elif ref_coord_typei == 'C':  # Cylindrical
-                ei2 = dot(T, self.cylindrical_to_rectangular(xyzi))
+                ei = dot(T, self.cylindrical_to_rectangular(xyzi))
                  #+ self.origin[ri]
             elif ref_coord_typei == 'S':  # Spherical
-                ei2 = dot(Ti, self.spherical_to_rectangular(xyzi))
+                ei = dot(Ti, self.spherical_to_rectangular(xyzi))
             else:
                 raise NotImplementedError(ref_coord_typei)
-            e2.append(ei2)
-        print("  e2 = %s" % e2)
-        e13 = e2[2] - e2[0]
-        e12 = e2[1] - e2[0]
+            e.append(ei)
+        #print("  e = %s" % e)
+        e13 = e[2] - e[0]
+        e12 = e[1] - e[0]
 
         coord.k = normalize(e12)
         coord.j = normalize(cross(coord.k, e13))
         coord.i = cross(coord.j, coord.k)
 
-        print("  e13 = %s" % e13)
-        print("  e12 = %s" % e12)
-        print("  coord.i = %s" % coord.i)
-        print("  coord.j = %s" % coord.j)
-        print("  coord.k = %s" % coord.k)
+        #print("  e13 = %s" % e13)
+        #print("  e12 = %s" % e12)
+        #print("  coord.i = %s" % coord.i)
+        #print("  coord.j = %s" % coord.j)
+        #print("  coord.k = %s" % coord.k)
         coord.isResolved = True
         self.is_resolved[i] = True
-        self.origin[i] = e2[0]
-        print('i** = %s' % i)
-        print('coord = \n%s' % coord)
+        self.origin[i] = e[0]
+        #print('i** = %s' % i)
+        #print('coord = \n%s' % coord)
         T = vstack([coord.i, coord.j, coord.k])
-        print('T.shape = %s' % str(T.shape))
+        #print('T.shape = %s' % str(T.shape))
         self.T[i, :, :] = T
 
-        coord.origin = e2[0]
+        coord.origin = e[0]
 
     def resolve_coord2(self, i, coord,
                        r, ref_coord_type, ref_coord):
@@ -342,9 +350,10 @@ class Coord(VectorizedCard):
         T = self.T[r, :, :].reshape(3, 3)
         #e1 = coord.origin
 
-        print("  coord.e1 = %s" % coord.e1)
-        print("  coord.e2 = %s" % coord.e2)
-        print("  coord.e3 = %s" % coord.e3)
+        #print('  ref_coord_type = %s' % ref_coord_type)
+        #print('  coord.e1 = %s' % coord.e1)
+        #print('  coord.e2 = %s' % coord.e2)
+        #print('  coord.e3 = %s' % coord.e3)
         #print("  T[%i] = %s" % (i, T))
         # transform coord.e2/e3 to the global
         if ref_coord_type == 'R':  # Rectangular
@@ -355,13 +364,14 @@ class Coord(VectorizedCard):
             e2 = e123[0, :]
             e3 = e123[1, :]
         elif ref_coord_type == 'C':  # Cylindrical
-            #e1 = dot(T, self.cylindrical_to_rectangular(coord.e1))
-            #e2 = dot(T, self.cylindrical_to_rectangular(coord.e2))
-            #e3 = dot(T, self.cylindrical_to_rectangular(coord.e3))
+            _e1 = dot(T, self.cylindrical_to_rectangular(coord.e1)).T
+            _e2 = dot(T, self.cylindrical_to_rectangular(coord.e2)).T
+            _e3 = dot(T, self.cylindrical_to_rectangular(coord.e3)).T
+            _e123 = vstack([_e1, _e2, _e3])
 
             pts = vstack([coord.e1, coord.e2, coord.e3])
-            e123 = dot(T, self.spherical_to_rectangular(pts).T).T
-            #assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
+            e123 = dot(T, self.cylindrical_to_rectangular(pts).T)
+            assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
             e1 = e123[0, :]
             e2 = e123[1, :]
             e3 = e123[2, :]
@@ -377,16 +387,20 @@ class Coord(VectorizedCard):
 
             pts = vstack([coord.e1, coord.e2, coord.e3])
             #print("pts", pts, pts.shape)
-            #_t1 = self.spherical_to_rectangular(coord.e1)  # good are _
-            #_t2 = self.spherical_to_rectangular(coord.e2)
-            #_t3 = self.spherical_to_rectangular(coord.e3)
-            #_t123 = vstack([_t1, _t2, _t3])
-            #t123 = self.spherical_to_rectangular(pts)
-            #assert array_equal(t123, _t123), "t123=\n%s\n\n_t123=\n%s" % (t123, _t123)
+            if 1:
+                _e1 = self.spherical_to_rectangular(coord.e1)  # good are _
+                _e2 = self.spherical_to_rectangular(coord.e2)
+                _e3 = self.spherical_to_rectangular(coord.e3)
+                _e123 = vstack([_e1, _e2, _e3])
+                e123 = _e123
+                #t123 = self.spherical_to_rectangular(pts)
+                #assert array_equal(t123, _t123), "t123=\n%s\n\n_t123=\n%s" % (t123, _t123)
 
-            #e123 = dot(T, t123).T
-            e123 = dot(T, self.spherical_to_rectangular(pts).T).T
-            #assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
+                #e123 = dot(T, t123).T
+                #e123 = dot(T, self.spherical_to_rectangular(pts).T).T
+                #assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
+            else:
+                e123 = dot(T, self.spherical_to_rectangular(pts).T).T
             e1 = e123[0, :]
             e2 = e123[1, :]
             e3 = e123[2, :]
@@ -408,15 +422,17 @@ class Coord(VectorizedCard):
             raise RuntimeError(ref_coord_type)
         #e2, rid_matrix = self.rid.transformToGlobal(coord.e2)
         #e3, rid_matrix = self.rid.transformToGlobal(coord.e3)
-        print("  e1 = %s" % e1)
-        print("  e2 = %s" % e2)
-        print("  e3 = %s" % e3)
+        #print("  e1 = %s" % list(e1))
+        #print("  e2 = %s" % list(e2))
+        #print("  e3 = %s" % list(e3))
         e13 = e3 - e1
         e12 = e2 - e1
+        #print('e13 = %s' % list(e13))
+        #print('e12 = %s' % list(e12))
         coord.k = normalize(e12)
-        print('k = %s' % coord.k)
+        #print('k = %s' % list(coord.k))
         coord.j = normalize(cross(coord.k, e13))
-        print('j = %s' % coord.j)
+        #print('j = %s' % list(coord.j))
         coord.i = cross(coord.j, coord.k)
 
         #print("  e13 = %s" % e13)
@@ -456,6 +472,16 @@ class Coord(VectorizedCard):
         theta = degrees(arctan2(y, x))
         R = sqrt(x * x + y * y)
         r_theta_z = vstack([R, theta, z])
+        return r_theta_z
+
+    def cylindrical_to_spherical(self, r_theta_z):
+        xyz = self.cylindrical_to_rectangular(r_theta_z)
+        r_theta_phi = self.rectangular_to_spherical(xyz)
+        return r_theta_phi
+
+    def spherical_to_cylindrical(self, r_theta_phi):
+        xyz = self.spherical_to_rectangular(r_theta_phi)
+        r_theta_z = self.rectangular_to_cylindrical(xyz)
         return r_theta_z
 
     def spherical_to_rectangular(self, r_theta_phi):
@@ -501,32 +527,38 @@ class Coord(VectorizedCard):
         return r_theta_phi
 
     def add_cord1r(self, card, comment=''):
+        """adds a CORD1R card"""
         coord = CORD1R(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord1c(self, card, comment=''):
+        """adds a CORD1C card"""
         coord = CORD1C(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord1s(self, card, comment=''):
+        """adds a CORD1S card"""
         coord = CORD1S(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord2r(self, card, comment=''):
+        """adds a CORD2R card"""
         coord = CORD2R(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
         #print('adding cord2r; cids=%s' % self.coords.keys())
 
     def add_cord2c(self, card, comment=''):
+        """adds a CORD2C card"""
         coord = CORD2C(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord2s(self, card, comment=''):
+        """adds a CORD2S card"""
         coord = CORD2S(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
@@ -556,23 +588,23 @@ class Coord(VectorizedCard):
         ucp = unique(cp)
         node_id = self._set_as_array(node_id)
         nnodes = len(node_id)
-        print('node_id = ', node_id)
-        print('inode = ', inode)
+        #print('node_id = ', node_id)
+        #print('inode = ', inode)
 
         xyz = zeros((nnodes, 3), dtype='float64')
-        print('cp = %s' % cp)
-        print('********')
-        print('ucp = %s' % ucp)
+        #print('cp = %s' % cp)
+        #print('********')
+        #print('ucp = %s' % ucp)
         for cpi in ucp:
-            print('-----------')
-            print('cpi = %s' % cpi)
+            #print('-----------')
+            #print('cpi = %s' % cpi)
             inodei = where(cpi == cp)[0]
             xyzi = grids.xyz[inodei, :]
             if cpi == 0:
                 xyz[inodei, :] = xyzi
             else:
                 icp = self.get_coord_index_by_coord_id(cpi)
-                print('icp = %s' % icp)
+                #print('icp = %s' % icp)
                 T = self.T[icp, :, :].reshape(3, 3)
                 origin = self.origin[icp, :]
                 # dot(p - self.origin, transpose(beta))
@@ -591,8 +623,8 @@ class Coord(VectorizedCard):
         return len(self.coords)
 
     def __iter__(self):
-        for cid in self.coords:
-            yield cid
+        for i in self.n:
+            yield i
 
     def values(self):
         for i in range(self.n):

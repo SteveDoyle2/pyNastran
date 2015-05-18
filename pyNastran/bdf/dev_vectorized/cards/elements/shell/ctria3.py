@@ -299,14 +299,31 @@ class CTRIA3(ShellElement):
         ]
         Cs *= E * h * k / (2.*(1+nu))
 
-    def get_centroid_by_element_id(self, element_id=None, node_ids=None, xyz_cid0=None):
-        if element_id is None:
-            element_id = self.element_id
-            i = None
-        else:
-            i = searchsorted(self.element_id, element_id)
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_centroid_by_element_index(i, xyz_cid0)
+
+    def get_area_by_element_id(self, element_id=None, xyz_cid0=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_area_by_element_index(i, xyz_cid0)
+
+    def get_normal_by_element_id(self, element_id=None, xyz_cid0=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_normal_by_element_index(i, xyz_cid0)
+
+    def get_centroid_by_element_index(self, i=None, xyz_cid0=None):
         n1, n2, n3 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3) / 3.
+
+    def get_area_by_element_index(self, i=None, xyz_cid0=None):
+        n1, n2, n3 = self._node_locations(xyz_cid0, i)
+        normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=False)
+        return A
+
+    def get_normal_by_element_index(self, i=None, xyz_cid0=None):
+        n1, n2, n3 = self._node_locations(xyz_cid0, i)
+        normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=False, normalize=True)
+        return normal
 
     #def slice_by_index(self, i):
         #i = self._validate_slice(i)
@@ -340,5 +357,8 @@ def _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True):
         #n = len(_norm)
         #for i in range(n):
             #normal[i] /= n
-        normal /= n
+        #print(normal.shape)
+        #print(n.shape)
+        nx = len(n)
+        normal /= n.reshape(nx, 1)
     return normal, A

@@ -34,6 +34,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     for node in nodes:
         card = print_card_16(['GRID', nid, cid] + list(node))
         f.write(card)
+        nid += 1
 
     eid = 1
     f.write('$Elements\n')
