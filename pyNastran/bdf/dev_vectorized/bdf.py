@@ -141,7 +141,7 @@ from .bdf_interface.cross_reference import XRefMesh
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
 # sets
-from pyNastran.bdf.cards.bdf_sets import SET3
+from pyNastran.bdf.cards.bdf_sets import SET1, SET3
 
 def class_obj_defaultdict(class_obj, *args, **kwargs):
 

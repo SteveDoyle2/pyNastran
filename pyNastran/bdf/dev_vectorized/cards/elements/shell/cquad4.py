@@ -161,7 +161,7 @@ class CQUAD4(ShellElement):
         return A
 
     def get_normal_by_element_index(self, i=None, xyz_cid0=None):
-        n1, n2, n3 = self._node_locations(xyz_cid0, i)
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
         normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=False, normalize=True)
         return normal
 
@@ -241,5 +241,8 @@ def _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True):
         #n = len(_norm)
         #for i in range(n):
             #normal[i] /= _norm[i]
-        normal /= n
+        #normal /= n
+        nx = len(n)
+        normal /= n.reshape(nx, 1)
+
     return normal, A

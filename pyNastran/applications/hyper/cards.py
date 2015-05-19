@@ -14,14 +14,15 @@ class FLOW(BaseCard):
             self.Vy = double(card, 4, 'Vy')
             self.Vz = double(card, 5, 'Vz')
         elif 'MACH' == self.mode:
-            self.Nx = double(card, 3, 'Nx')
-            self.Ny = double(card, 4, 'Ny')
-            self.Nz = double(card, 5, 'Nz')
+            #self.Nx = double(card, 3, 'Nx')
+            #self.Ny = double(card, 4, 'Ny')
+            #self.Nz = double(card, 5, 'Nz')
 
-            self.Ma = double(card, 6, 'Ma')
-            self.alpha = double(card, 7, 'alpha')
-            self.beta = double_or_blank(card, 8, 'beta', 0.)
-            self.phi = double_or_blank(card, 9, 'phi', 0.)
+            self.Ma = double(card, 3, 'Ma')
+            self.alpha = double(card, 4, 'alpha')
+            self.beta = double_or_blank(card, 5, 'beta', 0.)
+            #self.phi = double_or_blank(card, 9, 'phi', 0.)
+            self.phi = 0.0
         self.p = double_or_blank(card, 10, 'p', 0.)
         self.q = double_or_blank(card, 11, 'q', 0.)
         self.r = double_or_blank(card, 12, 'r', 0.)
@@ -47,8 +48,8 @@ class FLOW(BaseCard):
             V = self.Ma * a * array([ca*cb,
                                      sp*sa*cb+cp*sb,
                                      cp*sa*cb-sp*sb], dtype='float32')
-            n = array([self.Nx, self.Ny, self.Nz])
-            n /= norm(n)
+            #n = array([self.Nx, self.Ny, self.Nz])
+            #n /= norm(n)
             #V = dot(V, n)
         return V, a
 
