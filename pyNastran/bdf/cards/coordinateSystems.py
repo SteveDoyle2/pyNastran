@@ -75,7 +75,7 @@ class Coord(BaseCard, CoordDeprecated):
         return self.cid
 
     def setup(self):
-        """
+        r"""
         .. math::
           e_{13} = e_3 - e_1
 
@@ -322,8 +322,6 @@ class Coord(BaseCard, CoordDeprecated):
 
         :param self:   the coordinate system object
         :param p:      the point to transform
-        :param beta:   the transformation matrix to apply - created by
-                       transformToGlobal
         :param debug:  developer debug
 
         .. note::  uses the matrix as there is no linking from a global
@@ -914,7 +912,7 @@ class Cord1x(Coord):
             coord = CORD2R(card=None, data=data, comment=self.comment())
         elif self.type == 'CORD1C':
             coord = CORD2C(card=None, data=data, comment=self.comment())
-        elif self.type == 'CORD1C':
+        elif self.type == 'CORD1S':
             coord = CORD2S(card=None, data=data, comment=self.comment())
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
