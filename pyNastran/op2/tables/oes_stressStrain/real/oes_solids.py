@@ -1128,10 +1128,10 @@ class RealSolidStrain(StrainObject):
 
     def ovm(self, o11, o22, o33, o12, o13, o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = 0.5 * ((o11 - o22) ** 2 +
-                     (o22 - o33) ** 2 +
-                     (o11 - o33) ** 2 +
-                     6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
+        ovm = sqrt(0.5 * ((o11 - o22) ** 2 +
+                          (o22 - o33) ** 2 +
+                          (o11 - o33) ** 2 +
+                     6 * (o23 ** 2 + o13 ** 2 + o12 ** 2)))
         return ovm
 
     def octahedral(self, o11, o22, o33, o12, o13, o23):
