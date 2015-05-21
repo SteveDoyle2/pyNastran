@@ -1,6 +1,6 @@
 from __future__ import print_function
 from six import iteritems, itervalues
-from six.moves import zip
+from six.moves import zip, range
 import scipy
 from pyNastran.bdf.bdf import BDF
 from numpy import array, unique, where, arange, hstack, vstack, searchsorted
@@ -22,7 +22,7 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     all_nids = set(model.nodes.keys())
 
     nodes_to_remove = all_nids - nids_used
-    print('nodes_to_remove = %s' % nodes_to_remove)
+    #print('nodes_to_remove = %s' % nodes_to_remove)
     for nid in nodes_to_remove:
         del model.nodes[nid]
     model.write_bdf(bdf_filename_out)
@@ -207,17 +207,120 @@ def _write_nodes(self, outfile, size, is_double):
         outfile.write(''.join(msg))
 
 
-def bdf_renumber(bdf_filename, bdf_filename_out):
+def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     """
-    ..warning:: only supports nodes/properties/elements
+    Supports
+    ========
+     - GRID
+     - COORDx
+     - properties
+        - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
+          PROD/PTUBE/PBEAM
+     - materials
+     - loads should be updated...mabye not all...
+     - RBAR/RBAR1/RBE1/RBE3...not RBE2/SUPORT/SUPORT1
+
+    Not Done
+    ========
+     - CMASSx/CONMx/PMASS
+     - SPOINT
+     - any cards with SPOINTs
+       - DMIG/DMI/DMIJ/DMIJI/DMIK/etc.
+       - CELASx
+       - CDAMPx
+     - SPC/SPC1/SPCADD renumbering (nodes are supported)
+     - SPCD/SPCAX
+     - MPC/MPCADD renumbering (nodes are supported)
+     - aero cards
+     - thermal cards
+     - case control
+
+    ..warning:: spoints might be problematic...check
+    ..warning:: still in development
     """
     model = BDF()
     model.read_bdf(bdf_filename)
 
     nid = 1
-    for nidi, node in iteritems(model.nodes):
-        node.nid = nid
-        nid += 1
+    spoints = list(model.spoints.spoints)
+    nids = model.nodes.keys()
+
+    spoints_nids = spoints + nids
+    spoints_nids.sort()
+    i = 1
+    nnodes = len(spoints_nids)
+    nid_map = {}
+    reverse_nid_map = {}
+
+    i = 1
+    j = 1
+    #print(spoints_nids)
+    k = 0
+
+    i = 1
+    #banned_nodes = spoints
+    for nid in spoints_nids:
+        if nid in spoints:
+            pass
+            #print('sid=%s -> %s' % (nid, i))
+            #i += 1
+        else:
+            while i in spoints:
+                #print('*bump')
+                i += 1
+            #print('nid=%s -> %s' % (nid, i))
+            nid_map[nid] = i
+            reverse_nid_map[i] = nid
+            i += 1
+
+    #for nid in sorted(nids):
+        #nid_map[nid] = i
+        #reverse_nid_map[i] = nid
+        #i += 1
+    #print(nid_map)
+    #print(reverse_nid_map)
+    mids = (
+        model.materials.keys() +
+        model.creepMaterials.keys() +
+        model.MATT1.keys() +
+        model.MATT2.keys() +
+        model.MATT3.keys() +
+        model.MATT4.keys() +
+        model.MATT5.keys() +
+        #model.MATT6.keys() +
+        #model.MATT7.keys() +
+        model.MATT8.keys() +
+        model.MATS1.keys())
+    all_materials = (
+        model.materials,
+        model.creepMaterials,
+        model.MATT1,
+        model.MATT2,
+        model.MATT3,
+        model.MATT4,
+        model.MATT5,
+        #model.MATT6,
+        #model.MATT7,
+        model.MATT8,
+        model.MATS1
+    )
+    mids.sort()
+    nmaterials = len(mids)
+
+    mid_map = {}
+    for i in range(nmaterials):
+        mid = mids[i]
+        mid_map[mid] = i + 1
+
+    #spoints2 = arange(1, len(spoints) + 1)
+    for nid, node in iteritems(model.nodes):
+        nid_new = nid_map[nid]
+        node.nid = nid_new
+
+    #while i for i in range(1, nnodes + 1):
+        #nid = reverse_nid_map[i]
+        #node = model.nodes[nid]
+        #node.nid = i
 
     pid = 1
     for pidi, prop in iteritems(model.properties):
@@ -228,8 +331,93 @@ def bdf_renumber(bdf_filename, bdf_filename_out):
     for eidi, element in iteritems(model.elements):
         element.eid = eid
         eid += 1
-    model.write_bdf(bdf_filename_out)
 
+    #mid = 1
+    for materials in all_materials:
+        for midi, material in iteritems(materials):
+            mid = mid_map[midi]
+            material.mid = mid
+
+    # TODO: spc ids not updated - case control
+    for spc_id, spc_group in iteritems(model.spcs):
+        for i, spc in enumerate(spc_group):
+            if spc.type in ['SPC', 'SPCD']:
+                gids = []
+                #print(spc.gids)
+                for spci, gidi in enumerate(spc.gids):
+                    gidii = nid_map[gidi]
+                    gids.append(gidii)
+                spc.gids = gids
+            elif spc.type == 'SPC1':
+                gids = []
+                #print(spc.nodes)
+                for spci, gidi in enumerate(spc.nodes):
+                    gidii = nid_map[gidi]
+                    gids.append(gidii)
+                spc.nodes = gids
+            #elif spc.type == 'SPCD':
+                #raise NotImplementedError('SPCD')
+            elif spc.type == 'SPCAX':
+                raise NotImplementedError('SPCAX')
+            else:
+                raise NotImplementedError(spc.type)
+
+
+    # TODO: mpc ids not updated - case control
+    for mpc_id, mpc_group in iteritems(model.mpcs):
+        for mpc in mpc_group:
+            if mpc.type == 'MPC':
+                gids = []
+                for mpci, gidi in enumerate(mpc.gids):
+                    gidii = nid_map[gidi]
+                    gids.append(gidii)
+                mpc.gids = gids
+            else:
+                raise NotImplementedError(mpci.type)
+
+    for eidi, elem in iteritems(model.rigidElements):
+        #$RBAR, EID, GA, GB, CNA
+        #RBAR           5       1       2  123456
+        elem.eid = eid
+        if elem.type in ['RBAR', 'RBAR1']:
+            #print('ga=%s gb=%s' % (elem.ga, elem.gb))
+            elem.ga = nid_map[elem.ga]
+            elem.gb = nid_map[elem.gb]
+        elif elem.type == 'RBE1':
+            gids = []
+            for gidi in elem.Gmi:
+                gidii = nid_map[gidi]
+                gids.append(gidii)
+            elem.Gmi = gids
+
+            gids = []
+            for gidi in elem.Gni:
+                gidii = nid_map[gidi]
+                gids.append(gidii)
+            elem.Gni = gids
+        elif elem.type == 'RBE3':
+            #for pack in [self.refgrid, self.WtCG_groups[2], self.Gmi]
+            elem.refgrid = nid_map[elem.refgrid]
+            for i, (wt, ci, Gij) in enumerate(elem.WtCG_groups):
+                gids = []
+                for gidi in Gij:
+                    gidii = nid_map[gidi]
+                    gids.append(gidii)
+                elem.WtCG_groups[i][2] = gids
+
+            gids = []
+            for gidi in elem.Gmi:
+                gidii = nid_map[gidi]
+                gids.append(gidii)
+            elem.Gmi = gids
+        elif elem.type == 'RBE2':
+            raise NotImplementedError('RBE2')
+        else:
+            raise NotImplementedError(elem.type)
+        eid += 1
+
+    model.write_bdf(bdf_filename_out, size=8, is_double=False,
+                    interspersed=False)
 
 def main():
     msg = 'CEND\n'
