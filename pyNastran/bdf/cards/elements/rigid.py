@@ -168,7 +168,6 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gni = []
         self.Cni = []
 
-        #fields = [interpret_value(field) for field in card[2:]]
         iUm = card.index('UM')
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'
@@ -182,8 +181,6 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             self.alpha = 0.
 
         # loop till UM, no field9,field10
-        #print("iUm = %s" % iUm)
-
         n = 1
         i = 0
         offset = 2
@@ -201,8 +198,6 @@ class RBE1(RigidElement):  # maybe not done, needs testing
                 assert cni is None
             i += 2
 
-        #print('Gni =', self.Gni)
-        #print('Cni =', self.Cni)
         self.Gmi = []
         self.Cmi = []
 
@@ -210,30 +205,25 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         n = 1
         offset = iUm + 1
         i = 0
-        while offset + i < len(card):  # dont grab alpha
+
+        # dont grab alpha
+        while offset + i < len(card):
             gmi = integer_or_blank(card, offset + i, 'gm%i' % n)
             cmi = components_or_blank(card, offset + i + 1, 'cm%i' % n)
             if gmi:
-                #print("gmi=%s cmi=%s" % (gmi ,cmi))
                 self.Gmi.append(gmi)
                 self.Cmi.append(cmi)
                 n += 1
             else:
                 assert cmi is None
             i += 2
-        #print('Gmi =', self.Gmi)
-        #print('Cmi =', self.Cmi)
-        #print(self)
-        #sys.exit()
 
     def raw_fields(self):
         list_fields = [self.type, self.eid]
 
         for (i, gn, cn) in zip(count(), self.Gni, self.Cni):
-            #print('i=%r gn=%r cn=%r' % (i, gn, cn))
             list_fields += [gn, cn]
             if i > 0 and i % 3 == 0:
-                #print('adding blank')
                 list_fields += [None]
 
         nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM/ALPHA onto next line
@@ -244,11 +234,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         list_fields += ['UM']
         j = 1
         for (i, gm, cm) in zip(count(), self.Gmi, self.Cmi):
-            #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
             list_fields += [gm, cm]
             if i > 0 and j % 3 == 0:
                 list_fields += [None, None]
-                #print "---"
                 j -= 3
             j += 1
 
@@ -332,9 +320,8 @@ class RBE2(RigidElement):
 
             j = 4
             self.Gmi = []
-            for i in range(len(card)-4-n):
+            for i in range(len(card) - 4 - n):
                 gmi = integer(card, j + i, 'Gm%i' % (i + 1))
-                #print('gm%i = %s' % (i + 1, gmi))
                 self.Gmi.append(gmi)
         else:
             self.eid = data[0]
@@ -342,8 +329,8 @@ class RBE2(RigidElement):
             self.cm = data[2]
             self.Gmi = data[3]
             self.alpha = data[4]
-            print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
-                  % (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
+            #print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
+                  #% (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
             #raise NotImplementedError('RBE2 data...')
 
         assert self.gn is not None, 'gn=%s' % self.gn
@@ -565,7 +552,6 @@ class RBE3(RigidElement):
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.refgrid, self.refc]
         for (wt, ci, Gij) in self.WtCG_groups:
-            #print('wt=%s ci=%s Gij=%s' % (wt, ci, Gij))
             list_fields += [wt, ci] + Gij
         nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 
@@ -583,8 +569,6 @@ class RBE3(RigidElement):
         if self.Gmi:
             list_fields += ['UM']
         if self.Gmi:
-            #print("Gmi = %s" % self.Gmi)
-            #print("Cmi = %s" % self.Cmi)
             for (gmi, cmi) in zip(self.Gmi, self.Cmi):
                 list_fields += [gmi, cmi]
 

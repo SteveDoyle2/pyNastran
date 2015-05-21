@@ -212,10 +212,9 @@ class SUPORT1(Constraint):
 
 class SUPORT(Constraint):
     """
-    ::
-
-      SUPORT  ID1 C1 ID2 C2 ID3 C3 ID4 C4
-      SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
+    +---------+-----+-----+-----+-----+-----+-----+-----+----+
+    | SUPORT  | ID1 | C1  | ID2 |  C2 | ID3 | C3  | ID4 | C4 |
+    +---------+-----+-----+-----+-----+-----+-----+-----+----+
     """
     type = 'SUPORT'
 
@@ -224,9 +223,10 @@ class SUPORT(Constraint):
         if comment:
             self._comment = comment
 
-        self.IDs = []
+        self.IDs = [] ## TODO:  IDs reference nodes???
         self.Cs = []
         if card:
+            # TODO: remove fields...
             fields = card.fields(1)
 
             nfields = len(card)
@@ -374,20 +374,20 @@ class SPC(Constraint):
             self._comment = comment
         if card:
             self.conid = integer(card, 1, 'sid')
-            self.gids = [integer(card, 2, 'G1'), integer_or_blank(card, 5, 'G2')]
-            # :0 if scalar point 1-6 if grid
-            self.constraints = [components_or_blank(card, 3, 'C1', 0),
-                                components_or_blank(card, 6, 'C2', 0)]
-            self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                             double_or_blank(card, 7, 'D2', 0.0)]
-
-            # reduce the size if there are duplicate Nones
-            nConstraints = max(len(self.gids),
-                               len(self.constraints),
-                               len(self.enforced))
-            self.gids = self.gids[0:nConstraints]
-            self.constraints = self.constraints[0:nConstraints]
-            self.enforced = self.enforced[0:nConstraints]
+            if card.field(5) is None:
+                    self.gids = [integer(card, 2, 'G1'),]
+                    self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+            else:
+                    self.gids = [
+                        integer(card, 2, 'G1'),
+                        integer(card, 5, 'G2'),
+                    ]
+                    # :0 if scalar point 1-6 if grid
+                    self.constraints = [components_or_blank(card, 3, 'C1', 0),
+                                        components_or_blank(card, 6, 'C2', 0)]
+                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                                     double_or_blank(card, 7, 'D2', 0.0)]
         else:
             self.conid = data[0]
             self.gids = [data[1]]
@@ -652,7 +652,12 @@ class MPCADD(ConstraintADD):
     Defines a multipoint constraint equation of the form
     :math:`\Sigma_j A_j u_j =0` where :math:`u_j` represents
     degree-of-freedom :math:`C_j` at grid or scalar point :math:`G_j`.
-    mPCADD   2       1       3
+
+    +--------+----+----+-----+
+    |    1   | 2  |  3 |  4  |
+    +--------+----+----+-----+
+    | MPCADD | 2  |  1 |  3  |
+    +--------+----+----+-----+
     """
     type = 'MPCADD'
 
