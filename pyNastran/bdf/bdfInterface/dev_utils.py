@@ -3,7 +3,7 @@ from six import iteritems, itervalues
 from six.moves import zip, range
 import scipy
 from pyNastran.bdf.bdf import BDF
-from numpy import array, unique, where, arange, hstack, vstack, searchsorted
+from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique
 
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
@@ -211,29 +211,41 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     """
     Supports
     ========
-     - GRID
+     - GRIDs
+       - superelements?
      - COORDx
+     - elements
+        - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
           PROD/PTUBE/PBEAM
+     - mass
+        - CMASSx/CONMx/PMASS
+
      - materials
      - loads should be updated...mabye not all...
-     - RBAR/RBAR1/RBE1/RBE3...not RBE2/SUPORT/SUPORT1
+     - RBAR/RBAR1/RBE1/RBE2/RBE3...not SUPORT/SUPORT1
 
     Not Done
     ========
-     - CMASSx/CONMx/PMASS
      - SPOINT
      - any cards with SPOINTs
        - DMIG/DMI/DMIJ/DMIJI/DMIK/etc.
        - CELASx
        - CDAMPx
+     - superelements
      - SPC/SPC1/SPCADD renumbering (nodes are supported)
      - SPCD/SPCAX
      - MPC/MPCADD renumbering (nodes are supported)
      - aero cards
-     - thermal cards
+       - FLFACT
+       - CAEROx
+       - PAEROx
+       - SPLINEx
+     - thermal cards?
+     - optimization cards
      - case control
+     - SETx
 
     ..warning:: spoints might be problematic...check
     ..warning:: still in development
@@ -242,7 +254,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     model.read_bdf(bdf_filename)
 
     nid = 1
-    spoints = list(model.spoints.spoints)
+    if model.spoints is None:
+        spoints = []
+    else:
+        spoints = list(model.spoints.spoints)
     nids = model.nodes.keys()
 
     spoints_nids = spoints + nids
@@ -272,7 +287,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
             nid_map[nid] = i
             reverse_nid_map[i] = nid
             i += 1
-
     #for nid in sorted(nids):
         #nid_map[nid] = i
         #reverse_nid_map[i] = nid
@@ -290,7 +304,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         #model.MATT6.keys() +
         #model.MATT7.keys() +
         model.MATT8.keys() +
-        model.MATS1.keys())
+        model.MATT9.keys() +
+        model.MATS1.keys() +
+        model.MATS3.keys() +
+        model.MATS8.keys()
+    )
     all_materials = (
         model.materials,
         model.creepMaterials,
@@ -302,8 +320,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         #model.MATT6,
         #model.MATT7,
         model.MATT8,
-        model.MATS1
+        model.MATT9,
+        model.MATS1,
+        model.MATS3,
+        model.MATS8,
     )
+    mids = unique(mids)
     mids.sort()
     nmaterials = len(mids)
 
@@ -317,18 +339,28 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         nid_new = nid_map[nid]
         node.nid = nid_new
 
-    #while i for i in range(1, nnodes + 1):
-        #nid = reverse_nid_map[i]
-        #node = model.nodes[nid]
-        #node.nid = i
+    cid = 0
+    cid_map = {}
+    for cidi, coord in iteritems(model.coords):
+        coord.cid = cid
+        cid_map[cidi] = cid
+        cid += 1
 
     pid = 1
     for pidi, prop in iteritems(model.properties):
         prop.pid = pid
         pid += 1
+    for pidi, prop in iteritems(model.properties_mass):
+        # PMASS
+        prop.pid = pid
+        pid += 1
 
     eid = 1
     for eidi, element in iteritems(model.elements):
+        element.eid = eid
+        eid += 1
+    for eidi, element in iteritems(model.masses):
+        # CONM1, CONM2, CMASSx
         element.eid = eid
         eid += 1
 
@@ -396,7 +428,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
                 gids.append(gidii)
             elem.Gni = gids
         elif elem.type == 'RBE3':
-            #for pack in [self.refgrid, self.WtCG_groups[2], self.Gmi]
             elem.refgrid = nid_map[elem.refgrid]
             for i, (wt, ci, Gij) in enumerate(elem.WtCG_groups):
                 gids = []
@@ -411,7 +442,16 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
                 gids.append(gidii)
             elem.Gmi = gids
         elif elem.type == 'RBE2':
-            raise NotImplementedError('RBE2')
+            #RBE2        3690    3389  123456    3387    3386    3385    3388       9+
+            #+             10       2       1       6       5
+            elem.gn = nid_map[elem.gn]
+            gids = []
+            for gidi in elem.Gmi:
+                gidii = nid_map[gidi]
+                gids.append(gidii)
+            elem.Gmi = gids
+
+            #raise NotImplementedError('RBE2')
         else:
             raise NotImplementedError(elem.type)
         eid += 1

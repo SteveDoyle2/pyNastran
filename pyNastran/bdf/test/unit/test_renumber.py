@@ -1,6 +1,9 @@
 from pyNastran.bdf.bdfInterface.dev_utils import bdf_renumber
 import unittest
+import os
 
+import pyNastran
+pkg_path = pyNastran.__path__[0]
 
 class TestRenumber(unittest.TestCase):
     def test_renumber_1(self):
@@ -59,6 +62,12 @@ class TestRenumber(unittest.TestCase):
 
         # for now we're testing things don't crash
         bdf_renumber('renumber_in.bdf', 'renumber_out.bdf')
+
+    def test_renumber_02(self):
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm.dat')
+        bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm_renumber.dat')
+        bdf_renumber(bdf_filename, bdf_filename2)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -335,7 +335,7 @@ class RBE2(RigidElement):
 
         assert self.gn is not None, 'gn=%s' % self.gn
         assert self.cm is not None, 'cm=%s' % self.cm
-        self.gn = str(self.gn)
+        self.gn = self.gn
         self.cm = str(self.cm)
 
     def convert_to_MPC(self, mpc_id):
