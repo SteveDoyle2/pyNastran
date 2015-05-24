@@ -4,7 +4,7 @@ from six.moves import zip, range
 import scipy
 from pyNastran.bdf.bdf import BDF
 from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique
-
+from pyNastran.bdf.cards.baseCard import expand_thru
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     """
@@ -456,8 +456,76 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
             raise NotImplementedError(elem.type)
         eid += 1
 
+    ispline = 1
+    for spline in sorted(iteritems(model.splines)):
+        model.sid = ispline
+        ispline += 1
+
+    table_id = 1
+    for table_idi, table in sorted(iteritems(model.tables)):
+        table.tid = table_id
+        table_id += 1
+    for table_idi, table in sorted(iteritems(model.randomTables)):
+        table.tid = table_id
+        table_id += 1
+
+    eid_map = {}
+    mpc_map = {}
+    spc_map = {}
+    _update_case_control(model, nid_map, eid_map, spc_map, mpc_map)
     model.write_bdf(bdf_filename_out, size=8, is_double=False,
                     interspersed=False)
+
+def _update_case_control(model, nid_map, eid_map, spc_map, mpc_map):
+    elemental_quantities = ['STRESS', 'STRAIN', 'FORCE']
+    nodal_quanitities = ['DISPLACEMENT', 'VELOCITY', 'ACCELERATION', 'SPCFORCES', 'MPCFORCES', 'GPFORCES']
+
+    # TODO: renumber the sets
+    #iset = 1
+    for isubcase, subcase in sorted(iteritems(model.caseControlDeck.subcases)):
+        print('-----------------------')
+        print(subcase)
+        for key, values in sorted(iteritems(subcase.params)):
+            if key in ['LOAD', 'SPC', 'MPC', 'METHOD']:
+                continue
+
+            if 'SET ' not in key:
+                value, options, param_type = values
+                print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                if isinstance(value, int):
+                    seti = 'SET %i' % (value)
+                    seti2 = subcase.get_parameter(seti, msg=', which is needed by %s' % key)
+                    if key in ['LOAD']:
+                        pass
+                    elif key in ['SPC']:
+                        pass
+                    elif key in ['METHOD']:
+                        pass
+                    elif key in elemental_quantities:
+                        #set_values = expand_thru(seti2)
+                        # renumber eids
+                        if 0:
+                            values2 = []
+                            for eid in value:
+                                eid_new = eid_map[eid]
+                                values2.append(eid_new)
+                            #seti2.set_value
+                    elif key in nodal_quantities:
+                        set_values = expand_thru(seti2)
+                        # renumber nids
+                        if 0:
+                            values2 = []
+                            for nid in value:
+                                nid_new = nid_map[nid]
+                                values2.append(nid_new)
+                            #seti2.set_value
+                        pass
+                    else:
+                        print('key=%s seti2=%s' % (key, seti2))
+
+                    #if value ==
+        print()
+
 
 def main():
     msg = 'CEND\n'

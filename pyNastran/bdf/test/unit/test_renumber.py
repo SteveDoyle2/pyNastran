@@ -6,7 +6,7 @@ import pyNastran
 pkg_path = pyNastran.__path__[0]
 
 class TestRenumber(unittest.TestCase):
-    def test_renumber_1(self):
+    def test_renumber_01(self):
         msg = 'CEND\n'
         msg += 'BEGIN BULK\n'
         msg += 'GRID,10,,1.0\n'
@@ -66,6 +66,11 @@ class TestRenumber(unittest.TestCase):
     def test_renumber_02(self):
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm.dat')
         bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm_renumber.dat')
+        bdf_renumber(bdf_filename, bdf_filename2)
+
+    def test_renumber_03(self):
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush.dat')
+        bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush_renumber.dat')
         bdf_renumber(bdf_filename, bdf_filename2)
 
 
