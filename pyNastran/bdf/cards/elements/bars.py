@@ -413,6 +413,14 @@ class CBAR(LineElement):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
+
+    @nodes.setter
+    def nodes(self, values):
+        return values
+
     @node_ids.setter
     def node_ids(self, value):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
