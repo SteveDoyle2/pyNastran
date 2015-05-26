@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import zip
 import os
 import unittest
@@ -5,6 +6,7 @@ import unittest
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
+from pyNastran.bdf.subcase import write_set, collapse_thru_packs
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
@@ -40,18 +42,19 @@ class CaseControlTest(unittest.TestCase):
         deck.add_parameter_to_local_subcase(1, 'SET 1 = 100')
         deck.add_parameter_to_local_subcase(1, 'SET 2 = 200')
 
-        lines = ['DISPLACEMENT(PLOT,PUNCH) = 8',
-                 'GPFORCE = 7',
-                 'MPC = 3',
-                 'SPC = 2',
-                 'STRESS = ALL',
-                 'SUBCASE 1',
-                 '    SET 1 = 100',
-                 '    SET 2 = 200',
-                 '    ANALYSIS = SAERO',
-                 '    STRAIN = 7',
-                 'SUBCASE 2',
-                 '    ANALYSIS = STATIC',]
+        lines = [
+            'DISPLACEMENT(PLOT,PUNCH) = 8',
+            'GPFORCE = 7',
+            'MPC = 3',
+            'SPC = 2',
+            'STRESS = ALL',
+            'SUBCASE 1',
+            '    SET 1 = 100',
+            '    SET 2 = 200',
+            '    ANALYSIS = SAERO',
+            '    STRAIN = 7',
+            'SUBCASE 2',
+            '    ANALYSIS = STATIC',]
         deck_string = '%s' % deck
         deck_lines = deck_string.strip().splitlines()
 
@@ -111,6 +114,32 @@ class CaseControlTest(unittest.TestCase):
             self.assertEqual(line, line_expected, msg)
 
     def test_case_control_03(self):
+        values = [11, 12, 13, 14, 15, 16, 17, 18,
+           19, 20, 21, 22, 23, 24, 25, 26,
+           1000000000000000000000000000000000000000000000000000000, 33]
+        spaces = '    '
+        options = 10
+
+        singles, doubles = collapse_thru_packs(values)
+        assert singles == [33, 1000000000000000000000000000000000000000000000000000000], singles
+        assert doubles == [[11, 'THRU', 26]], doubles
+        msg = write_set(values, options, spaces)
+
+    def test_case_control_04(self):
+        seti = 'SET 88 = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300'
+        lines = []
+        deck = CaseControlDeck(lines)
+        deck.create_new_subcase(2)
+        deck.add_parameter_to_local_subcase(2, seti)
+        values, options = deck.get_subcase_parameter(2, 'SET 88')
+        msg = write_set(values, options)
+
+        singles, doubles = collapse_thru_packs(values)
+        assert singles == [16, 77, 78, 79]
+        assert doubles == [[5, 'THRU', 14], [17, 'THRU', 55], [100, 'THRU', 300]]
+
+
+    def test_case_control_05(self):
         lines = [
             'SUBCASE 1',
             '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
@@ -141,8 +170,7 @@ class CaseControlTest(unittest.TestCase):
         lines_expected = [
             'SUBCASE 1',
             '    SET = ALL',
-            '    SET 88 = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79,',
-            '             100 THRU 300',
+            '    SET 88 = 16, 77, 78, 79, 5 THRU 14, 17 THRU 55, 100 THRU 300',
             '    SET 99 = 1 THRU 10',
             '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
             '    SET 111 = MAAX1, MAAX2',
@@ -155,10 +183,9 @@ class CaseControlTest(unittest.TestCase):
             '    TSTEPNL = 22',
             '    VELOCITY(PLOT,PRINT,PHASE) = ALL',
             'SUBCASE 2',
-            '    SET 2 = 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,',
-            '            25, 26,',
+            '    SET 2 = 33,',
             '            1000000000000000000000000000000000000000000000000000000,',
-            '            33',
+            '            11 THRU 26',
         ]
         for line, line_expected in zip(deck_lines, lines_expected):
             line = line.rstrip()
@@ -170,7 +197,7 @@ class CaseControlTest(unittest.TestCase):
             self.assertEqual(line, line_expected, msg)
         #print('%s' % deck)
 
-    def test_case_control_04(self):
+    def test_case_control_06(self):
         lines_expected = [
             'ACCELERATION(PLOT,PRINT,PHASE) = ALL',
             'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
@@ -190,7 +217,7 @@ class CaseControlTest(unittest.TestCase):
         #print('%s' % deck)
 
 
-    def test_case_control_05(self):
+    def test_case_control_07(self):
         lines = [
             'TITLE= VIBRATION OF A BEAM.',
             'dsaprt=(end=sens)',
@@ -246,6 +273,7 @@ class CaseControlTest(unittest.TestCase):
             msg += '-------------\n--Actual--\n%s' % deck_msg
             msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
             self.assertEqual(line, line_expected, msg)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

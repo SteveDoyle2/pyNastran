@@ -3,7 +3,10 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function
-from six import string_types, integer_types, iteritems
+from six import string_types, integer_types, iteritems, PY2
+
+
+from pyNastran.bdf.cards.baseCard import collapse_thru_packs
 
 class Subcase(object):
     """
@@ -338,7 +341,7 @@ class Subcase(object):
 
             (101, 'VUGRID'): 10,
         }
-        print("key=%s" % str(key))
+        #print("key=%s" % str(key))
         if key not in tables:
             raise KeyError(key)
         table_code = tables[key]
@@ -383,13 +386,9 @@ class Subcase(object):
           subcase1 = case_control.subcases[1]
           value, options = subcase1['LOAD']
         """
-        param_name = update_param_name(param_name)
-        if param_name not in self.params:
-            raise KeyError('%s doesnt exist in subcase=%s in the case '
-                           'control deck.' % (param_name, self.id))
-        return self.params[param_name][0:2]
+        return self.get_parameter(param_name)
 
-    def get_parameter(self, param_name):  # possibly deprecate...
+    def get_parameter(self, param_name, msg=''):  # possibly deprecate...
         """
         Gets the [value, options] for a subcase.
 
@@ -404,7 +403,15 @@ class Subcase(object):
           subcase1 = case_control.subcases[1]
           value, options = subcase1['LOAD']
         """
-        return self.__getitem__(param_name)
+        param_name = update_param_name(param_name)
+        if param_name not in self.params:
+            raise KeyError('%s doesnt exist in subcase=%s in the case '
+                           'control deck.' % (param_name, self.id))
+        return self.params[param_name][0:2]
+
+    def add_parameter_to_subcase(self, key, value, options, param_type):
+        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type',], param_type
+        self._add_data(key, value, options, param_type)
 
     def _add_data(self, key, value, options, param_type):
         key = update_param_name(key)
@@ -420,23 +427,7 @@ class Subcase(object):
         if param_type == 'SET-type':
             #print("adding isubcase=%s key=%r value=|%s| options=|%s| "
             #      "param_type=%s" %(self.id, key, value, options, param_type))
-            values2 = []
-            for (i, ivalue) in enumerate(value):
-                ivalue = ivalue.strip()
-                if ivalue.isdigit():
-                    values2.append(int(ivalue))
-                else:
-                    if value is 'EXCLUDE':
-                        msg = ('EXCLUDE is not supported on CaseControlDeck '
-                               'SET card\n')
-                        raise RuntimeError(msg)
-                    values2.append(ivalue)
-
-            #: .. todo:: expand values with THRU and EXCLUDE
-            #: .. todo:: sort values
-            #: .. todo:: collapse values when printing
-
-            #print "values2 = ",values2
+            values2 = expand_thru_case_control(value)
             options = int(options)
             return (key, values2, options)
 
@@ -482,7 +473,7 @@ class Subcase(object):
             (value, options, paramType) = param
 
             sol = solmap_toValue[value.upper()]
-            print("***value=%s sol=%s" % (value, sol))
+            #print("***value=%s sol=%s" % (value, sol))
         else:  # leaves SOL the same
             sol = self.sol
 
@@ -604,23 +595,7 @@ class Subcase(object):
 
         elif param_type == 'SET-type':
             #: .. todo:: collapse data...not written yet
-            starter = 'SET %s = ' % (options)
-            msg2 = spaces + starter
-            nChars = len(msg2)
-
-            i = 0
-            while i < len(value):
-                #print "type(value[i]) = ",type(value[i])
-                newString = '%s, ' % (value[i])
-                #print "newString[%i] = |%s|" %(i,newString)
-                if len(msg2 + newString) > 70:
-                    msg += msg2 + '\n'
-                    msg2 = ' ' * nChars + newString
-                else:
-                    msg2 += newString
-                i += 1
-
-            msg += msg2.rstrip(' \n,') + '\n'
+            msg += write_set(value, options, spaces)
         else:
             # SET-type is not supported yet...
             raise NotImplementedError((key, param))
@@ -786,13 +761,9 @@ class Subcase(object):
             msg += 'SUBCASE %s\n' % self.id
 
         nparams = 0
-        for (key, param) in self.subcase_sorted(self.params.items()):
-            #print("key=%s param=%s" %(key,param))
-            (value, options, paramType) = param
-            #print("  ?*key=|%s| value=|%s| options=%s paramType=|%s|"
-            #      %(key,value,options,paramType))
+        for key, param in self.subcase_sorted(iteritems(self.params)):
+            (value, options, param_type) = param
             msg += self.print_param(key, param)
-            #print ""
             nparams += 1
         if self.id > 0:
             assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
@@ -896,3 +867,87 @@ def update_param_name(param_name):
     #elif param_name.startswith('TEMP'):  param_name = 'TEMPERATURE'
     #print '*param_name = ',param_name
     return param_name
+
+def expand_thru_case_control(set_value):
+    set_value2 = []
+    for (i, ivalue) in enumerate(set_value):
+        ivalue = ivalue.strip()
+        if ivalue.isdigit():
+            set_value2.append(int(ivalue))
+        else:
+            if set_value is 'EXCLUDE':
+                msg = ('EXCLUDE is not supported on CaseControlDeck '
+                       'SET card\n')
+                raise RuntimeError(msg)
+            elif 'THRU' in ivalue:
+                svalues = ivalue.split()
+                if len(svalues) == 3:
+                    imin, thru, imax = svalues
+                    assert thru == 'THRU', thru
+                    imin = int(imin)
+                    imax = int(imax)
+                    for jthru in range(imin, imax + 1):
+                        set_value2.append(jthru)
+                elif len(svalues) == 5:
+                    imin, thru, imax, by_except, increment_except = svalues
+                    imin = int(imin)
+                    imax = int(imax)
+                    increment_except = int(increment_except)
+                    if by_except == 'BY':
+                        for jthru in range(imin, imax + 1, by_except):
+                            set_value2.append(jthru)
+                    elif by_except == 'EXCEPT':
+                        for jthru in range(imin, imax + 1):
+                            if jthru == increment_except:
+                                continue
+                            set_value2.append(jthru)
+                    else:
+                        raise RuntimeError(ivalue)
+                else:
+                    raise RuntimeError(ivalue)
+            else:
+                set_value2.append(ivalue)
+    set_value2.sort()
+    #print('end of expansion', set_value2)
+    return set_value2
+
+import operator
+
+def write_set(value, options, spaces=''):
+    """
+    writes
+    SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,
+         4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
+         3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
+    """
+    value.sort()
+    starter = 'SET %s = ' % (options)
+    msg2 = spaces + starter
+
+    msg = ''
+    nchars = len(msg2)
+    is_valid = True
+    for valuei in value:
+        if not isinstance(valuei, integer_types):
+            is_valid = False
+            break
+
+    if is_valid:
+        singles, doubles = collapse_thru_packs(value)
+
+        out_value = singles
+        for double in doubles:
+            assert len(double) == 3, double
+            sdouble = '%i THRU %i' % (double[0], double[2])
+            out_value.append(sdouble)
+    else:
+        out_value = value
+
+    for i, out_valuei in enumerate(out_value):
+        new_string = '%s, ' % out_valuei
+        if len(msg2 + new_string) > 70:
+            msg += msg2 + '\n'
+            msg2 = ' ' * nchars + new_string
+        else:
+            msg2 += new_string
+    return msg + msg2.rstrip(' \n,') + '\n'

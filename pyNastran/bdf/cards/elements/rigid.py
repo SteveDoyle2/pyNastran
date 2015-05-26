@@ -94,14 +94,29 @@ class RBAR(RigidElement):
         #msg += "        \n"
         #return msg
 
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, int) or self.gb is None:
+            return self.gb
+        return self.gb.nid
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.ga = model.Node(self.Ga(), msg=msg)
+        self.gb = model.Node(self.Gb(), msg=msg)
+
     def raw_fields(self):
-        list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna,
+        list_fields = ['RBAR', self.eid, self.Ga(), self.Gb(), self.cna,
                        self.cnb, self.cma, self.cmb, self.alpha]
         return list_fields
 
     def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
-        list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb,
+        list_fields = ['RBAR', self.eid, self.Ga(), self.Gb(), self.cna, self.cnb,
                        self.cma, self.cmb, alpha]
         return list_fields
 
@@ -140,13 +155,28 @@ class RBAR1(RigidElement):
             self.cb = data[3]
             self.alpha = data[4]
 
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, int) or self.gb is None:
+            return self.gb
+        return self.gb.nid
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.ga = model.Node(self.Ga(), msg=msg)
+        self.gb = model.Node(self.Gb(), msg=msg)
+
     def raw_fields(self):
-        list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, self.alpha]
+        list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, self.alpha]
         return list_fields
 
     def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
-        list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
+        list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, alpha]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -218,10 +248,22 @@ class RBE1(RigidElement):  # maybe not done, needs testing
                 assert cmi is None
             i += 2
 
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.Gni = model.Nodes(self.Gni, allowEmptyNodes=True, msg=msg)
+        self.Gmi = model.Nodes(self.Gmi, allowEmptyNodes=True, msg=msg)
+
+    @property
+    def Gni_node_ids(self):
+        return self._nodeIDs(nodes=self.Gni, allowEmptyNodes=True)
+
+    @property
+    def Gmi_node_ids(self):
+        return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
+
     def raw_fields(self):
         list_fields = [self.type, self.eid]
-
-        for (i, gn, cn) in zip(count(), self.Gni, self.Cni):
+        for (i, gn, cn) in zip(count(), self.Gni_node_ids, self.Cni):
             list_fields += [gn, cn]
             if i > 0 and i % 3 == 0:
                 list_fields += [None]
@@ -233,7 +275,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         # overly complicated loop to print the UM section
         list_fields += ['UM']
         j = 1
-        for (i, gm, cm) in zip(count(), self.Gmi, self.Cmi):
+        for (i, gm, cm) in zip(count(), self.Gmi_node_ids, self.Cmi):
             list_fields += [gm, cm]
             if i > 0 and j % 3 == 0:
                 list_fields += [None, None]
@@ -402,21 +444,29 @@ class RBE2(RigidElement):
                 msg += "'N%i'," % (nid)
             msg = msg[:-1]
             msg += '\n'
-
-            #msg += "        \n"
-            #msg += "        \n"
-        #msg += "        \n"
-        #msg += "        \n"
-        #msg += "        \n"
         return msg
 
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.Gmi = model.Nodes(self.Gmi_node_ids, allowEmptyNodes=True, msg=msg)
+        self.gn = model.Node(self.Gn(), msg=msg)
+
+    def Gn(self):
+        if isinstance(self.gn, int) or self.gn is None:
+            return self.gn
+        return self.gn.nid
+
+    @property
+    def Gmi_node_ids(self):
+        return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
+
     def raw_fields(self):
-        list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [self.alpha]
+        list_fields = ['RBE2', self.eid, self.Gn(), self.cm] + self.Gmi_node_ids + [self.alpha]
         return list_fields
 
     def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.)
-        list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
+        list_fields = ['RBE2', self.eid, self.Gn(), self.cm] + self.Gmi_node_ids + [alpha]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -435,7 +485,7 @@ class RBE3(RigidElement):
         eid
         refgrid
         refc
-        WtCG_groups = [wt,ci,Gij]
+        WtCG_groups = [wt, ci, Gij]
         Gmi
         Cmi
         alpha
@@ -447,7 +497,6 @@ class RBE3(RigidElement):
         blank(card, 2, 'blank')
         self.refgrid = integer(card, 3, 'refgrid')
         self.refc = components_or_blank(card, 4, 'refc')
-        #iUM = fields.index('UM')
 
         fields = [field.upper() if isinstance(field, string_types) else field for field in card[5:]]
         iOffset = 5
@@ -459,16 +508,13 @@ class RBE3(RigidElement):
         except ValueError:
             iAlpha = None
             iUmStop = iWtMax
-        #print("iAlpha = %s" % iAlpha)
+
         try:
             iUm = fields.index('UM') + iOffset
             iWtMax = iUm
         except ValueError:
             iUm = None
-        #print("iAlpha=%s iUm=%s" % (iAlpha, iUm))
-        #print("iAlpha=%s iWtMax=%s" % (iAlpha, iWtMax))
 
-        #print("iUM = ", iUM)
         self.WtCG_groups = []
 
         i = iOffset
@@ -496,6 +542,9 @@ class RBE3(RigidElement):
                     if gij is not None:
                         Gij.append(gij)
                     i += 1
+                assert ci is not None
+                assert len(Gij) > 0, Gij
+                assert Gij[0] is not None, Gij
                 wtCG_group = [wt, ci, Gij]
                 self.WtCG_groups.append(wtCG_group)
                 #print('----finished a group=%r----' % wtCG_group)
@@ -504,7 +553,6 @@ class RBE3(RigidElement):
 
         self.Gmi = []
         self.Cmi = []
-        #print("")
         if iUm:
             #print('UM = %s' % card.field(iUm))  # UM
             i = iUm + 1
@@ -526,9 +574,8 @@ class RBE3(RigidElement):
         else:
             #: thermal expansion coefficient
             self.alpha = 0.0
-        #print(self)
 
-    # def convertToMPC(self, mpcID):
+    # def convert_to_MPC(self, mpcID):
     #     """
     #     -Ai*ui + Aj*uj = 0
     #     where ui are the base DOFs (max=6)
@@ -549,27 +596,38 @@ class RBE3(RigidElement):
     #             card += [gm, cm, Ai]
     #     return card
 
+    @property
+    def ref_grid_id(self):
+        if isinstance(self.refgrid, int) or self.refgrid is None:
+            return self.refgrid
+        return self.refgrid.nid
+
+    @property
+    def Gmi_node_ids(self):
+        return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        assert self.Gmi is not None
+        self.Gmi = model.Nodes(self.Gmi, allowEmptyNodes=True, msg=msg)
+        assert self.Gmi is not None
+        self.refgrid = model.Node(self.ref_grid_id, msg=msg)
+        for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
+            self.WtCG_groups[i][2] = model.Nodes(Gij, allowEmptyNodes=True, msg=msg)
+
     def raw_fields(self):
-        list_fields = ['RBE3', self.eid, None, self.refgrid, self.refc]
+        list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]
         for (wt, ci, Gij) in self.WtCG_groups:
-            list_fields += [wt, ci] + Gij
+            Giji = self._nodeIDs(nodes=Gij, allowEmptyNodes=True)
+            list_fields += [wt, ci] + Giji
         nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 
         if nSpaces < 8:
             list_fields += [None] * nSpaces
 
-        if self.Gmi and 0:
-            fields2 = ['UM']
-            for (gmi, cmi) in zip(self.Gmi, self.Cmi):
-                fields2 += [gmi, cmi]
-
-            ## .. todo:: what's going on here with the arguments???
-            list_fields += build_table_lines(fields2, i=1, j=1)
-
         if self.Gmi:
             list_fields += ['UM']
-        if self.Gmi:
-            for (gmi, cmi) in zip(self.Gmi, self.Cmi):
+            for (gmi, cmi) in zip(self.Gmi_node_ids, self.Cmi):
                 list_fields += [gmi, cmi]
 
         nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line

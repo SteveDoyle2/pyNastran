@@ -250,6 +250,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     ..warning:: spoints might be problematic...check
     ..warning:: still in development
     """
+    eid_map = {}
+    nid_map = {}
+    reverse_nid_map = {}
+    mid_map = {}
+    cid_map = {}
+
     model = BDF()
     model.read_bdf(bdf_filename)
 
@@ -264,8 +270,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     spoints_nids.sort()
     i = 1
     nnodes = len(spoints_nids)
-    nid_map = {}
-    reverse_nid_map = {}
 
     i = 1
     j = 1
@@ -329,7 +333,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     mids.sort()
     nmaterials = len(mids)
 
-    mid_map = {}
     for i in range(nmaterials):
         mid = mids[i]
         mid_map[mid] = i + 1
@@ -340,7 +343,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         node.nid = nid_new
 
     cid = 0
-    cid_map = {}
     for cidi, coord in iteritems(model.coords):
         coord.cid = cid
         cid_map[cidi] = cid
@@ -358,11 +360,19 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     eid = 1
     for eidi, element in iteritems(model.elements):
         element.eid = eid
+        eid_map[eidi] = eid
         eid += 1
     for eidi, element in iteritems(model.masses):
         # CONM1, CONM2, CMASSx
         element.eid = eid
+        eid_map[eidi] = eid
         eid += 1
+    for eidi, elem in iteritems(model.rigidElements):
+        # RBAR/RBAR1/RBE1/RBE2/RBE3
+        elem.eid = eid
+        eid_map[eidi] = eid
+        eid += 1
+
 
     #mid = 1
     for materials in all_materials:
@@ -407,54 +417,55 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
             else:
                 raise NotImplementedError(mpci.type)
 
-    for eidi, elem in iteritems(model.rigidElements):
-        #$RBAR, EID, GA, GB, CNA
-        #RBAR           5       1       2  123456
-        elem.eid = eid
-        if elem.type in ['RBAR', 'RBAR1']:
-            #print('ga=%s gb=%s' % (elem.ga, elem.gb))
-            elem.ga = nid_map[elem.ga]
-            elem.gb = nid_map[elem.gb]
-        elif elem.type == 'RBE1':
-            gids = []
-            for gidi in elem.Gmi:
-                gidii = nid_map[gidi]
-                gids.append(gidii)
-            elem.Gmi = gids
-
-            gids = []
-            for gidi in elem.Gni:
-                gidii = nid_map[gidi]
-                gids.append(gidii)
-            elem.Gni = gids
-        elif elem.type == 'RBE3':
-            elem.refgrid = nid_map[elem.refgrid]
-            for i, (wt, ci, Gij) in enumerate(elem.WtCG_groups):
+    if 0:
+        for eidi, elem in iteritems(model.rigidElements):
+            #$RBAR, EID, GA, GB, CNA
+            #RBAR           5       1       2  123456
+            elem.eid = eid
+            if elem.type in ['RBAR', 'RBAR1']:
+                #print('ga=%s gb=%s' % (elem.ga, elem.gb))
+                elem.ga = nid_map[elem.ga]
+                elem.gb = nid_map[elem.gb]
+            elif elem.type == 'RBE1':
                 gids = []
-                for gidi in Gij:
+                for gidi in elem.Gmi:
                     gidii = nid_map[gidi]
                     gids.append(gidii)
-                elem.WtCG_groups[i][2] = gids
+                elem.Gmi = gids
 
-            gids = []
-            for gidi in elem.Gmi:
-                gidii = nid_map[gidi]
-                gids.append(gidii)
-            elem.Gmi = gids
-        elif elem.type == 'RBE2':
-            #RBE2        3690    3389  123456    3387    3386    3385    3388       9+
-            #+             10       2       1       6       5
-            elem.gn = nid_map[elem.gn]
-            gids = []
-            for gidi in elem.Gmi:
-                gidii = nid_map[gidi]
-                gids.append(gidii)
-            elem.Gmi = gids
+                gids = []
+                for gidi in elem.Gni:
+                    gidii = nid_map[gidi]
+                    gids.append(gidii)
+                elem.Gni = gids
+            elif elem.type == 'RBE3':
+                elem.refgrid = nid_map[elem.refgrid]
+                for i, (wt, ci, Gij) in enumerate(elem.WtCG_groups):
+                    gids = []
+                    for gidi in Gij:
+                        gidii = nid_map[gidi]
+                        gids.append(gidii)
+                    elem.WtCG_groups[i][2] = gids
 
-            #raise NotImplementedError('RBE2')
-        else:
-            raise NotImplementedError(elem.type)
-        eid += 1
+                gids = []
+                for gidi in elem.Gmi:
+                    gidii = nid_map[gidi]
+                    gids.append(gidii)
+                elem.Gmi = gids
+            elif elem.type == 'RBE2':
+                #RBE2        3690    3389  123456    3387    3386    3385    3388       9+
+                #+             10       2       1       6       5
+                elem.gn = nid_map[elem.gn]
+                gids = []
+                for gidi in elem.Gmi:
+                    gidii = nid_map[gidi]
+                    gids.append(gidii)
+                elem.Gmi = gids
+
+                #raise NotImplementedError('RBE2')
+            else:
+                raise NotImplementedError(elem.type)
+            eid += 1
 
     ispline = 1
     for spline in sorted(iteritems(model.splines)):
@@ -469,7 +480,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         table.tid = table_id
         table_id += 1
 
-    eid_map = {}
     mpc_map = {}
     spc_map = {}
     _update_case_control(model, nid_map, eid_map, spc_map, mpc_map)
@@ -483,18 +493,18 @@ def _update_case_control(model, nid_map, eid_map, spc_map, mpc_map):
     # TODO: renumber the sets
     #iset = 1
     for isubcase, subcase in sorted(iteritems(model.caseControlDeck.subcases)):
-        print('-----------------------')
-        print(subcase)
+        #print('-----------------------')
+        #print(subcase)
         for key, values in sorted(iteritems(subcase.params)):
             if key in ['LOAD', 'SPC', 'MPC', 'METHOD']:
                 continue
 
             if 'SET ' not in key:
                 value, options, param_type = values
-                print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
                 if isinstance(value, int):
                     seti = 'SET %i' % (value)
-                    seti2 = subcase.get_parameter(seti, msg=', which is needed by %s' % key)
+                    msg = ', which is needed by %s' % key
+                    seti2, seti_key = subcase.get_parameter(seti, msg=msg)
                     if key in ['LOAD']:
                         pass
                     elif key in ['SPC']:
@@ -504,24 +514,30 @@ def _update_case_control(model, nid_map, eid_map, spc_map, mpc_map):
                     elif key in elemental_quantities:
                         #set_values = expand_thru(seti2)
                         # renumber eids
-                        if 0:
-                            values2 = []
-                            for eid in value:
-                                eid_new = eid_map[eid]
-                                values2.append(eid_new)
-                            #seti2.set_value
+
+                        #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                        #print(seti2)
+                        values2 = []
+                        for nid in seti2:
+                            nid_new = eid_map[nid]
+                            values2.append(nid_new)
+                        param_type = 'SET-type'
+                        #print('updating SET %s' % options)
+                        subcase.add_parameter_to_subcase(key, values2, options, param_type)
+
                     elif key in nodal_quantities:
-                        set_values = expand_thru(seti2)
                         # renumber nids
-                        if 0:
-                            values2 = []
-                            for nid in value:
-                                nid_new = nid_map[nid]
-                                values2.append(nid_new)
-                            #seti2.set_value
-                        pass
+                        values2 = []
+                        for nid in value:
+                            nid_new = nid_map[nid]
+                            values2.append(nid_new)
+                        param_type = 'SET-type'
+                        #print('updating SET %s' % options)
+                        subcase.add_parameter_to_subcase(key, values2, options, param_type)
                     else:
-                        print('key=%s seti2=%s' % (key, seti2))
+                        pass
+                        #print('key=%s seti2=%s' % (key, seti2))
+                        #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
 
                     #if value ==
         print()

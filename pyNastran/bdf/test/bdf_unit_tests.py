@@ -185,7 +185,8 @@ class BaseCard_Test(Tester):
 
         data = [1, 3, 4, 5, 6, 17]
         expected = [1, 3, 4, 5, 6, 17]
-        self.assertEqual(collapse_thru_by(data), expected, collapse_thru_by(data))
+        msg = 'expected=%s actual=%s' % (expected, collapse_thru_by(data))
+        self.assertEqual(collapse_thru_by(data), expected, msg)
 
         data = [1, 3, 4, 5, 6, 7, 17]
         expected = [1, 3, 4, 'THRU', 7, 17]

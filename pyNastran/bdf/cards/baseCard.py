@@ -1,13 +1,31 @@
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, integer_types
-from six.moves import zip, range
+from six import string_types, integer_types, PY2
+from six.moves import zip
+
+from numpy import arange
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
+
+
+if PY2:
+    def long_range(start, stop, step=1):
+        if isinstance(stop, long):
+            out = []
+            i = start
+            while i < stop:
+                out.append(i)
+                i += step
+            return out
+        else:
+            return xrange(start, stop, step)
+    range = long_range
+else:
+    pass
 
 
 class BaseCard(BaseCardDeprecated):
@@ -111,7 +129,7 @@ class BaseCard(BaseCardDeprecated):
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def print_raw_card(self, size=8, is_double=False):  ## TODO: needs to be fixed
+    def print_raw_card(self, size=8, is_double=False):
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return self.comment() + print_card(list_fields, size=size, is_double=is_double)
@@ -451,7 +469,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     return out
 
 
-def expand_thru_exclude(self, fields):
+def expand_thru_exclude(fields):
     """
     Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
@@ -544,14 +562,14 @@ def condense(value_list):
     packs = []
 
     dv_old = None
-    firstVal = value_list[0]
-    lastVal = firstVal
+    first_val = value_list[0]
+    last_val = first_val
 
     for val in value_list[1:]:
         try:
-            dv = val - lastVal
+            dv = val - last_val
         except TypeError:
-            print("lastVal=%r val=%r" % (lastVal, val))
+            print("lastVal=%r val=%r" % (last_val, val))
             print("valueList=%r" % value_list)
             raise
 
@@ -561,18 +579,18 @@ def condense(value_list):
 
         # fill up the pack
         if dv_old == dv:
-            lastVal = val
+            last_val = val
         else:
-            packs.append([firstVal, lastVal, dv_old])
-            lastVal = val
+            packs.append([first_val, last_val, dv_old])
+            last_val = val
             dv_old = None
-            firstVal = val
+            first_val = val
 
     # fills the last pack
     if dv_old == dv:
-        packs.append([firstVal, val, dv])
+        packs.append([first_val, val, dv])
     else:
-        packs.append([firstVal, val, dv_old])
+        packs.append([first_val, val, dv_old])
     return packs
 
 
@@ -598,16 +616,21 @@ def build_thru_packs(packs, max_dv=1):
         else:
             if by == 1:
                 if last_val - first_val < 3: # dont make extra THRU cards
-                    for val in range(first_val, last_val + 1):
-                        singles.append(val)
+                    singlei = list(range(first_val, last_val + 1, 1))
+                    singles += singlei
                 else:
                     double = [first_val, 'THRU', last_val]
                     doubles.append(double)
             else:
-                for val in range(first_val, last_val + 1, by):
-                    singles.append(val)
+                #if by == 1:
+                singlei = list(range(first_val, last_val + by, by))
+                singles += singlei
+                #for val in range(first_val, last_val + 1, by):
+                    #singles.append(val)
+                #else:
+                    #double = [first_val, 'THRU', last_val, 'BY', by]
+                    #doubles.append(double)
     return singles, doubles
-
 
 def build_thru(packs, max_dv=None):
     """
@@ -645,8 +668,9 @@ def build_thru(packs, max_dv=None):
                     fields.append('BY')
                     fields.append(dv)
                 else:
-                    for v in range(first_val, last_val + dv, dv):
-                        fields.append(v)
+                    fields += list(range(first_val, last_val + dv, dv))
+                    #for v in range(first_val, last_val + dv, dv):
+                        #fields.append(v)
             else:
                 for v in range(first_val, last_val + dv, dv):
                     fields.append(v)
