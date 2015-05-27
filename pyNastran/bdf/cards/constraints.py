@@ -614,7 +614,7 @@ class SPC1(Constraint):
 
     def cross_reference(self, model):
         msg = ', which is required by SPC1; conid=%s' % self.conid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
 
     def raw_fields(self):
         fields = ['SPC1', self.conid, self.constraints] + self.node_ids
@@ -632,31 +632,6 @@ class SPC1(Constraint):
 class ConstraintADD(Constraint):
     def __init__(self, card, data):
         Constraint.__init__(self, card, data)
-
-    def _reprSpcMpcAdd(self, fields):
-        outSPCs = ''
-        fieldSets = []
-
-        #print("repr---mpcadd")
-        #print(self.sets)
-        for spcsets in sorted(self.sets):
-            #print("*spcsets",spcsets)
-            if isinstance(spcsets, int):  # spcset wasnt found
-                #print("int unfound...%s" %(spcsets))
-                #outSPCs += str(spcsets)
-                fields.append(spcsets)
-            elif isinstance(spcsets, list):
-                for spcset in sorted(spcsets):
-                    fieldSets.append(spcset.conid)
-                    outSPCs += str(spcset)
-            else:
-                # dict
-                #outSPCs += str(spcsets.conid)
-                for (key, spcset) in sorted(iteritems(spcsets)):
-                    fieldSets.append(spcsets.conid)
-
-        # SPCADD
-        return self.print_card(fields + list(set(fieldSets))) + outSPCs
 
 
 class SPCADD(ConstraintADD):
@@ -699,18 +674,19 @@ class SPCADD(ConstraintADD):
         for spc in self.sets:
             if isinstance(spc, int):
                 spc_ids.append(spc)
+            elif isinstance(spc, list):
+                spc_ids.append(spc[0].conid)
             else:
-                spc_ids.append(spc.conid)
+                raise TypeError('type=%s; spc=\n%s' % (type(spc), spc))
         return spc_ids
 
     def cross_reference(self, model):
         for i, spc in enumerate(self.sets):
-            model.sets[i] = model.SPC(spc)
+            self.sets[i] = model.SPC(spc)
 
     def raw_fields(self):
         fields = ['SPCADD', self.conid] + self.spc_ids
         return fields
-        #return self._reprSpcMpcAdd(fields)
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
@@ -756,14 +732,13 @@ class MPCADD(ConstraintADD):
 
     def cross_reference(self, model):
         for i, mpc in enumerate(self.sets):
-            model.sets[i] = model.MPC(mpc)
+            self.sets[i] = model.MPC(mpc)
 
     def raw_fields(self):
         fields = ['MPCADD', self.conid]  # +self.sets
         for set_id in self.sets:
             fields.append(set_id)
         return fields
-        #return self._reprSpcMpcAdd(fields)
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()

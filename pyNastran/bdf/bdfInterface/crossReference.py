@@ -136,25 +136,23 @@ class XrefMesh(object):
         """
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC cards.
         """
-        #self.spcObject.cross_reference(self)  # enable to output SPCs
-        #self.mpcObject.cross_reference(self)  # enable to output MPCs
-
-        #self.spcObject = constraintObject()
         for spcadd in itervalues(self.spcadds):
             self.spcObject.Add(spcadd)
+            spcadd.cross_reference(self)
 
         for spcs in itervalues(self.spcs):
             for spc in spcs:
                 self.spcObject.append(spc)
+                spc.cross_reference(self)
 
         for mpcadd in itervalues(self.mpcadds):
             self.mpcObject.Add(mpcadd)
+            mpc.cross_reference(mpcadd)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
                 self.mpcObject.append(mpc)
-        #self.mpcObject = constraintObject()
-        #self.spcObject.cross_reference(self)
+                mpc.cross_reference(self)
 
     def _cross_reference_coordinates(self):
         """
