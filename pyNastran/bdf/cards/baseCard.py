@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types, PY2
 from six.moves import zip
 
-from numpy import arange
+from numpy import nan, empty
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.field_writer_8 import is_same
@@ -13,11 +13,18 @@ from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
 
 
 if PY2:
-    def long_range(start, stop, step=1):
+    def long_range(start, stop=None, step=1):
         if isinstance(stop, long):
             out = []
             i = start
             while i < stop:
+                out.append(i)
+                i += step
+            return out
+        elif stop is None:
+            i = 0
+            out = []
+            while i < start:
                 out.append(i)
                 i += step
             return out
@@ -243,12 +250,12 @@ class Element(BaseCard, ElementDeprecated):
         if not nodes:
             nodes = self.nodes
 
-        positions = []
-        for node in nodes:
+        nnodes = len(self.nodes)
+        positions = empty((nnodes, 3), dtype='float64')
+        positions.fill(nan)
+        for i, node in enumerate(nodes):
             if node is not None:
-                positions.append(node.Position())
-            else:
-                positions.append(None)
+                positions[i, :] = node.Position()
         return positions
 
     def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
@@ -387,7 +394,8 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     :param sort_fields: should the fields be sorted at the end? (default=False)
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [field.upper() if isinstance(field, string_types) else field for field in fields]
+    fields = [field.upper()
+              if isinstance(field, string_types) else field for field in fields]
 
     if isinstance(fields, int):
         return [fields]
@@ -400,7 +408,9 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         if fields[i] == 'THRU':
             istart = int(fields[i - 1])
             iend = int(fields[i + 1])
-            for j in range(istart, iend + 1): # adding 1 to iend for the range offset
+
+            # adding 1 to iend for the range offset
+            for j in range(istart, iend + 1):
                 out.append(j)
             i += 2
         else:
