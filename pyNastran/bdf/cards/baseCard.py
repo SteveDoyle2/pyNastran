@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types, PY2
 from six.moves import zip
 
-from numpy import arange
+import numpy as np
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.field_writer_8 import is_same
@@ -249,7 +249,7 @@ class Element(BaseCard, ElementDeprecated):
                 positions.append(node.Position())
             else:
                 positions.append(None)
-        return positions
+        return np.array(positions)
 
     def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
