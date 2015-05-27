@@ -21,6 +21,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from six.moves import zip, range
 from itertools import count
+import warnings
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -161,6 +162,48 @@ class Constraint(BaseCard):
         fields = [self.type, self.conid]
         return fields
 
+    def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
+        """returns nodeIDs for repr functions"""
+        try:
+            if not nodes:
+                nodes = self.nodes
+
+            if allowEmptyNodes:
+                nodes2 = []
+                for i, node in enumerate(nodes):
+                    #print("node=%r type=%r" % (node, type(node)))
+                    if node == 0 or node is None:
+                        nodes2.append(None)
+                    elif isinstance(node, int):
+                        nodes2.append(node)
+                    else:
+                        nodes2.append(node.nid)
+                return nodes2
+            else:
+                try:
+                    nodeIDs = []
+                    for i, node in enumerate(nodes):
+                        #print("node=%r type=%r" % (node, type(node)))
+                        if isinstance(node, int):
+                            nodeIDs.append(node)
+                        else:
+                            nodeIDs.append(node.nid)
+
+                    #if isinstance(nodes[0], int):
+                        #nodeIDs = [node for node in nodes]
+                    #else:
+                        #nodeIDs = [node.nid for node in nodes]
+                except:
+                    print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
+                        self.type, nodes, allowEmptyNodes, msg))
+                    raise
+                assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
+                return nodeIDs
+        except:
+            print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
+                self.type, nodes, allowEmptyNodes, msg))
+            raise
+
 
 class SUPORT1(Constraint):
     """
@@ -199,9 +242,18 @@ class SUPORT1(Constraint):
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
 
+    @property
+    def node_ids(self):
+        msg = ', which is required by SUPORT1'
+        return self._nodeIDs(nodes=self.IDs, allowEmptyNodes=True, msg=msg)
+
+    def cross_reference(self, model):
+        msg = ', which is required by SUPORT1'
+        self.IDs = model.Nodes(self.IDs, allowEmptyNodes=True, msg=msg)
+
     def raw_fields(self):
         fields = ['SUPORT1', self.conid]
-        for ID, c in zip(self.IDs, self.Cs):
+        for ID, c in zip(self.node_ids, self.Cs):
             fields += [ID, c]
         return fields
 
@@ -248,9 +300,18 @@ class SUPORT(Constraint):
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
 
+    @property
+    def node_ids(self):
+        msg = ', which is required by SUPORT'
+        return self._nodeIDs(nodes=self.IDs, allowEmptyNodes=True, msg=msg)
+
+    def cross_reference(self, model):
+        msg = ', which is required by SUPORT'
+        self.IDs = model.Nodes(self.IDs, allowEmptyNodes=True, msg=msg)
+
     def raw_fields(self):
         fields = ['SUPORT']
-        for ID, c in zip(self.IDs, self.Cs):
+        for ID, c in zip(self.node_ids, self.Cs):
             fields += [ID, c]
         return fields
 
@@ -286,14 +347,14 @@ class MPC(Constraint):
                 grid = integer(card, ifield, 'G%i' % i)
                 component = components_or_blank(card, ifield + 1, 'constraint%i' % i, 0)  # scalar point
                 if i == 1:
-                    value = double(card, ifield + 2, 'enforced%i' % i)
-                    if value == 0.0:
+                    enforcedi = double(card, ifield + 2, 'enforced%i' % i)
+                    if enforcedi == 0.0:
                         raise RuntimeError('enforced1 must be nonzero; value=%r' % value)
                 else:
-                    value = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
+                    enforcedi = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
                 self.gids.append(grid)
                 self.constraints.append(component)
-                self.enforced.append(value)
+                self.enforced.append(enforcedi)
                 i += 1
 
                 if ifield + 4 > nfields and i != 2:
@@ -301,29 +362,32 @@ class MPC(Constraint):
                     break
                 grid = integer(card, ifield + 3, 'G%i' % i)
                 component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point
-                value = double_or_blank(card, ifield + 5, 'enforced%i' % i)
+                enforcedi = double_or_blank(card, ifield + 5, 'enforced%i' % i)
                 self.gids.append(grid)
                 self.constraints.append(component)
-                self.enforced.append(value)
+                self.enforced.append(enforcedi)
                 i += 1
-
-            # reduce the size if there are duplicate Nones
-            #nConstraints = max(len(self.gids       ),
-            #                   len(self.constraints),
-            #                   len(self.enforced   ))
-            #self.gids        = self.gids[       0:nConstraints]
-            #self.constraints = self.constraints[0:nConstraints]
-            #self.enforced    = self.enforced[   0:nConstraints]
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
     def nodeIDs(self):
-        return self.gids
+        warnings.warn('deprecated; use self.node_ids instead of self.nodeIDs()',
+                      DeprecationWarning, stacklevel=2)
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        return self._nodeIDs(self, nodes=self.gids, allowEmptyNodes=True, msg=msg)
+
+    def cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
-        for i, gid, constraint, enforced in zip(count(), self.gids, self.constraints, self.enforced):
+        for i, gid, constraint, enforced in zip(count(), self.node_ids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
             if i % 2 == 1 and i > 0:
                 fields.append(None)
@@ -394,28 +458,26 @@ class SPC(Constraint):
             self.constraints = [data[2]]
             self.enforced = [data[3]]
 
-    def getNodeDOFs(self, model):
-        pass
-        #return conid, dofs
+    #def getNodeDOFs(self, model):
+        #pass
 
     def nodeIDs(self):
-        return self.gids
+        warnings.warn('deprecated; use self.node_ids instead of self.nodeIDs()',
+                      DeprecationWarning, stacklevel=2)
+        return self.node_ids
 
-    def cross_reference(self, i, node):
-        dof_count = 0
-        self.gids[i] = node
-        #for (i,constraint) in enumerate(self.constraints):
-        #    if self.constraint is None:
-        #        node = self.Node(self.gids[i])
-        #        if not node.Is('GRID'): # SPOINT, EPOINT, DPOINT
-        #            dofCount+=1
-        #        else:
-        #            dofCount+=6
-        return dof_count
+    @property
+    def node_ids(self):
+        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        return self._nodeIDs(nodes=self.gids, allowEmptyNodes=True, msg=msg)
+
+    def cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
 
     def raw_fields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in zip(self.gids, self.constraints,
+        for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
                                                self.enforced):
             fields += [gid, constraint, enforced]
         return fields
@@ -492,7 +554,9 @@ class SPCAX(Constraint):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def cross_reference(self, i, node):
+    def cross_reference(self, model):
+        #self.rid = model.ring[self.rid]
+        #self.hid = model.harmonic[self.hid]
         pass
 
     def raw_fields(self):
@@ -543,19 +607,17 @@ class SPC1(Constraint):
             self.constraints = data[1]
             self.nodes = data[2:]
 
-    def cross_reference(self, i, node):
-        self.nodes[i] = node
+    @property
+    def node_ids(self):
+        msg = ', which is required by SPC1; conid=%s' % self.conid
+        return self._nodeIDs(self.nodes, allowEmptyNodes=True, msg=msg)
 
-    def raw_fields(self):  # SPC1
-        #test = [i for i in range(self.nodes[0], self.nodes[-1]+1)]
-        #print("self.nodes = ",self.nodes)
-        #print("test       = ",test)
-        #if self.nodes == test:
-        #    nodes = [self.nodes[0], 'THRU', self.nodes[-1]]
-        #else:
-        #print("SPC1 self.nodes = ",self.nodes)
-        nodes = [int(i) for i in self.nodes]  # SPC1
-        fields = ['SPC1', self.conid, self.constraints] + nodes
+    def cross_reference(self, model):
+        msg = ', which is required by SPC1; conid=%s' % self.conid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+
+    def raw_fields(self):
+        fields = ['SPC1', self.conid, self.constraints] + self.node_ids
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -631,14 +693,22 @@ class SPCADD(ConstraintADD):
         (scale_factors, loads) = self.getReducedConstraints()
         return (types_found, position_spcs)
 
-    def cross_reference(self, i, node):
-        self.sets.sort()
-        self.sets[i] = node
+    @property
+    def spc_ids(self):
+        spc_ids = []
+        for spc in self.sets:
+            if isinstance(spc, int):
+                spc_ids.append(spc)
+            else:
+                spc_ids.append(spc.conid)
+        return spc_ids
+
+    def cross_reference(self, model):
+        for i, spc in enumerate(self.sets):
+            model.sets[i] = model.SPC(spc)
 
     def raw_fields(self):
-        fields = ['SPCADD', self.conid]  # +self.sets
-        for set_id in self.sets:
-            fields.append(set_id)
+        fields = ['SPCADD', self.conid] + self.spc_ids
         return fields
         #return self._reprSpcMpcAdd(fields)
 
@@ -674,9 +744,19 @@ class MPCADD(ConstraintADD):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def cross_reference(self, i, node):
-        self.sets.sort()
-        self.sets[i] = node
+    @property
+    def mpc_ids(self):
+        mpc_ids = []
+        for mpc in self.sets:
+            if isinstance(mpc, int):
+                mpc_ids.append(mpc)
+            else:
+                mpc_ids.append(mpc.conid)
+        return mpc_ids
+
+    def cross_reference(self, model):
+        for i, mpc in enumerate(self.sets):
+            model.sets[i] = model.MPC(mpc)
 
     def raw_fields(self):
         fields = ['MPCADD', self.conid]  # +self.sets
