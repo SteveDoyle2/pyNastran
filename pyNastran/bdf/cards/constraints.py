@@ -23,7 +23,7 @@ from six.moves import zip, range
 from itertools import count
 import warnings
 
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
+from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, components, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
@@ -164,45 +164,7 @@ class Constraint(BaseCard):
 
     def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
-        try:
-            if not nodes:
-                nodes = self.nodes
-
-            if allowEmptyNodes:
-                nodes2 = []
-                for i, node in enumerate(nodes):
-                    #print("node=%r type=%r" % (node, type(node)))
-                    if node == 0 or node is None:
-                        nodes2.append(None)
-                    elif isinstance(node, int):
-                        nodes2.append(node)
-                    else:
-                        nodes2.append(node.nid)
-                return nodes2
-            else:
-                try:
-                    nodeIDs = []
-                    for i, node in enumerate(nodes):
-                        #print("node=%r type=%r" % (node, type(node)))
-                        if isinstance(node, int):
-                            nodeIDs.append(node)
-                        else:
-                            nodeIDs.append(node.nid)
-
-                    #if isinstance(nodes[0], int):
-                        #nodeIDs = [node for node in nodes]
-                    #else:
-                        #nodeIDs = [node.nid for node in nodes]
-                except:
-                    print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                        self.type, nodes, allowEmptyNodes, msg))
-                    raise
-                assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
-                return nodeIDs
-        except:
-            print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                self.type, nodes, allowEmptyNodes, msg))
-            raise
+        return _node_ids(self, nodes, allowEmptyNodes, msg)
 
 
 class SUPORT1(Constraint):
@@ -261,7 +223,6 @@ class SUPORT1(Constraint):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
-
 class SUPORT(Constraint):
     """
     +---------+-----+-----+-----+-----+-----+-----+-----+----+
@@ -302,15 +263,15 @@ class SUPORT(Constraint):
 
     @property
     def node_ids(self):
-        msg = ', which is required by SUPORT'
+        msg = ', which is required by %s' % self.type
         return self._nodeIDs(nodes=self.IDs, allowEmptyNodes=True, msg=msg)
 
     def cross_reference(self, model):
-        msg = ', which is required by SUPORT'
+        msg = ', which is required by %s' % self.type
         self.IDs = model.Nodes(self.IDs, allowEmptyNodes=True, msg=msg)
 
     def raw_fields(self):
-        fields = ['SUPORT']
+        fields = [self.type]
         for ID, c in zip(self.node_ids, self.Cs):
             fields += [ID, c]
         return fields
@@ -318,6 +279,13 @@ class SUPORT(Constraint):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
+
+
+class SESUP(SUPORT):
+    type = 'SESUP'
+
+    def __init__(self, card=None, data=None, comment=''):
+        SUPORT.__init__(self, card, data)
 
 
 class MPC(Constraint):

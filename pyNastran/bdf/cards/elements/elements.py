@@ -49,15 +49,30 @@ class CFAST(Element):
 
     def cross_reference(self, model):
         msg = ' which is required by CFAST eid=%s' % self.eid
-        self.pid = model.Property(self.pid, msg=msg)
-        self.gs = model.Node(self.gs, msg=msg)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
+        self.gs = model.Node(self.Gs(), msg=msg)
+        self.ga = model.Node(self.Ga(), msg=msg)
+        self.gb = model.Node(self.Gb(), msg=msg)
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
-                       self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
+                       self.Gs(), self.Ga(), self.Gb(), self.xs, self.ys, self.zs]
         return list_fields
+
+    def Gs(self):
+        if isinstance(self.gs, int):
+            return self.gs
+        return self.gs.nid
+
+    def Ga(self):
+        if isinstance(self.ga, int):
+            return self.ga
+        return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, int):
+            return self.gb
+        return self.gb.nid
 
     def repr_fields(self):
         return self.raw_fields()
@@ -134,15 +149,15 @@ class CGAP(Element):
                                          'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid.type)
 
     def cross_reference(self, model):
-        msg = ' which is required by CGAP eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
+        msg = ' which is required by CGAP eid=%s' % self.Eid()
+        self.ga = model.Node(self.Ga(), msg=msg)
+        self.gb = model.Node(self.Gb(), msg=msg)
         if self.g0:
             self.g0 = model.Node(self.g0, msg=msg)
             self.x = self.g0.Position()
-        self.pid = model.Property(self.pid, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
         if self.cid:
-            self.cid = model.Coord(self.cid, msg=msg)
+            self.cid = model.Coord(self.Cid(), msg=msg)
 
     def Eid(self):
         return self.eid

@@ -1,13 +1,49 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
 
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
+from pyNastran.bdf.cards.baseCard import (BaseCard, _node_ids, expand_thru,
+    collapse_thru, collapse_thru_packs)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_int_card_blocks
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     components, components_or_blank, fields, integer_or_string, string,
     string_or_blank, integer_string_or_blank)
+
+"""
+All constraint cards are defined in this file.  This includes:
+
+* sets
+  * SET1, SET3, RADSET # ??? RADSET
+* asets - aset, aset1
+* bsets - bset, bset1
+* csets - cset, cset1
+* qsets - qset, qset1
+* usets - uset, uset1  # USET 1 is not supported
+
+The superelement sets start with SE:
+* se_bsets - sebset, sebset1
+* se_csets - secset, secset1
+* se_qsets - seqset, seqset1
+* se_usets - seuset, seuset1
+*se_sets
+  * SESET
+  * SEQSEP
+
+ #* Set
+ #* SetSuper
+
++------------+-----------------+
+| Entry Type | Equivalent Type |
++------------+-----------------+
+|  SEQSETi   | QSETi           |
++------------+-----------------+
+|  SESUP     | SUPORT          |
++------------+-----------------+
+|  SECSETi   | CSETi           |
++------------+-----------------+
+|  SEBSETi   | BSETi           |
++------------+-----------------+
+"""
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
@@ -259,7 +295,7 @@ class CSET1(Set):
 
             IDs2 = []
             ii = 1
-            for i in range(2, len(card)):
+            for ifield in range(2, len(card)):
                 integer_or_string(card, ifield, 'ID' % ii)
                 ii += 1
             IDs = fields(integer_or_string, 'ID', i=2, j=len(card))
@@ -508,7 +544,8 @@ class SESET(SetSuper):
             cards.append(card)
         return ''.join(cards)
 
-class SEBSET(Set):
+
+class SEBSET(ABCQSet):
     """
     Defines boundary degrees-of-freedom to be fixed (b-set) during generalized
     dynamic reduction or component mode calculations.
@@ -519,94 +556,43 @@ class SEBSET(Set):
     | SEBSET |  C   | ID1 | THRU | ID2 |    |     |    |
     +--------+------+-----+------+-----+----+-----+----+
     """
+    type = 'SEBSET'
+
     def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABCQSet.__init__(self, card, data, comment)
 
-        #:  Identifiers of grids points. (Integer > 0)
-        self.components = []
-        self.IDs = []
+class SEBSET1(ABQSet1):
+    type = 'SEBSET1'
 
-        #fields = str(card.fields(1))
-        nsets = (len(card) - 1) // 2
-        for n in range(nsets):
-            i = n * 2 + 1
-            component = components(card, i, 'component' + str(n))
-            ID = components(card, i + 1, 'ID' + str(n))
-            self.components.append(component)
-            self.IDs.append(ID)
-
-    def raw_fields(self):
-        """
-        gets the "raw" card without any processing as a list for printing
-        """
-        list_fields = ['SEBSET']
-        for (component, ID) in zip(self.components, self.IDs):
-            list_fields += [component, ID]
-        return list_fields
-
-class SEBSET1(Set):
-    """
-    Defines boundary degrees-of-freedom to be fixed (b-set) during generalized
-    dynamic reduction or component mode calculations.
-
-    +---------+-----+-----+--------+-----+-----+-----+-----+-----+
-    | SEBSET1 |  C  | ID1 |  ID2   | ID3 | ID4 | ID5 | ID6 | ID7 |
-    +---------+-----+-----+--------+-----+-----+-----+-----+-----+
-    |         | ID8 | ID9 |        |     |     |     |     |     |
-    +---------+-----+-----+--------+-----+-----+-----+-----+-----+
-    | SEBSET1 |  C  | ID1 | 'THRU' | ID2 |     |     |     |     |
-    +---------+-----+-----+--------+-----+-----+-----+-----+-----+
-    """
     def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABQSet1.__init__(self, card, data, comment)
 
-        #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = []
-        self.components = components(card, 1, 'components')
-        IDs = fields(integer_or_string, card, 2, 'ID')
-        self.IDs = expand_thru(IDs)
 
-    def raw_fields(self):
-        """gets the "raw" card without any processing as a list for printing"""
-        list_fields = ['SEBSET1', self.components] + collapse_thru(self.IDs)
-        return list_fields
+class SECSET(ABCQSet):
+    type = 'SECSET'
 
-    def __repr__(self):
-        list_fields = self.raw_fields()
-        return self.comment() + print_card_8(list_fields)
-
-class SEQSET1(Set):
-    """
-    Defines the generalized degrees-of-freedom of the superelement to be used in
-    generalized dynamic reduction or component mode synthesis.
-
-    +--------+-----+-----+--------+-----+-----+-----+-----+-----+
-    |SEQSET1 | C   | ID1 | ID2    | ID3 | ID4 | ID5 | ID6 | ID7 |
-    +--------+-----+-----+--------+-----+-----+-----+-----+-----+
-    |        | ID8 | ID9 |        |     |     |     |     |     |
-    +--------+-----+-----+--------+-----+-----+-----+-----+-----+
-    |SEQSET1 | C   | ID1 | 'THRU' | ID2 |     |     |     |     |
-    +--------+-----+-----+--------+-----+-----+-----+-----+-----+
-    """
     def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        ABCQSet.__init__(self, card, data, comment)
 
-        #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = []
-        self.components = components(card, 1, 'components')
-        IDs = fields(integer_or_string, card, i=2, j=len(card))
-        self.IDs = expand_thru(IDs)
+class SECSET1(ABQSet1):
+    type = 'SECSET1'
 
-    def raw_fields(self):
-        """gets the "raw" card without any processing as a list for printing"""
-        list_fields = ['SEQSET1', self.components] + collapse_thru(self.IDs)
-        return list_fields
+    def __init__(self, card=None, data=None, comment=''):
+        ABQSet1.__init__(self, card, data, comment)
+
+
+class SEQSET(ABCQSet):
+    type = 'SEQSET'
+
+    def __init__(self, card=None, data=None, comment=''):
+        ABCQSet.__init__(self, card, data, comment)
+
+class SEQSET1(ABQSet1):
+    type = 'SEQSET1'
+
+    def __init__(self, card=None, data=None, comment=''):
+        ABQSet1.__init__(self, card, data, comment)
+
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
@@ -672,3 +658,53 @@ class RADSET(Set):  # not integrated
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = ['RADSET', self.seid] + self.SetIDs()
         return list_fields
+
+
+class USET(Set):
+    """
+    Defines a degrees-of-freedom set.
+
+    +------+-------+-----+------+-----+----+-----+----+
+    | USET | SNAME | ID1 |  C1  | ID2 | C2 | ID3 | C3 |
+    +------+-------+-----+------+-----+----+-----+----+
+    | USET |  JUNK | ID1 | THRU | ID2 |    |     |    |
+    +------+-------+-----+------+-----+----+-----+----+
+    """
+    type = 'USET'
+    def __init__(self, card=None, data=None, comment=''):
+        Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+        self.name = string(card, 1, 'name')
+
+        #:  Identifiers of grids points. (Integer > 0)
+        self.components = []
+        self.IDs = []
+
+        nsets = (len(card) - 1) // 2
+        for n in range(nsets):
+            i = n * 2 + 2
+            ID = integer(card, i, 'node_id' + str(n))
+            component = components(card, i + 1, 'component' + str(n))
+            self.components.append(component)
+            self.IDs.append(ID)
+
+    def raw_fields(self):
+        """
+        gets the "raw" card without any processing as a list for printing
+        """
+        list_fields = ['USET', self.name]
+        for (component, ID) in zip(self.components, self.node_ids):
+            list_fields += [ID, component]
+        return list_fields
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s name=%s' % (self.type, self.name)
+        self.IDs = model.Nodes(self.IDs, allowEmptyNodes=True, msg=msg)
+
+    @property
+    def node_ids(self):
+        msg = ' which is required by %s name=%s' % (self.type, self.name)
+        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+

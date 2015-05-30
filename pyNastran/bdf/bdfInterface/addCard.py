@@ -383,8 +383,13 @@ class AddMethods(object):
             self._type_to_id_map[constraint.type].append(key)
 
     def add_suport(self, suport):
-        self._type_to_id_map[suport.type].append(len(self.suports))
-        self.suports.append(suport)
+        self._type_to_id_map[suport.type].append(len(self.suport))
+        self.suport.append(suport)
+
+    def add_suport1(self, suport):
+        key = suport.id
+        self._type_to_id_map[suport.type].append(key)
+        self.suport1[key] = suport
 
     def add_DAREA(self, darea, allowOverwrites=False):
         key = (darea.sid, darea.p)
@@ -624,6 +629,13 @@ class AddMethods(object):
 
     def add_QSET(self, set_obj):
         self.qsets.append(set_obj)
+
+    def add_USET(self, set_obj):
+        key = set_obj.name
+        if key in self.usets:
+            self.usets[key].append(set_obj)
+        else:
+            self.usets[key] = [set_obj]
 
     def add_SESET(self, set_obj):
         key = set_obj.seid

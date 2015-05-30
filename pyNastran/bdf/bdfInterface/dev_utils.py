@@ -212,7 +212,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     Supports
     ========
      - GRIDs
-       - superelements?
+       - no superelements
      - COORDx
 
      - elements
@@ -241,9 +241,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     - constraints
        - SPC/SPCADD/SPCAX/SPCD
        - MPC/MPCADD
+       - SUPORT/SUPORT1
 
     - solution control/methods
        - TSTEP/TSTEPNL/EIGB/EIGC/EIGRL/EIGR
+
+    - sets
+       - USET
 
     - other
       - tables
@@ -265,9 +269,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
      - thermal cards?
      - optimization cards
      - SETx
-     - SUPORT/SUPORT1
      - solution control
        - NLPARM
+     - PARAM,GRDPNT,x; where x>0
+     - GRID SEID
+
 
     ..warning:: spoints might be problematic...check
     ..warning:: still in development, but it should brutally crash if it's not supported
@@ -277,6 +283,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     nid = 101
     eid = 301
     pid = 401
+    mid = 501
     spc_id = 501
     mpc_id = 601
     load_id = 701
@@ -291,6 +298,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     freq_id = 1501
     tstep_id = 1601
     tstepnl_id = 1701
+    suport_id = 1801
+    suport1_id = 1901
 
     eid_map = {}
     nid_map = {}
@@ -309,6 +318,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     freq_map = {}
     tstep_map = {}
     tstepnl_map = {}
+    suport_map = {}
+    suport1_map = {}
 
     model = BDF()
     model.read_bdf(bdf_filename)
@@ -329,10 +340,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     #print(spoints_nids)
     k = 0
 
-    i = 1
+    i = nid
     #banned_nodes = spoints
-    for nid in spoints_nids:
-        if nid in spoints:
+    for nidi in spoints_nids:
+        if nidi in spoints:
             pass
             #print('sid=%s -> %s' % (nid, i))
             #i += 1
@@ -341,8 +352,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
                 #print('*bump')
                 i += 1
             #print('nid=%s -> %s' % (nid, i))
-            nid_map[nid] = i
-            reverse_nid_map[i] = nid
+            nid_map[nidi] = i
+            reverse_nid_map[i] = nidi
             i += 1
     #for nid in sorted(nids):
         #nid_map[nid] = i
@@ -375,34 +386,34 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     nmaterials = len(mids)
 
     for i in range(nmaterials):
-        mid = mids[i]
-        mid_map[mid] = i + 1
+        midi = mids[i]
+        mid_map[midi] = mid + i
 
     #spoints2 = arange(1, len(spoints) + 1)
-    for nid, node in iteritems(model.nodes):
+    for nid, node in sorted(iteritems(model.nodes)):
         nid_new = nid_map[nid]
         node.nid = nid_new
 
     # properties
-    for pidi, prop in iteritems(model.properties):
+    for pidi, prop in sorted(iteritems(model.properties)):
         prop.pid = pid
         pid += 1
-    for pidi, prop in iteritems(model.properties_mass):
+    for pidi, prop in sorted(iteritems(model.properties_mass)):
         # PMASS
         prop.pid = pid
         pid += 1
 
     # elements
-    for eidi, element in iteritems(model.elements):
+    for eidi, element in sorted(iteritems(model.elements)):
         element.eid = eid
         eid_map[eidi] = eid
         eid += 1
-    for eidi, element in iteritems(model.masses):
+    for eidi, element in sorted(iteritems(model.masses)):
         # CONM1, CONM2, CMASSx
         element.eid = eid
         eid_map[eidi] = eid
         eid += 1
-    for eidi, elem in iteritems(model.rigidElements):
+    for eidi, elem in sorted(iteritems(model.rigidElements)):
         # RBAR/RBAR1/RBE1/RBE2/RBE3
         elem.eid = eid
         eid_map[eidi] = eid
@@ -418,39 +429,40 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
             material.mid = mid
 
     # spc
-    for spc_idi, spc_group in iteritems(model.spcs):
+    for spc_idi, spc_group in sorted(iteritems(model.spcs)):
         for i, spc in enumerate(spc_group):
             assert hasattr(spc, 'conid')
             spc.conid = spc_id
         spc_map[spc_idi] = spc_id
         spc_id += 1
-    for spc_idi, spcadd in iteritems(model.spcadds):
+    for spc_idi, spcadd in sorted(iteritems(model.spcadds)):
         assert hasattr(spcadd, 'conid')
         spcadd.conid = spc_id
         spc_map[spc_idi] = spc_id
         spc_id += 1
 
     # mpc
-    for mpc_idi, mpc_group in iteritems(model.mpcs):
+    for mpc_idi, mpc_group in sorted(iteritems(model.mpcs)):
         for i, mpc in enumerate(spc_group):
             assert hasattr(mpc, 'conid')
             mpc.conid = mpc_id
         mpc_map[mpc_idi] = mpc_id
         mpc_id += 1
-    for mpc_idi, mpcadd in iteritems(model.mpcadds):
+    for mpc_idi, mpcadd in sorted(iteritems(model.mpcadds)):
         assert hasattr(mpcadd, 'conid')
         mpcadd.conid = mpc_id
         mpc_map[mpc_idi] = mpc_id
         mpc_id += 1
 
 
-    for cidi, coord in iteritems(model.coords):
+    for cidi, coord in sorted(iteritems(model.coords)):
         if cidi == 0:
             cid_map[0] = 0
             continue
         coord.cid = cid
         cid_map[cidi] = cid
         cid += 1
+
 
     data = (
         (model.methods, 'sid', method_map),
@@ -461,9 +473,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         (model.tsteps, 'sid', tstep_map),
         (model.tstepnls, 'sid', tstepnl_map),
         (model.splines, 'sid', None),
+        (model.suport1, 'sid', suport1_map),
     )
     param_id = 101
-    for (dict_obj, param_name, mmap) in data:
+    for (dict_obj, param_name, mmap) in sorted(data):
         for idi, param in sorted(iteritems(dict_obj)):
             assert hasattr(param, param_name)
             setattr(param, param_name, param_id)
@@ -472,11 +485,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
             param_id += 1
 
     # tables
-    for table_idi, table in sorted(iteritems(model.tables)):
+    for table_idi, table in sorted(sorted(iteritems(model.tables))):
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
-    for table_idi, table in sorted(iteritems(model.randomTables)):
+    for table_idi, table in sorted(sorted(iteritems(model.randomTables))):
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
@@ -523,6 +536,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         'LOADSET' : load_map, # wrong
         'TSTEP' : tstep_map,
         'TSTEPNL' : tstepnl_map,
+        'SUPORT' : suport_map,
+        'SUPORT1' : suport1_map,
     }
     _update_case_control(model, mapper)
     model.write_bdf(bdf_filename_out, size=8, is_double=False,
@@ -562,7 +577,7 @@ def _update_case_control(model, mapper):
                     msg = ', which is needed by %s=%s' % (key, value)
 
                     if key in mapper_quantities:
-                        print('mapper = %s, value=%s' % (key, value))
+                        #print('mapper = %s, value=%s' % (key, value))
                         kmap = mapper[key]
                         try:
                             value2 = kmap[value]

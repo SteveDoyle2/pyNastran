@@ -260,45 +260,7 @@ class Element(BaseCard, ElementDeprecated):
 
     def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
-        try:
-            if not nodes:
-                nodes = self.nodes
-
-            if allowEmptyNodes:
-                nodes2 = []
-                for i, node in enumerate(nodes):
-                    #print("node=%r type=%r" % (node, type(node)))
-                    if node == 0 or node is None:
-                        nodes2.append(None)
-                    elif isinstance(node, int):
-                        nodes2.append(node)
-                    else:
-                        nodes2.append(node.nid)
-                return nodes2
-            else:
-                try:
-                    nodeIDs = []
-                    for i, node in enumerate(nodes):
-                        #print("node=%r type=%r" % (node, type(node)))
-                        if isinstance(node, int):
-                            nodeIDs.append(node)
-                        else:
-                            nodeIDs.append(node.nid)
-
-                    #if isinstance(nodes[0], int):
-                        #nodeIDs = [node for node in nodes]
-                    #else:
-                        #nodeIDs = [node.nid for node in nodes]
-                except:
-                    print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                        self.type, nodes, allowEmptyNodes, msg))
-                    raise
-                assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
-                return nodeIDs
-        except:
-            print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                self.type, nodes, allowEmptyNodes, msg))
-            raise
+        return _node_ids(self, nodes, allowEmptyNodes, msg)
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
         """Verifies all node IDs exist and that they're integers"""
@@ -382,6 +344,48 @@ class Element(BaseCard, ElementDeprecated):
                 face = i
         return face
 
+
+def _node_ids(card, nodes=None, allowEmptyNodes=False, msg=''):
+    try:
+        if not nodes:
+            nodes = card.nodes
+            assert nodes is not None, card.__dict__
+
+        if allowEmptyNodes:
+            nodes2 = []
+            for i, node in enumerate(nodes):
+                #print("node=%r type=%r" % (node, type(node)))
+                if node == 0 or node is None:
+                    nodes2.append(None)
+                elif isinstance(node, int):
+                    nodes2.append(node)
+                else:
+                    nodes2.append(node.nid)
+            return nodes2
+        else:
+            try:
+                nodeIDs = []
+                for i, node in enumerate(nodes):
+                    #print("node=%r type=%r" % (node, type(node)))
+                    if isinstance(node, int):
+                        nodeIDs.append(node)
+                    else:
+                        nodeIDs.append(node.nid)
+
+                #if isinstance(nodes[0], int):
+                    #nodeIDs = [node for node in nodes]
+                #else:
+                    #nodeIDs = [node.nid for node in nodes]
+            except:
+                print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
+                    card.type, nodes, allowEmptyNodes, msg))
+                raise
+            assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
+            return nodeIDs
+    except:
+        print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
+            card.type, nodes, allowEmptyNodes, msg))
+        raise
 
 def expand_thru(fields, set_fields=True, sort_fields=False):
     """

@@ -69,7 +69,7 @@ from pyNastran.bdf.cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AE
                                       MKAERO2, SPLINE1, SPLINE2, SPLINE4,
                                       SPLINE5, TRIM)
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
-                                             MPC, MPCADD, SUPORT1, SUPORT,
+                                             MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              ConstraintObject)
 from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    CORD2R, CORD2C, CORD2S, CORD3G)
@@ -92,9 +92,12 @@ from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs
 from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                               DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET,
-                                          ASET1, BSET1, CSET1, QSET1,
-                                          SET1, SET3, SESET, SEQSEP, RADSET)
+from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET, USET,
+                                          ASET1, BSET1, CSET1, QSET1, #USET1,
+                                          SET1, SET3, RADSET,
+                                          SEBSET, SECSET, SEQSET, # SEUSET
+                                          SEBSET1, SECSET1, SEQSET1, # SEUSET1
+                                          SESET, SEQSEP)
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, RADM, RADBC,)
@@ -250,7 +253,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # spc/mpc constraints
             'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
             'MPC', 'MPCADD',
-            'SUPORT', 'SUPORT1',
+            'SUPORT', 'SUPORT1', 'SESUP',
 
             # loads
             'LOAD', 'LSEQ', 'RANDPS',
@@ -298,12 +301,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #'DSCREEN',
 
             # sets
-            'ASET', 'BSET', 'CSET', 'QSET',  # 'USET',
+            'ASET', 'BSET', 'CSET', 'QSET', 'USET',
             'ASET1', 'BSET1', 'CSET1', 'QSET1',  # 'USET1',
             'SET1', 'SET3',
 
             # super-element sets
             'SESET',
+            #ASET, BSET, CSET, QSET, USET,
+            #ASET1, BSET1, CSET1, QSET1, #USET1,
+            #SET1, SET3, RADSET,
+            'SEBSET', 'SECSET', 'SEQSET',
+            'SEBSET1', 'SECSET1', 'SEQSET1',
+            'SESET', 'SEQSEP',
 
             # tables
             #'DTABLE', 'TABLEHT', 'TABRNDG',
@@ -528,7 +537,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
         #self.constraints = {} # suport1, anything else???
-        self.suports = []  # suport, suport1
+        self.suport = []
+        self.suport1 = {}
+        self.se_suport = []
 
         #: stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject = ConstraintObject()
@@ -562,15 +573,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.dequations = {}
 
         # ----------------------------------------------------------------
-        #: SETx
+        #: SETy
         self.sets = {}
         self.asets = []
         self.bsets = []
         self.csets = []
         self.qsets = []
-        self.usets = []
-        #: SESETx
-        self.setsSuper = {}
+        self.usets = {}
+
+        #: SExSETy
+        self.se_bsets = []
+        self.se_csets = []
+        self.se_qsets = []
+        self.se_usets = {}
+        self.se_sets = {}
 
         # ----------------------------------------------------------------
         #: tables
@@ -732,7 +748,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #'spcadds' : ['SPCADD'],
             #'mpcadds' : ['MPCADD'],
             'mpcs' : ['MPC', 'MPCADD'],
-            'suports' : ['SUPORT', 'SUPORT1',],
+            'suport' : ['SUPORT'],
+            'suport1' : ['SUPORT1'],
+            'se_suport' : ['SESUP'],
 
             # loads
             'loads' : [
@@ -821,7 +839,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'sets' : ['SET1', 'SET3',],
 
             # super-element sets
-            'setsSuper' : ['SESET'],
+            'se_bsets' : ['SEBSET', 'SEBSET1'],
+            'se_csets' : ['SECSET', 'SECSET1',],
+            'se_qsets' : ['SEQSET', 'SEQSET1'],
+            'se_usets' : ['SEUSET', 'SEQSET1'],
+            'se_sets' : ['SESET'],
+            # SEBSEP
 
             'tables' : [
                 'DTABLE', 'TABLEHT', 'TABRNDG',
@@ -1422,7 +1445,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # dictionary of cards. Key is the name of the function to add the
             # card
             # 'PCOMPG':  # hasnt been verified
-            # 'MAT8':  # note there is no MAT6 or MAT7
             _cards = {
                 'add_node' : ['GRID'],
                 'add_mass' : ['CONM1', 'CONM2', 'CMASS1',
@@ -1444,6 +1466,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
                 # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
                 'add_creep_material': ['CREEP'],
+
+                # note there is no MAT6 or MAT7
                 'add_structural_material' : ['MAT1', 'MAT2', 'MAT3', 'MAT8',
                                              'MAT9', 'MAT10', 'MAT11',
                                              'EQUIV'],
@@ -1466,7 +1490,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_constraint_MPC' : ['MPC', 'MPCADD'],
                 'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
                 'add_suport' : ['SUPORT'],  # pseudo-constraint
-                'add_constraint' : ['SUPORT1'],  # pseudo-constraint
+                'add_constraint' : ['SUPORT1'],  # pseudo-constraint - TODO: should this be add_suport1???
+                'add_SESUP' : ['SESUP'],  # pseudo-constraint
                 'add_SPLINE' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'],
                 'add_CAERO' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
                 'add_PAERO' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
@@ -1476,7 +1501,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_BSET' : ['BSET', 'BSET1'],
                 'add_CSET' : ['CSET', 'CSET1'],
                 'add_QSET' : ['QSET', 'QSET1'],
+                'add_USET' : ['USET', 'USET1'],
                 'add_SET' : ['SET1', 'SET3'],
+                'add_SEBSET' : ['SEBSET', 'SEBSET1'],
+                'add_SECSET' : ['SECSET', 'SECSET1'],
+                'add_SEQSET' : ['SEQSET', 'SEQSET1'],
+                'add_SEUSET' : ['SEUSET', 'SEUSET1'],
                 'add_DRESP' : ['DRESP1', 'DRESP2'],
                 'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
                 'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S'],
@@ -1669,7 +1699,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'dvprels', 'dvmrels',
 
             # SESETx - dict
-            'setsSuper',
+            'se_sets',
+            'se_bsets', 'se_csets', 'se_qsets', 'se_suports',
 
             # tables
             'tables', 'randomTables',
@@ -1686,19 +1717,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'bcs', 'thermalMaterials', 'phbdys',
             'convectionProperties', ]
 
+        ## TODO: why are these ignored?
         ignored_types = set([
             'spoints', 'spointi',  # singleton
             'gridSet',  # singleton
 
             'spcs', 'spcadds',
 
-            'suports',  # suport, suport1 - list
+            'suport', 'suport1', # suport, suport1 - list
             'doptprm',  # singleton
 
             # SETx - list
             'sets', 'asets', 'bsets', 'csets', 'qsets',
         ])
 
+        ## TODO: why are some of these ignored?
         ignored_types2 = set([
             'caseControlDeck', 'spcObject2', 'mpcObject2',
 

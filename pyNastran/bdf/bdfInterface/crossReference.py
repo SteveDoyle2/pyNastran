@@ -87,7 +87,8 @@ class XrefMesh(object):
                         xref_materials=True,
                         xref_loads=True,
                         xref_constraints=True,
-                        xref_aero=True):
+                        xref_aero=True,
+                        xref_sets=True):
         """
         Links up all the cards to the cards they reference
 
@@ -98,6 +99,7 @@ class XrefMesh(object):
         :param xref_loads:       set cross referencing of loads (default=True)
         :param xref_constraints: set cross referencing of constraints (default=True)
         :param xref_aero:        set cross referencing of CAERO/SPLINEs (default=True)
+        :param xref_sets:        set cross referencing of SETx (default=True)
 
         To only cross-reference nodes:
 
@@ -107,7 +109,7 @@ class XrefMesh(object):
           model.read_bdf(bdf_filename, xref=False)
           model.cross_reference(xref=True, xref_loads=False, xref_constraints=False,
                                            xref_materials=False, xref_properties=False,
-                                           xref_aero=False, xref_masses=False)
+                                           xref_aero=False, xref_sets=False)
 
         .. warning:: be careful if you call this method
         """
@@ -130,6 +132,8 @@ class XrefMesh(object):
                 self._cross_reference_constraints()
             if xref_loads:
                 self._cross_reference_loads()
+            if xref_sets:
+                self._cross_reference_sets()
             #self.caseControlDeck.cross_reference(self)
 
     def _cross_reference_constraints(self):
@@ -153,6 +157,14 @@ class XrefMesh(object):
             for mpc in mpcs:
                 self.mpcObject.append(mpc)
                 mpc.cross_reference(self)
+
+        for suport in self.suport:
+            suport.cross_reference(self)
+        for suport1_id, suport1 in iteritems(self.suport1):
+            suport1.cross_reference(self)
+        for se_suport in self.se_suport:
+            se_suport.cross_reference(self)
+
 
     def _cross_reference_coordinates(self):
         """
@@ -190,6 +202,11 @@ class XrefMesh(object):
 
         if self.spoints:
             self.spointi = self.spoints.createSPOINTi()
+
+        # GRDPNT for mass calculations
+        #if model.has_key()
+        #for param_key, param in self.params:
+            #if
 
     def _cross_reference_elements(self):
         """
@@ -348,3 +365,28 @@ class XrefMesh(object):
                         self.pop_xref_errors()
 
         self.log.debug("done with xref_loads")
+
+    def _cross_reference_sets(self):
+        for set_obj in self.asets:
+            set_obj.cross_reference(self)
+        for set_obj in self.bsets:
+            set_obj.cross_reference(self)
+        for set_obj in self.csets:
+            set_obj.cross_reference(self)
+        for set_obj in self.qsets:
+            set_obj.cross_reference(self)
+        for name, set_objs in iteritems(self.usets):
+            for set_obj in set_objs:
+                set_obj.cross_reference(self)
+
+        # superelements
+        for set_obj in self.se_sets:
+            set_obj.cross_reference(self)
+        for set_obj in self.se_bsets:
+            set_obj.cross_reference(self)
+        for set_obj in self.se_csets:
+            set_obj.cross_reference(self)
+        for set_obj in self.se_qsets:
+            set_obj.cross_reference(self)
+        for set_obj in self.se_usets:
+            set_obj.cross_reference(self)
