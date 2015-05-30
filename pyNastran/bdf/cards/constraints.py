@@ -379,7 +379,7 @@ class MPC(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
-        return self._nodeIDs(self, nodes=self.gids, allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(nodes=self.gids, allowEmptyNodes=True, msg=msg)
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
@@ -395,7 +395,7 @@ class MPC(Constraint):
         return fields
 
     def write_card(self, size=8, is_double=False):
-        grids, constraints, enforceds = self.gids, self.constraints, self.enforced
+        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
         if size == 8:
             msg = 'MPC     %8s' % self.conid
             for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
@@ -509,7 +509,7 @@ class SPCD(SPC):
 
     def raw_fields(self):
         fields = ['SPCD', self.conid]
-        for (gid, constraint, enforced) in zip(self.gids, self.constraints,
+        for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
                                                self.enforced):
             fields += [gid, constraint, enforced]
         return fields

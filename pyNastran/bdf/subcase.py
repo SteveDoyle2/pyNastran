@@ -406,7 +406,7 @@ class Subcase(object):
         param_name = update_param_name(param_name)
         if param_name not in self.params:
             raise KeyError('%s doesnt exist in subcase=%s in the case '
-                           'control deck.' % (param_name, self.id))
+                           'control deck%s.' % (param_name, self.id, msg))
         return self.params[param_name][0:2]
 
     def add_parameter_to_subcase(self, key, value, options, param_type):
@@ -426,7 +426,7 @@ class Subcase(object):
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
             #print("adding isubcase=%s key=%r value=|%s| options=|%s| "
-            #      "param_type=%s" %(self.id, key, value, options, param_type))
+                  #"param_type=%s" %(self.id, key, value, options, param_type))
             values2 = expand_thru_case_control(value)
             options = int(options)
             return (key, values2, options)
@@ -445,6 +445,9 @@ class Subcase(object):
                 print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, integer_types) or value is None:
                 pass
+            elif isinstance(value, list):  # new???
+                msg = 'invalid type for key=%s value; expected an integer; got a list' % key
+                raise RuntimeError(msg)
             elif value.isdigit():  # STRESS = ALL
                 value = value
             #else: pass
@@ -539,10 +542,10 @@ class Subcase(object):
 
         op2Params['thermal'] = thermal
 
-        print("\nThe estimated results...")
-        for (key, value) in sorted(iteritems(op2Params)):
-            if value is not None:
-                print("   key=%r value=%r" % (key, value))
+        #print("\nThe estimated results...")
+        #for (key, value) in sorted(iteritems(op2Params)):
+            #if value is not None:
+                #print("   key=%r value=%r" % (key, value))
 
     def print_param(self, key, param):
         """
@@ -613,7 +616,8 @@ class Subcase(object):
           not really that necessary.  it's only really useful when running an
           analysis.
         """
-        print("keys = %s" % (sorted(self.params.keys())))
+        raise NotImplemented()
+        #print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
             load_id = self.params['LOAD'][0]
             loadObj = model.loads[load_id]
@@ -871,6 +875,9 @@ def update_param_name(param_name):
 def expand_thru_case_control(set_value):
     set_value2 = []
     for (i, ivalue) in enumerate(set_value):
+        if isinstance(ivalue, int):
+            set_value2.append(ivalue)
+            continue
         ivalue = ivalue.strip()
         if ivalue.isdigit():
             set_value2.append(int(ivalue))

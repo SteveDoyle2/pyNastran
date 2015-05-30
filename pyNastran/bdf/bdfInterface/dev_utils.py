@@ -214,17 +214,42 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
      - GRIDs
        - superelements?
      - COORDx
+
      - elements
         - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
+        - RBAR/RBAR1/RBE1/RBE2/RBE3
+
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
           PROD/PTUBE/PBEAM
      - mass
         - CMASSx/CONMx/PMASS
 
-     - materials
-     - loads should be updated...mabye not all...
-     - RBAR/RBAR1/RBE1/RBE2/RBE3...not SUPORT/SUPORT1
+     - aero
+       - FLFACT
+       - SPLINEx
+       - FLUTTER
+
+     - partial case control
+       - METHOD/CMETHOD/FREQENCY
+       - LOAD/DLOAD/LSEQ/LOADSET...LOADSET/LSEQ is iffy
+       - SET cards
+         - nodes
+         - elements
+       - SPC/MPC/FLUTTER/FLFACT
+
+    - constraints
+       - SPC/SPCADD/SPCAX/SPCD
+       - MPC/MPCADD
+
+    - solution control/methods
+       - TSTEP/TSTEPNL/EIGB/EIGC/EIGRL/EIGR
+
+    - other
+      - tables
+      - materials
+      - loads/dloads
+
 
     Not Done
     ========
@@ -234,32 +259,60 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
        - CELASx
        - CDAMPx
      - superelements
-     - SPC/SPC1/SPCADD renumbering (nodes are supported)
-     - SPCD/SPCAX
-     - MPC/MPCADD renumbering (nodes are supported)
      - aero cards
-       - FLFACT
        - CAEROx
        - PAEROx
-       - SPLINEx
      - thermal cards?
      - optimization cards
-     - case control
      - SETx
+     - SUPORT/SUPORT1
+     - solution control
+       - NLPARM
 
     ..warning:: spoints might be problematic...check
-    ..warning:: still in development
+    ..warning:: still in development, but it should brutally crash if it's not supported
+    ..warning:: be careful of unsupported cards
     """
+    cid = 50
+    nid = 101
+    eid = 301
+    pid = 401
+    spc_id = 501
+    mpc_id = 601
+    load_id = 701
+    dload_id = 801
+
+    method_id = 901
+    cmethod_id = 1001
+    spline_id = 1101
+    table_id = 1201
+    flfact_id = 1301
+    flutter_id = 1401
+    freq_id = 1501
+    tstep_id = 1601
+    tstepnl_id = 1701
+
     eid_map = {}
     nid_map = {}
     reverse_nid_map = {}
     mid_map = {}
     cid_map = {}
+    mpc_map = {}
+    spc_map = {}
+    dload_map = {}
+    load_map = {}
+
+    cmethod_map = {}
+    method_map = {}
+    flfact_map = {}
+    flutter_map = {}
+    freq_map = {}
+    tstep_map = {}
+    tstepnl_map = {}
 
     model = BDF()
     model.read_bdf(bdf_filename)
 
-    nid = 1
     if model.spoints is None:
         spoints = []
     else:
@@ -297,22 +350,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         #i += 1
     #print(nid_map)
     #print(reverse_nid_map)
-    mids = (
-        model.materials.keys() +
-        model.creepMaterials.keys() +
-        model.MATT1.keys() +
-        model.MATT2.keys() +
-        model.MATT3.keys() +
-        model.MATT4.keys() +
-        model.MATT5.keys() +
-        #model.MATT6.keys() +
-        #model.MATT7.keys() +
-        model.MATT8.keys() +
-        model.MATT9.keys() +
-        model.MATS1.keys() +
-        model.MATS3.keys() +
-        model.MATS8.keys()
-    )
+
     all_materials = (
         model.materials,
         model.creepMaterials,
@@ -329,6 +367,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         model.MATS3,
         model.MATS8,
     )
+    mids = []
+    for materials in all_materials:
+        mids += materials.keys()
     mids = unique(mids)
     mids.sort()
     nmaterials = len(mids)
@@ -342,13 +383,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         nid_new = nid_map[nid]
         node.nid = nid_new
 
-    cid = 0
-    for cidi, coord in iteritems(model.coords):
-        coord.cid = cid
-        cid_map[cidi] = cid
-        cid += 1
-
-    pid = 1
+    # properties
     for pidi, prop in iteritems(model.properties):
         prop.pid = pid
         pid += 1
@@ -357,7 +392,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         prop.pid = pid
         pid += 1
 
-    eid = 1
+    # elements
     for eidi, element in iteritems(model.elements):
         element.eid = eid
         eid_map[eidi] = eid
@@ -372,123 +407,139 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         elem.eid = eid
         eid_map[eidi] = eid
         eid += 1
-
+    #for eidi, elem in iteritems(model.caeros):
+        #pass
 
     #mid = 1
     for materials in all_materials:
         for midi, material in iteritems(materials):
             mid = mid_map[midi]
+            assert hasattr(material, 'mid')
             material.mid = mid
 
-    # TODO: spc ids not updated - case control
-    for spc_id, spc_group in iteritems(model.spcs):
+    # spc
+    for spc_idi, spc_group in iteritems(model.spcs):
         for i, spc in enumerate(spc_group):
-            if spc.type in ['SPC', 'SPCD']:
-                gids = []
-                #print(spc.gids)
-                for spci, gidi in enumerate(spc.gids):
-                    gidii = nid_map[gidi]
-                    gids.append(gidii)
-                spc.gids = gids
-            elif spc.type == 'SPC1':
-                gids = []
-                #print(spc.nodes)
-                for spci, gidi in enumerate(spc.nodes):
-                    gidii = nid_map[gidi]
-                    gids.append(gidii)
-                spc.nodes = gids
-            #elif spc.type == 'SPCD':
-                #raise NotImplementedError('SPCD')
-            elif spc.type == 'SPCAX':
-                raise NotImplementedError('SPCAX')
-            else:
-                raise NotImplementedError(spc.type)
+            assert hasattr(spc, 'conid')
+            spc.conid = spc_id
+        spc_map[spc_idi] = spc_id
+        spc_id += 1
+    for spc_idi, spcadd in iteritems(model.spcadds):
+        assert hasattr(spcadd, 'conid')
+        spcadd.conid = spc_id
+        spc_map[spc_idi] = spc_id
+        spc_id += 1
+
+    # mpc
+    for mpc_idi, mpc_group in iteritems(model.mpcs):
+        for i, mpc in enumerate(spc_group):
+            assert hasattr(mpc, 'conid')
+            mpc.conid = mpc_id
+        mpc_map[mpc_idi] = mpc_id
+        mpc_id += 1
+    for mpc_idi, mpcadd in iteritems(model.mpcadds):
+        assert hasattr(mpcadd, 'conid')
+        mpcadd.conid = mpc_id
+        mpc_map[mpc_idi] = mpc_id
+        mpc_id += 1
 
 
-    # TODO: mpc ids not updated - case control
-    for mpc_id, mpc_group in iteritems(model.mpcs):
-        for mpc in mpc_group:
-            if mpc.type == 'MPC':
-                gids = []
-                for mpci, gidi in enumerate(mpc.gids):
-                    gidii = nid_map[gidi]
-                    gids.append(gidii)
-                mpc.gids = gids
-            else:
-                raise NotImplementedError(mpci.type)
+    for cidi, coord in iteritems(model.coords):
+        if cidi == 0:
+            cid_map[0] = 0
+            continue
+        coord.cid = cid
+        cid_map[cidi] = cid
+        cid += 1
 
-    if 0:
-        for eidi, elem in iteritems(model.rigidElements):
-            #$RBAR, EID, GA, GB, CNA
-            #RBAR           5       1       2  123456
-            elem.eid = eid
-            if elem.type in ['RBAR', 'RBAR1']:
-                #print('ga=%s gb=%s' % (elem.ga, elem.gb))
-                elem.ga = nid_map[elem.ga]
-                elem.gb = nid_map[elem.gb]
-            elif elem.type == 'RBE1':
-                gids = []
-                for gidi in elem.Gmi:
-                    gidii = nid_map[gidi]
-                    gids.append(gidii)
-                elem.Gmi = gids
+    data = (
+        (model.methods, 'sid', method_map),
+        (model.cMethods, 'sid', cmethod_map),
+        (model.flfacts, 'fid', flfact_map),
+        (model.flutters, 'fid', flutter_map),
+        (model.frequencies, 'sid', freq_map),
+        (model.tsteps, 'sid', tstep_map),
+        (model.tstepnls, 'sid', tstepnl_map),
+        (model.splines, 'sid', None),
+    )
+    param_id = 101
+    for (dict_obj, param_name, mmap) in data:
+        for idi, param in sorted(iteritems(dict_obj)):
+            assert hasattr(param, param_name)
+            setattr(param, param_name, param_id)
+            if mmap is not None:
+                mmap[idi] = param_id
+            param_id += 1
 
-                gids = []
-                for gidi in elem.Gni:
-                    gidii = nid_map[gidi]
-                    gids.append(gidii)
-                elem.Gni = gids
-            elif elem.type == 'RBE3':
-                elem.refgrid = nid_map[elem.refgrid]
-                for i, (wt, ci, Gij) in enumerate(elem.WtCG_groups):
-                    gids = []
-                    for gidi in Gij:
-                        gidii = nid_map[gidi]
-                        gids.append(gidii)
-                    elem.WtCG_groups[i][2] = gids
-
-                gids = []
-                for gidi in elem.Gmi:
-                    gidii = nid_map[gidi]
-                    gids.append(gidii)
-                elem.Gmi = gids
-            elif elem.type == 'RBE2':
-                #RBE2        3690    3389  123456    3387    3386    3385    3388       9+
-                #+             10       2       1       6       5
-                elem.gn = nid_map[elem.gn]
-                gids = []
-                for gidi in elem.Gmi:
-                    gidii = nid_map[gidi]
-                    gids.append(gidii)
-                elem.Gmi = gids
-
-                #raise NotImplementedError('RBE2')
-            else:
-                raise NotImplementedError(elem.type)
-            eid += 1
-
-    ispline = 1
-    for spline in sorted(iteritems(model.splines)):
-        model.sid = ispline
-        ispline += 1
-
-    table_id = 1
+    # tables
     for table_idi, table in sorted(iteritems(model.tables)):
+        assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
     for table_idi, table in sorted(iteritems(model.randomTables)):
+        assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
 
-    mpc_map = {}
-    spc_map = {}
-    _update_case_control(model, nid_map, eid_map, spc_map, mpc_map)
+    # dloads
+    for dload_idi, dloads in sorted(iteritems(model.dloads)):
+        for dload in dloads:
+            assert hasattr(dload, 'sid')
+            dload.sid = dload_id
+        dload_map[dload_idi] = dload_id
+        dload_id += 1
+    for dload_idi, dloads in sorted(iteritems(model.dload_entries)):
+        for dload in dloads:
+            assert hasattr(dload, 'sid')
+            dload.sid = dload_id
+        dload_map[dload_idi] = dload_id
+        dload_id += 1
+
+
+    # loads
+    for load_idi, loads in sorted(iteritems(model.loads)):
+        for load in loads:
+            assert hasattr(load, 'sid')
+            load.sid = load_id
+        load_map[load_idi] = load_id
+        load_id += 1
+
+
+    mapper = {
+        'elements' : eid_map,
+        'nodes' : nid_map,
+        'coords' : cid_map,
+        'materials' : mid_map,
+        'SPC' : spc_map,
+        'MPC' : mpc_map,
+        'METHOD' : method_map,
+        'CMETHOD' : cmethod_map,
+        'FLFACT' : flfact_map,
+        'FLUTTER' : flutter_map,
+        'FREQUENCY' : freq_map,
+
+        'DLOAD' : dload_map,
+        'LOAD' : load_map,
+        'LOADSET' : load_map, # wrong
+        'TSTEP' : tstep_map,
+        'TSTEPNL' : tstepnl_map,
+    }
+    _update_case_control(model, mapper)
     model.write_bdf(bdf_filename_out, size=8, is_double=False,
                     interspersed=False)
 
-def _update_case_control(model, nid_map, eid_map, spc_map, mpc_map):
-    elemental_quantities = ['STRESS', 'STRAIN', 'FORCE']
-    nodal_quanitities = ['DISPLACEMENT', 'VELOCITY', 'ACCELERATION', 'SPCFORCES', 'MPCFORCES', 'GPFORCES']
+def _update_case_control(model, mapper):
+    elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE']
+    nodal_quantities = [
+        'DISPLACEMENT', 'VELOCITY', 'ACCELERATION', 'SPCFORCES', 'MPCFORCES',
+        'GPFORCES'
+    ]
+    mapper_quantities = [
+        'FREQUENCY', 'DLOAD', 'LOAD', 'LOADSET', 'SPC', 'METHOD', 'CMETHOD',
+        'TSTEP', 'TSTEPNL', 'NLPARM',
+    ]
+    nid_map = mapper['nodes']
+    eid_map = mapper['elements']
 
     # TODO: renumber the sets
     #iset = 1
@@ -496,24 +547,35 @@ def _update_case_control(model, nid_map, eid_map, spc_map, mpc_map):
         #print('-----------------------')
         #print(subcase)
         for key, values in sorted(iteritems(subcase.params)):
-            if key in ['LOAD', 'SPC', 'MPC', 'METHOD']:
-                continue
+            #if key in ['LOAD', 'SPC', 'MPC', 'METHOD', 'CMETHOD']:
+                #continue
 
-            if 'SET ' not in key:
+            if key in ['TITLE', 'ECHO']:
+                pass
+            elif 'SET ' in key:
+                # does this need to be updated...I don't think so...
+                continue
+            elif 'SET ' not in key:
                 value, options, param_type = values
                 if isinstance(value, int):
-                    seti = 'SET %i' % (value)
-                    msg = ', which is needed by %s' % key
-                    seti2, seti_key = subcase.get_parameter(seti, msg=msg)
-                    if key in ['LOAD']:
-                        pass
-                    elif key in ['SPC']:
-                        pass
-                    elif key in ['METHOD']:
-                        pass
+                    seti = 'SET %i' % value
+                    msg = ', which is needed by %s=%s' % (key, value)
+
+                    if key in mapper_quantities:
+                        print('mapper = %s, value=%s' % (key, value))
+                        kmap = mapper[key]
+                        try:
+                            value2 = kmap[value]
+                        except KeyError:
+                            msg = 'Could not find id=%s in %s dictionary' % (value, key)
+                            raise KeyError(msg)
+
+                        subcase.add_parameter_to_subcase(key, value2, options, param_type)
+
                     elif key in elemental_quantities:
-                        #set_values = expand_thru(seti2)
+                        seti2, seti_key = subcase.get_parameter(seti, msg=msg)
                         # renumber eids
+                        #continue
 
                         #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
                         #print(seti2)
@@ -521,23 +583,41 @@ def _update_case_control(model, nid_map, eid_map, spc_map, mpc_map):
                         for nid in seti2:
                             nid_new = eid_map[nid]
                             values2.append(nid_new)
-                        param_type = 'SET-type'
                         #print('updating SET %s' % options)
-                        subcase.add_parameter_to_subcase(key, values2, options, param_type)
+                        #subcase.add_parameter_to_subcase(key, values2, options, param_type)  # old
+
+                        param_type = 'SET-type'
+                        subcase.add_parameter_to_subcase(seti, values2, seti_key, param_type)
 
                     elif key in nodal_quantities:
+                        seti2, seti_key = subcase.get_parameter(seti, msg=msg)
                         # renumber nids
+                        #continue
                         values2 = []
                         for nid in value:
                             nid_new = nid_map[nid]
                             values2.append(nid_new)
-                        param_type = 'SET-type'
                         #print('updating SET %s' % options)
-                        subcase.add_parameter_to_subcase(key, values2, options, param_type)
+
+                        #subcase.add_parameter_to_subcase(key, values2, options, param_type)  # old
+                        param_type = 'SET-type'
+                        subcase.add_parameter_to_subcase(seti, values2, seti_key, param_type)
+
                     else:
                         pass
                         #print('key=%s seti2=%s' % (key, seti2))
-                        #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                        print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                        raise RuntimeError(key)
+                elif value == 'ALL':
+                    #print('*ALL -> key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                    #print('*all')
+                    pass
+                else:
+                    print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                    raise RuntimeError(key)
+
+            else:
+                raise RuntimeError(key)
 
                     #if value ==
         print()

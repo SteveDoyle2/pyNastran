@@ -1,3 +1,4 @@
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdfInterface.dev_utils import bdf_renumber
 import unittest
 import os
@@ -61,17 +62,48 @@ class TestRenumber(unittest.TestCase):
         msg_expected += 'ENDDATA\n'
 
         # for now we're testing things don't crash
-        bdf_renumber('renumber_in.bdf', 'renumber_out.bdf')
+        bdf_filename2 = 'renumber_out.bdf'
+        bdf_renumber('renumber_in.bdf', bdf_filename2)
+
+        #model = BDF()
+        #model.read_bdf(bdf_filename)
+        #model.write_bdf(bdf_filename_check)
+        model = BDF()
+        model.read_bdf(bdf_filename2)
 
     def test_renumber_02(self):
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm.dat')
         bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm_renumber.dat')
+        bdf_filename_check = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm_check.dat')
         bdf_renumber(bdf_filename, bdf_filename2)
+        model = BDF()
+        model.read_bdf(bdf_filename)
+        model.write_bdf(bdf_filename_check, interspersed=False)
+        model = BDF()
+        model.read_bdf(bdf_filename2)
+
 
     def test_renumber_03(self):
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush.dat')
         bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush_renumber.dat')
+        bdf_filename_check = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush_check.dat')
         bdf_renumber(bdf_filename, bdf_filename2)
+        model = BDF()
+        model.read_bdf(bdf_filename)
+        model.write_bdf(bdf_filename_check, interspersed=False)
+        model = BDF()
+        model.read_bdf(bdf_filename2)
+
+    def test_renumber_04(self):
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'complex', 'tet10', 'Simple_Example.bdf')
+        bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'complex', 'tet10', 'Simple_Example_renumber.bdf')
+        bdf_filename_check = os.path.join(pkg_path, '..', 'models', 'complex', 'tet10', 'Simple_Example_check.bdf')
+        bdf_renumber(bdf_filename, bdf_filename2)
+        model = BDF()
+        model.read_bdf(bdf_filename)
+        model.write_bdf(bdf_filename_check, interspersed=False)
+        model = BDF()
+        model.read_bdf(bdf_filename2)
 
 
 if __name__ == '__main__':
