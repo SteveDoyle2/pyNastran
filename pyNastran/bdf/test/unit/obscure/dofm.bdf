@@ -302,6 +302,9 @@ GRID    1107            7.      10.0    0.
 GRID    1108            8.      10.0    0.
 GRID    1109            9.      10.0    0.
 GRID    1110            10.     10.0    0.
+$
+$            sid     exciteID loadID tableID
+$            sid     nid     PLOAD2?
 LSEQ    720     710     730
 MAT1    150     1.0E7           0.3     .1
 PARAM   NASPRT  1

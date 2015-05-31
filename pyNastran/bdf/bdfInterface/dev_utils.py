@@ -554,10 +554,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         'DLOAD' : dload_map,
         'LOAD' : load_map,
         'LOADSET' : lseq_map,
-        #'LOADSET' : load_map, # wrong???
         'TSTEP' : tstep_map,
         'TSTEPNL' : tstepnl_map,
-        #'SUPORT' : suport_map,
         'SUPORT1' : suport1_map,
         'NLPARM' : nlparm_map,
         'SDAMPING' : table_sdamping_map,
@@ -573,6 +571,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         #'ADAPT' : adapt_map,
         #'SUPER' : super_map,
         #'BOUTPUT' : boutput_map,
+        #'OUTRCV' : outrcv_map,
     }
     #print('****suport1_map', suport1_map)
     #print('****dessub_map', dessub_map)
@@ -597,13 +596,15 @@ def _update_case_control(model, mapper):
     skip_keys_temp = [
         'DESSUB', 'ADAPT', 'DATAREC', 'DSAPRT(END=SENS)=ALL', 'TEMPERATURE(LOAD)',
         'CURVELINESYMBOL', 'DSAPRT=(END=SENS)', 'SUPER', 'BOUTPUT', 'IC',
+        'OUTRCV',
     ]
 
     nid_map = mapper['nodes']
     eid_map = mapper['elements']
     skip_keys = [
         'TITLE', 'ECHO', 'ANALYSIS', 'SUBTITLE', 'LABEL', 'SUBSEQ', 'OUTPUT',
-        'TCURVE', 'XTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES',
+        'TCURVE', 'XTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES', 'PARAM', 'CONTOUR',
+        'PTITLE',
         ] + skip_keys_temp
 
     sets_analyzed = set([])

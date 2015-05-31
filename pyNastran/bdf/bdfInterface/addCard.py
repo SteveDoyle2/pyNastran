@@ -392,7 +392,7 @@ class AddMethods(object):
         self.suport1[key] = suport
 
     def add_DAREA(self, darea, allowOverwrites=False):
-        key = (darea.sid, darea.p)
+        key = (darea.sid, darea.p, darea.c)
         if key in self.dareas and not allowOverwrites:
             if not darea._is_same_card(self.dareas[key]):
                 assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (darea, self.dareas[key])

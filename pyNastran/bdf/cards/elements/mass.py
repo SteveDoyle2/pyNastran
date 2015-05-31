@@ -369,16 +369,17 @@ class CMASS4(PointMassElement):
         1: 'eid', 2:'mass', 3:'s1', 4:'s2',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
-            self.eid = integer(card, 1, 'eid')
-            self.mass = double_or_blank(card, 2, 'mass', 0.)
-            self.s1 = integer(card, 3, 's1')
-            self.s2 = integer_or_blank(card, 4, 's2', 0)
-            assert len(card) <= 5, 'len(CMASS4 card) = %i' % len(card)
+            ioffset = icard * 4
+            self.eid = integer(card, 1 + ioffset, 'eid')
+            self.mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
+            self.s1 = integer(card, 3 + ioffset, 's1')
+            self.s2 = integer_or_blank(card, 4 + ioffset, 's2', 0)
+            assert len(card) <= 9, 'len(CMASS4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.mass = data[1]

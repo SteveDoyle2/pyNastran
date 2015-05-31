@@ -22,7 +22,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 #from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, string_or_blank)
+    double_or_blank, string_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -1005,6 +1005,33 @@ class Cord1x(Coord):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
+
+class GMCORD(BaseCard):
+    type = 'GMCORD'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        self.cid = integer(card, 1, 'cid')
+        self.entity = string(card, 2, 'entity')
+        self.gm_ids = [
+            integer(card, 3, 'GM_ID1'),
+            integer_or_blank(card, 4, 'GM_ID2'),
+        ]
+
+    def cross_reference(self, model):
+        pass
+
+    def setup(self):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['GMCORD', self.cid, self.entity] + self.gm_ids
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment() + print_card_8(card)
 
 class CORD3G(Coord):  # not done
     """

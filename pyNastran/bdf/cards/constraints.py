@@ -34,7 +34,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 
 class ConstraintObject(object):
     def __init__(self):
-        self.constraints = {}  # SPC, SPC1, SPCD, etc...
+        self.constraints = {}  # SPC, SPC1, SPCAX, etc...
         self.add_constraints = {}  # SPCADD
 
     def Add(self, ADD_Constraint):
@@ -477,38 +477,6 @@ class GMSPC(Constraint):
 
     def raw_fields(self):
         fields = ['GMSPC', self.conid, self.components, self.entity, self.entity_id]
-        return fields
-
-    def write_card(self, size=8, is_double=False):
-        card = self.raw_fields()
-        return self.comment() + print_card_8(card)
-
-
-class SPCD(SPC):
-    """
-    Defines an enforced displacement value for static analysis and an enforced
-    motion value (displacement, velocity or acceleration) in dynamic analysis.
-
-     +------+-----+-----+-----+------+----+---+----+
-     | SPCD | SID |  G1 | C1  |  D1  | G2 |C2 | D2 |
-     +------+-----+-----+-----+------+----+---+----+
-     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2 | .9 |
-     +------+-----+-----+-----+------+----+---+----+
-    """
-    type = 'SPCD'
-
-    def __init__(self, card=None, data=None, comment=''):
-        # defines everything :) at least until cross-referencing methods are
-        # implemented
-        SPC.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-
-    def raw_fields(self):
-        fields = ['SPCD', self.conid]
-        for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
-                                               self.enforced):
-            fields += [gid, constraint, enforced]
         return fields
 
     def write_card(self, size=8, is_double=False):

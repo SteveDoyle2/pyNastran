@@ -242,7 +242,7 @@ def print_card_8(fields):
         try:
             out += print_field_8(field)
         except:
-            print("bad fields = %s" % fields)
+            #print("bad fields = %s" % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
             out = out.rstrip(' ')

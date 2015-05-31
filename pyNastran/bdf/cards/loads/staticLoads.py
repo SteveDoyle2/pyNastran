@@ -1209,6 +1209,9 @@ class GMLOAD(Load):
             #return self.node
         #return self.node.nid
 
+    def getLoads(self):
+        return [self]
+
     def raw_fields(self):
         list_fields = ['GMLOAD', self.sid, self.Cid()] + list(self.normal) + [
             self.entity, self.gmcurve, self.method] + self.load_magnitudes

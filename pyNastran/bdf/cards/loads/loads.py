@@ -10,10 +10,11 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -142,11 +143,12 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
+        #self.exciteID = model.Node(self.exciteID, msg=msg)
         if self.tid:
             self.tid = model.Table(self.tid, msg=msg)
 
     def LoadID(self, lid):
-        if isinstance(lid, int):
+        if isinstance(lid, integer_types):
             return lid
         elif isinstance(lid, list):
             return self.LoadID(lid[0])
@@ -157,15 +159,22 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return self.lid
 
     def Lid(self):
-        if isinstance(self.lid, int):
+        if isinstance(self.lid, integer_types):
             return self.lid
         else:
             return self.LoadID(self.lid)
 
+    #@property
+    #def node_id(self):
+        #print('self.exciteID =', self.exciteID)
+        #if isinstance(self.exciteID, integer_types):
+            #return self.exciteID
+        #return self.exciteID.nid
+
     def Tid(self):
         if self.tid is None:
             return None
-        elif isinstance(self.tid, int):
+        elif isinstance(self.tid, integer_types):
             return self.tid
         return self.tid.tid
 
@@ -223,6 +232,68 @@ class DAREA(BaseCard):
 class TabularLoad(BaseCard):
     def __init__(self, card, data):
         pass
+
+
+class SPCD(Load):
+    """
+    Defines an enforced displacement value for static analysis and an enforced
+    motion value (displacement, velocity or acceleration) in dynamic analysis.
+
+     +------+-----+-----+-----+------+----+---+----+
+     | SPCD | SID |  G1 | C1  |  D1  | G2 |C2 | D2 |
+     +------+-----+-----+-----+------+----+---+----+
+     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2 | .9 |
+     +------+-----+-----+-----+------+----+---+----+
+    """
+    type = 'SPCD'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        if card:
+            self.sid = integer(card, 1, 'sid')
+            if card.field(5) is None:
+                    self.gids = [integer(card, 2, 'G1'),]
+                    self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+            else:
+                    self.gids = [
+                        integer(card, 2, 'G1'),
+                        integer(card, 5, 'G2'),
+                    ]
+                    # :0 if scalar point 1-6 if grid
+                    self.constraints = [components_or_blank(card, 3, 'C1', 0),
+                                        components_or_blank(card, 6, 'C2', 0)]
+                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                                     double_or_blank(card, 7, 'D2', 0.0)]
+        else:
+            self.sid = data[0]
+            self.gids = [data[1]]
+            self.constraints = [data[2]]
+            self.enforced = [data[3]]
+
+    @property
+    def node_ids(self):
+        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        return _node_ids(self, nodes=self.gids, allowEmptyNodes=True, msg=msg)
+
+    def cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
+
+    def getLoads(self):
+        return [self]
+
+    def raw_fields(self):
+        fields = ['SPCD', self.sid]
+        for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
+                                               self.enforced):
+            fields += [gid, constraint, enforced]
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment() + print_card_8(card)
 
 
 class SLOAD(Load):

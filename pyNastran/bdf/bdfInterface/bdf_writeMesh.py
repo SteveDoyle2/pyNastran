@@ -176,14 +176,19 @@ class WriteMesh(WriteMeshDeprecated):
         :param self: the BDF object
         """
         if self.elements:
+            #print('nastran_format=', self.nastran_format)
             outfile.write('$ELEMENTS\n')
-            for (eid, element) in sorted(iteritems(self.elements)):
-                try:
-                    outfile.write(element.write_card(size, is_double))
-                except:
-                    print('failed printing element...'
-                          'type=%s eid=%s' % (element.type, eid))
-                    raise
+            if self.is_long_ids:
+                for (eid, element) in sorted(iteritems(self.nodes)):
+                    outfile.write(element.write_card_16(is_double))
+            else:
+                for (eid, element) in sorted(iteritems(self.elements)):
+                    try:
+                        outfile.write(element.write_card(size, is_double))
+                    except:
+                        print('failed printing element...'
+                              'type=%s eid=%s' % (element.type, eid))
+                        raise
 
     def _write_elements_properties(self, outfile, size=8, is_double=False):
         """

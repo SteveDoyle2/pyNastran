@@ -126,6 +126,49 @@ class ABCQSet(Set):
         return self.comment() + print_card_8(list_fields)
 
 
+class SuperABCQSet(Set):
+    """
+    Generic Class ASET, BSET, CSET, QSET cards inherit from.
+
+    Defines degrees-of-freedom in the analysis set (A-set)
+
+    +--------+------+-----+----+-----+------+-----+-----+-----+
+    | SEBSET | SEID | ID1 | C1 | ID2 |  C2  | ID3 | C3  |     |
+    +--------+------+-----+----+-----+------+-----+-----+-----+
+    | SEBSET | 100  | 16  |  2 |  23 | 3516 |  1  | 4   |     |
+    +--------+------+-----+----+-----+------+-----+-----+-----+
+    """
+    def __init__(self, card=None, data=None, comment=''):
+        Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+        self.seid = integer(card, 1, 'seid')
+
+        #:  Identifiers of grids points. (Integer > 0)
+        self.IDs = []
+        self.components = []
+
+        nterms = len(card) // 2
+        for n in range(nterms):
+            i = n * 2 + 2
+            ID = integer(card, i, 'ID' + str(n))
+            component = components(card, i + 1, 'component' + str(n))
+            self.IDs.append(ID)
+            self.components.append(component)
+
+    def raw_fields(self):
+        """gets the "raw" card without any processing as a list for printing"""
+        list_fields = [self.type, self.seid]  # SEASET, SEBSET
+        for (ID, comp) in zip(self.IDs, self.components):
+            list_fields += [ID, comp]
+        return list_fields
+
+    def __repr__(self):
+        list_fields = self.raw_fields()
+        return self.comment() + print_card_8(list_fields)
+
+
 class ASET(ABCQSet):
     """
     Defines degrees-of-freedom in the analysis set (A-set).
@@ -201,7 +244,7 @@ class ABQSet1(Set):
 
     Defines degrees-of-freedom in the analysis set (a-set).
 
-    +--=----+-----+-----+------+------+-----+-----+-----+-----+
+    +-------+-----+-----+------+------+-----+-----+-----+-----+
     | ASET1 |  C  | ID1 | ID2  | ID3  | ID4 | ID5 | ID6 | ID7 |
     +-------+-----+-----+------+------+-----+-----+-----+-----+
     |       | ID8 | ID9 |      |      |     |     |     |     |
@@ -234,6 +277,54 @@ class ABQSet1(Set):
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = [self.type, self.components] + collapse_thru(self.IDs)
+        return list_fields
+
+    def __repr__(self):
+        list_fields = self.raw_fields()
+        return self.comment() + print_card_8(list_fields)
+
+
+class SuperABQSet1(Set):
+    """
+    Generic Class SEBSET1, SEQSET1 cards inherit from.
+
+    Defines degrees-of-freedom in the analysis set (a-set).
+
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    | SEBSET1  | SEID |  C  | ID1  | ID2  | ID3 | ID4 | ID5 | ID6 |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    |          | ID7  | ID9 |      |      |     |     |     |     |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    | SEBSET1  | SEID |  C  | ID1  | THRU | ID2 |     |     |     |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    """
+
+    def __init__(self, card=None, data=None, comment=''):
+        Set.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+        self.seid = integer(card, 1, 'seid')
+        #:  Component number. (Integer zero or blank for scalar points or any
+        #:  unique combination of the Integers 1 through 6 for grid points with
+        #:  no embedded blanks.)
+        self.components = components_or_blank(card, 2, 'components', 0)
+
+        nfields = len(card)
+        IDs = []
+        i = 1
+        for ifield in range(3, nfields):
+            ID = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            if ID:
+                i += 1
+                IDs.append(ID)
+        #IDs = fields(integer_or_string, card, 'ID', i=2, j=nfields)
+        #:  Identifiers of grids points. (Integer > 0)
+        self.IDs = expand_thru(IDs)
+
+    def raw_fields(self):
+        """gets the "raw" card without any processing as a list for printing"""
+        list_fields = [self.type, self.seid, self.components] + collapse_thru(self.IDs)
         return list_fields
 
     def __repr__(self):
@@ -556,7 +647,7 @@ class SESET(SetSuper):
         pass
 
 
-class SEBSET(ABCQSet):
+class SEBSET(SuperABCQSet):
     """
     Defines boundary degrees-of-freedom to be fixed (b-set) during generalized
     dynamic reduction or component mode calculations.
@@ -570,44 +661,44 @@ class SEBSET(ABCQSet):
     type = 'SEBSET'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data, comment)
+        SuperABCQSet.__init__(self, card, data, comment)
 
-class SEBSET1(ABQSet1):
+class SEBSET1(SuperABQSet1):
     type = 'SEBSET1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data, comment)
+        SuperABQSet1.__init__(self, card, data, comment)
 
     def cross_reference(self, model):
         pass
 
-class SECSET(ABCQSet):
+class SECSET(SuperABCQSet):
     type = 'SECSET'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data, comment)
+        SuperABCQSet.__init__(self, card, data, comment)
 
-class SECSET1(ABQSet1):
+class SECSET1(SuperABQSet1):
     type = 'SECSET1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data, comment)
+        SuperABQSet1.__init__(self, card, data, comment)
 
     def cross_reference(self, model):
         pass
 
 
-class SEQSET(ABCQSet):
+class SEQSET(SuperABCQSet):
     type = 'SEQSET'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data, comment)
+        SuperABCQSet1.__init__(self, card, data, comment)
 
-class SEQSET1(ABQSet1):
+class SEQSET1(SuperABQSet1):
     type = 'SEQSET1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data, comment)
+        SuperABQSet1.__init__(self, card, data, comment)
 
     def cross_reference(self, model):
         pass

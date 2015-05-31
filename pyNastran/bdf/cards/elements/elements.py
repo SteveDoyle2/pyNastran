@@ -11,7 +11,7 @@ All ungrouped elements are Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
+from six import integer_types
 
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
@@ -50,9 +50,12 @@ class CFAST(Element):
     def cross_reference(self, model):
         msg = ' which is required by CFAST eid=%s' % self.eid
         self.pid = model.Property(self.Pid(), msg=msg)
-        self.gs = model.Node(self.Gs(), msg=msg)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
+        if self.gs:
+            self.gs = model.Node(self.Gs(), msg=msg)
+        if self.ga:
+            self.ga = model.Node(self.Ga(), msg=msg)
+        if self.gb:
+            self.gb = model.Node(self.Gb(), msg=msg)
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
@@ -60,19 +63,23 @@ class CFAST(Element):
         return list_fields
 
     def Gs(self):
-        if isinstance(self.gs, int):
+        if isinstance(self.gs, integer_types):
             return self.gs
         return self.gs.nid
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types) or self.ga is None:
             return self.ga
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int):
+        if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb.nid
+
+    @property
+    def node_ids(self):
+        return [self.Ga(), self.Gb()]
 
     def repr_fields(self):
         return self.raw_fields()
@@ -101,7 +108,7 @@ class CGAP(Element):
             self.ga = integer_or_blank(card, 3, 'ga')
             self.gb = integer_or_blank(card, 4, 'gb')
             x1G0 = integer_double_or_blank(card, 5, 'x1_g0')
-            if isinstance(x1G0, int):
+            if isinstance(x1G0, integer_types):
                 self.g0 = x1G0
                 self.x = None
                 self.cid = None
@@ -174,17 +181,17 @@ class CGAP(Element):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def Cid(self):
-        if isinstance(self.cid, int) or self.cid is None:
+        if isinstance(self.cid, integer_types) or self.cid is None:
             return self.cid
         return self.cid.cid
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types):
             return self.ga
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int):
+        if isinstance(self.gb, integer_types):
             return self.gb
         return self.gb.nid
 

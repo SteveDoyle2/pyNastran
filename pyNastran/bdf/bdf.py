@@ -68,16 +68,17 @@ from pyNastran.bdf.cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AE
                                       FLFACT, FLUTTER, GUST, MKAERO1,
                                       MKAERO2, SPLINE1, SPLINE2, SPLINE4,
                                       SPLINE5, TRIM)
-from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
+from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC,
                                              ConstraintObject)
 from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
-                                                   CORD2R, CORD2C, CORD2S, CORD3G)
+                                                   CORD2R, CORD2C, CORD2S, CORD3G,
+                                                   GMCORD)
 from pyNastran.bdf.cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 from pyNastran.bdf.cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
                                          NLPCI)
-from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE
+from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD
 from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                    FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -253,7 +254,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'MAT4', 'MAT5',
 
             # spc/mpc constraints
-            'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
+            'SPC', 'SPCADD', 'SPC1', 'SPCAX',
             'GMSPC',
             'MPC', 'MPCADD',
             'SUPORT', 'SUPORT1', 'SESUP',
@@ -266,7 +267,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE',
-            'GMLOAD',
+            'GMLOAD', 'SPCD',
 
             # aero cards
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
@@ -280,6 +281,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # coords
             'CORD1R', 'CORD1C', 'CORD1S',
             'CORD2R', 'CORD2C', 'CORD2S',
+            'GMCORD',
 
             # temperature cards
             'TEMP',  # 'TEMPD',
@@ -539,7 +541,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.creepMaterials = {}
 
         # loads
-        #: stores LOAD, FORCE, MOMENT, etc.
+        #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+        #: PLOAD, PLOAD2, PLOAD4, SLOAD
+        #: GMLOAD, SPCD
         self.loads = {}
         self.tics = {}
 
@@ -561,7 +565,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.suport1 = {}
         self.se_suport = []
 
-        #: stores SPCADD,SPC,SPC1,SPCD,SPCAX,GMSPC
+        #: stores SPCADD,SPC,SPC1,SPCAX,GMSPC
         self.spcObject = ConstraintObject()
         #: stores MPCADD,MPC
         self.mpcObject = ConstraintObject()
@@ -708,7 +712,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'gridSet' : ['GRDSET'],
             #'POINT', 'POINTAX', 'RINGAX',
 
-            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
+            # CMASS4 lies in the QRG
+            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3'],
 
             'elements' : [
                 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -766,7 +771,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'thermalMaterials' : ['MAT4', 'MAT5',],
 
             # spc/mpc constraints - TODO: is this correct?
-            'spcs' : ['SPC', 'SPC1', 'SPCD', 'SPCAX', 'SPCADD', 'GMSPC'],
+            'spcs' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD', 'GMSPC'],
             #'spcadds' : ['SPCADD'],
             #'mpcadds' : ['MPCADD'],
             'mpcs' : ['MPC', 'MPCADD'],
@@ -782,7 +787,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'GRAV', 'ACCEL', 'ACCEL1',
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
                 'PLOADX1', 'RFORCE', 'SLOAD',
-                'GMLOAD',
+                'GMLOAD', 'SPCD',
 
                 # thermal
                 'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
@@ -812,7 +817,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # coords
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
-                        'CORD2R', 'CORD2C', 'CORD2S',],
+                        'CORD2R', 'CORD2C', 'CORD2S',
+                        'GMCORD'],
 
             # temperature cards
             # 'TEMPD',
@@ -1471,7 +1477,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             _cards = {
                 'add_node' : ['GRID'],
                 'add_mass' : ['CONM1', 'CONM2', 'CMASS1',
-                              'CMASS2', 'CMASS3', 'CMASS4', ],
+                              'CMASS2', 'CMASS3', ],
                 'add_element' : ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
                                  'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                                  'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
@@ -1479,7 +1485,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                  'CELAS4', 'CVISC', 'CSHEAR', 'CGAP',
                                  'CRAC2D', 'CRAC3D'],
                 'add_damper' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
-                                'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
+                                'CDAMP2', 'CDAMP3', 'CDAMP5',
+                                #'CDAMP4',   # is added later because the documentation is wrong
+                                ],
                 'add_rigid_element' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
                 'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
                                   'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
@@ -1504,7 +1512,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                               'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
                               'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
                               'RFORCE', 'SLOAD', 'RANDPS',
-                              'GMLOAD', ],
+                              'GMLOAD', 'SPCD', ],
                 'add_dload' : ['DLOAD'],
                 'add_dload_entry' : ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
 
@@ -1512,7 +1520,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_thermal_element' : ['CHBDYE', 'CHBDYG', 'CHBDYP'],
                 'add_convection_property' : ['PCONV', 'PCONVM'],
                 'add_constraint_MPC' : ['MPC', 'MPCADD'],
-                'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD',
+                'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD',
                                         'GMSPC'],
                 'add_suport' : ['SUPORT'],  # pseudo-constraint
                 #'add_constraint' : ['SUPORT1'],  # pseudo-constraint - TODO: should this be add_suport1???
@@ -1535,7 +1543,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_SEUSET' : ['SEUSET', 'SEUSET1'],
                 'add_DRESP' : ['DRESP1', 'DRESP2'],
                 'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
-                'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S'],
+                'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S', 'GMCORD'],
                 'add_table' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
                                'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
                                'TABLES1', 'TABLEST', 'TABDMP1'],
@@ -1568,6 +1576,37 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 d = _dct[card_name]
                 self.add_element((d[1] if card_obj.nfields == d[0]
                                   else d[2])(card_obj, comment=comment))
+                return card_obj
+
+
+            # masses that violate the QRG...no duplicate elements on card...lies
+            _dct = {'CMASS4': (5,),}
+            if card_name in _dct:
+                try:
+                    self.add_mass(_get_cls(card_name))
+                except Exception as e:
+                    if not e.args:
+                        e.args = ('',)
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
+                    raise
+                for i in _dct[card_name]:
+                    if card_obj.field(i):
+                        self.add_mass(_cls(card_name)(card_obj, 1, comment=comment))
+                return card_obj
+
+            # elements that violate the QRG...no duplicate elements on card...lies
+            _dct = {'CDAMP4': (5,),}
+            if card_name in _dct:
+                try:
+                    self.add_damper(_get_cls(card_name))
+                except Exception as e:
+                    if not e.args:
+                        e.args = ('',)
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
+                    raise
+                for i in _dct[card_name]:
+                    if card_obj.field(i):
+                        self.add_damper(_cls(card_name)(card_obj, 1, comment=comment))
                 return card_obj
 
             # dampers

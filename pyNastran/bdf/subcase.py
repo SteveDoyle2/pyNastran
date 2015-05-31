@@ -919,6 +919,7 @@ def expand_thru_case_control(set_value):
                     assert thru == 'THRU', thru
                     imin = int(imin)
                     imax = int(imax)
+                    assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
                     for jthru in range(imin, imax + 1):
                         set_value2.add(jthru)
 
@@ -926,6 +927,7 @@ def expand_thru_case_control(set_value):
                     imin, thru, imax, by_except = svalues
                     imin = int(imin)
                     imax = int(imax)
+                    assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
                     assert by_except == 'EXCEPT', by_except
 
                     for jthru in range(imin, imax + 1):
@@ -936,12 +938,17 @@ def expand_thru_case_control(set_value):
 
                 elif len(svalues) == 5:
                     imin, thru, imax, by_except, increment_except = svalues
-                    assert by_except == 'BY', by_except
                     imin = int(imin)
                     imax = int(imax)
+                    assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
                     increment_except = int(increment_except)
                     if by_except == 'BY':
                         for jthru in range(imin, imax + 1, by_except):
+                            set_value2.add(jthru)
+                    elif by_except == 'EXCEPT':
+                        for jthru in range(imin, imax + 1):
+                            if thru == increment_except:
+                                continue
                             set_value2.add(jthru)
                     else:
                         raise RuntimeError(ivalue)

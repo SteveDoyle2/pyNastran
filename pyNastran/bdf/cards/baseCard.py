@@ -158,15 +158,16 @@ class BaseCard(BaseCardDeprecated):
         Prints a card in the simplest way possible
         (default values are left blank).
         """
+        comment = self.comment()
+        list_fields = self.repr_fields()
         try:
-            return self.print_card(size=8)
+            return comment + print_card(list_fields, size=8)
         except:
             try:
-                return self.print_card(size=16)
+                return comment + print_card(list_fields, size=16)
             except:
                 print('problem printing %s card' % self.type)
-                fields = self.repr_fields()
-                print("fields = ", fields)
+                print("list_fields = ", list_fields)
                 raise
 
 
