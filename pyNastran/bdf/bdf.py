@@ -1,5 +1,5 @@
-# pylint: disable=W0212,W0633,W0611,W0201,C0301,R0915,R0912
 # coding: utf-8
+# pylint: disable=W0212,W0633,W0611,W0201,C0301,R0915,R0912
 """
 Main BDF class.  Defines:
   - BDF
@@ -565,7 +565,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.suport1 = {}
         self.se_suport = []
 
-        #: stores SPCADD,SPC,SPC1,SPCAX,GMSPC
+        #: stores SPCADD, SPC, SPC1, SPCAX, GMSPC
         self.spcObject = ConstraintObject()
         #: stores MPCADD,MPC
         self.mpcObject = ConstraintObject()
@@ -979,13 +979,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         if not os.path.exists(bdf_filename):
             msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
             raise IOError(msg)
-        if bdf_filename.lower().endswith('.pch'):
-            punch = True
+
+        self.punch = punch
+        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
+            self.punch = True
+        self._parse_primary_file_header(bdf_filename)
 
         try:
             self._open_file(self.bdf_filename)
             self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-            if not punch:
+            if not self.punch:
                 self.log.debug('---reading executive & case control decks---')
                 self._read_executive_control_deck()
                 self._read_case_control_deck()
@@ -1477,7 +1480,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             _cards = {
                 'add_node' : ['GRID'],
                 'add_mass' : ['CONM1', 'CONM2', 'CMASS1',
-                              'CMASS2', 'CMASS3', ],
+                              'CMASS2', 'CMASS3',
+							  # CMASS4 - added later because documentation is wrong
+							  ],
                 'add_element' : ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
                                  'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                                  'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
@@ -1486,7 +1491,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                  'CRAC2D', 'CRAC3D'],
                 'add_damper' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
                                 'CDAMP2', 'CDAMP3', 'CDAMP5',
-                                #'CDAMP4',   # is added later because the documentation is wrong
+                                # CDAMP4 - is added later because the documentation is wrong
                                 ],
                 'add_rigid_element' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
                 'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
@@ -2163,19 +2168,51 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             yield lines2, comment
         return
 
+    def _parse_primary_file_header(self, bdf_filename):
+        """
+        Extract encoding, nastran_format, and punch from the primary BDF.
+
+        ..code-block :: python
+            $ pyNastran: version=NX
+            $ pyNastran: encoding=latin-1
+            $ pyNastran: punch=True
+
+        ..warning :: pyNastran lines must be at the top of the file
+
+        ..todo :: make everything work :)
+        """
+        f = open(bdf_filename, 'r')
+        check_header = True
+        while check_header:
+            try:
+                line = f.readline()
+            except:
+                break
+
+            if line.startswith('$'):
+                key, value = _parse_pynastran_header(line)
+
+                if key:
+                    print('pyNastran key=%s value=%s' % (key, value))
+                    if key == 'version':
+                        self.nastran_format = value
+                    elif key == 'encoding':
+                        self._encoding = value
+                    elif key == 'punch':
+                        self.punch = True if value == 'true' else False
+                    else:
+                        raise NotImplementedError(key)
+                else:
+                    break
+            else:
+                break
+        f.close()
+
     def _stream_line(self):
         """
         Uses generators to open the file and stream the next line into
         a (line_number, comment, and line).
         """
-        f = open(self.active_filename, 'r')
-        line = f.readline()
-        f.close()
-        if line.strip().startswith('$'):
-            fmt = _parse_pyNastran_header(line)
-            if fmt:
-                self.nastran_format = fmt
-
         with open(self.active_filename, 'r') as f:
             for n, line in enumerate(f):
                 line = line.rstrip('\t\r\n ')
@@ -2234,24 +2271,29 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 raise
 
 
-def _parse_pyNastran_header(line):
-    line = line[1:].lower()
-    if 'pynastran' in line:
-        base, word = line.split(':')
-        word = word.strip()
-        base, value = word.split('=')
-        base = base.strip()
+def _parse_pynastran_header(line):
+    lline = line[1:].lower()
+    if 'pynastran' in lline:
+        base, word = lline.split(':')
+        if base.strip() != 'pynastran':
+            msg = 'unrecognized pyNastran marker\n'
+            msg += 'line=%r' % line
+            raise SyntaxError(msg)
+        key, value = word.strip().split('=')
+        key = key.strip()
         value = value.strip()
+        if key in ['version', 'encoding']:
+            pass
+        else:
+            msg = 'unrecognized pyNastran key=%r\n' % key
+            msg += 'line=%r' % line
+            raise KeyError(msg)
 
-        assert base == 'version', 'base=%r' % base
         assert ' ' not in value, 'value=%r' % value
-        #if word.startswith('version='):
-        #print('****line', line)
-        #print('  word = %r' % word)
-        #print('base=%r value=%r' % (base, value))
     else:
+        key = None
         value = None
-    return value
+    return key, value
 
 
 if __name__ == '__main__':  # pragma: no cover

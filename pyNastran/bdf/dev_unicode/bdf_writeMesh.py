@@ -132,6 +132,11 @@ class WriteMesh(WriteMeshDeprecated):
 
         :param self: the BDF object
         """
+        if self.nastran_format:
+            outfile.write('$pyNastran: version=%s\n' % self.nastran_format)
+            outfile.write('$pyNastran: punch=%s\n' % self.punch)
+            outfile.write('$pyNastran: encoding=%s\n' % self._encoding)
+
         self._write_executive_control_deck(outfile)
         self._write_case_control_deck(outfile)
 
@@ -175,13 +180,17 @@ class WriteMesh(WriteMeshDeprecated):
         """
         if self.elements:
             outfile.write('$ELEMENTS\n')
-            for (eid, element) in sorted(iteritems(self.elements)):
-                try:
-                    outfile.write(element.write_card(size, is_double))
-                except:
-                    print('failed printing element...'
-                          'type=%s eid=%s' % (element.type, eid))
-                    raise
+            if self.is_long_ids:
+                for (eid, element) in sorted(iteritems(self.nodes)):
+                    outfile.write(element.write_card_16(is_double))
+            else:
+                for (eid, element) in sorted(iteritems(self.elements)):
+                    try:
+                        outfile.write(element.write_card(size, is_double))
+                    except:
+                        print('failed printing element...'
+                              'type=%s eid=%s' % (element.type, eid))
+                        raise
 
     def _write_elements_properties(self, outfile, size=8, is_double=False):
         """
@@ -308,15 +317,18 @@ class WriteMesh(WriteMeshDeprecated):
         self._write_optimization(outfile, size, is_double)
         self._write_tables(outfile, size, is_double)
         self._write_sets(outfile, size, is_double)
+        self._write_superelements(outfile, size, is_double)
         self._write_contact(outfile, size, is_double)
         self._write_rejects(outfile, size, is_double)
         self._write_coords(outfile, size, is_double)
 
     def _write_constraints(self, outfile, size=8, is_double=False):
         """Writes the constraint cards sorted by ID"""
-        if self.suports:
+        if self.suport or self.suport1:
             msg = ['$CONSTRAINTS\n']
-            for suport in self.suports:
+            for suport in self.suport:
+                msg.append(suport.write_card(size, is_double))
+            for suport_id, suport in sorted(iteritems(self.suport1)):
                 msg.append(suport.write_card(size, is_double))
             outfile.write(''.join(msg))
 
@@ -540,8 +552,13 @@ class WriteMesh(WriteMeshDeprecated):
             msg.append('$NODES\n')
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
-            for (unused_nid, node) in sorted(iteritems(self.nodes)):
-                msg.append(node.write_card(size, is_double))
+
+            if self.is_long_ids:
+                for (unused_nid, node) in sorted(iteritems(self.nodes)):
+                    msg.append(node.write_card_16(is_double))
+            else:
+                for (unused_nid, node) in sorted(iteritems(self.nodes)):
+                    msg.append(node.write_card(size, is_double))
             outfile.write(''.join(msg))
         #if 0:  # not finished
             #self._write_nodes_associated(outfile, size, is_double)
@@ -626,15 +643,26 @@ class WriteMesh(WriteMeshDeprecated):
         """Writes the properties in a sorted order"""
         if self.properties:
             msg = ['$PROPERTIES\n']
-            for (unused_pid, prop) in sorted(iteritems(self.properties)):
-                msg.append(prop.write_card(size, is_double))
+            if self.is_long_ids:
+                for (unused_pid, prop) in sorted(iteritems(self.properties)):
+                    msg.append(prop.write_card_16(is_double))
 
-            for card in sorted(itervalues(self.pbusht)):
-                msg.append(card.write_card(size, is_double))
-            for card in sorted(itervalues(self.pdampt)):
-                msg.append(card.write_card(size, is_double))
-            for card in sorted(itervalues(self.pelast)):
-                msg.append(card.write_card(size, is_double))
+                for card in sorted(itervalues(self.pbusht)):
+                    msg.append(card.write_card_16(is_double))
+                for card in sorted(itervalues(self.pdampt)):
+                    msg.append(card.write_card_16(is_double))
+                for card in sorted(itervalues(self.pelast)):
+                    msg.append(card.write_card_16(is_double))
+            else:
+                for (unused_pid, prop) in sorted(iteritems(self.properties)):
+                    msg.append(prop.write_card(size, is_double))
+
+                for card in sorted(itervalues(self.pbusht)):
+                    msg.append(card.write_card(size, is_double))
+                for card in sorted(itervalues(self.pdampt)):
+                    msg.append(card.write_card(size, is_double))
+                for card in sorted(itervalues(self.pelast)):
+                    msg.append(card.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_rejects(self, outfile, size=8, is_double=False):
@@ -673,21 +701,31 @@ class WriteMesh(WriteMeshDeprecated):
 
     def _write_rigid_elements(self, outfile, size=8, is_double=False):
         """Writes the rigid elements in a sorted order"""
+
         if self.rigidElements:
             msg = ['$RIGID ELEMENTS\n']
-            for (eid, element) in sorted(iteritems(self.rigidElements)):
-                try:
-                    msg.append(element.write_card(size, is_double))
-                except:
-                    print('failed printing element...'
-                          'type=%s eid=%s' % (element.type, eid))
-                    raise
+            if self.is_long_ids:
+                for (eid, element) in sorted(iteritems(self.rigidElements)):
+                    try:
+                        msg.append(element.write_card_16(is_double))
+                    except:
+                        print('failed printing element...'
+                              'type=%s eid=%s' % (element.type, eid))
+                        raise
+            else:
+                for (eid, element) in sorted(iteritems(self.rigidElements)):
+                    try:
+                        msg.append(element.write_card(size, is_double))
+                    except:
+                        print('failed printing element...'
+                              'type=%s eid=%s' % (element.type, eid))
+                        raise
             outfile.write(''.join(msg))
 
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        if(self.sets or self.setsSuper or self.asets or self.bsets or
-           self.csets or self.qsets):
+        if(self.sets or self.asets or self.bsets or self.csets or self.qsets
+           or self.usets):
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
                 msg.append(set_obj.write_card(size, is_double))
@@ -699,8 +737,29 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.qsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
-            for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
+            for name, usets in sorted(iteritems(self.usets)):  # dict
+                for set_obj in usets:  # list
+                    msg.append(set_obj.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
+    def _write_superelements(self, outfile, size=8, is_double=False):
+        """Writes the SETx cards sorted by ID"""
+        if(self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
+           or self.se_usets):
+            msg = ['$SUPERELEMENTS\n']
+            for set_obj in self.se_bsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
+            for set_obj in self.se_csets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for set_obj in self.se_qsets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for (set_id, set_obj) in sorted(iteritems(self.se_sets)):  # dict
+                msg.append(set_obj.write_card(size, is_double))
+            for name, usets in sorted(iteritems(self.se_usets)):  # dict
+                for set_obj in usets:  # list
+                    msg.append(set_obj.write_card(size, is_double))
+            for suport in self.se_suport:  # list
+                msg.append(suport.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_tables(self, outfile, size=8, is_double=False):
@@ -708,6 +767,8 @@ class WriteMesh(WriteMeshDeprecated):
         if self.tables:
             msg = ['$TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.tables)):
+                msg.append(table.write_card(size, is_double))
+            for (unused_id, table) in sorted(iteritems(self.tables_sdamping)):
                 msg.append(table.write_card(size, is_double))
             outfile.write(''.join(msg))
 

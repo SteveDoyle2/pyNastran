@@ -133,7 +133,10 @@ class WriteMesh(WriteMeshDeprecated):
         :param self: the BDF object
         """
         if self.nastran_format:
-            outfile.write('$pyNastran: VERSION=%s\n' % self.nastran_format)
+            outfile.write('$pyNastran: version=%s\n' % self.nastran_format)
+            outfile.write('$pyNastran: punch=%s\n' % self.punch)
+            #outfile.write('$pyNastran: encoding=%s\n' % self._encoding)
+
         self._write_executive_control_deck(outfile)
         self._write_case_control_deck(outfile)
 
@@ -176,7 +179,6 @@ class WriteMesh(WriteMeshDeprecated):
         :param self: the BDF object
         """
         if self.elements:
-            #print('nastran_format=', self.nastran_format)
             outfile.write('$ELEMENTS\n')
             if self.is_long_ids:
                 for (eid, element) in sorted(iteritems(self.nodes)):
