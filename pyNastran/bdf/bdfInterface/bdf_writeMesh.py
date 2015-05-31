@@ -106,9 +106,9 @@ class WriteMesh(WriteMeshDeprecated):
                                            interspersed, size, is_double)
 
         if PY2:
-            outfile = open(out_filename, 'wb')
+            outfile = open(out_filename, 'wb', encoding=self._encoding)
         else:
-            outfile = open(out_filename, 'w')
+            outfile = open(out_filename, 'w', encoding=self._encoding)
         self._write_header(outfile)
         self._write_params(outfile, size, is_double)
         self._write_nodes(outfile, size, is_double)
@@ -135,7 +135,7 @@ class WriteMesh(WriteMeshDeprecated):
         if self.nastran_format:
             outfile.write('$pyNastran: version=%s\n' % self.nastran_format)
             outfile.write('$pyNastran: punch=%s\n' % self.punch)
-            #outfile.write('$pyNastran: encoding=%s\n' % self._encoding)
+            outfile.write('$pyNastran: encoding=%s\n' % self._encoding)
 
         self._write_executive_control_deck(outfile)
         self._write_case_control_deck(outfile)

@@ -135,7 +135,23 @@ class CaseControlTest(unittest.TestCase):
         deck.create_new_subcase(2)
         deck.add_parameter_to_local_subcase(2, seti)
         values, options = deck.get_subcase_parameter(2, 'SET 88')
-        print('values = ', values)
+
+        check = [
+            (7, True),
+            (13, True),
+            (15, False),
+            (16, False),
+            (55, True),
+            (77, True),
+            (99, False),
+            (150, True),
+        ]
+        for value, exists in check:
+            if exists:
+                assert value in values, 'value=%s should be in values=%s' % (value, values)
+            else:
+                assert value not in values, 'value=%s should NOT be in values=%s' % (value, values)
+
         msg = write_set(values, options)
 
         singles, doubles = collapse_thru_packs(values)
@@ -157,6 +173,7 @@ class CaseControlTest(unittest.TestCase):
             '    SET 111 = MAAX1,MAAX2',
             '    SET 1001 = 101/T1, 501/T3, 991/R3',
             #'    SET = ALL',
+            '    SET 20 = ALL',
             '    SPC = 42',
             '    TSTEPNL = 22',
             '    VELOCITY(PLOT,PRINT,PHASE) = ALL',
@@ -174,7 +191,8 @@ class CaseControlTest(unittest.TestCase):
         lines_expected = [
             'SUBCASE 1',
             #'    SET = ALL',
-            '    SET 88 = 16, 77, 78, 79, 5 THRU 14, 17 THRU 55, 100 THRU 300',
+            '    SET 20 = ALL',
+            '    SET 88 = 77, 78, 79, 5 THRU 14, 17 THRU 55, 100 THRU 300',
             '    SET 99 = 1 THRU 10',
             '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
             '    SET 111 = MAAX1, MAAX2',

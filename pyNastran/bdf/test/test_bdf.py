@@ -140,6 +140,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             reject=False, nastran='', post=-1, dynamic_vars=None):
     if dynamic_vars is None:
         dynamic_vars = {}
+
+    # TODO: why do we need this?
     bdfModel = str(bdf_filename)
     print("bdfModel = %s" % bdfModel)
     if isFolder:

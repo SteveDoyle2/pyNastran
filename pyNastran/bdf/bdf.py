@@ -116,7 +116,7 @@ from pyNastran.bdf.bdfInterface.getCard import GetMethods
 from pyNastran.bdf.bdfInterface.addCard import AddMethods
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
-from pyNastran.bdf.dev_unicode.bdf_writeMesh import WriteMesh
+from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh, CrossReferenceError
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
@@ -2019,7 +2019,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.log.info('opening %r' % bdf_filename)
         self.active_filenames.append(bdf_filename)
 
-        print('ENCODING - _open_file=%r' % self._encoding)
+        #print('ENCODING - _open_file=%r' % self._encoding)
         f = codec_open(bdf_filename, 'rU', encoding=self._encoding)
         return f
 
@@ -2107,8 +2107,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             $ pyNastran: punch=True
 
         ..warning :: pyNastran lines must be at the top of the file
-
-        ..todo :: make everything work :)
         """
         f = open(bdf_filename, 'r')
         check_header = True
@@ -2122,7 +2120,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 key, value = _parse_pynastran_header(line)
 
                 if key:
-                    print('pyNastran key=%s value=%s' % (key, value))
+                    #print('pyNastran key=%s value=%s' % (key, value))
                     if key == 'version':
                         self.nastran_format = value
                     elif key == 'encoding':
@@ -2241,5 +2239,5 @@ def main():
 
 
 if __name__ == '__main__':  # pragma: no cover
-    #from pyNastran.bdf.dev_unicode.test.test_bdf import main
-    main()
+    from pyNastran.bdf.dev_unicode.test.test_bdf import main
+    #main()

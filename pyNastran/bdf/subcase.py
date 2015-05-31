@@ -891,6 +891,7 @@ def expand_thru_case_control(set_value):
     #print('set_value = %r' % set_value)
     for ivalue in set_value:
         if isinstance(ivalue, int):
+            assert add_mode is True, add_mode
             set_value2.add(ivalue)
             continue
         ivalue = ivalue.strip()
@@ -914,7 +915,7 @@ def expand_thru_case_control(set_value):
             elif 'THRU' in ivalue:
                 svalues = ivalue.split()
                 if len(svalues) == 3:
-                    assert add_mode == True, add_mode
+                    assert add_mode is True, add_mode
                     imin, thru, imax = svalues
                     assert thru == 'THRU', thru
                     imin = int(imin)
@@ -931,8 +932,6 @@ def expand_thru_case_control(set_value):
                     assert by_except == 'EXCEPT', by_except
 
                     for jthru in range(imin, imax + 1):
-                        #if jthru == increment_except:
-                            #continue
                         set_value2.add(jthru)
                     add_mode = False
 
@@ -945,18 +944,19 @@ def expand_thru_case_control(set_value):
                     if by_except == 'BY':
                         for jthru in range(imin, imax + 1, by_except):
                             set_value2.add(jthru)
+                        add_mode = True
                     elif by_except == 'EXCEPT':
                         for jthru in range(imin, imax + 1):
-                            if thru == increment_except:
+                            if jthru == increment_except:
                                 continue
                             set_value2.add(jthru)
+                        add_mode = False
                     else:
                         raise RuntimeError(ivalue)
-                    add_mode = True
                 else:
                     raise RuntimeError(ivalue)
             else:
-                assert add_mode == True, add_mode
+                assert add_mode is True, add_mode
                 set_value2.add(ivalue)
 
     list_values = list(set_value2)

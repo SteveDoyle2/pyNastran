@@ -198,7 +198,6 @@ def parse_executive_control_deck(executive_control_lines):
 def _parse_pynastran_header(line):
     lline = line[1:].lower()
     if 'pynastran' in lline:
-        print('lline=%r' % lline)
         base, word = lline.split(':')
         if base.strip() != 'pynastran':
             msg = 'unrecognized pyNastran marker\n'
