@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip, range
 #from math import ceil
 
@@ -31,8 +31,8 @@ class DCONSTR(OptConstraint):
         if card:
             self.oid = integer(card, 1, 'oid')
             self.rid = integer(card, 2, 'rid')
-            self.lid = double_or_blank(card, 3, 'lid', -1e20)
-            self.uid = double_or_blank(card, 4, 'uid', 1e20)
+            self.lid = integer_double_or_blank(card, 3, 'lid', -1e20)
+            self.uid = integer_double_or_blank(card, 4, 'uid', 1e20)
             self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
             self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
             assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
@@ -45,22 +45,39 @@ class DCONSTR(OptConstraint):
             self.highfq = data[5]
 
     def Rid(self):
-            if isinstance(self.rid, int):
-                return self.rid
-            else:
-                return self.rid.oid
+        if isinstance(self.rid, integer_types):
+            return self.rid
+        else:
+            return self.rid.oid
+
+    def Lid(self):
+        if isinstance(self.lid, integer_types) or isinstance(self.lid, float):
+            return self.lid
+        else:
+            return self.lid.tid
+
+    def Uid(self):
+        if isinstance(self.uid, integer_types) or isinstance(self.uid, float):
+            return self.uid
+        else:
+            return self.uid.tid
 
     def cross_reference(self, model):
         self.rid = model.dresps[self.Rid()]
+        if isinstance(self.lid, integer_types):
+            self.lid = model.Table(self.lid)
+        if isinstance(self.uid, integer_types):
+            self.uid = model.Table(self.lid)
+
 
     def raw_fields(self):
-        list_fields = ['DCONSTR', self.oid, self.Rid(), self.lid,
-                       self.uid, self.lowfq, self.highfq]
+        list_fields = ['DCONSTR', self.oid, self.Rid(), self.Lid(),
+                       self.Uid(), self.lowfq, self.highfq]
         return list_fields
 
     def repr_fields(self):
-        lid = set_blank_if_default(self.lid, -1e20)
-        uid = set_blank_if_default(self.uid, 1e20)
+        lid = set_blank_if_default(self.Lid(), -1e20)
+        uid = set_blank_if_default(self.Uid(), 1e20)
         lowfq = set_blank_if_default(self.lowfq, 0.0)
         highfq = set_blank_if_default(self.highfq, 1e20)
         list_fields = ['DCONSTR', self.oid, self.Rid(), lid, uid, lowfq, highfq]
@@ -740,8 +757,8 @@ class DVPREL2(OptConstraint):
         self.pid = model.Property(self.pid)
         #self.eqID = model.DEquation(self.eqID)
 
-    def OptValue(self):  #: .. todo:: not implemented
-        self.pid.OptValue(self.pNameFid)
+    #def OptValue(self):  #: .. todo:: not implemented
+        #self.pid.OptValue(self.pNameFid)
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),

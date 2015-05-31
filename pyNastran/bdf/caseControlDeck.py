@@ -283,21 +283,23 @@ class CaseControlDeck(object):
                 lines2.append(lines[i])
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
+
+            line_upper = line.upper()
             if key == 'BEGIN':
-                if 'BULK' not in line and 'SUPER' not in line:
+                if 'BULK' not in line_upper and 'SUPER' not in line_upper:
                     raise NotImplementedError('line=%r' % line)
                 if self._begin_count == 1:
                     raise NotImplementedError('multiple BEGIN lines are defined...')
                 self.begin_bulk = [key, value]
                 self._begin_count += 1
                 continue
-            elif line.startswith('OUTPUT'):
+            elif line_upper.startswith('OUTPUT'):
                 is_output_lines = True
                 #output_line = '%s(%s) = %s\n' % (key, options, value)
                 key = 'OUTPUT'
 
                 # OUTPUT(POST) -> POST
-                post = line.split('OUTPUT')[1].strip('( )')
+                post = line_upper.split('OUTPUT')[1].strip('( )')
                 options = [post]
                 value = None
                 paramType = 'STRESS-type'
@@ -438,7 +440,7 @@ class CaseControlDeck(object):
                 msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
 
-            key = key.strip()
+            key = key.strip().upper()
             value = value.strip()
             if self.debug:
                 self.log.debug("key=%r value=%r" % (key, value))
@@ -491,7 +493,7 @@ class CaseControlDeck(object):
                 #print('B ??? line = ',line)
                 pass
 
-            key = update_param_name(key.strip())
+            key = update_param_name(key.strip().upper())
             verify_card(key, value, options, line)
 
         elif line_upper.startswith('BEGIN'):  # begin bulk
@@ -500,6 +502,7 @@ class CaseControlDeck(object):
             except:
                 msg = 'excepted "BEGIN BULK" found=%r' % line
                 raise RuntimeError(msg)
+            key = key.upper()
             param_type = 'BEGIN_BULK-type'
         elif 'PARAM' in line_upper:  # param
             sline = line.split(',')
@@ -508,7 +511,7 @@ class CaseControlDeck(object):
             (key, value, options) = sline
             param_type = 'CSV-type'
         elif ' ' not in line:
-            key = line.strip()
+            key = line.strip().upper()
             value = line.strip()
             options = None
             param_type = 'KEY-type'
@@ -519,6 +522,7 @@ class CaseControlDeck(object):
             options = None
             param_type = 'KEY-type'
         i += 1
+        assert key.upper() == key, key
 
         return (i, key, value, options, param_type)
 
