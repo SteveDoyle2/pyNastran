@@ -9,33 +9,21 @@ def make_log(display=False):
 
     :param display: do not only create file but also print log information
     """
-    smsg = [("sys.version", sys.version), ("sys.version_info", sys.version_info)]
-    pmsg = ["machine", "platform", "processor", "architecture", "python_branch",
-           "python_revision", "win32_ver", "version", "uname", "system",
-           "python_build", "python_compiler", "python_implementation", "system",
-           "mac_ver", "linux_distribution", "libc_ver"]
+    smsg = [('sys.version', sys.version), ('sys.version_info', sys.version_info)]
+    pmsg = ['machine', 'platform', 'processor', 'architecture', 'python_branch',
+           'python_revision', 'win32_ver', 'version', 'uname', 'system',
+           'python_build', 'python_compiler', 'python_implementation', 'system',
+           'mac_ver', 'linux_distribution', 'libc_ver']
 
-    fmt = "%-{0}s = %s\n".format(max(map(len, pmsg + [j[0] for j in smsg])))
-    msg = "".join([fmt % (i, str(j).replace("\n", "; ")) for (i, j) in smsg])
-    msg += "".join([fmt % (i, str(getattr(platform, i)())) for i in pmsg])
+    fmt = '%-{0}s = %s\n'.format(max(map(len, pmsg + [j[0] for j in smsg])))
+    msg = ''.join([fmt % (i, str(j).replace('\n', '; ')) for (i, j) in smsg])
+    msg += ''.join([fmt % (i, str(getattr(platform, i)())) for i in pmsg])
     if display:
         print(msg)
 
     with open('pyNastran.log', 'wb') as fil:
         fil.write(msg)
 
-
-def stderr_logging(typ, msg):
-    """
-    Default logging function. Takes a text and outputs to stderr.
-    :param typ: messeage type
-    :param msg: message to be displayed
-
-    Message will have format 'typ: msg'
-    """
-    name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
-    sys.stdout.write((name + msg) if typ else msg)
-    sys.stdout.flush()
 
 class SimpleLogger(object):
     """
@@ -51,7 +39,19 @@ class SimpleLogger(object):
       This is really only an issue when calling logging multiple times,
       such as in an optimization loop or testing.
     """
-    def __init__(self, level='debug', log_func=stderr_logging):
+    def stderr_logging(self, typ, msg):
+        """
+        Default logging function. Takes a text and outputs to stderr.
+        :param typ: messeage type
+        :param msg: message to be displayed
+
+        Message will have format 'typ: msg'
+        """
+        name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
+        sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
+        sys.stdout.flush()
+
+    def __init__(self, level='debug', encoding='utf-8', log_func=None):
         """
         :param level: level of logging: 'info' or 'debug'
         :param log_func:
@@ -59,9 +59,12 @@ class SimpleLogger(object):
           string that is produces by a logger. Default: print messages to
           stderr using @see stderr_logging function.
         """
+        if log_func is None:
+            log_func = self.stderr_logging
         assert level in ('info', 'debug', 'warning'), 'logging level=%r' % level
         self.level = level
         self.log_func = log_func
+        self.encoding = encoding
 
     def properties(self):
         """Return tuple: line number and filename"""
@@ -102,44 +105,44 @@ class SimpleLogger(object):
         """
         if self.level not in ('debug', 'info'):
             return
-        self.msg_typ("INFO", msg)
+        self.msg_typ('INFO', msg)
 
     def warning(self, msg):
         """
         Log WARNING message
         :param msg: message to be logged
         """
-        self.msg_typ("WARNING", msg)
+        self.msg_typ('WARNING', msg)
 
     def error(self, msg):
         """
         Log ERROR message
         :param msg: message to be logged
         """
-        self.msg_typ("ERROR", msg)
+        self.msg_typ('ERROR', msg)
 
     def exception(self, msg):
         """
         Log EXCEPTION message
         :param msg: message to be logged
         """
-        self.msg_typ("ERROR", msg)
+        self.msg_typ('ERROR', msg)
 
     def critical(self, msg):
         """
         Log CRITICAL message
         :param msg: message to be logged
         """
-        self.msg_typ("CRITICAL", msg)
+        self.msg_typ('CRITICAL', msg)
 
 
-def get_logger(log=None, level='debug'):
+def get_logger(log=None, level='debug', encoding='utf-8'):
     """
     This function is useful as it will instantiate a simpleLogger object if log=None.
     :param log:   a logger object or None
     :param level: level of logging: 'info' or 'debug'
     """
-    return SimpleLogger(level) if log is None else log
+    return SimpleLogger(level, encoding=encoding) if log is None else log
 
 
 def get_logger2(log=None, debug=True):
@@ -158,17 +161,17 @@ def get_logger2(log=None, debug=True):
     if log is not None:
         pass
     elif debug is None:
-        log = SimpleLogger('warning')
+        log = SimpleLogger('warning', encoding='utf-8')
     else:
         level = 'debug' if debug else 'info'
-        log = SimpleLogger(level)
+        log = SimpleLogger(level, encoding='utf-8')
     return log
 
 if __name__ == '__main__':  # pragma: no cover
     # how to use a simple logger
-    for nam in ["debug", "info"]:
+    for nam in ['debug', 'info']:
         print('--- %s logger ---' % nam)
-        test_log = SimpleLogger(nam)
+        test_log = SimpleLogger(nam, encoding='utf-8')
         test_log.debug('debug message')
         test_log.warning('warning')
         test_log.error('errors')
