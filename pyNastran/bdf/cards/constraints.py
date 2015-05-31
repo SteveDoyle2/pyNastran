@@ -10,6 +10,7 @@ All constraint cards are defined in this file.  This includes:
  * SPCAX
  * SPCD
  * MPC
+ * GMSPC
  * ConstraintADD
   * SPCADD
   * MPCADD
@@ -25,7 +26,7 @@ import warnings
 
 from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components, components_or_blank)
+    double, double_or_blank, components, components_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -455,6 +456,34 @@ class SPC(Constraint):
         return self.comment() + print_card_8(card)
 
 
+class GMSPC(Constraint):
+    type = 'GMSPC'
+
+    def __init__(self, card=None, data=None, comment=''):
+        Constraint.__init__(self, card, data)
+
+        if comment:
+            self._comment = comment
+        if card:
+            self.conid = integer(card, 1, 'sid')
+            self.components = components(card, 2, 'components')
+            self.entity = string(card, 3, 'entity')
+            self.entity_id = integer(card, 4, 'entity_id')
+        else:
+            raise NotImplemented()
+
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        fields = ['GMSPC', self.conid, self.components, self.entity, self.entity_id]
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment() + print_card_8(card)
+
+
 class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced
@@ -649,8 +678,9 @@ class SPCADD(ConstraintADD):
         return spc_ids
 
     def cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.conid)
         for i, spc in enumerate(self.sets):
-            self.sets[i] = model.SPC(spc)
+            self.sets[i] = model.SPC(spc, msg=msg)
 
     def raw_fields(self):
         fields = ['SPCADD', self.conid] + self.spc_ids

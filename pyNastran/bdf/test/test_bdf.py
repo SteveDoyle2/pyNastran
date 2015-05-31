@@ -15,7 +15,8 @@ import traceback
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.utils import CardParseSyntaxError
-from pyNastran.bdf.bdf import BDF, NastranMatrix #, CardParseSyntaxError
+from pyNastran.bdf.bdfInterface.crossReference import CrossReferenceError
+from pyNastran.bdf.bdf import BDF, NastranMatrix
 from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 
@@ -132,6 +133,7 @@ def memory_usage_psutil():
     mem = process.get_memory_info()[0] / float(2 ** 20)
     return mem
 
+
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
@@ -169,60 +171,20 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         test_get_cards_by_card_types(fem2)
         #except:
             #return 1, 2, 3
-        if nastran:
-            dirname = os.path.dirname(bdfModel)
-            basename = os.path.basename(bdfModel).split('.')[0]
 
-            f04_model = os.path.join(dirname, 'out_%s.f04' % basename)
-            f06_model = os.path.join(dirname, 'out_%s.f06' % basename)
-            op2_model = os.path.join(dirname, 'out_%s.f06' % basename)
-            log_model = os.path.join(dirname, 'out_%s.log' % basename)
-            xdb_model = os.path.join(dirname, 'out_%s.xdb' % basename)
-            pch_model = os.path.join(dirname, 'out_%s.pch' % basename)
-            asm_model = os.path.join(dirname, 'out_%s.asm' % basename)
-            master_model = os.path.join(dirname, 'out_%s.master' % basename)
-            #op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
-
-            #cwd = os.getcwd()
-            cwd = dirname
-            bdf_model2 = os.path.join(cwd, 'out_%s.bdf' % basename)
-            #op2_model2 = os.path.join(cwd, 'out_%s.op2' % basename)
-            #f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
-            print(bdf_model2)
-            #if os.path.exists(bdf_model2):
-                #os.remove(bdf_model2)
-
-            # make sure we're writing an OP2
-            bdf = BDF()
-            bdf.read_bdf(bdfModel)
-            if 'POST' in bdf.params:
-                param_post = bdf.params['POST']
-                #print('post = %s' % post)
-                param_post.update_values(value1=post)
-                #print('post = %s' % post)
-            else:
-                card = ['PARAM', 'POST', post]
-                bdf.add_card(card, 'PARAM', is_list=True)
-            bdf.write_bdf(bdf_model2, size=size, is_double=is_double)
-
-            #os.rename(outModel, outModel2)
-            if not os.path.exists(f06_model):
-                os.system(nastran + bdf_model2)
-            for fnamei in [f04_model, log_model, xdb_model, pch_model, asm_model, master_model]:
-                if os.path.exists(fnamei):
-                    os.remove(fnamei)
-            op2 = OP2()
-            if not os.path.exists(op2_model):
-                raise RuntimeError('%s failed' % op2_model)
-            op2.read_op2(op2_model2)
-            print(op2.get_op2_stats())
+        run_nastran(bdfModel, nastran, post, size, is_double)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except IOError:
-        #pass
-    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+    except IOError:  # only temporarily uncomment this when running lots of tests
         pass
+    #except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        #print('failed test because CardParseSyntaxError...ignoring')
+        #pass
+    #except RuntimeError:  # only temporarily uncomment this when running lots of tests
+        #if 'GRIDG' not in fem1.card_count:
+            #print('failed test because mesh adaption (GRIDG)...ignoring')
+            #raise
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except SyntaxError:  # only temporarily uncomment this when running lots of tests
@@ -243,7 +205,62 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     return (fem1, fem2, diffCards)
 
 
+def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
+    """
+    Verifies that a valid bdf was written by running nastran and parsing
+    the OP2.  Many cards do not support double precision and since there
+    is no list, a test is necessary.
+    """
+    if nastran:
+        dirname = os.path.dirname(bdf_model)
+        basename = os.path.basename(bdf_model).split('.')[0]
+
+        f04_model = os.path.join(dirname, 'out_%s.f04' % basename)
+        f06_model = os.path.join(dirname, 'out_%s.f06' % basename)
+        op2_model = os.path.join(dirname, 'out_%s.f06' % basename)
+        log_model = os.path.join(dirname, 'out_%s.log' % basename)
+        xdb_model = os.path.join(dirname, 'out_%s.xdb' % basename)
+        pch_model = os.path.join(dirname, 'out_%s.pch' % basename)
+        asm_model = os.path.join(dirname, 'out_%s.asm' % basename)
+        master_model = os.path.join(dirname, 'out_%s.master' % basename)
+        #op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
+
+        #cwd = os.getcwd()
+        cwd = dirname
+        bdf_model2 = os.path.join(cwd, 'out_%s.bdf' % basename)
+        op2_model2 = os.path.join(cwd, 'out_%s.op2' % basename)
+        #f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
+        print(bdf_model2)
+        #if os.path.exists(bdf_model2):
+            #os.remove(bdf_model2)
+
+        # make sure we're writing an OP2
+        bdf = BDF()
+        bdf.read_bdf(bdf_model)
+        if 'POST' in bdf.params:
+            param_post = bdf.params['POST']
+            #print('post = %s' % post)
+            param_post.update_values(value1=post)
+            #print('post = %s' % post)
+        else:
+            card = ['PARAM', 'POST', post]
+            bdf.add_card(card, 'PARAM', is_list=True)
+        bdf.write_bdf(bdf_model2, size=size, is_double=is_double)
+
+        #os.rename(outModel, outModel2)
+        if not os.path.exists(f06_model):
+            os.system(nastran + bdf_model2)
+        for fnamei in [f04_model, log_model, xdb_model, pch_model, asm_model, master_model]:
+            if os.path.exists(fnamei):
+                os.remove(fnamei)
+        op2 = OP2()
+        if not os.path.exists(op2_model):
+            raise RuntimeError('%s failed' % op2_model)
+        op2.read_op2(op2_model2)
+        print(op2.get_op2_stats())
+
 def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid):
+    """Reads/writes the BDF"""
     assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:
@@ -275,6 +292,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
 def run_fem2(bdfModel, outModel, xref, punch,
              sum_load, size, is_double,
              reject, debug=False, log=None):
+    """Reads/writes the BDF to verify nothing has been lost"""
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
 
@@ -306,6 +324,10 @@ def run_fem2(bdfModel, outModel, xref, punch,
 
 
 def divide(value1, value2):
+    """
+    Used to divide the number of cards to check that nothing was lost.
+    Handles division by 0 by returning 0, which is the reciprocal.
+    """
     if value1 == value2:  # good for 0/0
         return 1.0
     else:
@@ -455,32 +477,7 @@ def get_element_stats(fem1, fem2):
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
     print("mass =", mass)
     print("cg   =", cg)
-    print("I    =", I)
-
-   # for (key, e) in sorted(iteritems(fem1.elements)):
-   #     try:
-   #         e._verify()
-   #         #if isinstance(e, RigidElement):
-   #             #pass
-   #         #elif isinstance(e, DamperElement):
-   #             #b = e.B()
-   #         #elif isinstance(e, SpringElement):
-   #             #L = e.Length()
-   #             #K = e.K()
-   #             #pid = e.Pid()
-   #         #elif isinstance(e, PointElement):
-   #             #m = e.Mass()
-   #             #c = e.Centroid()
-   #     except Exception as exp:
-   #         #print("e=\n",str(e))
-   #         print("*stats - e.type=%s eid=%s  element=\n%s"
-   #             % (e.type, e.eid, str(exp.args)))
-   #     except AssertionError as exp:
-   #         print("e=\n",str(e))
-   #         #print("*stats - e.type=%s eid=%s  element=\n%s"
-   #             #% (e.type, e.eid, str(exp.args)))
-   #
-   #         #raise
+    #print("I    =", I)
 
 
 def get_matrix_stats(fem1, fem2):
@@ -503,8 +500,8 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True):
         get_element_stats(fem1, fem2)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)
-    #compare_params(fem1,fem2)
-    #print_points(fem1,fem2)
+    #compare_params(fem1, fem2)
+    #print_points(fem1, fem2)
     return diffCards
 
 
@@ -513,8 +510,8 @@ def compare_params(fem1, fem2):
 
 
 def print_points(fem1, fem2):
-    for (nid, n1) in sorted(iteritems(fem1.nodes)):
-        print("%s   xyz=%s  n1=%s  n2=%s" % (nid, n1.xyz, n1.Position(True),
+    for nid, node in sorted(iteritems(fem1.nodes)):
+        print("%s   xyz=%s  n1=%s  n2=%s" % (nid, node.xyz, node.Position(True),
                                             fem2.Node(nid).Position()))
         break
     coord = fem1.Coord(5)

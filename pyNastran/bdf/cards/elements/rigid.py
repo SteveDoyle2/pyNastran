@@ -12,7 +12,7 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, integer_types
 from six.moves import zip, range
 import sys
 from itertools import count
@@ -95,12 +95,12 @@ class RBAR(RigidElement):
         #return msg
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types):
             return self.ga
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int) or self.gb is None:
+        if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb.nid
 
@@ -156,12 +156,12 @@ class RBAR1(RigidElement):
             self.alpha = data[4]
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types):
             return self.ga
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int) or self.gb is None:
+        if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb.nid
 
@@ -452,7 +452,7 @@ class RBE2(RigidElement):
         self.gn = model.Node(self.Gn(), msg=msg)
 
     def Gn(self):
-        if isinstance(self.gn, int) or self.gn is None:
+        if isinstance(self.gn, integer_types) or self.gn is None:
             return self.gn
         return self.gn.nid
 
@@ -472,6 +472,10 @@ class RBE2(RigidElement):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
+        return self.comment() + print_card_16(card)
 
 
 class RBE3(RigidElement):

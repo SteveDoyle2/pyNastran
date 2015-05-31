@@ -1,7 +1,30 @@
 class BDFAttributes(object):
 
     def __init__(self):
-        pass
+        self._nastran_format = 'msc'
+
+    def set_as_msc(self):
+        self._nastran_format = 'msc'
+
+    def set_as_nx(self):
+        self._nastran_format = 'nx'
+
+    @property
+    def nastran_format(self):
+        return self._nastran_format
+
+    @nastran_format.setter
+    def nastran_format(self, nastran_format):
+        fmt_lower = nastran_format.lower().strip()
+        if fmt_lower not in ['nx', 'msc']:
+            raise RuntimeError(nastran_format)
+        self._nastran_format = fmt_lower
+
+    @property
+    def is_long_ids(self):
+        if self._nastran_format == 'nx':
+            return True
+        return False
 
     @property
     def nnodes(self):

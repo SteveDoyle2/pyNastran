@@ -1,0 +1,139 @@
+ID MSC, D200pe10$ V2002  June 20, 2001/ 15-Feb-2002 tin
+TIME  130
+SOL 200       $  OPTIMIZATION
+DIAG 8,15,56 $
+CEND
+TITLE = Multi SE support for adj load (SE 3, DC 2 on SE1 and 2)
+SUBTITLE = 25-BAR TRUSS
+ECHO = UNSORT
+SEALL = ALL
+DISP = ALL
+SPC = 100
+ANALYSIS = STATICS
+DSAPRT(END=SENS)=ALL
+SUPER = ALL
+DESOBJ = 15
+SUBCASE 1
+DESSUB = 1
+        LABEL = LOAD CONDITION 1
+        LOAD = 300
+SUBCASE 2
+DESSUB = 2
+        LABEL = LOAD CONDITION 2
+        LOAD = 310
+BEGIN BULK
+CROD    1       1       1       2
+CROD    2       2       1       4
+CROD    3       2       2       3
+CROD    4       2       1       5
+CROD    5       2       2       6
+CROD    6       3       2       4
+CROD    7       3       2       5
+CROD    8       3       1       3
+CROD    9       3       1       6
+CROD    10      4       3       6
+CROD    11      4       4       5
+CROD    12      5       3       4
+CROD    13      5       5       6
+CROD    14      6       3       10
+CROD    15      6       6       7
+CROD    16      6       4       9
+CROD    17      6       5       8
+CROD    18      7       4       7
+CROD    19      7       3       8
+CROD    20      7       5       10
+CROD    21      7       6       9
+CROD    22      8       6       10
+CROD    23      8       3       7
+CROD    24      8       5       9
+CROD    25      8       4       8
+DCONSTR 1       9       -0.35   0.35
+DCONSTR 2       9       -0.35   0.35
+DCONSTR 1       10      -0.35   0.35
+DCONSTR 2       10      -0.35   0.35
+DCONSTR 1       11      -0.35   0.35
+DCONSTR 2       11      -0.35   0.35
+DCONSTR 1       12      -0.35   0.35
+DCONSTR 2       12      -0.35   0.35
+DCONSTR 1       13      -0.35   0.35
+DCONSTR 2       13      -0.35   0.35
+DCONSTR 1       14      -0.35   0.35
+DCONSTR 2       14      -0.35   0.35
+DCONSTR 1       20      -0.35   0.35
+DCONSTR 2       20      -0.35   0.35
+DCONSTR 1       21      -0.35   0.35
+DCONSTR 2       21      -0.35   0.35
+DEQATN  1       F(A,RL,S) = 1.0-(S+39.274*A*1.0E7/(RL**2))/ABS(S)
+DESVAR  1       X1      2.0     0.01    100.0
+DESVAR  2       X2      2.0     0.01    100.0
+DESVAR  3       X3      2.0     0.01    100.0
+DESVAR  4       X4      2.0     0.01    100.0
+DESVAR  5       X5      2.0     0.01    100.0
+DESVAR  6       X6      2.0     0.01    100.0
+DESVAR  7       X7      2.0     0.01    100.0
+DESVAR  8       X8      2.0     0.01    100.0
+DOPTPRM APRCOD  2       DESMAX  10      DELP    0.5     DPMIN   0.1
+        PTOL    1.0E35  CONV1   0.002   CONV2   0.1     GMAX    0.01
+        DELB    0.01    CONVDV  0.01    CONVPR  0.02
+DRESP1  9       D1      DISP                    1               1
+DRESP1  10      D2      DISP                    2               1
+DRESP1  11      D3      DISP                    3               1
+DRESP1  12      D4      DISP                    1               2
+DRESP1  13      D5      DISP                    2               2
+DRESP1  14      D6      DISP                    3               2
+DRESP1  15      W       WEIGHT
+DRESP1  20      D2      DISP                    2               5
+DRESP1  21      D2      DISP                    2               6
+DSCREEN STRESS  -100.   100
+DSCREEN DISP    -100.   100
+DSCREEN EQUA    -100.   100
+DTABLE  L1      75.00   L2      130.50  L3      106.80  L4      75.00
+        L5      75.00   L6      181.14  L7      181.14  L8      133.46
+DVPREL1 1       PROD    1       4
+        1       1.0
+DVPREL1 2       PROD    2       4
+        2       1.0
+DVPREL1 3       PROD    3       4
+        3       1.0
+DVPREL1 4       PROD    4       4
+        4       1.0
+DVPREL1 5       PROD    5       4
+        5       1.0
+DVPREL1 6       PROD    6       4
+        6       1.0
+DVPREL1 7       PROD    7       4
+        7       1.0
+DVPREL1 8       PROD    8       4
+        8       1.0
+FORCE   300     1               1.0     1000.0  10000.0 -5000.0
+FORCE   300     2               1.0     0.0     10000.0 -5000.0
+FORCE   300     3               1.0     500.0   0.0     0.0
+FORCE   300     6               1.0     500.0   0.0     0.0
+FORCE   310     1               1.0     0.0     20000.0 -5000.0
+FORCE   310     2               1.0     0.0     -20000. -5000.0
+GRDSET                                                  456
+GRID    1               -37.5   0.0     200.0
+GRID    2               37.5    0.0     200.0
+GRID    3               -37.5   37.5    100.0
+GRID    4               37.5    37.5    100.0
+GRID    5               37.5    -37.5   100.0
+GRID    6               -37.5   -37.5   100.0
+GRID    7               -100.0  100.0   0.0
+GRID    8               100.0   100.0   0.0
+GRID    9               100.0   -100.0  0.0
+GRID    10              -100.0  -100.0  0.0
+MAT1    1       10.0E6                  0.1
+        25000.  25000.
+PROD    1       1       2.0     0.0
+PROD    2       1       2.0     0.0
+PROD    3       1       2.0     0.0
+PROD    4       1       2.0     0.0
+PROD    5       1       2.0     0.0
+PROD    6       1       2.0     0.0
+PROD    7       1       2.0     0.0
+PROD    8       1       2.0     0.0
+SESET   1       1       2
+SESET   2       5       6
+SPC1    100     123     7       THRU    10
+PARAM,POST,-1
+ENDDATA

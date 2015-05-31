@@ -202,6 +202,12 @@ class Property(BaseCard):
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
 
+    def write_card_8(self):
+        return self.write_card()
+
+    def write_card_16(self, is_double=False):
+        return self.write_card()
+
 
 class Material(BaseCard):
     """Base Material Class"""
@@ -357,7 +363,7 @@ def _node_ids(card, nodes=None, allowEmptyNodes=False, msg=''):
                 #print("node=%r type=%r" % (node, type(node)))
                 if node == 0 or node is None:
                     nodes2.append(None)
-                elif isinstance(node, int):
+                elif isinstance(node, integer_types):
                     nodes2.append(node)
                 else:
                     nodes2.append(node.nid)
@@ -367,12 +373,12 @@ def _node_ids(card, nodes=None, allowEmptyNodes=False, msg=''):
                 nodeIDs = []
                 for i, node in enumerate(nodes):
                     #print("node=%r type=%r" % (node, type(node)))
-                    if isinstance(node, int):
+                    if isinstance(node, integer_types):
                         nodeIDs.append(node)
                     else:
                         nodeIDs.append(node.nid)
 
-                #if isinstance(nodes[0], int):
+                #if isinstance(nodes[0], integer_types):
                     #nodeIDs = [node for node in nodes]
                 #else:
                     #nodeIDs = [node.nid for node in nodes]

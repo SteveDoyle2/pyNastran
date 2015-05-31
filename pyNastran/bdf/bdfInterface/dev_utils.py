@@ -5,6 +5,8 @@ import scipy
 from pyNastran.bdf.bdf import BDF
 from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique
 from pyNastran.bdf.cards.baseCard import expand_thru
+from pyNastran.utils import object_attributes
+
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     """
@@ -463,22 +465,39 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         cid_map[cidi] = cid
         cid += 1
 
-
+    nlparm_map = {}
+    nlpci_map = {}
+    table_sdamping_map = {}
+    dessub_map = {}  # DCONSTR/DCONADD...this is wrong...only DCONSTR for now
+    dresp_map = {}
+    gust_map = {}
+    trim_map = {}
+    tic_map = {}
+    #print('suport1s', model.suport1)
     data = (
         (model.methods, 'sid', method_map),
         (model.cMethods, 'sid', cmethod_map),
-        (model.flfacts, 'fid', flfact_map),
-        (model.flutters, 'fid', flutter_map),
+        (model.flfacts, 'sid', flfact_map),
+        (model.flutters, 'sid', flutter_map),
         (model.frequencies, 'sid', freq_map),
         (model.tsteps, 'sid', tstep_map),
         (model.tstepnls, 'sid', tstepnl_map),
-        (model.splines, 'sid', None),
-        (model.suport1, 'sid', suport1_map),
+        (model.splines, 'eid', None),
+        (model.suport1, 'conid', suport1_map),
+        (model.nlparms, 'nlparm_id', nlparm_map),
+        (model.nlpcis, 'nlpci_id', nlpci_map),
+        (model.tables_sdamping, 'tid', table_sdamping_map),
+        (model.dconstrs, 'oid', dessub_map),
+        (model.dresps, 'oid', dresp_map),
+        (model.gusts, 'sid', gust_map),
+        (model.trims, 'sid', trim_map),
+        (model.tics, 'sid', tic_map),
     )
     param_id = 101
     for (dict_obj, param_name, mmap) in sorted(data):
         for idi, param in sorted(iteritems(dict_obj)):
-            assert hasattr(param, param_name)
+            msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
+            assert hasattr(param, param_name), msg
             setattr(param, param_name, param_id)
             if mmap is not None:
                 mmap[idi] = param_id
@@ -517,7 +536,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         load_map[load_idi] = load_id
         load_id += 1
 
-
+    lseq_map = load_map # wrong???
+    temp_map = load_map # wrong???
     mapper = {
         'elements' : eid_map,
         'nodes' : nid_map,
@@ -533,39 +553,85 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
 
         'DLOAD' : dload_map,
         'LOAD' : load_map,
-        'LOADSET' : load_map, # wrong
+        'LOADSET' : lseq_map,
+        #'LOADSET' : load_map, # wrong???
         'TSTEP' : tstep_map,
         'TSTEPNL' : tstepnl_map,
-        'SUPORT' : suport_map,
+        #'SUPORT' : suport_map,
         'SUPORT1' : suport1_map,
+        'NLPARM' : nlparm_map,
+        'SDAMPING' : table_sdamping_map,
+        'DESSUB' : dessub_map,
+        'DESOBJ' : dresp_map,
+        'GUST' : gust_map,
+        'TRIM' : trim_map,
+        'IC' : tic_map,
+
+        # bad...
+        'TEMPERATURE(LOAD)' : temp_map,
+        #'DATAREC' : datarec_map,
+        #'ADAPT' : adapt_map,
+        #'SUPER' : super_map,
+        #'BOUTPUT' : boutput_map,
     }
+    #print('****suport1_map', suport1_map)
+    #print('****dessub_map', dessub_map)
+    #print('****dresp_map', dresp_map)
     _update_case_control(model, mapper)
     model.write_bdf(bdf_filename_out, size=8, is_double=False,
                     interspersed=False)
 
 def _update_case_control(model, mapper):
-    elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE']
+    elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
     nodal_quantities = [
         'DISPLACEMENT', 'VELOCITY', 'ACCELERATION', 'SPCFORCES', 'MPCFORCES',
-        'GPFORCES'
+        'GPFORCES', 'SDISPLACEMENT',
     ]
     mapper_quantities = [
-        'FREQUENCY', 'DLOAD', 'LOAD', 'LOADSET', 'SPC', 'METHOD', 'CMETHOD',
-        'TSTEP', 'TSTEPNL', 'NLPARM',
+        'FREQUENCY', 'DLOAD', 'LOAD', 'LOADSET', 'SPC', 'MPC', 'METHOD', 'CMETHOD',
+        'TSTEP', 'TSTEPNL', 'NLPARM', 'SDAMPING', 'DESSUB', 'DESOBJ', 'GUST',
+        'SUPORT1', 'TRIM', 'BOUTPUT', 'IC',
     ]
+
+    # TODO: remove this...
+    skip_keys_temp = [
+        'DESSUB', 'ADAPT', 'DATAREC', 'DSAPRT(END=SENS)=ALL', 'TEMPERATURE(LOAD)',
+        'CURVELINESYMBOL', 'DSAPRT=(END=SENS)', 'SUPER', 'BOUTPUT', 'IC',
+    ]
+
     nid_map = mapper['nodes']
     eid_map = mapper['elements']
+    skip_keys = [
+        'TITLE', 'ECHO', 'ANALYSIS', 'SUBTITLE', 'LABEL', 'SUBSEQ', 'OUTPUT',
+        'TCURVE', 'XTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES',
+        ] + skip_keys_temp
 
+    sets_analyzed = set([])
+    # sets in the global don't get updated....
+    # so we're going to find all the sets and
+    # map them
     # TODO: renumber the sets
-    #iset = 1
+    set_locations = {}
     for isubcase, subcase in sorted(iteritems(model.caseControlDeck.subcases)):
+        for key, values in sorted(iteritems(subcase.params)):
+            value, options, param_type = values
+            if 'SET ' in key:
+                #print(isubcase, key, value, options, param_type)
+                #assert isubcase != 0, isubcase
+                if isubcase not in set_locations:
+                    set_locations[isubcase] = [key]
+                else:
+                    set_locations[isubcase].append(key)
+
+    #print('set_locations =', set_locations)
+    #iset = 1
+    case_control = model.caseControlDeck
+    global_subcase = case_control.subcases[0]
+    for isubcase, subcase in sorted(iteritems(case_control.subcases)):
         #print('-----------------------')
         #print(subcase)
         for key, values in sorted(iteritems(subcase.params)):
-            #if key in ['LOAD', 'SPC', 'MPC', 'METHOD', 'CMETHOD']:
-                #continue
-
-            if key in ['TITLE', 'ECHO']:
+            if key in skip_keys:
                 pass
             elif 'SET ' in key:
                 # does this need to be updated...I don't think so...
@@ -582,50 +648,74 @@ def _update_case_control(model, mapper):
                         try:
                             value2 = kmap[value]
                         except KeyError:
-                            msg = 'Could not find id=%s in %s dictionary' % (value, key)
+                            msg = 'Could not find id=%s in %s dictionary\n' % (value, key)
+                            msg += str(kmap)
                             raise KeyError(msg)
+                        subcase.update_parameter_in_subcase(key, value2, options, param_type)
 
-                        subcase.add_parameter_to_subcase(key, value2, options, param_type)
-
-                    elif key in elemental_quantities:
+                    elif key in elemental_quantities + nodal_quantities:
                         seti2, seti_key = subcase.get_parameter(seti, msg=msg)
-                        # renumber eids
-                        #continue
+                        if seti_key in sets_analyzed:
+                            continue
+                        sets_analyzed.add(seti_key)
+                        msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  %(seti_key, type(seti_key))
+                        msgi += '  key=%r value=%r options=%r param_type=%r\n' % (key, value, options, param_type)
+                        msgi += '  seti=%r\n' % seti
+                        #print(msgi)
+                        assert isinstance(seti_key, int), msgi
 
                         #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
                         #print(seti2)
                         values2 = []
-                        for nid in seti2:
-                            nid_new = eid_map[nid]
-                            values2.append(nid_new)
-                        #print('updating SET %s' % options)
-                        #subcase.add_parameter_to_subcase(key, values2, options, param_type)  # old
+                        if key in elemental_quantities:
+                            # renumber eids
+                            for eid in seti2:
+                                if eid not in eid_map:
+                                    print("  couldnt find eid=%s...dropping" % eid)
+                                    continue
+                                eid_new = eid_map[eid]
+                                values2.append(eid_new)
+                            #print('updating element SET %r' % options)
+                        else:
+                            # renumber nids
+                            for nid in seti2:
+                                if nid not in nid_map:
+                                    print("  couldnt find nid=%s...dropping" % nid)
+                                    continue
+                                nid_new = nid_map[nid]
+                                values2.append(nid_new)
+                            #print('updating node SET %r' % options)
 
                         param_type = 'SET-type'
-                        subcase.add_parameter_to_subcase(seti, values2, seti_key, param_type)
-
-                    elif key in nodal_quantities:
-                        seti2, seti_key = subcase.get_parameter(seti, msg=msg)
-                        # renumber nids
-                        #continue
-                        values2 = []
-                        for nid in value:
-                            nid_new = nid_map[nid]
-                            values2.append(nid_new)
-                        #print('updating SET %s' % options)
-
-                        #subcase.add_parameter_to_subcase(key, values2, options, param_type)  # old
-                        param_type = 'SET-type'
-                        subcase.add_parameter_to_subcase(seti, values2, seti_key, param_type)
-
+                        #print('adding seti=%r values2=%r seti_key=%r param_type=%r'  % (
+                            #seti, values2, seti_key, param_type))
+                        assert len(values2) > 0, values2
+                        if isubcase in set_locations and key in set_locations[isubcase]:
+                            # or not global_subcase.has_parameter(key)
+                            gset = subcase.get_parameter(seti)
+                            lset = subcase.get_parameter(seti)
+                            #print('gset', gset)
+                            #print('lset', lset)
+                            if gset != lset:
+                                asdf
+                                subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                            else:
+                                global_subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                            #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                        elif not global_subcase.has_parameter(key):
+                            subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                        else:
+                            global_subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
                     else:
                         pass
                         #print('key=%s seti2=%s' % (key, seti2))
-                        print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                        print('key=%r options=%r param_type=%r value=%r' % (key, options, param_type, value))
                         raise RuntimeError(key)
-                elif value == 'ALL':
+                elif value in ['NONE', 'ALL']:
                     #print('*ALL -> key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
                     #print('*all')
+                    pass
+                elif key == '':
                     pass
                 else:
                     print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
@@ -635,7 +725,7 @@ def _update_case_control(model, mapper):
                 raise RuntimeError(key)
 
                     #if value ==
-        print()
+        #print()
 
 
 def main():

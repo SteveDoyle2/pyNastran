@@ -407,10 +407,17 @@ class Subcase(object):
         if param_name not in self.params:
             raise KeyError('%s doesnt exist in subcase=%s in the case '
                            'control deck%s.' % (param_name, self.id, msg))
-        return self.params[param_name][0:2]
+        value, options, param_type = self.params[param_name]
+        #print('param_name=%r value=%s options=%s param_type=%r' % (param_name, value, options, param_type))
+        return value, options  #, param_type
 
     def add_parameter_to_subcase(self, key, value, options, param_type):
         assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type',], param_type
+        self._add_data(key, value, options, param_type)
+
+    def update_parameter_in_subcase(self, key, value, options, param_type):
+        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type',], param_type
+        assert key in self.params, 'key=%r is not in isubcase=%s' % (key, self.id)
         self._add_data(key, value, options, param_type)
 
     def _add_data(self, key, value, options, param_type):
@@ -425,9 +432,13 @@ class Subcase(object):
 
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
-            #print("adding isubcase=%s key=%r value=|%s| options=|%s| "
-                  #"param_type=%s" %(self.id, key, value, options, param_type))
+            #print("adding isubcase=%s key=%r value=%r options=%r "
+                  #"param_type=%r" %(self.id, key, value, options, param_type))
             values2 = expand_thru_case_control(value)
+            assert isinstance(values2, list), type(values2)
+            if isinstance(options, list):
+                msg = 'invalid type for options=%s value; expected an integer; got a list' % key
+                raise TypeError(msg)
             options = int(options)
             return (key, values2, options)
 
@@ -442,16 +453,16 @@ class Subcase(object):
                 b = 'value=%r' % value
                 c = 'options=%r' % options
                 d = 'param_type=%r' % param_type
-                print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
+                #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, integer_types) or value is None:
                 pass
             elif isinstance(value, list):  # new???
                 msg = 'invalid type for key=%s value; expected an integer; got a list' % key
-                raise RuntimeError(msg)
+                raise TypeError(msg)
             elif value.isdigit():  # STRESS = ALL
                 value = value
             #else: pass
-        return (key, value, options)
+        return key, value, options
 
     def get_op2_data(self, sol, solmap_toValue):
         self.sol = sol
@@ -873,14 +884,28 @@ def update_param_name(param_name):
     return param_name
 
 def expand_thru_case_control(set_value):
-    set_value2 = []
-    for (i, ivalue) in enumerate(set_value):
+    set_value2 = set([])
+    add_mode = True
+    imin = 0
+    imax = 0
+    #print('set_value = %r' % set_value)
+    for ivalue in set_value:
         if isinstance(ivalue, int):
-            set_value2.append(ivalue)
+            set_value2.add(ivalue)
             continue
         ivalue = ivalue.strip()
         if ivalue.isdigit():
-            set_value2.append(int(ivalue))
+            ivalue = int(ivalue)
+            if not imin < ivalue < imax:
+                add_mode = True
+                #print('break...')
+            if add_mode:
+                #print('adding %s' % ivalue)
+                set_value2.add(ivalue)
+            else:
+                #print('removing %s' % ivalue)
+                set_value2.remove(ivalue)
+                imin = ivalue
         else:
             if set_value is 'EXCLUDE':
                 msg = ('EXCLUDE is not supported on CaseControlDeck '
@@ -889,34 +914,49 @@ def expand_thru_case_control(set_value):
             elif 'THRU' in ivalue:
                 svalues = ivalue.split()
                 if len(svalues) == 3:
+                    assert add_mode == True, add_mode
                     imin, thru, imax = svalues
                     assert thru == 'THRU', thru
                     imin = int(imin)
                     imax = int(imax)
                     for jthru in range(imin, imax + 1):
-                        set_value2.append(jthru)
+                        set_value2.add(jthru)
+
+                elif len(svalues) == 4:
+                    imin, thru, imax, by_except = svalues
+                    imin = int(imin)
+                    imax = int(imax)
+                    assert by_except == 'EXCEPT', by_except
+
+                    for jthru in range(imin, imax + 1):
+                        #if jthru == increment_except:
+                            #continue
+                        set_value2.add(jthru)
+                    add_mode = False
+
                 elif len(svalues) == 5:
                     imin, thru, imax, by_except, increment_except = svalues
+                    assert by_except == 'BY', by_except
                     imin = int(imin)
                     imax = int(imax)
                     increment_except = int(increment_except)
                     if by_except == 'BY':
                         for jthru in range(imin, imax + 1, by_except):
-                            set_value2.append(jthru)
-                    elif by_except == 'EXCEPT':
-                        for jthru in range(imin, imax + 1):
-                            if jthru == increment_except:
-                                continue
-                            set_value2.append(jthru)
+                            set_value2.add(jthru)
                     else:
                         raise RuntimeError(ivalue)
+                    add_mode = True
                 else:
                     raise RuntimeError(ivalue)
             else:
-                set_value2.append(ivalue)
-    set_value2.sort()
-    #print('end of expansion', set_value2)
-    return set_value2
+                assert add_mode == True, add_mode
+                set_value2.add(ivalue)
+
+    list_values = list(set_value2)
+    list_values.sort()
+
+    #print('end of expansion', list_values)
+    return list_values
 
 import operator
 

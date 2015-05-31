@@ -252,7 +252,7 @@ class NLPARM(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            self.nid = integer(card, 1, 'nid')
+            self.nlparm_id = integer(card, 1, 'nlparm_id')
             self.ninc = integer_or_blank(card, 2, 'ninc', 10)
             self.dt = double_or_blank(card, 3, 'dt', 0.0)
             self.kMethod = string_or_blank(card, 4, 'kMethod', 'AUTO')
@@ -282,10 +282,10 @@ class NLPARM(BaseCard):
             self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
             assert len(card) <= 24, 'len(NLPARM card) = %i' % len(card)
         else:
-            (sid, ninc, dt, kMethod, kStep, maxIter, conv, intOut, epsU, epsP,
+            (nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv, intOut, epsU, epsP,
              epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,
              rTolB) = data
-            self.nid = sid
+            self.nlparm_id = nlparm_id
             self.ninc = ninc
             self.dt = dt
             self.kMethod = kMethod
@@ -310,7 +310,7 @@ class NLPARM(BaseCard):
             self.rTolB = rTolB
 
     def raw_fields(self):
-        list_fields = ['NLPARM', self.nid, self.ninc, self.dt, self.kMethod,
+        list_fields = ['NLPARM', self.nlparm_id, self.ninc, self.dt, self.kMethod,
                        self.kStep, self.maxIter, self.conv, self.intOut, self.epsU,
                        self.epsP, self.epsW, self.maxDiv, self.maxQn, self.maxLs,
                        self.fStress, self.lsTol, self.maxBisect, None, None, None,
@@ -337,7 +337,7 @@ class NLPARM(BaseCard):
         maxR = set_blank_if_default(self.maxR, 20.)
         rTolB = set_blank_if_default(self.rTolB, 20.)
 
-        list_fields = ['NLPARM', self.nid, ninc, dt, kMethod, kStep, maxIter,
+        list_fields = ['NLPARM', self.nlparm_id, ninc, dt, kMethod, kStep, maxIter,
                        conv, intOut, epsU, epsP, epsW, maxDiv, maxQn, maxLs,
                        fStress, lsTol, maxBisect, None, None, None, maxR, None,
                        rTolB]
@@ -356,7 +356,7 @@ class NLPCI(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.nlparm_id = integer(card, 1, 'nlparm_id')
+        self.nlpci_id = integer(card, 1, 'nlpci_id')
         self.Type = string_or_blank(card, 2, 'Type', 'CRIS')
         self.minalr = double_or_blank(card, 3, 'minalr', 0.25)
         self.maxalr = double_or_blank(card, 4, 'maxalr', 4.0)
@@ -366,7 +366,7 @@ class NLPCI(BaseCard):
         self.mxinc = integer_or_blank(card, 8, 'mxinc', 20)
 
     def raw_fields(self):
-        list_fields = ['NLPCI', self.nlparm_id, self.Type, self.minalr,
+        list_fields = ['NLPCI', self.nlpci_id, self.Type, self.minalr,
                        self.maxalr, self.scale, None, self.desiter, self.mxinc]
         return list_fields
 

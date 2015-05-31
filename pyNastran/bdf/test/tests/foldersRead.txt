@@ -62,4 +62,4 @@ D:\work\move\Dropbox\pyNastran_examples\demo_sort2_post_m2
 D:\work\move\Dropbox\pyNastran_examples\solid_shell_bar
 D:\work\move\Dropbox\pyNastran_examples\solid_shell_bar_m2
 D:\work\move\Dropbox\pyNastran_examples\iSat
-#F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test
+F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike

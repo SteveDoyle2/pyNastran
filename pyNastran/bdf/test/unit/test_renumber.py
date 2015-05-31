@@ -1,10 +1,15 @@
+from __future__ import print_function
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdfInterface.dev_utils import bdf_renumber
+from pyNastran.utils.dev import get_files_of_type
 import unittest
 import os
 
 import pyNastran
 pkg_path = pyNastran.__path__[0]
+model_path = os.path.join(pkg_path, '..', 'models')
+test_path = os.path.join(pkg_path, 'bdf', 'test')
+unit_path = os.path.join(test_path, 'unit')
 
 class TestRenumber(unittest.TestCase):
     def test_renumber_01(self):
@@ -62,49 +67,56 @@ class TestRenumber(unittest.TestCase):
         msg_expected += 'ENDDATA\n'
 
         # for now we're testing things don't crash
-        bdf_filename2 = 'renumber_out.bdf'
-        bdf_renumber('renumber_in.bdf', bdf_filename2)
+        bdf_filename = 'renumber_in.bdf'
+        bdf_filename_renumber = 'renumber_out.bdf'
+        bdf_renumber(bdf_filename_renumber, bdf_filename_renumber)
 
         #model = BDF()
         #model.read_bdf(bdf_filename)
         #model.write_bdf(bdf_filename_check)
         model = BDF()
-        model.read_bdf(bdf_filename2)
+        model.read_bdf(bdf_filename_renumber)
 
     def test_renumber_02(self):
-        bdf_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm.dat')
-        bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm_renumber.dat')
-        bdf_filename_check = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm_check.dat')
-        bdf_renumber(bdf_filename, bdf_filename2)
-        model = BDF()
-        model.read_bdf(bdf_filename)
-        model.write_bdf(bdf_filename_check, interspersed=False)
-        model = BDF()
-        model.read_bdf(bdf_filename2)
+        bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm.dat')
+        bdf_filename_renumber = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm_renumber.dat')
+        bdf_filename_check = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm_check.dat')
+        check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
 
     def test_renumber_03(self):
-        bdf_filename = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush.dat')
-        bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush_renumber.dat')
-        bdf_filename_check = os.path.join(pkg_path, '..', 'models', 'cbush', 'cbush_check.dat')
-        bdf_renumber(bdf_filename, bdf_filename2)
-        model = BDF()
-        model.read_bdf(bdf_filename)
-        model.write_bdf(bdf_filename_check, interspersed=False)
-        model = BDF()
-        model.read_bdf(bdf_filename2)
+        bdf_filename = os.path.join(model_path, 'cbush', 'cbush.dat')
+        bdf_filename_renumber = os.path.join(model_path, 'cbush', 'cbush_renumber.dat')
+        bdf_filename_check = os.path.join(model_path, 'cbush', 'cbush_check.dat')
+        check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
     def test_renumber_04(self):
-        bdf_filename = os.path.join(pkg_path, '..', 'models', 'complex', 'tet10', 'Simple_Example.bdf')
-        bdf_filename2 = os.path.join(pkg_path, '..', 'models', 'complex', 'tet10', 'Simple_Example_renumber.bdf')
-        bdf_filename_check = os.path.join(pkg_path, '..', 'models', 'complex', 'tet10', 'Simple_Example_check.bdf')
-        bdf_renumber(bdf_filename, bdf_filename2)
-        model = BDF()
-        model.read_bdf(bdf_filename)
-        model.write_bdf(bdf_filename_check, interspersed=False)
-        model = BDF()
-        model.read_bdf(bdf_filename2)
+        bdf_filename = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example.bdf')
+        bdf_filename_renumber = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example_renumber.bdf')
+        bdf_filename_check = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example_check.bdf')
+        check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
+    def test_renumber_05(self):
+        dirname = os.path.join(unit_path, 'obscure')
+        bdf_filenames = get_files_of_type(dirname, extension='.bdf')
+        for bdf_filename in bdf_filenames:
+            print('bdf_filename = %s' % (bdf_filename))
+            basename = os.path.basename(bdf_filename)
+            base, ext = os.path.splitext(basename)
+            bdf_filename_renumber = os.path.join(dirname, base + '_renumber.bdf_test')
+            bdf_filename_check = os.path.join(dirname, base + '_check.bdf_test')
+            check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
+
+
+def check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check):
+    bdf_renumber(bdf_filename, bdf_filename_renumber)
+
+    model = BDF()
+    model.read_bdf(bdf_filename)
+    model.write_bdf(bdf_filename_check, interspersed=False)
+
+    model = BDF()
+    model.read_bdf(bdf_filename_renumber)
 
 if __name__ == '__main__':
     unittest.main()

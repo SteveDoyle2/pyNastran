@@ -141,6 +141,8 @@ class ASET(ABCQSet):
     def __init__(self, card=None, data=None, comment=''):
         ABCQSet.__init__(self, card, data, comment)
 
+    def cross_reference(self, model):
+        pass
 
 class BSET(ABCQSet):
     """
@@ -256,6 +258,9 @@ class ASET1(ABQSet1):
     def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data, comment)
 
+    def cross_reference(self, model):
+        pass
+
 
 class BSET1(ABQSet1):
     type = 'BSET1'
@@ -321,6 +326,9 @@ class QSET1(ABQSet1):
 
     def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data, comment)
+
+    def cross_reference(self, model):
+        pass
 
 
 class SET1(Set):
@@ -544,6 +552,9 @@ class SESET(SetSuper):
             cards.append(card)
         return ''.join(cards)
 
+    def cross_reference(self, model):
+        pass
+
 
 class SEBSET(ABCQSet):
     """
@@ -567,6 +578,8 @@ class SEBSET1(ABQSet1):
     def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data, comment)
 
+    def cross_reference(self, model):
+        pass
 
 class SECSET(ABCQSet):
     type = 'SECSET'
@@ -580,6 +593,9 @@ class SECSET1(ABQSet1):
     def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data, comment)
 
+    def cross_reference(self, model):
+        pass
+
 
 class SEQSET(ABCQSet):
     type = 'SEQSET'
@@ -592,6 +608,9 @@ class SEQSET1(ABQSet1):
 
     def __init__(self, card=None, data=None, comment=''):
         ABQSet1.__init__(self, card, data, comment)
+
+    def cross_reference(self, model):
+        pass
 
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???

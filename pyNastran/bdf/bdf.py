@@ -70,6 +70,7 @@ from pyNastran.bdf.cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AE
                                       SPLINE5, TRIM)
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
+                                             GMSPC,
                                              ConstraintObject)
 from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    CORD2R, CORD2C, CORD2S, CORD3G)
@@ -80,7 +81,8 @@ from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE
 from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                    FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                                   PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
+                                                   PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
+                                                   GMLOAD)
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11,
@@ -112,7 +114,7 @@ from pyNastran.bdf.bdfInterface.addCard import AddMethods
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
-from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
+from pyNastran.bdf.bdfInterface.crossReference import XrefMesh, CrossReferenceError
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
 
@@ -175,7 +177,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         BDFMethods.__init__(self)
         WriteMesh.__init__(self)
         XrefMesh.__init__(self)
-        #BDF_Attributes.__init__(self)
+        BDFAttributes.__init__(self)
 
         #: useful in debugging errors in input
         self.debug = debug
@@ -252,6 +254,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # spc/mpc constraints
             'SPC', 'SPCADD', 'SPC1', 'SPCD', 'SPCAX',
+            'GMSPC',
             'MPC', 'MPCADD',
             'SUPORT', 'SUPORT1', 'SESUP',
 
@@ -263,6 +266,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE',
+            'GMLOAD',
 
             # aero cards
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
@@ -307,20 +311,35 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # super-element sets
             'SESET',
-            #ASET, BSET, CSET, QSET, USET,
-            #ASET1, BSET1, CSET1, QSET1, #USET1,
-            #SET1, SET3, RADSET,
+            #'RADSET',
             'SEBSET', 'SECSET', 'SEQSET',
             'SEBSET1', 'SECSET1', 'SEQSET1',
             'SESET', 'SEQSEP',
 
+            #------------------------------------------------------------------
             # tables
             #'DTABLE', 'TABLEHT', 'TABRNDG',
-            'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
-            'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+            'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
+            'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
+
+
+            # modal damping table - tables_sdamping
             'TABDMP1',
-            'TABLES1', 'TABLEST',
-            'TABRND1', 'TABRNDG',
+
+            ## common group
+            # nonlinear elastic temperature dependent materials (e.g. creep)
+            # sees TABLES1
+            'TABLEST',
+            # material tables - stress (MATS1, CREEP, MATHP)
+            'TABLES1',
+
+            # PSD=func(freq); used by RANDPS card
+            'TABRND1',
+
+            # gust for aeroelastic response; used by RANDPS card
+            'TABRNDG',
+
+            #------------------------------------------------------------------
 
             # initial conditions - sid (set ID)
             #'TIC',  (in bdf_tables.py)
@@ -522,6 +541,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         # loads
         #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = {}
+        self.tics = {}
 
         # stores DLOAD entries.
         self.dloads = {}
@@ -541,7 +561,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.suport1 = {}
         self.se_suport = []
 
-        #: stores SPCADD,SPC,SPC1,SPCD,SPCAX
+        #: stores SPCADD,SPC,SPC1,SPCD,SPCAX,GMSPC
         self.spcObject = ConstraintObject()
         #: stores MPCADD,MPC
         self.mpcObject = ConstraintObject()
@@ -593,6 +613,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.tables = {}
         #: randomTables
         self.randomTables = {}
+        #: TABDMP1
+        self.tables_sdamping = {}
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
@@ -744,7 +766,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'thermalMaterials' : ['MAT4', 'MAT5',],
 
             # spc/mpc constraints - TODO: is this correct?
-            'spcs' : ['SPC', 'SPC1', 'SPCD', 'SPCAX', 'SPCADD'],
+            'spcs' : ['SPC', 'SPC1', 'SPCD', 'SPCAX', 'SPCADD', 'GMSPC'],
             #'spcadds' : ['SPCADD'],
             #'mpcadds' : ['MPCADD'],
             'mpcs' : ['MPC', 'MPCADD'],
@@ -760,6 +782,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'GRAV', 'ACCEL', 'ACCEL1',
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
                 'PLOADX1', 'RFORCE', 'SLOAD',
+                'GMLOAD',
 
                 # thermal
                 'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
@@ -850,9 +873,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'DTABLE', 'TABLEHT', 'TABRNDG',
                 'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
                 'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                'TABDMP1',
                 'TABLES1', 'TABLEST',
                 ],
+            'tables_sdamping' : ['TABDMP1'],
             'randomTables' : ['TABRND1', 'TABRNDG',],
 
             # initial conditions - sid (set ID)
@@ -1089,7 +1112,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     is_error = True
 
                 if is_error and self._stop_on_xref_error:
-                    raise RuntimeError(msg.rstrip())
+                    raise CrossReferenceError(msg.rstrip())
 
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
@@ -1480,7 +1503,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_load' : ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
                               'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
                               'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
-                              'RFORCE', 'SLOAD', 'RANDPS'],
+                              'RFORCE', 'SLOAD', 'RANDPS',
+                              'GMLOAD', ],
                 'add_dload' : ['DLOAD'],
                 'add_dload_entry' : ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
 
@@ -1488,9 +1512,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_thermal_element' : ['CHBDYE', 'CHBDYG', 'CHBDYP'],
                 'add_convection_property' : ['PCONV', 'PCONVM'],
                 'add_constraint_MPC' : ['MPC', 'MPCADD'],
-                'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
+                'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD',
+                                        'GMSPC'],
                 'add_suport' : ['SUPORT'],  # pseudo-constraint
-                'add_constraint' : ['SUPORT1'],  # pseudo-constraint - TODO: should this be add_suport1???
+                #'add_constraint' : ['SUPORT1'],  # pseudo-constraint - TODO: should this be add_suport1???
+                'add_suport1' : ['SUPORT1'],  # pseudo-constraint
                 'add_SESUP' : ['SESUP'],  # pseudo-constraint
                 'add_SPLINE' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'],
                 'add_CAERO' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
@@ -1513,6 +1539,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_table' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
                                'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
                                'TABLES1', 'TABLEST', 'TABDMP1'],
+                'add_table_sdamping' : ['TABDMP1'],
                 'add_random_table' : ['TABRND1', 'TABRNDG'],
                 'add_method' : ['EIGB', 'EIGR', 'EIGRL'],
                 'add_cmethod' : ['EIGC', 'EIGP'],
@@ -1699,8 +1726,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'dvprels', 'dvmrels',
 
             # SESETx - dict
+            'suport1',
             'se_sets',
-            'se_bsets', 'se_csets', 'se_qsets', 'se_suports',
+            'se_usets',
 
             # tables
             'tables', 'randomTables',
@@ -1717,18 +1745,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'bcs', 'thermalMaterials', 'phbdys',
             'convectionProperties', ]
 
-        ## TODO: why are these ignored?
+        # These are ignored because they're lists
         ignored_types = set([
             'spoints', 'spointi',  # singleton
             'gridSet',  # singleton
 
             'spcs', 'spcadds',
 
-            'suport', 'suport1', # suport, suport1 - list
+            'suport', 'se_suport', # suport, suport1 - list
             'doptprm',  # singleton
 
             # SETx - list
             'sets', 'asets', 'bsets', 'csets', 'qsets',
+            'se_bsets', 'se_csets', 'se_qsets',
         ])
 
         ## TODO: why are some of these ignored?
@@ -1802,6 +1831,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             card_group = getattr(self, card_group_name)
             groups = set([])
 
+            if not isinstance(card_group, dict):
+                msg = '%s is a %s; not dictionary' % (card_group_name, type(card_group))
+                raise RuntimeError(msg)
             for card in itervalues(card_group):
                 if isinstance(card, list):
                     for card2 in card:
@@ -2097,6 +2129,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         Uses generators to open the file and stream the next line into
         a (line_number, comment, and line).
         """
+        f = open(self.active_filename, 'r')
+        line = f.readline()
+        f.close()
+        if line.strip().startswith('$'):
+            fmt = _parse_pyNastran_header(line)
+            if fmt:
+                self.nastran_format = fmt
+
         with open(self.active_filename, 'r') as f:
             for n, line in enumerate(f):
                 line = line.rstrip('\t\r\n ')
@@ -2153,6 +2193,26 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             except:
                 print(str(card))
                 raise
+
+
+def _parse_pyNastran_header(line):
+    line = line[1:].lower()
+    if 'pynastran' in line:
+        base, word = line.split(':')
+        word = word.strip()
+        base, value = word.split('=')
+        base = base.strip()
+        value = value.strip()
+
+        assert base == 'version', 'base=%r' % base
+        assert ' ' not in value, 'value=%r' % value
+        #if word.startswith('version='):
+        #print('****line', line)
+        #print('  word = %r' % word)
+        #print('base=%r value=%r' % (base, value))
+    else:
+        value = None
+    return value
 
 
 if __name__ == '__main__':  # pragma: no cover

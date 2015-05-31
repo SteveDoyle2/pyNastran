@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array
+from six import integer_types
 
 from pyNastran.bdf.deprecated import GridDeprecated, PointDeprecated, SPOINTsDeprecated
 
@@ -143,7 +144,7 @@ class SPOINT(Node):
         if comment:
             self._comment = comment
         self.nid = nid
-        assert isinstance(nid, int), nid
+        assert isinstance(nid, integer_types), nid
 
     def cross_reference(self, model):
         """
@@ -1006,41 +1007,49 @@ class GRID(Node, GridDeprecated):
         :type is_double:
           bool
         """
-        xyz = self.xyz
         if size == 8:
-            cp = set_string8_blank_if_default(self.Cp(), 0)
-            cd = set_string8_blank_if_default(self.Cd(), 0)
-            seid = set_string8_blank_if_default(self.SEid(), 0)
-            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % (
-                'GRID', self.nid, cp,
-                print_float_8(xyz[0]),
-                print_float_8(xyz[1]),
-                print_float_8(xyz[2]),
-                cd, self.ps, seid)
+            return self.write_card_8()
         else:
-            cp = set_string16_blank_if_default(self.Cp(), 0)
-            cd = set_string16_blank_if_default(self.Cd(), 0)
-            seid = set_string16_blank_if_default(self.SEid(), 0)
-            if is_double:
-                msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % (
-                           'GRID*', self.nid,
-                           cp,
-                           print_scientific_double(xyz[0]),
-                           print_scientific_double(xyz[1]),
-                           '*',
-                           print_scientific_double(xyz[2]),
-                           cd, self.ps, seid))
-            else:
-                msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % (
-                           'GRID*', self.nid,
-                           cp,
-                           print_float_16(xyz[0]),
-                           print_float_16(xyz[1]),
-                           '*',
-                           print_float_16(xyz[2]),
-                           cd, self.ps, seid))
+            return self.write_card_16(is_double)
+
+    def write_card_8(self):
+        xyz = self.xyz
+        cp = set_string8_blank_if_default(self.Cp(), 0)
+        cd = set_string8_blank_if_default(self.Cd(), 0)
+        seid = set_string8_blank_if_default(self.SEid(), 0)
+        msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % (
+            'GRID', self.nid, cp,
+            print_float_8(xyz[0]),
+            print_float_8(xyz[1]),
+            print_float_8(xyz[2]),
+            cd, self.ps, seid)
+        return self.comment() + msg.rstrip() + '\n'
+
+    def write_card_16(self, is_double=False):
+        xyz = self.xyz
+        cp = set_string16_blank_if_default(self.Cp(), 0)
+        cd = set_string16_blank_if_default(self.Cd(), 0)
+        seid = set_string16_blank_if_default(self.SEid(), 0)
+        if is_double:
+            msg = ('%-8s%16i%16s%16s%16s\n'
+                   '%-8s%16s%16s%16s%16s\n' % (
+                       'GRID*', self.nid,
+                       cp,
+                       print_scientific_double(xyz[0]),
+                       print_scientific_double(xyz[1]),
+                       '*',
+                       print_scientific_double(xyz[2]),
+                       cd, self.ps, seid))
+        else:
+            msg = ('%-8s%16i%16s%16s%16s\n'
+                   '%-8s%16s%16s%16s%16s\n' % (
+                       'GRID*', self.nid,
+                       cp,
+                       print_float_16(xyz[0]),
+                       print_float_16(xyz[1]),
+                       '*',
+                       print_float_16(xyz[2]),
+                       cd, self.ps, seid))
         return self.comment() + msg.rstrip() + '\n'
 
 

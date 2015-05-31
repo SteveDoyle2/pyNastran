@@ -44,8 +44,17 @@ class DCONSTR(OptConstraint):
             self.lowfq = data[4]
             self.highfq = data[5]
 
+    def Rid(self):
+            if isinstance(self.rid, int):
+                return self.rid
+            else:
+                return self.rid.oid
+
+    def cross_reference(self, model):
+        self.rid = model.dresps[self.Rid()]
+
     def raw_fields(self):
-        list_fields = ['DCONSTR', self.oid, self.rid, self.lid,
+        list_fields = ['DCONSTR', self.oid, self.Rid(), self.lid,
                        self.uid, self.lowfq, self.highfq]
         return list_fields
 
@@ -54,7 +63,7 @@ class DCONSTR(OptConstraint):
         uid = set_blank_if_default(self.uid, 1e20)
         lowfq = set_blank_if_default(self.lowfq, 0.0)
         highfq = set_blank_if_default(self.highfq, 1e20)
-        list_fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
+        list_fields = ['DCONSTR', self.oid, self.Rid(), lid, uid, lowfq, highfq]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -321,6 +330,9 @@ class DRESP1(OptConstraint):
             #print(str(self))
         #assert len(self.others)==0
 
+    def cross_reference(self, model):
+        pass
+
     def raw_fields(self):
         list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
                        self.region, self.atta, self.attb, self.atti] + self.others
@@ -378,6 +390,9 @@ class DRESP2(OptConstraint):
             #print("  key=%s params=%s" %(key, valueList))
 
         #print self
+
+    def cross_reference(self, model):
+        pass
 
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line

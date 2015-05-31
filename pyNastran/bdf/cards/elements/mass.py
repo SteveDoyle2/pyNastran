@@ -105,7 +105,7 @@ class CMASS1(PointMassElement):
             self.g1 = model.Node(self.g1, msg=msg)
         if isinstance(self.g2, int):
             self.g2 = model.Node(self.g2, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.pid = model.PropertyMass(self.pid, msg=msg)
 
     def G1(self):
         if isinstance(self.g1, int):
@@ -340,7 +340,7 @@ class CMASS3(PointMassElement):
         msg = ' which is required by CMASS3 eid=%s' % self.eid
         #self.s1 = model.Node(self.s1, msg=msg)
         #self.s2 = model.Node(self.s2, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.pid = model.PropertyMass(self.pid, msg=msg)
 
     def raw_fields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]

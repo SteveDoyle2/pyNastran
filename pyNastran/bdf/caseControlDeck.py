@@ -396,6 +396,38 @@ class CaseControlDeck(object):
             value = line[eIndex + 1:].strip()
             options = []
             param_type = 'STRING-type'
+        elif line_upper.startswith('SET ') and equals_count == 1:
+            # would have been caught by STRESS-type
+            sline = line.split('=')
+            assert len(sline) == 2, sline
+
+            key, value = sline
+            (key, ID) = key.split()
+            key = key + ' ' + ID
+            options = int(ID)
+
+            if self.debug:
+                self.log.debug('SET-type key=%r ID=%r' % (key, ID))
+            fivalues = value.rstrip(' ,').split(',')  # float/int values
+
+            #: .. todo:: should be more efficient multiline reader...
+            # read more lines....
+            if line[-1].strip() == ',':
+                i += 1
+                #print("rawSETLine = %r" % (lines[i]))
+                while 1:
+                    if ',' == lines[i].strip()[-1]:
+                        fivalues += lines[i][:-1].split(',')
+                    else:  # last case
+                        fivalues += lines[i].split(',')
+                        #print("fivalues last = i=%s %r" % (i, lines[i]))
+                        i += 1
+                        break
+                    i += 1
+            #print("len(fivalues) = ",len(fivalues))
+            value = fivalues
+            param_type = 'SET-type'
+
         elif equals_count == 1:  # STRESS
             if '=' in line:
                 (key, value) = line.strip().split('=')
@@ -421,33 +453,33 @@ class CaseControlDeck(object):
                     options = []
                 #print("key=%r options=%s" %(key,options))
 
-            elif ' ' in key and ',' in value:  # SET-type
-                (key, ID) = key.split()
-                key = key + ' ' + ID
+            #elif ' ' in key and ',' in value:  # SET-type
+                #(key, ID) = key.split()
+                #key = key + ' ' + ID
 
-                if self.debug:
-                    self.log.debug('SET-type key=%r ID=%r' % (key, ID))
-                fivalues = value.rstrip(' ,').split(',')  # float/int values
+                #if self.debug:
+                    #self.log.debug('SET-type key=%r ID=%r' % (key, ID))
+                #fivalues = value.rstrip(' ,').split(',')  # float/int values
 
-                #: .. todo:: should be more efficient multiline reader...
-                # read more lines....
-                if line[-1].strip() == ',':
-                    i += 1
-                    #print("rawSETLine = %r" % (lines[i]))
-                    while 1:
-                        if ',' == lines[i].strip()[-1]:
-                            fivalues += lines[i][:-1].split(',')
-                        else:  # last case
-                            fivalues += lines[i].split(',')
-                            #print("fivalues last = i=%s %r" % (i, lines[i]))
-                            i += 1
-                            break
-                        i += 1
-                #print("len(fivalues) = ",len(fivalues))
-                value = fivalues
+                ##: .. todo:: should be more efficient multiline reader...
+                ## read more lines....
+                #if line[-1].strip() == ',':
+                    #i += 1
+                    ##print("rawSETLine = %r" % (lines[i]))
+                    #while 1:
+                        #if ',' == lines[i].strip()[-1]:
+                            #fivalues += lines[i][:-1].split(',')
+                        #else:  # last case
+                            #fivalues += lines[i].split(',')
+                            ##print("fivalues last = i=%s %r" % (i, lines[i]))
+                            #i += 1
+                            #break
+                        #i += 1
+                ##print("len(fivalues) = ",len(fivalues))
+                #value = fivalues
 
-                options = ID  # needed a place to put it...
-                param_type = 'SET-type'
+                #options = ID  # needed a place to put it...
+                #param_type = 'SET-type'
             elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
                 #print('A ??? line = ',line)
                 #raise RuntimeError(line)
@@ -516,6 +548,7 @@ class CaseControlDeck(object):
 
         self:  the CaseControlDeck object
         """
+        #self.debug = True
         if self.debug:
             a = 'key=%r' % key
             b = 'value=%r' % value
@@ -526,7 +559,7 @@ class CaseControlDeck(object):
             self.log.debug(msg)
 
         if key == 'SUBCASE':
-            assert value not in self.subcases
+            assert value not in self.subcases, 'key=%s value=%s already exists' % (key, value)
             assert isinstance(value, int)
             isubcase = value
             #print("value=", value)
@@ -778,7 +811,8 @@ def main():
     #deck.add_parameter_to_local_subcase(0, 'SET 2 = 11,12,13,14,15,16,17,18,'
     #   '19,20,21,22,23,24,25,26,'
     #   '1000000000000000000000000000000000000000000000000000000,33')
-    print('%s\n\n' % deck)
+    str(deck)
+    #print('%s\n\n' % deck)
 
     #deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
     #                         'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',

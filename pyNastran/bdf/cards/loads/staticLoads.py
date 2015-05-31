@@ -29,7 +29,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, expand_thru_by
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, string_or_blank,
-    integer_or_string, fields, integer_string_or_blank)
+    integer_or_string, fields, integer_string_or_blank, integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -1137,6 +1137,81 @@ class MOMENT2(Moment):
                                                      self.g3, self.g4])
         assert isinstance(g1, int), g1
         list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
+
+
+class GMLOAD(Load):
+    """
+    Defines a static concentrated force at a grid point by specification of a
+    magnitude and two grid points that determine the direction.
+    """
+    type = 'GMLOAD'
+
+    def __init__(self, card=None, data=None, comment=''):
+        Load.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            self.sid = integer(card, 1, 'sid')
+            self.cid = integer_or_blank(card, 2, 'cid', 0)
+            self.normal = array([
+                double_or_blank(card, 3, 'N1', 0.),
+                double_or_blank(card, 4, 'N2', 0.),
+                double_or_blank(card, 5, 'N3', 1.),
+            ])
+            self.entity = string(card, 6, 'entity')
+            self.gmcurve = integer(card, 7, 'GMCURVE')
+            self.method = string(card, 8, 'method')
+
+            self.load_magnitudes = []
+            for i in range(9, len(card)):
+                ifield = i - 8
+                load_mag = integer_or_double(card, i, 'load_magnitude_%s' % ifield)
+                self.load_magnitudes.append(load_mag)
+        else:
+            raise NotImplemented()
+
+    def cross_reference(self, model):
+        """
+        .. todo:: cross reference and fix repr function
+        """
+        msg = ' which is required by GMLOAD sid=%s' % self.sid
+        self.cid = model.Coord(self.Cid(), msg=msg)
+        #self.node = model.Node(self.node, msg=msg)
+        #self.g1 = model.Node(self.g1, msg=msg)
+        #self.g2 = model.Node(self.g2, msg=msg)
+        #self.xyz = self.g2.Position() - self.g1.Position()
+        #self.normalize()
+
+    #def G1(self):
+        #if isinstance(self.g1, int) or isinstance(self.g1, float):
+            #return self.g1
+        #return self.g1.nid
+
+    #def G2(self):
+        #if isinstance(self.g2, int) or isinstance(self.g1, float):
+            #return self.g2
+        #return self.g2.nid
+
+    #def NodeID(self):
+        #if isinstance(self.node, int):
+            #return self.node
+        #return self.node.nid
+
+    def raw_fields(self):
+        list_fields = ['GMLOAD', self.sid, self.Cid()] + list(self.normal) + [
+            self.entity, self.gmcurve, self.method] + self.load_magnitudes
         return list_fields
 
     def repr_fields(self):

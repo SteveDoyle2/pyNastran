@@ -67,6 +67,9 @@ from six import iteritems, itervalues
 import warnings
 import traceback
 
+class CrossReferenceError(RuntimeError):
+    pass
+
 
 class XrefMesh(object):
     """
@@ -114,6 +117,8 @@ class XrefMesh(object):
         .. warning:: be careful if you call this method
         """
         if xref:
+            xref_optimization = True
+
             self.log.debug("Cross Referencing...")
             self._cross_reference_nodes()
             self._cross_reference_coordinates()
@@ -134,6 +139,8 @@ class XrefMesh(object):
                 self._cross_reference_loads()
             if xref_sets:
                 self._cross_reference_sets()
+            if xref_optimization:
+                self._cross_reference_optimization()
             #self.caseControlDeck.cross_reference(self)
 
     def _cross_reference_constraints(self):
@@ -380,9 +387,11 @@ class XrefMesh(object):
                 set_obj.cross_reference(self)
 
         # superelements
-        for set_obj in self.se_sets:
+        for key, set_obj in iteritems(self.se_sets):
+            #print("se_set = ", set_obj)
             set_obj.cross_reference(self)
         for set_obj in self.se_bsets:
+            #print("se_bset = ", set_obj)
             set_obj.cross_reference(self)
         for set_obj in self.se_csets:
             set_obj.cross_reference(self)
@@ -390,3 +399,9 @@ class XrefMesh(object):
             set_obj.cross_reference(self)
         for set_obj in self.se_usets:
             set_obj.cross_reference(self)
+
+    def _cross_reference_optimization(self):
+        for key, dresp in iteritems(self.dresps):
+            dresp.cross_reference(self)
+        for key, dconstr in iteritems(self.dconstrs):
+            dconstr.cross_reference(self)

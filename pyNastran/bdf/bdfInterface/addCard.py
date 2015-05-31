@@ -387,7 +387,7 @@ class AddMethods(object):
         self.suport.append(suport)
 
     def add_suport1(self, suport):
-        key = suport.id
+        key = suport.conid
         self._type_to_id_map[suport.type].append(key)
         self.suport1[key] = suport
 
@@ -567,14 +567,14 @@ class AddMethods(object):
         self._type_to_id_map[dvprel.type].append(key)
 
     def add_NLPARM(self, nlparm):
-        key = nlparm.nid
+        key = nlparm.nlparm_id
         assert key not in self.nlparms
         assert key > 0
         self.nlparms[key] = nlparm
         self._type_to_id_map[nlparm.type].append(key)
 
     def add_NLPCI(self, nlpci):
-        key = nlpci.nlparm_id
+        key = nlpci.nlpci_id
         assert key not in self.nlpcis
         assert key > 0
         self.nlpcis[key] = nlpci
@@ -637,14 +637,31 @@ class AddMethods(object):
         else:
             self.usets[key] = [set_obj]
 
+    def add_SEBSET(self, set_obj):
+        self.se_bsets.append(set_obj)
+
+    def add_SECSET(self, set_obj):
+        self.se_csets.append(set_obj)
+
+    def add_SEQSET(self, set_obj):
+        self.se_qsets.append(set_obj)
+
+    def add_SEUSET(self, set_obj):
+        key = set_obj.name
+        if key in self.se_usets:
+            self.se_usets[key].append(set_obj)
+        else:
+            self.se_usets[key] = [set_obj]
+
     def add_SESET(self, set_obj):
         key = set_obj.seid
         assert key >= 0
-        if key in self.setsSuper:
-            old_set = self.setsSuper[key]
+        if key in self.se_sets:
+            old_set = self.se_sets[key]
             set_obj.add_SESET_Object(old_set)
-        self.setsSuper[key] = set_obj
+        self.se_sets[key] = set_obj
         self._type_to_id_map[set_obj.type].append(key)
+
 
     def add_table(self, table):
         key = table.tid
@@ -652,6 +669,14 @@ class AddMethods(object):
             table, self.tables[key])
         assert key > 0
         self.tables[key] = table
+        self._type_to_id_map[table.type].append(key)
+
+    def add_table_sdamping(self, table):
+        key = table.tid
+        assert key not in self.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
+            table, self.tables_sdamping[key])
+        assert key > 0
+        self.tables_sdamping[key] = table
         self._type_to_id_map[table.type].append(key)
 
     def add_random_table(self, table):
