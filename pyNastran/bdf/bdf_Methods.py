@@ -982,7 +982,7 @@ class BDFMethods(BDFMethodsDeprecated):
                     eid = elem.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
                         # triangles
-                        nodes = elem.nodeIDs()
+                        nodes = elem.node_ids
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                         axb = cross(n1 - n2, n1 - n3)
                         nunit = norm(axb)
@@ -999,7 +999,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         centroid = (n1 + n2 + n3) / 3.
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
-                        nodes = elem.nodeIDs()
+                        nodes = elem.node_ids
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
                         axb = cross(n1 - n3, n2 - n4)
                         nunit = norm(axb)

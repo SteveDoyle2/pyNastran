@@ -87,7 +87,7 @@ class GetMethods(GetMethodsDeprecated):
         for eid in eids:
             element = self.Element(eid, msg=msg)
             self.log.debug("element.pid = %s" % (element.pid))
-            nids = set(element.nodeIDs())
+            nids = set(element.node_ids)
             nids2.update(nids)
         return nids2
 

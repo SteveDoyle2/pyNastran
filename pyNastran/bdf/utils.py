@@ -195,6 +195,33 @@ def parse_executive_control_deck(executive_control_lines):
     return sol, method, isol_line
 
 
+def _parse_pynastran_header(line):
+    lline = line[1:].lower()
+    if 'pynastran' in lline:
+        print('lline=%r' % lline)
+        base, word = lline.split(':')
+        if base.strip() != 'pynastran':
+            msg = 'unrecognized pyNastran marker\n'
+            msg += 'line=%r' % line
+            raise SyntaxError(msg)
+        key, value = word.strip().split('=')
+        key = key.strip()
+        value = value.strip()
+        if key in ['version', 'encoding', 'punch']:
+            pass
+        else:
+            msg = '\nunrecognized pyNastran key=%r\n' % key
+            msg += 'line=%r' % line
+            print(msg)
+            raise KeyError(msg)
+
+        assert ' ' not in value, 'value=%r' % value
+    else:
+        key = None
+        value = None
+    return key, value
+
+
 def clean_empty_lines(lines):
     """
     Removes leading and trailing empty lines

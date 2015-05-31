@@ -402,7 +402,10 @@ class CaseControlDeck(object):
             assert len(sline) == 2, sline
 
             key, value = sline
-            (key, ID) = key.split()
+            try:
+                (key, ID) = key.split()
+            except:
+                raise RuntimeError(key)
             key = key + ' ' + ID
             options = int(ID)
 
