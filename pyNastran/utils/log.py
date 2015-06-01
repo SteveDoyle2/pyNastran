@@ -62,6 +62,7 @@ class SimpleLogger(object):
         if log_func is None:
             log_func = self.stderr_logging
         assert level in ('info', 'debug', 'warning'), 'logging level=%r' % level
+        #assert encoding in ['utf-8', 'latin-1', 'ascii'], encoding
         self.level = level
         self.log_func = log_func
         self.encoding = encoding

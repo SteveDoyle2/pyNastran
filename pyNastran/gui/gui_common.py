@@ -840,12 +840,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def start_logging(self):
         if self.html_logging:
-            log = SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
+            log = SimpleLogger('debug', 'utf-8', lambda x, y: self.logg_msg(x, y))
             # logging needs synchronizing, so the messages from different threads
             # would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()
         else:
-            log = SimpleLogger('debug', lambda x, y: print(x, y))
+            log = SimpleLogger('debug', 'utf-8', lambda x, y: print(x, y))
         self.log = log
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
