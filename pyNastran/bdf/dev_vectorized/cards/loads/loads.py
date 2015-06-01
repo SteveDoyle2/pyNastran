@@ -129,7 +129,7 @@ class LOADs(VectorizedCardDict):
     def write_card(self, f, size=8, is_double=False, load_id=None):
         if load_id is None:
             load_id = self.get_load_ids()
-        #if isinstance(load_id, int):
+        #if isinstance(load_id, integer_types):
             #load_id = array(load_id)
         if len(load_id.shape) == 0:
             load_id = array([load_id])

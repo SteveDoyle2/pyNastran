@@ -181,7 +181,7 @@ class WriteMesh(WriteMeshDeprecated):
         if self.elements:
             outfile.write('$ELEMENTS\n')
             if self.is_long_ids:
-                for (eid, element) in sorted(iteritems(self.nodes)):
+                for (eid, element) in sorted(iteritems(self.elements)):
                     outfile.write(element.write_card_16(is_double))
             else:
                 for (eid, element) in sorted(iteritems(self.elements)):
@@ -643,26 +643,18 @@ class WriteMesh(WriteMeshDeprecated):
         """Writes the properties in a sorted order"""
         if self.properties:
             msg = ['$PROPERTIES\n']
+            prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
             if self.is_long_ids:
-                for (unused_pid, prop) in sorted(iteritems(self.properties)):
-                    msg.append(prop.write_card_16(is_double))
-
-                for card in sorted(itervalues(self.pbusht)):
-                    msg.append(card.write_card_16(is_double))
-                for card in sorted(itervalues(self.pdampt)):
-                    msg.append(card.write_card_16(is_double))
-                for card in sorted(itervalues(self.pelast)):
-                    msg.append(card.write_card_16(is_double))
+                for prop_group in prop_groups:
+                    for unused_pid, prop in sorted(iteritems(prop_group)):
+                        msg.append(prop.write_card_16(is_double))
+                #except:
+                    #print('failed printing property type=%s' % prop.type)
+                    #raise
             else:
-                for (unused_pid, prop) in sorted(iteritems(self.properties)):
-                    msg.append(prop.write_card(size, is_double))
-
-                for card in sorted(itervalues(self.pbusht)):
-                    msg.append(card.write_card(size, is_double))
-                for card in sorted(itervalues(self.pdampt)):
-                    msg.append(card.write_card(size, is_double))
-                for card in sorted(itervalues(self.pelast)):
-                    msg.append(card.write_card(size, is_double))
+                for prop_group in prop_groups:
+                    for unused_pid, prop in sorted(iteritems(prop_group)):
+                        msg.append(prop.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_rejects(self, outfile, size=8, is_double=False):

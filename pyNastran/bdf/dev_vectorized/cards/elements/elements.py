@@ -548,7 +548,7 @@ class Elements(object):
         #print('property_id = %s' % property_id)
         for pid in property_id:
             for Type, pids in iteritems(self.property_groups):
-                if not isinstance(pid, int):
+                if not isinstance(pid, integer_types):
                     self.model.log.debug('pids = %s' % pids)
                     self.model.log.debug('pid  = %s' % pid)
 

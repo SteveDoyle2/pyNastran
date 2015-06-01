@@ -1,3 +1,4 @@
+from six import integer_types
 from six.moves import zip
 from numpy import array, zeros, arange, searchsorted, unique
 
@@ -98,7 +99,7 @@ class PBAR(Property):
 
     #=========================================================================
     def get_index(self, property_id):
-        if isinstance(property_id, int):
+        if isinstance(property_id, integer_types):
             property_ids = array([property_id])
         if property_ids is None:
             return arange(self.n)

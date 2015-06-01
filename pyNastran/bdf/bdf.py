@@ -98,14 +98,14 @@ from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, D
                                               DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET, USET,
-                                          ASET1, BSET1, CSET1, QSET1, #USET1,
+                                          ASET1, BSET1, CSET1, QSET1, USET1,
                                           SET1, SET3, RADSET,
                                           SEBSET, SECSET, SEQSET, # SEUSET
                                           SEBSET1, SECSET1, SEQSET1, # SEUSET1
                                           SESET, SEQSEP)
-from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD
+from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, RADM, RADBC,)
+                                                 PHBDY, CONV, RADM, RADBC)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC)
@@ -120,6 +120,9 @@ from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh, CrossReferenceError
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
+
+class DuplicateIDsError(RuntimeError):
+    pass
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes):
     """
@@ -198,17 +201,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.cards_to_read = set([
             'ECHOON', 'ECHOOFF',
             'PARAM',
-            'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
-            #'POINT', 'POINTAX', 'RINGAX',
+
+            ## nodes
+            'GRID', 'GRDSET', 'SPOINT',
+            #'POINT', 'POINTAX', 'RINGAX', 'EPOINT', 'GRIDG'
 
             # mass
             'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
 
-            # elements
-            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-            # 'CELAS5',
+            ## elements
+            # springs
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', # 'CELAS5',
+            # bushings
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
-
+            # dampers
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
             'CFAST',
 
@@ -219,41 +225,54 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
 
-            # rigid elements
+            ## rigidElements
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
 
-            # properties
+            ## properties
             'PMASS',
             'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
             'PBUSH', 'PBUSH1D',
-            'PDAMP', 'PDAMP5', 'PDAMPT',
+            'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
             'PBEAML',  # not fully supported
             # 'PBEAM3',
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
+            # PQUAD4
 
-            # creep materials
+            ## pdampt
+            'PDAMPT',
+
+            ## pelast
+            'PELAST',
+
+            ## creepMaterials
             'CREEP',
 
-            # materials
+            ## materials
             'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11', 'MATHP',
+
+            ## Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT4', 'MATT5',  #'MATT3', 'MATT8', 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
-            # thermal materials
+            ## thermalMaterials
             'MAT4', 'MAT5',
 
-            # spc/mpc constraints
+            ## spcs/spcadds
             'SPC', 'SPCADD', 'SPC1', 'SPCAX',
             'GMSPC',
+
+            ## mpcs/mpcadds
             'MPC', 'MPCADD',
+
+            ## suport/suport1/se_suport
             'SUPORT', 'SUPORT1', 'SESUP',
 
-            # loads
+            ## loads
             'LOAD', 'LSEQ', 'RANDPS',
             'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'FORCE', 'FORCE1', 'FORCE2',
@@ -262,17 +281,32 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE',
             'GMLOAD', 'SPCD',
+            #thermal
+            'QVOL',
 
             # aero cards
-            'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
-            'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
-            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', # 'CAERO5',
-            'PAERO1', 'PAERO2', 'PAERO3', # 'PAERO4', 'PAERO5',
-            'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
+            'AERO',  ## aero
+            'AEROS',  ## aeros
+            'GUST',  ## gusts
+            'FLUTTER',   ## flutters
+            'FLFACT',   ## flfacts
+            'MKAERO1', 'MKAERO2',  ## mkaeros
+            'AEFACT',   ## aefacts
+            'AELINK',   ## aelinks
+            'AELIST',   ## aelists
+            'AEPARAM',   ## aeparams
+            'AESTAT',   ## aestats
+            'AESURF',  ## aesurfs
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
+            # 'CAERO5',
+            'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
+            # 'PAERO4', 'PAERO5',
+            'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
-            'TRIM',
+            'TRIM',  ## trims
+            'CSSCHD', ## csschds
 
-            # coords
+            ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
             'CORD2R', 'CORD2C', 'CORD2S',
             'GMCORD',
@@ -284,10 +318,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PCONV', 'PCONVM', 'PHBDY',
             'RADBC', 'CONV',  # 'RADM',
 
-            # dynamic cards
-            'DAREA', 'NLPARM', 'NLPCI', 'TSTEP', 'TSTEPNL',
+            # ---- dynamic cards ---- #
+            'DAREA',
+            'NLPARM',  ## nlparms
+            'NLPCI',  ## nlpcis
+            'TSTEP',  ## tsteps
+            'TSTEPNL',  ## tstepnls
 
-            # frequencies
+            ## frequencies
             'FREQ', 'FREQ1', 'FREQ2',
 
             # direct matrix input cards
@@ -300,38 +338,43 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
             #'DSCREEN',
 
-            # sets
-            'ASET', 'BSET', 'CSET', 'QSET', 'USET',
-            'ASET1', 'BSET1', 'CSET1', 'QSET1',  # 'USET1',
-            'SET1', 'SET3',
+            'SET1', 'SET3',  ## sets
+            'ASET', 'ASET1',  ## asets
+            'BSET', 'BSET1',  ## bsets
+            'CSET', 'CSET1',  ## csets
+            'QSET', 'QSET1',  ## qsets
+            'USET', 'USET1',  ## usets
+
 
             # super-element sets
-            'SESET',
+            'SESET',  ## se_sets
+
+            'SEBSET', 'SEBSET1',  ## se_bsets
+            'SECSET', 'SECSET1',  ## se_csets
+            'SEQSET', 'SEQSET1',  ## se_qsets
+            #'SEUSET', 'SEUSET1',  ## se_usets
+            'SEQSEP',
             #'RADSET',
-            'SEBSET', 'SECSET', 'SEQSET',
-            'SEBSET1', 'SECSET1', 'SEQSET1',
-            'SESET', 'SEQSEP',
 
             #------------------------------------------------------------------
-            # tables
+            ## tables
             #'DTABLE', 'TABLEHT', 'TABRNDG',
             'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
 
-
-            # modal damping table - tables_sdamping
-            'TABDMP1',
-
-            ## common group
             # nonlinear elastic temperature dependent materials (e.g. creep)
             # sees TABLES1
             'TABLEST',
             # material tables - stress (MATS1, CREEP, MATHP)
             'TABLES1',
 
+
+            ## modal damping table - tables_sdamping
+            'TABDMP1',
+
+            ## randomTables
             # PSD=func(freq); used by RANDPS card
             'TABRND1',
-
             # gust for aeroelastic response; used by RANDPS card
             'TABRNDG',
 
@@ -347,8 +390,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'EIGC', 'EIGP',
 
             #: contact
-            'BCTPARA',
-            'BCRPARA', 'BCTADD', 'BCTSET', 'BSURF', 'BSURFS',
+            'BCTPARA',  ## bctpara
+            'BCRPARA',  ## bcrpara
+            'BCTADD',  ## bctadds
+            'BCTSET',  ## bctsets
+            'BSURF',  ## bsurf
+            'BSURFS',  ## bsurfs
 
             # other
             'INCLUDE',  # '='
@@ -537,7 +584,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         # loads
         #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
         #: PLOAD, PLOAD2, PLOAD4, SLOAD
-        #: GMLOAD, SPCD
+        #: GMLOAD, SPCD,
+        #: QVOL
         self.loads = {}
         self.tics = {}
 
@@ -665,6 +713,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.aesurfs = {}
         #: stores AESTAT
         self.aestats = {}
+        #: stores CSSCHD
+        self.csschds = {}
 
         #: stores GUST cards
         self.gusts = {}
@@ -733,7 +783,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'properties' : [
                 'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
                 'PBUSH', 'PBUSH1D',
-                'PDAMP', 'PDAMP5', 'PDAMPT',
+                'PDAMP', 'PDAMP5',
                 'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
                 'PBEAML',  # not fully supported
                 # 'PBEAM3',
@@ -741,7 +791,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
             ],
-
+            'pdampt' : ['PDAMPT',],
+            'pelast' : ['PELAST',],
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11'],
@@ -785,6 +836,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
                 # thermal
                 'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
+                'QVOL',
                 ],
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
@@ -806,6 +858,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',], # 'CAERO5',
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3',], # 'PAERO4', 'PAERO5',
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
+            'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'trims' : ['TRIM',],
 
@@ -1108,7 +1161,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     is_error = True
 
             if is_error:
-                raise RuntimeError(msg.rstrip())
+                raise DuplicateIDsError(msg.rstrip())
 
     def pop_xref_errors(self):
         if self._stop_on_xref_error:
@@ -1422,7 +1475,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # cards that have their own method add_CARDNAME to add them
             if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
                              'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
-                             'FLUTTER', 'FLFACT', 'GUST', 'NLPARM', 'NLPCI', 'TSTEP',
+                             'FLUTTER', 'FLFACT', 'GUST', 'CSSCHD',
+                             'NLPARM', 'NLPCI', 'TSTEP',
                              'TSTEPNL', 'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK',
                              'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT']:
                 try:
@@ -1478,7 +1532,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                               'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
                               'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
                               'RFORCE', 'SLOAD', 'RANDPS',
-                              'GMLOAD', 'SPCD', ],
+                              'GMLOAD', 'SPCD',
+                              #thermal
+                              'QVOL',
+                              ],
                 'add_dload' : ['DLOAD'],
                 'add_dload_entry' : ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
 
@@ -1983,6 +2040,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         del lines
         #for line in bulk_data_lines:
             #print(line)
+
+        # clean comments
+        executive_control_lines = [_clean_comment(line) for line in executive_control_lines]
+        case_control_lines = [_clean_comment(line) for line in case_control_lines]
         return executive_control_lines, case_control_lines, bulk_data_lines
 
     def _increase_card_count(self, card_name, n=1):
@@ -2181,8 +2242,10 @@ def _clean_comment(comment):
 
     :param comment: the comment to possibly remove
     """
-    if comment in ('EXECUTIVE CONTROL DECK',
-                   'CASE CONTROL DECK',
+    if comment == '':
+        pass
+    elif comment in ('$EXECUTIVE CONTROL DECK',
+                   '$CASE CONTROL DECK',
                    'NODES', 'SPOINTS', 'ELEMENTS',
                    'PARAMS', 'PROPERTIES', 'ELEMENTS_WITH_PROPERTIES',
                    'ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
@@ -2195,6 +2258,11 @@ def _clean_comment(comment):
                    'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
                    'PROPERTIES_MASS', 'MASSES'):
         comment = ''
+    elif 'pynastran' in comment.lower():
+        comment = ''
+
+    #if comment:
+        #print(comment)
     return comment
 
 

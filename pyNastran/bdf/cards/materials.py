@@ -17,6 +17,7 @@ All cards are Material objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from numpy import zeros, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -105,7 +106,7 @@ class CREEP(Material):
         self.mid = model.Material(self.mid, msg=msg)
 
     def Mid(self):  # links up to MAT1, MAT2, MAT9 or same mid
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 

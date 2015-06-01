@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import string_types, iteritems, integer_types
 #import sys
 from numpy import ndarray
 
@@ -43,6 +43,7 @@ class GetMethods(GetMethodsDeprecated):
 
         out = {}
         for card_type in card_types:
+            #print('card_type=%r' % card_type)
             key = rslot_map[card_type]
             slot = getattr(self, key)
             ids = self._type_to_id_map[card_type]
@@ -60,6 +61,8 @@ class GetMethods(GetMethodsDeprecated):
                             cards.append(cardi)
                 else:
                     cards.append(card)
+                #for card in cards:
+                    #print('%s' % str(card).split('\n')[0])
             out[card_type] = cards
         return out
 
@@ -99,7 +102,7 @@ class GetMethods(GetMethodsDeprecated):
         elif self.spoints and nid in self.spoints.spoints:
             return SPOINT(nid)
         else:
-            assert isinstance(nid, int), 'nid should be an integer; not %s' % type(nid)
+            assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
             raise RuntimeError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
 
     def Nodes(self, nids, allowEmptyNodes=False, msg=''):
@@ -371,7 +374,7 @@ class GetMethods(GetMethodsDeprecated):
     # LOADS
 
     def Load(self, sid, msg=''):
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
         if sid in self.loads:
             load = self.loads[sid]
         else:
@@ -379,7 +382,7 @@ class GetMethods(GetMethodsDeprecated):
         return load
 
     def DLoad(self, sid, msg=''):
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
         if sid in self.dloads:
             load = self.dloads[sid]
         else:
@@ -387,7 +390,7 @@ class GetMethods(GetMethodsDeprecated):
         return load
 
     def get_dload_entries(self, sid, msg=''):
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
         if sid in self.dload_entries:
             load = self.dload_entries[sid]
         else:
@@ -398,7 +401,7 @@ class GetMethods(GetMethodsDeprecated):
     # SPCs
 
     def SPC(self, conid, msg=''):
-        assert isinstance(conid, int), 'conid=%s is not an integer\n' % conid
+        assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
         if conid in self.spcs:
             constraint = self.spcs[conid]
         else:
@@ -670,7 +673,7 @@ class GetMethods(GetMethodsDeprecated):
             pass
         elif isinstance(xkeys, ndarray):
             assert len(xkeys.shape) == 1, xkeys.shape
-            assert isinstance(xkeys[0], int), type(xkeys[0])
+            assert isinstance(xkeys[0], integer_types), type(xkeys[0])
         elif xkeys is None:
             xkeys = xdict.iterkeys()
         else:

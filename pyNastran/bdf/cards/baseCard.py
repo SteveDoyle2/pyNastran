@@ -193,7 +193,7 @@ class Property(BaseCard):
         :returns mid: the Material ID
         :type mid:    int
         """
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         else:
             return self.mid.mid
@@ -247,7 +247,7 @@ class Element(BaseCard, ElementDeprecated):
         :returns pid: the Property ID
         :type pid:    int
         """
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         else:
             return self.pid.pid
@@ -408,7 +408,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     fields = [field.upper()
               if isinstance(field, string_types) else field for field in fields]
 
-    if isinstance(fields, int):
+    if isinstance(fields, integer_types):
         return [fields]
     if len(fields) == 1:
         return [int(fields[0])]

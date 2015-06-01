@@ -31,7 +31,7 @@ class Load(BaseCard):
         self.nodes = None
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         else:
             return self.cid.cid
@@ -48,7 +48,7 @@ class Load(BaseCard):
         """returns nodeIDs for repr functions"""
         if not nodes:
             nodes = self.nodes
-        if isinstance(nodes[0], int):
+        if isinstance(nodes[0], integer_types):
             return [node for node in nodes]
         else:
             return [node.nid for node in nodes]
@@ -94,7 +94,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
         self.loadIDs = loadIDs2
 
     def LoadID(self, lid):
-        if isinstance(lid, int):
+        if isinstance(lid, integer_types):
             return lid
         elif isinstance(lid, list):
             return lid[0].sid
@@ -335,7 +335,7 @@ class SLOAD(Load):
             self.nids[i] = model.Node(nid, msg=msg)
 
     def Nid(self, node):
-        if isinstance(node, int):
+        if isinstance(node, integer_types):
             return node
         return node.nid
 
@@ -390,12 +390,12 @@ class RFORCE(Load):
         self.cid = model.Coord(self.cid, msg=msg)
 
     def Nid(self):
-        if isinstance(self.nid, int):
+        if isinstance(self.nid, integer_types):
             return self.nid
         return self.nid.nid
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -480,7 +480,7 @@ class RANDPS(RandomLoad):
     def Tid(self):
         if self.tid == 0:
             return None
-        elif isinstance(self.tid, int):
+        elif isinstance(self.tid, integer_types):
             return self.tid
         return self.tid.tid
 

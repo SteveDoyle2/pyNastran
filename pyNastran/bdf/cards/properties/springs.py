@@ -9,9 +9,7 @@ All spring properties are SpringProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
-#simport sys
-#from numpy import zeros,pi
+from six import integer_types
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
@@ -23,6 +21,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 class SpringProperty(Property):
     def __init__(self, card, data):
         Property.__init__(self, card, data)
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment() + print_card_8(card)
 
 
 class PELAS(SpringProperty):
@@ -89,10 +91,6 @@ class PELAS(SpringProperty):
         list_fields = ['PELAS', self.pid, self.k, ge, s]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        return self.comment() + print_card_8(card)
-
 
 class PELAST(SpringProperty):
     """
@@ -139,7 +137,7 @@ class PELAST(SpringProperty):
             self.tknid = model.Table(self.tknid)
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -148,7 +146,7 @@ class PELAST(SpringProperty):
         Returns the table ID for force per unit displacement vs frequency
         (k=F/d vs freq)
         """
-        if isinstance(self.tkid, int):
+        if isinstance(self.tkid, integer_types):
             return self.tkid
         return self.tkid.tid
 
@@ -156,7 +154,7 @@ class PELAST(SpringProperty):
         """
         Returns the table ID for nondimensional force vs. displacement
         """
-        if isinstance(self.tknid, int):
+        if isinstance(self.tknid, integer_types):
             return self.tknid
         return self.tknid.tid
 
@@ -165,6 +163,10 @@ class PELAST(SpringProperty):
         Returns the table ID for nondimensional structural damping
         coefficient vs. frequency (c/c0 vs freq)
         """
-        if isinstance(self.tgeid, int):
+        if isinstance(self.tgeid, integer_types):
             return self.tgeid
         return self.tgeid.tid
+
+    def raw_fields(self):
+        return [self.pid, self.Tkid(), self.Tgeid(), self.Tknid()]
+

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import integer_types
 from six.moves import zip, range
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
 from numpy.linalg import norm
@@ -208,7 +209,7 @@ class CTUBE(RodElement):
         return n1, n2
 
     def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
-        if isinstance(element_id, int):
+        if isinstance(element_id, integer_types):
             assert element_id > 0, element_id
         elif element_id is None:
             pass

@@ -18,7 +18,7 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip, range
 
 from numpy import array, cross, allclose, unique, int32
@@ -181,7 +181,7 @@ class LOAD(LoadCombination):
         load_scale = self.scale # global
         for (loads_pack, i_scale) in zip(self.loadIDs, self.scaleFactors):
             scale = i_scale * load_scale # actual scale = global * local
-            if isinstance(loads_pack, int):
+            if isinstance(loads_pack, integer_types):
                 raise RuntimeError('the load have not been cross-referenced')
 
             for load in loads_pack:
@@ -359,7 +359,7 @@ class GRAV(BaseCard):
         self.cid = model.Coord(self.cid, msg=msg)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -449,7 +449,7 @@ class ACCEL(BaseCard):
         self.cid = model.Coord(self.cid, msg=msg)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -510,19 +510,25 @@ class ACCEL1(BaseCard):
 
     def cross_reference(self, model):
         msg = ' which is required by ACCEL1 sid=%s' % self.sid
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.cid = model.Coord(self.Cid(), msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
-    def nodeIDs(self, nodes=None):  # this function comes from BaseCard.py
+    @property
+    def node_ids(self):
+        #msg = ' which is required by ACCEL1 sid=%s' % self.sid
+        #_node_ids(self.nodes, allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs()
+
+    def _nodeIDs(self, nodes=None):  # this function comes from BaseCard.py
         """returns nodeIDs for repr functions"""
         if not nodes:
             nodes = self.nodes
-        if isinstance(nodes[0], int):
+        if isinstance(nodes[0], integer_types):
             nodeIDs = [node for node in nodes]
         else:
             nodeIDs = [node.nid for node in nodes]
@@ -700,7 +706,7 @@ class FORCE(Force):
         self.xyz = array(xyz)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -772,17 +778,17 @@ class FORCE1(Force):
         self.normalize()
 
     def G1(self):
-        if isinstance(self.g1, int) or isinstance(self.g1, float):
+        if isinstance(self.g1, integer_types) or isinstance(self.g1, float):
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, int) or isinstance(self.g1, float):
+        if isinstance(self.g2, integer_types) or isinstance(self.g1, float):
             return self.g2
         return self.g2.nid
 
     def NodeID(self):
-        if isinstance(self.node, int):
+        if isinstance(self.node, integer_types):
             return self.node
         return self.node.nid
 
@@ -869,27 +875,27 @@ class FORCE2(Force):
         self.normalize()
 
     def NodeID(self):
-        if isinstance(self.node, int):
+        if isinstance(self.node, integer_types):
             return self.node
         return self.node.nid
 
     def G1(self):
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             return self.g2
         return self.g2.nid
 
     def G3(self):
-        if isinstance(self.g3, int):
+        if isinstance(self.g3, integer_types):
             return self.g3
         return self.g3.nid
 
     def G4(self):
-        if isinstance(self.g4, int):
+        if isinstance(self.g4, integer_types):
             return self.g4
         return self.g4.nid
 
@@ -944,7 +950,7 @@ class MOMENT(Moment):
         self.xyz = xyz
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -1022,17 +1028,17 @@ class MOMENT1(Moment):
         self.normalize()
 
     def get_node_id(self):
-        if isinstance(self.node, int):
+        if isinstance(self.node, integer_types):
             return self.node
         return self.node.nid
 
     def G1(self):
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             return self.g2
         return self.g2.nid
 
@@ -1108,34 +1114,34 @@ class MOMENT2(Moment):
         self.xyz = cross(v12, v34)
 
     def NodeID(self):
-        if isinstance(self.node, int):
+        if isinstance(self.node, integer_types):
             return self.node
         return self.node.nid
 
     def G1(self):
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             return self.g2
         return self.g2.nid
 
     def G3(self):
-        if isinstance(self.g3, int):
+        if isinstance(self.g3, integer_types):
             return self.g3
         return self.g3.nid
 
     def G4(self):
-        if isinstance(self.g4, int):
+        if isinstance(self.g4, integer_types):
             return self.g4
         return self.g4.nid
 
     def raw_fields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs(nodes=[self.node, self.g1, self.g2,
                                                      self.g3, self.g4])
-        assert isinstance(g1, int), g1
+        assert isinstance(g1, integer_types), g1
         list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
@@ -1195,17 +1201,17 @@ class GMLOAD(Load):
         #self.normalize()
 
     #def G1(self):
-        #if isinstance(self.g1, int) or isinstance(self.g1, float):
+        #if isinstance(self.g1, integer_types) or isinstance(self.g1, float):
             #return self.g1
         #return self.g1.nid
 
     #def G2(self):
-        #if isinstance(self.g2, int) or isinstance(self.g1, float):
+        #if isinstance(self.g2, integer_types) or isinstance(self.g1, float):
             #return self.g2
         #return self.g2.nid
 
     #def NodeID(self):
-        #if isinstance(self.node, int):
+        #if isinstance(self.node, integer_types):
             #return self.node
         #return self.node.nid
 
@@ -1479,7 +1485,7 @@ class PLOAD1(Load):
         return [self]
 
     def Eid(self):
-        if isinstance(self.eid, int):
+        if isinstance(self.eid, integer_types):
             return self.eid
         return self.eid.eid
 
@@ -1658,7 +1664,7 @@ class PLOAD4(Load):
         return (isLoad, faceNodeIDs, vectors)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -1674,18 +1680,18 @@ class PLOAD4(Load):
             self.eids = model.Elements(self.eids, msg=msg)
 
     def Eid(self, eid):
-        if isinstance(eid, int) or isinstance(eid, int32):
+        if isinstance(eid, integer_types) or isinstance(eid, int32):
             return eid
         return eid.eid
 
     def nodeIDs(self, nodes=None):
         nodeIDs = [None, None]
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             nodeIDs[0] = self.g1
         elif self.g1 is not None:
             nodeIDs[0] = self.g1.nid
 
-        if isinstance(self.g34, int):
+        if isinstance(self.g34, integer_types):
             nodeIDs[1] = self.g34
         elif self.g34 is not None:
             nodeIDs[1] = self.g34.nid

@@ -7,10 +7,11 @@ All shell properties are defined in this file.  This includes:
  * PSHEAR
  * PSHELL
 
-All shell properties are ShellProperty and Property objects.
+All shell properties are ShellProperty and Property objects.W
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 from numpy import array
 
@@ -161,7 +162,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         iply = self._adjust_ply_id(iply)
         Mid = self.Material(iply)
-        if isinstance(Mid, int):
+        if isinstance(Mid, integer_types):
             return Mid
         return Mid.mid
 
@@ -794,12 +795,12 @@ class PLPLANE(ShellProperty):
         #return self.pid
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -867,7 +868,7 @@ class PSHEAR(ShellProperty):
         return self.mid.Rho()
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 
@@ -884,8 +885,8 @@ class PSHEAR(ShellProperty):
         pid = self.Pid()
         midi = self.Mid()
 
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(midi, int), 'mid=%r' % midi
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(midi, integer_types), 'mid=%r' % midi
 
         if xref:
             assert isinstance(self.mid, Material), 'mid=%r' % self.mid
@@ -994,12 +995,12 @@ class PSHELL(ShellProperty):
         mid3 = self.Mid3()
         mid4 = self.Mid4()
 
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert mid1 is None or isinstance(mid1, int), 'mid1=%r' % mid1
-        assert mid2 is None or isinstance(mid2, int), 'mid2=%r' % mid2
-        assert mid3 is None or isinstance(mid3, int), 'mid3=%r' % mid3
-        assert mid4 is None or isinstance(mid4, int), 'mid4=%r' % mid4
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
+        assert mid1 is None or isinstance(mid1, integer_types), 'mid1=%r' % mid1
+        assert mid2 is None or isinstance(mid2, integer_types), 'mid2=%r' % mid2
+        assert mid3 is None or isinstance(mid3, integer_types), 'mid3=%r' % mid3
+        assert mid4 is None or isinstance(mid4, integer_types), 'mid4=%r' % mid4
 
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
                 if mid is not None]
@@ -1009,7 +1010,7 @@ class PSHELL(ShellProperty):
 
             for i, mid in enumerate(mids):
                 if i == 1: # mid2
-                    if isinstance(mid, int):
+                    if isinstance(mid, integer_types):
                         assert mid == -1, mid
                         continue
 

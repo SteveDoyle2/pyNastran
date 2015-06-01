@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import integer_types
 from six.moves import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
                    arange, ndarray, asarray, int64)
@@ -142,7 +143,7 @@ class VectorizedCard(object):
                     msg2 += 'sorted %s[i]= %s\n' % (field_name, sorted_array[i])
                     msg2 += 'i=%s\n' % i
                     raise RuntimeError(msg2)
-        if isinstance(i, int64) or isinstance(i, int):
+        if isinstance(i, int64) or isinstance(i, integer_types):
             i = array([i], dtype='int32')
         return i
 
@@ -164,7 +165,7 @@ def by_converter(value, default):
     """
     if value is None:
         return default
-    if isinstance(value, int):
+    if isinstance(value, integer_types):
         return array([value], dtype='int32')
     else:
         return asarray(value)

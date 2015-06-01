@@ -11,6 +11,7 @@ All coordinate cards are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 
@@ -833,7 +834,7 @@ class Cord2x(Coord):
 
     def Rid(self):
         """Gets the reference coordinate system self.rid"""
-        if isinstance(self.rid, int):
+        if isinstance(self.rid, integer_types):
             return self.rid
         return self.rid.cid
 
@@ -970,17 +971,17 @@ class Cord1x(Coord):
         super(Cord1x, self).setup()
 
     def G1(self):
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             return self.g2
         return self.g2.nid
 
     def G3(self):
-        if isinstance(self.g3, int):
+        if isinstance(self.g3, integer_types):
             return self.g3
         return self.g3.nid
 
@@ -1080,7 +1081,7 @@ class CORD3G(Coord):  # not done
         self.rid = model.Coord(self.rid, msg=msg)
 
     def Rid(self):
-        if isinstance(self.rid, int):
+        if isinstance(self.rid, integer_types):
             return self.rid
         return self.rid.cid
 

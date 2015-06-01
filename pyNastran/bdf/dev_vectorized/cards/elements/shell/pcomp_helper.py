@@ -1,4 +1,6 @@
 from __future__ import print_function
+from six import integer_types
+
 from numpy import array
 #from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     #double_or_blank, integer_double_or_blank, blank, string_or_blank)
@@ -57,7 +59,7 @@ class Property_i(BaseCard):
         :returns mid: the Material ID
         :type mid:    int
         """
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         else:
             return self.mid.mid

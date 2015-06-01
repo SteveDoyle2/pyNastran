@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import  iteritems
+from six import  iteritems, integer_types
 from six.moves import range
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -23,6 +23,70 @@ class ThermalLoadDefault(ThermalCard):
 class ThermalLoad(ThermalCard):
     def __init__(self, card, data):
         pass
+
+class QVOL(ThermalLoad):
+    """
+    Defines a rate of volumetric heat addition in a conduction element.
+    """
+    type = 'QVOL'
+
+    def __init__(self, card, data=None, comment=''):
+        ThermalLoad.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            #: Load set identification number. (Integer > 0)
+            self.sid = integer(card, 1, 'sid')
+
+            self.qvol = double(card, 2, 'qvol')
+            self.control_point = integer_or_blank(card, 3, 'control_id', 0)
+
+            i = 1
+            eids = []
+            for ifield in range(4, len(card)):
+                eid = integer_or_string(card, ifield, 'eid_%i' % i)
+                eids.append(eid)
+                i += 1
+            self.elements = expand_thru_by(eids)
+
+    def getLoads(self):
+        return [self]
+
+    def cross_reference(self, model):
+        msg = ' which is required by QVOL sid=%s' % self.sid
+        self.elements = model.Elements(self.elements, msg=msg)
+
+    def _eid(self, eid):
+        if isinstance(eid, integer_types):
+            return eid
+        return eid.eid
+
+    @property
+    def element_ids(self):
+        return self.Eids()
+
+    def Eids(self):
+        eids = []
+        for eid in self.elements:
+            eids.append(self._eid(eid))
+        return eids
+
+    def raw_fields(self):
+        list_fields = ['QVOL', self.sid, self.qvol, self.control_point] + self.element_ids
+        return list_fields
+
+    def repr_fields(self):
+        eids = collapse_thru_by(self.element_ids)
+        list_fields = ['QVOL', self.sid, self.qvol, self.control_point] + eids
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class QBDY1(ThermalLoad):
@@ -64,26 +128,30 @@ class QBDY1(ThermalLoad):
         msg = ' which is required by QBDY1 sid=%s' % self.sid
         self.eids = model.Elements(self.eids, msg=msg)
 
-    def Eid(self, eid):
-        if isinstance(eid, int):
+    def _eid(self, eid):
+        if isinstance(eid, integer_types):
             return eid
         return eid.eid
 
     def nQFluxTerms(self):
         return len(self.qFlux)
 
+    @property
+    def element_ids(self):
+        return self.Eids()
+
     def Eids(self):
         eids = []
         for eid in self.eids:
-            eids.append(self.Eid(eid))
+            eids.append(self._eid(eid))
         return eids
 
     def raw_fields(self):
-        list_fields = ['QBDY1', self.sid, self.qFlux] + self.Eids()
+        list_fields = ['QBDY1', self.sid, self.qFlux] + self.element_ids
         return list_fields
 
     def repr_fields(self):
-        eids = collapse_thru_by(self.Eids())
+        eids = collapse_thru_by(self.element_ids)
         list_fields = ['QBDY1', self.sid, self.qFlux] + eids
         return list_fields
 
@@ -137,7 +205,7 @@ class QBDY2(ThermalLoad):  # not tested
         self.eid = model.Element(self.eid, msg=msg)
 
     def Eid(self):
-        if isinstance(self.eid, int):
+        if isinstance(self.eid, integer_types):
             return self.eid
         return self.eid.eid
 
@@ -200,7 +268,7 @@ class QBDY3(ThermalLoad):
         return eids
 
     def Eid(self, eid):
-        if isinstance(eid, int):
+        if isinstance(eid, integer_types):
             return eid
         return eid.eid
 

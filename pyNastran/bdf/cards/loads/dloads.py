@@ -9,6 +9,7 @@ All dynamic loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -112,14 +113,14 @@ class RLOAD1(TabularLoad):
     def Tc(self):
         if self.tc == 0:
             return None
-        elif isinstance(self.tc, int):
+        elif isinstance(self.tc, integer_types):
             return self.tc
         return self.tc.tid
 
     def Td(self):
         if self.td == 0:
             return None
-        elif isinstance(self.td, int):
+        elif isinstance(self.td, integer_types):
             return self.td
         return self.td.tid
 
@@ -203,14 +204,14 @@ class RLOAD2(TabularLoad):
     def Tb(self):
         if self.tb == 0:
             return None
-        elif isinstance(self.tb, int):
+        elif isinstance(self.tb, integer_types):
             return self.tb
         return self.tb.tid
 
     def Tp(self):
         if self.tp == 0:
             return None
-        elif isinstance(self.tp, int):
+        elif isinstance(self.tp, integer_types):
             return self.tp
         return self.tp.tid
 
@@ -305,7 +306,7 @@ class TLOAD1(TabularLoad):
     def Tid(self):
         if self.tid == 0:
             return None
-        elif isinstance(self.tid, int):
+        elif isinstance(self.tid, integer_types):
             return self.tid
         return self.tid.tid
 

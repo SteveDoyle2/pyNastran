@@ -333,7 +333,7 @@ class Cord2x(Coord):
 
     def Rid(self):
         """Gets the reference coordinate system self.rid"""
-        if isinstance(self.rid, int):
+        if isinstance(self.rid, integer_types):
             return self.rid
         return self.rid.cid
 

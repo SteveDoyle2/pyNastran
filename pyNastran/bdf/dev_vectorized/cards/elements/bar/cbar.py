@@ -1,3 +1,5 @@
+from __future__ import print_function
+from six import integer_types
 from six.moves import zip, StringIO
 from numpy import array, arange, zeros, unique, searchsorted, full, nan
 from numpy.linalg import norm
@@ -100,7 +102,7 @@ class CBAR(Element):
         else:
             field5 = integer_double_or_blank(card, 5, 'g0_x1', x1_default)
 
-        if isinstance(field5, int):
+        if isinstance(field5, integer_types):
             self.is_g0[i] = True
             self.g0[i] = field5
         elif isinstance(field5, float):

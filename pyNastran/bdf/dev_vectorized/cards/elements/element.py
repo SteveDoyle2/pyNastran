@@ -1,4 +1,5 @@
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from six import integer_types
 
 class Element(VectorizedCard):
     def __init__(self, model):
@@ -39,7 +40,7 @@ class Element(VectorizedCard):
     def get_element_index_by_element_id(self, element_id=None, msg=''):
         print('Type=%s' % self.type)
         print('element_id = %s' % element_id)
-        if isinstance(element_id, int):
+        if isinstance(element_id, integer_types):
             assert element_id > 0, element_id
         elif element_id is None:
             pass

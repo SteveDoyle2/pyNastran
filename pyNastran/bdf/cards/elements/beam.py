@@ -1,5 +1,5 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
-from six import string_types
+from six import string_types, integer_types
 from numpy import array, cross
 from numpy.linalg import norm
 
@@ -168,19 +168,19 @@ class CBEAM(CBAR):
             raise RuntimeError("Card Instantiation: %s" % msg)
 
     def Mid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Mid()
 
     def Area(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Area()
 
     def Nsm(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Nsm()

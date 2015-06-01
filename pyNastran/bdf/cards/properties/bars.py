@@ -1251,7 +1251,7 @@ class PBEND(LineProperty):
                 #: centroid, positive is toward the center of curvature
                 self.deltaN = double(card, 22, 'deltaN')
 
-            elif isinstance(value3, int):  # alternate form
+            elif isinstance(value3, integer_types):  # alternate form
                 self.beamType = 2
                 #: Flag selecting the flexibility and stress intensification
                 #: factors. See Remark 3. (Integer = 1, 2, or 3)

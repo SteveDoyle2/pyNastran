@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import StringIO, zip
 from itertools import count
 
@@ -138,7 +138,7 @@ class PCOMP(Property):
         int_flag = False
         if property_id is None:
             property_id = self.property_id
-        elif isinstance(property_id, int):
+        elif isinstance(property_id, integer_types):
             int_flag = True #if isinstance(property_id, int) else False
             property_id = [property_id]
             i = self.get_property_index_by_property_id([property_id])

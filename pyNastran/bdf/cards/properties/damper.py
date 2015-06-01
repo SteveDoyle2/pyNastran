@@ -11,6 +11,7 @@ All damper properties are DamperProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -105,14 +106,14 @@ class PDAMP5(DamperProperty):
     def _verify(self, xref=True):
         pid = self.Pid()
         #b = self.B()
-        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
         #assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 
@@ -161,7 +162,7 @@ class PDAMPT(DamperProperty):
     def Tbid(self):
         if self.tbid == 0:
             return None
-        elif isinstance(self.tbid, int):
+        elif isinstance(self.tbid, integer_types):
             return self.tbid
         return self.tbid.tid
 

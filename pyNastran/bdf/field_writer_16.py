@@ -3,7 +3,9 @@ Defines functions for single precision 16 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import range
+
 import sys
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -192,7 +194,7 @@ def print_field_16(value):
     :param value:   the value to print
     :returns field: an 16-character string
     """
-    if isinstance(value, int):
+    if isinstance(value, integer_types):
         field = "%16s" % value
     elif isinstance(value, float):
         field = print_float_16(value)

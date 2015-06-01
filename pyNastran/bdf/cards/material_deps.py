@@ -16,6 +16,8 @@ All material dependency cards are defined in this file.  This includes:
 
 All cards are Material objects.
 """
+from six import integer_types
+
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.cards.bdf_tables import Table
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -29,14 +31,14 @@ class MaterialDependence(BaseCard):
         self.mid = None
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid  # TODO: is this something that should be supported?
 
     def _get_table(self, key):
         """internal method for accessing tables"""
         table = getattr(self, key)
-        if table is None or isinstance(table, int):
+        if table is None or isinstance(table, integer_types):
             return table
         return table.tid
 

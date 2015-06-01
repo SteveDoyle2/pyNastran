@@ -19,7 +19,7 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip, range
 from itertools import count
 import warnings
@@ -124,7 +124,7 @@ class ConstraintObject(object):
          #return constraints2
 
     def ConstraintID(self):
-        if isinstance(self.conid, int):
+        if isinstance(self.conid, integer_types):
             return self.conid
         return self.conid.conid
 
@@ -637,7 +637,7 @@ class SPCADD(ConstraintADD):
     def spc_ids(self):
         spc_ids = []
         for spc in self.sets:
-            if isinstance(spc, int):
+            if isinstance(spc, integer_types):
                 spc_ids.append(spc)
             elif isinstance(spc, list):
                 spc_ids.append(spc[0].conid)
@@ -690,7 +690,7 @@ class MPCADD(ConstraintADD):
     def mpc_ids(self):
         mpc_ids = []
         for mpc in self.sets:
-            if isinstance(mpc, int):
+            if isinstance(mpc, integer_types):
                 mpc_ids.append(mpc)
             else:
                 mpc_ids.append(mpc.conid)

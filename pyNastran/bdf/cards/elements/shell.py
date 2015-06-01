@@ -436,7 +436,7 @@ class CTRIA6(TriShell):
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -881,7 +881,7 @@ class CTRIAX6(TriShell):
         raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 
@@ -1625,8 +1625,8 @@ class CQUAD8(QuadShell):
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)

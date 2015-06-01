@@ -13,6 +13,7 @@ All mass elements are PointMassElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import range
 from numpy import zeros, array
 
@@ -93,29 +94,29 @@ class CMASS1(PointMassElement):
         c2 = self.c2
         #self.nodes
 
-        assert isinstance(eid, int), 'eid=%r' % eid
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(eid, integer_types), 'eid=%r' % eid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(mass, float), 'mass=%r' % mass
-        assert c1 is None or isinstance(c1, int), 'c1=%r' % c1
-        assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
+        assert c1 is None or isinstance(c1, integer_types), 'c1=%r' % c1
+        assert c2 is None or isinstance(c2, integer_types), 'c2=%r' % c2
 
     def cross_reference(self, model):
         msg = ' which is required by CMASS1 eid=%s' % self.eid
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             self.g1 = model.Node(self.g1, msg=msg)
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             self.g2 = model.Node(self.g2, msg=msg)
         self.pid = model.PropertyMass(self.pid, msg=msg)
 
     def G1(self):
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             return self.g1
         elif self.g1 is None:
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             return self.g2
         elif self.g2 is None:
             return self.g2
@@ -149,7 +150,7 @@ class CMASS1(PointMassElement):
         return nodes
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -249,20 +250,20 @@ class CMASS2(PointMassElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CMASS2 eid=%s' % self.eid
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             self.g1 = model.Node(self.g1, msg=msg)
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             self.g2 = model.Node(self.g2, msg=msg)
 
     def G1(self):
-        if isinstance(self.g1, int):
+        if isinstance(self.g1, integer_types):
             return self.g1
         elif self.g1 is None:
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, int):
+        if isinstance(self.g2, integer_types):
             return self.g2
         elif self.g2 is None:
             return self.g2
@@ -561,7 +562,7 @@ class CONM1(PointMassElement):
 
     def _verify(self, xref=False):
         eid = self.Eid()
-        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(eid, integer_types), 'eid=%r' % eid
 
     def Eid(self):
         return self.eid
@@ -573,12 +574,12 @@ class CONM1(PointMassElement):
         return [self.Nid()]
 
     def Nid(self):
-        if isinstance(self.nid, int):
+        if isinstance(self.nid, integer_types):
             return self.nid
         return self.nid.nid
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -795,12 +796,12 @@ class CONM2(PointMassElement):
         return [self.Nid()]
 
     def Nid(self):
-        if isinstance(self.nid, int):
+        if isinstance(self.nid, integer_types):
             return self.nid
         return self.nid.nid
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 

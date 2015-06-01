@@ -1,3 +1,5 @@
+from __future__ import print_function
+from six import integer_types
 from six.moves import zip, StringIO
 from numpy import zeros, unique, where, searchsorted, asarray, array
 
@@ -92,7 +94,7 @@ class PSOLID(Property):
     def get_density_by_property_id(self, property_id=None):
         if property_id is None:
             property_id = self.property_id
-        elif isinstance(property_id, int):
+        elif isinstance(property_id, integer_types):
             property_id = array([property_id], dtype='int32')
         property_id = asarray(property_id)
         n = len(property_id)

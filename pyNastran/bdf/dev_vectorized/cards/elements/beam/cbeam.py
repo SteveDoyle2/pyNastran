@@ -1,4 +1,4 @@
-from six import string_types
+from six import string_types, integer_types
 from six.moves import zip, StringIO
 from numpy import array, dot, arange, zeros, unique, searchsorted, nan, full
 from numpy.linalg import norm
@@ -74,7 +74,7 @@ class CBEAM(Element):
         #---------------------------------------------------------
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
-        if isinstance(field5, int):
+        if isinstance(field5, integer_types):
             self.is_g0[i] = True
             self.g0[i] = field5
         elif isinstance(field5, float):

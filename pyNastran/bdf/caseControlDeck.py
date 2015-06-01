@@ -380,10 +380,14 @@ class CaseControlDeck(object):
                 msg = "trying to parse %r..." % line
                 raise RuntimeError(msg)
             (key, param_type) = sline
+            key = key.upper()
+
             #print("key=%r isubcase=%r" % (key, isubcase))
             value = int(param_type)
             #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
+            assert key.upper() == key, key
+
         elif (line_upper.startswith('LABEL') or
               line_upper.startswith('SUBT') or  # SUBTITLE
               line_upper.startswith('TITL')):   # TITLE
@@ -394,13 +398,13 @@ class CaseControlDeck(object):
                 msg += "line = %r" % line_upper.strip()
                 raise RuntimeError(msg)
 
-            key = line[0:eIndex].strip()
+            key = line_upper[0:eIndex].strip()
             value = line[eIndex + 1:].strip()
             options = []
             param_type = 'STRING-type'
         elif line_upper.startswith('SET ') and equals_count == 1:
             # would have been caught by STRESS-type
-            sline = line.split('=')
+            sline = line_upper.split('=')
             assert len(sline) == 2, sline
 
             key, value = sline
@@ -409,6 +413,8 @@ class CaseControlDeck(object):
             except:
                 raise RuntimeError(key)
             key = key + ' ' + ID
+
+            assert key.upper() == key, key
             options = int(ID)
 
             if self.debug:
@@ -435,7 +441,7 @@ class CaseControlDeck(object):
 
         elif equals_count == 1:  # STRESS
             if '=' in line:
-                (key, value) = line.strip().split('=')
+                (key, value) = line_upper.strip().split('=')
             else:
                 msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
@@ -445,6 +451,7 @@ class CaseControlDeck(object):
             if self.debug:
                 self.log.debug("key=%r value=%r" % (key, value))
             param_type = 'STRESS-type'
+            assert key.upper() == key, key
 
             if '(' in key:  # comma may be in line - STRESS-type
                 #paramType = 'STRESS-type'
@@ -495,6 +502,7 @@ class CaseControlDeck(object):
 
             key = update_param_name(key.strip().upper())
             verify_card(key, value, options, line)
+            assert key.upper() == key, key
 
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
@@ -504,23 +512,27 @@ class CaseControlDeck(object):
                 raise RuntimeError(msg)
             key = key.upper()
             param_type = 'BEGIN_BULK-type'
+            assert key.upper() == key, key
         elif 'PARAM' in line_upper:  # param
-            sline = line.split(',')
+            sline = line_upper.split(',')
             if len(sline) != 3:
                 raise SyntaxError("trying to parse %r..." % line)
             (key, value, options) = sline
             param_type = 'CSV-type'
+            assert key.upper() == key, key
         elif ' ' not in line:
             key = line.strip().upper()
             value = line.strip()
             options = None
             param_type = 'KEY-type'
+            assert key.upper() == key, key
         else:
             msg = 'generic catch all...line=|%r|' % line
             key = ''
             value = line
             options = None
             param_type = 'KEY-type'
+            assert key.upper() == key, key
         i += 1
         assert key.upper() == key, key
 

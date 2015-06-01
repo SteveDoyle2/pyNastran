@@ -17,7 +17,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip, range
 import multiprocessing as mp
 
@@ -405,9 +405,9 @@ class BDFMethods(BDFMethodsDeprecated):
 
         .. todo:: not done...
         """
-        if not isinstance(loadcase_id, int):
+        if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
-        if isinstance(p0, int):
+        if isinstance(p0, integer_types):
             p = self.nodes[p0].Position()
         else:
             p = array(p0)
@@ -767,9 +767,9 @@ class BDFMethods(BDFMethodsDeprecated):
 
         Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
         """
-        if not isinstance(loadcase_id, int):
+        if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
-        if isinstance(p0, int):
+        if isinstance(p0, integer_types):
             p = self.model.nodes[p0].Position()
         else:
             p = array(p0)

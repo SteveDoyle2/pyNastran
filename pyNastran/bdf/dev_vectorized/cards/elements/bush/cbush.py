@@ -1,3 +1,4 @@
+from six import integer_types
 from six.moves import zip
 from numpy import array, arange, zeros, unique, searchsorted, full, nan, isnan
 from numpy.linalg import norm
@@ -74,7 +75,7 @@ class CBUSH(Element):
         #---------------------------------------------------------
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'x1_g0')
-        if isinstance(field5, int):
+        if isinstance(field5, integer_types):
             self.is_g0[i] = True
             self.g0[i] = field5
         elif isinstance(field5, float):

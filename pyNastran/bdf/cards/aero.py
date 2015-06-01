@@ -22,6 +22,7 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 from itertools import count
 from numpy import array, pi, linspace, zeros, arange, repeat, dot, cos, arcsin
@@ -681,7 +682,7 @@ class AEROS(Aero):
         return self.comment() + print_card_8(card)
 
 
-class CSSCHD(BaseCard):
+class CSSCHD(Aero):
     """
     Defines a scheduled control surface deflection as a function of Mach number
     and angle of attack.
@@ -692,7 +693,7 @@ class CSSCHD(BaseCard):
     | CSSCHD | SlD | AESID | LALPHA | LMACH | LSCHD |
     +--------+-----+-------+--------+-------+-------+
     """
-    type = 'ASSCHD'
+    type = 'CSSCHD'
     _field_map = {
         1: 'sid', 2:'aesid', 3:'lAlpha', 4:'lMach', 5:'lSchd',
     }
@@ -730,22 +731,22 @@ class CSSCHD(BaseCard):
         self.lSchd = model.AEFact(self.lSchd, msg=msg)
 
     def AESid(self):
-        if isinstance(self.aesid, int):
+        if isinstance(self.aesid, integer_types):
             return self.aesid
         return self.aesid.aesid
 
     def LAlpha(self):
-        if isinstance(self.lAlpha, int):
+        if isinstance(self.lAlpha, integer_types):
             return self.lAlpha
         return self.lAlpha.sid
 
     def LMach(self):
-        if isinstance(self.lMach, int):
+        if isinstance(self.lMach, integer_types):
             return self.lMach
         return self.lMach.sid
 
     def LSchd(self):
-        if isinstance(self.lSchd, int):
+        if isinstance(self.lSchd, integer_types):
             return self.lSchd
         return self.lSchd.sid
 
@@ -905,12 +906,12 @@ class CAERO1(BaseCard, CAERO1Deprecated):
             raise NotImplementedError(msg)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -926,10 +927,10 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         self.pid = model.PAero(self.pid, msg=msg)
         self.cp = model.Coord(self.cp, msg=msg)
         if self.nchord == 0:
-            assert isinstance(self.lchord, int), self.lchord
+            assert isinstance(self.lchord, integer_types), self.lchord
             self.lchord = model.AEFact(self.lchord, msg)
         if self.nspan == 0:
-            assert isinstance(self.lspan, int), self.lspan
+            assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan = model.AEFact(self.lspan, msg)
 
     def get_points(self):
@@ -1037,12 +1038,12 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         return list_fields
 
     def get_LChord(self):
-        if isinstance(self.lchord, int):
+        if isinstance(self.lchord, integer_types):
             return self.lchord
         return self.lchord.sid
 
     def get_LSpan(self):
-        if isinstance(self.lspan, int):
+        if isinstance(self.lspan, integer_types):
             return self.lspan
         return self.lspan.sid
 
@@ -1188,17 +1189,17 @@ class CAERO2(BaseCard, CAERO2Deprecated):
             raise NotImplementedError(msg)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
     def Lsb(self):  # AEFACT
-        if isinstance(self.lsb, int):
+        if isinstance(self.lsb, integer_types):
             return self.lsb
         return self.lsb.sid
 
@@ -1311,12 +1312,12 @@ class CAERO3(BaseCard):
         #self.list_c2 = model.AEFact(self.list_c2, msg=msg) # not added
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -1408,12 +1409,12 @@ class CAERO4(BaseCard):
         self.cp = model.Coord(self.cp, msg=msg)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -1592,12 +1593,12 @@ class CAERO5(BaseCard):
             c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -1930,17 +1931,17 @@ class FLUTTER(BaseCard):
         self.rfreq_val = model.FLFACT(self.density, msg=msg)
 
     def get_density(self):
-        if isinstance(self.density, int):
+        if isinstance(self.density, integer_types):
             return self.density
         return self.density.sid
 
     def get_mach(self):
-        if isinstance(self.mach, int):
+        if isinstance(self.mach, integer_types):
             return self.mach
         return self.mach.sid
 
     def get_rfreq_vel(self):
-        if isinstance(self.rfreq_vel, int):
+        if isinstance(self.rfreq_vel, integer_types):
             return self.rfreq_vel
         return self.rfreq_vel.sid
 
@@ -2529,12 +2530,12 @@ class SPLINE1(Spline):
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 
@@ -2644,17 +2645,17 @@ class SPLINE2(Spline):
         self.setg = model.Set(self.setg, msg=msg)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 
@@ -2740,17 +2741,17 @@ class SPLINE4(Spline):
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % self.usage
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def AEList(self):
-        if isinstance(self.aelist, int):
+        if isinstance(self.aelist, integer_types):
             return self.aelist
         return self.aelist.sid
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 
@@ -2843,22 +2844,22 @@ class SPLINE5(Spline):
             raise NotImplementedError(msg)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def AEList(self):
-        if isinstance(self.aelist, int):
+        if isinstance(self.aelist, integer_types):
             return self.aelist
         return self.aelist.aelist
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 

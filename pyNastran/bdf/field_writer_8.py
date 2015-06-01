@@ -3,7 +3,7 @@ Defines functions for single precision 8 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, integer_types
 from six.moves import range
 import sys
 from numpy import float32
@@ -193,7 +193,7 @@ def print_field_8(value):
     :param value:   the value to print
     :returns field: an 8-character string
     """
-    if isinstance(value, int):
+    if isinstance(value, integer_types):
         field = "%8s" % value
     elif isinstance(value, float) or isinstance(value, float32):
         field = print_float_8(value)

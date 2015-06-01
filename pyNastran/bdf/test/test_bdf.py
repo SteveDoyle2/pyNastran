@@ -1,7 +1,7 @@
 # pylint: disable=W0612,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 import os
 import sys
 import numpy
@@ -16,7 +16,7 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.utils import CardParseSyntaxError
 from pyNastran.bdf.bdfInterface.crossReference import CrossReferenceError
-from pyNastran.bdf.bdf import BDF, NastranMatrix
+from pyNastran.bdf.bdf import BDF, NastranMatrix, DuplicateIDsError
 from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 
@@ -40,7 +40,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
     if size is None:
         sizes = [8]
-    elif isinstance(size, int):
+    elif isinstance(size, integer_types):
         sizes = [size]
     else:
         sizes = size
@@ -54,7 +54,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
     if post is None:
         posts = [-1]
-    elif isinstance(post, int):
+    elif isinstance(post, integer_types):
         posts = [post]
     else:
         posts = post
@@ -180,13 +180,16 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         sys.exit('KeyboardInterrupt...sys.exit()')
     except IOError:  # only temporarily uncomment this when running lots of tests
         pass
-    #except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
-        #print('failed test because CardParseSyntaxError...ignoring')
-        #pass
-    #except RuntimeError:  # only temporarily uncomment this when running lots of tests
-        #if 'GRIDG' not in fem1.card_count:
-            #print('failed test because mesh adaption (GRIDG)...ignoring')
-            #raise
+    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because CardParseSyntaxError...ignoring')
+        pass
+    except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because DuplicateIDsError...ignoring')
+        pass
+    except RuntimeError:  # only temporarily uncomment this when running lots of tests
+        if 'GRIDG' not in fem1.card_count:
+            print('failed test because mesh adaption (GRIDG)...ignoring')
+            raise
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except SyntaxError:  # only temporarily uncomment this when running lots of tests

@@ -15,13 +15,13 @@ class TestRenumber(unittest.TestCase):
     def test_renumber_01(self):
         msg = 'CEND\n'
         msg += 'BEGIN BULK\n'
-        msg += 'GRID,10,,1.0\n'
-        msg += 'GRID,30,,3.0\n'
-        msg += 'GRID,20,,2.0\n'
-        msg += 'GRID,33,,3.3\n'
-        msg += 'GRID,34,,3.4\n'
-        msg += 'GRID,35,,3.5\n'
-        msg += 'GRID,36,,3.6\n'
+        msg += 'GRID,10,,1.0,1.0\n'
+        msg += 'GRID,30,,3.0,2.0\n'
+        msg += 'GRID,20,,2.0,3.0\n'
+        msg += 'GRID,33,,3.3,4.0\n'
+        msg += 'GRID,34,,3.4,5.0\n'
+        msg += 'GRID,35,,3.5,6.0\n'
+        msg += 'GRID,36,,3.6,7.0\n'
         msg += 'SPOINT,4,THRU,8\n'
         msg += 'SPOINT,11\n'
         msg += 'CTRIA3,10,8,30,20,10\n'
@@ -69,7 +69,7 @@ class TestRenumber(unittest.TestCase):
         # for now we're testing things don't crash
         bdf_filename = 'renumber_in.bdf'
         bdf_filename_renumber = 'renumber_out.bdf'
-        bdf_renumber(bdf_filename_renumber, bdf_filename_renumber)
+        bdf_renumber(bdf_filename, bdf_filename_renumber)
 
         #model = BDF()
         #model.read_bdf(bdf_filename)

@@ -875,6 +875,8 @@ def update_param_name(param_name):
         param_name = 'GPSTRAIN'
     elif param_name in ['DEFO', 'DEFOR']:
         param_name = 'DEFORM'
+    elif param_name == 'TEMPERATURE(INIT)':
+        param_name = 'TEMPERATURE(INITIAL)'
 
     #elif param_name.startswith('DFRE'):  param_name = 'D'
 
@@ -890,7 +892,7 @@ def expand_thru_case_control(set_value):
     imax = 0
     #print('set_value = %r' % set_value)
     for ivalue in set_value:
-        if isinstance(ivalue, int):
+        if isinstance(ivalue, integer_types):
             assert add_mode is True, add_mode
             set_value2.add(ivalue)
             continue

@@ -10,8 +10,7 @@ All bush elements are BushElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
-#from numpy.linalg import norm
+from six import integer_types
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
@@ -28,7 +27,7 @@ class BushElement(Element):
     def Cid(self):
         if self.cid is None:
             return None
-        elif isinstance(self.cid, int):
+        elif isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -75,7 +74,7 @@ class CBUSH(BushElement):
             self.gb = integer_or_blank(card, 4, 'gb')
 
             x1G0 = integer_double_or_blank(card, 5, 'x1_g0')
-            if isinstance(x1G0, int):
+            if isinstance(x1G0, integer_types):
                 self.g0 = x1G0
                 self.x = None
             elif isinstance(x1G0, float):
@@ -131,33 +130,33 @@ class CBUSH(BushElement):
         ocid = self.OCid()
         pid = self.Pid()
         #si = self.si
-        assert isinstance(ga, int), 'ga=%r' % ga
-        assert isinstance(gb, int) or gb is None, 'gb=%r' % gb
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(cid, int) or cid is None, 'cid=%r' % cid
-        assert isinstance(ocid, int), 'ocid=%r' % ocid
+        assert isinstance(ga, integer_types), 'ga=%r' % ga
+        assert isinstance(gb, integer_types) or gb is None, 'gb=%r' % gb
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(cid, integer_types) or cid is None, 'cid=%r' % cid
+        assert isinstance(ocid, integer_types), 'ocid=%r' % ocid
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types):
             return self.ga
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int) or self.gb is None:
+        if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb.nid
 
     def OCid(self):
         if self.ocid is None:
             return None
-        elif isinstance(self.ocid, int):
+        elif isinstance(self.ocid, integer_types):
             return self.ocid
         return self.ocid.cid
 
     def Cid(self):
         if self.cid is None:
             return None
-        elif isinstance(self.cid, int):
+        elif isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
@@ -233,20 +232,20 @@ class CBUSH1D(BushElement):
         gb = self.Gb()
         cid = self.Cid()
         pid = self.Pid()
-        assert isinstance(ga, int), 'ga=%r' % ga
-        assert isinstance(gb, int) or gb is None, 'gb=%r' % gb
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(cid, int) or cid is None, 'cid=%r' % cid
+        assert isinstance(ga, integer_types), 'ga=%r' % ga
+        assert isinstance(gb, integer_types) or gb is None, 'gb=%r' % gb
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(cid, integer_types) or cid is None, 'cid=%r' % cid
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types):
             return self.ga
         #elif self.ga is None:
             #return None
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int):
+        if isinstance(self.gb, integer_types):
             return self.gb
         elif self.gb is None:
             return None
@@ -313,19 +312,19 @@ class CBUSH2D(BushElement):
         cid = self.Cid()
         pid = self.Pid()
         plane = self.plane
-        assert isinstance(ga, int), 'ga=%r' % ga
-        assert isinstance(gb, int), 'gb=%r' % gb
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(ga, integer_types), 'ga=%r' % ga
+        assert isinstance(gb, integer_types), 'gb=%r' % gb
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
         assert self.plane in ['XY', 'YZ', 'ZX'], 'plane=%r' % plane
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types):
             return self.ga
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int):
+        if isinstance(self.gb, integer_types):
             return self.gb
         return self.gb.nid
 

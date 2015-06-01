@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip
 from numpy import zeros, where, array, unique, concatenate
 
@@ -120,7 +120,7 @@ class Materials(object):
 
     def get_density_by_material_id(self, material_id):
         int_flag = True if isinstance(material_id, int) else False
-        if isinstance(material_id, int):
+        if isinstance(material_id, integer_types):
             material_id = array([material_id], dtype='int32')
 
         n = len(material_id)

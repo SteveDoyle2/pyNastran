@@ -464,6 +464,13 @@ class AddMethods(object):
         self.aesurfs[key] = aesurf
         self._type_to_id_map[aesurf.type].append(key)
 
+    def add_CSSCHD(self, csschd):
+        key = csschd.sid
+        assert key not in self.csschds, '\naeros=\n%s oldAEROS=\n%s' % (csschd, self.csschds[key])
+        assert key >= 0
+        self.csschds[key] = csschd
+        self._type_to_id_map[csschd.type].append(key)
+
     def add_CAERO(self, caero):
         key = caero.eid
         assert key not in self.caeros, '\ncaero=\n|%s| oldCAERO=\n|%s|' % (

@@ -67,7 +67,7 @@ class DCONSTR(OptConstraint):
         if isinstance(self.lid, integer_types):
             self.lid = model.Table(self.lid)
         if isinstance(self.uid, integer_types):
-            self.uid = model.Table(self.lid)
+            self.uid = model.Table(self.uid)
 
 
     def raw_fields(self):
@@ -549,7 +549,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.mid = model.Material(self.mid)
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 
@@ -626,7 +626,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.pid = model.Property(self.pid)
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -744,7 +744,7 @@ class DVPREL2(OptConstraint):
                     self.labels.append(label)
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 

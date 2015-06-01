@@ -11,6 +11,7 @@ All ungrouped properties are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -75,7 +76,7 @@ class PFAST(Property):
             self.mcid = model.Coord(self.Mcid(), msg)
 
     def Mcid(self):
-        if isinstance(self.mcid, int):
+        if isinstance(self.mcid, integer_types):
             return self.mcid
         return self.mcid.cid
 

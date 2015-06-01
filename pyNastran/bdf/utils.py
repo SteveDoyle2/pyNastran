@@ -38,6 +38,10 @@ def _clean_comment(comment, end=-1):
     """
     if comment[:end] in _REMOVED_LINES:
         comment = ''
+    elif 'pynastran' in line.lower():
+        comment = ''
+    #if comment:
+        #print(comment)
     return comment
 
 

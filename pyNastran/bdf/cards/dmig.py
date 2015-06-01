@@ -1,6 +1,7 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 from math import log, sin, cos, radians, atan2, sqrt, degrees
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
@@ -634,12 +635,12 @@ class DMI(NastranMatrix):
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
             i1 = fields[i]
-            if isinstance(i1, int):
+            if isinstance(i1, integer_types):
                 i += 1
                 is_done_reading_floats = False
                 while not is_done_reading_floats and i < len(fields):
                     real_value = fields[i]
-                    if isinstance(real_value, int):
+                    if isinstance(real_value, integer_types):
                         is_done_reading_floats = True
                     elif isinstance(real_value, float):
                         self.GCj.append(j)
@@ -675,7 +676,7 @@ class DMI(NastranMatrix):
             #while not isDoneReadingFloats and i < len(fields):
                 ##print("i=%s len(fields)=%s" %(i, len(fields)))
                 #realValue = fields[i]
-                #if isinstance(floatValue, int):
+                #if isinstance(floatValue, integer_types):
                     #isDoneReadingFloats = True
                 #elif isinstance(realValue, float):
                     #complexValue = fields[i + 1]

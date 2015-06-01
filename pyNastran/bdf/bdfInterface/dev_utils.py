@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, itervalues
+from six import iteritems, itervalues, integer_types
 from six.moves import zip, range
 import scipy
 from pyNastran.bdf.bdf import BDF
@@ -246,7 +246,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
        - SUPORT/SUPORT1
 
     - solution control/methods
-       - TSTEP/TSTEPNL/EIGB/EIGC/EIGRL/EIGR
+       - TSTEP/TSTEPNL
+       - NLPARM
+       - EIGB/EIGC/EIGRL/EIGR
 
     - sets
        - USET
@@ -271,14 +273,16 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
      - thermal cards?
      - optimization cards
      - SETx
-     - solution control
-       - NLPARM
      - PARAM,GRDPNT,x; where x>0
      - GRID SEID
+     - case control
+       - STATSUB
+       - SUBCASE
+       - global SET cards won't be renumbered properly
 
 
     ..warning:: spoints might be problematic...check
-    ..warning:: still in development, but it should brutally crash if it's not supported
+    ..warning:: still in development, but it usually brutally crashes if it's not supported
     ..warning:: be careful of unsupported cards
     """
     cid = 50
@@ -367,6 +371,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     all_materials = (
         model.materials,
         model.creepMaterials,
+        model.thermalMaterials,
+        model.hyperelasticMaterials,
         model.MATT1,
         model.MATT2,
         model.MATT3,
@@ -404,6 +410,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         # PMASS
         prop.pid = pid
         pid += 1
+    for pidi, prop in sorted(iteritems(model.convectionProperties)):
+        # PCONV
+        prop.pid = pid
+        pid += 1
+    for pidi, prop in sorted(iteritems(model.phbdys)):
+        # PHBDY
+        prop.pid = pid
+        pid += 1
 
     # elements
     for eidi, element in sorted(iteritems(model.elements)):
@@ -427,6 +441,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     for materials in all_materials:
         for midi, material in iteritems(materials):
             mid = mid_map[midi]
+            if midi == 15:
+                print(material)
             assert hasattr(material, 'mid')
             material.mid = mid
 
@@ -445,7 +461,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
 
     # mpc
     for mpc_idi, mpc_group in sorted(iteritems(model.mpcs)):
-        for i, mpc in enumerate(spc_group):
+        for i, mpc in enumerate(mpc_group):
             assert hasattr(mpc, 'conid')
             mpc.conid = mpc_id
         mpc_map[mpc_idi] = mpc_id
@@ -473,6 +489,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     gust_map = {}
     trim_map = {}
     tic_map = {}
+    csschd_map = {}
     #print('suport1s', model.suport1)
     data = (
         (model.methods, 'sid', method_map),
@@ -492,6 +509,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         (model.gusts, 'sid', gust_map),
         (model.trims, 'sid', trim_map),
         (model.tics, 'sid', tic_map),
+        (model.csschds, 'sid', csschd_map),
+        (model.aefacts, 'sid', None),
+        (model.aelinks, 'sid', None),
+        (model.aelists, 'sid', None),
+        (model.paeros, 'pid', None),
     )
     param_id = 101
     for (dict_obj, param_name, mmap) in sorted(data):
@@ -564,9 +586,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         'GUST' : gust_map,
         'TRIM' : trim_map,
         'IC' : tic_map,
+        'CSSCHD' : csschd_map,
 
         # bad...
         'TEMPERATURE(LOAD)' : temp_map,
+        'TEMPERATURE(INITIAL)' : temp_map,
         #'DATAREC' : datarec_map,
         #'ADAPT' : adapt_map,
         #'SUPER' : super_map,
@@ -589,22 +613,22 @@ def _update_case_control(model, mapper):
     mapper_quantities = [
         'FREQUENCY', 'DLOAD', 'LOAD', 'LOADSET', 'SPC', 'MPC', 'METHOD', 'CMETHOD',
         'TSTEP', 'TSTEPNL', 'NLPARM', 'SDAMPING', 'DESSUB', 'DESOBJ', 'GUST',
-        'SUPORT1', 'TRIM', 'BOUTPUT', 'IC',
+        'SUPORT1', 'TRIM', 'BOUTPUT', 'IC', 'CSSCHD',
     ]
 
     # TODO: remove this...
     skip_keys_temp = [
         'DESSUB', 'ADAPT', 'DATAREC', 'DSAPRT(END=SENS)=ALL', 'TEMPERATURE(LOAD)',
         'CURVELINESYMBOL', 'DSAPRT=(END=SENS)', 'SUPER', 'BOUTPUT', 'IC',
-        'OUTRCV',
+        'OUTRCV', 'TEMPERATURE(INITIAL)',
     ]
 
     nid_map = mapper['nodes']
     eid_map = mapper['elements']
     skip_keys = [
         'TITLE', 'ECHO', 'ANALYSIS', 'SUBTITLE', 'LABEL', 'SUBSEQ', 'OUTPUT',
-        'TCURVE', 'XTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES', 'PARAM', 'CONTOUR',
-        'PTITLE',
+        'TCURVE', 'XTITLE', 'YTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES', 'PARAM', 'CONTOUR',
+        'PTITLE', 'PLOTTER',
         ] + skip_keys_temp
 
     sets_analyzed = set([])
@@ -639,7 +663,7 @@ def _update_case_control(model, mapper):
                 continue
             elif 'SET ' not in key:
                 value, options, param_type = values
-                if isinstance(value, int):
+                if isinstance(value, integer_types):
                     seti = 'SET %i' % value
                     msg = ', which is needed by %s=%s' % (key, value)
 

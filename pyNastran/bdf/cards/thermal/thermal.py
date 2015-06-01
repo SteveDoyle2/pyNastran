@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -37,7 +38,7 @@ class ThermalElement(ThermalCard):
         return []
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         else:
             return self.pid.pid
@@ -691,7 +692,7 @@ class CONVM(ThermalBC):
         self.filmNode = model.Grid(self.filmNode, msg=msg)
 
     def film_node(self):
-        if isinstance(self.filmNode, int):
+        if isinstance(self.filmNode, integer_types):
             return self.filmNode
         return self.filmNode.nid
 
@@ -806,7 +807,7 @@ class RADBC(ThermalBC):
         return eids
 
     def Eid(self, eid):
-        if isinstance(eid, int):
+        if isinstance(eid, integer_types):
             return eid
         return eid.eid
 

@@ -1,7 +1,7 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, integer_types
 
 from numpy import array
 from numpy.linalg import norm
@@ -20,7 +20,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
     def C(self):
         """torsional constant"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.C()
@@ -31,49 +31,49 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
     def E(self):
         """returns the Young's Modulus, :math:`E`"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.E()
 
     def G(self):
         """returns the Shear Modulus, :math:`G`"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.G()
 
     def J(self):
         """returns the Polar Moment of Inertia, :math:`J`"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.J()
 
     def I11(self):
         """returns the Moment of Inertia, :math:`I_{11}`"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.I11()
 
     def I22(self):
         """returns the Moment of Inertia, :math:`I_{22}`"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.I22()
 
     def I12(self):
         """returns the Moment of Inertia, :math:`I_{12}`"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.I12()
 
     def Nu(self):
         """Get Poisson's Ratio, :math:`\nu`"""
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.nu
@@ -82,7 +82,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         """Get the material density, :math:`\rho`"""
         #print(str(self.pid), type(self.pid))
         #raise NotImplementedError('implement self.Rho() for %s' % self.type)
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.mid.rho
@@ -95,7 +95,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         """
         Get the mass per unit length, :math:`\frac{m}{L}`
         """
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.MassPerLength()
@@ -153,7 +153,7 @@ class CBAROR(object):
 
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
-        if isinstance(field5, int):
+        if isinstance(field5, integer_types):
             self.is_g0 = True
             self.g0 = field5
             self.x = [0., 0., 0.]
@@ -308,19 +308,19 @@ class CBAR(LineElement):
         assert isinstance(mass, float), 'nass=%r' % mass
 
     def Mid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Mid()
 
     def Area(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         A = self.pid.Area()
         assert isinstance(A, float)
         return A
 
     def J(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         j = self.pid.J()
         assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s' % (j, self.eid, self.pid.pid, self.pid.type)
@@ -332,14 +332,14 @@ class CBAR(LineElement):
         return L
 
     def Nsm(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         nsm = self.pid.Nsm()
         assert isinstance(nsm, float)
         return nsm
 
     def I1(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.I1()
 
@@ -351,7 +351,7 @@ class CBAR(LineElement):
 
     def initX_G0(self, card):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
-        if isinstance(field5, int):
+        if isinstance(field5, integer_types):
             self.g0 = field5
             self.x = None
         elif isinstance(field5, float):
@@ -378,13 +378,13 @@ class CBAR(LineElement):
         self.pid = model.Property(self.pid, msg=msg)
 
     def Ga(self):
-        if isinstance(self.ga, int):
+        if isinstance(self.ga, integer_types):
             return self.ga
         else:
             return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int):
+        if isinstance(self.gb, integer_types):
             return self.gb
         else:
             return self.gb.nid
@@ -583,7 +583,7 @@ class CBEND(LineElement):
             self.ga = integer(card, 3, 'ga')
             self.gb = integer(card, 4, 'gb')
             x1Go = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
-            if isinstance(x1Go, int):
+            if isinstance(x1Go, integer_types):
                 self.g0 = x1Go
                 self.x = None
             elif isinstance(x1Go, float):
@@ -610,7 +610,7 @@ class CBEND(LineElement):
             raise RuntimeError(msg)
 
     def Area(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Area()
 
