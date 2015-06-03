@@ -152,6 +152,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         # file management parameters
         self.active_filenames = []
+        self.active_filename = None
         self.include_dir = ''
 
         self._relpath = True
@@ -1247,28 +1248,28 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             card_count[old_card_name] += 1
         return cards, card_count
 
-    def write_test(self):
-        f = open('test.bdf', 'wb')
-        for line in executive_control_lines:
-            f.write(line)
-        for line in case_control_lines:
-            f.write(line)
-        for card_name, card in sorted(cards.iteritems()):
-            #print('---%r---' % card_name)
-            if card_name == 'ENDDATA':
-                continue
-            for cardi in card:
-                f.write('$-------------------------\n')
-                if cardi[0]:
-                    f.write(cardi[0])
-                f.write('\n'.join(cardi[1]))
-                f.write('\n')
-        if 'ENDDATA' in cards:
-            for cardi in cards['ENDDATA']:
-                if cardi[0]:
-                    f.write(cardi[0])
-                f.write('\n'.join(cardi[1]))
-                f.write('\n')
+    #def write_test(self):
+        #f = open('test.bdf', 'wb')
+        #for line in executive_control_lines:
+            #f.write(line)
+        #for line in case_control_lines:
+            #f.write(line)
+        #for card_name, card in sorted(cards.iteritems()):
+            ##print('---%r---' % card_name)
+            #if card_name == 'ENDDATA':
+                #continue
+            #for cardi in card:
+                #f.write('$-------------------------\n')
+                #if cardi[0]:
+                    #f.write(cardi[0])
+                #f.write('\n'.join(cardi[1]))
+                #f.write('\n')
+        #if 'ENDDATA' in cards:
+            #for cardi in cards['ENDDATA']:
+                #if cardi[0]:
+                    #f.write(cardi[0])
+                #f.write('\n'.join(cardi[1]))
+                #f.write('\n')
 
     def update_solution(self, sol, method, isol_line):
         """
@@ -1496,8 +1497,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_node' : ['GRID'],
                 'add_mass' : ['CONM1', 'CONM2', 'CMASS1',
                               'CMASS2', 'CMASS3',
-							  # CMASS4 - added later because documentation is wrong
-							  ],
+                              # CMASS4 - added later because documentation is wrong
+                              ],
                 'add_element' : ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
                                  'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                                  'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
@@ -1618,19 +1619,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 return card_obj
 
             # elements that violate the QRG...no duplicate elements on card...lies
-            _dct = {'CDAMP4': (5,),}
-            if card_name in _dct:
-                try:
-                    self.add_damper(_get_cls(card_name))
-                except Exception as e:
-                    if not e.args:
-                        e.args = ('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
-                    raise
-                for i in _dct[card_name]:
-                    if card_obj.field(i):
-                        self.add_damper(_cls(card_name)(card_obj, 1, comment=comment))
-                return card_obj
+            if card_name == 'CDAMP4':
+                    self.add_damper(CDAMP4(card_obj, comment=comment))
+                    if card_obj.field(5):
+                        self.add_damper(CDAMP4(card_obj, 1, comment=comment))
+                    return card_obj
 
             # dampers
             _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
@@ -1651,8 +1644,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 if comment:
                     self.rejects.append([comment])
                 #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
-                #self.add_DEQATN(DEQATN(card_obj)) # should be later moved to
-                self.rejects.append(card)          # for loop below
+                # should be later moved to loop below
+                #self.add_DEQATN(DEQATN(card_obj))
+                self.rejects.append(card)
             elif card_name == 'GRDSET':
                 self.gridSet = GRDSET(card_obj, comment=comment)
             elif card_name == 'DOPTPRM':
@@ -2234,6 +2228,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 print(str(card))
                 raise
 
+IGNORE_COMMENTS = (
+    '$EXECUTIVE CONTROL DECK',
+    '$CASE CONTROL DECK',
+    'NODES', 'SPOINTS', 'ELEMENTS',
+    'PARAMS', 'PROPERTIES', 'ELEMENTS_WITH_PROPERTIES',
+    'ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+    'UNASSOCIATED_PROPERTIES',
+    'MATERIALS', 'THERMAL MATERIALS',
+    'CONSTRAINTS', 'SPCs', 'MPCs', 'RIGID ELEMENTS',
+    'LOADS', 'AERO', 'AERO CONTROL SURFACES',
+    'FLUTTER', 'DYNAMIC', 'OPTIMIZATION',
+    'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
+    'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
+    'PROPERTIES_MASS', 'MASSES')
 
 def _clean_comment(comment):
     """
@@ -2244,19 +2252,7 @@ def _clean_comment(comment):
     """
     if comment == '':
         pass
-    elif comment in ('$EXECUTIVE CONTROL DECK',
-                   '$CASE CONTROL DECK',
-                   'NODES', 'SPOINTS', 'ELEMENTS',
-                   'PARAMS', 'PROPERTIES', 'ELEMENTS_WITH_PROPERTIES',
-                   'ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
-                   'UNASSOCIATED_PROPERTIES',
-                   'MATERIALS', 'THERMAL MATERIALS',
-                   'CONSTRAINTS', 'SPCs', 'MPCs', 'RIGID ELEMENTS',
-                   'LOADS', 'AERO', 'AERO CONTROL SURFACES',
-                   'FLUTTER', 'DYNAMIC', 'OPTIMIZATION',
-                   'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
-                   'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
-                   'PROPERTIES_MASS', 'MASSES'):
+    elif comment in IGNORE_COMMENTS:
         comment = ''
     elif 'pynastran' in comment.lower():
         comment = ''
@@ -2270,17 +2266,13 @@ def main():
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     bdf_filename = os.path.abspath(os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf'))
-    #bdf_filename = 'file.bdf'
     model = BDF()
-    #model.read_bdf('solid_bending.bdf', encoding='utf-8')
     model.read_bdf(bdf_filename, encoding='latin-1')
-    #model.read_bdf('beam_modes.dat')
-
     node1 = model.nodes[1]
+
     # decode when we receive, encode on send
     note = 'helló wörld from two'  # must be same encoding as the header (utf-8)
     #note = b'helló wörld from two\n'.decode('utf-8')
-
     print(note)
 
     # this will be wrong because it's inconsistent with the header (utf-8)
@@ -2299,10 +2291,15 @@ def main():
     # desired encoding, it *should* work.
     print(note)
 
-    # Notes are unmodified, so you can inadvertantly add cards/bugs.
+    # Comments are unmodified, so you can inadvertantly add cards/bugs.
     # A comment is a single string where all lines start with $ and end
     # with an endline character.
     node1._comment = '$ ' + note + '\n'
+
+    # in other words, msg is a bad comment:
+    msg = '$ line 1\n'
+    msg += 'line 2\n'
+    msg += '$ line 3\n'
     model.write_bdf('test.bdf')
 
 

@@ -261,11 +261,11 @@ class CaseControlTest(unittest.TestCase):
             'DESOBJ = 1',
             'DESSUB = 2',
             'DISPLACEMENT = ALL',
+            'dsaprt=(end=sens)',
             'ECHO = UNSORT',
             'METHOD = 1',
             'OLOAD = ALL',
             'TITLE = VIBRATION OF A BEAM.',
-            'dsaprt=(end=sens)',
             'SUBCASE 1',
             '    SUPER 1',
             '    DESSUB = 1',
@@ -274,11 +274,11 @@ class CaseControlTest(unittest.TestCase):
             '    DESOBJ = 1',
             '    DESSUB = 2',
             '    DISPLACEMENT = ALL',
+            '    dsaprt=(end=sens)',
             '    ECHO = UNSORT',
             '    METHOD = 1',
             '    OLOAD = ALL',
             '    TITLE = VIBRATION OF A BEAM.',
-            '    dsaprt=(end=sens)',
             'BEGIN BULK',
         ]
         deck = CaseControlDeck(lines)
@@ -287,14 +287,16 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         #print "--------"
         #print deck_msg
+        i = 0
         for line, line_expected in zip(deck_lines, lines_expected):
             line = line.rstrip()
-            msg = 'The lines are not the same...\n'
+            msg = 'The lines are not the same...i=%s\n' % i
             msg += 'line     = %r\n' % line
             msg += 'expected = %r\n' % line_expected
             msg += '-------------\n--Actual--\n%s' % deck_msg
             msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
             self.assertEqual(line, line_expected, msg)
+            i += 1
 
 
 if __name__ == '__main__':  # pragma: no cover

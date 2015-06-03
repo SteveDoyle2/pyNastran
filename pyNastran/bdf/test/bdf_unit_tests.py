@@ -174,7 +174,7 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1, reference_point='cg')
 
 
-class BaseCard_Test(Tester):
+class TestBaseCard(Tester):
     def test_base_card_01_collapse_thru(self):
         """
         tests collapse_thru method used by SETx cards
