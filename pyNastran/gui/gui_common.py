@@ -239,7 +239,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.menu_scripts = None
 
         menu_window = ['toolbar', 'reswidget']
-        menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', ]
+        menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend', 'axis', ]
         if self.html_logging:
             actions['logwidget'] = self.log_dock.toggleViewAction()
             actions['logwidget'].setStatusTip("Show/Hide application log")
