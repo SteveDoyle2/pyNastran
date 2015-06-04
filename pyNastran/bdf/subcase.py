@@ -850,7 +850,8 @@ def update_param_name(param_name):
     elif param_name.startswith('THER'):
         param_name = 'THERMAL'
     elif param_name.startswith('VECT'):
-        param_name = 'PRESSURE' # or VECTOR
+        #param_name = 'PRESSURE' # or VECTOR
+        param_name = 'DISPLACEMENT' # or VECTOR
     elif param_name.startswith('VELO'):
         param_name = 'VELOCITY'
     elif param_name.startswith('TITL'):

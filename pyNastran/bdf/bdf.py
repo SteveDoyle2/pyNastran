@@ -538,7 +538,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.points = {}
         #self.grids = {}
         self.spoints = None
-        #self.epoints = None
+        self.epoints = None
         #: stores GRIDSET card
         self.gridSet = None
 
@@ -1725,6 +1725,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             elif card_name == 'SPOINT':
                 self.add_SPOINT(SPOINTs(card_obj, comment=comment))
+            #elif card_name == 'EPOINT':
+                #self.add_EPOINT(EPOINTs(card_obj, comment=comment))
             elif card_name == 'PBEAML':
                 prop = PBEAML(card_obj, comment=comment)
                 self.add_property(prop)

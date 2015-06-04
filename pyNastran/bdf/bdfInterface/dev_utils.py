@@ -570,7 +570,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
-        'FLUTTER' : flutter_map,
+        'FMETHOD' : flutter_map,
         'FREQUENCY' : freq_map,
 
         'DLOAD' : dload_map,
@@ -613,7 +613,7 @@ def _update_case_control(model, mapper):
     mapper_quantities = [
         'FREQUENCY', 'DLOAD', 'LOAD', 'LOADSET', 'SPC', 'MPC', 'METHOD', 'CMETHOD',
         'TSTEP', 'TSTEPNL', 'NLPARM', 'SDAMPING', 'DESSUB', 'DESOBJ', 'GUST',
-        'SUPORT1', 'TRIM', 'BOUTPUT', 'IC', 'CSSCHD',
+        'SUPORT1', 'TRIM', 'BOUTPUT', 'IC', 'CSSCHD', 'FMETHOD',
     ]
 
     # TODO: remove this...
@@ -628,7 +628,7 @@ def _update_case_control(model, mapper):
     skip_keys = [
         'TITLE', 'ECHO', 'ANALYSIS', 'SUBTITLE', 'LABEL', 'SUBSEQ', 'OUTPUT',
         'TCURVE', 'XTITLE', 'YTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES', 'PARAM', 'CONTOUR',
-        'PTITLE', 'PLOTTER',
+        'PTITLE', 'PLOTTER', 'K2PP',
         ] + skip_keys_temp
 
     sets_analyzed = set([])
