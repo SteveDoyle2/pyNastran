@@ -191,9 +191,39 @@ class XrefMesh(object):
         """
         for caero in itervalues(self.caeros):
             caero.cross_reference(self)
+        for paero in itervalues(self.paeros):
+            paero.cross_reference(self)
 
         for spline in itervalues(self.splines):
             spline.cross_reference(self)
+        for aecomp in itervalues(self.aecomps):
+            aecomp.cross_reference(self)
+        for aelist in itervalues(self.aelists):
+            aelist.cross_reference(self)
+        for aeparam in itervalues(self.aeparams):
+            aeparam.cross_reference(self)
+        for aestat in itervalues(self.aestats):
+            aestat.cross_reference(self)
+        #for aesurf in itervalues(self.aesurf):
+            #aesurf.cross_reference(self)
+        for aesurfs in itervalues(self.aesurfs):
+            aesurfs.cross_reference(self)
+
+
+            #'AERO',  ## aero
+            #'AEROS',  ## aeros
+            #'GUST',  ## gusts
+            #'FLUTTER',   ## flutters
+            #'FLFACT',   ## flfacts
+            #'MKAERO1', 'MKAERO2',  ## mkaeros
+            #'AECOMP',   ## aecomps
+            #'AEFACT',   ## aefacts
+            #'AELINK',   ## aelinks
+            #'AELIST',   ## aelists
+            #'AEPARAM',   ## aeparams
+            #'AESTAT',   ## aestats
+            #'AESURF',  ## aesurfs
+
 
     def _cross_reference_nodes(self):
         """

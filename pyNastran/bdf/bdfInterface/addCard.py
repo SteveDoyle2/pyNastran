@@ -386,10 +386,14 @@ class AddMethods(object):
         self._type_to_id_map[suport.type].append(len(self.suport))
         self.suport.append(suport)
 
-    def add_suport1(self, suport):
-        key = suport.conid
-        self._type_to_id_map[suport.type].append(key)
-        self.suport1[key] = suport
+    def add_suport1(self, suport1):
+        key = suport1.conid
+        if key in self.suport1:
+            self.suport1[key].add_suport1_to_set(suport1)
+        else:
+            assert suport1.conid > 0
+            self.suport1[key] = suport1
+            self._type_to_id_map[suport1.type].append(key)
 
     def add_DAREA(self, darea, allowOverwrites=False):
         key = (darea.sid, darea.p, darea.c)
@@ -440,6 +444,13 @@ class AddMethods(object):
         self.aelinks[key].append(aelink)
         self._type_to_id_map[aelink.type].append(key)
         #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
+
+    def add_AECOMP(self, aecomp):
+        key = aecomp.name
+        assert key not in self.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aeparam, self.aecomps[key])
+        assert key >= 0
+        self.aecomps[key] = aecomp
+        self._type_to_id_map[aecomp.type].append(key)
 
     def add_AEPARM(self, aeparam):
         key = aeparam.id

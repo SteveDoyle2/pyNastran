@@ -398,15 +398,31 @@ class GetMethods(GetMethodsDeprecated):
         return load
 
     #--------------------
-    # SPCs
+    def MPC(self, conid, msg=''):
+        assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
+        if conid in self.mpcs:
+            constraint = self.mpcs[conid]
+        else:
+            raise KeyError('cannot find MPC ID=%r.\n%s' % (conid, msg))
+        return constraint
 
     def SPC(self, conid, msg=''):
         assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
         if conid in self.spcs:
             constraint = self.spcs[conid]
         else:
-            raise KeyError('cannot find ConstraintID=%r.\n%s' % (conid, msg))
+            raise KeyError('cannot find SPC ID=%r.\n%s' % (conid, msg))
         return constraint
+
+    #--------------------
+    # Sets
+    def SET1(self, set_id, msg=''):
+        assert isinstance(set_id, integer_types), 'set_id=%s is not an integer\n' % set_id
+        if set_id in self.sets:
+            set1 = self.sets[set_id]
+        else:
+            raise KeyError('cannot find SET1 ID=%r.\n%s' % (set_id, msg))
+        return set1
 
     #--------------------
     # COORDINATES CARDS
@@ -484,6 +500,13 @@ class GetMethods(GetMethodsDeprecated):
         except KeyError:
             raise KeyError('aid=%s not found%s.  Allowed AESTATs=%s'
                            % (aid, msg, self.aestats.keys()))
+
+    def AELIST(self, aid, msg=''):
+        try:
+            return self.aelists[aid]
+        except KeyError:
+            raise KeyError('id=%s not found%s.  Allowed AELISTs=%s'
+                           % (aid, msg, self.aelists.keys()))
 
     def AELink(self, linkID, msg=''):
         try:

@@ -277,12 +277,15 @@ class WriteMesh(WriteMeshDeprecated):
 
     def _write_aero_control(self, outfile, size=8, is_double=False):
         """Writes the aero control surface cards"""
-        if(self.aefacts or self.aeparams or self.aelinks or self.aelists or
-           self.aestats or self.aesurfs):
+        if(self.aecomps or self.aefacts or self.aeparams or self.aelinks or
+           self.aelists or self.aestats or self.aesurfs):
             msg = ['$AERO CONTROL SURFACES\n']
             for (unused_id, aelinks) in sorted(iteritems(self.aelinks)):
                 for aelink in aelinks:
                     msg.append(aelink.write_card(size, is_double))
+
+            for (unused_id, aecomp) in sorted(iteritems(self.aecomps)):
+                msg.append(aecomp.write_card(size, is_double))
             for (unused_id, aeparam) in sorted(iteritems(self.aeparams)):
                 msg.append(aeparam.write_card(size, is_double))
             for (unused_id, aestat) in sorted(iteritems(self.aestats)):
