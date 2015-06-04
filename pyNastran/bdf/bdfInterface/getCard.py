@@ -99,11 +99,13 @@ class GetMethods(GetMethodsDeprecated):
             return None
         elif nid in self.nodes:
             return self.nodes[nid]
-        elif self.spoints and nid in self.spoints.spoints:
+        elif self.spoints and nid in self.spoints.points:
             return SPOINT(nid)
+        elif self.epoints and nid in self.epoints.points:
+            return EPOINT(nid)
         else:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-            raise RuntimeError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
+            raise RuntimeError('nid=%s is not a GRID, SPOINT, or EPOINT%s' % (nid, msg))
 
     def Nodes(self, nids, allowEmptyNodes=False, msg=''):
         """

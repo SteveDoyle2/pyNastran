@@ -2,8 +2,9 @@ from __future__ import print_function
 from six import iteritems, itervalues, integer_types
 from six.moves import zip, range
 import scipy
+from math import ceil
 from pyNastran.bdf.bdf import BDF
-from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique
+from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique, log10
 from pyNastran.bdf.cards.baseCard import expand_thru
 from pyNastran.utils import object_attributes
 
@@ -209,6 +210,10 @@ def _write_nodes(self, outfile, size, is_double):
         outfile.write(''.join(msg))
 
 
+def _roundup(x, n=100):
+    return int(ceil(x / float(n))) * n
+
+
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     """
     Supports
@@ -306,6 +311,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     tstepnl_id = 1701
     suport_id = 1801
     suport1_id = 1901
+    tf_id = 2001
 
     eid_map = {}
     nid_map = {}
@@ -333,7 +339,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     if model.spoints is None:
         spoints = []
     else:
-        spoints = list(model.spoints.spoints)
+        spoints = list(model.spoints.points)
+    if model.epoints is None:
+        epoints = []
+    else:
+        epoints = list(model.epoints.points)
+
     nids = model.nodes.keys()
 
     spoints_nids = spoints + nids
@@ -441,8 +452,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     for materials in all_materials:
         for midi, material in iteritems(materials):
             mid = mid_map[midi]
-            if midi == 15:
-                print(material)
+            #if midi == 15:
+                #print(material)
             assert hasattr(material, 'mid')
             material.mid = mid
 
@@ -472,7 +483,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         mpc_map[mpc_idi] = mpc_id
         mpc_id += 1
 
-
+    # coords
     for cidi, coord in sorted(iteritems(model.coords)):
         if cidi == 0:
             cid_map[0] = 0
@@ -490,7 +501,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     trim_map = {}
     tic_map = {}
     csschd_map = {}
-    #print('suport1s', model.suport1)
+    tranfer_function_map = {}
     data = (
         (model.methods, 'sid', method_map),
         (model.cMethods, 'sid', cmethod_map),
@@ -514,9 +525,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         (model.aelinks, 'sid', None),
         (model.aelists, 'sid', None),
         (model.paeros, 'pid', None),
+        (model.dareas, 'sid', None),
+        #(model.transfer_functions, 'sid', tranfer_function_map)
     )
-    param_id = 101
+    param_id = 9999
     for (dict_obj, param_name, mmap) in sorted(data):
+        param_id = _roundup(param_id, 1000) + 1
         for idi, param in sorted(iteritems(dict_obj)):
             msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
             assert hasattr(param, param_name), msg
@@ -558,6 +572,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         load_map[load_idi] = load_id
         load_id += 1
 
+    # transfer_functions
+    for tf_idi, tfs in sorted(iteritems(model.transfer_functions)):
+        for tf in tfs:
+            assert hasattr(tf, 'sid')
+            tf.sid = tf_id
+        tranfer_function_map[tf_idi] = tf_id
+        load_id += 1
+
     lseq_map = load_map # wrong???
     temp_map = load_map # wrong???
     mapper = {
@@ -587,6 +609,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         'TRIM' : trim_map,
         'IC' : tic_map,
         'CSSCHD' : csschd_map,
+        'TFL' : tranfer_function_map,
 
         # bad...
         'TEMPERATURE(LOAD)' : temp_map,
@@ -608,12 +631,12 @@ def _update_case_control(model, mapper):
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
     nodal_quantities = [
         'DISPLACEMENT', 'VELOCITY', 'ACCELERATION', 'SPCFORCES', 'MPCFORCES',
-        'GPFORCES', 'SDISPLACEMENT',
+        'GPFORCES', 'SDISPLACEMENT', 'OLOAD',
     ]
     mapper_quantities = [
         'FREQUENCY', 'DLOAD', 'LOAD', 'LOADSET', 'SPC', 'MPC', 'METHOD', 'CMETHOD',
         'TSTEP', 'TSTEPNL', 'NLPARM', 'SDAMPING', 'DESSUB', 'DESOBJ', 'GUST',
-        'SUPORT1', 'TRIM', 'BOUTPUT', 'IC', 'CSSCHD', 'FMETHOD',
+        'SUPORT1', 'TRIM', 'BOUTPUT', 'IC', 'CSSCHD', 'FMETHOD', 'TFL',
     ]
 
     # TODO: remove this...
@@ -628,7 +651,7 @@ def _update_case_control(model, mapper):
     skip_keys = [
         'TITLE', 'ECHO', 'ANALYSIS', 'SUBTITLE', 'LABEL', 'SUBSEQ', 'OUTPUT',
         'TCURVE', 'XTITLE', 'YTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES', 'PARAM', 'CONTOUR',
-        'PTITLE', 'PLOTTER', 'K2PP',
+        'PTITLE', 'PLOTTER', 'K2PP', 'CSCALE', 'XGRID LINES', 'YGRID LINES', 'YMIN', 'YMAX',
         ] + skip_keys_temp
 
     sets_analyzed = set([])
@@ -679,24 +702,31 @@ def _update_case_control(model, mapper):
                         subcase.update_parameter_in_subcase(key, value2, options, param_type)
 
                     elif key in elemental_quantities + nodal_quantities:
-                        seti2, seti_key = subcase.get_parameter(seti, msg=msg)
-                        if seti_key in sets_analyzed:
-                            continue
-                        sets_analyzed.add(seti_key)
-                        msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  %(seti_key, type(seti_key))
-                        msgi += '  key=%r value=%r options=%r param_type=%r\n' % (key, value, options, param_type)
-                        msgi += '  seti=%r\n' % seti
-                        #print(msgi)
-                        assert isinstance(seti_key, int), msgi
+                        #msg += '  allowed_keys=%s' % sorted(kmap.keys())
+                        if seti in subcase:
+                            seti2, seti_key = subcase.get_parameter(seti, msg=msg)
+                            if seti_key in sets_analyzed:
+                                continue
+                            sets_analyzed.add(seti_key)
+                            msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  %(seti_key, type(seti_key))
+                            msgi += '  key=%r value=%r options=%r param_type=%r\n' % (key, value, options, param_type)
+                            msgi += '  seti=%r\n' % seti
+                            #print(msgi)
+                            assert isinstance(seti_key, int), msgi
 
-                        #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
-                        #print(seti2)
+                            #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                            #print(seti2)
+                        else:
+                            seti2 = [value]
+                            print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                            raise NotImplementedError(key)
+
                         values2 = []
                         if key in elemental_quantities:
                             # renumber eids
                             for eid in seti2:
                                 if eid not in eid_map:
-                                    print("  couldnt find eid=%s...dropping" % eid)
+                                    print("  couldn't find eid=%s...dropping" % eid)
                                     continue
                                 eid_new = eid_map[eid]
                                 values2.append(eid_new)
@@ -705,7 +735,7 @@ def _update_case_control(model, mapper):
                             # renumber nids
                             for nid in seti2:
                                 if nid not in nid_map:
-                                    print("  couldnt find nid=%s...dropping" % nid)
+                                    print("  couldn't find nid=%s...dropping" % nid)
                                     continue
                                 nid_new = nid_map[nid]
                                 values2.append(nid_new)

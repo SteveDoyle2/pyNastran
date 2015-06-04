@@ -23,7 +23,7 @@ from six.moves import zip, range
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string_or_blank, blank, fields)
+    double, double_or_blank, string_or_blank, blank, fields, components)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -375,6 +375,53 @@ class NLPCI(BaseCard):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
+
+class TF(BaseCard):
+    type = 'TF'
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = integer(card, 1, 'sid')
+        self.nid0 = integer(card, 2, 'nid0')
+        self.c = components(card, 3, 'components_0')
+        self.b0 = double_or_blank(card, 4, 'b0', 0.)
+        self.b1 = double_or_blank(card, 5, 'b1', 0.)
+        self.b2 = double_or_blank(card, 6, 'b2', 0.)
+
+        nfields = len(card) - 9
+        nrows = nfields // 8
+        if nfields % 8 > 0:
+            nrows += 1
+
+        self.grids1 = []
+        self.components1 = []
+        self.a = []
+        for irow in range(nrows):
+            j = irow * 8 + 9
+            ifield = (irow + 1)
+            grid1 = integer(card, j, 'grid_%i' % (irow + 1))
+            component1 = components(card, j + 1, 'components_%i' % (irow + 1))
+            a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
+            a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), 0.)
+            a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), 0.)
+            self.grids1.append(grid1)
+            self.components1.append(component1)
+            self.a.append([a0, a1, a2])
+        assert len(self.grids1) > 0, len(self.grids1)
+
+    def raw_fields(self):
+        list_fields = ['TF', self.sid, self.nid0, self.c, self.b0, self.b1, self.b2, None, None]
+        for grid, c, (a0, a1, a2) in zip(self.grids1, self.components1, self.a):
+            list_fields += [grid, c, a0, a1, a2, None, None, None]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # double precision?
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

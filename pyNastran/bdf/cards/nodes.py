@@ -1,4 +1,26 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+"""
+All nodes are defined in this file.  This includes:
+
+ * Node
+   * XPoint
+     * EPOINT
+     * SPOINT
+   * XPoints
+     * EPOINTs
+     * SPOINTs
+   * GRID
+   * GRDSET
+   * GRIDB
+ * POINT
+ * Ring
+   * RINGAX
+
+All ungrouped elements are Node objects.
+
+The EPOINT/SPOINT classes refer to a single EPOINT/SPOINT.  The
+EPOINTs/SPOINTs classes are for multiple degrees of freedom
+(e.g. an SPOINT card).
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array
@@ -117,8 +139,77 @@ class RINGAX(Ring):
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
 
+class XPoint(Node):
+    """common class for EPOINT/SPOINT"""
+    def __init__(self, nid, comment):
+        Node.__init__(self, card=None, data=None)
+        if comment:
+            self._comment = comment
+        self.nid = nid
+        assert isinstance(nid, integer_types), nid
 
-class SPOINT(Node):
+    @property
+    def type(self):
+        """dummy method for EPOINT/SPOINT classes"""
+        raise NotImplementedError('This method should be overwritten by the parent class')
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the EPOINT/SPOINT object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
+        lists_fields = []
+        if isinstance(self.nid, integer_types):
+            list_fields = [self.type, self.nid]
+            lists_fields.append(list_fields)
+        else:
+            singles, doubles = collapse_thru_packs(self.nid)
+            if singles:
+                list_fields = [self.type] + singles
+            if doubles:
+                for spoint_double in doubles:
+                    list_fields = [self.type] + spoint_double
+                    lists_fields.append(list_fields)
+        return lists_fields
+
+    def write_card(self, size=8, is_double=False):
+        """
+        The writer method used by BDF.write_card
+
+        :param self:   the EPOINT/SPOINT object pointer
+        :param size:   unused
+        :param is_double: unused
+        """
+        msg = self.comment()
+        lists_fields = self.repr_fields()
+        for list_fields in lists_fields:
+            if 'THRU' not in list_fields:
+                msg += print_int_card(list_fields)
+            else:
+                msg += print_card_8(list_fields)
+        return msg
+
+    def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:
+          the EPOINT/SPOINT object pointer
+        :param model:
+          the BDF object
+        :type model:
+          BDF
+        """
+        pass
+
+class SPOINT(XPoint):
+    """defines the SPOINT class"""
     type = 'SPOINT'
 
     def __init__(self, nid, comment=''):
@@ -140,69 +231,11 @@ class SPOINT(Node):
         :type comment:
           string
         """
-        Node.__init__(self, card=None, data=None)
-        if comment:
-            self._comment = comment
-        self.nid = nid
-        assert isinstance(nid, integer_types), nid
-
-    def cross_reference(self, model):
-        """
-        Cross links the card
-
-        :param self:
-          the SPOINT object pointer
-        :param model:
-          the BDF object
-        :type model:
-          BDF
-        """
-        pass
-
-    def raw_fields(self):
-        """
-        Gets the fields in their unmodified form
-
-        :param self:
-          the SPOINT object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
-        """
-        lists_fields = []
-        if isinstance(self.nid, integer_types):
-            list_fields = ['SPOINT', self.nid]
-            lists_fields.append(list_fields)
-        else:
-            singles, doubles = collapse_thru_packs(self.nid)
-            if singles:
-                list_fields = ['SPOINT'] + singles
-            if doubles:
-                for spoint_double in doubles:
-                    list_fields = ['SPOINT'] + spoint_double
-                    lists_fields.append(list_fields)
-        return lists_fields
-
-    def write_card(self, size=8, is_double=False):
-        """
-        The writer method used by BDF.write_card
-
-        :param self:   the SPOINT object pointer
-        :param size:   unused
-        :param is_double: unused
-        """
-        lists_fields = self.repr_fields()
-        msg = self.comment()
-        for list_fields in lists_fields:
-            if 'THRU' not in list_fields:
-                msg += print_int_card(list_fields)
-            else:
-                msg += print_card_8(list_fields)
-        return msg
+        XPoint.__init__(self, nid, comment)
 
 
-class EPOINT(Node):
+class EPOINT(XPoint):
+    """defines the EPOINT class"""
     type = 'EPOINT'
 
     def __init__(self, nid, comment=''):
@@ -224,18 +257,99 @@ class EPOINT(Node):
         :type comment:
           string
         """
-        Node.__init__(self, card=None, data=None)
+        XPoint.__init__(self, nid, comment)
+
+
+def _get_compressed_xpoints(Type, xpoints):
+    """
+    Gets the spoints in sorted, short form.
+
+      uncompresed:  SPOINT,1,3,5
+      compressed:   SPOINT,1,3,5
+
+      uncompresed:  SPOINT,1,2,3,4,5
+      compressed:   SPOINT,1,THRU,5
+
+      uncompresed:  SPOINT,1,2,3,4,5,7
+      compressed:   SPOINT,7
+                    SPOINT,1,THRU,5
+
+    Type = 'SPOINT'
+    spoints = [1, 2, 3, 4, 5]
+    fields = _get_compressed_xpoints(Type, spoints)
+    >>> fields
+    ['SPOINT', 1, 'THRU', 5]
+    """
+    spoints = list(xpoints)
+    spoints.sort()
+
+    singles, doubles = collapse_thru_packs(spoints)
+
+    lists_fields = []
+    if singles:
+        list_fields = [Type] + singles
+        lists_fields.append(list_fields)
+    if doubles:
+        for spoint_double in doubles:
+            list_fields = [Type] + spoint_double
+            lists_fields.append(list_fields)
+    return lists_fields
+
+class XPoints(Node):
+    """common class for EPOINTs and SPOINTs"""
+
+    @property
+    def type(self):
+        """dummy method for EPOINTs/SPOINTs classes"""
+        raise NotImplementedError('This method should be overwritten by the parent class')
+
+    def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.nid = nid
-        assert isinstance(nid, integer_types), nid
+        Node.__init__(self, card, data)
+
+        if card:
+            fields = []
+            for i in range(1, len(card)):
+                field = integer_or_string(card, i, 'ID%i' % i)
+                fields.append(field)
+        else:
+            fields = data
+            assert isinstance(data, list), data
+            assert isinstance(data[0], int), data
+        self.points = set(expand_thru(fields))
+
+    def __len__(self):
+        """
+        Returns the number of degrees of freedom for the EPOINTs/SPOINTs class
+
+        :param self:
+          the EPOINTs/SPOINTs object pointer
+        :returns ndofs:
+          the number of degrees of freedom
+        :type ndofs:
+          int
+        """
+        return len(self.points)
+
+    def get_ndof(self):  # TODO: deprecate?
+        return self.__len__()
+
+    def add_points(self, sList):
+        """
+        Adds more EPOINTs/SPOINTs to this object
+
+        :param self:
+          the EPOINTs/SPOINTs object pointer
+        """
+        self.points = self.points.union(set(sList))
 
     def cross_reference(self, model):
         """
         Cross links the card
 
         :param self:
-          the EPOINT object pointer
+          the EPOINTs/SPOINTs object pointer
         :param model:
           the BDF object
         :type model:
@@ -248,35 +362,25 @@ class EPOINT(Node):
         Gets the fields in their unmodified form
 
         :param self:
-          the EPOINT object pointer
+          the EPOINTs/SPOINTs object pointer
         :returns fields:
           the fields that define the card
         :type fields:
           LIST
         """
-        lists_fields = []
-        if isinstance(self.nid, integer_types):
-            list_fields = ['EPOINT', self.nid]
-            lists_fields.append(list_fields)
-        else:
-            singles, doubles = collapse_thru_packs(self.nid)
-            if singles:
-                list_fields = ['EPOINT'] + singles
-            if doubles:
-                for epoint_double in doubles:
-                    list_fields = ['EPOINT'] + epoint_double
-                    lists_fields.append(list_fields)
-        return lists_fields
+        points = list(self.points)
+        points.sort()
+        return [self.type] + points
 
     def write_card(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_card
 
-        :param self:   the EPOINT object pointer
+        :param self:   the EPOINTs/SPOINTs object pointer
         :param size:   unused
         :param is_double: unused
         """
-        lists_fields = self.repr_fields()
+        lists_fields = _get_compressed_xpoints(self.type, self.points)
         msg = self.comment()
         for list_fields in lists_fields:
             if 'THRU' not in list_fields:
@@ -285,8 +389,7 @@ class EPOINT(Node):
                 msg += print_card_8(list_fields)
         return msg
 
-
-class SPOINTs(Node):
+class SPOINTs(XPoints):
     """
     +--------+-----+------+-----+-----+-----+-----+-----+-----+
     |   1    |  2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
@@ -318,55 +421,7 @@ class SPOINTs(Node):
         :type comment:
           string
         """
-        if comment:
-            self._comment = comment
-        Node.__init__(self, card, data)
-
-        if card:
-            fields = []
-            for i in range(1, len(card)):
-                field = integer_or_string(card, i, 'ID%i' % i)
-                fields.append(field)
-        else:
-            fields = data
-            assert isinstance(data, list), data
-            assert isinstance(data[0], int), data
-        self.spoints = set(expand_thru(fields))
-
-    def get_ndof(self):
-        """
-        Returns the number of degrees of freedom for the SPOINTs class
-
-        :param self:
-          the SPOINT object pointer
-        :returns ndofs:
-          the number of degrees of freedom
-        :type ndofs:
-          int
-        """
-        return len(self.spoints)
-
-    def addSPoints(self, sList):
-        """
-        Adds more SPOINTs to this object
-
-        :param self:
-          the SPOINT object pointer
-        """
-        self.spoints = self.spoints.union(set(sList))
-
-    def cross_reference(self, model):
-        """
-        Cross links the card
-
-        :param self:
-          the SPOINT object pointer
-        :param model:
-          the BDF object
-        :type model:
-          BDF
-        """
-        pass
+        XPoints.__init__(self, card, data, comment)
 
     def createSPOINTi(self):
         """
@@ -376,73 +431,12 @@ class SPOINTs(Node):
           the SPOINT object pointer
         """
         spoints = []
-        for nid in self.spoints:
+        for nid in self.points:
             spoints.append(SPOINT(nid))
         return spoints
 
-    def raw_fields(self):
-        """
-        Gets the fields in their unmodified form
 
-        :param self:
-          the SPOINT object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
-        """
-        spoints = list(self.spoints)
-        spoints.sort()
-        return ['SPOINT'] + spoints
-
-    def _get_compressed_spoints(self):
-        """
-        Gets the spoints in sorted, short form.
-
-          uncompresed:  SPOINT,1,3,5
-          compressed:   SPOINT,1,3,5
-
-          uncompresed:  SPOINT,1,2,3,4,5
-          compressed:   SPOINT,1,THRU,5
-
-          uncompresed:  SPOINT,1,2,3,4,5,7
-          compressed:   SPOINT,7
-                        SPOINT,1,THRU,5
-        """
-        spoints = list(self.spoints)
-        spoints.sort()
-
-        singles, doubles = collapse_thru_packs(spoints)
-
-        lists_fields = []
-        if singles:
-            list_fields = ['SPOINT'] + singles
-            lists_fields.append(list_fields)
-        if doubles:
-            for spoint_double in doubles:
-                list_fields = ['SPOINT'] + spoint_double
-                lists_fields.append(list_fields)
-        return lists_fields
-
-    def write_card(self, size=8, is_double=False):
-        """
-        The writer method used by BDF.write_card
-
-        :param self:   the SPOINT object pointer
-        :param size:   unused
-        :param is_double: unused
-        """
-        lists_fields = self._get_compressed_spoints()
-        msg = self.comment()
-        for list_fields in lists_fields:
-            if 'THRU' not in list_fields:
-                msg += print_int_card(list_fields)
-            else:
-                msg += print_card_8(list_fields)
-        return msg
-
-
-class EPOINTs(Node):
+class EPOINTs(XPoints):
     """
     +--------+-----+------+-----+-----+-----+-----+-----+-----+
     |   1    |  2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
@@ -454,7 +448,7 @@ class EPOINTs(Node):
     |        | ID8 | etc. |     |     |     |     |     |     |
     +--------+-----+------+-----+-----+-----+-----+-----+-----+
     """
-    type = 'SPOINT'
+    type = 'EPOINT'
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -474,55 +468,7 @@ class EPOINTs(Node):
         :type comment:
           string
         """
-        if comment:
-            self._comment = comment
-        Node.__init__(self, card, data)
-
-        if card:
-            fields = []
-            for i in range(1, len(card)):
-                field = integer_or_string(card, i, 'ID%i' % i)
-                fields.append(field)
-        else:
-            fields = data
-            assert isinstance(data, list), data
-            assert isinstance(data[0], int), data
-        self.epoints = set(expand_thru(fields))
-
-    def get_ndof(self):
-        """
-        Returns the number of degrees of freedom for the EPOINTs class
-
-        :param self:
-          the EPOINT object pointer
-        :returns ndofs:
-          the number of degrees of freedom
-        :type ndofs:
-          int
-        """
-        return len(self.epoints)
-
-    def addEPoints(self, id_list):
-        """
-        Adds more EPOINTs to this object
-
-        :param self:
-          the EPOINT object pointer
-        """
-        self.epoints = self.epoints.union(set(id_list))
-
-    def cross_reference(self, model):
-        """
-        Cross links the card
-
-        :param self:
-          the EPOINT object pointer
-        :param model:
-          the BDF object
-        :type model:
-          BDF
-        """
-        pass
+        XPoints.__init__(self, card, data, comment)
 
     def createEPOINTi(self):
         """
@@ -532,70 +478,9 @@ class EPOINTs(Node):
           the EPOINT object pointer
         """
         points = []
-        for nid in self.epoints:
+        for nid in self.points:
             points.append(EPOINT(nid))
         return points
-
-    def raw_fields(self):
-        """
-        Gets the fields in their unmodified form
-
-        :param self:
-          the EPOINT object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
-        """
-        epoints = list(self.epoints)
-        epoints.sort()
-        return ['EPOINT'] + epoints
-
-    def _get_compressed_spoints(self):
-        """
-        Gets the spoints in sorted, short form.
-
-          uncompresed:  EPOINT,1,3,5
-          compressed:   EPOINT,1,3,5
-
-          uncompresed:  EPOINT,1,2,3,4,5
-          compressed:   EPOINT,1,THRU,5
-
-          uncompresed:  EPOINT,1,2,3,4,5,7
-          compressed:   EPOINT,7
-                        EPOINT,1,THRU,5
-        """
-        spoints = list(self.epoints)
-        spoints.sort()
-
-        singles, doubles = collapse_thru_packs(spoints)
-
-        lists_fields = []
-        if singles:
-            list_fields = ['EPOINT'] + singles
-            lists_fields.append(list_fields)
-        if doubles:
-            for spoint_double in doubles:
-                list_fields = ['EPOINT'] + spoint_double
-                lists_fields.append(list_fields)
-        return lists_fields
-
-    def write_card(self, size=8, is_double=False):
-        """
-        The writer method used by BDF.write_card
-
-        :param self:   the EPOINT object pointer
-        :param size:   unused
-        :param is_double: unused
-        """
-        lists_fields = self._get_compressed_epoints()
-        msg = self.comment()
-        for list_fields in lists_fields:
-            if 'THRU' not in list_fields:
-                msg += print_int_card(list_fields)
-            else:
-                msg += print_card_8(list_fields)
-        return msg
 
 
 class GRDSET(Node):
@@ -784,6 +669,7 @@ class GRDSET(Node):
 
 
 class GRIDB(Node):
+    """defines the GRIDB class"""
     type = 'GRIDB'
 
     #: allows the get_field method and update_field methods to be used
@@ -1253,6 +1139,9 @@ class GRID(Node, GridDeprecated):
             return self.write_card_16(is_double)
 
     def write_card_8(self):
+        """
+        Writes a GRID card in 8-field format
+        """
         xyz = self.xyz
         cp = set_string8_blank_if_default(self.Cp(), 0)
         cd = set_string8_blank_if_default(self.Cd(), 0)
@@ -1266,6 +1155,9 @@ class GRID(Node, GridDeprecated):
         return self.comment() + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
+        """
+            Writes a GRID card in 16-field format
+            """
         xyz = self.xyz
         cp = set_string16_blank_if_default(self.Cp(), 0)
         cd = set_string16_blank_if_default(self.Cd(), 0)

@@ -331,28 +331,78 @@ class DRESP1(OptConstraint):
 
         # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
         self.ptype = integer_string_or_blank(card, 4, 'ptype')
-        if 0:
-            assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                                  'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                                  'PBEAML', 'PSHEAR', 'PTUBE',
-                                  'PKNL',   #: .. todo:: is this correct?
-                                  None], 'DRESP1 ptype=%s' % self.ptype
+        #if 1:
+            ## incomplete
+            #assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                                  #'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                                  #'PBEAML', 'PSHEAR', 'PTUBE',
+                                  #'PKNL',
+                                  #None], 'DRESP1 ptype=%s' % self.ptype
         self.region = integer_or_blank(card, 5, 'region')
         self.atta = integer_double_string_or_blank(card, 6, 'atta')
         self.attb = integer_double_string_or_blank(card, 7, 'attb')
-        self.atti = integer_double_string_or_blank(card, 8, 'atti')
-        self.others = [interpret_value(field) for field in card[9:]]
-        #if self.others:
-            #print("self.others = %s" %(self.others))
-            #print(str(self))
-        #assert len(self.others)==0
+
+        self.atti = []
+        for i in range(8, len(card)):
+            atti = integer_double_string_or_blank(card, i, 'atti_%i' % (i + 1))
+            self.atti.append(atti)
 
     def cross_reference(self, model):
-        pass
+        return
+        msg = ', which is required by %s oid=%s' % (self.type, self.oid)
+        msg += '\n' + str(self)
+        if self.ptype in ['ELEM']:
+            self.atti = model.Elements(self.atti, msg=msg)
+        elif self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                            'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                            'PBEAML', 'PSHEAR', 'PTUBE',]:
+            self.atti = model.Properties(self.atti, msg=msg)
+        elif self.rtype in ['FRSTRE']:
+            self.atti = model.Properties(self.atti, msg=msg)
+        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER']:
+            pass
+        elif self.rtype in ['DISP', 'FRDISP']:
+            self.atti = model.Nodes(self.atti, msg=msg)
+        else:
+            msg = 'rtype=%s ptype=%s\n' % (self.rtype, self.ptype)
+            msg += str(self)
+            raise NotImplementedError(msg)
+
+    def atti_values(self):
+        return self.atti
+        #if self.rtype in ['ELEM']:
+            #self.atti = model.Elements(self.atti, msg=msg)
+            #pass
+        data = []
+        if self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                            'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                            'PBEAML', 'PSHEAR', 'PTUBE',
+                            'FRSTRE']:
+            data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
+            for value in data:
+                assert not isinstance(value, BaseCard), value
+        elif self.rtype in ['FRSTRE']:
+            data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
+            for value in data:
+                print('atti =', value, type(value))
+                assert not isinstance(value, BaseCard), value
+        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'EIGN', 'FREQ']:
+            pass
+        elif self.rtype in ['DISP', 'FRDISP', 'FRVELO', 'FRACCL', 'PSDACCL']:
+            #self.atti = model.Nodes(self.atti, msg=msg)
+            data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
+        elif self.rtype in ['VOLUME']:
+            pass
+        else:
+            msg = 'rtype=%s ptype=%s\n' % (self.rtype, self.ptype)
+            #msg += str(self)
+            raise NotImplementedError(msg)
+
+        return data
 
     def raw_fields(self):
         list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
-                       self.region, self.atta, self.attb, self.atti] + self.others
+                       self.region, self.atta, self.attb] + self.atti_values()
         return list_fields
 
     def write_card(self, size=8, is_double=False):

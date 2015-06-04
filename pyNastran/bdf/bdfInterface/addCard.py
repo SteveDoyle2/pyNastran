@@ -60,11 +60,17 @@ class AddMethods(object):
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
 
-    def add_SPOINT(self, spoint):
+    def add_SPOINT(self, spoints):
         if self.spoints is None:
-            self.spoints = spoint
+            self.spoints = spoints
         else:
-            self.spoints.addSPoints(spoint.spoints)
+            self.spoints.add_points(spoints.points)
+
+    def add_EPOINT(self, epoints):
+        if self.epoints is None:
+            self.epoints = epoints
+        else:
+            self.epoints.add_points(epoints.points)
 
     def add_element(self, elem, allowOverwrites=False):
         key = elem.eid
@@ -134,18 +140,6 @@ class AddMethods(object):
             self.properties_mass[key] = prop
             self._type_to_id_map[prop.type].append(key)
 
-    def add_PBUSHT(self, prop, allowOverwrites=False):
-        key = prop.pid
-
-        if key in self.pbusht and not allowOverwrites:
-            if not prop._is_same_card(self.pbusht[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pbusht[key],prop))
-                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pbusht[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            self.pbusht[key] = prop
-            self._type_to_id_map[prop.type].append(key)
-
     def add_BCRPARA(self, card, allowOverwrites=False):
         key = card.crid
         self.bcrparas[key] = card
@@ -176,12 +170,24 @@ class AddMethods(object):
         self.bsurfs[key] = card
         self._type_to_id_map[card.type].append(key)
 
+    def add_PBUSHT(self, prop, allowOverwrites=False):
+        key = prop.pid
+        if key in self.pbusht and not allowOverwrites:
+            if not prop._is_same_card(self.pbusht[key]):
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pbusht[key],prop))
+                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pbusht[key], prop)
+        else:
+            assert key > 0, 'pid=%s prop=%s' % (key, prop)
+            self.pbusht[key] = prop
+            self._type_to_id_map[prop.type].append(key)
+
     def add_PDAMPT(self, prop, allowOverwrites=False):
         key = prop.pid
         if key in self.pdampt and not allowOverwrites:
             if not prop._is_same_card(self.pdampt[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
-                assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pdampt[key], prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, self.pdampt[key],prop))
+                assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                    key, self.pdampt[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pdampt[key] = prop
@@ -192,11 +198,21 @@ class AddMethods(object):
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.pelast and not allowOverwrites:
             if not prop._is_same_card(self.pelast[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pelast[key],prop))
-                assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key], prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key],prop))
+                assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                    key, self.pelast[key], prop)
         else:
             self.pelast[key] = prop
             self._type_to_id_map[prop.type].append(key)
+
+    def add_TF(self, tf, allowOverwrites=False):
+        key = tf.sid
+        assert key > 0, 'sid=%s tf=%s' % (key, tf)
+        if key in self.transfer_functions:
+            self.transfer_functions[key].append(tf)
+        else:
+            self.transfer_functions[key] = [tf]
+            self._type_to_id_map[tf.type].append(key)
 
     def add_structural_material(self, material, allowOverwrites=False):
         key = material.mid

@@ -4,7 +4,7 @@ Subcase creation/extraction class
 """
 from __future__ import print_function
 from six import string_types, integer_types, iteritems, PY2
-
+from numpy import ndarray
 
 from pyNastran.bdf.cards.baseCard import collapse_thru_packs
 
@@ -456,7 +456,7 @@ class Subcase(object):
                 #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, integer_types) or value is None:
                 pass
-            elif isinstance(value, list):  # new???
+            elif isinstance(value, list) or isinstance(value, ndarray):  # new???
                 msg = 'invalid type for key=%s value; expected an integer; got a list' % key
                 raise TypeError(msg)
             elif value.isdigit():  # STRESS = ALL

@@ -168,5 +168,5 @@ class PELAST(SpringProperty):
         return self.tgeid.tid
 
     def raw_fields(self):
-        return [self.pid, self.Tkid(), self.Tgeid(), self.Tknid()]
+        return ['PELAST', self.pid, self.Tkid(), self.Tgeid(), self.Tknid()]
 

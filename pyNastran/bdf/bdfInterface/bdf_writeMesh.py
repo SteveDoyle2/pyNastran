@@ -409,7 +409,7 @@ class WriteMesh(WriteMeshDeprecated):
     def _write_dynamic(self, outfile, size=8, is_double=False):
         """Writes the dynamic cards sorted by ID"""
         if(self.dareas or self.nlparms or self.frequencies or self.methods or
-           self.cMethods or self.tsteps or self.tstepnls):
+           self.cMethods or self.tsteps or self.tstepnls or self.transfer_functions):
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
                 msg.append(method.write_card(size, is_double))
@@ -427,6 +427,10 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(tstepnl.write_card(size, is_double))
             for (unused_id, freq) in sorted(iteritems(self.frequencies)):
                 msg.append(freq.write_card(size, is_double))
+
+            for (unused_id, tfs) in sorted(iteritems(self.transfer_functions)):
+                for tf in tfs:
+                    msg.append(tf.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_flutter(self, outfile, size=8, is_double=False):
@@ -545,6 +549,11 @@ class WriteMesh(WriteMeshDeprecated):
             msg = []
             msg.append('$SPOINTS\n')
             msg.append(self.spoints.write_card(size, is_double))
+            outfile.write(''.join(msg))
+        if self.epoints:
+            msg = []
+            msg.append('$EPOINTS\n')
+            msg.append(self.epoints.write_card(size, is_double))
             outfile.write(''.join(msg))
 
         if self.nodes:

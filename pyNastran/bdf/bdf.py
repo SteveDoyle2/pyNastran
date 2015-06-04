@@ -50,7 +50,7 @@ from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, C
                                                 CTRIAX6, CTRIAR, ShellElement)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D
+from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                                  CDAMP5, DamperElement)
 from pyNastran.bdf.cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
@@ -79,7 +79,7 @@ from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    GMCORD)
 from pyNastran.bdf.cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 from pyNastran.bdf.cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
-                                         NLPCI)
+                                         NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD
 from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -93,7 +93,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1  # TODO: add MATT3, MATT8, MATT9
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs
 from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                               DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
@@ -248,6 +248,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             ## pelast
             'PELAST',
 
+            ## pbusht
+            'PBUSHT',
+
             ## creepMaterials
             'CREEP',
 
@@ -325,6 +328,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
             'TSTEPNL',  ## tstepnls
+            'TF',  ## transfer_functions
 
             ## frequencies
             'FREQ', 'FREQ1', 'FREQ2',
@@ -691,6 +695,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.tsteps = {}
         #: stores TSTEPNL
         self.tstepnls = {}
+        #: stores TF
+        self.transfer_functions = {}
+
         # --------------------------- aero defaults --------------------------
         # aero cards
         #: stores CAEROx
@@ -753,7 +760,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._type_to_slot_map = None
         self._slot_to_type_map = {
             'params' : ['PARAM'],
-            'nodes' : ['GRID', 'SPOINT', ], # 'RINGAX',
+            'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'gridSet' : ['GRDSET'],
             #'POINT', 'POINTAX', 'RINGAX',
 
@@ -794,6 +801,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             ],
             'pdampt' : ['PDAMPT',],
             'pelast' : ['PELAST',],
+            'pbusht' : ['PBUSHT',],
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11'],
@@ -884,6 +892,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'nlpcis' : ['NLPCI'],
             'tsteps' : ['TSTEP'],
             'tstepnls' : ['TSTEPNL'],
+            'transfer_functions' : ['TF'],
 
             'frequencies' : ['FREQ', 'FREQ1', 'FREQ2'],
 
@@ -1479,7 +1488,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                              'FLUTTER', 'FLFACT', 'GUST', 'CSSCHD',
                              'NLPARM', 'NLPCI', 'TSTEP',
                              'TSTEPNL', 'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK',
-                             'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT']:
+                             'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT', 'TF']:
                 try:
                     # PHBDY -> add_PHBDY
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
@@ -1725,8 +1734,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             elif card_name == 'SPOINT':
                 self.add_SPOINT(SPOINTs(card_obj, comment=comment))
-            #elif card_name == 'EPOINT':
-                #self.add_EPOINT(EPOINTs(card_obj, comment=comment))
+            elif card_name == 'EPOINT':
+                self.add_EPOINT(EPOINTs(card_obj, comment=comment))
             elif card_name == 'PBEAML':
                 prop = PBEAML(card_obj, comment=comment)
                 self.add_property(prop)
@@ -1751,7 +1760,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #self.log.debug("card_name = %r" % card_name)
                 #self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
                 #self.log.debug("filename = %r\n" % self.bdf_filename)
-                #raise
+            raise
         return card_obj
 
     def get_bdf_stats(self, return_type='string'):
@@ -2233,7 +2242,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 IGNORE_COMMENTS = (
     '$EXECUTIVE CONTROL DECK',
     '$CASE CONTROL DECK',
-    'NODES', 'SPOINTS', 'ELEMENTS',
+    'NODES', 'SPOINTS', 'EPOINTS', 'ELEMENTS',
     'PARAMS', 'PROPERTIES', 'ELEMENTS_WITH_PROPERTIES',
     'ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
     'UNASSOCIATED_PROPERTIES',

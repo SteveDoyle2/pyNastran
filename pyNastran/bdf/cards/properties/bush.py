@@ -394,10 +394,49 @@ class PBUSHT(BushingProperty):
         BushingProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
+
         if card:
-            raise NotImplementedError()
+            self.pid = integer(card, 1, 'pid')
+            nfields = len(card) - 1
+            nrows = nfields // 8
+            if nfields % 8 != 0:
+                nrows += 1
+
+            self.k_tables = []
+            self.b_tables = []
+            self.ge_tables = []
+            self.kn_tables = []
+            for irow in range(nrows):
+                ifield = 1 + irow * 8
+                param = string(card, ifield + 1, 'param_type')
+                table = []
+                for j in range(6):
+                    table_value = integer_or_blank(card, ifield + j + 2, param + '%i' % (j+1))
+                    table.append(table_value)
+                if param == 'K':
+                    self.k_tables = table
+                elif param == 'B':
+                    self.b_tables = table
+                elif param == 'GE':
+                    self.ge_tables = table
+                elif param == 'KN':
+                    self.kn_tables = table
+                else:
+                    raise ValueError(param)
         else:
             raise NotImplementedError()
+
+    def raw_fields(self):
+        list_fields = ['PBUSHT', self.pid]
+        if self.k_tables:
+            list_fields += ['K'] + self.k_tables + [None]
+        if self.b_tables:
+            list_fields += ['B'] + self.b_tables + [None]
+        if self.ge_tables:
+            list_fields += ['GE'] + self.ge_tables + [None]
+        if self.kn_tables:
+            list_fields += ['KN'] + self.kn_tables
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
