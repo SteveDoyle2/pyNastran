@@ -205,6 +205,14 @@ class SUPORT1(Constraint):
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
 
+    def add_suport1_to_set(self, suport1):
+        assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
+        comment = self.comment() + suport1.comment()
+        if comment:
+            self._comment = comment
+        self.IDs += suport1.IDs
+        self.Cs += suport1.Cs
+
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT1'
@@ -703,7 +711,10 @@ class MPCADD(ConstraintADD):
     def raw_fields(self):
         fields = ['MPCADD', self.conid]  # +self.sets
         for set_id in self.sets:
-            fields.append(set_id)
+            if isinstance(set_id, integer_types):
+                fields.append(set_id)
+            else:
+                fields.append(set_id[0].conid)
         return fields
 
     def write_card(self, size=8, is_double=False):

@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 
 from pyNastran.bdf.cards.baseCard import (BaseCard, _node_ids, expand_thru,
@@ -505,21 +506,22 @@ class SET1(Set):
         #:  in field 3)
         self.IDs = expand_thru(IDs[i:])
         self.cleanIDs()
+        self.xref_type = None
 
     def __eq__(self, set1):
         self.cleanIDs()
         set1.cleanIDs()
-        if self.IDs == set1.IDs:
+        if self.get_IDs() == set1.get_IDs():
             return True
         return False
 
     def symmetric_difference(self, set1):
-        s1 = set(self.IDs)
-        s2 = set(set1.IDs)
+        s1 = set(self.get_IDs())
+        s2 = set(set1.get_IDs())
         return s1.symmetric_difference(s2)
 
     def add_set(self, set1):
-        self.IDs += set1.IDs
+        self.IDs += set1.get_IDs
         self.cleanIDs()
 
     def IsSkin(self):
@@ -529,7 +531,37 @@ class SET1(Set):
         skin = []
         if self.isSkin:
             skin = ['SKIN']
-        return ['SET1', self.sid] + skin + self.IDs
+        return ['SET1', self.sid] + skin + self.get_IDs()
+
+    def cross_reference(self, model, xref_type, allow_empty_nodes=False):
+        """
+        SPLINEx, ACMODL, PANEL, AECOMP, XYOUTPUT
+
+        - nodes
+          - SPLINEx (all nodes must exist)
+          - PANEL (all nodes must exist)
+          - XYOUTPUT (missing nodes ignored)
+          - AECOMP
+          - ACMODL (optional)
+        - elements
+          - ACMODL (optional)
+        """
+        msg = 'which is required by SET1 sid=%s' % self.sid
+        if xref_type == 'Node':
+            self.IDs = model.Nodes(self.get_IDs(), msg)
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
+        self.xref_type = xref_type
+
+    def get_IDs(self):
+        if self.xref_type is None:
+            IDs = self.IDs
+        elif self.xref_type == 'Node':
+            IDs = [node if isinstance(node, integer_types) else node.nid
+                   for node in self.IDs]
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
+        return IDs
 
     def write_card(self, size=8, is_double=False):
         skin = []
@@ -537,7 +569,7 @@ class SET1(Set):
             skin = ['SKIN']
 
         field_packs = []
-        singles, doubles = collapse_thru_packs(self.IDs)
+        singles, doubles = collapse_thru_packs(self.get_IDs())
         if singles:
             field_packs.append(['SET1', self.sid] + skin + singles)
         if doubles:

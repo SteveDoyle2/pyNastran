@@ -63,8 +63,8 @@ from pyNastran.bdf.cards.properties.beam import  PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
                                                PointElement, PointMassElement)  # CMASS5
 from pyNastran.bdf.cards.properties.mass import (PMASS, NSM)
-from pyNastran.bdf.cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
-                                      AESURFS, AERO, AEROS, CSSCHD,
+from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
+                                      AESURF, AESURFS, AERO, AEROS, CSSCHD,
                                       CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                       PAERO1, PAERO2, PAERO3,
                                       FLFACT, FLUTTER, GUST, MKAERO1,
@@ -295,6 +295,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'FLUTTER',   ## flutters
             'FLFACT',   ## flfacts
             'MKAERO1', 'MKAERO2',  ## mkaeros
+            'AECOMP',   ## aecomps
             'AEFACT',   ## aefacts
             'AELINK',   ## aelinks
             'AELIST',   ## aelists
@@ -709,6 +710,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         #: stores AEROS
         self.aeros = {}
 
+        #: stores AECOMP
+        self.aecomps = {}
         #: stores AEFACT
         self.aefacts = {}
         #: stores AELINK
@@ -787,7 +790,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             ],
             'rigidElements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',],
 
-            'mass_properties' : ['PMASS'],
+            'properties_mass' : ['PMASS'],
             'properties' : [
                 'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
                 'PBUSH', 'PBUSH1D',
@@ -858,6 +861,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'flutters' : ['FLUTTER'],
             'flfacts' : ['FLFACT'],
             'mkaeros' : ['MKAERO1', 'MKAERO2'],
+            'aecomps' : ['AECOMP'],
             'aefacts' : ['AEFACT'],
             'aelinks' : ['AELINK'],
             'aelists' : ['AELIST'],
@@ -1483,7 +1487,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         try:
             # cards that have their own method add_CARDNAME to add them
-            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
+            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AECOMP', 'AEFACT',
                              'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
                              'FLUTTER', 'FLFACT', 'GUST', 'CSSCHD',
                              'NLPARM', 'NLPCI', 'TSTEP',
@@ -1754,13 +1758,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self._iparse_errors += 1
             var = traceback.format_exception_only(type(e), e)
             self._stored_parse_errors.append((card, var))
+            raise
             if self._iparse_errors > self._nparse_errors:
                 self.pop_parse_errors()
                 #print(str(e))
                 #self.log.debug("card_name = %r" % card_name)
                 #self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
                 #self.log.debug("filename = %r\n" % self.bdf_filename)
-            raise
         return card_obj
 
     def get_bdf_stats(self, return_type='string'):
@@ -1804,7 +1808,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'methods', 'cMethods',
 
             # aero
-            'caeros', 'paeros', 'aero', 'aeros', 'aefacts', 'aelinks',
+            'caeros', 'paeros', 'aero', 'aeros', 'aecomps', 'aefacts', 'aelinks',
             'aelists', 'aeparams', 'aesurfs', 'aestats', 'gusts', 'flfacts',
             'flutters', 'splines', 'trims',
 
