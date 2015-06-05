@@ -170,12 +170,37 @@ class AddMethods(object):
         self.bsurfs[key] = card
         self._type_to_id_map[card.type].append(key)
 
+    def add_DELAY(self, delay, allowOverwrites=False):
+        key = delay.sid
+        if key in self.delays and not allowOverwrites:
+            if not delay._is_same_card(self.delays[key]):
+                assert key not in self.delays, 'pid=%s old_DELAY=\n%snew_DELAY=\n%s' % (
+                    key, self.delays[key], delay)
+        else:
+            assert key > 0, 'sid=%s delay=%s' % (key, delay)
+            self.delays[key] = delay
+            self._type_to_id_map[delay.type].append(key)
+
+    def add_TEMPD(self, tempd, allowOverwrites=False):
+        key = tempd.sid
+        if key in self.tempds and not allowOverwrites:
+            if not tempd._is_same_card(self.tempds[key]):
+                print('A', tempd.raw_fields())
+                print('B', self.tempds[key].raw_fields())
+                print(tempd._is_same_card(self.tempds[key]))
+                assert key not in self.tempds, 'pid=%s old_TEMPD=\n%snew_TEMPD=\n%s' % (
+                    key, self.tempds[key], tempd)
+        else:
+            assert key > 0, 'sid=%s tempd=%s' % (key, tempd)
+            self.tempds[key] = tempd
+            self._type_to_id_map[tempd.type].append(key)
+
     def add_PBUSHT(self, prop, allowOverwrites=False):
         key = prop.pid
         if key in self.pbusht and not allowOverwrites:
             if not prop._is_same_card(self.pbusht[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pbusht[key],prop))
-                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pbusht[key], prop)
+                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                    key, self.pbusht[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pbusht[key] = prop
@@ -185,7 +210,6 @@ class AddMethods(object):
         key = prop.pid
         if key in self.pdampt and not allowOverwrites:
             if not prop._is_same_card(self.pdampt[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, self.pdampt[key],prop))
                 assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
                     key, self.pdampt[key], prop)
         else:
@@ -578,6 +602,17 @@ class AddMethods(object):
         assert key > 0
         self.dlinks[key] = dlink
         self._type_to_id_map[dlink.type].append(key)
+
+    def add_DCONADD(self, dconadd, allowOverwrites=False):
+        key = dconadd.dcid
+        if key in self.dconadds and not allowOverwrites:
+            if not dconadd._is_same_card(self.dconadds[key]):
+                assert key not in self.dconadds, 'pid=%s old_DCONADD=\n%snew_DCONADD=\n%s' % (
+                    key, self.dconadds[key], dconadd)
+        else:
+            assert key > 0, 'dcid=%s dconadd=%s' % (key, dconadd)
+            self.dconadds[key] = dconadd
+            self._type_to_id_map[dconadd.type].append(key)
 
     def add_DRESP(self, dresp):
         key = dresp.oid

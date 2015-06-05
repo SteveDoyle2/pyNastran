@@ -55,10 +55,13 @@ class Set(BaseCard):
         #:  list of IDs in the SETx
         self.IDs = None
 
-    def cleanIDs(self):
+    def clean_ids(self):
         """eliminates duplicate IDs from self.IDs and sorts self.IDs"""
         self.IDs = list(set(self.IDs))
         self.IDs.sort()
+
+    def cleanIDs(self):
+        self.clean_ids()
 
     def SetIDs(self):
         """gets the IDs of the SETx"""
@@ -505,15 +508,16 @@ class SET1(Set):
         #:  (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
         #:  in field 3)
         self.IDs = expand_thru(IDs[i:])
-        self.cleanIDs()
+        self.clean_ids()
         self.xref_type = None
 
-    def __eq__(self, set1):
-        self.cleanIDs()
-        set1.cleanIDs()
-        if self.get_IDs() == set1.get_IDs():
-            return True
-        return False
+    #def __eq__(self, set1):
+        #assert self.type == set1.type, 'type=%s set1.type=%s' % (self.type, set1.type)
+        #self.clean_ids()
+        #set1.clean_ids()
+        #if self.get_IDs() == set1.get_IDs():
+            #return True
+        #return False
 
     def symmetric_difference(self, set1):
         s1 = set(self.get_IDs())
@@ -522,7 +526,7 @@ class SET1(Set):
 
     def add_set(self, set1):
         self.IDs += set1.get_IDs
-        self.cleanIDs()
+        self.clean_ids()
 
     def IsSkin(self):
         return self.isSkin
@@ -617,7 +621,7 @@ class SET3(Set):
 
         IDs = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         self.IDs = expand_thru(IDs)
-        self.cleanIDs()
+        self.clean_ids()
 
     def union(self, s2):
         assert self.desc == s2.desc, 'self.desc=%r set2.desc=%r' % (self.desc, s2.desc)
@@ -681,11 +685,11 @@ class SESET(SetSuper):
 
         IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         self.IDs = expand_thru(IDs)
-        self.cleanIDs()
+        self.clean_ids()
 
     def add_SESET_Object(self, seset):
         self.IDs += seset.IDs
-        self.cleanIDs()
+        self.clean_ids()
 
     def raw_fields(self):
         return ['SESET', self.seid] + collapse_thru(self.IDs)
@@ -781,7 +785,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
 
         IDs = fields(integer_or_string, card, i=3, j=len(card))
         self.IDs = expand_thru(IDs)
-        self.cleanIDs()
+        self.clean_ids()
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -813,11 +817,11 @@ class RADSET(Set):  # not integrated
 
         IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         self.IDs = expand_thru(IDs)
-        self.cleanIDs()
+        self.clean_ids()
 
     def addRadsetObject(self, radset):
         self.IDs += radset.IDs
-        self.cleanIDs()
+        self.clean_ids()
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""

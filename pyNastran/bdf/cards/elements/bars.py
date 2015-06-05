@@ -623,6 +623,12 @@ class CBEND(LineElement):
     def repr_fields(self):
         return self.raw_fields()
 
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
+        #self.pid = model.Property(self.pid, msg=msg)
+        #self.g0 = model.nodes[self.g0]
+
     def write_card(self, size, is_double):
         card = self.repr_fields()
         if size == 8:

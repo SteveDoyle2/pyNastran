@@ -28,6 +28,39 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
+class DELAY(BaseCard):
+    type = 'DELAY'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 1, 'node')
+        self.components = integer(card, 1, 'components')
+        assert self.components in [0, 1, 2, 3, 4, 5, 6], self.components
+        self.delay = float_or_blank(card, 3, 'delay')
+
+    def cross_reference(self, model):
+        msg = ', which is required by DELAY sid=%s' % self.sid
+        self.node = model.Node(self.node_id)
+
+    @property
+    def node_id(self):
+        if isinstance(self.node, integer_types):
+            return self.node
+        return self.node.nid
+
+    def raw_fields(self):
+        list_fields = ['DELAY', self.sid, self.node_id, self.components, self.delay]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
+
 class FREQ(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency

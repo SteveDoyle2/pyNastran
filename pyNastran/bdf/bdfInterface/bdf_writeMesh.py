@@ -412,7 +412,8 @@ class WriteMesh(WriteMeshDeprecated):
     def _write_dynamic(self, outfile, size=8, is_double=False):
         """Writes the dynamic cards sorted by ID"""
         if(self.dareas or self.nlparms or self.frequencies or self.methods or
-           self.cMethods or self.tsteps or self.tstepnls or self.transfer_functions):
+           self.cMethods or self.tsteps or self.tstepnls or self.transfer_functions or
+           self.delays):
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
                 msg.append(method.write_card(size, is_double))
@@ -430,6 +431,8 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(tstepnl.write_card(size, is_double))
             for (unused_id, freq) in sorted(iteritems(self.frequencies)):
                 msg.append(freq.write_card(size, is_double))
+            for (unused_id, delay) in sorted(iteritems(self.delays)):
+                msg.append(delay.write_card(size, is_double))
 
             for (unused_id, tfs) in sorted(iteritems(self.transfer_functions)):
                 for tf in tfs:
@@ -451,7 +454,7 @@ class WriteMesh(WriteMeshDeprecated):
 
     def _write_loads(self, outfile, size=8, is_double=False):
         """Writes the load cards sorted by ID"""
-        if self.loads:
+        if self.loads or self.tempds:
             msg = ['$LOADS\n']
             for (key, loadcase) in sorted(iteritems(self.loads)):
                 for load in loadcase:
@@ -461,7 +464,10 @@ class WriteMesh(WriteMeshDeprecated):
                         print('failed printing load...type=%s key=%r'
                               % (load.type, key))
                         raise
+            for key, tempd in sorted(iteritems(self.tempds)):
+                msg.append(tempd.write_card(size, is_double))
             outfile.write(''.join(msg))
+
         if self.dloads or self.dload_entries:
             msg = ['$DLOADS\n']
             for (key, loadcase) in sorted(iteritems(self.dloads)):
@@ -485,6 +491,7 @@ class WriteMesh(WriteMeshDeprecated):
 
 
     def _write_masses(self, outfile, size=8, is_double=False):
+        """Writes the mass cards sorted by ID"""
         if self.properties_mass:
             outfile.write('$PROPERTIES_MASS\n')
             for (pid, mass) in sorted(iteritems(self.properties_mass)):
@@ -615,10 +622,12 @@ class WriteMesh(WriteMeshDeprecated):
 
     def _write_optimization(self, outfile, size=8, is_double=False):
         """Writes the optimization cards sorted by ID"""
-        if(self.dconstrs or self.desvars or self.ddvals or self.dresps
-           or self.dvprels or self.dvmrels or self.doptprm or self.dlinks
-           or self.ddvals):
+        if(self.dconadds or self.dconstrs or self.desvars or self.ddvals or
+           self.dresps or self.ddvals or
+           self.dvprels or self.dvmrels or self.doptprm or self.dlinks):
             msg = ['$OPTIMIZATION\n']
+            for (unused_id, dconadd) in sorted(iteritems(self.dconadds)):
+                msg.append(dconadd.write_card(size, is_double))
             for (unused_id, dconstr) in sorted(iteritems(self.dconstrs)):
                 msg.append(dconstr.write_card(size, is_double))
             for (unused_id, desvar) in sorted(iteritems(self.desvars)):

@@ -1809,6 +1809,23 @@ class PAERO5(BaseCard):  ## TODO: not integrated
         else:
             raise NotImplementedError('data')
 
+    @property
+    def lxis_id(self):
+        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis.aid
+
+    @property
+    def ltaus_id(self):
+        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus.aid
+
+    def cross_reference(self, model):
+        self.ltaus = model.AEFACT(self.lxis_id)
+        self.ltaus = model.AEFACT(self.ltaus_id)
+
+    def raw_fields(self):
+        list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
+                       self.lxis_id, self.ntaus, self.ltaus_id] + self.caoci
+        return list_fields
+
     #def integrals(self):
         ## chord location
         #x = self.lxis.Di
@@ -1835,9 +1852,6 @@ class PAERO5(BaseCard):  ## TODO: not integrated
 
         #return(I1, I2, I3, I4, I5,
                #J1, J2, J3, J4, J5)
-
-    def cross_reference(self, model):
-        pass
 
 
 class FLFACT(BaseCard):
@@ -2357,7 +2371,7 @@ class PAERO1(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 

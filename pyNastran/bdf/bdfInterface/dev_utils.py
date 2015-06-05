@@ -495,7 +495,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     nlparm_map = {}
     nlpci_map = {}
     table_sdamping_map = {}
-    dessub_map = {}  # DCONSTR/DCONADD...this is wrong...only DCONSTR for now
+    dconstr_map = {}
+    dconadd_map = {}
     dresp_map = {}
     gust_map = {}
     trim_map = {}
@@ -515,7 +516,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         (model.nlparms, 'nlparm_id', nlparm_map),
         (model.nlpcis, 'nlpci_id', nlpci_map),
         (model.tables_sdamping, 'tid', table_sdamping_map),
-        (model.dconstrs, 'oid', dessub_map),
+        (model.dconadds, 'dcid', dconadd_map),
+        (model.dconstrs, 'oid', dconstr_map),
         (model.dresps, 'oid', dresp_map),
         (model.gusts, 'sid', gust_map),
         (model.trims, 'sid', trim_map),
@@ -552,6 +554,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
             if mmap is not None:
                 mmap[idi] = param_id
             param_id += 1
+
+    dessub_map = dconadd_map
+    for key, value in iteritems(dconstr_map):
+        if key in dessub_map:
+            raise NotImplementedError()
+        dessub_map[key] = value
 
     # tables
     for table_idi, table in sorted(sorted(iteritems(model.tables))):
@@ -624,7 +632,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         'IC' : tic_map,
         'CSSCHD' : csschd_map,
         'TFL' : tranfer_function_map,
-
+        #'DESSUB' : dessub_map,
         # bad...
         'TEMPERATURE(LOAD)' : temp_map,
         'TEMPERATURE(INITIAL)' : temp_map,

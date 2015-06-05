@@ -68,7 +68,7 @@ CELAS2  (done)
 CELAS3  (done)
 CELAS4  (done)
 PELAS   (done)
-PELAST  (not added)
+PELAST  (done)
 
 ----Bushings (Elements/Properties)----:
 CBUSH   (done)
@@ -95,7 +95,7 @@ CVISC   (done) # viscous damper
 PVISC   (done)
 
 ----Masses (Elements/Properties)----:
-CONM1   (disabled)
+CONM1   (done)
 CONM2   (cid!=0)
 
 CMASS1  (done)
@@ -181,6 +181,7 @@ SUPORT1 (done)
 ----Loads----:
 LOAD    (done)
 LSEQ    (done)
+SPCAX   (done)
 
 FORCE   (done)
 FORCE1  (done)
@@ -211,7 +212,7 @@ RLOAD2  (done)
 
 ----Thermal Loads----:
 TEMP   (done)
-TEMPD  (not integrated)
+TEMPD  (done)
 TEMPD1
 
 QHBDY  (done)
@@ -267,16 +268,17 @@ PAERO5
 
 SPLINE1 (done)
 SPLINE2 (done)
-SPLINE3
+SPLINE3 (partial)
 SPLINE4 (done)
 SPLINE5 (done)
 SPLINE6
 SPLINE7
 
-CSSCHD  (not integrated)
+CSSCHD  (done)
 TRIM    (done)
 
 ----Dynamic----:
+EPOINT  (done)
 DAREA   (done)
 NLPARM  (done)
 NLPCI   (done)
@@ -292,6 +294,7 @@ FREQ4
 FREQ5
 
 ----Optimization----:
+DCONADD  (done?)
 DCONSTR  (done)
 DESVAR   (done)
 DDVAL    (done)
@@ -335,18 +338,29 @@ ASET   (done)
 BSET   (done)
 CSET   (done)
 QSET   (done)
+USET   (done)
 ASET1  (done)
 BSET1  (done)
 CSET1  (done)
 QSET1  (done)
+USET1  (done)
 
+SESET   (done)
 SET1   (done)
 SET2
 SET3   (done)
-SESET  (done)
+
 SEQSEP (not integrated...is this a set)
-SEQSET1
 RADSET (not integrated)
+
+SEBSET  (done)
+SECSET  (done)
+SEQSET  (done)
+SEUSET 
+SEBSET1 (done)
+SECSET1 (done)
+SEQSET1 (done)
+SEUSET1
 
 ----Methods----:
 EIGB    (done)
@@ -365,7 +379,7 @@ DMIJI       (done)
 DMIK        (done)
 
 ----Other----:
-INCLUDE (partial - case control deck & bulk data deck ONLY)
+INCLUDE (done)
 PARAM (done)
 
 -----------------------------------------------
@@ -402,6 +416,7 @@ OMITAX
 SECTAX
 
 ----Contact----:
+BCTPARA (done)
 BCRPARA (done)
 BCTADD  (done)
 BCTSET  (done)
@@ -468,7 +483,6 @@ RADSET
 GENEL
 
 ----Dynamics/Nonlinear---:
-EPOINT
 
 ----Super Elements----:
 CSUPER
@@ -482,8 +496,6 @@ SEMPLN
 SENQST
 SEQGP
 SEQSEP
-SEQSET
-SEQSET1
 SESUP
 
 ----Acoustic----:

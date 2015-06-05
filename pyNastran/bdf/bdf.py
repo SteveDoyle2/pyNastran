@@ -53,22 +53,22 @@ from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                                  CDAMP5, DamperElement)
-from pyNastran.bdf.cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
+from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE, RodElement
-from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, CBEAM3 # CBEND
+from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-from pyNastran.bdf.cards.properties.bars import (PBAR, PBARL, )  # PBEND
-from pyNastran.bdf.cards.properties.beam import  PBEAM, PBEAML, PBCOMP
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL  # PBEND
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
                                                PointElement, PointMassElement)  # CMASS5
 from pyNastran.bdf.cards.properties.mass import (PMASS, NSM)
 from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
                                       AESURF, AESURFS, AERO, AEROS, CSSCHD,
                                       CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-                                      PAERO1, PAERO2, PAERO3,
+                                      PAERO1, PAERO2, PAERO3, PAERO5, # PAERO4
                                       FLFACT, FLUTTER, GUST, MKAERO1,
-                                      MKAERO2, SPLINE1, SPLINE2, SPLINE4,
+                                      MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
                                       SPLINE5, TRIM)
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
@@ -78,8 +78,8 @@ from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    CORD2R, CORD2C, CORD2S, CORD3G,
                                                    GMCORD)
 from pyNastran.bdf.cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
-from pyNastran.bdf.cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
-                                         NLPCI, TF)
+from pyNastran.bdf.cards.dynamic import (DELAY, FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL,
+                                         NLPARM, NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD
 from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -94,8 +94,10 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1 
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs
-from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
-                                              DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
+from pyNastran.bdf.cards.optimization import (DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+                                              DRESP1, DRESP2, DRESP3,
+                                              DVMREL1,
+                                              DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET, USET,
                                           ASET1, BSET1, CSET1, QSET1, USET1,
@@ -317,7 +319,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'GMCORD',
 
             # temperature cards
-            'TEMP',  # 'TEMPD',
+            'TEMP', 'TEMPD',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'PCONV', 'PCONVM', 'PHBDY',
@@ -325,6 +327,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # ---- dynamic cards ---- #
             'DAREA',
+            'DELAY',  ## delays
             'NLPARM',  ## nlparms
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
@@ -339,9 +342,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'DEQATN',
 
             # optimization cards
-            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2',
+            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
             'DVPREL1', 'DVPREL2',
-            'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
+            'DVMREL1',
+            'DOPTPRM', 'DLINK', 'DCONADD',
             #'DSCREEN',
 
             'SET1', 'SET3',  ## sets
@@ -676,6 +680,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         # ---------------------------- optimization --------------------------
         # optimization
+        self.dconadds = {}
         self.dconstrs = {}
         self.desvars = {}
         self.ddvals = {}
@@ -698,6 +703,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.tstepnls = {}
         #: stores TF
         self.transfer_functions = {}
+        #: stores DELAY
+        self.delays = {}
 
         # --------------------------- aero defaults --------------------------
         # aero cards
@@ -749,6 +756,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.phbdys = {}
         #: stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
+        #: stores TEMPD
+        self.tempds = {}
 
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}
@@ -866,10 +875,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'aelinks' : ['AELINK'],
             'aelists' : ['AELIST'],
             'aeparams' : ['AEPARM'],
-            'aesurfs' : ['AESURF'],
+            'aesurfs' : ['AESURF', 'AESURFS'],
             'aestats' : ['AESTAT'],
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',], # 'CAERO5',
-            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3',], # 'PAERO4', 'PAERO5',
+            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO5'], # 'PAERO4',
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
@@ -881,7 +890,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                         'GMCORD'],
 
             # temperature cards
-            # 'TEMPD',
+            'tempds' : ['TEMPD'],
 
             'phbdys' : ['PHBDY'],
             'convectionProperties' : ['PCONV', 'PCONVM'],
@@ -897,6 +906,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'tsteps' : ['TSTEP'],
             'tstepnls' : ['TSTEPNL'],
             'transfer_functions' : ['TF'],
+            'delays' : ['DELAY'],
 
             'frequencies' : ['FREQ', 'FREQ1', 'FREQ2'],
 
@@ -909,6 +919,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'dequations' : ['DEQATN'],
 
             # optimization cards
+            'dconadds' : ['DCONADD'],
             'dconstrs' : ['DCONSTR'],
             'desvars' : ['DESVAR'],
             'ddvals' : ['DDVAL'],
@@ -1479,6 +1490,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         try:
             _get_cls = lambda name: globals()[name](card_obj, comment=comment)
         except Exception as e:
+            # if we'r in here, the card wasn't imported
             if not e.args:
                 e.args = ('',)
             e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
@@ -1492,7 +1504,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                              'FLUTTER', 'FLFACT', 'GUST', 'CSSCHD',
                              'NLPARM', 'NLPCI', 'TSTEP',
                              'TSTEPNL', 'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK',
-                             'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT', 'TF']:
+                             'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT', 'TF', 'DELAY',
+                             'DCONADD']:
                 try:
                     # PHBDY -> add_PHBDY
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
@@ -1578,7 +1591,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_SECSET' : ['SECSET', 'SECSET1'],
                 'add_SEQSET' : ['SEQSET', 'SEQSET1'],
                 'add_SEUSET' : ['SEUSET', 'SEUSET1'],
-                'add_DRESP' : ['DRESP1', 'DRESP2'],
+                'add_DRESP' : ['DRESP1', 'DRESP2', 'DRESP3'],
                 'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
                 'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S', 'GMCORD'],
                 'add_table' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
@@ -1635,8 +1648,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             if card_name == 'CDAMP4':
                     self.add_damper(CDAMP4(card_obj, comment=comment))
                     if card_obj.field(5):
-                        self.add_damper(CDAMP4(card_obj, 1, comment=comment))
+                        self.add_damper(CDAMP4(card_obj, 1, comment=''))
                     return card_obj
+
+            # elements that violate the QRG...no duplicate elements on card...lies
+            if card_name == 'TEMPD':
+                self.add_TEMPD(TEMPD(card_obj, 0, comment=''))
+                if card_obj.field(3):
+                    self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
+                    if card_obj.field(5):
+                        self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
+                        if card_obj.field(7):
+                            self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
+                return card_obj
 
             # dampers
             _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
@@ -1651,6 +1675,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 for i in _dct[card_name]:
                     if card_obj.field(i):
                         self.add_property(_cls(card_name)(card_obj, 1, comment=comment))
+                        comment = ''
                 return card_obj
 
             if card_name in ['DEQATN']:  # buggy for commas
@@ -1753,6 +1778,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 if '=' not in card[0]:
                     self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
+                #raise NotImplementedError(card)
         except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
             # NameErrors should be caught
             self._iparse_errors += 1
@@ -1793,7 +1819,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'frequencies',
 
             # optimization - dict
-            'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
+            'dconadds', 'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
             'dvprels', 'dvmrels',
 
             # SESETx - dict
@@ -2095,9 +2121,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
     def _parse_cards(self, cards, card_count):
         #print('card_count = %s' % card_count)
-        for card_name, card in sorted(cards.iteritems()):
+        for card_name, card in sorted(iteritems(cards)):
             #print('---%r---' % card_name)
             if self.is_reject(card_name):
+                #raise NotImplementedError(card)
                 self.log.info('    rejecting card_name = %s' % card_name)
                 for cardi in card:
                     self._increase_card_count(card_name)

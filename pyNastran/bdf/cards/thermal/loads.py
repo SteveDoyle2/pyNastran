@@ -10,7 +10,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import expand_thru, expand_thru_by, collapse_thru_by
+from pyNastran.bdf.cards.baseCard import expand_thru, expand_thru_by, collapse_thru_by, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_or_string, string, fields)
 
@@ -451,31 +451,27 @@ class TEMP(ThermalLoad):
 # Default Loads
 
 
-class TEMPD(ThermalLoadDefault):
+class TEMPD(BaseCard):
     """
     Defines a temperature value for all grid points of the structural model
     that have not been given a temperature on a TEMP entry
     """
     type = 'TEMPD'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ThermalLoadDefault.__init__(self, card, data)
+    def __init__(self, card=None, icard=0, data=None, comment=''):
+        BaseCard.__init__(self)
         if comment:
             self._comment = comment
         if card:
             nfields = len(card) - 1
             assert nfields % 2 == 0
-
-            #: dictionary of temperatures where the key is the set ID (SIDi)
-            #: and the value is the temperature (Ti)
-            self.temperatures = {}
-            for i in range(0, nfields, 2):
-                n = i // 2
-                sid = integer(card, i + 1, 'sid' + str(n))
-                temp = double(card, i + 2, 'temp' + str(n))
-                self.temperatures[sid] = temp
+            i = 2 * icard
+            print('i =', i)
+            self.sid = integer(card, i + 1, 'sid')
+            self.temperature = double(card, i + 2, 'temp')
         else:
-            self.temperatures = {data[0]: data[1]}
+            #self.temperatures = {data[0]: data[1]}
+            raise NotImplementedError('TEMPD')
 
     def add(self, tempd_obj):
         for (lid, tempd) in iteritems(tempd_obj.temperatures):
@@ -484,19 +480,13 @@ class TEMPD(ThermalLoadDefault):
     def cross_reference(self, model):
         pass
 
-    def repr_fields(self):
+    def raw_fields(self):
         """Writes the TEMPD card"""
-        list_fields = ['TEMPD']
-
-        nTemps = len(self.temperatures) - 1
-        for i, (gid, temp) in enumerate(sorted(iteritems(self.temperatures))):
-            list_fields += [gid, temp]
-            if i % 4 == 3 and nTemps > i:  # start a new TEMP card
-                list_fields += ['TEMPD']
+        list_fields = ['TEMPD', self.sid, self.temperature]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
+        card = self.raw_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         if is_double:

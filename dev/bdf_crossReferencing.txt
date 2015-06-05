@@ -81,7 +81,7 @@ CELAS2  (done)
 CELAS3  (done)
 CELAS4  (done)
 PELAS   (NA)
-PELAST  (not added, references PELAS, Tables)
+PELAST  (done, references PELAS, tables)
 
 ----Bushings (Elements/Properties)----:
 CBUSH   (no PBUSH, PBUSHT)
@@ -91,20 +91,20 @@ CBUSH2D (no PBUSH2D)
 PBUSH   (NA)
 PBUSH1D (NA)
 PBUSH2D (???)
-PBUSHT  (not added, references PBUSH)
+PBUSHT  (done, references PBUSH, tables)
 
 ----Dampers (Elements/Properties)----:
-CDAMP1  (???)
-CDAMP2  (???)
-CDAMP3  (???)
-CDAMP4  (???)
+CDAMP1  (done)
+CDAMP2  (done)
+CDAMP3  (done)
+CDAMP4  (done)
 CDAMP5  (???)
 
-PDAMP   (???)
-PDAMP5  (???)
-PDAMPT  (???)
+PDAMP   (done)
+PDAMP5  (done)
+PDAMPT  (done)
 
-CVISC   (???)
+CVISC   (done; references PVISC)
 PVISC   (NA)
 
 ----Masses (Elements/Properties)----:
@@ -186,7 +186,7 @@ SPCADD  (done)
 MPC     (done)
 MPCADD  (done)
 
-SUPORT  (???)
+SUPORT  (done)
 SUPORT1 (???)
 
 ----Loads----:
@@ -212,17 +212,17 @@ MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
 
-DLOAD   (???)
+DLOAD   (done; TLOAD/RLOAD)
 SLOAD   (done)
 
-TLOAD1  (no delay)
-TLOAD2  (no delay)
-RLOAD1  (no delay)
-RLOAD2  (no delay)
+TLOAD1  (done; delay)
+TLOAD2  (done; delay)
+RLOAD1  (done; delay)
+RLOAD2  (done; delay)
 
 ----Thermal Loads----:
 TEMP   (???)
-TEMPD  (not integrated)
+TEMPD  (done; no xref)
 TEMPD1
 
 QHBDY  (???)
@@ -277,8 +277,8 @@ PAERO4
 PAERO5
 
 SPLINE1 (done)
-SPLINE2 (no aefact ID1/ID2 reference)
-SPLINE3
+SPLINE2 (done; aefact)
+SPLINE3 (done)
 SPLINE4 (done)
 SPLINE5 (done)
 SPLINE6
@@ -309,7 +309,7 @@ DDVAL    (???)
 DOPTPRM  (NA)
 DRESP1   (???)
 DRESP2   (???)
-DRESP3
+DRESP3   (partial)
 DVGRID
 DVCREL1         # element  DV
 DVCREL2

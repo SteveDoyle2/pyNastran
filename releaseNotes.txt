@@ -52,25 +52,69 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.0 released 2015/04/xx-----------------------
+-----------------------v0.8.0 released 2015/04/25-----------------------
+Major changes:
+ - BDF supports unicode
+ - 22 new cards
+
 BDF:
+ - unicode is now supported
+ - support for the following in the header:
+   $ pyNastran: encoding=latin1
+   $ pyNastran: punch=True
+   $ pyNastran: version=nx
+ - self.set_as_msc() / self.set_as_nx()
  - added bdf.get_cards_by_card_types to get list of cards by card type easily
   - self._type_to_id_map
   - self._type_to_slot_map
   - self._slot_to_type_map
- - fixed bug in SPCAX with init
- - fixed bug in CBUSH with GB of None
- - QHBDY handles missing nodes better
+ - added:
+   - cards
+     - splines: SPLINE3
+     - aecomps: AECOMP
+     - pbushts: PBUSHT
+     - pelasts: PELAST
+     - pdampts: PDAMPT
+     - epoints: EPOINT
+     - transfer_functions: TF
+     - loads: QVOL, GMLOAD
+     - csschd: CSSCHD
+     - usets : USET, USET1
+     - coords: GMCORD
+     - spcs: GMSPC
+     - tempds : TEMPD
+     - se_sets: SESUP
+     - se_bsets: SEBSET/SEBSET1
+     - se_csets: SECSET/SECSET1
+     - se_qsets: SEQSET/SEQSET1
+
+   - more xref
+     - attempting to xref every card
+   - supports reading executive/case control decks
+   - renumbering
+   - parsing of "SET 1 THRU 10 EXCEPT, 8, 11, 12" in case control deck
+ - fixes:
+   - SUPORT1 dropping extra cards with same sid
+   - fixed bug in SPCAX with init
+   - fixed bug in CBUSH with GB of None
+   - QHBDY handles missing nodes better
+   - CFAST doesn't crash for blank nodes
+   - PFAST handles cid=-1
+   - renamed nlparm.id to nlparm.nlparm_id
+   - renamed nlpci.nlparm_id to nlpci.nlpci_id
+   - self.setSuper is now self.se_sets
+   - RBE3 is ambiguous; no longer handling bad cards
+   - model.material_ids
+ - API changes:
+   - case control now returns PRESSURE as DISPLACEMENT and not VECTOR
+   - SPCD is now in self.loads, not self.spcs
+   - TABDMP1 is now in self.tables_sdamping
+   - SUPORT1 is now in self.suport1, not self.spcs
+   - renamed spoints.spoints to spoints.points
+   - deprecated echo_bdf
 
 OP2:
 
-BDF API:
- - deprecated echo_bdf
-
------------------------v0.7.2 released 2015/04/xx-----------------------
-
-BDF:
-  - fixed model.material_ids
 
 -----------------------v0.7.2 released 2015/04/25-----------------------
 Relase notes:

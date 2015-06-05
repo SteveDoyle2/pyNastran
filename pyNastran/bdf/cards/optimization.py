@@ -427,7 +427,7 @@ class DRESP2(OptConstraint):
             self._comment = comment
         self.oid = integer(card, 1, 'oid')
         self.label = string(card, 2, 'label')
-        self.eqidFunc = integer_or_string(card, 3, 'eqid_Func')
+        self.dequation = integer_or_string(card, 3, 'dequation_id')
         self.region = integer_or_blank(card, 4, 'region')
         self.method = string_or_blank(card, 5, 'method', 'MIN')
         self.c1 = double_or_blank(card, 6, 'c1', 100.)
@@ -438,34 +438,36 @@ class DRESP2(OptConstraint):
         fields = [interpret_value(field) for field in card[9:]]
         key = '$NULL$'  # dummy key
         self.params = {key: []}
-        valueList = []
+        value_list = []
         for (i, field) in enumerate(fields):
             if i % 8 == 0 and field is not None:
-                self.params[key] = valueList
+                self.params[key] = value_list
                 key = field
-                valueList = []
+                value_list = []
             elif field is not None:
-                valueList.append(field)
+                value_list.append(field)
             #else:
             #    pass
-
-        self.params[key] = valueList
+        self.params[key] = value_list
         del self.params['$NULL$']
 
         #print "--Params--"
-        #for key, valueList in sorted(iteritems(self.params)):
-            #print("  key=%s params=%s" %(key, valueList))
+        #for key, value_list in sorted(iteritems(self.params)):
+            #print("  key=%s params=%s" %(key, value_list))
 
         #print self
 
     def cross_reference(self, model):
-        pass
+        msg = ', which is required by %s ID=%s' % (self.type, self.oid)
+        #TODO: implement xref
+        #self.dequation = model.DEQUATION(self.dequation, msg=msg)
 
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
         packLength = {
             'DESVAR' : [1, 0],
             'DTABLE' : [1, 0],
+            'DFRFNC' : [1, 0],
             'DRESP1' : [1, 0],
             'DNODE' : [1, 1],  # unique entry
             'DVPREL1' : [1, 0],
@@ -475,24 +477,20 @@ class DRESP2(OptConstraint):
             'DVCREL2' : [1, 0],
             'DVMREL2' : [1, 0],
             'DRESP2' : [1, 0],
-            'DESVAR' : [1, 0],
-            'DESVAR' : [1, 0],
-            'DESVAR' : [1, 0],
-            'DESVAR' : [1, 0],
         }
         list_fields = []
-        for key, valueList in sorted(iteritems(self.params)):
-            fields2 = [key] + valueList
+        for key, value_list in sorted(iteritems(self.params)):
+            fields2 = [key] + value_list
             try:
                 (i, j) = packLength[key]
             except KeyError:
-                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, valueList, self.oid)
+                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, value_list, self.oid)
                 raise KeyError(msg)
             list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
 
     def raw_fields(self):
-        list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
+        list_fields = ['DRESP2', self.oid, self.label, self.dequation,
                        self.region, self.method, self.c1, self.c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
@@ -502,9 +500,124 @@ class DRESP2(OptConstraint):
         c1 = set_blank_if_default(self.c1, 100.)
         c2 = set_blank_if_default(self.c2, 0.005)
 
-        list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
+        list_fields = ['DRESP2', self.oid, self.label, self.dequation,
                        self.region, method, c1, c2, self.c3]
         list_fields += self._pack_params()
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
+
+
+class DRESP3(OptConstraint):
+    type = 'DRESP3'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        self.oid = integer(card, 1, 'ID')
+        self.label = string(card, 2, 'label')
+        self.group = string(card, 3, 'group')
+        self.Type = string(card, 4, 'Type')
+        self.region = integer(card, 5, 'Type')
+
+        i = 0
+        fields = [interpret_value(field) for field in card[9:]]
+        key = '$NULL$'  # dummy key
+        self.params = {key: []}
+        value_list = []
+        for (i, field) in enumerate(fields):
+            if i % 8 == 0 and field is not None:
+                self.params[key] = value_list
+                key = field
+                value_list = []
+            elif field is not None:
+                value_list.append(field)
+            #else:
+            #    pass
+        self.params[key] = value_list
+        del self.params['$NULL$']
+
+    def _pack_params(self):
+        # # the amount of padding at the [beginning,end] of the 2nd line
+        packLength = {
+            'DESVAR' : [1, 0],
+            'DTABLE' : [1, 0],
+            'DFRFNC' : [1, 0],
+            'DRESP1' : [1, 0],
+            'DNODE' : [1, 1],  # unique entry
+            'DVPREL1' : [1, 0],
+            'DVCREL1' : [1, 0],
+            'DVMREL1' : [1, 0],
+            'DVPREL2' : [1, 0],
+            'DVCREL2' : [1, 0],
+            'DVMREL2' : [1, 0],
+            'DRESP2' : [1, 0],
+            'USRDATA' : [1, 0],
+        }
+        list_fields = []
+        for key, value_list in sorted(iteritems(self.params)):
+            fields2 = [key] + value_list
+            try:
+                (i, j) = packLength[key]
+            except KeyError:
+                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, value_list, self.oid)
+                raise KeyError(msg)
+            list_fields += build_table_lines(fields2, nstart=i, nend=j)
+        return list_fields
+
+    def raw_fields(self):
+        list_fields = [
+            'DRESP3', self.oid, self.label, self.group, self.Type, self.region,
+            None, None, None, None]
+        list_fields += self._pack_params()
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = [
+            'DRESP3', self.oid, self.label, self.group, self.Type, self.region,
+            None, None, None, None]
+        list_fields += self._pack_params()
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
+
+
+class DCONADD(OptConstraint):
+    type = 'DCONADD'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        if card:
+            self.dcid = integer(card, 1, 'dcid')
+            self.dconstrs = []
+
+            for i in range(1, len(card)):
+                dconstr = integer(card, i, 'dconstr_%i' % i)
+                self.dconstrs.append(dconstr)
+
+    def cross_reference(self, model):
+        self.dconstrs = [model.dconstrs[dcid] for dcid in self.dconstr_ids]
+
+    @property
+    def dconstr_ids(self):
+        return [dconstr if isinstance(dconstr, integer_types) else dconstr.oid
+                for dconstr in self.dconstrs]
+
+    def raw_fields(self):
+        list_fields = ['DCONADD', self.dcid] + self.dconstr_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
