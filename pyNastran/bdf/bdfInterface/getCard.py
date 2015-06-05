@@ -54,6 +54,9 @@ class GetMethods(GetMethodsDeprecated):
                 except KeyError:
                     msg = 'key=%s id=%s cannot be found' % (key, id)
                     raise KeyError(msg)
+                except TypeError:
+                    msg = 'key=%s id=%s cannot be found' % (key, id)
+                    raise TypeError(msg)
 
                 if isinstance(card, list):
                     for cardi in card:  # loads/spc/mpc

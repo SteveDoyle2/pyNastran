@@ -1767,7 +1767,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     return points, elements
 
 
-class PAERO5(BaseCard):
+class PAERO5(BaseCard):  ## TODO: not integrated
     def __init__(self, card=None, data=None):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
@@ -1836,6 +1836,8 @@ class PAERO5(BaseCard):
         #return(I1, I2, I3, I4, I5,
                #J1, J2, J3, J4, J5)
 
+    def cross_reference(self, model):
+        pass
 
 
 class FLFACT(BaseCard):
@@ -2452,8 +2454,8 @@ class PAERO2(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    #def cross_reference(self, model):
-        #pass
+    def cross_reference(self, model):
+        pass
 
     def raw_fields(self):
         """
@@ -2550,6 +2552,9 @@ class PAERO3(BaseCard):
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
+
+    def cross_reference(self, model):
+        pass
 
     def raw_fields(self):
         """
@@ -2652,8 +2657,9 @@ class SPLINE1(Spline):
         :type model:   BDF()
         """
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
-        self.caero = model.CAero(self.caero, msg=msg)
-        self.setg = model.Set(self.setg, msg=msg)
+        self.caero = model.CAero(self.CAero(), msg=msg)
+        self.setg = model.Set(self.Set(), msg=msg)
+        self.setg.cross_reference(model, 'Node')
 
     def raw_fields(self):
         """
@@ -2763,6 +2769,30 @@ class SPLINE2(Spline):
             return self.setg
         return self.setg.sid
 
+    def CAero(self):
+        if isinstance(self.caero, integer_types):
+            return self.caero
+        return self.caero.eid
+
+    def Set(self):
+        if isinstance(self.setg, integer_types):
+            return self.setg
+        return self.setg.sid
+
+    def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the SPLINE2 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
+        msg = ' which is required by SPLINE2 eid=%s' % self.eid
+        self.cid = model.Coord(self.Cid(), msg=msg)
+        self.caero = model.CAero(self.CAero(), msg=msg)
+        self.setg = model.Set(self.Set(), msg=msg)
+        self.setg.cross_reference(model, 'Node')
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2790,6 +2820,69 @@ class SPLINE2(Spline):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
+
+
+class SPLINE3(Spline):
+        type = 'SPLINE3'
+        _field_map = {
+            1: 'eid', 2:'caero', 3:'box_id', 5:'g1', 6:'c1',
+            7: 'a1', 8:'usage',
+        }
+
+        def __init__(self, card=None, data=None, comment=''):
+            Spline.__init__(self, card, data)
+            if comment:
+                self._comment = comment
+            if card:
+                self.eid = integer(card, 1, 'eid')
+                self.caero = integer(card, 2, 'caero')
+                self.box_idt = integer(card, 3, 'box_id')
+                self.components = integer(card, 4, 'comp')
+                assert self.components in [1, 2, 3, 4, 5, 6], self.components
+                self.g1 = integer(card, 5, 'G1')
+                self.c1 = integer(card, 5, 'C1')
+                self.a1 = double(card, 5, 'A1')
+                assert self.c1 in [0, 1, 2, 3, 4, 5, 6], self.components
+                self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
+                assert self.usage in ['FORCE', 'DISP', 'BOTH'], self.usage
+
+                nfields = len(card) - 1
+                nrows = nfields // 8
+                if nfields % 8:
+                    nrows += 1
+
+                i = 1
+                self.Gi = []
+                self.ci = []
+                self.ai = []
+                for irow in range(1, nrows):
+                    j = 1 + nrows * 8
+                    gi = integer(card, j, 'Gi_' % i)
+                    ci = integer(card, j + 1, 'Ci_' % i)
+                    ai = double(card, j + 2, 'Ai_' % i)
+                    self.Gi.append(gi)
+                    self.ci.append(ci)
+                    self.ai.append(ai)
+                    if card[j + 3] or card[j + 4] or card[j + 5]:
+                        i += 1
+                        gi = integer(card, j, 'Gi_' % i)
+                        ci = integer(card, j + 1, 'Ci_' % i)
+                        ai = double(card, j + 2, 'Ai_' % i)
+                        self.Gi.append(gi)
+                        self.ci.append(ci)
+                        self.ai.append(ai)
+                    i += 1
+            else:
+                raise NotImplementedError()
+
+        def cross_reference(self, model):
+            pass
+
+        def raw_fields(self):
+            list_fields = ['SPLINE3', self.eid, self.caero, self.box_id, self.g1, self.c1, self.a1, self.usage]
+            for g, c, a in zip(self.Gi, self.ci, self.ai):
+                list_fields += [g, c, a, None]
+            return list_fields
 
 
 class SPLINE4(Spline):
@@ -2868,9 +2961,10 @@ class SPLINE4(Spline):
         :type model:   BDF()
         """
         msg = ' which is required by SPLINE4 eid=%s' % self.eid
-        #self.caero = model.CAero(self.caero, msg=msg)
-        #self.setg = model.Set(self.setg, msg=msg)
-        #self.aelist = model.AEList(self.aelist, msg=msg)
+        self.caero = model.CAero(self.CAero(), msg=msg)
+        self.setg = model.Set(self.Set(), msg=msg)
+        self.aelist = model.AEList(self.aelist, msg=msg)
+        self.setg.cross_reference(model, 'Node')
 
     def raw_fields(self):
         """
@@ -2976,9 +3070,11 @@ class SPLINE5(Spline):
         :type model:   BDF()
         """
         msg = ' which is required by SPLINE5 eid=%s' % self.eid
-        self.caero = model.CAero(self.caero, msg=msg)
-        self.setg = model.Set(self.setg, msg=msg)
-        self.aelist = model.AEList(self.aelist, msg=msg)
+        self.cid = model.Coord(self.Cid(), msg=msg)
+        self.caero = model.CAero(self.CAero(), msg=msg)
+        self.setg = model.Set(self.Set(), msg=msg)
+        self.aelist = model.AEList(self.AEList(), msg=msg)
+        self.setg.cross_reference(model, 'Node')
 
     def raw_fields(self):
         """

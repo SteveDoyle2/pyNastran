@@ -783,7 +783,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             ],
             'rigidElements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',],
 
-            'mass_properties' : ['PMASS'],
+            'properties_mass' : ['PMASS'],
             'properties' : [
                 'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
                 'PBUSH', 'PBUSH1D',

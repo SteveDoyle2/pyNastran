@@ -171,10 +171,10 @@ class BDFMethods(BDFMethodsDeprecated):
                     sym_axis += 'y'
                 if aero.is_symmetric_xz():
                     sym_axis += 'z'
-                if aero.is_symmetric_xy():
-                    raise NotImplementedError('%s is antisymmetric about the XY plane' % str(aero))
-                if aero.is_symmetric_xz():
-                    raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
+                if aero.is_anti_symmetric_xy():
+                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
+                if aero.is_anti_symmetric_xz():
+                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
         if sym_axis is not None:
             # either we figured sym_axis out from the AERO cards or the user told us
             self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)

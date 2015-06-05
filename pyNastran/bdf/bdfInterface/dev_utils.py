@@ -514,6 +514,20 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
         (model.aelinks, 'sid', None),
         (model.aelists, 'sid', None),
         (model.paeros, 'pid', None),
+
+        (model.sets, 'sid', None),
+        #(model.asets, 'sid', None),
+        #(model.bsets, 'sid', None),
+        #(model.csets, 'sid', None),
+        #(model.qsets, 'sid', None),
+        #(model.usets, 'sid', None),
+
+        (model.se_sets, 'sid', None),
+        #(model.se_asets, 'sid', None),
+        #(model.se_bsets, 'sid', None),
+        #(model.se_csets, 'sid', None),
+        #(model.se_qsets, 'sid', None),
+        #(model.se_usets, 'sid', None),
     )
     param_id = 101
     for (dict_obj, param_name, mmap) in sorted(data):
