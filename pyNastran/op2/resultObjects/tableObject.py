@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import string_types, iteritems
 from six.moves import zip, range
 from struct import Struct, pack
@@ -124,85 +125,113 @@ class RealTableArray(TableArray):  # displacement style table
     def data_type(self):
         return 'float32'
 
-    def _write_op2_header(self, f, table_num, i):
-        # record 3
-        header1 = [  #4, 0, 4,
-                  #4, -n, 4,
-                  #4, 0, 4,
+    def _write_table_3(self, f, fascii, itable=-3, itime=0):
+        import inspect
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        fascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-                  4, 146, 4,
-                  4, 584, 4]
-        header_format1 = b'6i '
+        f.write(pack('12i', *[4, itable, 4,
+                             4, 1, 4,
+                             4, 0, 4,
+                             4, 146, 4,
+                             ]))
+        approach_code = self.approach_code
+        table_code = self.table_code
+        isubcase = self.isubcase
+        random_code = self.random_code
+        format_code = 1
+        num_wide = self.num_wide
+        acoustic_flag = 0
+        thermal = 0
+        Title = '%-128s' % self.Title
+        subtitle = '%-128s' % self.subtitle
+        label = '%-128s' % self.label
+        ftable3 = '50i 128s 128s 128s'
+        oCode = 0
+        if self.analysis_code == 1:
+            lsdvmn = self.lsdvmn
+        else:
+            raise NotImplementedError(self.analysis_code)
 
-        # end of record 3
-        header2 = [4, 584, 4]
-        header_format2 = b' 3i'
+        table3 = [
+            approach_code, table_code, 0, isubcase, lsdvmn,
+            0, 0, random_code, format_code, num_wide,
+            oCode, acoustic_flag, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, thermal, thermal, 0,
+            Title, subtitle, label,
+        ]
 
-        #============
-        header_format = b''  # the main block
-        header = []
-        for word in self.words:
-            if word == '???':
-                val = 0
-            elif word in self.dataNames:
-                val = getattr(self, word + 's')[i]  # self.times[i]
+        n = 0
+        for v in table3:
+            if isinstance(v, int) or isinstance(v, float):
+                n += 4
             else:
-                val = getattr(self, word)  # self.time
+                n += len(v)
+        assert n == 584, n
+        data = [584] + table3 + [584]
+        fmt = 'i' + ftable3 + 'i'
+        #print(fmt)
+        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        fascii.write('%s header 3c = %s\n' % (self.table_name, data))
+        f.write(pack(fmt, *data))
 
-            if isinstance(val, int):
-                header_format += b'i'
-            elif isinstance(val, float):
-                header_format += b'f'
-            elif isinstance(val, string_types) and word in ['Title', 'subtitle', 'label']:
-                val = 4
-                header_format += 'i'
-                #val = '%128s' % val
-                #header_format += b'128s'
-            else:  # I don't think strings are allowed, but if they are, it's 4s
-                raise RuntimeError('format(%r) = %r ???' % (word, val))
-            header.append(val)
+    def write_op2(self, f, fascii, date, is_mag_phase=False):
+        import inspect
+        assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
 
-        #============
-        Formats = header_format1 + header_format + header_format2
-        headers = header1 + header + header2
-        #print('Formats =', Formats)
-        #print('headers =', headers)
-        #f.write(Struct(header_format1).pack(*header1))
-        #f.write(Struct(header_format2).pack(*header2))
-        #f.write(Struct(header_format).pack(*header))
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        fascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        f.write(Struct(Formats).pack(*headers))
-
-    def write_op2(self, f, is_mag_phase=False):
         #print('data_code =', self.data_code)
-        self._write_table_header(f)
+        self._write_table_header(f, fascii, date)
         if isinstance(self.nonlinear_factor, float):
             op2_format = '%sif' % (7 * self.ntimes)
+            raise NotImplementedError()
         else:
             op2_format = '2i6f' * self.ntimes
         s = Struct(op2_format)
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        format_table4_1 = Struct(b'9i')
+        format_table4_1 = Struct(b'15i')
         format_table4_2 = Struct(b'3i')
 
         # table 4 info
-        nnodes = self.data.shape[0]
+        #ntimes = self.data.shape[0]
+        nnodes = self.data.shape[1]
         nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
 
         #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
         ntotal = self.ntimes * nnodes * (2 + 6)
 
-        table_num = 3
+        #print('shape = %s' % str(self.data.shape))
+        assert nnodes > 1, nnodes
+        assert ntotal > 1, ntotal
+
+        table_num = -3
+        device_code = self.device_code
+        fascii.write('  ntimes = %s\n' % self.ntimes)
+
+        fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
         for itime in range(self.ntimes):
-            self._write_op2_header(f, table_num, itime)
+            self._write_table_3(f, fascii, table_num, itime)
 
             # record 4
-            header = [4, 0, 4,
-                      4, -table_num - 1, 4,
-                      4, 4 * ntotal, 4]
-            f.write(format_table4_1.pack(*header))
+            header = [4, -4, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4*ntotal]
+            f.write(pack('%ii' % len(header), *header))
+            fascii.write('r4 [4, 0, 4]\n')
+            fascii.write('r4 [4, %s, 4]\n' % (table_num-1))
+            fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
             t1 = self.data[itime, :, 0]
             t2 = self.data[itime, :, 1]
@@ -211,16 +240,22 @@ class RealTableArray(TableArray):  # displacement style table
             r2 = self.data[itime, :, 4]
             r3 = self.data[itime, :, 5]
 
-            i = 0
-
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
-                vals = (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
-                #grid = nodeID*10+device_code
-                f.write(s.pack(*vals))
+                data = [node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i]
+                fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
+                f.write(s.pack(*data))
 
             table_num -= 2
-            header = [4, 4 * ntotal, 4]
-            f.write(format_table4_2.pack(*header))
+            header = [4 * ntotal,]
+            f.write(pack('i', *header))
+            fascii.write('footer = %s' % header)
+        header = [
+            4, table_num, 4,
+            4, 1, 4,
+            4, 0, 4,
+            4, 0, 4,
+        ]
+        f.write(pack('%ii' % len(header), *header))
         #return n
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words=True):

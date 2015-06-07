@@ -790,6 +790,9 @@ class OP2Common(Op2Codes, F06Writer):
         self.tCode = tCode
         self.int3 = int3
 
+        self.data_code['subtable_name'] = self.subtable_name
+        self.data_code['approach_code'] = approach_code
+
         #: the local subcase ID
         self.isubcase = isubcase
         self.data_code['isubcase'] = self.isubcase

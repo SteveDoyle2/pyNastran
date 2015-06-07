@@ -116,7 +116,7 @@ class FortranFormat(object):
         self.n += 8 + ndata
         return data_out
 
-    def read_markers(self, markers):
+    def read_markers(self, markers, macro_rewind=True):
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -132,7 +132,7 @@ class FortranFormat(object):
             assert marker == imarker, 'marker=%r imarker=%r; markers=%s i=%s' % (marker, imarker, markers, i)
             self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
-    def get_nmarkers(self, n, rewind=True):
+    def get_nmarkers(self, n, rewind=True, macro_rewind=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -150,9 +150,12 @@ class FortranFormat(object):
         if rewind:
             self.n = ni
             self.f.seek(self.n)
+            #for i in range(n):
+                #self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (i, macro_rewind or rewind))
         else:
+            #if not macro_rewind:
             for i in range(n):
-                self.binary_debug.write('get_nmarkers- [4, %i, 4]\n' % i)
+                self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (i, macro_rewind or rewind))
         return markers
 
     def _skip_subtables(self):
@@ -248,7 +251,7 @@ class FortranFormat(object):
     def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
-
+        self.binary_debug.write('record_length = %s\n' % record_len)
         if record_len == 584:  # table3 has a length of 584
             self.data_code = {}
             self.obj = None
@@ -443,19 +446,23 @@ class FortranFormat(object):
         to quickly size the arrays.  We just need a bit of meta data and can
         jump around quickly.
         """
+        self.binary_debug.write('_get_record_length\n')
         len_record = 0
         n0 = self.n
         markers0 = self.get_nmarkers(1, rewind=False)
+        self.binary_debug.write('  markers0=%s\n' % markers0)
 
         n = self.n
         record = self.skip_block()
         len_record += self.n - n - 8  # -8 is for the block
+        self.binary_debug.write('  len_record=%s\n' % len_record)
 
         markers1 = self.get_nmarkers(1, rewind=True)
         # handling continuation blocks
         if markers1[0] > 0:
             while markers1[0] > 0:
                 markers1 = self.get_nmarkers(1, rewind=False)
+                self.binary_debug.write('  markers1=%s\n' % markers1)
                 n = self.n
                 record = self.skip_block()
                 len_record += self.n - n - 8  # -8 is for the block
@@ -512,18 +519,18 @@ class FortranFormat(object):
                 markers1 = self.get_nmarkers(1, rewind=True)
                 nloop += 1
 
-    def _read_record(self, stream=False, debug=True):
+    def _read_record(self, stream=False, debug=True, macro_rewind=False):
         """
         :param self:  the OP2 object pointer
         """
-        markers0 = self.get_nmarkers(1, rewind=False)
+        markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.debug and debug:
-            self.binary_debug.write('read_record - marker = [4, %i, 4]\n' % markers0[0])
+            self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
         record = self.read_block()
 
         if self.debug and debug:
             nrecord = len(record)
-            self.binary_debug.write('read_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
+            self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
         assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
 
         markers1 = self.get_nmarkers(1, rewind=True)

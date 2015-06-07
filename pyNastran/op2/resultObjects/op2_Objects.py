@@ -3,11 +3,14 @@ from __future__ import print_function
 from six import  iteritems
 from six.moves import range
 import copy
+from struct import pack
+import inspect
+
 
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
 #from pyNastran.utils import list_print
-
+from pyNastran.op2.write_utils import write_table_header
 
 class BaseScalarObject(Op2Codes):
     def __init__(self):
@@ -217,3 +220,59 @@ class ScalarObject(BaseScalarObject):
         if dt is not None:
             self.dt = dt
             self.add_new_transient()
+
+    def _write_table_header(self, f, fascii, date):
+        table_name = '%-8s' % self.table_name # 'BOUGV1  '
+        fascii.write('%s._write_table_header\n' % table_name)
+        #get_nmarkers- [4, 0, 4]
+        #marker = [4, 2, 4]
+        #table_header = [8, 'BOUGV1  ', 8]
+        write_table_header(f, fascii, table_name)
+
+
+        #read_markers -> [4, -1, 4]
+        #get_nmarkers- [4, 0, 4]
+        #read_record - marker = [4, 7, 4]
+        #read_record - record = [28, recordi, 28]
+
+        #write_markers(f, fascii, '  %s header1a' % self.table_name, [-1, 0, 7])
+        data_a = [4, -1, 4,]
+        #data_a = []
+        #data_b = [4, -1, 4,]
+        data_c = [4, 7, 4,]
+        data = data_a + data_c
+        blank = ' ' * len(self.table_name)
+        fascii.write('%s header1a_i = %s\n' % (self.table_name, data_a))
+        #fascii.write('%s            = %s\n' % (blank, data_b))
+        fascii.write('%s            = %s\n' % (blank, data_c))
+        f.write(pack('<6i', *data))
+
+        table1_fmt = '<9i'
+        table1 = [
+            28,
+            1, 2, 3, 4, 5, 6, 7,
+            28,
+        ]
+        fascii.write('%s header1b = %s\n' % (self.table_name, table1))
+        f.write(pack(table1_fmt, *table1))
+
+        #recordi = [subtable_name, month, day, year, 0, 1]
+
+        data = [
+            4, -2, 4,
+            4, 1, 4,
+            4, 0, 4,
+            4, 7, 4,
+        ]
+        fascii.write('%s header2a = %s\n' % (self.table_name, data))
+        f.write(pack('12i', *data))
+
+        month, day, year = date
+        table2 = [
+            28,  # 4i -> 13i
+            b'%-8s' % self.subtable_name, month, day, year - 2000, 0, 1,   # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)
+            28,
+            ]
+        table2_format = 'i8s6i'
+        fascii.write('%s header2b = %s\n' % (self.table_name, table2))
+        f.write(pack(table2_format, *table2))

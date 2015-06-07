@@ -11,6 +11,7 @@ import warnings
 
 import pyNastran
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
+from pyNastran.op2.write_utils import _write_markers
 
 def make_stamp(Title, today=None):
     if 'Title' is None:
@@ -64,17 +65,45 @@ class OP2Writer(OP2_F06_Common):
         :param delete_objects: should objects be deleted after they're written
                          to reduce memory (default=True)
         """
+        assert op2_outname != 'ctria3.op2'
+        print('writing %s' % op2_outname)
         if isinstance(op2_outname, str):
             op2 = open(op2_outname, 'wb')
-            op2ascii = open(op2_outname+'.txt', 'wb')
+            op2_ascii = open(op2_outname + '.txt', 'wb')
         else:
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
             op2 = op2_outname
             op2_outname = op2.name
             print('op2_outname =', op2_outname)
 
-        data = [4, 2, 4]
-        op2.write(pack('3i', *data))
+        #op2_ascii.write('writing [3, 7, 0] header\n')
+        #if markers == [3,]:  # PARAM, POST, -1
+            #self.read_markers([3])
+            #data = self.read_block()
+
+            #self.read_markers([7])
+            #data = self.read_block()
+            #data = self._read_record()
+            #self.read_markers([-1, 0])
+        #elif markers == [2,]:  # PARAM, POST, -2
+        if 1:
+        #_write_markers(op2, op2_ascii, [3, 0, 7])
+            op2.write(pack('3i', *[4, 3, 4,]))
+            tape_code = b'NASTRAN FORT TAPE ID CODE - '
+            op2.write(pack('7i 28s i', *[4, 1, 4,
+                                         4, 7, 4,
+                                         28, tape_code, 28]))
+
+            nastran_version = b'NX8.5   ' if self.is_nx else b'XXXXXXXX'
+            op2.write(pack(b'4i 8s i', *[4, 2, 4,
+                                         #4, 2, 4,
+                                         #4, 1, 4,
+                                         #4, 8, 4,
+                                         8, nastran_version, 8]))
+            op2.write(pack(b'6i', *[4, -1, 4,
+                                    4, 0, 4,]))
+        else:
+            _write_markers(op2, op2_ascii, [2, 4])
 
         if self.grid_point_weight.reference_point is not None:
             if has_attr(result, 'write_op2'):
@@ -91,7 +120,7 @@ class OP2Writer(OP2_F06_Common):
             header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             if has_attr(result, 'write_op2'):
-                result.write_op2(op2, op2ascii)
+                result.write_op2(op2, op2_ascii)
                 if delete_objects:
                     del result
             else:
@@ -105,7 +134,7 @@ class OP2Writer(OP2_F06_Common):
 
             if hasattr(result, 'write_op2'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                result.write_op2(op2, op2ascii, is_mag_phase=is_mag_phase)
+                result.write_op2(op2, op2_ascii, is_mag_phase=is_mag_phase)
                 if delete_objects:
                     del result
             else:
@@ -116,12 +145,6 @@ class OP2Writer(OP2_F06_Common):
         # nastran puts the tables in order of the Case Control deck,
         # but we're lazy so we just hardcode the order
 
-        # param,post,-2 ???
-        data = [  #4, 0, 4,
-                #4, 2, 4,
-                #4, 0, 4,
-                ]
-        op2.write(Struct(b'%ii' % len(data)).pack(*data))
 
         #if markers == [3,]:  # PARAM, POST, -2
             #self.read_markers([3])
@@ -131,109 +154,99 @@ class OP2Writer(OP2_F06_Common):
             ##self.show(100)
             #data = self._read_record()
 
-        res_types = [
-            self.accelerations,
-            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
-            self.scaledDisplacements,  # ???
 
-            self.forceVectors,
-            self.loadVectors,
-            self.temperatures,
-            self.velocities, #self.eigenvectors,
-
-            self.mpcForces,
-            self.spcForces,
-            self.thermalLoadVectors,
-
-
-            #------------------------------------------
+        oef = [
             # OEF - forces
-
             # alphabetical order...
-            # bars
-            self.barForces,
             self.cbar_force,
 
             # beam
-            self.beamForces,
-            self.bar100Forces,
-            self.bendForces,
+            #self.cbeam_forces,
+            #self.cbar100_forces,
+            #self.cbend_forces,
             self.cbeam_force,
+            self.cbush_force,
 
-            # alphabetical
             self.celas1_force,
             self.celas2_force,
             self.celas3_force,
             self.celas4_force,
 
+            self.cdamp1_force,
+            self.cdamp2_force,
+            self.cdamp3_force,
+            self.cdamp4_force,
+
+            #self.plateForces,   # centroidal elements
+            #self.plateForces2,  # bilinear elements
+
             self.conrod_force,
             self.cquad4_force,
-            self.plateForces,   # centroidal elements
-            self.plateForces2,  # bilinear elements
-
+            self.cquad8_force,
             self.crod_force,
             self.cshear_force,
             self.ctria3_force,
+            self.ctria6_force,
             self.ctube_force,
 
-            # rods
-            self.rodForces,
-
-            # springs
-            self.springForces,
-
-            # dampers
-            self.damperForces,
-
-            # cshear,
-            self.shearForces,
             # other
-            self.bushForces, self.gapForces, self.solidPressureForces,
+            #self.cgap_force, #self.solidPressureForces,
+        ]
 
-            #------------------------------------------
-            # OES - strain
-            # 1.  cbar
-            # 2.  cbeam
-            # 3.  crod/ctube/conrod
+        oes1x1 = [
+            # cbars/cbeams
+            self.cbar_stress, self.cbeam_stress,
+
+            # bush
+            self.cbush_stress, self.cbush1d_stress_strain,
+
+            # rods
+            #self.nonlinearRodStress,
+
+            self.celas1_stress, self.celas2_stress, self.celas3_stress, self.celas4_stress,
+
+            self.chexa_stress,
+            self.conrod_stress,
+            self.cpenta_stress,
+            self.cquad4_stress, self.cquad8_stress, self.cquadr_stress,
+            self.crod_stress,
+            self.cshear_stress,
+            self.ctetra_stress,
+            self.ctria3_stress, self.ctria6_stress, self.ctriar_stress,
+            self.ctube_stress,
+        ]
+        oes1c = [
+            self.cquad4_composite_stress, self.cquad8_composite_stress, self.cquadr_composite_stress,
+            self.ctria3_composite_stress, self.ctria6_composite_stress, self.ctriar_composite_stress,
+
+            #self.nonlinearPlateStress,
+            self.ctriax_stress, #self.hyperelasticPlateStrain,
+        ]
+        stress = oes1x1 + oes1c
+
+        strain = [
+            # bars/beams
+            self.cbar_strain, self.cbeam_strain,
 
             # springs,
-            self.celasStrain,
-            self.celas1_strain,
-            self.celas2_strain,
-            self.celas3_strain,
-            self.celas4_strain,
-
-            # bars/beams
-            self.barStrain, self.beamStrain,
-            self.cbar_strain,
-            self.cbeam_strain,
+            self.celas1_strain, self.celas2_strain, self.celas3_strain, self.celas4_strain,
 
             # plates
-            self.plateStrain,
-            self.shearStrain,
-            self.compositePlateStrain,
-            self.cquad4_composite_strain,
-            self.cquad8_composite_strain,
-            self.cquadr_composite_strain,
-            self.ctria3_composite_strain,
-            self.ctria6_composite_strain,
-            self.ctriar_composite_strain,
+            self.ctria3_strain, self.cquad4_strain,
+            self.cshear_strain,
+            self.cquad4_composite_strain, self.cquad8_composite_strain, self.cquadr_composite_strain,
+            self.ctria3_composite_strain, self.ctria6_composite_strain, self.ctriar_composite_strain,
 
-            self.nonlinearPlateStrain,
-            self.ctriaxStrain, self.hyperelasticPlateStress,
-
+            #self.nonlinearPlateStrain,
+            #self.ctriax_strain, self.hyperelasticPlateStress,
 
             # solids
-            self.solidStrain,
+            self.ctetra_strain,
+            self.cpenta_strain,
+            self.chexa_strain,
 
             # rods
-            self.rodStrain, self.nonlinearRodStrain,  # non-vectorized
-
-
-            self.celas1_strain,
-            self.celas2_strain,
-            self.celas3_strain,
-            self.celas4_strain,
+            #self.nonlinearRodStrain,  # non-vectorized
 
             self.chexa_strain,
             self.conrod_strain,
@@ -250,107 +263,50 @@ class OP2Writer(OP2_F06_Common):
             self.ctube_strain,
 
             # bush
-            self.bushStrain,
-            #------------------------------------------
-            # cbars/cbeams
-            self.barStress,
-            self.beamStress,
-            self.cbar_stress,
-            self.cbeam_stress,
-
-            # bush
-            self.bushStress, self.bush1dStressStrain,
-
-            self.celasStress,
-            self.shearStress,
-            self.plateStress,
-            self.solidStress,
-
-            # rods
-            self.rodStress, self.nonlinearRodStress,
-
-
-            # shear
-            # OES - stress
-            self.celas1_stress,
-            self.celas2_stress,
-            self.celas3_stress,
-            self.celas4_stress,
-
-            self.chexa_stress,
-            self.conrod_stress,
-            self.cpenta_stress,
-            self.cquad4_stress,
-            self.cquad8_stress,
-            self.cquadr_stress,
-            self.crod_stress,
-            self.cshear_stress,
-            self.ctetra_stress,
-            self.ctria3_stress,
-            self.ctria6_stress,
-            self.ctriar_stress,
-            self.ctube_stress,
-
-            self.compositePlateStress,
-            self.cquad4_composite_stress,
-            self.cquad8_composite_stress,
-            self.cquadr_composite_stress,
-            self.ctria3_composite_stress,
-            self.ctria6_composite_stress,
-            self.ctriar_composite_stress,
-
-            self.nonlinearPlateStress,
-            self.ctriaxStress, self.hyperelasticPlateStrain,
-
-            #------------------------------------------
-
-            self.gridPointStresses, self.gridPointVolumeStresses, self.gridPointForces,
+            self.cbush_strain,
         ]
 
+        oug = [
+            self.accelerations,
+            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
+            self.scaledDisplacements,  # ???
+            self.temperatures,
+            self.velocities, self.eigenvectors,
+        ]
+        oqg = [
+            self.mpc_forces,
+            self.spc_forces,
+        ]
+
+        other = [
+            #self.forceVectors,
+            #self.loadVectors,
+            self.thermal_load_vectors,
+
+            self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
+        ]
         isubcases = sorted(self.iSubcaseNameMap.keys())
-        res_keys = isubcases
-        for res_key in res_keys:
-            isubcase = res_key
-            title = self.Title
-            (subtitle, label) = self.iSubcaseNameMap[isubcase]
-            subtitle = subtitle.strip()
-            label = label.strip()
+        title = self.Title
 
-            (subtitle, label) = self.iSubcaseNameMap[isubcase]
-            label = label.strip()
-            subtitle = subtitle.strip()
-
-            res_length = 0
-
-
-            for res_type in res_types:
-                if isubcase in res_type:
-                    result = res_type[isubcase]
-                    if hasattr(result, 'write_op2'):
-                        result.write_op2(op2, op2ascii)
-                        res_length = max(len(result.__class__.__name__), res_length)
-                        continue
-                    else:
-                        print("*op2 - %s not written" % result.__class__.__name__)
-
-            if res_length == 0:
-                return
-
-            print("OP2:")
-            res_format = '  %%-%is SUBCASE=%%i%%s' % res_length
-
-            for res_type in res_types:
-                #print("res_type ", res_type)
-                if isubcase in res_type:
-                    result = res_type[isubcase]
-                    if hasattr(result, 'write_op2'):
+        res_categories = [oug, oqg, oef, stress, strain, other]
+        res_outs = {}
+        for res_category in res_categories:
+            for res_type in res_category:
+                res_keys = isubcases
+                for res_key in res_keys:
+                    isubcase = res_key
+                    if isubcase in res_type:
+                        #(subtitle, label) = self.iSubcaseNameMap[isubcase]
+                        result = res_type[isubcase]
                         element_name = ''
                         if hasattr(result, 'element_name'):
                             element_name = ' - ' + result.element_name
+                        if hasattr(result, 'write_op2'):
+                            print('%s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
+                            result.write_op2(op2, op2_ascii, self.date, is_mag_phase=False)
+                        else:
+                            print("*op2 - %s not written" % result.__class__.__name__)
 
-                        print(res_format % (result.__class__.__name__, isubcase, element_name))
-                        result.write_op2(op2, op2ascii, is_mag_phase=False)
-                    else:
-                        print("*op2 - %s not written" % result.__class__.__name__)
-
+        footer = [4, 0, 4]
+        op2.write(pack(b'3i', *footer))
         op2.close()

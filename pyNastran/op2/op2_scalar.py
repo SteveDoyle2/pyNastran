@@ -677,15 +677,26 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             raise
 
         if markers == [3,]:  # PARAM, POST, -1
+            self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
+            self.post = -1
             self.read_markers([3])
             data = self.read_block()
 
             self.read_markers([7])
             data = self.read_block()
+            self.binary_debug.write(data + '\n')
             data = self._read_record()
+            if data.startswith(b'NX'):
+                self.set_as_nx()
+                print('version=%r' % data.strip())
+            else:
+                self.set_as_msc()
+                print('version=%r' % data.strip())
+            self.binary_debug.write(data + '\n')
             self.read_markers([-1, 0])
         elif markers == [2,]:  # PARAM, POST, -2
-            pass
+            self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
+            self.post = -2
         else:
             raise NotImplementedError(markers)
 
@@ -750,7 +761,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             if self.debug:
                 self.binary_debug.write('-' * 80 + '\n')
-                self.binary_debug.write('table_name = %r; f.tell()=%s\n' % (table_name, self.f.tell()))
+                self.binary_debug.write('table_name = %r\n' % (table_name))
 
             if is_release:
                 self.log.info('  table_name=%r' % table_name)
@@ -1023,17 +1034,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def read_table_name(self, rewind=False, stop_on_failure=True):
         """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
+        table_name = None
+        data = None
+        self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
         ni = self.n
         if stop_on_failure:
-            data = self._read_record(debug=False)
+            data = self._read_record(debug=False, macro_rewind=rewind)
             table_name, = unpack(b'8s', data)
-            if self.debug:
+            if self.debug and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
             table_name = table_name.strip()
         else:
             try:
-                data = self._read_record()
+                data = self._read_record(macro_rewind=rewind)
                 table_name, = unpack(b'8s', data)
                 table_name = table_name.strip()
             except:
@@ -1043,7 +1057,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
                 try:
                     # we have a trailing 0 marker
-                    self.read_markers([0])
+                    self.read_markers([0], macro_rewind=rewind)
                 except:
                     # if we hit this block, we have a FATAL error
                     raise FatalError('last table=%r' % self.table_name)
@@ -1392,6 +1406,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             msg += 'ints     = %r\n' % str(ints)
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
+        self.subtable_name = subtable_name
         self._read_subtables()
 
     def _print_month(self, month, day, year, zero, one):
