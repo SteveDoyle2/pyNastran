@@ -173,6 +173,8 @@ class F06Writer(OP2_F06_Common):
     def __init__(self):
         OP2_F06_Common.__init__(self)
         self.card_count = {}
+        self.additional_matrices = {}
+        self.matrices = {}
 
         self._results = ResultSet(self.get_all_results())
 
