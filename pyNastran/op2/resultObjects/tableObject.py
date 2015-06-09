@@ -179,7 +179,7 @@ class RealTableArray(TableArray):  # displacement style table
         fascii.write('%s header 3c = %s\n' % (self.table_name, data))
         f.write(pack(fmt, *data))
 
-    def write_op2(self, f, fascii, date, is_mag_phase=False):
+    def write_op2(self, f, fascii, itable, date, is_mag_phase=False):
         import inspect
         assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
 
@@ -188,7 +188,10 @@ class RealTableArray(TableArray):  # displacement style table
         fascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
         #print('data_code =', self.data_code)
-        self._write_table_header(f, fascii, date)
+        if itable == -1:
+            self._write_table_header(f, fascii, date)
+            itable = -3
+
         if isinstance(self.nonlinear_factor, float):
             op2_format = '%sif' % (7 * self.ntimes)
             raise NotImplementedError()
@@ -213,14 +216,13 @@ class RealTableArray(TableArray):  # displacement style table
         assert nnodes > 1, nnodes
         assert ntotal > 1, ntotal
 
-        table_num = -3
         device_code = self.device_code
         fascii.write('  ntimes = %s\n' % self.ntimes)
 
         fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
         for itime in range(self.ntimes):
-            self._write_table_3(f, fascii, table_num, itime)
+            self._write_table_3(f, fascii, itable, itime)
 
             # record 4
             header = [4, -4, 4,
@@ -230,7 +232,7 @@ class RealTableArray(TableArray):  # displacement style table
                       4*ntotal]
             f.write(pack('%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
-            fascii.write('r4 [4, %s, 4]\n' % (table_num-1))
+            fascii.write('r4 [4, %s, 4]\n' % (itable-1))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
             t1 = self.data[itime, :, 0]
@@ -245,18 +247,17 @@ class RealTableArray(TableArray):  # displacement style table
                 fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
                 f.write(s.pack(*data))
 
-            table_num -= 2
+            itable -= 2
             header = [4 * ntotal,]
             f.write(pack('i', *header))
             fascii.write('footer = %s' % header)
         header = [
-            4, table_num, 4,
+            4, itable, 4,
             4, 1, 4,
-            4, 0, 4,
             4, 0, 4,
         ]
         f.write(pack('%ii' % len(header), *header))
-        #return n
+        return itable
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words=True):
         if write_words:

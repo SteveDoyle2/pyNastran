@@ -222,7 +222,7 @@ class OP2Writer(OP2_F06_Common):
             #self.nonlinearPlateStress,
             self.ctriax_stress, #self.hyperelasticPlateStrain,
         ]
-        stress = oes1x1 + oes1c
+        #stress = oes1x1 + oes1c
 
         strain = [
             # bars/beams
@@ -273,26 +273,39 @@ class OP2Writer(OP2_F06_Common):
             self.temperatures,
             self.velocities, self.eigenvectors,
         ]
-        oqg = [
-            self.mpc_forces,
-            self.spc_forces,
-        ]
-
+        oqg_mpc = [self.mpc_forces,]
+        oqg_spc = [self.spc_forces,]
+        ogs = [self.grid_point_stresses, self.grid_point_volume_stresses, ]
+        ogp = [self.grid_point_forces,]
         other = [
             #self.forceVectors,
             #self.loadVectors,
             self.thermal_load_vectors,
-
-            self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         ]
         isubcases = sorted(self.iSubcaseNameMap.keys())
-        title = self.Title
+        #title = self.Title
 
-        res_categories = [oug, oqg, oef, stress, strain, other]
+        res_categories = [
+            ('OUG', oug),
+            ('OQG_SPC', oqg_spc),
+            ('OQG_MPC', oqg_mpc),
+            ('OEF', oef),
+            ('OES1X', oes1x1),
+            ('OES1C', oes1c),
+            ('OSTR', strain),
+            ('OGS', ogs),
+            ('OGP', ogp),
+            ('other', other)
+        ]
         res_outs = {}
-        for res_category in res_categories:
+
+        # TODO: this may need to be reworked such that all of subcase 1
+        #is printed before subcase 2
+        for res_name, res_category in res_categories:
+            print("res_name = %s" % res_name)
             for res_type in res_category:
                 res_keys = isubcases
+                itable = -1
                 for res_key in res_keys:
                     isubcase = res_key
                     if isubcase in res_type:
@@ -302,11 +315,13 @@ class OP2Writer(OP2_F06_Common):
                         if hasattr(result, 'element_name'):
                             element_name = ' - ' + result.element_name
                         if hasattr(result, 'write_op2'):
-                            print('%s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
-                            result.write_op2(op2, op2_ascii, self.date, is_mag_phase=False)
+                            print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
+                            result.write_op2(op2, op2_ascii, itable, self.date, is_mag_phase=False)
                         else:
-                            print("*op2 - %s not written" % result.__class__.__name__)
+                            print("  *op2 - %s not written" % result.__class__.__name__)
 
-        footer = [4, 0, 4]
+            footer = [4, 0, 4]
+            op2.write(pack(b'3i', *footer))
+        #footer = [4, 0, 4]
         op2.write(pack(b'3i', *footer))
         op2.close()
