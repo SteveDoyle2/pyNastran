@@ -10,6 +10,7 @@ import os
 from struct import unpack, Struct
 
 from numpy import array
+from scipy.sparse import coo_matrix
 
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
@@ -812,7 +813,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         print('table_name = %r' % table_name)
         self.read_markers([-1])
         data = self._read_record()
-        matrix_num, form, Mrows, Ncols, tout, nvalues, g = unpack('7i', data)
+        matrix_num, form, mrows, ncols, tout, nvalues, g = unpack('7i', data)
         m = Matrix(table_name)
         self.matrices[table_name] = m
 
@@ -837,33 +838,51 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         # 2 - factor matrix
         # 3 - factor matrix
 
+        if tout == 1:
+            dtype = 'float32'
+        elif tout == 2:
+            dtype = 'float64'
+        elif tout == 3:
+            dtype = 'complex64'
+        elif tout == 4:
+            dtype = 'complex128'
+        else:
+            raise RuntimeError('tout = %s' % tout)
+
+        if form == 1:
+            if ncols != 1:
+                print('unexpected size; form=%s mrows=%s ncols=%s' % (form, mrows, ncols))
+
         assert matrix_num in [101, 102, 103, 104, 104, 105], matrix_num
         if matrix_num in [101, 102]:
             assert form == 2, form
-            assert Mrows == 4, Mrows
-            assert Ncols == 2, Ncols
+            assert mrows == 4, mrows
+            assert ncols == 2, ncols
             assert tout == 1, tout
             assert nvalues == 3, nvalues
             assert g == 6250, g
         elif matrix_num in [103, 104]:
             assert form == 2, form
-            assert Mrows == 2, Mrows
-            assert Ncols == 1, Ncols
+            assert mrows == 2, mrows
+            assert ncols == 1, ncols
             assert tout == 2, tout
             assert nvalues == 4, nvalues
             assert g == 10000, g
         elif matrix_num == 105:
-            assert form == 1, form  # why is this one?
-            assert Mrows == 36, Mrows
-            assert Ncols == 2, Ncols
+            assert form == 1, form  # TDOO: why is this 1?
+            assert mrows == 36, mrows
+            assert ncols == 2, ncols # TODO: why is this not 1
             assert tout == 1, tout
             assert nvalues == 36, nvalues  ## TODO: is this correct?
             assert g == 10000, g  ## TODO: what does this mean?
         else:
             vals = unpack('7i', data)
-            msg = 'name=%r matrix_num=%s form=%s Mrows=%s Ncols=%s tout=%s nvalues=%s g=%s' % (
-                table_name, matrix_num, form, Mrows, Ncols, tout, nvalues, g)
+            msg = 'name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
+                table_name, matrix_num, form, mrows, ncols, tout, nvalues, g)
             raise NotImplementedError(msg)
+        print('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
+            table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+
         #self.show_data(data)
         #print('------------')
         self.read_markers([-2, 1, 0])
@@ -872,85 +891,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert a == 170, a
         assert b == 170, b
 
-        #self.show_data(data)
-        print('------------')
         itable = -3
-        if 0:
-            self.read_markers([itable, 1])
-            one, = self.get_nmarkers(1, rewind=False)
-            assert one == 1, one
-            if one:
-                nvalues, = self.get_nmarkers(1, rewind=False)
-                print('nvalues =', nvalues)
-                data = self.read_block()
-                out = unpack('i %if' % nvalues, data)
-
-                i = out[0]
-                values = out[1:]
-                if matrix_num in [101, 102]:
-                    assert nvalues == 3, nvalues
-                    assert i == 1, i
-                    assert values[0] == 1.0, values
-                    assert values[1] == 3.0, values
-                    assert values[2] == 5.0, values
-                elif matrix_num in [103, 104]:
-                    assert nvalues == 4, nvalues
-                    assert values[0] == 0.0, values
-                    assert values[1] == 3.0234375, values
-                    assert values[2] == 0.0, values
-                    assert values[3] == 2.78125, values
-                elif matrix_num == 105:
-                    assert nvalues == 36, nvalues
-                    values_expected = (
-                        -1.0, 1.0, 1.0, -1.0, 1.0,
-                        2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
-                        1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
-                        -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
-                        4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,)
-                    assert len(values_expected) == 36
-                    msg = 'values   = %s\n' % str(values)
-                    msg += 'expected = %s' % str(values_expected)
-                    assert values == values_expected, msg
-                else:
-                    raise NotImplementedError(matrix_num)
-                itable -= 1
-            else:
-                asdf
-            #a, data = unpack('i 3f', data)
-
-        if 0:
-            self.read_markers([itable, 1])
-            one, = self.get_nmarkers(1, rewind=False)
-            assert one == 1, 'itable=%s one=%s' % (itable, one)
-            if one:
-                nvalues, = self.get_nmarkers(1, rewind=False)
-                #print('***')
-                #print('nvalues =', nvalues)
-                data = self.read_block()
-                out = unpack('i %if' % nvalues, data)
-                i = out[0]
-                values = out[1:]
-                print(i, values)
-
-                if matrix_num in [101, 102]:
-                    assert i == 2, i
-                    assert values[0] == 6.0, b
-                elif matrix_num in [103, 104]:
-                    assert i == 1, i
-                    assert values[0] == 0.0, values
-                    assert values[1] == 2.78125, values
-                    assert values[2] == 0.0, values
-                    assert values[3] == 3.390625, values
-                itable -= 1
-            else:
-                raise NotImplementedError(matrix_num)
-        #self.show_data(data)
-
-        #one, = self.get_nmarkers(1, rewind=False)
-        #nvalues, = self.get_nmarkers(1, rewind=True)
-
         j = None
-        while 1:
+
+        niter = 0
+        niter_max = 100000000
+
+        GCi = []
+        GCj = []
+        reals = []
+        jj = 1
+        while niter < niter_max:
             #nvalues, = self.get_nmarkers(1, rewind=True)
             #print('nvalues4a =', nvalues)
             self.read_markers([itable, 1])
@@ -959,6 +910,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 nvalues, = self.get_nmarkers(1, rewind=True)
                 while nvalues >= 0:
                     nvalues, = self.get_nmarkers(1, rewind=False)
+                    GCj += [jj] * nvalues
                     data = self.read_block()
                     #self.show_data(data)
 
@@ -967,51 +919,52 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
                     #print(len(data))
                     out = unpack(fmt, data)
-                    i = out[0]
+                    ii = out[0]
                     values = out[1:]
+
+                    GCi += list(range(ii, ii + nvalues))
+                    reals += values
                     if matrix_num in [101, 102, 103, 104, 105]:
-                        print('II=%s i=%s j=%s %s' % (abs(itable+2), i, j, values))
+                        print('II=%s; j=%s i0=%s %s' % (abs(itable+2), jj, ii, values))
                         #print(i, values)
                         #assert i == 4, i
                         #assert values[0] == 8, values
                     else:
                         raise NotImplementedError(matrix_num)
                     nvalues, = self.get_nmarkers(1, rewind=True)
+                assert len(GCi) == len(GCj), 'nGCi=%s nGCj=%s' % (len(GCi), len(GCj))
+                assert len(GCi) == len(reals), 'nGCi=%s nReals=%s' % (len(GCi), len(reals))
+                jj += 1
             else:
                 nvalues, = self.get_nmarkers(1, rewind=False)
                 assert nvalues == 0, nvalues
                 print('nvalues =', nvalues)
                 print('returning...')
-                m.data = 1
+
+                #assert max(GCi) <= mrows, 'GCi=%s GCj=%s mrows=%s' % (GCi, GCj, mrows)
+                #assert max(GCj) <= ncols, 'GCi=%s GCj=%s ncols=%s' % (GCi, GCj, ncols)
+                GCi = array(GCi, dtype='int32') - 1
+                GCj = array(GCj, dtype='int32') - 1
+                #print('Gci', GCi)
+                #print('GCj', GCj)
+                #print('reals', reals)
+                try:
+                    # we subtract 1 to account for Fortran
+                    matrix = coo_matrix((reals, (GCi, GCj)),
+                                        shape=(mrows, ncols), dtype=dtype)
+                    matrix = matrix.todense()
+                except ValueError:
+                    matrix = array(reals) #.reshape((len(reals), 1))
+                    print('m =', matrix)
+
+
+                m.data = matrix
                 #nvalues, = self.get_nmarkers(1, rewind=True)
                 #self.show(100)
                 return
             itable -= 1
-        #else:
-
-        #self.show(30)
-        #self.read_markers([0])
-        #nvalues, = self.get_nmarkers(1, rewind=False)
-
-        #print('nvalues5 =', nvalues)
-        #if nvalues == 0:
-            #return
-        #else:
-            #self.show(100)
-            #asdf
-
-        #self.show(50)
-        #data = self.read_block()
-        #self.read_markers([2])
-        #data = self.read_block()
-        #self.read_markers([-1])
-
-        #data = b''
-        #self.show(100)
-        #for data in self._stream_record():
-            #data = datai + data
-
-        #data = self._read_record()
+            niter += 1
+        raise RuntimeError('this should never happen; n=%s' % niter_max)
         print('------------')
         #self.show(100)
 

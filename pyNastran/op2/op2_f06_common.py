@@ -580,7 +580,7 @@ class OP2_F06_Common(object):
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in ['card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
-                  'labels', 'subtitles']]
+                  'labels', 'subtitles', 'additional_matrices', 'matrices']]
         for table in tables:
             assert table in table_types, table
         return table_types

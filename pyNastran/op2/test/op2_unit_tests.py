@@ -93,9 +93,9 @@ class TestOP2(Tester):
 
 
     def test_op2_dmi(self):
-        op2_filename = os.path.join('matrix', 'mymatrix.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        op2_filename = os.path.join(folder, op2_filename)
+        bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
+        op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
         matrices = {
             'A' : True,
             'B' : False,
@@ -103,6 +103,15 @@ class TestOP2(Tester):
             'BTA' : False,
             'MYDOF' : True,
         }
+        from pyNastran.bdf.bdf import BDF
+        model = BDF()
+        model.read_bdf(bdf_filename)
+
+        dmi_a = model.dmis['A']
+        a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
+        print('model.dmi.A =\n%s' % dmi_a)
+        print('model.dmi.A =\n%s' % str(a))
+        #return
         op2 = OP2()
         op2.set_additional_matrices_to_read(matrices)
         try:
@@ -136,12 +145,21 @@ class TestOP2(Tester):
 
         for table_name, expected in zip(matrix_names, expecteds):
             assert table_name in op2.matrices, table_name
+
+
             actual = op2.matrices[table_name].data
             if not array_equal(expected, actual):
+                if table_name in model.dmis:
+                    dmi = model.dmis[table_name]
+                    table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
+                    #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
+                    print(table_array)
+                #print(stable_array)
                 msg = 'matrix %s was not read properly\n' % table_name
                 msg += 'expected\n%s\n' % expected
-                #msg += 'actual\n%s' % actual
+                msg += 'actual\n%s' % actual
                 print(msg)
+                print('==========================')
                 #raise RuntimeError(msg)
 
 
