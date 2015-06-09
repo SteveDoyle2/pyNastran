@@ -3,7 +3,7 @@ import unittest
 import pyNastran
 test_path = pyNastran.__path__[0]
 
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, FatalError
 from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 
@@ -90,6 +90,60 @@ class TestOP2(Tester):
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
                 write_f06=write_f06, is_vector=True,
                 debug=debug, stopOnFailure=True)
+
+
+    def test_op2_dmi(self):
+        op2_filename = os.path.join('matrix', 'mymatrix.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        op2_filename = os.path.join(folder, op2_filename)
+        matrices = {
+            'A' : True,
+            'B' : False,
+            'ATB' : False,
+            'BTA' : False,
+            'MYDOF' : True,
+        }
+        op2 = OP2()
+        op2.set_additional_matrices_to_read(matrices)
+        try:
+            op2.read_op2(op2_filename)
+            raise RuntimeError('this is wrong...')
+        except FatalError:
+            # the OP2 doesn't have a trailing zero marker
+            pass
+
+        from numpy import dot, array, array_equal
+        # M rows, Ncols
+        A = array([
+            [1., 0.],
+            [3., 6.],
+            [5., 0.],
+            [0., 8.],
+        ], dtype='float32')
+        B = A
+        mydof = array([
+            -1.0, 1.0, 1.0, -1.0, 1.0,
+            2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
+            1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
+            -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
+            4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
+        ])
+        BTA = dot(B.T, A)
+        ATB = dot(A.T, B)
+
+        expecteds = [A, ATB, B, BTA, mydof]
+        matrix_names = sorted(matrices.keys())
+
+        for table_name, expected in zip(matrix_names, expecteds):
+            assert table_name in op2.matrices, table_name
+            actual = op2.matrices[table_name].data
+            if not array_equal(expected, actual):
+                msg = 'matrix %s was not read properly\n' % table_name
+                msg += 'expected\n%s\n' % expected
+                #msg += 'actual\n%s' % actual
+                print(msg)
+                #raise RuntimeError(msg)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

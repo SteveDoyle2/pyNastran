@@ -795,11 +795,227 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_sdf()
                 elif table_name in RESULT_TABLES:
                     self._read_results_table()
+                elif table_name.strip() in self.additional_matrices:
+                    self._read_matrix()
                 else:
-                    raise NotImplementedError('geom/results split: %r' % table_name)
+                    msg = 'geom/results split: %r\n\n' % table_name
+                    msg += 'If you have matrices that you want to read, see:\n'
+                    msg += '  model.set_additional_matrices(matrices)'
+                    raise NotImplementedError(msg)
 
             table_name = self.read_table_name(rewind=True, stop_on_failure=False)
         return table_names
+
+    def _read_matrix(self):
+        print('----------------------------------------------------------------')
+        table_name = self.read_table_name(rewind=False, stop_on_failure=True)
+        print('table_name = %r' % table_name)
+        self.read_markers([-1])
+        data = self._read_record()
+        matrix_num, form, Mrows, Ncols, tout, nvalues, g = unpack('7i', data)
+        m = Matrix(table_name)
+        self.matrices[table_name] = m
+
+        # matrix_num is a counter (101, 102, 103, ...)
+        # 101 will be the first matrix 'A' (matrix_num=101),
+        # then we'll read a new matrix 'B' (matrix_num=102),
+        # etc.
+        #
+        # the matrix is Mrows x Ncols
+        #
+        # it has nvalues in it
+        #
+        # tout is the precision of the matrix
+        # 0 - set precision by cell
+        # 1 - real, single precision (float32)
+        # 2 - real, double precision (float64)
+        # 3 - complex, single precision (complex64)
+        # 4 - complex, double precision (complex128)
+
+        # form (bad name)
+        # 1 - column matrix
+        # 2 - factor matrix
+        # 3 - factor matrix
+
+        assert matrix_num in [101, 102, 103, 104, 104, 105], matrix_num
+        if matrix_num in [101, 102]:
+            assert form == 2, form
+            assert Mrows == 4, Mrows
+            assert Ncols == 2, Ncols
+            assert tout == 1, tout
+            assert nvalues == 3, nvalues
+            assert g == 6250, g
+        elif matrix_num in [103, 104]:
+            assert form == 2, form
+            assert Mrows == 2, Mrows
+            assert Ncols == 1, Ncols
+            assert tout == 2, tout
+            assert nvalues == 4, nvalues
+            assert g == 10000, g
+        elif matrix_num == 105:
+            assert form == 1, form  # why is this one?
+            assert Mrows == 36, Mrows
+            assert Ncols == 2, Ncols
+            assert tout == 1, tout
+            assert nvalues == 36, nvalues  ## TODO: is this correct?
+            assert g == 10000, g  ## TODO: what does this mean?
+        else:
+            vals = unpack('7i', data)
+            msg = 'name=%r matrix_num=%s form=%s Mrows=%s Ncols=%s tout=%s nvalues=%s g=%s' % (
+                table_name, matrix_num, form, Mrows, Ncols, tout, nvalues, g)
+            raise NotImplementedError(msg)
+        #self.show_data(data)
+        #print('------------')
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        name, a, b = unpack('8s 2i', data)
+        assert a == 170, a
+        assert b == 170, b
+
+        #self.show_data(data)
+        print('------------')
+        itable = -3
+        if 0:
+            self.read_markers([itable, 1])
+            one, = self.get_nmarkers(1, rewind=False)
+            assert one == 1, one
+            if one:
+                nvalues, = self.get_nmarkers(1, rewind=False)
+                print('nvalues =', nvalues)
+                data = self.read_block()
+                out = unpack('i %if' % nvalues, data)
+
+                i = out[0]
+                values = out[1:]
+                if matrix_num in [101, 102]:
+                    assert nvalues == 3, nvalues
+                    assert i == 1, i
+                    assert values[0] == 1.0, values
+                    assert values[1] == 3.0, values
+                    assert values[2] == 5.0, values
+                elif matrix_num in [103, 104]:
+                    assert nvalues == 4, nvalues
+                    assert values[0] == 0.0, values
+                    assert values[1] == 3.0234375, values
+                    assert values[2] == 0.0, values
+                    assert values[3] == 2.78125, values
+                elif matrix_num == 105:
+                    assert nvalues == 36, nvalues
+                    values_expected = (
+                        -1.0, 1.0, 1.0, -1.0, 1.0,
+                        2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
+                        1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
+                        -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
+                        4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,)
+                    assert len(values_expected) == 36
+                    msg = 'values   = %s\n' % str(values)
+                    msg += 'expected = %s' % str(values_expected)
+                    assert values == values_expected, msg
+                else:
+                    raise NotImplementedError(matrix_num)
+                itable -= 1
+            else:
+                asdf
+            #a, data = unpack('i 3f', data)
+
+        if 0:
+            self.read_markers([itable, 1])
+            one, = self.get_nmarkers(1, rewind=False)
+            assert one == 1, 'itable=%s one=%s' % (itable, one)
+            if one:
+                nvalues, = self.get_nmarkers(1, rewind=False)
+                #print('***')
+                #print('nvalues =', nvalues)
+                data = self.read_block()
+                out = unpack('i %if' % nvalues, data)
+                i = out[0]
+                values = out[1:]
+                print(i, values)
+
+                if matrix_num in [101, 102]:
+                    assert i == 2, i
+                    assert values[0] == 6.0, b
+                elif matrix_num in [103, 104]:
+                    assert i == 1, i
+                    assert values[0] == 0.0, values
+                    assert values[1] == 2.78125, values
+                    assert values[2] == 0.0, values
+                    assert values[3] == 3.390625, values
+                itable -= 1
+            else:
+                raise NotImplementedError(matrix_num)
+        #self.show_data(data)
+
+        #one, = self.get_nmarkers(1, rewind=False)
+        #nvalues, = self.get_nmarkers(1, rewind=True)
+
+        j = None
+        while 1:
+            #nvalues, = self.get_nmarkers(1, rewind=True)
+            #print('nvalues4a =', nvalues)
+            self.read_markers([itable, 1])
+            one, = self.get_nmarkers(1, rewind=False)
+            if one:
+                nvalues, = self.get_nmarkers(1, rewind=True)
+                while nvalues >= 0:
+                    nvalues, = self.get_nmarkers(1, rewind=False)
+                    data = self.read_block()
+                    #self.show_data(data)
+
+                    fmt = b'i %if' % nvalues
+                    #print('***itable=%s nvalues=%s fmt=%r' % (itable, nvalues, fmt))
+
+                    #print(len(data))
+                    out = unpack(fmt, data)
+                    i = out[0]
+                    values = out[1:]
+                    if matrix_num in [101, 102, 103, 104, 105]:
+                        print('II=%s i=%s j=%s %s' % (abs(itable+2), i, j, values))
+                        #print(i, values)
+                        #assert i == 4, i
+                        #assert values[0] == 8, values
+                    else:
+                        raise NotImplementedError(matrix_num)
+                    nvalues, = self.get_nmarkers(1, rewind=True)
+            else:
+                nvalues, = self.get_nmarkers(1, rewind=False)
+                assert nvalues == 0, nvalues
+                print('nvalues =', nvalues)
+                print('returning...')
+                m.data = 1
+                #nvalues, = self.get_nmarkers(1, rewind=True)
+                #self.show(100)
+                return
+            itable -= 1
+        #else:
+
+        #self.show(30)
+        #self.read_markers([0])
+        #nvalues, = self.get_nmarkers(1, rewind=False)
+
+        #print('nvalues5 =', nvalues)
+        #if nvalues == 0:
+            #return
+        #else:
+            #self.show(100)
+            #asdf
+
+        #self.show(50)
+        #data = self.read_block()
+        #self.read_markers([2])
+        #data = self.read_block()
+        #self.read_markers([-1])
+
+        #data = b''
+        #self.show(100)
+        #for data in self._stream_record():
+            #data = datai + data
+
+        #data = self._read_record()
+        print('------------')
+        #self.show(100)
+
+        #asdf
 
     def _skip_table(self, table_name):
         """bypasses the next table as quickly as possible"""
@@ -1070,6 +1286,16 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.n = ni
             self.f.seek(self.n)
         return table_name
+
+    def set_additional_matrices_to_read(self, matrices):
+        """
+        :param matrices: a dictionary of key=name, value=True/False,
+                         where True/False indicates the matrix should be read
+
+        .. note:: If you use an already defined table (e.g. OUGV1), it will be ignored.
+                  If the table you requested doesn't exist, there will be no effect.
+        """
+        self.additional_matrices = matrices
 
     def _skip_table_helper(self):
         """
@@ -1438,6 +1664,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 if word not in ['Title', 'reference_point']:
                     delattr(self, word)
         self.obj = None
+
+
+class Matrix(object):
+    def __init__(self, name):
+        self.name = name
+        self.data = None
 
 
 def main():
