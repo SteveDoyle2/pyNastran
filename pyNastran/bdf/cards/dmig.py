@@ -387,7 +387,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     :returns M:    the matrix
     :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
     :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
-    .. warning:: isSparse WILL fail
+    .. warning:: is_sparse=True WILL fail
     """
     i = 0
     rows = {}
@@ -422,44 +422,26 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
 
     #is_sparse = False
     if is_sparse:
-        data = []
-        rows2 = []
-        cols2 = []
+        GCj = array(self.GCj, dtype='int32') - 1
+        GCi = array(self.GCi, dtype='int32') - 1
+        reals = array(self.GCi, dtype='float32')
 
-        nrows = 0
-        ncols = 0
+        # TODO: matrix size:  is this correct?
+        nrows = max(GCi) + 1
+        ncols = max(GCj) + 1
+
+        #dtype = self.getDType(self.tin)
+        # TODO: no check for symmetry
+        # TODO: no check for dtype
         if self.is_complex():
-            #: no check for symmetry
-            for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
-                i = rows[GCi]
-                j = cols[GCj]
-                nrows = max(i, nrows)
-                ncols = max(j, ncols)
-                rows2.append(i)
-                cols2.append(j)
-                data.append(complex(reali, complexi))
+            data = array([real, complexs]).astype(complex)
         else:
-            # no check for symmetry
-            for (GCj, GCi) in zip(self.GCj, self.GCi):
-                i = rows[GCi]
-                j = cols[GCj]
-                nrows = max(i, nrows)
-                ncols = max(j, ncols)
-                rows2.append(i)
-                cols2.append(j)
-            data = self.Real
-        #print("i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s"
-        #    % (i, j, len(self.GCi), len(self.GCj), len(data)))
-        # ,dtype=Format
-        #print(rows2)
+            data = reals
 
-        #print("nrows=%s ncols=%s" % (nrows, ncols))
         if self.ifo in [1, 6]:
             nrows = max(nrows, ncols)
             ncols = nrows
-        #print("nrows=%s ncols=%s" % (nrows, ncols))
 
-        dtype = self.getDType(self.tin)
         #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype) # test
         M = coo_matrix((data, (self.GCi, self.GCj)),
                        shape=(nrows, ncols), dtype=dtype)
@@ -609,6 +591,7 @@ class DMI(NastranMatrix):
 
             self.nRows = integer(card, 7, 'nrows')
             self.nCols = integer(card, 8, 'ncols')
+
             assert len(card) == 9, 'len(DMI card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
@@ -619,6 +602,10 @@ class DMI(NastranMatrix):
 
         if self.is_complex():
             self.Complex = []
+
+    @property
+    def ifo(self):
+        return self.nRows == self.nCols
 
     def _add_column(self, card=None, data=None):
         if not self.is_complex():  # real
@@ -643,18 +630,20 @@ class DMI(NastranMatrix):
                     if isinstance(real_value, integer_types):
                         is_done_reading_floats = True
                     elif isinstance(real_value, float):
+                        #print('adding j=%s i1=%s val=%s' % (j, i1, real_value))
                         self.GCj.append(j)
                         self.GCi.append(i1)
                         self.Real.append(real_value)
                         i += 1
+                        i1 += 1
                     else:
                         real_value = self.Real[-1]
                         endI = fields[i + 1]
                         for ii in range(i1, endI + 1):
+                            #print('adding j=%s i1=%s val=%s' % (j, ii, real_value))
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(real_value)
-
                         i += 1
                         is_done_reading_floats = True
 
@@ -663,11 +652,11 @@ class DMI(NastranMatrix):
         #raise NotImplementedError(msg)
         ## column number
         #j = integer(card, 2, 'icol')
-    ##
+
         ## counter
         #i = 0
         #fields = [interpret_value(field) for field in card[3:]]
-    ##
+
         ## Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
         #while i < len(fields):
             #i1 = fields[i]

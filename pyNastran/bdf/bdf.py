@@ -1784,7 +1784,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self._iparse_errors += 1
             var = traceback.format_exception_only(type(e), e)
             self._stored_parse_errors.append((card, var))
-            raise
+            #raise
             if self._iparse_errors > self._nparse_errors:
                 self.pop_parse_errors()
                 #print(str(e))
@@ -2124,7 +2124,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         for card_name, card in sorted(iteritems(cards)):
             #print('---%r---' % card_name)
             if self.is_reject(card_name):
-                #raise NotImplementedError(card)
                 self.log.info('    rejecting card_name = %s' % card_name)
                 for cardi in card:
                     self._increase_card_count(card_name)
