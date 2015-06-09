@@ -11,9 +11,10 @@ from pyNastran.op2.op2_scalar import OP2_Scalar
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2_common import SortCodeError
 
-from pyNastran.op2.op2_writer import OP2Writer
+#from pyNastran.op2.op2_writer import OP2Writer
 
-class OP2(OP2_Scalar, OP2Writer):
+#class OP2(OP2_Scalar, OP2Writer):
+class OP2(OP2_Scalar):
 
     def __init__(self,
                  debug=True, log=None,

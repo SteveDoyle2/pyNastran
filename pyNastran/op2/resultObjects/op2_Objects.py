@@ -10,7 +10,7 @@ import inspect
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
 #from pyNastran.utils import list_print
-from pyNastran.op2.write_utils import write_table_header
+#from pyNastran.op2.write_utils import write_table_header
 
 class BaseScalarObject(Op2Codes):
     def __init__(self):
