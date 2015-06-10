@@ -137,8 +137,9 @@ class WriteMesh(WriteMeshDeprecated):
             outfile.write('$pyNastran: punch=%s\n' % self.punch)
             outfile.write('$pyNastran: encoding=%s\n' % self._encoding)
 
-        self._write_executive_control_deck(outfile)
-        self._write_case_control_deck(outfile)
+        if not self.punch:
+            self._write_executive_control_deck(outfile)
+            self._write_case_control_deck(outfile)
 
     def _write_executive_control_deck(self, outfile):
         """

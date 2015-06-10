@@ -7,6 +7,7 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.subcase import write_set, collapse_thru_packs
+from codecs import open as codec_open
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
@@ -287,6 +288,7 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         #print "--------"
         #print deck_msg
+
         i = 0
         for line, line_expected in zip(deck_lines, lines_expected):
             line = line.rstrip()
@@ -297,6 +299,37 @@ class CaseControlTest(unittest.TestCase):
             msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
             self.assertEqual(line, line_expected, msg)
             i += 1
+
+    def test_case_control_08(self):
+        lines_expected = [
+            '$pyNastran: version=msc\n',
+            '$pyNastran: punch=True\n',
+            '$pyNastran: encoding=ascii\n',
+            '$NODES\n',
+            'GRID,100000,,43.91715,-29.,.8712984\n',
+        ]
+        bdf_filename = 'test7.bdf'
+        bdf_filename2 = 'test7_bad.bdf'
+        with codec_open(bdf_filename, 'w', encoding='ascii') as f:
+            for line in lines_expected:
+                f.write(line)
+        bdf = BDF()
+        bdf.read_bdf(bdf_filename)
+        bdf.write_bdf(bdf_filename2)
+
+        with codec_open(bdf_filename, 'r', encoding='ascii') as f:
+            lines = f.readlines()
+            i = 0
+            for line, line_expected in zip(lines, lines_expected):
+                line = line.rstrip()
+                line_expected = line_expected.rstrip()
+                msg = 'The lines are not the same...i=%s\n' % i
+                msg += 'line     = %r\n' % line
+                msg += 'expected = %r\n' % line_expected
+                msg += '-------------\n--Actual--\n%s' % ''.join(lines)
+                msg += '-------------\n--Expected--\n%s' % ''.join(lines_expected)
+                self.assertEqual(line, line_expected, msg)
+                i += 1
 
 
 if __name__ == '__main__':  # pragma: no cover
