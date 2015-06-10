@@ -136,6 +136,12 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
 
+    def get_edges(self):
+        """
+        Return the edges
+        """
+        return [(self.nodes[0], self.nodes[1])]
+
 
 class CBAROR(object):
     type = 'CBAROR'

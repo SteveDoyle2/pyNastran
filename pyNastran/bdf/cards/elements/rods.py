@@ -62,6 +62,12 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         mass = (self.Rho() * self.Area() + self.Nsm()) * L
         return mass
 
+    def get_edges(self):
+        """
+        Return the edges
+        """
+        return [(self.nodes[0], self.nodes[1])]
+
 
 class CROD(RodElement):
     type = 'CROD'

@@ -938,12 +938,10 @@ class QuadShell(ShellElement):
         """
         Returns the edges
         """
-        return [
-            (self.nodes[0], self.nodes[1]),
-            (self.nodes[1], self.nodes[2]),
-            (self.nodes[2], self.nodes[3]),
-            (self.nodes[3], self.nodes[0]),
-        ]
+        return [(self.nodes[0], self.nodes[1]),
+                (self.nodes[1], self.nodes[2]),
+                (self.nodes[2], self.nodes[3]),
+                (self.nodes[3], self.nodes[0])]
 
     def Thickness(self):
         """
