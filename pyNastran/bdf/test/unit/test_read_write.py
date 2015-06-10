@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import unittest
 from six import PY2
+from codecs import open as codec_open
 
 import os
 import pyNastran
@@ -214,11 +215,40 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(len(model.nodes), 5)
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
+    def test_encoding_write(self):
+        from pyNastran.bdf.bdf import BDF
+
+        mesh = BDF()
+        mesh.add_card(['GRID', 100000, 0, 43.91715, -29., .8712984], 'GRID')
+        mesh.write_bdf('out.bdf')
+        lines_expected = [
+            '$pyNastran: version=msc',
+            '$pyNastran: punch=False',
+            '$pyNastran: encoding=ascii',
+            '$NODES',
+            'GRID      100000        43.91715    -29..8712984',
+        ]
+        bdf_filename = 'out.bdf'
+        with codec_open(bdf_filename, 'r', encoding='ascii') as f:
+            lines = f.readlines()
+            i = 0
+            for line, line_expected in zip(lines, lines_expected):
+                line = line.rstrip()
+                line_expected = line_expected.rstrip()
+                msg = 'The lines are not the same...i=%s\n' % i
+                msg += 'line     = %r\n' % line
+                msg += 'expected = %r\n' % line_expected
+                msg += '-------------\n--Actual--\n%s' % ''.join(lines)
+                msg += '-------------\n--Expected--\n%s' % ''.join(lines_expected)
+                self.assertEqual(line, line_expected, msg)
+                i += 1
+
     def test_read_bad_01(self):
         model = BDF()
         model.active_filenames = ['fake.file']
         with self.assertRaises(IOError):
             model._open_file('fake.file')
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

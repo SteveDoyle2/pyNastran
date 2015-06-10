@@ -7,6 +7,7 @@ This file defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, itervalues, PY2
+import sys
 from codecs import open
 
 from pyNastran.bdf.utils import print_filename
@@ -83,7 +84,7 @@ class WriteMesh(WriteMeshDeprecated):
         self.log.debug("***writing %s" % fname)
         return out_filename
 
-    def write_bdf(self, out_filename=None,
+    def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
                   interspersed=True, enddata=None):
         """
@@ -92,6 +93,9 @@ class WriteMesh(WriteMeshDeprecated):
         :param self:         the BDF object
         :param out_filename: the name to call the output bdf
                              (default=None; pops a dialog)
+        :param encoding:     the unicode encoding (latin1, and utf8 are generally good options)
+                             default=None -> system specified encoding
+
         :param size:      the field size (8 is recommended)
         :param is_double: small field (False) or large field (True); default=False
         :param interspersed: Writes a bdf with properties & elements
@@ -104,12 +108,17 @@ class WriteMesh(WriteMeshDeprecated):
         """
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
+        if encoding is None:
+            encoding = sys.getdefaultencoding()
+        else:
+            encoding = self._encoding
+        #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
         if PY2:
-            outfile = open(out_filename, 'wb', encoding=self._encoding)
+            outfile = open(out_filename, 'wb', encoding=encoding)
         else:
-            outfile = open(out_filename, 'w', encoding=self._encoding)
-        self._write_header(outfile)
+            outfile = open(out_filename, 'w', encoding=encoding)
+        self._write_header(outfile, encoding)
         self._write_params(outfile, size, is_double)
         self._write_nodes(outfile, size, is_double)
 
@@ -126,16 +135,24 @@ class WriteMesh(WriteMeshDeprecated):
             outfile.write('ENDDATA\n')
         outfile.close()
 
-    def _write_header(self, outfile):
+    def _write_header(self, outfile, encoding):
         """
         Writes the executive and case control decks.
 
         :param self: the BDF object
         """
+
+        if self.punch is None:
+            # writing a mesh without using read_bdf
+            if self.executive_control_lines or self.caseControlDeck:
+                self.punch = True
+            else:
+                self.punch = False
+
         if self.nastran_format:
             outfile.write('$pyNastran: version=%s\n' % self.nastran_format)
             outfile.write('$pyNastran: punch=%s\n' % self.punch)
-            outfile.write('$pyNastran: encoding=%s\n' % self._encoding)
+            outfile.write('$pyNastran: encoding=%s\n' % encoding)
 
         if not self.punch:
             self._write_executive_control_deck(outfile)

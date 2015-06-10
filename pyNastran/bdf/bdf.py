@@ -156,6 +156,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.active_filenames = []
         self.active_filename = None
         self.include_dir = ''
+        self._encoding = None
+        self.punch = None
 
         self._relpath = True
         if sys.version_info < (2, 6):
