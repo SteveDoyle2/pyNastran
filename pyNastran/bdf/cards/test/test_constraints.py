@@ -1,3 +1,5 @@
+from __future__ import print_function
+from itertools import count
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1, MPC
 
@@ -116,21 +118,63 @@ class TestConstraints(unittest.TestCase):
         #msg = mpc.write_card(size=8, double=False)
         self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_card(size=8))
 
+    def test_mpc_02(self):
         model = BDF()
 
         card = ['MPC            1    1002       4      1.    1000       4-.129394',
                 '                    1000       5-7.152-3    1000       6-.013655']
-        msgA = ('MPC            1    1002       4      1.    1000       4-.129394\n'
+        msg8 = ('MPC            1    1002       4      1.    1000       4-.129394\n'
                 '                    1000       5-7.152-3    1000       6-.013655\n')
+        msg16 =('MPC*                   1            1002               4              1.\n'
+                '*                   1000               4        -.129394\n'
+                '*                                   1000               5        -.007152\n'
+                '*                   1000               6        -.013655\n')
+
 
         card = model.add_card(card, 'MPC', is_list=False)
         mpc = MPC(card)
-        #print('u%r' % msgA)
-        #print('%r' % mpc.write_card(size=8))
-        self.assertEqual(msgA, mpc.write_card(size=8))
-        #print(mpc, type(mpc))
+        msg_8_actual = mpc.write_card(size=8)
+        msg_16_actual = mpc.write_card(size=16)
+        self.check_card(msg8, msg_8_actual)
+        self.check_card(msg16, msg_16_actual)
 
-        card = []
+    def test_mpc_03(self):
+        model = BDF()
+
+        card = ['MPC            1    1002       4      1.    1000       4-.129394',
+                '                    1000       5-7.152-3    1000       6-.013655',
+                '                    1004       2   123.3',]
+        msg8 = ('MPC            1    1002       4      1.    1000       4-.129394\n'
+                '                    1000       5-7.152-3    1000       6-.013655\n'
+                '                    1004       2   123.3\n')
+        msg16 =('MPC*                   1            1002               4              1.\n'
+                '*                   1000               4        -.129394\n'
+                '*                                   1000               5        -.007152\n'
+                '*                   1000               6        -.013655\n'
+                '*                                   1004               2           123.3\n'
+                '*\n')
+
+
+        card = model.add_card(card, 'MPC', is_list=False)
+        mpc = MPC(card)
+        msg_8_actual = mpc.write_card(size=8)
+        msg_16_actual = mpc.write_card(size=16)
+        msg_16_double_actual = mpc.write_card(size=16, is_double=True)
+        self.check_card(msg8, msg_8_actual)
+        self.check_card(msg16, msg_16_actual)
+
+    def check_card(self, msg_expected, msg_actual):
+        if isinstance(msg_expected, tuple):
+            msg_expected = msg_expected[0]
+        msg_expected_lines = msg_expected.split('\n')
+        msg_actual_lines = msg_actual.split('\n')
+        for i, actual, expected  in zip(count(), msg_actual_lines, msg_expected_lines):
+            msg = 'Error on line %i\n' % i
+            msg += 'actual=\n%s\n' % actual
+            msg += 'expected=\n%s\n\n' % expected
+            msg += 'Actual Card =\n%s\n' % '\n'.join(msg_actual_lines)
+            msg += '\nExpected Card =\n%s\n' % '\n'.join(msg_expected_lines)
+            assert actual == expected, msg
 
 
 

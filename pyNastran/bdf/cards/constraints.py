@@ -384,14 +384,22 @@ class MPC(Constraint):
             msg = 'MPC*    %16s' % self.conid
             if is_double:
                 for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                    msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
-                    if i % 2 == 1 and i > 0:
-                        msg += '\n%8s%16s' % ('*', '')
+                    if i == 0:
+                        msg += '%16i%16s%16s\n' % (grid, component, print_scientific_double(enforced))
+                    elif i % 2 == 1:
+                        msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_scientific_double(enforced))
+                    else:  # first
+                        msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_scientific_double(enforced))
             else:
                 for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                    msg += '%16i%16s%16s' % (grid, component, print_float_16(enforced))
-                    if i % 2 == 1 and i > 0:
-                        msg += '\n%8s%16s' % ('*', '')
+                    if i == 0:
+                        msg += '%16i%16s%16s\n' % (grid, component, print_float_16(enforced))
+                    elif i % 2 == 1:
+                        msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_float_16(enforced))
+                    else:  # first
+                        msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_float_16(enforced))
+            if i % 2 == 0:
+                msg += '*'
         return self.comment() + msg.rstrip() + '\n'
 
 
