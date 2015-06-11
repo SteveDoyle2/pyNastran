@@ -1505,7 +1505,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 8:
-            table_name, = unpack(b'8s', data)
+            subtable_name, = unpack(b'8s', data)
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % len(data)
@@ -1513,6 +1513,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             msg += 'ints     = %r\n' % str(ints)
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
+
+        self.subtable_name = subtable_name.rstrip()
         self._read_subtables()
 
     def _read_sdf(self):
@@ -1585,6 +1587,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             msg += 'ints     = %r\n' % str(ints)
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
+        if hasattr(self, 'subtable_name'):
+            raise RuntimeError('the file hasnt been cleaned up; subtable_name_old=%s new=%s' % (self.subtable_name, subtable_name))
         self.subtable_name = subtable_name
         self._read_subtables()
 
@@ -1617,6 +1621,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 if word not in ['Title', 'reference_point']:
                     delattr(self, word)
         self.obj = None
+        if hasattr(self, 'subtable_name'):
+            del self.subtable_name
 
 
 class Matrix(object):
