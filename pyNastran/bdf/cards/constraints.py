@@ -1,4 +1,3 @@
-# pylint: disable=R0904,R0902
 """
 All constraint cards are defined in this file.  This includes:
 
@@ -25,10 +24,10 @@ from itertools import count
 import warnings
 
 from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids, expand_thru
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank, components, components_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
-from pyNastran.bdf.field_writer_16 import print_float_16
+from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 
 
@@ -326,7 +325,7 @@ class MPC(Constraint):
                 if i == 1:
                     enforcedi = double(card, ifield + 2, 'enforced%i' % i)
                     if enforcedi == 0.0:
-                        raise RuntimeError('enforced1 must be nonzero; value=%r' % value)
+                        raise RuntimeError('enforced1 must be nonzero; enforcedi=%r' % enforcedi)
                 else:
                     enforcedi = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
                 self.gids.append(grid)
@@ -372,34 +371,42 @@ class MPC(Constraint):
         return fields
 
     def write_card(self, size=8, is_double=False):
-        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
         if size == 8:
-            msg = 'MPC     %8s' % self.conid
+            return self.write_card_8()
+        else:
+            return self.write_card_16(is_double)
+
+    def write_card_8(self):
+        msg = 'MPC     %8s' % self.conid
+        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
+        for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
+            msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
+            if i % 2 == 1 and i > 0:
+                msg += '\n%8s%8s' % ('', '')
+        return self.comment() + msg.rstrip() + '\n'
+
+    def write_card_16(self, is_double=False):
+        # TODO: we're sure MPCs support double precision?
+        msg = 'MPC*    %16s' % self.conid
+        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
+        if is_double:
             for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
-                if i % 2 == 1 and i > 0:
-                    msg += '\n%8s%8s' % ('', '')
-        elif size == 16:
-            # TODO: we're sure MPCs support double precision?
-            msg = 'MPC*    %16s' % self.conid
-            if is_double:
-                for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                    if i == 0:
-                        msg += '%16i%16s%16s\n' % (grid, component, print_scientific_double(enforced))
-                    elif i % 2 == 1:
-                        msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_scientific_double(enforced))
-                    else:  # first
-                        msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_scientific_double(enforced))
-            else:
-                for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                    if i == 0:
-                        msg += '%16i%16s%16s\n' % (grid, component, print_float_16(enforced))
-                    elif i % 2 == 1:
-                        msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_float_16(enforced))
-                    else:  # first
-                        msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_float_16(enforced))
-            if i % 2 == 0:
-                msg += '*'
+                if i == 0:
+                    msg += '%16i%16s%16s\n' % (grid, component, print_scientific_double(enforced))
+                elif i % 2 == 1:
+                    msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_scientific_double(enforced))
+                else:
+                    msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_scientific_double(enforced))
+        else:
+            for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
+                if i == 0:
+                    msg += '%16i%16s%16s\n' % (grid, component, print_float_16(enforced))
+                elif i % 2 == 1:
+                    msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_float_16(enforced))
+                else:
+                    msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_float_16(enforced))
+        if i % 2 == 0:
+            msg += '*'
         return self.comment() + msg.rstrip() + '\n'
 
 
@@ -424,19 +431,19 @@ class SPC(Constraint):
         if card:
             self.conid = integer(card, 1, 'sid')
             if card.field(5) is None:
-                    self.gids = [integer(card, 2, 'G1'),]
-                    self.constraints = [components_or_blank(card, 3, 'C1', 0)]
-                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+                self.gids = [integer(card, 2, 'G1'),]
+                self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
             else:
-                    self.gids = [
-                        integer(card, 2, 'G1'),
-                        integer(card, 5, 'G2'),
-                    ]
-                    # :0 if scalar point 1-6 if grid
-                    self.constraints = [components_or_blank(card, 3, 'C1', 0),
-                                        components_or_blank(card, 6, 'C2', 0)]
-                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                                     double_or_blank(card, 7, 'D2', 0.0)]
+                self.gids = [
+                    integer(card, 2, 'G1'),
+                    integer(card, 5, 'G2'),
+                ]
+                # :0 if scalar point 1-6 if grid
+                self.constraints = [components_or_blank(card, 3, 'C1', 0),
+                                    components_or_blank(card, 6, 'C2', 0)]
+                self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                                 double_or_blank(card, 7, 'D2', 0.0)]
         else:
             self.conid = data[0]
             self.gids = [data[1]]
@@ -486,9 +493,10 @@ class GMSPC(Constraint):
             self.entity = string(card, 3, 'entity')
             self.entity_id = integer(card, 4, 'entity_id')
         else:
-            raise NotImplemented()
+            raise NotImplementedError('GMSPC')
 
     def cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.conid)
         pass
 
     def raw_fields(self):
@@ -536,6 +544,7 @@ class SPCAX(Constraint):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.conid)
         #self.rid = model.ring[self.rid]
         #self.hid = model.harmonic[self.hid]
         pass
@@ -605,10 +614,6 @@ class SPC1(Constraint):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
-#class ADDConstraint(Constraint):
-#    def __init__(self,card,data):
-#        self.__init__(Constraint)
-
 
 class ConstraintADD(Constraint):
     def __init__(self, card, data):
@@ -674,6 +679,10 @@ class SPCADD(ConstraintADD):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment() + print_card_16(card)
+
 
 class MPCADD(ConstraintADD):
     r"""
@@ -728,3 +737,7 @@ class MPCADD(ConstraintADD):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment() + print_card_16(card)

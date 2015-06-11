@@ -1,4 +1,3 @@
-# pylint: disable=C0103,R0902,R0904,R0915
 """
 All bush properties are defined in this file.  This includes:
 
@@ -11,6 +10,7 @@ All bush properties are BushingProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -60,20 +60,20 @@ class PBUSH(BushingProperty):
 
             nfields = card.nfields
             self.vars = []
-            iStart = 2
-            while iStart < nfields:
-                pname = string(card, iStart, 'pname')
+            istart = 2
+            while istart < nfields:
+                pname = string(card, istart, 'pname')
                 if   pname == 'K':
-                    self.getK(card, iStart)
+                    self._read_k(card, istart)
                 elif pname == 'B':
-                    self.getB(card, iStart)
+                    self._read_b(card, istart)
                 elif pname == 'GE':
-                    self.getGE(card, iStart)
+                    self._read_ge(card, istart)
                 elif pname == 'RCV':
-                    self.getRCV(card, iStart)
+                    self._read_rcv(card, istart)
                 else:
                     break
-                iStart += 8
+                istart += 8
         else:
             self.pid = data[0]
             self.b = data[1]
@@ -82,49 +82,49 @@ class PBUSH(BushingProperty):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
 
-    def getK(self, card, iStart):
+    def _read_k(self, card, istart):
         # Flag indicating that the next 1 to 6 fields are stiffness values in
         # the element coordinate system.
-        #self.k = string(card, iStart, 'k')
+        #self.k = string(card, istart, 'k')
 
         #: Nominal stiffness values in directions 1 through 6.
         #: See Remarks 2 and 3. (Real; Default = 0.0)
-        self.Ki = fields(double_or_blank, card, 'Ki', iStart + 1, iStart + 7)
+        self.Ki = fields(double_or_blank, card, 'Ki', istart + 1, istart + 7)
         #print "Ki = ",self.Ki
         self.vars.append('K')
 
-    def getB(self, card, iStart):
+    def _read_b(self, card, istart):
         # Flag indicating that the next 1 to 6 fields are force-per-velocity
         # damping.
-        #self.b = string(card, iStart, 'b')
+        #self.b = string(card, istart, 'b')
 
         #: Force per unit velocity (Real)
         #: Nominal damping coefficients in direction 1 through 6 in units of
         #: force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
-        self.Bi = fields(double_or_blank, card, 'Bi', iStart + 1, iStart + 7)
+        self.Bi = fields(double_or_blank, card, 'Bi', istart + 1, istart + 7)
         self.vars.append('B')
 
-    def getGE(self, card, iStart):
+    def _read_ge(self, card, istart):
         # Flag indicating that the next fields, 1 through 6 are structural
         # damping constants. See Remark 7. (Character)
-        #self.ge = string(card, iStart, 'ge')
+        #self.ge = string(card, istart, 'ge')
 
         #: Nominal structural damping constant in directions 1 through 6. See
         #: Remarks 2. and 3. (Real; Default = 0.0)
-        self.GEi = fields(double_or_blank, card, 'GEi', iStart + 1, iStart + 7)
+        self.GEi = fields(double_or_blank, card, 'GEi', istart + 1, istart + 7)
         self.vars.append('GE')
 
-    def getRCV(self, card, iStart):
+    def _read_rcv(self, card, istart):
         # Flag indicating that the next 1 to 4 fields are stress or strain
         # coefficients. (Character)
-        #self.rcv = string(card, iStart, 'rcv')
+        #self.rcv = string(card, istart, 'rcv')
 
-        self.sa = double_or_blank(card, iStart + 1, 'sa', 1.)
-        self.st = double_or_blank(card, iStart + 2, 'st', 1.)
-        self.ea = double_or_blank(card, iStart + 3, 'ea', 1.)
-        self.et = double_or_blank(card, iStart + 4, 'et', 1.)
+        self.sa = double_or_blank(card, istart + 1, 'sa', 1.)
+        self.st = double_or_blank(card, istart + 2, 'st', 1.)
+        self.ea = double_or_blank(card, istart + 3, 'ea', 1.)
+        self.et = double_or_blank(card, istart + 4, 'et', 1.)
         self.vars.append('RCV')
 
     def raw_fields(self):
@@ -142,7 +142,6 @@ class PBUSH(BushingProperty):
                 raise RuntimeError('not supported PBUSH field...')
             nSpaces = 8 - (len(list_fields) - 1) % 8
 
-            #print("nSpaces = ",nSpaces)
             if nSpaces == 8:
                 list_fields += [None]
             elif nSpaces < 8:
@@ -214,20 +213,20 @@ class PBUSH1D(BushingProperty):
 
             nfields = card.nfields
             self.vars = []
-            iStart = 9
-            while iStart < nfields:
-                pname = string(card, iStart, 'pname')
+            istart = 9
+            while istart < nfields:
+                pname = string(card, istart, 'pname')
                 if   pname == 'SHOCKA':
-                    iStart = self.getShockA(card, iStart)
+                    istart = self._read_shock(card, istart)
                 elif pname == 'SPRING':
-                    self.getSpring(card, iStart)
+                    self._read_spring(card, istart)
                 elif pname == 'DAMPER':
-                    self.getDamper(card, iStart)
+                    self._read_damper(card, istart)
                 elif pname == 'GENER':
-                    self.getGener(card, iStart)
+                    self._read_gener(card, istart)
                 else:
                     break
-                iStart += 8
+                istart += 8
         else:
             self.pid = data[0]
             self.b = data[1]
@@ -237,79 +236,79 @@ class PBUSH1D(BushingProperty):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r' % pid
 
-    def getShockA(self, card, iStart):
-        self.shockType = string_or_blank(card, iStart + 1, 'shockType')
-        self.shockCVT = double(card, iStart + 2, 'shockCVT')
-        self.shockCVC = double_or_blank(card, iStart + 3, 'shockCVC')
-        self.shockExpVT = double_or_blank(card, iStart + 4, 'shockExpVT', 1.0)
-        self.shockExpVC = double_or_blank(card, iStart + 5,
+    def _read_shock(self, card, istart):
+        self.shockType = string_or_blank(card, istart + 1, 'shockType')
+        self.shockCVT = double(card, istart + 2, 'shockCVT')
+        self.shockCVC = double_or_blank(card, istart + 3, 'shockCVC')
+        self.shockExpVT = double_or_blank(card, istart + 4, 'shockExpVT', 1.0)
+        self.shockExpVC = double_or_blank(card, istart + 5,
                                           'shockExpVC', self.shockExpVT)
 
         if self.shockType == 'TABLE':
             pass
-            # self.shockIDTS = integer(card, iStart + 6, 'shockIDTS')
-            # self.shockIDETS = blank(card, iStart + 9, 'shockIDETS')
-            # self.shockIDECS = blank(card, iStart + 10, 'shockIDECS')
-            # self.shockIDETSD = blank(card, iStart + 11, 'shockIDETSD')
-            # self.shockIDECSD = blank(card, iStart + 12, 'shockIDECSD')
+            # self.shockIDTS = integer(card, istart + 6, 'shockIDTS')
+            # self.shockIDETS = blank(card, istart + 9, 'shockIDETS')
+            # self.shockIDECS = blank(card, istart + 10, 'shockIDECS')
+            # self.shockIDETSD = blank(card, istart + 11, 'shockIDETSD')
+            # self.shockIDECSD = blank(card, istart + 12, 'shockIDECSD')
         elif self.shockType == 'EQUAT':
-            self.shockIDTS = blank(card, iStart + 6, 'shockIDTS')
-            self.shockIDETS = integer(card, iStart + 9, 'shockIDETS')
-            self.shockIDECS = integer_or_blank(card, iStart + 10,
+            self.shockIDTS = blank(card, istart + 6, 'shockIDTS')
+            self.shockIDETS = integer(card, istart + 9, 'shockIDETS')
+            self.shockIDECS = integer_or_blank(card, istart + 10,
                                                'shockIDECS', self.shockIDETS)
-            self.shockIDETSD = integer(card, iStart + 11, 'shockIDETSD')
-            self.shockIDECSD = integer_or_blank(card, iStart + 11,
+            self.shockIDETSD = integer(card, istart + 11, 'shockIDETSD')
+            self.shockIDECSD = integer_or_blank(card, istart + 11,
                                                 'shockIDECSD', self.shockIDETSD)
         else:
-            raise RuntimeError('Invalid shockType=|%s| on card\n%s' %(self.shockType, card))
+            raise RuntimeError('Invalid shockType=%r on card\n%s' %(self.shockType, card))
 
-        iStart += 8
-        return iStart
+        istart += 8
+        return istart
 
-    def getSpring(self, card, iStart):
-        self.springType = string_or_blank(card, iStart + 1, 'springType')
-        self.springIDT = integer(card, iStart + 2, 'springIDT')
+    def _read_spring(self, card, istart):
+        self.springType = string_or_blank(card, istart + 1, 'springType')
+        self.springIDT = integer(card, istart + 2, 'springIDT')
 
         if self.springType == 'TABLE':
-            self.springIDC = blank(card, iStart + 3, 'springIDC')
-            self.springIDTDU = blank(card, iStart + 4, 'springIDTDU')
-            self.springIDCDU = blank(card, iStart + 5, 'springIDCDU')
+            self.springIDC = blank(card, istart + 3, 'springIDC')
+            self.springIDTDU = blank(card, istart + 4, 'springIDTDU')
+            self.springIDCDU = blank(card, istart + 5, 'springIDCDU')
         elif self.springType == 'EQUAT':
-            self.springIDC = integer_or_blank(card, iStart + 3,
+            self.springIDC = integer_or_blank(card, istart + 3,
                                               'springIDC', self.springIDT)
-            self.springIDTDU = integer(card, iStart + 4, 'springIDTDU')
-            self.springIDCDU = integer_or_blank(card, iStart + 5,
+            self.springIDTDU = integer(card, istart + 4, 'springIDTDU')
+            self.springIDCDU = integer_or_blank(card, istart + 5,
                                                 'springIDCDU', self.springIDTDU)
         else:
             raise RuntimeError('Invalid springType=|%s| on card\n%s' %(self.springType, card))
 
         self.vars.append('SPRING')
 
-    def getDamper(self, card, iStart):
-        self.damperType = string_or_blank(card, iStart + 1, 'damperType')
-        self.damperIDT = integer(card, iStart + 2, 'damperIDT')
+    def _read_damper(self, card, istart):
+        self.damperType = string_or_blank(card, istart + 1, 'damperType')
+        self.damperIDT = integer(card, istart + 2, 'damperIDT')
         if self.damperType == 'TABLE':
-            self.damperIDC = blank(card, iStart + 3, 'damperIDC')
-            self.damperIDTDV = blank(card, iStart + 4, 'damperIDTDV')
-            self.damperIDCDV = blank(card, iStart + 5, 'damperIDCDV')
+            self.damperIDC = blank(card, istart + 3, 'damperIDC')
+            self.damperIDTDV = blank(card, istart + 4, 'damperIDTDV')
+            self.damperIDCDV = blank(card, istart + 5, 'damperIDCDV')
         elif self.damperType == 'EQUAT':
-            self.damperIDC = integer_or_blank(card, iStart + 3, 'damperIDC')
-            self.damperIDTDV = integer(card, iStart + 4, 'damperIDTDV')
-            self.damperIDCDV = integer_or_blank(card, iStart + 5, 'damperIDCDV', self.damperIDTDV)
+            self.damperIDC = integer_or_blank(card, istart + 3, 'damperIDC')
+            self.damperIDTDV = integer(card, istart + 4, 'damperIDTDV')
+            self.damperIDCDV = integer_or_blank(card, istart + 5, 'damperIDCDV', self.damperIDTDV)
         else:
             raise RuntimeError('Invalid springType=|%s| on card\n%s' %(self.springType, card))
 
         self.vars.append('DAMPER')
 
-    def getGener(self, card, iStart):
-        self.generIDT = integer(card, iStart + 2, 'generIDT')
-        self.generIDC = integer_or_blank(card, iStart + 3,
+    def _read_gener(self, card, iStart):
+        self.generIDT = integer(card, istart + 2, 'generIDT')
+        self.generIDC = integer_or_blank(card, istart + 3,
                                          'generIDC', self.generIDT)
-        self.generIDTDU = integer(card, iStart + 4, 'generIDTDU')
-        self.generIDCDU = integer_or_blank(card, iStart + 5,
+        self.generIDTDU = integer(card, istart + 4, 'generIDTDU')
+        self.generIDCDU = integer_or_blank(card, istart + 5,
                                            'generIDCDU', self.generIDTDU)
-        self.generIDTDV = integer(card, iStart + 6, 'generIDTDV')
-        self.generIDCDV = integer_or_blank(card, iStart + 7,
+        self.generIDTDV = integer(card, istart + 6, 'generIDTDV')
+        self.generIDCDV = integer_or_blank(card, istart + 7,
                                            'generIDCDV', self.generIDTDV)
         self.vars.append('GENER')
 
@@ -381,10 +380,9 @@ class PBUSH2D(BushingProperty):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        #if size == 8:
-            #return self.comment() + print_card_8(card)
-        #return self.comment() + print_card_16(card)
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PBUSHT(BushingProperty):

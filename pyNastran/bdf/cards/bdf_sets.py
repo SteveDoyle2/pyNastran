@@ -489,14 +489,7 @@ class SET1(Set):
         self.sid = integer(card, 1, 'sid')
 
         self.IDs = []
-        IDs = []
-        i = 1
-        for ifield in range(2, len(card)):
-            ID = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if ID:
-                i += 1
-                IDs.append(ID)
-        #IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
 
         self.isSkin = False
         i = 0

@@ -7,7 +7,7 @@ from math import log, sin, cos, radians, atan2, sqrt, degrees
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
 
-from numpy import zeros, abs  # average
+from numpy import array, zeros, abs  # average
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -424,7 +424,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     if is_sparse:
         GCj = array(self.GCj, dtype='int32') - 1
         GCi = array(self.GCi, dtype='int32') - 1
-        reals = array(self.GCi, dtype='float32')
+        reals = array(self.Real, dtype='float32')
 
         # TODO: matrix size:  is this correct?
         nrows = max(GCi) + 1
@@ -434,6 +434,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
         # TODO: no check for symmetry
         # TODO: no check for dtype
         if self.is_complex():
+            complexs = array(self.Complex, dtype='float32')
             data = array([real, complexs]).astype(complex)
         else:
             data = reals
