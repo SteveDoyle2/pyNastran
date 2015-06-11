@@ -2114,7 +2114,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
                 % (bdf_filename, self.active_filenames)
             raise RuntimeError(msg)
-        self.log.info('opening %r' % bdf_filename)
+        self.log.debug('opening %r' % bdf_filename)
         self.active_filenames.append(bdf_filename)
 
         #print('ENCODING - _open_file=%r' % self._encoding)
