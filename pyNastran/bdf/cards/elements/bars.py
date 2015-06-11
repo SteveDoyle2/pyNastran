@@ -299,6 +299,7 @@ class CBAR(LineElement):
 
     def _verify(self, xref=False):
         pid = self.Pid()
+        edges = self.get_edges()
         if xref:  # True
             mid = self.Mid()
             A = self.Area()
@@ -556,6 +557,8 @@ class CBEAM3(CBAR):
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
 
+    def _verify(self, xref=False):
+        edges = self.get_edges()
 
 class CBEND(LineElement):
     type = 'CBEND'
@@ -619,6 +622,9 @@ class CBEND(LineElement):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Area()
+
+    def _verify(self, xref):
+        edges = self.get_edges()
 
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()

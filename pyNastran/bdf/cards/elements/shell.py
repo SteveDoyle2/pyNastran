@@ -282,11 +282,12 @@ class CTRIA3(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
+        edges = self.get_edges()
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -432,9 +433,10 @@ class CTRIA6(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
+        edges = self.get_edges()
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
             assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
@@ -588,10 +590,10 @@ class CTRIAR(TriShell):
         #pid = self.Pid()
         #nids = self.node_ids
 
-        #assert isinstance(eid, int)
-        #assert isinstance(pid, int)
+        #assert isinstance(eid, integer_types)
+        #assert isinstance(pid, integer_types)
         #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         #if xref:
             #assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -633,11 +635,12 @@ class CTRIAR(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
+        edges = self.get_edges()
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             # PSHELL/PCOMP
@@ -710,14 +713,15 @@ class CTRIAX(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
+        edges = self.get_edges()
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
             if i < 3:
-                assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+                assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
             else:
-                assert isinstance(nid, int) or nid is None, 'nid%i is not an integer or None nid=%s' %(i, nid)
+                assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer or None nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -827,13 +831,13 @@ class CTRIAX6(TriShell):
 
     def _verify(self, xref=True):
         eid = self.Eid()
-        #pid = self.Pid()
         nids = self.node_ids
+        edges = self.get_edges()
+
         assert self.pid == 0, 'pid = %s' % self.pid
-        assert isinstance(eid, int)
-        #assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
             assert self.mid.type in ['MAT1', 'MAT3', 'MAT4'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
@@ -1123,11 +1127,12 @@ class CSHEAR(QuadShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
+        edges = self.get_edges()
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHEAR'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -1267,10 +1272,11 @@ class CQUAD4(QuadShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        edges = self.get_edges()
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -1417,10 +1423,10 @@ class CQUADR(QuadShell):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -1620,9 +1626,10 @@ class CQUAD8(QuadShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
+        edges = self.get_edges()
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i,nid in enumerate(nids):
             assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 

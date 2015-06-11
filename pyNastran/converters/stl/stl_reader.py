@@ -210,18 +210,18 @@ class STLReader(object):
         normals[:, 2] /= n
         return normals
 
-    #def get_area(self, elements, stop_on_failure=True):
-        #v123, n, inan = self._get_normals_data(elements, nodes=self.nodes)
+    def get_area(self, elements, stop_on_failure=True):
+        v123, n, inan = self._get_normals_data(elements, nodes=self.nodes)
 
-        #if stop_on_failure:
-            #msg = 'Failed Elements: %s\n' % inan
-            #if len(inan) > 0:
-                #for inani in inan:
-                    #msg += '  eid=%s nodes=%s\n' % (inani, elements[inani, :])
-                    #for ni in elements[inani]:
-                        #msg += '    nid=%s node=%s\n' % (ni, nodes[ni, :])
-                #raise RuntimeError(msg)
-        #return 0.5 * n
+        if stop_on_failure:
+            msg = 'Failed Elements: %s\n' % inan
+            if len(inan) > 0:
+                for inani in inan:
+                    msg += '  eid=%s nodes=%s\n' % (inani, elements[inani, :])
+                    for ni in elements[inani]:
+                        msg += '    nid=%s node=%s\n' % (ni, nodes[ni, :])
+                raise RuntimeError(msg)
+        return 0.5 * n
 
     def get_normals(self, elements, nodes=None, stop_on_failure=True):
         """
