@@ -30,9 +30,10 @@ import vtk
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
-    STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO,
+    STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
     is_nastran, is_cart3d, is_panair, is_lawgs,
-    is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d, is_openvsp)
+    is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d, is_openvsp,
+    is_fast)
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -61,7 +62,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO,
-                 TetgenIO, Usm3dIO, Plot3d_io, ADB_IO):
+                 TetgenIO, Usm3dIO, Plot3d_io, ADB_IO, FastIO):
 
     def __init__(self, inputs):
         html_logging = True
@@ -77,10 +78,11 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         Usm3dIO.__init__(self)
         Plot3d_io.__init__(self)
         ADB_IO.__init__(self)
+        FastIO.__init__(self)
 
         fmt_order = [
             'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', # results
-            'lawgs', 'tetgen', 'stl', #'plot3d',  # no results
+            'lawgs', 'tetgen', 'stl', 'fast', #'plot3d',  # no results
         ]
         self.build_fmts(fmt_order, stop_on_failure=False)
 
