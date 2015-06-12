@@ -107,6 +107,18 @@ except ImportError:
             pass
     is_usm3d = False
 
+
+try:
+    from pyNastran.converters.dev.fast.fast_io import FastIO
+    is_fast = True
+except ImportError:
+    #raise
+    class FastIO(object):
+        def __init__(self):
+            pass
+    is_fast = False
+
+
 try:
     from pyNastran.converters.openvsp.adb_io import ADB_IO
     is_openvsp = True

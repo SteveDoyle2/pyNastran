@@ -906,8 +906,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #if geometry_format in self.formats:
             msg = 'The import for the %r module failed.\n' % geometry_format
             #else:
-                #msg = '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
-                #msg += str("formats = %s" % str(self.formats))
+            #msg += '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
             self.log_error(msg)
             return is_failed
 
