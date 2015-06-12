@@ -1,10 +1,14 @@
 from __future__ import print_function
 from six import iteritems, itervalues, integer_types
 from six.moves import zip, range
-import scipy
+from itertools import count
 from math import ceil
-from pyNastran.bdf.bdf import BDF
+
 from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique, log10
+from numpy.linalg import norm
+import scipy
+
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.baseCard import expand_thru
 from pyNastran.utils import object_attributes
 
@@ -31,7 +35,8 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     model.write_bdf(bdf_filename_out)
 
 
-def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
+def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                          renumber_nodes=False, neq_max=4):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -42,20 +47,32 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     model.read_bdf(bdf_filename, xref=True)
 
     # quads / tris
-    quads = []
-    quadmap = []
-    tris = []
-    trimap = []
+    nids_quads = []
+    eids_quads = []
+    nids_tris = []
+    eids_tris = []
 
-    inode = 1
+    # map the node ids to the slot in the nids array
+    renumber_nodes = False
+
+    inode = 0
     nid_map = {}
-    for nid, node in sorted(iteritems(model.nodes)):
-        node.nid = inode
-        nid_map[inode - 1] = nid
-        inode += 1
+    if renumber_nodes:
+        for nid, node in sorted(iteritems(model.nodes)):
+            node.nid = inode + 1
+            nid_map[inode] = nid
+            inode += 1
+        nnodes = len(model.nodes)
+        nids = arange(1, inode + 1, dtype='int32')
+        assert nids[-1] == nnodes
+
+    else:
+        for nid, node in sorted(iteritems(model.nodes)):
+            nid_map[inode] = nid
+            inode += 1
+        nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
     #model.write_bdf('A_' + bdf_filename_out)
 
-    nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
     #nids_used = set([])
     #for element in itervalues(model.elements):
     #    nids_used.update(element.node_ids)
@@ -65,27 +82,33 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
 
     nnodes = len(nids)
     i = arange(nnodes, dtype='int32')
-    nids2 = vstack([i, nids]).T
+    #nids2 = vstack([i, nids]).T
 
     nodes_xyz = array([node.xyz for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
+
+    if 0:
+        i = 0
+        for nid, xyz in zip(nids, nodes_xyz):
+            #print('%i %-5s %s' % (i, nid, list_print(xyz)))
+            i += 1
 
     nids_new = set([])
     for eid, element in sorted(iteritems(model.elements)):
         emap = []
 
         if element.type == 'CQUAD4':
-            quads.append(element.node_ids)
-            quadmap.append(element.eid)
+            nids_quads.append(element.node_ids)
+            eids_quads.append(element.eid)
         elif element.type == 'CTRIA3':
-            tris.append(element.node_ids)
-            trimap.append(element.eid)
+            nids_tris.append(element.node_ids)
+            eids_tris.append(element.eid)
         else:
             raise NotImplementedError(element.type)
 
-    quads = array(quads, dtype='int32') - 1
-    quadmap = array(quadmap, dtype='int32')
-    tris = array(tris, dtype='int32') - 1
-    trimap = array(trimap, dtype='int32')
+    nids_quads = array(nids_quads, dtype='int32')
+    #eids_quads = array(eids_quads, dtype='int32')
+    nids_tris = array(nids_tris, dtype='int32')
+    #eids_tris = array(eids_tris, dtype='int32')
 
     # build the kdtree
     try:
@@ -95,25 +118,43 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
         raise RuntimeError(nodes_xyz)
 
     # find the node ids of interest
-    nids_new = hstack([unique(quads), unique(tris)])
+    nids_new = unique(hstack([
+        nids_quads.flatten(), nids_tris.flatten()
+    ]))
     nids_new.sort()
     inew = searchsorted(nids, nids_new, side='left')
 
     # check the closest 10 nodes for equality
-    deq, ieq = kdt.query(nodes_xyz[inew, :], k=10, distance_upper_bound=tol)
+    deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
 
     # get the ids of the duplicate nodes
-    slots = where(ieq[:, 1:] < nnodes)
+    slots = where(ieq[:, :] < nnodes)
     irows, icols = slots
     #replacer = unique(ieq[slots])
 
     skip_nodes = []
-    for (irow, icol) in zip(irows, icols):
-        nid1 = nid_map[irow]
-        nid2 = nid_map[icol]
+    for (islot, irow, icol) in zip(count(), irows, icols):
+        inid2 = ieq[irow, icol]
+        nid1 = nids[irow]
+        nid2 = nids[inid2]
+
+        #if nid1 == nid2:
+            #continue
 
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
+        R = norm(node1.xyz - node2.xyz)
+        #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
+        if R > tol:
+            #print('  *n1=%-4s xyz=%s\n  *n2=%-4s xyz=%s\n  *R=%s\n' % (
+            #    nid1, list_print(node1.xyz),
+            #    nid2, list_print(node2.xyz),
+            #    R))
+            continue
+        #print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  R=%s\n' % (
+        #    nid1, list_print(node1.xyz),
+        #    nid2, list_print(node2.xyz),
+        #    R))
 
         node2.nid = node1.nid
         node2.xyz = node1.xyz
@@ -123,7 +164,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
         assert node2.seid == node1.seid
         skip_nodes.append(nid2)
 
-    model.remove_nodes = skip_nodes
+    #model.remove_nodes = skip_nodes
     #model._write_nodes = _write_nodes
     model.write_bdf(bdf_filename_out)
 
@@ -805,7 +846,56 @@ def _update_case_control(model, mapper):
         #print()
 
 
-def main():
+def eq2():
+    lines = [
+        '$pyNastran: version=msc',
+        '$pyNastran: punch=True',
+        '$pyNastran: encoding=ascii',
+        '$NODES',
+        '$ Nodes to merge:',
+        '$ 5987 10478',
+        '$   GRID        5987           35.46     -6.      0.',
+        '$   GRID       10478           35.46     -6.      0.',
+        '$ 5971 10479',
+        '$   GRID        5971           34.92     -6.      0.',
+        '$   GRID       10479           34.92     -6.      0.',
+        '$ 6003 10477',
+        '$   GRID        6003             36.     -6.      0.',
+        '$   GRID       10477             36.     -6.      0.',
+        'GRID        5971           34.92     -6.      0.',
+        'GRID        5972           34.92-5.73333      0.',
+        'GRID        5973           34.92-5.46667      0.',
+        'GRID        5987           35.46     -6.      0.',
+        'GRID        5988           35.46-5.73333      0.',
+        'GRID        5989           35.46-5.46667      0.',
+        'GRID        6003             36.     -6.      0.',
+        'GRID        6004             36.-5.73333      0.',
+        'GRID        6005             36.-5.46667      0.',
+        'GRID       10476             36.     -6.    -1.5',
+        'GRID       10477             36.     -6.      0.',
+        'GRID       10478           35.46     -6.      0.',
+        'GRID       10479           34.92     -6.      0.',
+        'GRID       10561           34.92     -6.    -.54',
+        '$ELEMENTS_WITH_PROPERTIES',
+        'PSHELL         1       1      .1',
+        'CQUAD4      5471       1    5971    5987    5988    5972',
+        'CQUAD4      5472       1    5972    5988    5989    5973',
+        'CQUAD4      5486       1    5987    6003    6004    5988',
+        'CQUAD4      5487       1    5988    6004    6005    5989',
+        'PSHELL        11       1      .1',
+        'CTRIA3      9429      11   10561   10476   10478',
+        'CTRIA3      9439      11   10478   10479   10561',
+        'CTRIA3      9466      11   10476   10477   10478',
+        '$MATERIALS',
+        'MAT1           1      3.              .3',
+    ]
+    bdf_filename = 'nonunique2.bdf'
+    f = open(bdf_filename, 'wb')
+    f.write('\n'.join(lines))
+    f.close()
+    bdf_equivalence_nodes('nonunique2.bdf', 'unique2.bdf', 0.01)
+
+def eq1():
     msg = 'CEND\n'
     msg += 'BEGIN BULK\n'
     msg += 'GRID,1,,0.,0.,0.\n'
@@ -821,7 +911,6 @@ def main():
     msg += 'MAT1,1,3.0,, 0.3\n'
     msg += 'ENDDATA'
 
-
     bdf_filename = 'nonunique.bdf'
 
     f = open(bdf_filename, 'wb')
@@ -833,4 +922,4 @@ def main():
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 
 if __name__ == '__main__':
-    main()
+    eq2()
