@@ -136,9 +136,6 @@ class ScalarObject(BaseScalarObject):
         for name in self.data_code['dataNames']:
             self.append_data_member(name + 's', name)
 
-        if 'element_name' in self.data_code:
-            self.element_names = [self.data_code['element_name']]
-
     def update_data_code(self, data_code):
         if not self.data_code or (data_code['nonlinear_factor'] != self.data_code['nonlinear_factor']):
             self.data_code = data_code
