@@ -1049,19 +1049,19 @@ class RealSolidStrain(StrainObject):
         msg += self.get_data_code()
         return msg
 
-    def add_f06_data(self, data, transient):
+    def add_f06_data(self, _f06_data, transient):
         if transient is None:
             if self._f06_data is None:
                 self._f06_data = []
-            self._f06_data += data
+            self._f06_data += _f06_data
         else:
+            dt = transient[1]
             if self._f06_data is None:
                 self._f06_data = {}
-            dt = transient[1]
             if dt not in self._f06_data:
                 self._f06_data[dt] = []
-            for line in data:
-                self._f06_data[dt] += data
+            self._f06_data[dt] += _f06_data
+            assert 'name' in self.data_code, self.data_code
 
     def processF06Data(self):
         """
@@ -1167,7 +1167,7 @@ class RealSolidStrain(StrainObject):
                     try:
                         (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
                     except:
-                        print('strain; error reading %s; nnodes=%s' % (self.element_name, nnodes))
+                        print('strain; error reading %s; nnodes=%s\n%r' % (self.element_name, nnodes, f06_data[n]))
                         raise
 
                     (blank, blank, y, oyy, tyz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
