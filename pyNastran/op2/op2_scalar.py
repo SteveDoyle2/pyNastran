@@ -687,12 +687,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             data = self.read_block()
             self.binary_debug.write(data + '\n')
             data = self._read_record()
-            if data.startswith(b'NX'):
+            version = data.strip()
+            if version.startswith(b'NX'):
                 self.set_as_nx()
-                print('version=%r' % data.strip())
-            else:
+            elif version == b'XXXXXXXX':
                 self.set_as_msc()
-                print('version=%r' % data.strip())
+            else:
+                raise RuntimeError('unknown version=%r' % version)
+
             self.binary_debug.write(data + '\n')
             self.read_markers([-1, 0])
         elif markers == [2,]:  # PARAM, POST, -2
