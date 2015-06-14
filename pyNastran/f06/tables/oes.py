@@ -694,11 +694,11 @@ class OES(object):
     def _strain_in_ctetra_elements(self):
         return self._read_solid_strain('CTETRA', 39, 4, self.ctetra_strain)
 
-    def _read_solid_stress(self, element_name, element_type, n, slot):
-        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, n, is_strain=False)
+    def _read_solid_stress(self, element_name, element_type, nnodes, slot):
+        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, nnodes, is_strain=False)
         data_code['table_name'] = 'OES1X'
 
-        data = self._read_3D_stress(element_name, n)
+        data = self._read_3D_stress(element_name, nnodes, is_strain=False)
         if isubcase in slot:
             slot[isubcase].add_f06_data(data, transient)
         else:
@@ -709,11 +709,11 @@ class OES(object):
             assert slot[isubcase].is_strain() == False
         self.iSubcases.append(isubcase)
 
-    def _read_solid_strain(self, element_name, element_type, n, slot):
-        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, n, is_strain=True)
+    def _read_solid_strain(self, element_name, element_type, nnodes, slot):
+        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, nnodes, is_strain=True)
         data_code['table_name'] = 'OSTR1X'
 
-        data = self._read_3D_stress(element_name, n)
+        data = self._read_3D_stress(element_name, nnodes, is_strain=True)
         if isubcase in slot:
             slot[isubcase].add_f06_data(data, transient)
         else:
@@ -736,7 +736,7 @@ class OES(object):
         """
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
-        #print "headers = %s" % (headers)
+        #print("headers = %s" % (headers))
 
         is_max_shear = True
         if 'VON MISES' in headers:
@@ -758,9 +758,9 @@ class OES(object):
             data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
 
-    def _read_3D_stress(self, eType, n):
+    def _read_3D_stress(self, eType, nnodes, is_strain=False):
         data = []
-        eType2 = eType + str(n)
+        eType2 = eType + str(nnodes)
         while 1:
             line = self.infile.readline().rstrip('\n\r')  # [1:]
                     #              CENTER         X          #          XY             #        A         #
