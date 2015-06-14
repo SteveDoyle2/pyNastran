@@ -116,7 +116,7 @@ class OP2(OP2_Scalar):
                              The second will be used for superelements regardless
                              of the option (default=True)
         """
-        self.log.info('vectorized=%s combine=%s' % (vectorized, combine))
+        self.log.debug('vectorized=%s combine=%s' % (vectorized, combine))
         assert self.ask in [True, False], self.ask
         self.is_vectorized = vectorized
         if self.is_vectorized:
