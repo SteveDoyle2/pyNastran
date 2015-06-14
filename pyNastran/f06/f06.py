@@ -674,6 +674,66 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         year = int(year)
         self.date = (month, day, year)
 
+    def _get_minus_lines(self, debug=False):
+        """
+        Reads the following section:
+
+        1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    14
+             DEFAULT
+        0                                                                                                            SUBCASE 1
+
+                                                             L O A D   V E C T O R
+
+        and finds the lines whose first characters are 1 and 0.  The
+        LOAD VECTOR line is line 0 and lines count down from that in self.stored_lines.
+        """
+        if debug:
+            print('-------------------------')
+            print(self.stored_lines[0])
+        msg = ''
+        i0 = None
+        i1 = None
+        nlines = len(self.stored_lines)
+        for i, line in enumerate(self.stored_lines):
+            #if line[0].strip():
+            if debug:
+                print('%-3i %-2i %r' % (i, i - nlines, line[0]))
+            if line[0] == '0':
+                i0 = i - nlines
+            elif line[0] == '1':
+                i1 = i - nlines
+
+        # i1 doesn't always exist, but presumably we've found it before,
+        # so we don't need to change it
+        found_i1 = True
+        if i1 is None:
+            i1 = i0 - 2
+            found_i1 = False
+        assert i0 is not None and i1 is not None, 'i1=%s i0=%s'  % (i1, i0)
+
+        # i1 comes before (it's more negative) than i0
+        delta = i1 - i0
+        if delta not in [-2, -3]:
+            if debug:
+                msg = 'found_i1=%s i1=%s i0=%s delta=%s nlines=%i; delta should be in [-2, -3]' % (found_i1, i1, i0, delta, nlines)
+                raise RuntimeError(msg)
+            self.get_minus_lines(debug=True)
+
+
+        #header_lines = self.stored_lines[i1 : i0+1]
+        #assert header_lines[-1][0] == '0'
+        #i = -len(header_lines)
+        #for i, line in enumerate(header_lines):
+            #msg += 'i=%s - %s\n' % (i, line.rstrip()[:118])
+        #print(msg)
+
+
+        header_lines = self.stored_lines[i1 : i0 + 1]
+        if debug:
+            for i, line in enumerate(header_lines):
+                print('  header i=%s*%r' % (i, line.strip()))
+        return found_i1, header_lines, delta
+
     def _read_f06_subcase_header(self, n=-2):
         """
         -4 -> 1                                                     JANUARY   5, 2014  MSC.NASTRAN 11/25/11   PAGE    14
@@ -687,47 +747,63 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             #else:
                 #print('line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
         #assert 'PAGE' in self.stored_lines[-4], self.stored_lines[-4]
-        subtitle = self.stored_lines[-3].strip()
 
-        msg = ''
-        lines2 = []
-        for i, line in enumerate(self.stored_lines[-4:]):
-            line2 = line.rstrip()
-            if line2:
-                #msg += '%i -> %s\n' % (-4 + i, line.rstrip())
-                #print("%r" % line2.replace("  ", " "))
-                lines2.append(line2)
-
-        if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
-            title_line = self.stored_lines[-4]
+        found_i1, header_lines, delta = self._get_minus_lines()
+        #if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
+        if found_i1:
+            title_line = header_lines[0]
+            assert 'PAGE' in title_line, title_line
             self.Title = title_line[1:75].strip()
             date = title_line[75:93].strip()
             if date:
-                try:
+                if ',' in date:
                     month, day, year = date.split()
-                except:
+                    assert day[-1] == ',', day
+                    day = day[:-1]
+                else:
                     raise RuntimeError('Couldnt parse date; line=%r' % title_line.strip())
-                self._set_f06_date(month, day[:-1], year)  # -1 chops the comma
+
+                self._set_f06_date(month, day, year)
             #assert 'PAGE' not in title_line, '%r' % date
             assert 'D I S P L A C' not in self.Title, msg
         #self.Title = subcaseName  # 'no title'
 
         subcase_name = ''
-        #print("subcaseLine = %r" % subcaseName)
+        #print("subcaseLine = %r" % subcase_name)
 
-        # hack...
-        if 'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' in self.stored_lines[0]:
-            label_isubcase = self.stored_lines[-3]
+        if found_i1:
+            subtitle = header_lines[1].strip()
+            label_isubcase = header_lines[2]
+            #assert delta == -2, delta
         else:
-            label_isubcase = self.stored_lines[-2]
-        label, isubcase = _parse_label_isubcase(label_isubcase)
+            subtitle = header_lines[1].strip()
+            label_isubcase = header_lines[2]
+            assert delta == -2, delta
+        #print('label_isubcase  = %r' % label_isubcase[:120].strip())
+        label, isubcase = self._parse_label_isubcase(label_isubcase, stop_on_failure=False)
+        #print('label  = %r' % label.strip())
+        #print('isubcase  = %s' % isubcase)
 
         # TODO: this hardcodes the subtitle, but with bad splitting
-        #key = (isubcase, subtitle)
-        subtitle = 'subtitle'
-        if (isubcase, subtitle) not in self.labels:
+        #subtitle = 'subtitle'
+        if 'EIGENVALUE' in subtitle:
+            msg = 'subtitle=%r has EIGENVALUE in it...\n' % subtitle
+            msg += 'subcase = %s\n' % isubcase
+            msg += 'label = %s\n' % label
+            msg += '\nStored Lines\n'
+            msg += '------------\n'
+
+            stored_lines_to_print = self.stored_lines[-10:]
+            i = -len(stored_lines_to_print)
+            for i, line in enumerate(stored_lines_to_print):
+                msg += 'i=%s - %s\n' % (i-10, line.rstrip())
+            raise RuntimeError(msg)
+
+        key = (isubcase, subtitle)
+        if key not in self.labels:
+            #print('subcase_key = %s' % str(key))
             self.subtitles[isubcase].append(subtitle)
-            self.labels[(isubcase, subtitle)] = label
+            self.labels[key] = label
 
         #if isubcase not in self.labels:
             #self.subtitles[isubcase].append(subtitle)
@@ -1148,25 +1224,20 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self.i += iskip
         return self.infile.readline()
 
-    #def get_op2_stats(self):
-        #"""
-        #Gets info about the contents of the different attributes of the
-        #OP2 class.
-        #"""
-        #pass
-
-def _parse_label_isubcase(label_isubcase):
-    label = label_isubcase[1:65].strip()
-    isubcase = label_isubcase[65:].strip()
-    #print('stored2 = ', label_isubcase.strip().replace('         ', ' '))
-    if isubcase:
-        isubcase = int(isubcase.split()[-1])
-    else:
-        #raise RuntimeError('asdf')
-        isubcase = 1
-    return label, isubcase
-    #assert isinstance(isubcase,int),'isubcase=%r' % isubcase
-    #print("subcaseName=%s isubcase=%s" % (subcaseName, isubcase))
+    def _parse_label_isubcase(self, label_isubcase_line, stop_on_failure=True):
+        label = label_isubcase_line[1:65].strip()
+        isubcase = label_isubcase_line[65:].strip()
+        if isubcase:
+            isubcase = int(isubcase.split()[-1])
+        else:
+            if stop_on_failure:
+                msg = 'unknown subcase; label_isubcase_line=%r' % label_isubcase_line
+                raise RuntimeError(msg)
+            else:
+                msg = 'unknown subcase; assuming isubcase=1; label_isubcase_line=%r' % label_isubcase_line
+                self.log.error(msg)
+            isubcase = 1
+        return label, isubcase
 
 if __name__ == '__main__':  # pragma: no cover
     from pyNastran.f06.test.test_f06 import main

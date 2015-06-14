@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import  iteritems
 from six.moves import zip
 import os
@@ -221,15 +222,14 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_strain) == 0, len(f06.chexa_strain)
         assert len(f06.chexa_stress) == 0, len(f06.chexa_stress)
 
-
     def test_beam_modes_1(self):
         bdfname = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
         f06name = os.path.join(model_path, 'beam_modes', 'beam_modes.f06')
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
 
-        assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
         assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
+        assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
 
         subtitle_label= f06.iSubcaseNameMap[1]
         assert subtitle_label[0] == 'MODES', subtitle_label
@@ -255,6 +255,7 @@ class TestF06(unittest.TestCase):
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
+    #@unittest.expectedFailure - fails if subtitle check is different
     def test_bar3truss_1(self):
         bdfname = None
         op2name = None
@@ -364,6 +365,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_strain) == 1, len(f06.chexa_strain)
         assert len(f06.chexa_stress) == 1, len(f06.chexa_stress)
 
+    #@unittest.expectedFailure  # fails
     def test_solid_shell_bar_2(self):
         bdfname = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
         f06name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.f06')
@@ -372,8 +374,8 @@ class TestF06(unittest.TestCase):
         f06name2 = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.test_f06.f06')
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
 
-        assert f06.Title == 'MSC.NASTRAN JOB', '%r' % f06.Title
         assert op2.Title == 'MSC.NASTRAN JOB', '%r' % op2.Title
+        assert f06.Title == 'MSC.NASTRAN JOB', '%r' % f06.Title
 
         subtitle_label = f06.iSubcaseNameMap[1]
         #assert subtitle_label[0] == 'DEFAULT', subtitle_label
@@ -433,8 +435,8 @@ class TestF06(unittest.TestCase):
         #0           21      G      9.121415E-18   5.869901E-15  -1.456074E+02   0.0            2.171751E+02   2.631261E-13
         #                           4.977449E-19   3.364763E-15  -6.035482E+00   0.0            2.480264E+01   2.345500E-14
         isubcase = 1
-        assert len(f06.cquad4_force) == 2, len(f06.cquad4_force)  # ??? is correct
-        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # ??? is correct
+        assert len(f06.cquad4_force) == 2, len(f06.cquad4_force)  # 2 is correct
+        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # 0 is correct
 
         assert len(f06.displacements) == 2, len(f06.displacements)
         assert len(f06.spc_forces) == 2, len(f06.spc_forces)
@@ -442,9 +444,8 @@ class TestF06(unittest.TestCase):
         assert len(f06.ctria3_composite_stress) == 0, len(f06.ctria3_composite_stress)
         assert len(f06.cquad4_composite_stress) == 2, len(f06.cquad4_composite_stress)
 
-        assert len(f06.cquad4_force) == 2, len(f06.cquad4_force)  # ??? is correct
-        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # ??? is correct
-        #assert len(f06.plateForces2) == 2, len(f06.plateForces2)
+        assert len(f06.cquad4_force) == 2, len(f06.cquad4_force)  # 2 is correct
+        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # 0 is correct
 
         #disp = f06.displacements[isubcase]
         #frequency = .21
