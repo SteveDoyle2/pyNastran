@@ -382,6 +382,8 @@ class F06Writer(OP2_F06_Common):
                   '\n', '']
 
         # eigenvalues are written first
+        f06.write(page_stamp % self.page_num)
+        self.page_num += 1
         for ikey, result in sorted(iteritems(self.eigenvalues)):
             print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,

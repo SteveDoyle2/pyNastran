@@ -145,7 +145,7 @@ def main():
 
     msg = 'Tests to see if an F06 will work with pyNastran.\n'
     msg += 'Usage:\n'
-    msg += '  f06.py [-f] [-p] [-q] [-t] F06_FILENAME'
+    msg += '  f06.py [-f] [-q] [-t] F06_FILENAME' # [-p]
     msg += '  f06.py -h | --help\n'
     msg += '  f06.py -v | --version\n'
     msg += '\n'

@@ -43,6 +43,12 @@ class TestF06(unittest.TestCase):
             bdf.write_bdf(bdf_name+'.out', interspersed=True)
             outputs.append(bdf)
 
+        if op2_name:
+            op2 = OP2(debug=False)
+            op2.read_op2(op2_name, vectorized=False)
+            op2.write_f06(op2_name[:-4] + '.test_op2.out')
+            outputs.append(op2)
+
         if f06_name:
             f06 = F06(debug=False, log=None)
             f06.read_f06(f06_name)
@@ -52,12 +58,6 @@ class TestF06(unittest.TestCase):
                 assert f06.grid_point_weight.reference_point is not None
             else:
                 assert f06.grid_point_weight.reference_point is None
-
-        if op2_name:
-            op2 = OP2(debug=False)
-            op2.read_op2(op2_name, vectorized=False)
-            op2.write_f06(op2_name[:-4] + '.test_op2.out')
-            outputs.append(op2)
 
         if op4_name:
             op4 = OP4()
@@ -301,7 +301,7 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'fsi', 'fsi.op2')
 
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
-        assert len(f06.eigenvectors) == 0, len(f06.eigenvectors)  # 1 is correct
+        assert len(f06.eigenvectors) == 1, len(f06.eigenvectors)  # 1 is correct
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     def test_cbush_1(self):

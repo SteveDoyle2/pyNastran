@@ -15,7 +15,7 @@ class OQG(object):
         headers = self.skip(2)
         #print "headers = %s" % (headers)
 
-        data = self._real_f06_table_data(allow_blanks=False)
+        data = self._real_f06_real_table_data(allow_blanks=False)
 
         data_code = {
             'analysis_code': analysis_code,
@@ -46,7 +46,7 @@ class OQG(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        data = self._real_f06_table_data(allow_blanks=False)
+        data = self._real_f06_real_table_data(allow_blanks=False)
 
         data_code = {
             'analysis_code': analysis_code,
@@ -72,7 +72,7 @@ class OQG(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        data = self._real_f06_table_data(allow_blanks=False)
+        data = self._real_f06_real_table_data(allow_blanks=False)
 
         data_code = {
             'analysis_code': analysis_code,
