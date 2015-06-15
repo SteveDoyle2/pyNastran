@@ -11,6 +11,14 @@ import os.path
 #webbrowser.open("http://xkcd.com/353/")
 
 from PyQt4 import QtCore, QtGui
+
+import pyNastran
+from pyNastran.gui.utils import check_for_newer_version
+
+
+self = None
+check_for_newer_version(self, pop_msg=True)
+
 print("Using PyQt4")
 fmode = 1
 #except ImportError:
@@ -27,7 +35,6 @@ assert fmode in [1, 2]
 import vtk
 
 # pyNastran
-import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
