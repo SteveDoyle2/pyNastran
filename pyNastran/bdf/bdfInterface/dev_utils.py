@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, itervalues, integer_types
+from six import iteritems, itervalues, integer_types, PY2
 from six.moves import zip, range
 from itertools import count
 from math import ceil
@@ -11,6 +11,16 @@ import scipy
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.baseCard import expand_thru
 from pyNastran.utils import object_attributes
+
+
+if PY2:
+    import re
+    _name_re = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*$")
+    def isidentifier(s, dotted=False):
+        return bool(_name_re.match(s))
+else:
+    def isidentifier(s, dotted=False):
+        return s.isidentifier()
 
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
@@ -32,19 +42,39 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     #print('nodes_to_remove = %s' % nodes_to_remove)
     for nid in nodes_to_remove:
         del model.nodes[nid]
-    model.write_bdf(bdf_filename_out)
+
+    if renumber:
+        bdf_renumber(model, bdf_filename_out, size=8, is_double=False)
+    else:
+        model.write_bdf(bdf_filename_out)
 
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
-                          renumber_nodes=False, neq_max=4):
+                          renumber_nodes=False, neq_max=4, xref=True):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
-    .. warning:: only handles CQUAD4, CTRIA3
-    .. warning:: assumes cid=0
+    :param bdf_filename: a bdf_filename (string) or a BDF model (BDF)
+        that is fully valid (see xref)
+    :param bdf_filename_out: a bdf_filename to write
+    :param tol:              the spherical tolerance (float)
+    :param renumber_nodes:   should the nodes be renumbered (default=False)
+    :param neq_max:          the number of "close" points (default=4)
+    :param xref:             does the model need to be cross_referenced (default=True; only applies to model option)
+
+    .. warning:: this will collapse elements
+    .. warning:: xref not fully implemented (assumes cid=0)
     """
-    model = BDF()
-    model.read_bdf(bdf_filename, xref=True)
+    if isinstance(bdf_filename, str):
+        xref = True
+        model = BDF()
+        model.read_bdf(bdf_filename, xref=True)
+    else:
+        model = bdf_filename
+        model.cross_reference(xref=xref)
+
+    coord_ids = model.coord_ids
+    needs_get_position = True if coord_ids == [0] else False
 
     # quads / tris
     nids_quads = []
@@ -84,7 +114,12 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     i = arange(nnodes, dtype='int32')
     #nids2 = vstack([i, nids]).T
 
-    nodes_xyz = array([node.xyz for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
+    if needs_get_position:
+        nodes_xyz = array([node.get_position()
+                           for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
+    else:
+        nodes_xyz = array([node.xyz
+                           for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
 
     if 0:
         i = 0
@@ -158,7 +193,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
         node2.nid = node1.nid
         node2.xyz = node1.xyz
-        assert node2.cp == node1.cp
+        node2.cp = node1.cp
         assert node2.cd == node1.cd
         assert node2.ps == node1.ps
         assert node2.seid == node1.seid
@@ -255,8 +290,22 @@ def _roundup(x, n=100):
     return int(ceil(x / float(n))) * n
 
 
-def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
+def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                 starting_id_dict=None):
     """
+    Renumbers a BDF
+
+    :param bdf_filename: a bdf_filename (string; supported) or a BDF model (BDF)
+        that has been cross referenced and is fully valid
+    :param bdf_filename_out: a bdf_filename to write
+    :param size:       the field size to write (default=8; 8 or 16)
+    :param is_double:  the field precision to write (default=True)
+
+    ..todo :: bdf_model option for bdf_filename hasn't been tested
+    ..warning :: spoints might be problematic...check
+    ..warning :: still in development, but it usually brutally crashes if it's not supported
+    ..warning :: be careful of unsupported cards
+
     Supports
     ========
      - GRIDs
@@ -325,34 +374,46 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
        - STATSUB
        - SUBCASE
        - global SET cards won't be renumbered properly
-
-
-    ..warning:: spoints might be problematic...check
-    ..warning:: still in development, but it usually brutally crashes if it's not supported
-    ..warning:: be careful of unsupported cards
     """
-    cid = 50
-    nid = 101
-    eid = 301
-    pid = 401
-    mid = 501
-    spc_id = 501
-    mpc_id = 601
-    load_id = 701
-    dload_id = 801
+    starting_id_dict_default = {
+        'cid' : 50,
+        'nid' : 101,
+        'eid' : 301,
+        'pid' : 401,
+        'mid' : 501,
+        'spc_id' : 501,
+        'mpc_id' : 601,
+        'load_id' : 701,
+        'dload_id' : 801,
 
-    method_id = 901
-    cmethod_id = 1001
-    spline_id = 1101
-    table_id = 1201
-    flfact_id = 1301
-    flutter_id = 1401
-    freq_id = 1501
-    tstep_id = 1601
-    tstepnl_id = 1701
-    suport_id = 1801
-    suport1_id = 1901
-    tf_id = 2001
+        'method_id' : 901,
+        'cmethod_id' : 1001,
+        'spline_id' : 1101,
+        'table_id' : 1201,
+        'flfact_id' : 1301,
+        'flutter_id' : 1401,
+        'freq_id' : 1501,
+        'tstep_id' : 1601,
+        'tstepnl_id' : 1701,
+        'suport_id' : 1801,
+        'suport1_id' : 1901,
+        'tf_id' : 2001,
+    }
+    if starting_id_dict is None:
+        starting_id_dict = starting_id_dict_default
+    else:
+        for key, value in iteritems(starting_id_dict_default):
+            if key not in starting_id_dict:
+                starting_id_dict[key] = value
+
+    for key, value in sorted(iteritems(starting_id_dict)):
+        assert isinstance(key, str), key
+        assert key in starting_id_dict_default, 'key=%s is invalid' % (key)
+        assert isidentifier(key), 'key=%s is invalid' % key
+        assert isinstance(value, integer_types), 'value=%s must be an integer; type(value)' % (value, type(value))
+        call = '%s = %s' % (key, value)
+        exec(call)
+
 
     eid_map = {}
     nid_map = {}
@@ -374,8 +435,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False):
     suport_map = {}
     suport1_map = {}
 
-    model = BDF()
-    model.read_bdf(bdf_filename)
+    if isinstance(bdf_filename, str):
+        model = BDF()
+        model.read_bdf(bdf_filename)
+    else:
+        model = bdf_filename
 
     if model.spoints is None:
         spoints = []
