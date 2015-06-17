@@ -13,7 +13,33 @@ class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         pass
 
-    def get_cards_by_card_types(self, card_types=None, reset_type_to_slot_map=False):
+    def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False):
+        """
+        :param card_types: the list of keys to consider
+        :param reset_type_to_slot_map:
+            should the mapping dictionary be rebuilt (default=False);
+            set to True if you added cards
+        :retval out: the key=card_type, value=the ID of the card object
+        """
+        if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
+            raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
+
+        #if reset_type_to_slot_map or self._type_to_slot_map is None:
+            #self._type_to_slot_map = rslot_map
+
+        #out = {
+            #(key) : (self._type_to_id_map[key] if key in self.card_count else [])
+            #for key in card_types
+        #}
+        out = {}
+        for key in card_types:
+            if key in self.card_count:
+                out[key] = self._type_to_id_map[key]
+            else:
+                out[key] = []
+        return out
+
+    def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False):
         """
         :param card_types: the list of keys to consider
         :param reset_type_to_slot_map:
@@ -21,6 +47,9 @@ class GetMethods(GetMethodsDeprecated):
             set to True if you added cards
         :retval out: the key=card_type, value=the card object
         """
+        if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
+            raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
+
         #self._type_to_id_map = {
         #    'CQUAD4' : [1, 2, 3]
         #}
@@ -34,15 +63,12 @@ class GetMethods(GetMethodsDeprecated):
         else:
             rslot_map = self._type_to_slot_map
 
-        if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
-            raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
-
-        for card_type in card_types:
-            if card_type not in self.card_count:
-                raise KeyError('card_type=%r does not exist in card_count' % card_type)
-
         out = {}
         for card_type in card_types:
+            if card_type not in self.card_count:
+                out[card_type] = []
+                continue
+
             #print('card_type=%r' % card_type)
             key = rslot_map[card_type]
             slot = getattr(self, key)
