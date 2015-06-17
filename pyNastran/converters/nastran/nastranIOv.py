@@ -294,7 +294,7 @@ class NastranIO(object):
 
         self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.log_info("zmin=%s xmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         # add the CAERO/CONM2 elements
         j = 0

@@ -24,7 +24,8 @@ def combine_stls(stl_filenames, stl_out_filename=None, remove_bad_elements=False
     """
     Combines multiple STLs into a single file
 
-    :param stl_filenames:        list of stl filenames
+    :param stl_filenames:        list of stl filenames or a
+                                 string filename (useful for removing bad elements)
     :param remove_bad_elements:  should elements with invalid normals be removed?  (default=False)
     :param stl_out_filename:     string of stl output filename (default=None -> no writing)
     :param is_binary:            should the output file be binary (default=True)
@@ -34,6 +35,9 @@ def combine_stls(stl_filenames, stl_out_filename=None, remove_bad_elements=False
     """
     nodes = []
     elements = []
+
+    if isinstance(stl_filenames, str):
+        stl_filenames = [stl_filenames]
 
     n0 = 0
     for fname in stl_filenames:
