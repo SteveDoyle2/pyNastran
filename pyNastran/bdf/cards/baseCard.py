@@ -4,8 +4,14 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types, PY2
 from six.moves import zip
 
+import os
+import sys
+import warnings
+import inspect
+
 from numpy import nan, empty
 
+import pyNastran
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
@@ -35,11 +41,54 @@ else:
     pass
 
 
+def deprecated(old_name, new_name, deprecated_version, levels=None):
+    """
+    :param deprecated_version: the version the method was first deprecated in
+
+    TODO: turn this into a decorator?
+    """
+    assert isinstance(deprecated_version, string_types), type(deprecated_version)
+    assert isinstance(levels, list), type(levels)
+    assert old_name != new_name, "'%s' and '%s' are the same..." % (old_name, new_name)
+
+    version = pyNastran.__version__.split('_')[0]
+    dep_ver_tuple = tuple([int(i) for i in deprecated_version.split('.')])
+    ver_tuple = tuple([int(i) for i in version.split('.')[:2]])
+
+    new_line = ''
+    if new_name:
+        new_line = "; replace it with '%s'\n" % new_name
+    msg = "'%s' was deprecated in v%s%s" % (old_name, deprecated_version, new_line)
+
+    for level in levels:
+        # jump to get out of the inspection code
+        frame =  sys._getframe(3 + level)
+        line_no = frame.f_lineno
+        code = frame.f_code
+        filename = os.path.basename(frame.f_globals['__file__'])
+
+        source_lines, line_no0 = inspect.getsourcelines(code)
+        di = line_no - line_no0
+        line = source_lines[di]
+        msg += '  %-25s lineNo=%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
+
+    if ver_tuple > dep_ver_tuple:
+        # fail
+        raise RuntimeError(msg)
+    else:
+        warnings.warn(msg, DeprecationWarning)
+
+
 class BaseCard(BaseCardDeprecated):
     def __init__(self):
         pass
 
+    def deprecated(self, old_name, new_name, deprecated_version):
+        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
+
     def comment(self):
+        # just for testing
+        #self.deprecated('comment()', 'comment2()', '0.7')
         if hasattr(self, '_comment'):
             return '%s' % self._comment
         return ''

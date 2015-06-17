@@ -36,6 +36,8 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     nids_used = set([])
     for element in itervalues(model.elements):
         nids_used.update(element.node_ids)
+    #for element in itervalues(model.masses):
+        #nids_used.update(element.node_ids)
     all_nids = set(model.nodes.keys())
 
     nodes_to_remove = all_nids - nids_used
@@ -296,7 +298,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     Renumbers a BDF
 
     :param bdf_filename: a bdf_filename (string; supported) or a BDF model (BDF)
-        that has been cross referenced and is fully valid
+        that has been cross referenced and is fully valid (a equivalenced deck is not valid)
     :param bdf_filename_out: a bdf_filename to write
     :param size:       the field size to write (default=8; 8 or 16)
     :param is_double:  the field precision to write (default=True)
