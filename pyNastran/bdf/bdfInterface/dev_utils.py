@@ -165,7 +165,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     # get the ids of the duplicate nodes
     slots = where(ieq[:, :] < nnodes)
     irows, icols = slots
-    #replacer = unique(ieq[slots])
+    #replacer = unique(ieq[slots])  ## TODO: turn this back on?
 
     skip_nodes = []
     for (islot, irow, icol) in zip(count(), irows, icols):
@@ -210,7 +210,8 @@ def cut_model(model, axis='-y'):
 
     Typically aircraft are defined as x-aft, y-right, z-up, so
     all node xyz locations are positive.  We then have a xz plane
-    of symmetry with the axis of symmetry being y.
+    of symmetry with the axis of symmetry being y, and typically
+    save the +y elements.
 
     Considers
     =========
@@ -986,4 +987,5 @@ def eq1():
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 
 if __name__ == '__main__':
+    eq1()
     eq2()

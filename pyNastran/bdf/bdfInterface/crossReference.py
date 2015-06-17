@@ -87,6 +87,7 @@ class XrefMesh(object):
     def cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_properties=True,
+                        xref_masses=True,
                         xref_materials=True,
                         xref_loads=True,
                         xref_constraints=True,
@@ -98,6 +99,7 @@ class XrefMesh(object):
         :param xref:             cross references the model (default=True)
         :param xref_element:     set cross referencing of elements (default=True)
         :param xref_properties:  set cross referencing of properties (default=True)
+        :param xref_masses       set cross referencing of CMASS/PMASS (default=True)
         :param xref_materials:   set cross referencing of materials (default=True)
         :param xref_loads:       set cross referencing of loads (default=True)
         :param xref_constraints: set cross referencing of constraints (default=True)
@@ -112,7 +114,8 @@ class XrefMesh(object):
           model.read_bdf(bdf_filename, xref=False)
           model.cross_reference(xref=True, xref_loads=False, xref_constraints=False,
                                            xref_materials=False, xref_properties=False,
-                                           xref_aero=False, xref_sets=False)
+                                           xref_aero=False, xref_masses=False,
+                                           xref_sets=False)
 
         .. warning:: be careful if you call this method
         """
@@ -127,7 +130,8 @@ class XrefMesh(object):
                 self._cross_reference_elements()
             if xref_properties:
                 self._cross_reference_properties()
-            self._cross_reference_masses()
+            if xref_masses:
+                self._cross_reference_masses()
             if xref_materials:
                 self._cross_reference_materials()
 
@@ -171,7 +175,6 @@ class XrefMesh(object):
             suport1.cross_reference(self)
         for se_suport in self.se_suport:
             se_suport.cross_reference(self)
-
 
     def _cross_reference_coordinates(self):
         """
@@ -418,10 +421,8 @@ class XrefMesh(object):
 
         # superelements
         for key, set_obj in iteritems(self.se_sets):
-            #print("se_set = ", set_obj)
             set_obj.cross_reference(self)
         for set_obj in self.se_bsets:
-            #print("se_bset = ", set_obj)
             set_obj.cross_reference(self)
         for set_obj in self.se_csets:
             set_obj.cross_reference(self)

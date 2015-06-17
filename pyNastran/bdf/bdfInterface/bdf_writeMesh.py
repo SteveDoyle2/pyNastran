@@ -732,7 +732,6 @@ class WriteMesh(WriteMeshDeprecated):
 
     def _write_rigid_elements(self, outfile, size=8, is_double=False):
         """Writes the rigid elements in a sorted order"""
-
         if self.rigidElements:
             msg = ['$RIGID ELEMENTS\n']
             if self.is_long_ids:
