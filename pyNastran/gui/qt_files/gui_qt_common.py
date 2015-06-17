@@ -35,7 +35,9 @@ class GuiCommon(object):
         return False
 
     def update_axes_length(self, dim_max):
-        # scale based on model length
+        """
+        scale coordinate system based on model length
+        """
         dim_max *= 0.10
         if hasattr(self, 'axes'):
             for cid, axes in iteritems(self.axes):
