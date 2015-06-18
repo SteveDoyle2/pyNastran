@@ -4,7 +4,7 @@ from six.moves import zip, range
 from itertools import count
 from math import ceil
 
-from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique, log10
+from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique, log10, array_equal
 from numpy.linalg import norm
 import scipy
 
@@ -52,7 +52,8 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
 
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
-                          renumber_nodes=False, neq_max=4, xref=True):
+                          renumber_nodes=False, neq_max=4, xref=True,
+                          node_set=None, crash_on_collapse=False):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -60,11 +61,19 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         that is fully valid (see xref)
     :param bdf_filename_out: a bdf_filename to write
     :param tol:              the spherical tolerance (float)
-    :param renumber_nodes:   should the nodes be renumbered (default=False)
+    :param renumber_nodes:   should the nodes be renumbered (default=False; not supported)
     :param neq_max:          the number of "close" points (default=4)
-    :param xref:             does the model need to be cross_referenced (default=True; only applies to model option)
+    :param xref:             does the model need to be cross_referenced
+                             (default=True; only applies to model option)
+    :param nodes_set:        the list/array of nodes to consider (not supported)
+    :param crash_on_collapse: stop if nodes have been collapsed
+                              (default=False;
+                               False: blindly move on
+                               True: rereads the BDF which catches doubled nodes (temporary);
+                                     in the future collapse=True won't need to double read;
+                                     an alternative is to do Patran's method of avoiding collapse)
 
-    .. warning:: this will collapse elements
+    .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
     """
     if isinstance(bdf_filename, str):
@@ -129,23 +138,24 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
             #print('%i %-5s %s' % (i, nid, list_print(xyz)))
             i += 1
 
-    nids_new = set([])
+    # there is some set of points that are used on the elements that
+    spoint_epoint_nid_set = set([])
     for eid, element in sorted(iteritems(model.elements)):
-        emap = []
+        spoint_epoint_nid_set.update(element.node_ids)
+    for eid, element in sorted(iteritems(model.elements)):
+        spoint_epoint_nid_set.update(element.node_ids)
 
-        if element.type == 'CQUAD4':
-            nids_quads.append(element.node_ids)
-            eids_quads.append(element.eid)
-        elif element.type == 'CTRIA3':
-            nids_tris.append(element.node_ids)
-            eids_tris.append(element.eid)
-        else:
-            raise NotImplementedError(element.type)
+    if model.spoints and model.epoints:
+        nids_new = spoint_epoint_nid_set - model.spoints.points - model.epoints.points
+    elif model.spoints:
+        nids_new = spoint_epoint_nid_set - model.spoints.points
+    elif model.epoints:
+        nids_new = spoint_epoint_nid_set - model.epoints.points
+    else:
+        nids_new = spoint_epoint_nid_set
 
-    nids_quads = array(nids_quads, dtype='int32')
-    #eids_quads = array(eids_quads, dtype='int32')
-    nids_tris = array(nids_tris, dtype='int32')
-    #eids_tris = array(eids_tris, dtype='int32')
+    if None in nids_new:
+        nids_new.remove(None)
 
     # build the kdtree
     try:
@@ -155,11 +165,15 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         raise RuntimeError(nodes_xyz)
 
     # find the node ids of interest
-    nids_new = unique(hstack([
-        nids_quads.flatten(), nids_tris.flatten()
-    ]))
-    nids_new.sort()
+    #nids_new = unique(hstack([
+        #nids_quads.flatten(), nids_tris.flatten()
+    #]))
+    # autosorts the data
+    nids_new = unique(list(nids_new))
+    assert isinstance(nids_new[0], integer_types), type(nids_new[0])
+
     inew = searchsorted(nids, nids_new, side='left')
+    assert array_equal(nids[inew], nids_new), 'some nodes are not defined'
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
@@ -204,6 +218,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     #model.remove_nodes = skip_nodes
     #model._write_nodes = _write_nodes
     model.write_bdf(bdf_filename_out)
+    if crash_on_collapse:
+        # lazy way to make sure there aren't any collapsed nodes
+        model2 = BDF()
+        model.read_bdf(bdf_filename_out)
 
 
 def cut_model(model, axis='-y'):
@@ -988,4 +1006,5 @@ def eq1():
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 
 if __name__ == '__main__':
+    eq1()
     eq2()

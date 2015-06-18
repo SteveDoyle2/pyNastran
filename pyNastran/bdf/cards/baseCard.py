@@ -9,7 +9,7 @@ import sys
 import warnings
 import inspect
 
-from numpy import nan, empty
+from numpy import nan, empty, unique
 
 import pyNastran
 from pyNastran.bdf.fieldWriter import print_card
@@ -321,6 +321,22 @@ class Element(BaseCard, ElementDeprecated):
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = []
+        if allow_empty_nodes:
+            nids2 = [nid for nid in nids if nid is not None]
+            if len(nids2) == 0:
+                msg = '%s requires at least one node id be specified; node_ids=%s' % (self.type, nids2)
+                raise ValueError(msg)
+
+            unique_nodes = unique(nids2)
+            if len(nids2) != len(unique_nodes):
+                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, self.__class__.__name__, nids2)
+                raise IndexError(msg)
+        else:
+            unique_nodes = unique(nids)
+            if len(nids) != len(unique_nodes):
+                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids)
+                raise IndexError(msg)
+
         for nid in nids:
             if isinstance(nid, integer_types):
                 self.nodes.append(nid)
