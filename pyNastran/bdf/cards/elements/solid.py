@@ -229,16 +229,67 @@ class CHEXA8(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+    def get_edge_ids(self):
+        """
+        Return the edges
+        """
+        return [
+            # btm (1-2-3-4)
+            (self.nodes[0], self.nodes[1]),
+            (self.nodes[1], self.nodes[2]),
+            (self.nodes[2], self.nodes[3]),
+            (self.nodes[3], self.nodes[0]),
 
+            # top (5-6-7-8)
+            (self.nodes[4], self.nodes[5]),
+            (self.nodes[5], self.nodes[6]),
+            (self.nodes[6], self.nodes[7]),
+            (self.nodes[7], self.nodes[4]),
+
+            # up - (4-8, 3-7, 1-5, 2-6)
+            (self.nodes[0], self.nodes[4]),
+            (self.nodes[1], self.nodes[5]),
+            (self.nodes[2], self.nodes[6]),
+            (self.nodes[3], self.nodes[7]),
+        ]
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        # top (5-6-7-8)
+        # btm (1-2-3-4)
+        # left (1-2-3-4)
+        # right (5-6-7-8)
+        # front (1-5-8-4)
+        # back (2-6-7-3)
+        node_ids = self.node_ids
+        return [
+            # btm (1-2-3-4)
+            (node_ids[0], node_ids[1]),
+            (node_ids[1], node_ids[2]),
+            (node_ids[2], node_ids[3]),
+            (node_ids[3], node_ids[0]),
+
+            # top (5-6-7-8)
+            (node_ids[4], node_ids[5]),
+            (node_ids[5], node_ids[6]),
+            (node_ids[6], node_ids[7]),
+            (node_ids[7], node_ids[4]),
+
+            # up - (4-8, 3-7, 1-5, 2-6)
+            (node_ids[0], node_ids[4]),
+            (node_ids[1], node_ids[5]),
+            (node_ids[2], node_ids[6]),
+            (node_ids[3], node_ids[7]),
+        ]
 
 class CHEXA20(SolidElement):
     """
@@ -359,15 +410,12 @@ class CHEXA20(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPENTA6(SolidElement):
@@ -588,15 +636,12 @@ class CPENTA6(SolidElement):
         return list_fields
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPENTA15(SolidElement):
@@ -717,15 +762,12 @@ class CPENTA15(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPYRAM5(SolidElement):
@@ -812,15 +854,12 @@ class CPYRAM5(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPYRAM13(SolidElement):
@@ -928,15 +967,12 @@ class CPYRAM13(SolidElement):
         return abs(V)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CTETRA4(SolidElement):
@@ -1004,6 +1040,39 @@ class CTETRA4(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
+    def get_edges(self):
+        """
+        Return the edges
+        """
+        return [
+            # base
+            (self.nodes[0], self.nodes[1]),
+            (self.nodes[1], self.nodes[2]),
+            (self.nodes[2], self.nodes[0]),
+
+            # sides
+            (self.nodes[0], self.nodes[3]),
+            (self.nodes[1], self.nodes[3]),
+            (self.nodes[2], self.nodes[3]),
+        ]
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            (node_ids[0], node_ids[1]),
+            (node_ids[1], node_ids[2]),
+            (node_ids[2], node_ids[0]),
+
+            # sides
+            (node_ids[0], node_ids[3]),
+            (node_ids[1], node_ids[3]),
+            (node_ids[2], node_ids[3]),
+        ]
+
     def Volume(self):
         (n1, n2, n3, n4) = self.nodePositions()
         return volume4(n1, n2, n3, n4)
@@ -1034,15 +1103,12 @@ class CTETRA4(SolidElement):
         return A, centroid, normal / n
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CTETRA10(SolidElement):
@@ -1168,12 +1234,10 @@ class CTETRA10(SolidElement):
         return nids
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")

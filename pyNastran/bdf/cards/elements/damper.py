@@ -92,7 +92,7 @@ class CDAMP1(LineDamper):
         return self.eid
 
     def nodeIDs(self):
-        """deprecated"""
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -272,7 +272,7 @@ class CDAMP3(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
 
     #def nodeIDs(self):
-        #"""deprecated"""
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.7')
         #return self.node_ids
 
     @property
@@ -343,7 +343,7 @@ class CDAMP4(LineDamper):
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
 
     #def nodeIDs(self):
-        #"""deprecated"""
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         #return self.node_ids
 
     @property
@@ -416,7 +416,7 @@ class CDAMP5(LineDamper):
         return self.pid.b
 
     def nodeIDs(self):
-        """deprecated"""
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -488,7 +488,7 @@ class CVISC(LineDamper):
         return self.pid.ce
 
     def nodeIDs(self):
-        """deprecated"""
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
