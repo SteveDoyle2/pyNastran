@@ -15,13 +15,15 @@ class GetMethods(GetMethodsDeprecated):
 
     def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False, stop_on_missing_card=False):
         """
-        :param card_types: the list of keys to consider
+        :param card_types: the list of keys to consider (list of strings; string)
         :param reset_type_to_slot_map:
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
         :retval out: the key=card_type, value=the ID of the card object
         """
-        if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
+        if isinstance(card_types, string_types):
+            card_types = [card_types]
+        elif not(isinstance(card_types, list) or isinstance(card_types, tuple)):
             raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
 
         #if reset_type_to_slot_map or self._type_to_slot_map is None:

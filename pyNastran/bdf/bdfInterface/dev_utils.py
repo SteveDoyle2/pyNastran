@@ -139,10 +139,14 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
             i += 1
 
     # there is some set of points that are used on the elements that
+    # will be considered.
+    #
+    # Presumably this is enough to capture all the node ids and NOT
+    # spoints, but I doubt it...
     spoint_epoint_nid_set = set([])
     for eid, element in sorted(iteritems(model.elements)):
         spoint_epoint_nid_set.update(element.node_ids)
-    for eid, element in sorted(iteritems(model.elements)):
+    for eid, element in sorted(iteritems(model.masses)):
         spoint_epoint_nid_set.update(element.node_ids)
 
     if model.spoints and model.epoints:
@@ -157,23 +161,27 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     if None in nids_new:
         nids_new.remove(None)
 
+    # autosorts the data
+    nids_new = unique(list(nids_new))
+    assert isinstance(nids_new[0], integer_types), type(nids_new[0])
+
+    missing_nids = list(set(nids_new) - set(nids))
+    if missing_nids:
+        missing_nids.sort()
+        msg = 'There are missing nodes...\n'
+        msg = 'missing nids=%s' % str(missing_nids)
+        raise RuntimeError(msg)
+
+    # get the node_id mapping for the kdtree
+    inew = searchsorted(nids, nids_new, side='left')
+    #assert array_equal(nids[inew], nids_new), 'some nodes are not defined'
+
     # build the kdtree
     try:
         kdt = scipy.spatial.cKDTree(nodes_xyz)
     except RuntimeError:
         print(nodes_xyz)
         raise RuntimeError(nodes_xyz)
-
-    # find the node ids of interest
-    #nids_new = unique(hstack([
-        #nids_quads.flatten(), nids_tris.flatten()
-    #]))
-    # autosorts the data
-    nids_new = unique(list(nids_new))
-    assert isinstance(nids_new[0], integer_types), type(nids_new[0])
-
-    inew = searchsorted(nids, nids_new, side='left')
-    assert array_equal(nids[inew], nids_new), 'some nodes are not defined'
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
@@ -194,7 +202,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
+
+        # TODO: doesn't use get position...
         R = norm(node1.xyz - node2.xyz)
+
         #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
         if R > tol:
             #print('  *n1=%-4s xyz=%s\n  *n2=%-4s xyz=%s\n  *R=%s\n' % (
@@ -215,8 +226,6 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         assert node2.seid == node1.seid
         skip_nodes.append(nid2)
 
-    #model.remove_nodes = skip_nodes
-    #model._write_nodes = _write_nodes
     model.write_bdf(bdf_filename_out)
     if crash_on_collapse:
         # lazy way to make sure there aren't any collapsed nodes
