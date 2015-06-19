@@ -319,6 +319,99 @@ def _roundup(x, n=100):
     return int(ceil(x / float(n))) * n
 
 
+def bdf_merge(bdf_filenames, bdf_filenames_out=None, renumber=True):
+    """
+    .. todo :: doesn't support SPOINTs/EPOINTs
+    .. warning :: still very preliminary
+    """
+    if isinstance(bdf_filenames, str):
+        bdf_filenames = [bdf_filenames]
+    elif not (isinstance(bdf_filenames, list) or isinstance(bdf_filenames, tuple)):
+        raise TypeError(bdf_filenames)
+
+    #starting_id_dict_default = {
+        #'cid' : max(model.coords.keys()),
+        #'nid' : max(model.nodes.keys()),
+        #'eid' : max([
+            #max(model.elements.keys()),
+            #max(model.masses.keys()),
+        #]),
+        #'pid' : max([
+            #max(model.properties.keys()),
+            #max(model.properties_mass.keys()),
+        #]),
+        #'mid' : max(model.material_ids),
+    #}
+    model = BDF()
+    bdf_filename0 = bdf_filenames[0]
+    model.read_bdf(bdf_filename0)
+    print('primary=%s' % bdf_filename0)
+
+    data_members = [
+        'coords', 'nodes', 'elements', 'masses', 'properties',  'properties_mass',
+        'materials',
+    ]
+    for bdf_filename in bdf_filenames[1:]:
+        print('model.masses = %s' % model.masses)
+        starting_id_dict = {
+            'cid' : max(model.coords.keys()) + 1,
+            'nid' : max(model.nodes.keys()) + 1,
+            'eid' : max([
+                max(model.elements.keys()),
+                0 if len(model.masses) == 0 else max(model.masses.keys()),
+            ]) + 1,
+            'pid' : max([
+                max(model.properties.keys()),
+                0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
+            ]) + 1,
+            'mid' : max(model.material_ids) + 1,
+        }
+        #for param, val in sorted(iteritems(starting_id_dict)):
+            #print('  %-3s %s' % (param, val))
+
+        print('secondary=%s' % bdf_filename)
+        model2 = BDF()
+        bdf_dump = 'temp.bdf'
+        #model2.read_bdf(bdf_filename, xref=False)
+
+        bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict)
+        model2 = BDF()
+        model2.read_bdf(bdf_dump)
+
+        print('model2.node_ids = %s' % model2.node_ids)
+        for data_member in data_members:
+            data1 = getattr(model, data_member)
+            data2 = getattr(model2, data_member)
+            if isinstance(data1, dict):
+                print('  working on %s' % (data_member))
+                for key, value in iteritems(data2):
+                    if data_member in 'coords' and key == 0:
+                        continue
+                    if isinstance(value, list):
+                        raise NotImplementedError(type(value))
+                    else:
+                        assert key not in data1, key
+                        data1[key] = value
+                        #print('   %s' % key)
+            else:
+                raise NotImplementedError(type(data1))
+    #if bdf_filenames_out:
+        #model.write_bdf(bdf_filenames_out)
+
+    if renumber:
+        print('final renumber...')
+        starting_id_dict = {
+            'cid' : 1,
+            'nid' : 1,
+            'eid' : 1,
+            'pid' : 1,
+            'mid' : 1,
+        }
+        bdf_renumber(model, bdf_filenames_out, starting_id_dict=starting_id_dict)
+
+    return model
+
+
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                  starting_id_dict=None):
     """
@@ -780,8 +873,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #print('****dessub_map', dessub_map)
     #print('****dresp_map', dresp_map)
     _update_case_control(model, mapper)
-    model.write_bdf(bdf_filename_out, size=8, is_double=False,
-                    interspersed=False)
+    if bdf_filename_out is not None:
+        model.write_bdf(bdf_filename_out, size=8, is_double=False,
+                        interspersed=False)
+
 
 def _update_case_control(model, mapper):
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
