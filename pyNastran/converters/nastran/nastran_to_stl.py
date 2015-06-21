@@ -31,12 +31,12 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',]:
             continue
         elif element.type in ['CQUAD4']:
-            n1, n2, n3, n4 = element.nodeIDs()
+            n1, n2, n3, n4 = element.node_ids
             i1, i2, i3, i4 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4]
             elements.append([i1, i2, i3])
             elements.append([i3, i4, i1])
         elif element.type in ['CTRIA3', 'CTRIAR']:
-            n1, n2, n3 = element.nodeIDs()
+            n1, n2, n3 = element.node_ids
             i1, i2, i3 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3]
             elements.append([i1, i2, i3])
         else:

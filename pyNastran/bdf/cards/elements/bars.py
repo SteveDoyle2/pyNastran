@@ -142,6 +142,13 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         """
         return [(self.nodes[0], self.nodes[1])]
 
+    def get_edges(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [(node_ids[0], node_ids[1])]
+
 
 class CBAROR(object):
     type = 'CBAROR'
@@ -300,6 +307,7 @@ class CBAR(LineElement):
     def _verify(self, xref=False):
         pid = self.Pid()
         edges = self.get_edges()
+        edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
             A = self.Area()

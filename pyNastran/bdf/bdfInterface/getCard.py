@@ -13,15 +13,17 @@ class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         pass
 
-    def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False):
+    def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False, stop_on_missing_card=False):
         """
-        :param card_types: the list of keys to consider
+        :param card_types: the list of keys to consider (list of strings; string)
         :param reset_type_to_slot_map:
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
         :retval out: the key=card_type, value=the ID of the card object
         """
-        if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
+        if isinstance(card_types, string_types):
+            card_types = [card_types]
+        elif not(isinstance(card_types, list) or isinstance(card_types, tuple)):
             raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
 
         #if reset_type_to_slot_map or self._type_to_slot_map is None:
@@ -36,10 +38,12 @@ class GetMethods(GetMethodsDeprecated):
             if key in self.card_count:
                 out[key] = self._type_to_id_map[key]
             else:
+                if stop_on_missing_card:
+                    raise RuntimeError('%r is not in the card_count; keys=%s' % str(sorted(self.card_count.keys())))
                 out[key] = []
         return out
 
-    def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False):
+    def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False, stop_on_missing_card=False):
         """
         :param card_types: the list of keys to consider
         :param reset_type_to_slot_map:
@@ -66,6 +70,8 @@ class GetMethods(GetMethodsDeprecated):
         out = {}
         for card_type in card_types:
             if card_type not in self.card_count:
+                if stop_on_missing_card:
+                    raise RuntimeError('%r is not in the card_count; keys=%s' % str(sorted(self.card_count.keys())))
                 out[card_type] = []
                 continue
 

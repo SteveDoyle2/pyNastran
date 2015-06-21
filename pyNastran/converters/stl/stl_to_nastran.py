@@ -1,10 +1,13 @@
 from __future__ import print_function
 from pyNastran.converters.stl.stl_reader import STLReader
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 def stl_to_nastran_filename(stl_filename, bdf_filename,
                             nnodes_offset=0, nelements_offset=0,
                             pid=100, mid=200,
+                            size=8, is_double=False,
                             log=None):
     model = STLReader(log=log)
     model.read_stl(stl_filename)
@@ -21,9 +24,18 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
     bdf.write('BEGIN BULK\n')
     nid2 = 1
     magnitude = 100.
-    for (x, y, z) in model.nodes:
+
+    if size == 8:
+        print_card = print_card_8
+    elif size == 16:
+        if is_double:
+            print_card = print_card_16
+        else:
+            print_card = print_card_double
+
+    for x, y, z in model.nodes:
         card = ['GRID', nid, cid, x, y, z]
-        bdf.write(print_card_8(card))
+        bdf.write(print_card_16(card))
 
         #nx, ny, nz = nodal_normals[nid2 - 1]
         #card = ['FORCE', load_id, nid, cid, magnitude, nx, ny, nz]

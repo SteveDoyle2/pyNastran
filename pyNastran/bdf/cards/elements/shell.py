@@ -144,6 +144,15 @@ class TriShell(ShellElement):
                 (self.nodes[1], self.nodes[2]),
                 (self.nodes[2], self.nodes[0])]
 
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [(node_ids[0], node_ids[1]),
+                (node_ids[1], node_ids[2]),
+                (node_ids[2], node_ids[0])]
+
     def Thickness(self):
         """
         Returns the thickness
@@ -946,6 +955,16 @@ class QuadShell(ShellElement):
                 (self.nodes[1], self.nodes[2]),
                 (self.nodes[2], self.nodes[3]),
                 (self.nodes[3], self.nodes[0])]
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [(node_ids[0], node_ids[1]),
+                (node_ids[1], node_ids[2]),
+                (node_ids[2], node_ids[3]),
+                (node_ids[3], node_ids[0])]
 
     def Thickness(self):
         """

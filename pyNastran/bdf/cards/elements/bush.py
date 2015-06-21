@@ -34,6 +34,19 @@ class BushElement(Element):
     def Mass(self):
         return 0.
 
+    def get_edges(self):
+        """
+        Return the edges
+        """
+        return [(self.ga[0], self.gb[1])]
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [(node_ids[0], node_ids[1])]
+
 class CBUSH(BushElement):
     type = 'CBUSH'
     _field_map = {
@@ -113,15 +126,12 @@ class CBUSH(BushElement):
         return self.eid
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -252,15 +262,12 @@ class CBUSH1D(BushElement):
         return self.gb.nid
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
@@ -329,15 +336,12 @@ class CBUSH2D(BushElement):
         return self.gb.nid
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
