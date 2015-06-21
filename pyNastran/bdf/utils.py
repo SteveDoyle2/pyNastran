@@ -40,8 +40,6 @@ def _clean_comment(comment, end=-1):
         comment = ''
     elif 'pynastran' in line.lower():
         comment = ''
-    #if comment:
-        #print(comment)
     return comment
 
 

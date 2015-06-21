@@ -433,7 +433,7 @@ class Subcase(object):
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
             #print("adding isubcase=%s key=%r value=%r options=%r "
-                  #"param_type=%r" %(self.id, key, value, options, param_type))
+                  #"param_type=%r" % (self.id, key, value, options, param_type))
             values2 = expand_thru_case_control(value)
             assert isinstance(values2, list), type(values2)
             if isinstance(options, list):
