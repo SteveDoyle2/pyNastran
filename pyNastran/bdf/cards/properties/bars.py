@@ -815,9 +815,9 @@ class PBARL(LineProperty):
 
             ndim = self.validTypes[self.Type]
             j = 9 + ndim + 1
-            #self.dim = fields(double_or_blank, card, 'dim', i=9, j=j)
+
             dims = []
-            dim_old = None
+            #dim_old = None  ## TODO: is there a default?
             for i in range(ndim):
                 dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
                 dims.append(dim)

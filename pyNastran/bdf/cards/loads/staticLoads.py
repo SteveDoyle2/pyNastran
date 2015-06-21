@@ -186,7 +186,8 @@ class LOAD(LoadCombination):
 
             for load in loads_pack:
                 if (isinstance(load, Force) or isinstance(load, Moment) or
-                    isinstance(load, PLOAD4) or isinstance(load, GRAV)):
+                    isinstance(load, PLOAD2)  or isinstance(load, PLOAD4) or
+                    isinstance(load, GRAV)):
                     loads.append(load)
                     scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):

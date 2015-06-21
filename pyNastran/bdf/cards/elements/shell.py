@@ -532,6 +532,10 @@ class CTRIA6(TriShell):
         T3 = set_blank_if_default(self.T3, 1.0)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
@@ -768,6 +772,10 @@ class CTRIAX(TriShell):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
 
     @property
     def node_ids(self):
@@ -1188,6 +1196,10 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
@@ -1321,6 +1333,10 @@ class CQUAD4(QuadShell):
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
+
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
 
     @property
     def node_ids(self):
@@ -1477,6 +1493,10 @@ class CQUADR(QuadShell):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
@@ -1556,6 +1576,10 @@ class CQUAD(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
         assert len(self.nodes) == 9
+
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
 
     @property
     def node_ids(self):
@@ -1729,6 +1753,10 @@ class CQUAD8(QuadShell):
         area = Area(a, b)
         return area
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
@@ -1805,6 +1833,10 @@ class CQUADX(QuadShell):
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
+
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
 
     @property
     def node_ids(self):

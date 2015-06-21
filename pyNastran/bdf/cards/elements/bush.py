@@ -133,6 +133,10 @@ class CBUSH(BushElement):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
+    @node_ids.setter
+    def node_ids(self, value):
+        raise ValueError("You cannot set node IDs like this...modify the node objects")
+
     def _verify(self, xref=False):
         ga = self.Ga()
         gb = self.Gb()
