@@ -1,6 +1,8 @@
 from __future__ import print_function
 from six import iteritems, itervalues, integer_types, PY2
 from six.moves import zip, range
+
+import os
 from itertools import count
 from math import ceil
 
@@ -226,11 +228,13 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         assert node2.seid == node1.seid
         skip_nodes.append(nid2)
 
-    model.write_bdf(bdf_filename_out)
+    if bdf_filename_out is not None:
+        model.write_bdf(bdf_filename_out)
     if crash_on_collapse:
         # lazy way to make sure there aren't any collapsed nodes
         model2 = BDF()
         model.read_bdf(bdf_filename_out)
+    return model
 
 
 def cut_model(model, axis='-y'):
@@ -371,14 +375,15 @@ def bdf_merge(bdf_filenames, bdf_filenames_out=None, renumber=True):
 
         print('secondary=%s' % bdf_filename)
         model2 = BDF()
-        bdf_dump = 'temp.bdf'
+        bdf_dump = 'bdf_merge_temp.bdf'
         #model2.read_bdf(bdf_filename, xref=False)
 
         bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict)
         model2 = BDF()
         model2.read_bdf(bdf_dump)
+        os.remove(bdf_dump)
 
-        print('model2.node_ids = %s' % model2.node_ids)
+        print('model2.node_ids = %s' % array(model2.node_ids))
         for data_member in data_members:
             data1 = getattr(model, data_member)
             data2 = getattr(model2, data_member)
@@ -876,6 +881,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out, size=8, is_double=False,
                         interspersed=False)
+    return model
 
 
 def _update_case_control(model, mapper):

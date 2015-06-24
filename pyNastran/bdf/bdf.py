@@ -519,6 +519,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._iparse_errors = 0
         self._nparse_errors = 0
         self._stop_on_parsing_error = True
+        self._stop_on_duplicate_error = True
         self._stored_parse_errors = []
 
         self._duplicate_nodes = []

@@ -125,6 +125,8 @@ class AddMethods(object):
         if key in self.properties and not allowOverwrites:
             if not prop._is_same_card(self.properties[key]):
                 self._duplicate_properties.append(prop)
+                if self._stop_on_duplicate_error:
+                    self.pop_parse_errors()
         else:
             self.properties[key] = prop
             self._type_to_id_map[prop.type].append(key)
