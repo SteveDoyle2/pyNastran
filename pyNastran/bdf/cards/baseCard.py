@@ -96,7 +96,8 @@ class BaseCard(BaseCardDeprecated):
 
     @comment.setter
     def comment(self, new_comment):
-        self._comment = new_comment.rstrip() + '\n'
+        comment = new_comment.rstrip()
+        self._comment = comment + '\n' if comment else ''
 
     def _test_update_fields(self):
         n = 1
@@ -212,7 +213,7 @@ class BaseCard(BaseCardDeprecated):
         Prints a card in the simplest way possible
         (default values are left blank).
         """
-        comment = self.comment()
+        comment = self.comment
         list_fields = self.repr_fields()
         try:
             return comment + print_card(list_fields, size=8)
