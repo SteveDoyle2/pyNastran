@@ -358,7 +358,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         msg = cgi.escape(msg)
         #message colors
         dark_orange = '#EB9100'
-        cols = {"GUI": "blue", "COMMAND":"green", "GUI ERROR":"Crimson", "DEBUG" : dark_orange}
+        cols = {
+            "GUI": "blue",
+            "COMMAND":"green",
+            "GUI ERROR":"Crimson",
+            "DEBUG" : dark_orange,
+            'WARNING' : "purple",
+            # INFO - black
+        }
         msg = msg.rstrip().replace('\n', '<br>')
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
         if typ in cols:
