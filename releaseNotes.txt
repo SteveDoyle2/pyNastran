@@ -100,8 +100,8 @@ BDF:
    - QHBDY handles missing nodes better
    - CFAST doesn't crash for blank nodes
    - PFAST handles cid=-1
-   - renamed nlparm.id to nlparm.nlparm_id
-   - renamed nlpci.nlparm_id to nlpci.nlpci_id
+   - renamed nlparm.id to nlparm.nlparm_id as it was obviously wrong
+   - renamed nlpci.nlparm_id to nlpci.nlpci_id as it was obviously wrong
    - self.setSuper is now self.se_sets
    - RBE3 is ambiguous; no longer handling bad cards
    - model.material_ids
