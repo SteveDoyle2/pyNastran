@@ -59,4 +59,4 @@ class PAERO1(VectorizedCard):
                 b2 = [bi for bi in b if bi > 0]
                 list_fields = ['PAERO1', pid] + b2
                 f.write(print_card_8(list_fields))
-        #return self.comment() + print_card_8(card)
+        #return self.comment + print_card_8(card)

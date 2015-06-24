@@ -228,7 +228,7 @@ class SUPORT1(Constraint):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SUPORT(Constraint):
@@ -286,7 +286,7 @@ class SUPORT(Constraint):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SESUP(SUPORT):
@@ -382,7 +382,7 @@ class MPC(Constraint):
             msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
             if i % 2 == 1 and i > 0:
                 msg += '\n%8s%8s' % ('', '')
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         # TODO: we're sure MPCs support double precision?
@@ -406,7 +406,7 @@ class MPC(Constraint):
                     msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_float_16(enforced))
         if i % 2 == 0:
             msg += '*'
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
 
 class SPC(Constraint):
@@ -474,7 +474,7 @@ class SPC(Constraint):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class GMSPC(Constraint):
@@ -503,7 +503,7 @@ class GMSPC(Constraint):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SPCAX(Constraint):
@@ -553,7 +553,7 @@ class SPCAX(Constraint):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SPC1(Constraint):
@@ -610,7 +610,7 @@ class SPC1(Constraint):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class ConstraintADD(Constraint):
@@ -675,11 +675,11 @@ class SPCADD(ConstraintADD):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
     def write_card_16(self, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 
 class MPCADD(ConstraintADD):
@@ -734,8 +734,8 @@ class MPCADD(ConstraintADD):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
     def write_card_16(self, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_16(card)
+        return self.comment + print_card_16(card)

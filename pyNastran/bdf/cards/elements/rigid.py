@@ -123,8 +123,8 @@ class RBAR(RigidElement):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class RBAR1(RigidElement):
@@ -182,8 +182,8 @@ class RBAR1(RigidElement):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class RBE1(RigidElement):  # maybe not done, needs testing
@@ -295,8 +295,8 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class RBE2(RigidElement):
@@ -471,11 +471,11 @@ class RBE2(RigidElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
     def write_card_16(self, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 
 class RBE3(RigidElement):
@@ -647,4 +647,4 @@ class RBE3(RigidElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)

@@ -467,8 +467,8 @@ class CBAR(LineElement):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class CBEAM3(CBAR):
@@ -559,8 +559,8 @@ class CBEAM3(CBAR):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
     def _verify(self, xref=False):
         edges = self.get_edges()
@@ -649,6 +649,6 @@ class CBEND(LineElement):
     def write_card(self, size, is_double):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         else:
-            return self.comment() + print_card_16(card)
+            return self.comment + print_card_16(card)

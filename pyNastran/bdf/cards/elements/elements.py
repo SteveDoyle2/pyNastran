@@ -86,7 +86,7 @@ class CFAST(Element):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CGAP(Element):
@@ -206,7 +206,7 @@ class CGAP(Element):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CrackElement(Element):
@@ -284,7 +284,7 @@ class CRAC2D(CrackElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CRAC3D(CrackElement):
@@ -341,4 +341,4 @@ class CRAC3D(CrackElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)

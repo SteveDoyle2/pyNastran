@@ -187,7 +187,7 @@ class CROD(RodElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CTUBE(RodElement):
@@ -289,7 +289,7 @@ class CTUBE(RodElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CONROD(RodElement):
@@ -444,5 +444,5 @@ class CONROD(RodElement):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)

@@ -133,7 +133,7 @@ class CDAMP1(LineDamper):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CDAMP2(LineDamper):
@@ -213,7 +213,7 @@ class CDAMP2(LineDamper):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CDAMP3(LineDamper):
@@ -285,7 +285,7 @@ class CDAMP3(LineDamper):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CDAMP4(LineDamper):
@@ -356,7 +356,7 @@ class CDAMP4(LineDamper):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CDAMP5(LineDamper):
@@ -434,7 +434,7 @@ class CDAMP5(LineDamper):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CVISC(LineDamper):
@@ -504,4 +504,4 @@ class CVISC(LineDamper):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)

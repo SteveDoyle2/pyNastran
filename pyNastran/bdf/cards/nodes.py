@@ -136,8 +136,8 @@ class RINGAX(Ring):
         """
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class XPoint(Node):
     """common class for EPOINT/SPOINT"""
@@ -794,8 +794,8 @@ class GRIDB(Node):
         """
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class GRID(Node, GridDeprecated):
@@ -1152,7 +1152,7 @@ class GRID(Node, GridDeprecated):
             print_float_8(xyz[1]),
             print_float_8(xyz[2]),
             cd, self.ps, seid)
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         """
@@ -1182,7 +1182,7 @@ class GRID(Node, GridDeprecated):
                        '*',
                        print_float_16(xyz[2]),
                        cd, self.ps, seid))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
 
 class POINT(Node, PointDeprecated):
@@ -1411,7 +1411,7 @@ class POINT(Node, PointDeprecated):
         """
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
