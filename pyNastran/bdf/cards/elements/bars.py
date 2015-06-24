@@ -434,11 +434,8 @@ class CBAR(LineElement):
 
     @nodes.setter
     def nodes(self, values):
-        return values
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        self.ga = values[0]
+        self.gb = values[1]
 
     def raw_fields(self):
         """

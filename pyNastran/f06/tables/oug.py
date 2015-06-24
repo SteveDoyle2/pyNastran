@@ -1,9 +1,10 @@
 #pylint: disable=C0301
+from __future__ import print_function
 from six.moves import zip
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement, ComplexDisplacement
-from pyNastran.op2.tables.oug.oug_eigenvectors import (Eigenvector,  # ,ComplexEigenVector
-                                                       RealEigenvectorArray)
+from pyNastran.op2.tables.oug.oug_eigenvectors import (Eigenvector, ComplexEigenvector,
+                                                       RealEigenvectorArray, ComplexEigenvectorArray)
 from pyNastran.op2.tables.oug.oug_temperatures import RealTemperature
 
 
@@ -39,20 +40,13 @@ class OUG(object):
         * #s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        cycle, iMode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
-        iMode = int(iMode)
+        cycle, imode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
+        imode = int(imode)
 
         cycles = cycle.strip().split('=')
-        #print smarker
         assert 'CYCLES' == cycles[0].strip(), 'marker=%s' % marker
         cycle = float(cycles[1])
 
-        #print "marker = |%s|" %(marker)
-        #subcase_name = '???'
-        #print self.storedLines
-        #isubcase = self.storedLines[-2].strip()[1:]
-        #isubcase = int(isubcase.strip('SUBCASE '))
-        #print "subcase_name=%s isubcase=%s" %(subcase_name, isubcase)
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         eigenvalue_real = transient[1]
         headers = self.skip(2)
@@ -61,33 +55,100 @@ class OUG(object):
             'log': self.log, 'analysis_code': analysis_code,
             'device_code': 1, 'table_code': 7, 'sort_code': 0,
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
-            'mode': iMode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
+            'mode': imode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
             'dataNames': ['mode', 'eigr', 'mode_cycle'],
             'name': 'mode', 'table_name': 'OUGV1',
-            'nonlinear_factor': iMode,
-            #'s_code':0,
-            #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
+            'nonlinear_factor': imode,
         }
-        data = self._real_f06_table_data(allow_blanks=True)
+        data = self._real_f06_real_table_data(allow_blanks=True)
 
         #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
-        #print "isubcase = %s" % isubcase
         if isubcase in self.eigenvectors:
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
             is_sort1 = True
             if self.is_vectorized:
-                vector = RealEigenvectorArray(data_code, is_sort1, isubcase, iMode, f06_flag=True)
+                vector = RealEigenvectorArray(data_code, is_sort1, isubcase, imode, f06_flag=True)
             else:
-                vector = Eigenvector(data_code, is_sort1, isubcase, iMode)
+                vector = Eigenvector(data_code, is_sort1, isubcase, imode)
             vector.read_f06_data(data_code, data)
             self.eigenvectors[isubcase] = vector
 
     def _complex_eigenvectors(self, marker):
-        headers = self.skip(2)
-        self._read_table_dummy()
+        """
+        Reads real eigenvector table accounting for blank entries
 
-    def _real_f06_table_data(self, allow_blanks=False):
+        :param self:   the object pointer
+
+        ::
+                COMPLEX EIGENVALUE =  0.000000E+00,  3.805272E+02
+                                                 C O M P L E X   E I G E N V E C T O R   NO.          5
+                                                                    (REAL/IMAGINARY)
+
+                POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+          0            1      G      0.0            0.0            0.0           -3.041936E-02  -1.922321E-01   0.0
+                                     0.0            0.0            0.0            0.0            0.0            0.0
+          0          227      S      1.418276E-03  -2.095675E-04  -1.663478E-03   2.633889E-03   4.171373E-14  -2.633889E-03
+                                     0.0            0.0            0.0            0.0            0.0            0.0
+          0          233      S      1.663478E-03   2.095675E-04  -1.418276E-03
+                                     0.0            0.0            0.0
+
+        * analysis_code = 2 (Normal modes)
+        * table_code    = 7 (Eigenvector)
+        * device_code   = 1 (Print)
+        * sort_code     = ? (Sort2,Real/Imag or Mag/Phase,Sorted Results) => sort_bits = [0,0,0]
+        * format_code   = 1 (???)
+        * num_wide      = 16 (8*2)
+        """
+
+        #self._read_table_dummy()
+        #return
+
+        blank_imode = marker.strip().split('C O M P L E X   E I G E N V E C T O R   NO.')
+        blank, imode = blank_imode
+        assert blank == '', blank_imode
+        imode = int(imode)
+
+        (subcase_name, isubcase, transient, _dt, analysis_code, _is_sort1) = self._read_f06_subcase_header()
+        eigenvalue_real, eigenvalue_imag = transient[1]
+
+        real_imag_mag_phase = self._get_next_line().strip()
+        headers = self.skip(2).split()
+
+        if '(REAL/IMAGINARY)' in real_imag_mag_phase:
+            is_mag_phase = False
+        else:
+            raise RuntimeError(real_imag_mag_phase)
+
+        if 'POINT' in headers and 'ID.' in headers:
+            is_sort1 = True
+        else:
+            msg = 'Only SORT1 is supported; headers=%s' % headers
+            raise NotImplementedError(msg)
+
+        data_code = {
+            'log': self.log, 'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 7, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 16, 'format_code': 1,
+            'mode': imode, 'eigr': eigenvalue_real, 'eigi' : eigenvalue_imag,
+            'dataNames': ['mode', 'eigr', 'eigi'],
+            'name': 'mode', 'table_name': 'OUGV1',
+            'nonlinear_factor': imode,
+        }
+        data = self._real_f06_complex_table_data(allow_blanks=True, is_mag_phase=is_mag_phase)
+
+        if isubcase in self.eigenvectors:
+            self.eigenvectors[isubcase].read_f06_data(data_code, data)
+        else:
+            is_sort1 = True
+            if self.is_vectorized:
+                vector = ComplexEigenvectorArray(data_code, is_sort1, isubcase, imode, f06_flag=True)  ## TODO: f06_flag isn't defined...
+            else:
+                vector = ComplexEigenvector(data_code, is_sort1, isubcase, imode, apply_data_code=False)
+            vector.read_f06_data(data_code, data)
+            self.eigenvectors[isubcase] = vector
+
+    def _real_f06_real_table_data(self, allow_blanks=False):
         """
         Reads real displacement/velocity/spc forces/mpc forces
         Handles GRIDs and SPOINTs.
@@ -117,18 +178,17 @@ class OUG(object):
             #: TYPE (str)
             grid_type = line[14:24].strip()
 
+            fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
             if grid_type in ['G', 'L']:
                 # .. todo:: are L points single DOFs?
                 # we do know they're greater than the max value...
                 sline = [node_id, grid_type]
-                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
                 if allow_blanks:
                     sline += [float(val) if val.strip() != '' else 0.0 for val in fields]
                 else:
                     sline += [float(val) for val in fields]
                 data.append(sline)
             elif grid_type == 'S':
-                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
                 fields = [float(val) if val.strip() != '' else None for val in fields]
                 for ioffset, field in enumerate(fields):
                     if field is None:
@@ -138,6 +198,75 @@ class OUG(object):
                     sline = [node_id + ioffset,
                              grid_type, field, 0.0, 0.0, 0.0, 0.0, 0.0]
                     data.append(sline)
+            else:
+                raise NotImplementedError('grid_type = %r' % grid_type)
+            self.i += 1
+            n += 1
+        return data
+
+    def _real_f06_complex_table_data(self, allow_blanks=False, is_mag_phase=False):
+        """
+        Reads complex displacement/velocity/spc forces/mpc forces
+        Handles GRIDs and SPOINTs.
+
+        :param self:         the object pointer
+        :param allow_blanks: Accounting for blank entries (e.g. on eigenvector)
+                             default=False
+        :returns data:       the parsed data
+
+        .. todo:: support L, H, and R points
+        """
+        field_length = 15  # width of each eigenvector field
+        num_fields = 6     # the number of fields (T1, T2, T3, R1, R2, R3)
+        data = []
+
+        n = 0
+        while 1:
+            line1 = self.infile.readline()[1:].rstrip()
+
+            # TODO: add catch for FATAL
+            if 'PAGE' in line1:
+                break
+            line2 = self.infile.readline()[1:].rstrip()
+
+            #: point ID (int)
+            node_id = int(line1[:14].strip())
+
+            #: TYPE (str)
+            grid_type = line1[14:24].strip()
+
+            fields = [
+                line1[24:39], line2[24:39],
+                line1[39:54], line2[39:54],
+                line1[54:69], line2[54:69],
+                line1[69:84], line2[69:84],
+                line1[84:99], line2[84:99],
+                line1[99:114],line2[99:114],
+            ]
+            if grid_type in ['G', 'L']:
+                # .. todo:: are L points single DOFs?
+                # we do know they're greater than the max value...
+                sline = [node_id, grid_type]
+                fields2 = [float(val) if val.strip() != '' else None for val in fields]
+
+                for i in range(0, len(fields), 2):
+                    value = complex(float(fields[i]), float(fields[i+1]))
+                    sline.append(value)
+                assert len(sline) == 8, sline
+                data.append(sline)
+            elif grid_type == 'S':
+                ioffset = 0
+                for i in range(0, len(fields), 2):
+                    if fields[i].strip() == '':
+                        # incomplete spoint line
+                        # ID, S, 1.0, 2.0, 3.0, 4.0, 5.0, None
+                        break
+                    value = complex(float(fields[i]), float(fields[i+1]))
+                    sline = [node_id + ioffset,
+                             grid_type, value, 0.0, 0.0, 0.0, 0.0, 0.0]
+                    data.append(sline)
+                    #print(sline)
+                    ioffset += 1
             else:
                 raise NotImplementedError('grid_type = %r' % grid_type)
             self.i += 1
@@ -172,10 +301,10 @@ class OUG(object):
             'lsdvmn': 1, 'format_code': 3,
             'dataNames':['lsdvmn']
         }
-        #print "headers = %s" % (headers)
-        #print "transient =", transient
+        #print("headers = %s" % (headers))
+        #print("transient =", transient)
 
-        data = self._real_f06_table_data(allow_blanks=False)
+        data = self._real_f06_real_table_data(allow_blanks=False)
 
         if isubcase in self.displacements:
             self.displacements[isubcase].add_f06_data(data, transient)

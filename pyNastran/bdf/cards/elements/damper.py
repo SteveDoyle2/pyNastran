@@ -495,10 +495,6 @@ class CVISC(LineDamper):
     def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids
         return list_fields

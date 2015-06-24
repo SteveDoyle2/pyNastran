@@ -703,6 +703,16 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             elif line[0] == '1':
                 i1 = i - nlines
 
+        # A header block has a 1 for the first character on the line
+        # It's closed by a 0.
+        # If i1-i0 == -2, -3 (we're working with negative line numbers
+        # (from the end of the stack), we can parse it.
+        # If we didn't find i1, it means we probably found it before (and
+        # since it's repeated, we don't need it) and assume it's a -2 stack.
+        # If it's -3, we know this is a nonlinear run.  Our assumption below
+        # (assume -2) is invalid for a nonlinear BDF, but that isn't supported
+        # anyways.
+        #
         # i1 doesn't always exist, but presumably we've found it before,
         # so we don't need to change it
         found_i1 = True
@@ -740,16 +750,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         -3 -> DEFAULT
         -2 -> xxx             subcase 1
         """
-        #print('-----------------')
-        #for iline in [-4, -3, -2, -1, 0]:
-            #if iline == -1:
-                #print('***line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
-            #else:
-                #print('line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
-        #assert 'PAGE' in self.stored_lines[-4], self.stored_lines[-4]
-
         found_i1, header_lines, delta = self._get_minus_lines()
-        #if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
         if found_i1:
             title_line = header_lines[0]
             assert 'PAGE' in title_line, title_line
@@ -764,17 +765,15 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                     raise RuntimeError('Couldnt parse date; line=%r' % title_line.strip())
 
                 self._set_f06_date(month, day, year)
-            #assert 'PAGE' not in title_line, '%r' % date
-            assert 'D I S P L A C' not in self.Title, msg
         #self.Title = subcaseName  # 'no title'
 
         subcase_name = ''
-        #print("subcaseLine = %r" % subcase_name)
+        #print("subcase_name = %r" % subcase_name)
 
         if found_i1:
             subtitle = header_lines[1].strip()
             label_isubcase = header_lines[2]
-            #assert delta == -2, delta
+            assert delta in [-2, -3], delta
         else:
             subtitle = header_lines[1].strip()
             label_isubcase = header_lines[2]
@@ -801,31 +800,17 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
         key = (isubcase, subtitle)
         if key not in self.labels:
-            #print('subcase_key = %s' % str(key))
             self.subtitles[isubcase].append(subtitle)
             self.labels[key] = label
 
-        #if isubcase not in self.labels:
-            #self.subtitles[isubcase].append(subtitle)
-            #self.labels[isubcase] = label
-
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
-
         #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
 
 #title      date_stamp  page_stamp
 #subtitle
 #label      ???
 
-        #if 'F O R C E S' in self.stored_lines[0]:
-            #print("title    = %r" % self.Title)
-            #print("subtitle = %r" % subtitle)
-            #print("label    = %r" % label)
-            #print("isubcase = %r" % isubcase)
-        #print('------------')
-
-        #assert self.Title == 'MSC.NASTRAN JOB CREATED ON 12-MAR-13 AT 12:52:23', self.Title
         self._subtitle = subtitle
         self.iSubcaseNameMap[isubcase] = [subtitle, label]
         transient = self.stored_lines[-1].strip()
@@ -839,7 +824,10 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                 #print(msg)
                 raise ValueError(msg)
             trans_word = trans_word.strip()
-            trans_value = float(trans_value)
+            if ',' in trans_value:
+                trans_value = [float(trans_valuei) for trans_valuei in trans_value.split(',')]
+            else:
+                trans_value = float(trans_value)
             transient = [trans_word, trans_value]
 
             if trans_word == 'LOAD STEP':  # nonlinear statics
@@ -863,6 +851,9 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             elif trans_word == 'ELEMENT-ID':
                 is_sort1 = False
                 analysis_code = None
+            elif trans_word == 'COMPLEX EIGENVALUE':
+                is_sort1 = True
+                analysis_code = 9
             else:
                 raise NotImplementedError('transient_word=%r is not supported...' % trans_word)
         else:
@@ -1222,6 +1213,10 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         for i in range(iskip - 1):
             self.infile.readline()
         self.i += iskip
+        return self.infile.readline()
+
+    def _get_next_line(self):
+        self.i += 1
         return self.infile.readline()
 
     def _parse_label_isubcase(self, label_isubcase_line, stop_on_failure=True):

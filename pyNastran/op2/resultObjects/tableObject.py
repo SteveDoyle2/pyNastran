@@ -365,10 +365,16 @@ class ComplexTableArray(TableArray):  # displacement style table
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 #if not is_all_zeros:
-                f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                        '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                            node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                        '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                if sgridtype == 'S':
+                    f.write('0 %12i %6s     %-s\n'
+                            '  %12s %6s     %-s\n' % (
+                                node_id, sgridtype, dxr,
+                                '', '', dxi))
+                else:
+                    f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                            '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                            '', '', dxi, dyi, dzi, rxi, ryi, rzi))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -379,7 +385,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.nonlinear_factor = None
         self.table_name = None
         self.analysis_code = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
         self.gridTypes = {}
         self.translations = {}
         self.rotations = {}
@@ -563,8 +569,12 @@ class RealTableObject(ScalarObject):  # displacement style table
             (vals2, is_all_zeros) = writeFloats13E(vals)
             #if not is_all_zeros:
             (dx, dy, dz, rx, ry, rz) = vals2
-            msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                    % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+            if grid_type == 'S':
+                msg.append('%14i %6s     %-13s  %s\n'
+                           % (nodeID, grid_type, dx.rstrip()))
+            else:
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                        % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -590,7 +600,10 @@ class RealTableObject(ScalarObject):  # displacement style table
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 #if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
+                if grid_type == 'S':
+                    msg.append('%14i %6s     %s\n' % (nodeID, grid_type, dx))
+                else:
+                    msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
@@ -665,11 +678,11 @@ class RealTableObject(ScalarObject):  # displacement style table
 
 
 class ComplexTableObject(ScalarObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1, isubcase, dt, apply_data_code=True):
         self.nonlinear_factor = None
         self.table_name = None
         self.analysis_code = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
         self.gridTypes = {}
         self.translations = {}
         self.rotations = {}

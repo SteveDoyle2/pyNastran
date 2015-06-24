@@ -40,7 +40,6 @@ class AddMethods(object):
                 self.log.warning('key=%s param=%s oldPARAM=%s'
                                  % (key, param, self.params[key]))
                 self.params[key] = param
-                #self._type_to_id_map[key] = param
         else:
             self.params[key] = param
             self._type_to_id_map[param.type].append(key)
@@ -337,7 +336,6 @@ class AddMethods(object):
             self._type_to_id_map[load.type].append(key)
 
     def add_dload_entry(self, load):
-        #print(load)
         key = load.sid
         if key in self.dload_entries:
             self.dload_entries[key].append(load)
@@ -386,9 +384,9 @@ class AddMethods(object):
 
     def add_constraint_MPCADD(self, constraint):
         raise RuntimeError('is this used?')
-        if constraint.conid in self.mpcadds:
-            raise RuntimeError('must have unique MPCADD IDs')
         key = constraint.conid
+        if key in self.mpcadds:
+            raise RuntimeError('must have unique MPCADD IDs')
         self.mpcadds[key] = constraint
         self._type_to_id_map[constraint.type].append(key)
 

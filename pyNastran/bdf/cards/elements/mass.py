@@ -520,7 +520,7 @@ class CONM1(PointMassElement):
             self._comment = comment
         m = zeros((6, 6))
         if card:
-            #self.nids  = [card[1]]
+            #self.nids = [card[1]]
             #del self.nids
             #self.pid = None
             self.eid = integer(card, 1, 'eid')
@@ -594,6 +594,7 @@ class CONM1(PointMassElement):
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
 
     def Nid(self):
         if isinstance(self.nid, integer_types):
@@ -681,7 +682,7 @@ class CONM2(PointMassElement):
         +-------+--------+-------+-------+---------+------+------+------+-----+
         |   1   |    2   |    3  |   4   |    5    |  6   |  7   |   8  |  9  |
         +-------+--------+-------+-------+---------+------+------+------+-----+
-        | CONM2 | EID    |  NID  |  CID  |  MASS   |  X1  |  X2  |  X3  |     |
+        | CONM2 |   EID  |  NID  |  CID  |  MASS   |  X1  |  X2  |  X3  |     |
         +-------+--------+-------+-------+---------+------+------+------+-----+
         |       |   I11  |  I21  |  I22  |   I31   |  I32 |  I33 |      |     |
         +-------+--------+-------+-------+---------+------+------+------+-----+

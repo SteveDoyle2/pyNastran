@@ -158,11 +158,10 @@ class CHEXA8(SolidElement):
 
     def write_card_16(self, is_double=False):
         data = [self.eid, self.Pid()] + self.node_ids
-        msg = ('CHEXA   %16i%16i%16i%16i\n'
-               '        %16i%16i%16i%16i\n'
-               '        %816%816\n' % tuple(data))
+        msg = ('CHEXA*  %16i%16i%16i%16i\n'
+               '*       %16i%16i%16i%16i\n'
+               '*       %16i%16i\n' % tuple(data))
         return self.comment() + msg
-
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -354,7 +353,7 @@ class CHEXA20(SolidElement):
                 integer_or_blank(card, 20, 'nid18'),
                 integer_or_blank(card, 21, 'nid19'),
                 integer_or_blank(card, 22, 'nid20')
-                ]
+            ]
             assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
         else:
             self.eid = data[0]

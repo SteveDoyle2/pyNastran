@@ -154,8 +154,6 @@ def fields(f, card, fieldname, i, j=None):
     """
     .. todo:: improve fieldname
     """
-    #raise RuntimeError('fields has been removed...')
-    #print('******fields!')
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(fieldname, string_types), type(fieldname)
     fs = []

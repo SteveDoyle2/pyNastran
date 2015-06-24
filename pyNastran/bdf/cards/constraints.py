@@ -7,7 +7,6 @@ All constraint cards are defined in this file.  This includes:
  * SPC
  * SPC1
  * SPCAX
- * SPCD
  * MPC
  * GMSPC
  * ConstraintADD
@@ -231,6 +230,7 @@ class SUPORT1(Constraint):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
+
 class SUPORT(Constraint):
     """
     +---------+-----+-----+-----+-----+-----+-----+-----+----+
@@ -348,8 +348,7 @@ class MPC(Constraint):
             raise NotImplementedError(msg)
 
     def nodeIDs(self):
-        warnings.warn('deprecated; use self.node_ids instead of self.nodeIDs()',
-                      DeprecationWarning, stacklevel=2)
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -454,8 +453,7 @@ class SPC(Constraint):
         #pass
 
     def nodeIDs(self):
-        warnings.warn('deprecated; use self.node_ids instead of self.nodeIDs()',
-                      DeprecationWarning, stacklevel=2)
+        self.deprecated('self.nodeIDs()', 'self.node_ids')
         return self.node_ids
 
     @property

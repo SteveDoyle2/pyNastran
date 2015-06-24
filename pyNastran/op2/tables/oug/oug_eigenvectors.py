@@ -185,8 +185,8 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
                 raise RuntimeError(msg)
             (node_id, grid_type, t1, t2, t3, r1, r2, r3) = line
             self.gridTypes[node_id] = grid_type
-            self.translations[imode][node_id] = array([t1, t2, t3])
-            self.rotations[imode][node_id] = array([r1, r2, r3])
+            self.translations[imode][node_id] = array([t1, t2, t3], dtype='float32')
+            self.rotations[imode][node_id] = array([r1, r2, r3], dtype='float32')
         assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
 
     def update_mode(self, data_code, imode):
@@ -361,7 +361,10 @@ class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
+                if grid_type == 'S':
+                    msg.append('%14i %6s     %s\n' % (nodeID, grid_type, dx))
+                else:
+                    msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
@@ -370,8 +373,8 @@ class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
 
 
 class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, iMode):
-        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
+    def __init__(self, data_code, is_sort1, isubcase, iMode, apply_data_code=True):
+        ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode, apply_data_code=apply_data_code)
         self.caseVal = iMode
         self.update_dt = self.update_mode
 
@@ -382,18 +385,17 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
         #self.translations = {iMode: {}}
         #self.rotations    = {iMode: {}}
 
-    def update_mode(self, data_code, iMode):
+    def update_mode(self, data_code, imode):
         """
         this method is called if the object
         already exits and a new time step is found
         """
         #assert mode>=0.
-        self.caseVal = iMode
+        self.caseVal = imode
         self.data_code = data_code
         self.apply_data_code()
         self.set_data_members()
-        #print "mode = %s" %(str(mode))
-        self.add_new_mode(iMode)
+        self.add_new_mode(imode)
 
     def add_new_mode(self, iMode):
         self.translations[iMode] = {}
@@ -402,20 +404,62 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
     def eigenvalues(self):
         return sorted(self.translations.keys())
 
+    def read_f06_data(self, data_code, data):
+        """
+        it is now assumed that all data coming in is correct, so...
+
+
+        so...
+           [node_id, grid_type, t1, t2, t3, r1, r2, r3]
+           [100, 'G', 1.0, 2.0, 3.0, 4.0, 5.0, 6.0] #  valid
+
+           [101, 'S', 1.0, 2.0] #  invalid
+           [101, 'S', 1.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
+           [102, 'S', 2.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
+        is no longer valid
+        """
+        imode = data_code['mode']
+        if imode not in self.translations:
+            self.update_mode(data_code, imode)
+
+        for line in data:
+            if len(line) != 8:
+                msg = 'invalid length; even spoints must be in \n'
+                msg += '[nid, type, t1, t2, t3, r1, r2, t3] format\nline=%s\n' % line
+                msg += 'expected length=8; length=%s' % len(line)
+                raise RuntimeError(msg)
+            (node_id, grid_type, t1, t2, t3, r1, r2, r3) = line
+            self.gridTypes[node_id] = grid_type
+            self.translations[imode][node_id] = array([t1, t2, t3], dtype='complex64')
+            self.rotations[imode][node_id] = array([r1, r2, r3], dtype='complex64')
+        assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
+        assert self.eigis[-1] == data_code['eigi'], 'eigis=%s\ndata_code[eigis]=%s' %(self.eigis, data_code['eigi'])
+
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = []
         #print self.data_code
         hasCycle = hasattr(self, 'mode_cycle')
+        assert len(self.eigis) == len(self.translations)
         for i, (iMode, eigVals) in enumerate(sorted(iteritems(self.translations))):
             msg += header
-            freq = self.eigrs[i]
-            #freq = 0.0
-            msg.append('%16s = %12E\n' % ('EIGENVALUE', freq))
+            eigr = self.eigrs[i]
+            eigi = self.eigis[i]
+            eigr = 0. if eigr == -0. else eigr
+            eigi = 0. if eigi == -0. else eigi
+
+            f.write(''.join(header))
+            f.write('      %16s = %12E, %12E\n' % ('COMPLEX EIGENVALUE', eigr, eigi))
             if hasCycle:
-                msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
+                f.write('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
             else:
-                msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
-            msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
+                # TODO: should there be an extra ' \n'???
+                f.write('                                       C O M P L E X   E I G E N V E C T O R   NO. %10i\n' % (iMode))
+
+            if is_mag_phase:
+                f.write('                                                         (MAGNITUDE/PHASE)\n \n')
+            else:
+                f.write('                                                          (REAL/IMAGINARY)\n \n')
+            f.write('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID, displacement in sorted(iteritems(eigVals)):
                 rotation = self.rotations[iMode][nodeID]
                 grid_type = self.gridTypes[nodeID]
@@ -426,11 +470,14 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
                 (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
-                msg.append('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                if grid_type == 'S':
+                    f.write('0%13i %6s     %-13s\n' % (nodeID, grid_type, dxr))
+                    f.write(' %13s %6s     %-13s\n' % ('', '', dxi))
+                else:
+                    f.write('0%13i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
+                    f.write(' %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
 
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
+            f.write(page_stamp % page_num)
             msg = ['']
             page_num += 1
         return page_num - 1

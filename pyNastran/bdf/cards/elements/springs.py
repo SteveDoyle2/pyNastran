@@ -83,6 +83,10 @@ class CELAS1(SpringElement):
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
@@ -249,6 +253,10 @@ class CELAS2(SpringElement):
             raise ValueError('unsupported value of c1=%s' % self.c1)
         return msg
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
@@ -317,6 +325,10 @@ class CELAS3(SpringElement):
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
@@ -377,6 +389,10 @@ class CELAS4(SpringElement):
 
     def K(self):
         return self.k
+
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
 
     @property
     def node_ids(self):

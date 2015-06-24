@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, integer_types, PY2
-from six.moves import zip
+from six.moves import zip, range
 
 import os
 import sys
@@ -718,6 +718,7 @@ def build_thru_packs(packs, max_dv=1):
                     #doubles.append(double)
     return singles, doubles
 
+
 def build_thru(packs, max_dv=None):
     """
     Takes a pack [1,7,2] and converts it into fields used by a SET card.
@@ -755,8 +756,6 @@ def build_thru(packs, max_dv=None):
                     fields.append(dv)
                 else:
                     fields += list(range(first_val, last_val + dv, dv))
-                    #for v in range(first_val, last_val + dv, dv):
-                        #fields.append(v)
             else:
                 for v in range(first_val, last_val + dv, dv):
                     fields.append(v)
