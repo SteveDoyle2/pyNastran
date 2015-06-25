@@ -176,11 +176,11 @@ class RealRodForceArray(ScalarObject):
             page_num += 1
         return page_num - 1
 
-class RealRodForce(ScalarObject):  # 1-ROD
+
+class RealRodForce(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
 
-        self.elementType = 'CROD'
         self.axialForce = {}
         self.torque = {}
 
@@ -249,13 +249,46 @@ class RealRodForce(ScalarObject):  # 1-ROD
             self.axialForce[dt][eid] = axial
             self.torque[dt][eid] = torsion
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
-        msg = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-                        '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
-                        '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
-        return self._write_f06(msg, page_stamp, page_num, f)
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
+                            is_mag_phase=False):
+        msg = []
+        itime = 0
+        ntimes = len(self.axialForce)
+        for dt, axials in sorted(iteritems(self.axialForce)):
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            #dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
+            #header[2] = dtLine
+            msg += header
+            out = []
+            for eid in sorted(axials):
+                axial = self.axialForce[dt][eid]
+                torsion = self.torque[dt][eid]
+                out.append([eid, axial, torsion])
+
+            nOut = len(out)
+            nWrite = nOut
+            if nOut % 2 == 1:
+                nWrite = nOut - 1
+            for i in range(0, nWrite, 2):
+
+
+                #            14       -3.826978E+05   2.251969E+03                       15       -4.054566E+05   8.402607E+02
+
+
+                outLine = '      %8i       %13.6E  %13.6E                 %8i       %13.6E  %13.6E\n' % (tuple(out[i] + out[i + 1]))
+                msg.append(outLine)
+
+            if nOut % 2 == 1:
+                outLine = '      %8i       %13.6E  %13.6E\n' % (
+                    tuple(out[-1]))
+                msg.append(outLine)
+            msg.append(page_stamp % page_num)
+            for line in msg:
+                print(line.rstrip())
+            f.write(''.join(msg))
+            page_num += 1
+            itime += 1
+        return page_num - 1
 
     def _write_f06(self, msg, page_stamp, page_num, f):
         out = []
@@ -282,17 +315,31 @@ class RealRodForce(ScalarObject):  # 1-ROD
         return page_num
 
 
-class RealCtubeForce(RealRodForce):  # 3-TUBE
+class RealCRodForce(RealRodForce):  # 1-CROD
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealRodForce.__init__(self, data_code, is_sort1, isubcase, dt)
+        self.elementType = 'CROD'
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        words = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
+                          '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
+                          '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(words, page_stamp, page_num, f)
+        return self._write_f06(words, page_stamp, page_num, f)
+
+
+class RealCTubeForce(RealRodForce):  # 3-TUBE
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealRodForce.__init__(self, data_code, is_sort1, isubcase, dt)
         self.elementType = 'CTUBE'
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
         words = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n',
-                        '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
-                        '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+                          '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
+                          '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(words, page_stamp, page_num, f)
         return self._write_f06(words, page_stamp, page_num, f)
 
 
@@ -302,13 +349,11 @@ class RealConrodForce(RealRodForce):  # 10-CONROD
         self.elementType = 'CONROD'
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
         words = header + ['                                           F O R C E S   I N   R O D   E L E M E N T S     ( C O N R O D )\n',
                           '       ELEMENT           AXIAL                                     ELEMENT           AXIAL\n',
                           '         ID.             FORCE          TORQUE                       ID.             FORCE          TORQUE\n']
-
-
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(words, page_stamp, page_num, f)
         return self._write_f06(words, page_stamp, page_num, f)
 
 
@@ -1218,7 +1263,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_name))
         msg += self.get_data_code()
         return msg
 
@@ -1259,7 +1304,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
-        (ntimes, ntotal, four) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element
         cen_word = 'CEN/%i' % nnodes

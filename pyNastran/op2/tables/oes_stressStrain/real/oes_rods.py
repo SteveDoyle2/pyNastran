@@ -100,7 +100,7 @@ class RealRodArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_name))
         msg += self.get_data_code()
         return msg
 
@@ -438,9 +438,10 @@ class RealRodStress(StressObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
         msg = []
+        itime = 0
+        ntimes = len(self.axial)
         for dt, axials in sorted(iteritems(self.axial)):
-            dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
-            header[2] = dtLine
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             msg += header + words
             out = []
             for eid in sorted(axials):
@@ -467,6 +468,7 @@ class RealRodStress(StressObject):
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
+            itime += 1
         return page_num - 1
 
 
@@ -647,9 +649,10 @@ class RealRodStrain(StrainObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         msg = []
+        itime = 0
+        ntimes = len(self.axial)
         for dt, axials in sorted(iteritems(self.axial)):
-            dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
-            header[2] = dtLine
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             msg += header + words
             out = []
             for eid in sorted(axials):
@@ -675,6 +678,7 @@ class RealRodStrain(StrainObject):
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
+            itime += 1
         return page_num - 1
 
 

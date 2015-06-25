@@ -147,7 +147,7 @@ class RealBeamArray(OES_Object):
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_name))
         msg += self.get_data_code()
         return msg
 
@@ -713,8 +713,11 @@ class RealBeamStress(StressObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
+        itime = 0
+        ntimes = len(self.smax)
         for dt, SMaxs in sorted(iteritems(self.smax)):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, Smax in sorted(iteritems(SMaxs)):
                 msg.append('0  %8i\n' % (eid))
@@ -738,6 +741,7 @@ class RealBeamStress(StressObject):
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
+            itime += 1
         return page_num - 1
 
 
@@ -952,8 +956,11 @@ class RealBeamStrain(StrainObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
+        itime = 0
+        ntimes = len(self.smax)
         for dt, SMaxs in sorted(iteritems(self.smax)):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, Smax in sorted(iteritems(SMaxs)):
                 msg.append('0  %8i\n' % eid)
@@ -976,4 +983,5 @@ class RealBeamStrain(StrainObject):
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
+            itime += 1
         return page_num - 1

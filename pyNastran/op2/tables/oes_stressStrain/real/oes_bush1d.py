@@ -140,12 +140,11 @@ class RealBush1DStress(StressObject):
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
 
         raise NotImplementedError('CBUSH1D')
-        msg = header + [
-            '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
+        msg = header + ['    S T R A I N S   I N   B U S H   E L E M E N T S        ( C B U S H 1 D)',
+                        '',
+                        '    ELEMENT-ID        STRAIN-TX     STRAIN-TY     STRAIN-TZ    STRAIN-RX     STRAIN-RY     STRAIN-RZ ',
+                        #'0                          1      1.000000E-06  0.0           0.0           0.0           0.0           0.0',
         ]
-
         for eid, S1s in sorted(iteritems(self.s1)):
             element_force = self.element_force[eid]
             axial_displacement = self.axial_displacement[eid]
@@ -154,21 +153,11 @@ class RealBush1DStress(StressObject):
             axial_strain = self.axial_strain[eid]
             plastic_strain = self.plastic_strain[eid]
             is_failed = self.is_failed[eid]
-            #eType = self.eType[eid]
-            #axial = self.axial[eid]
-            #s1 = self.s1[eid]
-            #s2 = self.s2[eid]
-            #s3 = self.s3[eid]
-            #s4 = self.s4[eid]
 
             vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
             (vals2, is_all_zeros) = self.writeImagFloats13E(vals, is_mag_phase)
             [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed))
-            msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % ('', s1ai, s2ai, s3ai, s4ai, axiali))
-
-            msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
-            msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))

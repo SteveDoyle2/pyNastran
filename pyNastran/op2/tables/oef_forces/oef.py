@@ -10,7 +10,8 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D, HeatFlux_VU,
     HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
-    RealRodForce, RealRodForceArray,
+    RealCRodForce, RealCTubeForce, RealConrodForce,
+    RealRodForceArray,
     RealCBeamForce, RealCShearForce,
     RealSpringForce, RealDamperForce, RealViscForce,
     RealPlateForce, RealPlateForceArray,
@@ -566,7 +567,6 @@ class OEF(OP2Common):
             #1-CROD
             #3-CTUBE
             #10-CONROD
-            obj_real = RealRodForce
             #obj_complex = ComplexRodForce
 
             obj_vector_real = RealRodForceArray
@@ -574,12 +574,15 @@ class OEF(OP2Common):
             if self.element_type == 1: # CROD
                 result_vector_name = 'crod_force'
                 slot_vector = self.crod_force
+                obj_real = RealCRodForce
             elif self.element_type == 3:  # CTUBE
                 result_vector_name = 'ctube_force'
                 slot_vector = self.ctube_force
+                obj_real = RealCTubeForce
             elif self.element_type == 10:  # CONROD
                 result_vector_name = 'conrod_force'
                 slot_vector = self.conrod_force
+                obj_real = RealConrodForce
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)

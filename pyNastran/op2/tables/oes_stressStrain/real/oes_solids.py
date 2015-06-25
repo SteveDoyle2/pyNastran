@@ -876,27 +876,35 @@ class RealSolidStress(StressObject):
     def _write_f06_transient(self, header, page_stamp, page_num, f):
         tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
 
+        itime = 0
+        ntimes = len(self.oxx)
         if self.element_type == 39: # CTETRA
             nnodes = 4
             for dt, oxx in sorted(iteritems(self.oxx)):
                 eids = sorted(oxx.keys())
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 self._write_element_transient('CTETRA4', nnodes, eids, dt, header, tetraMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
+                itime += 1
         elif self.element_type == 68: # CPENTA
             nnodes = 6
             for dt, oxx in sorted(iteritems(self.oxx)):
                 eids = sorted(oxx.keys())
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 self._write_element_transient('CPENTA6', nnodes, eids, dt, header, pentaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
+                itime += 1
         elif self.element_type == 67: # CHEXA
             nnodes = 8
             for dt, oxx in sorted(iteritems(self.oxx)):
                 eids = sorted(oxx.keys())
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 self._write_element_transient('CHEXA8', nnodes, eids, dt, header, hexaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
+                itime += 1
         else:
             raise NotImplementedError('element_name=%r type=%s' % (self.element_name, self.element_type))
         return page_num - 1
@@ -939,8 +947,8 @@ class RealSolidStress(StressObject):
                             '', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
 
     def _write_element_transient(self, eType, nnodes, eids, dt, header, tetraMsg, f):
-        dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
-        header[1] = dtLine
+        #dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
+        #header[1] = dtLine
         f.write(''.join(header + tetraMsg))
         for eid in eids:
             cid = self.cid[eid]
@@ -1372,26 +1380,34 @@ class RealSolidStrain(StrainObject):
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
+        itime = 0
+        ntimes = len(self.exx)
         if self.element_type == 39: # CTETRA
             nnodes = 4
             for dt, oxx in sorted(iteritems(self.exx)):
                 eids = sorted(oxx.keys())
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 self._write_element_transient('CTETRA4', nnodes, eids, dt, header, tetraMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
+                itime += 1
         elif self.element_type == 68: # CPENTA
             nnodes = 6
             for dt, oxx in sorted(iteritems(self.exx)):
                 eids = sorted(oxx.keys())
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 self._write_element_transient('CPENTA6', nnodes, eids, dt, header, pentaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
+                itime += 1
         elif self.element_type == 67: # CHEXA
             nnodes = 8
             for dt, oxx in sorted(iteritems(self.exx)):
                 eids = sorted(oxx.keys())
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 self._write_element_transient('CHEXA8', nnodes, eids, dt, header, hexaMsg, f)
                 f.write(page_stamp % page_num)
+                itime += 1
                 page_num += 1
         else:
             raise NotImplementedError('element_name=%r type=%s' % (self.element_name, self.element_type))
@@ -1434,8 +1450,8 @@ class RealSolidStrain(StrainObject):
                            '', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]), )
 
     def _write_element_transient(self, eType, nnodes, eids, dt, header, tetraMsg, f):
-        dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
-        header[1] = dtLine
+        #dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
+        #header[1] = dtLine
         f.write(''.join(header + tetraMsg))
         for eid in eids:
             cid = self.cid[eid]

@@ -156,7 +156,7 @@ class RealPlateArray(OES_Object):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
-        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_name))
         msg += self.get_data_code()
         return msg
 
@@ -760,9 +760,12 @@ class RealPlateStress(StressObject):
             dt_msg = ' %s = %%10.4E\n' % self.data_code['name']
 
         msg = []
+        itime = 0
+        ntimes = len(dts)
         if self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4 bilinear
             for dt, oxx in sorted(iteritems(self.oxx)):
-                header[1] = dt_msg % dt
+                #header[1] = dt_msg % dt
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 msg.append('\n'.join(header + msg_pack))
                 for eid in sorted(oxx.keys()):
                     out = self._write_f06_quad4_bilinear_transient(dt, eid, nnodes, cen)
@@ -771,9 +774,11 @@ class RealPlateStress(StressObject):
                 f.write(''.join(msg))
                 msg = ['']
                 page_num += 1
+                itime += 1
         elif self.element_type in [33, 74]:
             for dt, oxx in sorted(iteritems(self.oxx)):
-                header[1] = dt_msg % dt
+                #header[1] = dt_msg % dt
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 msg.append('\n'.join(header + msg_pack))
                 for eid in sorted(oxx.keys()):
                     out = self._write_f06_tri3_transient(dt, eid)
@@ -782,6 +787,7 @@ class RealPlateStress(StressObject):
                 f.write(''.join(msg))
                 msg = ['']
                 page_num += 1
+                itime += 1
         else:
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
         return page_num - 1
@@ -1280,24 +1286,30 @@ class RealPlateStrain(StrainObject):
             dt_msg = ' %s = %%10.4E\n' % self.data_code['name']
 
         msg = []
+        itime = 0
+        ntimes = len(dts)
         if self.element_type in [64, 70, 75, 82, 144]:
             for dt, oxx in sorted(iteritems(self.exx)):
-                header[1] = dt_msg % dt
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
+                #header[1] = dt_msg % dt
                 msg.append('\n'.join(header + msg_pack))
                 for eid in sorted(oxx.keys()):
                     out = self._write_f06_quad4_bilinear_transient(dt, eid, nnodes, cen)
                     msg.append(out)
                 msg.append(page_stamp % page_num)
                 page_num += 1
+                itime += 1
         elif self.element_type in [33, 74]:
             for dt, oxx in sorted(iteritems(self.exx)):
-                header[1] = dt_msg % dt
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
+                #header[1] = dt_msg % dt
                 msg.append('\n'.join(header + msg_pack))
                 for eid in sorted(oxx.keys()):
                     out = self._write_f06_tri3_transient(dt, eid)
                     msg.append(out)
                 msg.append(page_stamp % page_num)
                 page_num += 1
+                itime += 1
         else:
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
         f.write(''.join(msg))
