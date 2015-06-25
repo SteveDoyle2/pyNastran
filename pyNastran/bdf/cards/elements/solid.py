@@ -134,7 +134,7 @@ class SolidElement(Element):
     #def write_card(self, size=8, is_double=False):
         #card = self.raw_fields()
         #msg2 = self.write_card()
-        ##msg1 = self.comment() + print_card_8(card)
+        ##msg1 = self.comment + print_card_8(card)
         ##assert msg1 == msg2, 'write_card != write_card\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         #return msg2
 

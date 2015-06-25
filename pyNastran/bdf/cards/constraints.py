@@ -205,7 +205,7 @@ class SUPORT1(Constraint):
 
     def add_suport1_to_set(self, suport1):
         assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
-        comment = self.comment() + suport1.comment()
+        comment = self.comment + suport1.comment
         if comment:
             self._comment = comment
         self.IDs += suport1.IDs

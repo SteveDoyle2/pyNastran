@@ -186,7 +186,7 @@ class XPoint(Node):
         :param size:   unused
         :param is_double: unused
         """
-        msg = self.comment()
+        msg = self.comment
         lists_fields = self.repr_fields()
         for list_fields in lists_fields:
             if 'THRU' not in list_fields:
@@ -381,7 +381,7 @@ class XPoints(Node):
         :param is_double: unused
         """
         lists_fields = _get_compressed_xpoints(self.type, self.points)
-        msg = self.comment()
+        msg = self.comment
         for list_fields in lists_fields:
             if 'THRU' not in list_fields:
                 msg += print_int_card(list_fields)

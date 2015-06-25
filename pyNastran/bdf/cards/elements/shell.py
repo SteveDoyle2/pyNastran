@@ -555,9 +555,9 @@ class CTRIA6(TriShell):
     def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
-            msg = self.comment() + print_card_8(card)
+            msg = self.comment + print_card_8(card)
         else:
-            msg = self.comment() + print_card_16(card)
+            msg = self.comment + print_card_16(card)
         #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
@@ -690,9 +690,9 @@ class CTRIAR(TriShell):
     def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 5: # to last node
-            msg = self.comment() + print_card_8(card)
+            msg = self.comment + print_card_8(card)
         else:
-            msg = self.comment() + print_card_16(card)
+            msg = self.comment + print_card_16(card)
         return msg
 
 
@@ -794,9 +794,9 @@ class CTRIAX(TriShell):
     def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
-            msg = self.comment() + print_card_8(card)
+            msg = self.comment + print_card_8(card)
         else:
-            msg = self.comment() + print_card_16(card)
+            msg = self.comment + print_card_16(card)
         #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
@@ -943,9 +943,9 @@ class CTRIAX6(TriShell):
     def write_card(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
-            msg = self.comment() + print_card_8(card)
+            msg = self.comment + print_card_8(card)
         else:
-            msg = self.comment() + print_card_16(card)
+            msg = self.comment + print_card_16(card)
         #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
@@ -1217,7 +1217,7 @@ class CSHEAR(QuadShell):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        msg = self.comment() + print_card_8(card)
+        msg = self.comment + print_card_8(card)
         #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
@@ -1390,9 +1390,9 @@ class CQUAD4(QuadShell):
     #def write_card(self, size=8, is_double=False):
         #card = wipe_empty_fields(self.repr_fields())
         #if size == 8 or len(card) == 7: # to last node
-            #msg = self.comment() + print_card_8(card)
+            #msg = self.comment + print_card_8(card)
         #else:
-            #msg = self.comment() + print_card_16(card)
+            #msg = self.comment + print_card_16(card)
         #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         #return msg
@@ -1520,9 +1520,9 @@ class CQUADR(QuadShell):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8 or len(card) == 7: # to last node
-            msg = self.comment() + print_card_8(card)
+            msg = self.comment + print_card_8(card)
         else:
-            msg = self.comment() + print_card_16(card)
+            msg = self.comment + print_card_16(card)
         #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
@@ -1603,7 +1603,7 @@ class CQUAD(QuadShell):
 
     #def write_card(self, size=8, is_double=False):
         #card = self.repr_fields()
-        #msg = self.comment() + print_card_8(card)
+        #msg = self.comment + print_card_8(card)
         #msg2 = self.write_card(size)
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         #return msg
