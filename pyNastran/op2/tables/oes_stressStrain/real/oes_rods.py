@@ -100,7 +100,7 @@ class RealRodArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % ', '.join(self.element_name))
+        msg.append('  element types: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
