@@ -1,10 +1,13 @@
+from __future__ import print_function
 from six import  iteritems
 #from math import pi, degrees
 from pyNastran.bdf.dev_vectorized.bdf import BDF, to_fields, BDFCard
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 #from pyNastran.applications.hyper
 from cards import FLOW, HYPER
-from numpy import array, cross, vstack, dot, arccos, pi, degrees, arange, hstack #, radians
+from numpy import (array, cross, vstack, dot, arccos, pi, degrees, arange,
+    hstack, append, unique, where, array_equal, argsort, searchsorted,
+    zeros) #, radians
 from numpy.linalg import norm
 
 
@@ -78,127 +81,205 @@ class Hypersonic(BDF):
 
         grids = self.grid
         #print(list(grids.node_id))
-        xyz_global = grids.get_position_by_node_index()
+        xyz_cid0 = grids.get_position_by_node_index()
 
         tris = self.elements.elements_shell.ctria3
         quads = self.elements.elements_shell.cquad4
 
+        ntris = tris.n
+        nquads = quads.n
         if tris.n:
             et = tris.element_id
-            pt = tris.property_id
-            At = tris.get_area_by_element_index()
-            nt = tris.get_normal_by_element_index()
-            ct = tris.get_centroid_by_element_index()
+            #pt = tris.property_id
+            #At = tris.get_area_by_element_index()
+            #nt = tris.get_normal_by_element_index()
+            #ct = tris.get_centroid_by_element_index()
 
-            #i = arange(tris.n)
-            #n1, n2, n3 = tris._node_locations(xyz_cid0, i)
-            # n3 = n4
+            i = arange(tris.n)
+            n1, n2, n3 = tris._node_locations(xyz_cid0, i)
+            #n3 = n4
             # is this right?
             #ut = (n1 + n2 - 2 * n3) / 2.
             #pt = (n2 - n1) / 2.
             #ot = cross(nt, ut)
+
+
+            #i1, i2, i3 = tris.get_node_indices()
+            n1, n2, n3 = tris._node_locations(xyz_cid0, i)
+
+            # hacked an extra point in to make the equations work nice
+            #xyz = vstack([n1, n2, n3, n3])
+            xyz_avg_t = (n1 + n2 + n3) / 3.
+            a = n2 - n1
+            b = n3 - n1
+            xyz_avgt = (n1 + n2 + n3) / 3.
+            n = cross(a, b)
+            norm_n = norm(n, axis=1)
+            assert len(norm_n) == ntris, 'nnorm=%s nelem=%s' % (len(norm_n), ntris)
+            #A = 0.5 * norm_n
+
+            n /= norm_n.reshape(ntris, 1)
+
+            t1 = a / norm(a, axis=1).reshape(ntris, 1)
+            t2 = cross(n, t1)
+            assert len(t1) == ntris, 'len(t1)=%s ntris=%s' %(len(t1), ntris)
+            assert len(t2) == ntris, 'len(t2)=%s ntris=%s' %(len(t2), ntris)
+            nt = n
+            t1t = t1
+            t2t = t2
+            n1234 = zeros((ntris, 4), dtype='int32')
+            n1234[:, :3] = tris.node_ids
+            n1234[:, 3] = tris.node_ids[:, 0]
+            n1234t = n1234
+
         if quads.n:
             eq = quads.element_id
-            pq = quads.property_id
-            Aq = quads.get_area_by_element_index()
-            nq = quads.get_normal_by_element_index()
-            cq = quads.get_centroid_by_element_index()
 
             i = arange(quads.n)
-            #n1, n2, n3, n4 = quads._node_locations(xyz_cid0, i)
-            #uq = (n1 + n2 - n3 - n4) / 2.
+            n1, n2, n3, n4 = quads._node_locations(xyz_cid0, i)
+            #xyz = vstack([p1, p2, p3, p4])
+            xyz_avg = (n1 + n2 + n3 + n4) / 4.
+            a = n3 - n1
+            b = n4 - n2
+
+            #pq = quads.property_id
+            #Aq = quads.get_area_by_element_index()
+            #nq = quads.get_normal_by_element_index()
+            #cq = quads.get_centroid_by_element_index()
+
+            i = arange(quads.n)
+            n1, n2, n3, n4 = quads._node_locations(xyz_cid0, i)
+            uq = (n1 + n2 - n3 - n4) / 2.
             #pq = (n2 + n3 - n4 - n1) / 2.
             #oq = cross(nq, uq)
+            xyz_avg_q = (n1 + n2 + n3 + n4) / 4.
+
+            n = cross(a, b)
+            norm_n = norm(n, axis=1)
+            n /= norm_n.reshape(nquads, 1)
+            t1 = a / norm(a, axis=1).reshape(nquads, 1)
+            t2 = cross(n, t1)
+            assert len(t1) == nquads, 'len(t1)=%s nquads=%s' %(len(t1), nquads)
+            assert len(t2) == nquads, 'len(t2)=%s nquads=%s' %(len(t2), nquads)
+            nq = n
+            t1q = t1
+            t2q = t2
+            n1234 = quads.node_ids
+            n1234q = n1234
 
         if tris.n and quads.n:
-            e = vstack([et, eq])
-            pids = vstack([pt, pq])
-            A = vstack([At, Aq])
+            eids = append(et, eq)
+            #pids = append(pt, pq)
+            #A = append(At, Aq)
             n = vstack([nt, nq])
-            c = vstack([ct, cq])
-            o = vstack([ot, oq])
+            #c = append(ct, cq)
+            #o = append(ot, oq)
+            xyz_avg = vstack([xyz_avg_t, xyz_avg_q])
+            t1 = vstack([t1t, t1q])
+            t2 = vstack([t2t, t2q])
+            n1234 = vstack([n1234t, n1234q])
         elif tris.n:
-            e = et
-            pids = pt
-            A = At
+            eids = et
+            #pids = pt
+            #A = At
             n = nt
-            c = ct
+            #c = ct
             #o = ot
         elif quads.n:
-            e = eq
-            pids = pq
-            A = Aq
+            eids = eq
+            #pids = pq
+            #A = Aq
             n = nq
-            c = cq
+            #c = cq
             #o = oq
+        nelem = tris.n + quads.n
+        i = argsort(eids)
+        eids = eids[i]
+        #A = A[i]
+        print(n)
+        n = n[i, :]
+        t1 = t1[i, :]
+        t2 = t2[i, :]
+        #o = o[i]
+        #positions = {}
+        #for nid, node in iteritems(self.nodes):
+            #positions[nid] = node.Position()
 
-        positions = {}
-        for nid, node in iteritems(self.nodes):
-            positions[nid] = node.Position()
+        #upids = unique(pids)
+        print('looking for hyper cases=%s' % sorted(self.hyper.keys()))
+        #n1234 =
 
-        upids = unique(pid)
-        for upidi in upids:
-            i = where(pids == upidi)[0]
-            hyper = self.hyper[pid]
-            gamma = hyper.gamma
-            #_cp = hyper._cps
+        n1 = n1234[:, 0]
+        n2 = n1234[:, 1]
+        n3 = n1234[:, 2]
+        n4 = n1234[:, 3]
+        #n1234r = n1234.reshape(nquads * 4)
+        print('nodes1234\n', n1234)
+        n1234i = grids.get_node_index_by_node_id(n1234)
+        print('nodes1234 index\n', n1234i)
+        x = xyz_cid0[n1234i, 0]
+        y = xyz_cid0[n1234i, 1]
+        z = xyz_cid0[n1234i, 2]
+        print('xyz\n', x)
+        #y =
+        #z =
 
-            #for iset, set_id in enumerate(hyper.sets):
-                #SET = self.sets[set_id]
-                #if eid not in SET.IDs:
-                    #continue
-                #hyper.Type = hyper.Types[iset]
-                #hyper._cp = hyper._cps[iset]
-                #hyper.set = hyper.sets[iset]
-                #hyper.gamma = hyper.gammas[iset]
+        for key, hyper in sorted(iteritems(self.hyper)):
+            for Type, set3_id in zip(hyper.Types, hyper.sets):
+                print('Type=%s set3=%s' % (Type, set3_id))
+                set3 = self.set3[set3_id]
+                assert set3.desc == 'ELEM', set3.desc
+                eids_set = set3.IDs
+                print('eids = %s' % eids)
+                print('eids_set = %s' % eids_set)
+                j = searchsorted(eids, eids_set)
+                assert array_equal(eids[j], eids_set)
+                print('j = ', j)
+                nj = len(j)
 
-
-            for element in [ctria3, cquad4]:
-                if element.type == 'CTRIA3':
-                    i1, i2, i3 = ctria3.get_node_indices()
-                    p1, p2, p3 = positions[i1], positions[i2], positions[i3]
-
-                    # hacked an extra point in to make the equations work nice
-                    xyz = vstack([p1, p2, p3, p3])
-                    xyz_avg = (p1 + p2 + p3) / 3.
-                    a = p2 - p1
-                    b = p3 - p1
-                if element.type == 'CQUAD4':
-                    i1, i2, i3, i4 = cquad4.get_node_indices()
-                    xyz = positions[i1, :], positions[i2, :], positions[i3, :], positions[i4, :]
-                    p1, p2, p3, p4 = xyz[:, 0], xyz[:, 1], xyz[:, 2], xyz[:, 3]
-                    #xyz = vstack([p1, p2, p3, p4])
-                    xyz_avg = (p1 + p2 + p3 + p4) / 4.
-                    a = p3 - p1
-                    b = p4 - p2
-
-                n = cross(a, b)
-                norm_n = norm(n)
-                #A = 0.5 * norm_n
-                n /= norm_n
-
-                t1 = a / norm(a)
-                t2 = cross(n, t1)
 
                 # corner point projection distance
-                dk = (n[0] * (xyz_avg[0] - xyz[:, 0]) +
-                      n[1] * (xyz_avg[1] - xyz[:, 1]) +
-                      n[2] * (xyz_avg[2] - xyz[:, 2]))
+                #dka = n[j, 0] * (xyz_avg[j, 0] - x[j, 0])
+                dk = zeros((nj, 4), dtype='float32')
+                dk[:, 0] = n[j, 0] * (xyz_avg[j, 0] - x[j, 0])
+                dk[:, 1] = n[j, 1] * (xyz_avg[j, 1] - x[j, 1])
+                dk[:, 2] = n[j, 2] * (xyz_avg[j, 2] - x[j, 2])
 
-                x_prime = xyz[:, 0] + n[0] * dk[0]
-                y_prime = xyz[:, 1] + n[1] * dk[1]
-                z_prime = xyz[:, 2] + n[2] * dk[2]
+                #dk = (n[j, 0] * (xyz_avg[j, 0] - x[:, 0]) +
+                #      n[j, 1] * (xyz_avg[j, 1] - y[:, 1]) +
+                #      n[j, 2] * (xyz_avg[j, 2] - z[:, 2]))
+                assert dk.shape == (nelem, 4), 'dk.shape=%s nj=%s' % (str(dk.shape), nj)
+
+                print('dk\n', dk)
+                dk =  dk.reshape(nj, 1)
+                x_prime = xyz_cid0[j, 0] + dot(n[j, 0], dk)
+                y_prime = xyz_cid0[j, 1] + dot(n[j, 1], dk)
+                z_prime = xyz_cid0[j, 2] + dot(n[j, 2], dk)
+
+                print('nj.shape\n', n[j, ].shape)
+                print('dk.shape\n', dk.shape)
+                ndk = n[j, :] * dk
+                xyz_prime = xyz_cid0[j, :] + ndk # n[j, :] * dk
+                print('xyz_prime')
+                print(xyz_prime)
+                #x_prime = xyz_prime[:, 0]
+                #y_prime = xyz_prime[:, 1]
+                #z_prime = xyz_prime[:, 2]
+                print('xyz_prime2')
+                print(x_prime)
+                print(y_prime)
+                print(z_prime)
 
                 # zeta_k_star
                 #t1*dk - xyz_avg
                 #zeta = t1 @ ((xyz + n @ dk) - xyz_avg))
-                #zeta = (t1[:, 0] * (x_prime - xyz_avg[:, 0]) +
-                #        t1[:, 1] * (y_prime - xyz_avg[:, 1]) +
-                #        t1[:, 2] * (z_prime - xyz_avg[:, 2]) )
+                zeta = (t1[j, 0] * (x_prime - xyz_avg[j, 0]) +
+                        t1[j, 1] * (y_prime - xyz_avg[j, 1]) +
+                        t1[j, 2] * (z_prime - xyz_avg[j, 2]) )
                 #eta = t2 @ ((xyz + n @ dk) - xyz_avg))
-                eta  = (t2[:, 0] * (x_prime - xyz_avg[:, 0]) +
-                        t2[:, 1] * (y_prime - xyz_avg[:, 1]) +
-                        t2[:, 2] * (z_prime - xyz_avg[:, 2]) )
+                eta  = (t2[j, 0] * (x_prime - xyz_avg[j, 0]) +
+                        t2[j, 1] * (y_prime - xyz_avg[j, 1]) +
+                        t2[j, 2] * (z_prime - xyz_avg[j, 2]) )
 
                 if element.type in ['CTRIA3']:
                     # as eta4 becomes eta1

@@ -409,11 +409,11 @@ class Cord1x(Coord):
         data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
         if self.type == 'CORD1R':
-            coord = CORD2R(card=None, data=data, comment=self.comment())
+            coord = CORD2R(card=None, data=data, comment=self.comment)
         elif self.type == 'CORD1C':
-            coord = CORD2C(card=None, data=data, comment=self.comment())
+            coord = CORD2C(card=None, data=data, comment=self.comment)
         elif self.type == 'CORD1S':
-            coord = CORD2S(card=None, data=data, comment=self.comment())
+            coord = CORD2S(card=None, data=data, comment=self.comment)
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
         model.coords[self.cid] = coord

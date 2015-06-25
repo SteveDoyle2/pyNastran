@@ -51,14 +51,15 @@ class Hypersonic(BDF):
             return
         BDF.add_card(self, card, card_name, comment=comment, is_list=True)
 
-    def _write_common(self, size, card_writer):
+    def _write_common(self, f, size, card_writer):
         msg = ''
         for fid,flow in sorted(iteritems(self.flow)):
             msg += str(flow)
         for fid,hyper in sorted(iteritems(self.hyper)):
             msg += str(hyper)
         msg += BDF._write_common(self, size, card_writer)
-        return msg
+        f.write(msg)
+        #return msg
 
     def get_pressure(self, isubcase=1):
         """
@@ -129,6 +130,10 @@ class Hypersonic(BDF):
             x_prime = xyz[:, 0] + n[0] * dk[0]
             y_prime = xyz[:, 1] + n[1] * dk[1]
             z_prime = xyz[:, 2] + n[2] * dk[2]
+            #print('  eid=%s dk=%s' % (eid, dk))
+            #print('  x_prime=%s' % (x_prime))
+            #print('  y_prime=%s' % (y_prime))
+            #print('  z_prime=%s' % (z_prime))
 
             # zeta_k_star
             #t1*dk - xyz_avg
@@ -138,6 +143,8 @@ class Hypersonic(BDF):
             eta  = (t2[0] * (x_prime - xyz_avg[0]) +
                     t2[1] * (y_prime - xyz_avg[1]) +
                     t2[2] * (z_prime - xyz_avg[2]) )
+            #print('  zeta=%s' % (zeta))
+            #print('  eta=%s' % (eta))
 
             if element.type in ['CTRIA3']:
                 # as eta4 becomes eta1

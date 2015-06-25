@@ -58,9 +58,11 @@ class FLOW(BaseCard):
 
     def raw_fields(self):
         if self.mode == 'VELO':
-            cards = ['$FLOW', self.flow_id, self.mode, self.Vx, self.Vy, self.Vz, None, None, None, self.p, self.q, self.r]
+            cards = ['$FLOW', self.flow_id, self.mode, self.Vx, self.Vy, self.Vz,
+                     None, None, None, self.p, self.q, self.r]
         else:
-            cards = ['$FLOW', self.flow_id, self.mode, self.Nx, self.Ny, self.Nz, self.Ma, self.alpha, self.beta, self.phi, self.p, self.q, self.r]
+            cards = ['$FLOW', self.flow_id, self.mode, self.Nx, self.Ny, self.Nz,
+                     self.Ma, self.alpha, self.beta, self.phi, self.p, self.q, self.r]
         return cards
 
 
