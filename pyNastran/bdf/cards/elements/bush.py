@@ -206,7 +206,7 @@ class CBUSH(BushElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CBUSH1D(BushElement):
@@ -280,7 +280,7 @@ class CBUSH1D(BushElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CBUSH2D(BushElement):
@@ -364,4 +364,4 @@ class CBUSH2D(BushElement):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)

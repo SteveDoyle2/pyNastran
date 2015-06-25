@@ -385,7 +385,7 @@ class CTRIA3(TriShell):
         data = [self.eid, self.Pid()] + nodes + row2
         msg = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
                '                %8s%8s%8s%8s\n' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
 
 class CTRIA6(TriShell):
@@ -1385,7 +1385,7 @@ class CQUAD4(QuadShell):
         data = [self.eid, self.Pid()] + nodes + row2
         msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                '                %8s%8s%8s%8s%8s\n' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     #def write_card(self, size=8, is_double=False):
         #card = wipe_empty_fields(self.repr_fields())
@@ -1599,7 +1599,7 @@ class CQUAD(QuadShell):
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
         msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                '        %8s%8s%8s\n' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     #def write_card(self, size=8, is_double=False):
         #card = self.repr_fields()
@@ -1776,8 +1776,8 @@ class CQUAD8(QuadShell):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8 or len(card) == 11: # to last node
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class CQUADX(QuadShell):
@@ -1855,4 +1855,4 @@ class CQUADX(QuadShell):
         row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]]
         msg = ('CQUADX  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                '        %8s%8s%8s' % tuple(data + row2))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'

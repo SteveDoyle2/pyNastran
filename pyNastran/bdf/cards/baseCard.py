@@ -86,12 +86,18 @@ class BaseCard(BaseCardDeprecated):
     def deprecated(self, old_name, new_name, deprecated_version):
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
+    @property
     def comment(self):
         # just for testing
         #self.deprecated('comment()', 'comment2()', '0.7')
         if hasattr(self, '_comment'):
             return '%s' % self._comment
         return ''
+
+    @comment.setter
+    def comment(self, new_comment):
+        comment = new_comment.rstrip()
+        self._comment = comment + '\n' if comment else ''
 
     def _test_update_fields(self):
         n = 1
@@ -188,7 +194,7 @@ class BaseCard(BaseCardDeprecated):
     def print_raw_card(self, size=8, is_double=False):
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
-        return self.comment() + print_card(list_fields, size=size, is_double=is_double)
+        return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def repr_fields(self):
         """gets the card's fields"""
@@ -196,18 +202,18 @@ class BaseCard(BaseCardDeprecated):
 
     def print_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
-        return self.comment() + print_card(list_fields, size=size, is_double=is_double)
+        return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def print_repr_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
-        return self.comment() + print_card(list_fields, size=size, is_double=is_double)
+        return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def __repr__(self):
         """
         Prints a card in the simplest way possible
         (default values are left blank).
         """
-        comment = self.comment()
+        comment = self.comment
         list_fields = self.repr_fields()
         try:
             return comment + print_card(list_fields, size=8)

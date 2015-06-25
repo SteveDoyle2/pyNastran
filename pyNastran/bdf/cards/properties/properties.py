@@ -105,8 +105,8 @@ class PFAST(Property):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PGAP(Property):
@@ -189,8 +189,8 @@ class PGAP(Property):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class SolidProperty(Property):
@@ -247,8 +247,8 @@ class PLSOLID(SolidProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PSOLID(SolidProperty):
@@ -335,7 +335,7 @@ class PSOLID(SolidProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         # this card has integers & strings, so it uses...
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 class CrackProperty(Property):
     def __init__(self, card, data):
@@ -349,8 +349,8 @@ class CrackProperty(Property):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PRAC2D(CrackProperty):
@@ -560,5 +560,5 @@ class PCONEAX(Property):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)

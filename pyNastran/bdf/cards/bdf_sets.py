@@ -72,11 +72,11 @@ class Set(BaseCard):
         return list_fields
 
     def __repr__(self):
-        return self.comment() + print_card_8(self.repr_fields())
+        return self.comment + print_card_8(self.repr_fields())
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SetSuper(Set):
@@ -137,7 +137,7 @@ class ABCQSet(Set):
 
     def __repr__(self):
         list_fields = self.raw_fields()
-        return self.comment() + print_card_8(list_fields)
+        return self.comment + print_card_8(list_fields)
 
 
 class SuperABCQSet(Set):
@@ -189,7 +189,7 @@ class SuperABCQSet(Set):
 
     def __repr__(self):
         list_fields = self.raw_fields()
-        return self.comment() + print_card_8(list_fields)
+        return self.comment + print_card_8(list_fields)
 
 
 class ASET(ABCQSet):
@@ -309,7 +309,7 @@ class ABQSet1(Set):
 
     def __repr__(self):
         list_fields = self.raw_fields()
-        return self.comment() + print_card_8(list_fields)
+        return self.comment + print_card_8(list_fields)
 
 
 class SuperABQSet1(Set):
@@ -366,7 +366,7 @@ class SuperABQSet1(Set):
 
     def __repr__(self):
         list_fields = self.raw_fields()
-        return self.comment() + print_card_8(list_fields)
+        return self.comment + print_card_8(list_fields)
 
 
 class ASET1(ABQSet1):
@@ -446,7 +446,7 @@ class CSET1(Set):
 
     def __repr__(self):
         list_fields = self.raw_fields()
-        return self.comment() + print_card_8(list_fields)
+        return self.comment + print_card_8(list_fields)
 
 
 class QSET1(ABQSet1):
@@ -658,7 +658,7 @@ class SET3(Set):
             [[self.sid, self.desc], False], # these are not all integers
             [self.SetIDs(), True], # these are all integers
         ]
-        return self.comment() + print_int_card_blocks(fields_blocks)
+        return self.comment + print_int_card_blocks(fields_blocks)
 
 
 class SESET(SetSuper):
@@ -924,4 +924,4 @@ class USET1(ABQSet1):
 
     def __repr__(self):
         list_fields = self.raw_fields()
-        return self.comment() + print_card_8(list_fields)
+        return self.comment + print_card_8(list_fields)

@@ -187,7 +187,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class DAREA(BaseCard):
@@ -226,7 +226,7 @@ class DAREA(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class TabularLoad(BaseCard):
@@ -293,7 +293,7 @@ class SPCD(Load):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SLOAD(Load):
@@ -356,7 +356,7 @@ class SLOAD(Load):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class RFORCE(Load):
@@ -421,10 +421,10 @@ class RFORCE(Load):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class RandomLoad(BaseCard):
@@ -495,7 +495,7 @@ class RANDPS(RandomLoad):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)

@@ -20,7 +20,7 @@ class BaseCard(object):
 
     def print_card(self, size=8):
         list_fields = self.repr_fields()
-        return self.comment() + print_card(list_fields, size=size)
+        return self.comment + print_card(list_fields, size=size)
 
 
     def __repr__(self):
@@ -608,6 +608,6 @@ class PCOMPi(CompositeShellProperty):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 

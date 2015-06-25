@@ -170,8 +170,8 @@ class MATS1(MaterialDependence):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MATT1(MaterialDependence):
@@ -282,8 +282,8 @@ class MATT1(MaterialDependence):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class MATT2(MaterialDependence):
     """
@@ -407,8 +407,8 @@ class MATT2(MaterialDependence):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 #MATT3 - CTRIAX6 only
 
@@ -485,8 +485,8 @@ class MATT4(MaterialDependence):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class MATT5(MaterialDependence):
     """
@@ -577,8 +577,8 @@ class MATT5(MaterialDependence):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 #MATT8
 #MATT9

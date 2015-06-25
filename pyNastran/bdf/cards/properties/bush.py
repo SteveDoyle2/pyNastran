@@ -154,8 +154,8 @@ class PBUSH(BushingProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PBUSH1D(BushingProperty):
@@ -362,8 +362,8 @@ class PBUSH1D(BushingProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PBUSH2D(BushingProperty):
@@ -381,8 +381,8 @@ class PBUSH2D(BushingProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PBUSHT(BushingProperty):
@@ -439,5 +439,5 @@ class PBUSHT(BushingProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)

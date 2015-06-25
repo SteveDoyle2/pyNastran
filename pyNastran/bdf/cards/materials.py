@@ -138,8 +138,8 @@ class CREEP(Material):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT1(IsotropicMaterial):
@@ -368,8 +368,8 @@ class MAT1(IsotropicMaterial):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT2(AnisotropicMaterial):
@@ -574,8 +574,8 @@ class MAT2(AnisotropicMaterial):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT3(OrthotropicMaterial):
@@ -691,8 +691,8 @@ class MAT3(OrthotropicMaterial):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT4(ThermalMaterial):
@@ -782,8 +782,8 @@ class MAT4(ThermalMaterial):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
@@ -885,8 +885,8 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT8(OrthotropicMaterial):
@@ -1063,8 +1063,8 @@ class MAT8(OrthotropicMaterial):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class MAT9(AnisotropicMaterial):
     """
@@ -1224,8 +1224,8 @@ class MAT9(AnisotropicMaterial):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT10(Material):
@@ -1332,8 +1332,8 @@ class MAT10(Material):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MAT11(Material):
@@ -1443,8 +1443,8 @@ class MAT11(Material):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class MATHP(HyperelasticMaterial):
@@ -1636,8 +1636,8 @@ class MATHP(HyperelasticMaterial):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class EQUIV(Material):

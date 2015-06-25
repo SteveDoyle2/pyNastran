@@ -83,10 +83,10 @@ class QVOL(ThermalLoad):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class QBDY1(ThermalLoad):
@@ -158,10 +158,10 @@ class QBDY1(ThermalLoad):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class QBDY2(ThermalLoad):  # not tested
@@ -222,10 +222,10 @@ class QBDY2(ThermalLoad):  # not tested
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class QBDY3(ThermalLoad):
@@ -295,10 +295,10 @@ class QBDY3(ThermalLoad):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class QHBDY(ThermalLoad):
@@ -367,10 +367,10 @@ class QHBDY(ThermalLoad):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class TEMP(ThermalLoad):
@@ -441,10 +441,10 @@ class TEMP(ThermalLoad):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 # Loads
 #-------------------------------------------------------
@@ -488,7 +488,7 @@ class TEMPD(BaseCard):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)

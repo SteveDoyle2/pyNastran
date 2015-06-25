@@ -255,4 +255,4 @@ class RBE3(object):
 
 
         #card = self.repr_fields()
-        #return self.comment() + print_card_8(card)
+        #return self.comment + print_card_8(card)

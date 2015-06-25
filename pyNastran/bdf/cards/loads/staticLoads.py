@@ -280,9 +280,9 @@ class LOAD(LoadCombination):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         else:
-            return self.comment() + print_card_16(card)
+            return self.comment + print_card_16(card)
 
 
 class GRAV(BaseCard):
@@ -388,8 +388,8 @@ class GRAV(BaseCard):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class ACCEL(BaseCard):
@@ -469,10 +469,10 @@ class ACCEL(BaseCard):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 class ACCEL1(BaseCard):
     """
@@ -549,10 +549,10 @@ class ACCEL1(BaseCard):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class Force(Load):
@@ -611,10 +611,10 @@ class Force(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class Moment(Load):
@@ -669,10 +669,10 @@ class Moment(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class FORCE(Force):
@@ -738,8 +738,8 @@ class FORCE(Force):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class FORCE1(Force):
@@ -804,10 +804,10 @@ class FORCE1(Force):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class FORCE2(Force):
@@ -911,10 +911,10 @@ class FORCE2(Force):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class MOMENT(Moment):
@@ -976,10 +976,10 @@ class MOMENT(Moment):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class MOMENT1(Moment):
@@ -1056,10 +1056,10 @@ class MOMENT1(Moment):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class MOMENT2(Moment):
@@ -1152,10 +1152,10 @@ class MOMENT2(Moment):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class GMLOAD(Load):
@@ -1230,10 +1230,10 @@ class GMLOAD(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class PLOAD(Load):
@@ -1281,10 +1281,10 @@ class PLOAD(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class PLOAD1(Load):
@@ -1501,10 +1501,10 @@ class PLOAD1(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class PLOAD2(Load):
@@ -1554,10 +1554,10 @@ class PLOAD2(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class PLOAD4(Load):
@@ -1752,8 +1752,8 @@ class PLOAD4(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PLOADX1(Load):
@@ -1797,7 +1797,7 @@ class PLOADX1(Load):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         if is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)

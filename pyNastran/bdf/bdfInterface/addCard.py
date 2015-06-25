@@ -77,6 +77,8 @@ class AddMethods(object):
         if key in self.elements and not allowOverwrites:
             if not elem._is_same_card(self.elements[key]):
                 self._duplicate_elements.append(elem)
+                if self._stop_on_duplicate_error:
+                    self.pop_parse_errors()
         else:
             self.elements[key] = elem
             self._type_to_id_map[elem.type].append(key)

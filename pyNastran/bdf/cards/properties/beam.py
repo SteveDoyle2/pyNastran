@@ -454,8 +454,8 @@ class PBEAM(IntegratedLineProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PBEAML(IntegratedLineProperty):
@@ -689,8 +689,8 @@ class PBEAML(IntegratedLineProperty):
         """.. todo:: having bug with PBEAML"""
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)  #is this allowed???
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)  #is this allowed???
 
 
 class PBCOMP(LineProperty):
@@ -792,7 +792,7 @@ class PBCOMP(LineProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         #if is_double:
-            #return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            #return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)

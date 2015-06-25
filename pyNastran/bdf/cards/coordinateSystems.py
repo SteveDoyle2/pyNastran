@@ -813,10 +813,10 @@ class Cord2x(Coord):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
-            return self.comment() + print_card_8(card)
+            return self.comment + print_card_8(card)
         elif is_double:
-            return self.comment() + print_card_double(card)
-        return self.comment() + print_card_16(card)
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
     def cross_reference(self, model):
         """
@@ -1004,7 +1004,7 @@ class Cord1x(Coord):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class GMCORD(BaseCard):
@@ -1032,7 +1032,7 @@ class GMCORD(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 class CORD3G(Coord):  # not done
     """

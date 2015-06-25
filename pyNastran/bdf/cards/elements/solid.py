@@ -154,14 +154,14 @@ class CHEXA8(SolidElement):
         data = [self.eid, self.Pid()] + self.node_ids
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
                '        %8i%8i\n' % tuple(data))
-        return self.comment() + msg
+        return self.comment + msg
 
     def write_card_16(self, is_double=False):
         data = [self.eid, self.Pid()] + self.node_ids
         msg = ('CHEXA*  %16i%16i%16i%16i\n'
                '*       %16i%16i%16i%16i\n'
                '*       %16i%16i\n' % tuple(data))
-        return self.comment() + msg
+        return self.comment + msg
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -312,7 +312,7 @@ class CHEXA20(SolidElement):
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
                '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
                '        %8s%8s%8s%8s%8s%8s' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
@@ -324,7 +324,7 @@ class CHEXA20(SolidElement):
                '*       %16i%16i%16s%16s\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%16s%16s%16s%16s' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -440,14 +440,14 @@ class CPENTA6(SolidElement):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = 'CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
-        return self.comment() + msg
+        return self.comment + msg
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = ('CPENTA  %16i%16i%16i%16i\n'
                '        %16i%16i%16i%16i\n' % tuple(data))
-        return self.comment() + msg
+        return self.comment + msg
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -664,7 +664,7 @@ class CPENTA15(SolidElement):
         msg = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
                '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
                '        %8s' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
@@ -675,7 +675,7 @@ class CPENTA15(SolidElement):
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -783,14 +783,14 @@ class CPYRAM5(SolidElement):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = ('CPYRAM  %16i%16i%16i%16i\n'
                '        %16i%16i%16i' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -879,7 +879,7 @@ class CPYRAM13(SolidElement):
         data = [self.eid, self.Pid()] + nodes[:5] + nodes2
         msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
                '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
@@ -889,7 +889,7 @@ class CPYRAM13(SolidElement):
                '*       %16i%16i%16i%16s\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%s\n' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -988,14 +988,14 @@ class CTETRA4(SolidElement):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
-        return self.comment() + msg
+        return self.comment + msg
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
         msg = ('CTETRA  %16i%16i%16i%16i\n'
                '        %16i%16i\n' % tuple(data))
-        return self.comment() + msg
+        return self.comment + msg
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -1135,7 +1135,7 @@ class CTETRA10(SolidElement):
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
         msg = ('CTETRA  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                '        %8s%8s%8s%8s' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
@@ -1145,7 +1145,7 @@ class CTETRA10(SolidElement):
         msg = ('CTETRA  %16i%16i%16i%16i\n'
                '        %16i%16i%16s%16s\n'
                '        %16s%16s%16s%16s' % tuple(data))
-        return self.comment() + msg.rstrip() + '\n'
+        return self.comment + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)

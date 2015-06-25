@@ -98,7 +98,7 @@ class AECOMP(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 class AEFACT(BaseCard):
     """
@@ -150,7 +150,7 @@ class AEFACT(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class AELINK(BaseCard):
@@ -214,7 +214,7 @@ class AELINK(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class AELIST(BaseCard):
@@ -283,7 +283,7 @@ class AELIST(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class AEPARM(BaseCard):
@@ -333,7 +333,7 @@ class AEPARM(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class AESTAT(BaseCard):
@@ -383,7 +383,7 @@ class AESTAT(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class AESURF(BaseCard):
@@ -530,7 +530,7 @@ class AESURF(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class AESURFS(BaseCard):  # not integrated
@@ -585,7 +585,7 @@ class AESURFS(BaseCard):  # not integrated
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class Aero(BaseCard, AeroDeprecated):
@@ -697,7 +697,7 @@ class AERO(Aero):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class AEROS(Aero):
@@ -777,7 +777,7 @@ class AEROS(Aero):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CSSCHD(Aero):
@@ -865,7 +865,7 @@ class CSSCHD(Aero):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CAERO1(BaseCard, CAERO1Deprecated):
@@ -1168,7 +1168,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CAERO2(BaseCard, CAERO2Deprecated):
@@ -1362,7 +1362,7 @@ class CAERO2(BaseCard, CAERO2Deprecated):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CAERO3(BaseCard):
@@ -1454,7 +1454,7 @@ class CAERO3(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CAERO4(BaseCard):
@@ -1551,7 +1551,7 @@ class CAERO4(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class CAERO5(BaseCard):
@@ -1722,7 +1722,7 @@ class CAERO5(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
@@ -1926,7 +1926,7 @@ class FLFACT(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class FLUTTER(BaseCard):
@@ -2102,7 +2102,7 @@ class FLUTTER(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class GUST(BaseCard):
@@ -2161,7 +2161,7 @@ class GUST(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class MKAERO1(BaseCard):
@@ -2234,7 +2234,7 @@ class MKAERO1(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class MKAERO2(BaseCard):
@@ -2293,7 +2293,7 @@ class MKAERO2(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class PAERO1(BaseCard):
@@ -2372,7 +2372,7 @@ class PAERO1(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class PAERO2(BaseCard):
@@ -2490,7 +2490,7 @@ class PAERO2(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class PAERO3(BaseCard):
@@ -2588,7 +2588,7 @@ class PAERO3(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class Spline(BaseCard):
@@ -2705,7 +2705,7 @@ class SPLINE1(Spline):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SPLINE2(Spline):
@@ -2833,7 +2833,7 @@ class SPLINE2(Spline):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SPLINE3(Spline):
@@ -3010,7 +3010,7 @@ class SPLINE4(Spline):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class SPLINE5(Spline):
@@ -3116,7 +3116,7 @@ class SPLINE5(Spline):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)
 
 
 class TRIM(BaseCard):
@@ -3242,4 +3242,4 @@ class TRIM(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + print_card_8(card)
+        return self.comment + print_card_8(card)

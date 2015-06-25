@@ -352,7 +352,7 @@ class GRID(VectorizedCard):
                                 print_float_16(xyz[2]),
                                 cd, ps, seid))).rstrip() + '\n'
                         bdf_file.write(msg)
-            #return self.comment() + msg.rstrip() + '\n'
+            #return self.comment + msg.rstrip() + '\n'
 
 
     def __repr__(self):
