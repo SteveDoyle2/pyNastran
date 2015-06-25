@@ -388,9 +388,9 @@ class CBAR(LineElement):
         #if self.g0:
         #    self.x = nodes[self.g0].Position() - nodes[self.ga].Position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.ga = model.Node(self.Ga(), msg=msg)
+        self.gb = model.Node(self.Gb(), msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -422,6 +422,7 @@ class CBAR(LineElement):
         return v
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property

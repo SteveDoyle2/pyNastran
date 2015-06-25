@@ -293,7 +293,7 @@ class Element(BaseCard, ElementDeprecated):
         BaseCard.__init__(self)
         assert card is None or data is None
         #: the list of node IDs for an element (default=None)
-        self.nodes = None
+        #self.nodes = None
 
     def Pid(self):
         """
