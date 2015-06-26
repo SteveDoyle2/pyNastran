@@ -342,6 +342,7 @@ class CBAR(LineElement):
         return j
 
     def Length(self):
+        # TODO: consider w1a and w1b in the length formulation
         L = norm(self.gb.Position() - self.ga.Position())
         assert isinstance(L, float)
         return L
