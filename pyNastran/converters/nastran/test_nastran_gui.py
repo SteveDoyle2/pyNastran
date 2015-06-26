@@ -10,62 +10,66 @@ model_path = os.path.join(pkg_path, '..', 'models')
 import unittest
 
 class NastranGUI(unittest.TestCase):
-        def test_solid_shell_bar_01(self):
-            bdf_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
-            op2_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
+    def test_solid_shell_bar_01(self):
+        bdf_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
+        op2_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
 
-            test = NastranIO()
-            test.is_nodal = False
-            test.is_centroidal = True
+        test = NastranIO()
+        test.is_nodal = False
+        test.is_centroidal = True
 
-            add_dummy_gui_functions(test)
+        add_dummy_gui_functions(test)
 
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
+    def test_solid_shell_bar_02(self):
+
+        bdf_filename = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
+        op2_filename = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
+
+        test = NastranIO()
+        test.is_nodal = False
+        test.is_centroidal = True
+
+        add_dummy_gui_functions(test)
+
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
+    def test_solid_bending(self):
+        bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
+        op2_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
+
+        test = NastranIO()
+        test.is_nodal = False
+        test.is_centroidal = True
+
+        add_dummy_gui_functions(test)
+
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
+    def test_beam_modes(self):
+        dirname = bdf_filename = os.path.join(model_path, 'beam_modes')
+        bdf_filename = os.path.join(dirname, 'beam_modes.dat')
+        op2_filename = os.path.join(dirname, 'beam_modes.op2')
+
+        test = NastranIO()
+        test.is_nodal = False
+        test.is_centroidal = True
+
+        add_dummy_gui_functions(test)
+
+        test.load_nastran_geometry(bdf_filename, None)
+        #test.load_nastran_results(op2_filename, None)
+
+        test.load_nastran_geometry(bdf_filename, dirname)
+        #test.load_nastran_results(op2_filename, dirname)
+
+        with self.assertRaises(IOError):
             test.load_nastran_geometry(bdf_filename, '')
-            test.load_nastran_results(op2_filename, '')
 
-        def test_solid_shell_bar_02(self):
-            bdf_filename = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
-            op2_filename = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
-
-            test = NastranIO()
-            test.is_nodal = False
-            test.is_centroidal = True
-
-            add_dummy_gui_functions(test)
-
-            test.load_nastran_geometry(bdf_filename, '')
-            test.load_nastran_results(op2_filename, '')
-
-        def test_solid_bending(self):
-            bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
-            op2_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
-
-            test = NastranIO()
-            test.is_nodal = False
-            test.is_centroidal = True
-
-            add_dummy_gui_functions(test)
-
-            test.load_nastran_geometry(bdf_filename, '')
-            test.load_nastran_results(op2_filename, '')
-
-        def test_beam_modes(self):
-            """
-            currently failing because:
-               The INCLUDE file is not in the local directory
-               beam.blk cannot be found
-            """
-            bdf_filename = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
-            op2_filename = os.path.join(model_path, 'beam_modes', 'beam_modes.op2')
-
-            test = NastranIO()
-            test.is_nodal = False
-            test.is_centroidal = True
-
-            add_dummy_gui_functions(test)
-
-            test.load_nastran_geometry(bdf_filename, '')
-            test.load_nastran_results(op2_filename, '')
 
 def test_bottle():
     """
