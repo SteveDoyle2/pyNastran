@@ -16,6 +16,9 @@ from pyNastran.op4.test.op4_test import TestOP4
 #utils
 from pyNastran.utils.test.all_tests import *
 
+# converters
+from pyNastran.converters.test_formats import *
+
 #gui - just tests the imports
 #import pyNastran.gui.gui
 
