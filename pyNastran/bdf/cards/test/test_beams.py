@@ -55,10 +55,10 @@ class TestBeams(unittest.TestCase):
             '     ,  , ,2.0,-4.0',
             '     ,YES,1.0,5.3,56.2,78.6',
             '     ,   ,   ,2.5,-5.0',
-            '     ,YES,1.0,5.3,56.2,78.6',
-            '     ,   ,   ,2.5,-5.0',
-            '     ,YES,1.0,5.3,56.2,78.6',
-            '     ,   ,   ,2.5,-5.0',
+            #'     ,YES,1.0,5.3,56.2,78.6',
+            #'     ,   ,   ,2.5,-5.0',
+            #'     ,YES,1.0,5.3,56.2,78.6',
+            #'     ,   ,   ,2.5,-5.0',
             '     ,   ,   ,1.1,    ,2.1,,0.21',
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
@@ -73,10 +73,10 @@ class TestBeams(unittest.TestCase):
             '              0.      0.      2.     -4.      0.      0.      0.      0.',
             '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
             '              0.      0.     2.5     -5.      0.      0.      0.      0.',
-            '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
-            '              0.      0.     2.5     -5.      0.      0.      0.      0.',
-            '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
-            '              0.      0.     2.5     -5.      0.      0.      0.      0.',
+            #'             YES      1.     5.3    56.2    78.6      0.      0.      0.',
+            #'              0.      0.     2.5     -5.      0.      0.      0.      0.',
+            #'             YES      1.     5.3    56.2    78.6      0.      0.      0.',
+            #'              0.      0.     2.5     -5.      0.      0.      0.      0.',
             '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
             '              0.      0.      0.      0.      .5      .5      0.      0.'
         ]
@@ -206,7 +206,7 @@ class TestBeams(unittest.TestCase):
         lines_expected = [
             'PBEAM          1       1      1.     60.      1.      0.      0.      0.',
             '              5.      0.     -5.      0.      0.      0.      0.      0.',
-            '             YES      1.      2.    240.      0.      0.      0.      0.',
+            '             YES      1.      2.    240.      1.      0.      0.      0.',
             '             10.      0.    -10.      0.      0.      0.      0.      0.',
             '              1.      1.-.666667      0.      0.      0.      0.      0.',
             '              0.      0.      0.      0.      0.      0.      0.      0.',
@@ -221,8 +221,7 @@ class TestBeams(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        with self.assertRaises(SyntaxError):  # .. todo:: is this correct?
-            card2 = PBEAM(card)
+        card2 = PBEAM(card)
 
         #if 0:
             #fields = card2.raw_fields()
@@ -313,51 +312,73 @@ class TestBeams(unittest.TestCase):
         """
         model = BDF()
 
-        # correct
-        lines = [
-            'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '    0.',
-            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
-            '    0.      0.                    .872    .718',
-            '    0.  .33936      0.  .31983',
-        ]
-        lines_expected = lines
-        model.add_card(lines, 'PBEAM', is_list=False)
-
-        # correct
-        lines = [
-            'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '+',
-            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
-            '    0.      0.                    .872    .718',
-            '    0.  .33936      0.  .31983',
-        ]
-        lines_expected = lines
-        model.add_card(lines, 'PBEAM', is_list=False)
-
-        # error
+        # correct - standard NO with full list of values
         lines = [
             'PBEAM          1       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '    0.',
-            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
-            '    0.',
-            '    0.      0.                    .872    .718',
-            '    0.  .33936      0.  .31983',
+            '            0.',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              0.      0.           .872    .718',
+            '              0.  .33936      0. .31983',
         ]
-        with self.assertRaises(RuntimeError):
-            model.add_card(lines, 'PBEAM', is_list=False)
+        lines_expected = lines
+        model.add_card(lines, 'PBEAM', is_list=False)
 
-        # error
+        # correct - 2nd continuation line
         lines = [
             'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '+',
-            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
-            '    0.      0.                    .872    .718',
-            '    0.  .33936      0.  .31983',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              0.      0.           .872    .718',
+            '              0.  .33936      0. .31983',
         ]
         lines_expected = lines
-        with self.assertRaises(RuntimeError):
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        # error - 3 lines after NO
+        lines = [
+            'PBEAM          3       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '            0.',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '            0.',
+            '              0.      0.           .872    .718',
+            '              0.  .33936      0. .31983',
+        ]
+        with self.assertRaises(AssertionError):
             model.add_card(lines, 'PBEAM', is_list=False)
+
+        # correct - skipped 2nd line
+        lines = [
+            'PBEAM          4       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              0.      0.           .872    .718',
+            '              0.  .33936      0. .31983',
+        ]
+        lines_expected = lines
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        # correct - skipped 2nd line and last line
+        lines = [
+            'PBEAM          5       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              0.      0.           .872    .718',
+        ]
+        lines_expected = lines
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        # correct - skipped 2nd line and last 2 lines
+        lines = [
+            'PBEAM          6       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+        ]
+        lines_expected = lines
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        # correct - single line
+        lines = [
+            'PBEAM          7       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+        ]
+        lines_expected = lines
+        model.add_card(lines, 'PBEAM', is_list=False)
 
 
 if __name__ == '__main__':  # pragma: no cover
