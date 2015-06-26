@@ -14,6 +14,8 @@ def add_dummy_gui_functions(test):
         pass
     def passer():
         pass
+    def passer2(a, b):
+        pass
 
     class Grid(object):
         def Reset(self):
@@ -37,9 +39,13 @@ def add_dummy_gui_functions(test):
         def Modified(self):
             pass
 
+    test._finish_results_io2 = passer2
+
     test.grid = Grid()
     test.grid2 = Grid()
     test.scalarBar = ScalarBar()
+    test.alt_geometry_actor = ScalarBar()
+
     test.log = get_logger(log=None, level='debug')
     test.log_info = print
     test.removeOldGeometry = removeOldGeometry
