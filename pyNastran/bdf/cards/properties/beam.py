@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=C0103
 """
 All beam properties are defined in this file.  This includes:
  *   PBEAM
@@ -13,7 +13,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from six.moves import zip, range
 from itertools import count
-from numpy import pi, array
+from numpy import unique, argsort
 
 from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -45,26 +45,312 @@ class PBEAM(IntegratedLineProperty):
             # at least one cross section are required
             # so[0] and xxb[0] aren't used
             #: Output flag
-            self.so = ['YES']
+            self.so = ['YES']  # TODO: remove this...
             #: Section position
             self.xxb = [0.]
-            A = double(card, 3, 'Area')
+            area0 = double(card, 3, 'Area')
             #: Area
-            self.A = [A]
+            self.A = [area0]
+            i1a = double_or_blank(card, 4, 'I1', 0.0)
+            i2a = double_or_blank(card, 5, 'I2', 0.0)
+            i12a = double_or_blank(card, 6, 'I12', 0.0)
+            ja = double_or_blank(card, 7, 'J', 0.0)
+            nsma = double_or_blank(card, 8, 'nsm', 0.0)
             #: Moment of Inertia about the 1 axis :math:`I_1`
-            self.i1 = [double_or_blank(card, 4, 'I1', 0.0)]
+            self.i1 = [i1a]
             #: Moment of Inertia about the 2 axis  :math:`I_2`
-            self.i2 = [double_or_blank(card, 5, 'I2', 0.0)]
+            self.i2 = [i2a]
             #: Moment of Inertia about the 12 axis  :math:`I_{12}`
-            self.i12 = [double_or_blank(card, 6, 'I12', 0.0)]
+            self.i12 = [i12a]
             #: Polar Moment of Inertia :math:`J`
-            self.j = [double_or_blank(card, 7, 'J', 0.0)]
+            self.j = [ja]
             #: Non-structural mass :math:`nsm`
-            self.nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
+            self.nsm = [nsma]
 
             assert self.A[0] >= 0., self.A
             assert self.i1[0] >= 0., self.i1
             assert self.i2[0] >= 0., self.i2
+            assert self.j[0] >= 0., self.j  # TODO: add check for > 0.0 if warping...
+
+            if not (i1a*i2a - i12a **2 > 0.):
+                msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End A\n'
+                msg += 'i1=%s i2=%s i12=%s'  % (i1a, i2a, i12a)
+                raise ValueError(msg)
+
+            if 0:
+                # TODO: can you have a single lined PBEAM...I don't think so?
+                ifield = 9
+                field9 = double_string_or_blank(card, 9, 'field9', 0.0)
+                if isinstance(field9, float):
+                    # C/D/E/F
+                    c1a = double_or_blank(card, 9, 'c1', 0.0)
+                    c2a = double_or_blank(card, 10, 'c2', 0.0)
+                    d1a = double_or_blank(card, 11, 'd1', 0.0)
+                    d2a = double_or_blank(card, 12, 'd2', 0.0)
+                    e1a = double_or_blank(card, 13, 'e1', 0.0)
+                    e2a = double_or_blank(card, 14, 'e2', 0.0)
+                    f1a = double_or_blank(card, 15, 'f1', 0.0)
+                    f2a = double_or_blank(card, 16, 'f2', 0.0)
+                    self.c1 = [c1a]
+                    self.c2 = [c2a]
+                    self.d1 = [d1a]
+                    self.d2 = [d2a]
+                    self.e1 = [e1a]
+                    self.e2 = [e2a]
+                    self.f1 = [f1a]
+                    self.f2 = [f2a]
+                    so = 'YES'
+                    ifield += 8 # 9 + 8 = 17
+                else:
+                    c1a = c2a = d1a = d2a = e1a = e2a = f1a = f2a = 0.0
+                    self.c1 = [None]
+                    self.c2 = [None]
+                    self.d1 = [None]
+                    self.d2 = [None]
+                    self.e1 = [None]
+                    self.e2 = [None]
+                    self.f1 = [None]
+                    self.f2 = [None]
+                    so = 'NO'
+                    if field9 not in ['YES', 'YESA', 'NO']:
+                        msg = 'field9=%r on the PBEAM pid=%s must be [YES, YESA, NO] because C/D/E/F at A is not specified' % field9
+                        raise ValueError(field9)
+                # at least one cross section is required; even if it's empty
+                # xxb[0] isn't explicitly used
+                #: Output flag
+                self.so = [so]
+
+                irow = 0
+                nrows_max = 10
+                #ifield = 17
+                for irow in nrows_max:
+                    nrepeated = irow + 1
+                    SOi_k1 = double_string_or_blank(card, ifield, 'SO_%i/K1' % nrepeated)
+                    if isinstance(SOi_k1, float) or SOi_k1 is None:
+                        # we found K1
+                        break
+                    else:
+                        so = string(card, ifield, 'SO%i' % nrepeated)
+                        xxb = double(card, ifield + 1, 'x/xb%i' % nrepeated)
+                        if xxb == 1.0:
+                            # these have already been checked such that they're greater than 0
+                            # so when we interpolate, our values will be correct
+                            A = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, area0)
+                            i1 = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, i1a)
+                            i2 = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, i2a)
+
+                            i12 = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, i12a)
+
+                            assert self.A[-1] >= 0., self.A
+                            assert self.i1[-1] >= 0., self.i1
+                            assert self.i2[-1] >= 0., self.i2
+                            assert self.j[-1] >= 0., self.j  # TODO: add check for > 0.0 if warping...
+                            if not (i1 * i2 - i12 ** 2 > 0.):
+                                msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
+                                msg += 'xxb=1.0 i1=%s i2=%s i12=%s'  % (i1, i2, i12)
+                                raise ValueError(msg)
+
+                            j = double_or_blank(card, ifield + 6, 'J%i' % nrepeated, ja)
+                            nsm = double_or_blank(card, ifield + 7, 'nsm%i' % nrepeated, nsma)
+                        else:
+                            # we'll go through and do linear interpolation afterwards
+                            A = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, 0.0)
+                            i1 = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, 0.0)
+                            i2 = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, 0.0)
+                            i12 = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, 0.0)
+                            j = double_or_blank(card, ifield + 6, 'J%i' % nrepeated, 0.0)
+                            nsm = double_or_blank(card, ifield + 7, 'nsm%i' % nrepeated, 0.0)
+
+                        self.so.append(so)
+                        self.xxb.append(xxb)
+                        self.A.append(A)
+                        self.i1.append(i1)
+                        self.i2.append(i2)
+                        self.i12.append(i12)
+                        self.j.append(j)
+                        self.nsm.append(nsm)
+
+                        if so == 'YES':
+                            c1 = double_or_blank(card, ifield + 8, 'c1 %i' % nrepeated, 0.0)
+                            c2 = double_or_blank(card, ifield + 9, 'c2 %i' % nrepeated, 0.0)
+                            d1 = double_or_blank(card, ifield + 10, 'd1 %i' % nrepeated, 0.0)
+                            d2 = double_or_blank(card, ifield + 11, 'd2 %i' % nrepeated, 0.0)
+                            e1 = double_or_blank(card, ifield + 12, 'e1 %i' % nrepeated, 0.0)
+                            e2 = double_or_blank(card, ifield + 13, 'e2 %i' % nrepeated, 0.0)
+                            f1 = double_or_blank(card, ifield + 14, 'f1 %i' % nrepeated, 0.0)
+                            f2 = double_or_blank(card, ifield + 15, 'f2 %i' % nrepeated, 0.0)
+                            ifield += 16
+                        elif so in ['YESA', 'NO']:
+                            c1 = c1a
+                            c2 = c2a
+                            d1 = d1a
+                            d2 = d2a
+                            e1 = e1a
+                            e2 = e2a
+                            f1 = f1a
+                            f2 = f2a
+                        elif so in ['YESA', 'NO']:
+                            c1 = None
+                            c2 = None
+                            d1 = None
+                            d2 = None
+                            e1 = None
+                            e2 = None
+                            f1 = None
+                            f2 = None
+                            ifield += 8
+                        else:
+                            raise RuntimeError('so=%r and not [YES, YESA, NO]' % so)
+                        self.c1.append(c1)
+                        self.c2.append(c2)
+                        self.d1.append(d1)
+                        self.d2.append(d2)
+                        self.e1.append(e1)
+                        self.e2.append(e2)
+                        self.f1.append(f1)
+                        self.f2.append(f2)
+                    if irow != 0:
+                        assert min(self.xxb) == 0.0, self.xxb
+                        assert max(self.xxb) == 1.0, self.xxb
+                        assert len(self.xxb) == unique(self.xxb), self.xxb
+                    #ifield += 8
+
+                # sort xxb
+                ixxb = argsort(self.xxb)
+
+                self.so = self.so[ixxb]
+                self.xxb = self.xxb[ixxb]
+
+                self.A = self.A[ixxb]
+                self.i1 = self.i1[ixxb]
+                self.i2 = self.i2[ixxb]
+                self.i12 = self.i12[ixxb]
+                self.j = self.j[ixxb]
+                self.nsm = self.nsm[ixxb]
+
+                self.c1 = self.c1[ixxb]
+                self.c2 = self.c2[ixxb]
+                self.d1 = self.d1[ixxb]
+                self.d2 = self.d2[ixxb]
+                self.e1 = self.e1[ixxb]
+                self.e2 = self.e2[ixxb]
+                self.f1 = self.f1[ixxb]
+                self.f2 = self.f2[ixxb]
+
+                # now we interpolate to fix up missing data
+                # from arrays that were potentially out of order
+                # (they're sorted now)
+                #
+                # we've also already checked xxb=0.0 and xxb=1.0 for I1, I2, I12, J
+                loop_vars = (
+                    count(), self.xxb, self.A, self.i1, self.i2, self.i12, self.j, self.nsm,
+                    self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2
+                )
+                for interp_data in zip(loop_vars):
+                    i, xxb, a, i1, i2, j, nsm, c1, c2, d1, d2, e1, e2, f1, f2 = interp_data
+                    if xxb not in [0., 1.]:
+                        if a == 0.0:
+                            self.A[i] = self.A[-1] + self.A[0] * (1 - xxb)
+                        if i1 == 0.0:
+                            self.i1[i] = self.i1[-1] + self.i1[0] * (1 - xxb)
+                        if i2 == 0.0:
+                            self.i12[i] = self.i2[-1] + self.i2[0] * (1 - xxb)
+                        if j == 0.0:
+                            self.j[i] = self.j[-1] + self.j[0] * (1 - xxb)
+
+
+                        assert self.A[i] >= 0., self.A
+                        assert self.i1[i] >= 0., self.i1
+                        assert self.i2[i] >= 0., self.i2
+                        assert self.j[i] >= 0., self.j  # we check warping later
+                        if not (self.i1[i] * self.i2[i] - self.i12[i] ** 2 > 0.):
+                            msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
+                            msg = 'xxb=%s i1=%s i2=%s i12=%s'  % (self.xxb[i], self.i1[i], self.i2[i], self.i12[i])
+                            raise ValueError(msg)
+
+
+                        if nsm == 0.0:
+                            self.nsm[i] = self.nsm[-1] + self.nsm[0] * (1 - xxb)
+
+                        if c1 == 0.0:
+                            self.c1[i] = self.c1[-1] + self.c1[0] * (1 - xxb)
+                        if c2 == 0.0:
+                            self.c2[i] = self.c2[-1] + self.c2[0] * (1 - xxb)
+
+                        if d1 == 0.0:
+                            self.d1[i] = self.d1[-1] + self.d1[0] * (1 - xxb)
+                        if d2 == 0.0:
+                            self.d2[i] = self.d2[-1] + self.d2[0] * (1 - xxb)
+
+                        if e1 == 0.0:
+                            self.e1[i] = self.e1[-1] + self.e1[0] * (1 - xxb)
+                        if e2 == 0.0:
+                            self.e2[i] = self.e2[-1] + self.e2[0] * (1 - xxb)
+
+                        if f1 == 0.0:
+                            self.f1[i] = self.f1[-1] + self.f1[0] * (1 - xxb)
+                        if f2 == 0.0:
+                            self.f2[i] = self.f2[-1] + self.f2[0] * (1 - xxb)
+
+
+                # calculate:
+                #    k1, k2, s1, s2
+                #    m1a, m2a, n1a, n2a, etc.
+
+                # footer fields
+                #: Shear stiffness factor K in K*A*G for plane 1.
+                self.k1 = double_or_blank(card, ifield, 'k1', 1.0)
+                #: Shear stiffness factor K in K*A*G for plane 2.
+                self.k2 = double_or_blank(card, ifield + 1, 'k2', 1.0)
+
+                #: Shear relief coefficient due to taper for plane 1.
+                self.s1 = double_or_blank(card, ifield + 2, 's1', 0.0)
+                #: Shear relief coefficient due to taper for plane 2.
+                self.s2 = double_or_blank(card, ifield + 3, 's2', 0.0)
+
+                #: non structural mass moment of inertia per unit length
+                #: about nsm center of gravity at Point A.
+                self.nsia = double_or_blank(card, ifield + 4, 'nsia', 0.0)
+                #: non structural mass moment of inertia per unit length
+                #: about nsm center of gravity at Point B.
+                self.nsib = double_or_blank(card, ifield + 5, 'nsib', self.nsia)
+
+                #: warping coefficient for end A.
+                self.cwa = double_or_blank(card, ifield + 6, 'cwa', 0.0)
+                #: warping coefficient for end B.
+                self.cwb = double_or_blank(card, ifield + 7, 'cwb', self.cwa)
+
+                #: y coordinate of center of gravity of
+                #: nonstructural mass for end A.
+                self.m1a = double_or_blank(card, ifield + 8, 'm1a', 0.0)
+                #: z coordinate of center of gravity of
+                #: nonstructural mass for end A.
+                self.m2a = double_or_blank(card, ifield + 9, 'm2a', self.m1a)
+
+                #: y coordinate of center of gravity of
+                #: nonstructural mass for end B.
+                self.m1b = double_or_blank(card, ifield + 10, 'm1b', 0.0)
+                #: z coordinate of center of gravity of
+                #: nonstructural mass for end B.
+                self.m2b = double_or_blank(card, ifield + 11, 'm2b', self.m1b)
+
+                #: y coordinate of neutral axis for end A.
+                self.n1a = double_or_blank(card, ifield + 12, 'n1a', 0.0)
+                #: z coordinate of neutral axis for end A.
+                self.n2a = double_or_blank(card, ifield + 13, 'n2a', self.n1a)
+
+                #: y coordinate of neutral axis for end B.
+                self.n1b = double_or_blank(card, ifield + 14, 'n1a', 0.0)
+                #: z coordinate of neutral axis for end B.
+                self.n2b = double_or_blank(card, ifield + 15, 'n2b', self.n1b)
+
+
+                if self.cwa or self.cwb:  # if either is non-zero
+                    for i, xxb, j in zip(count(), self.xxb, self.j):
+                        assert self.j[i] > 0., self.j  # warping specific check
+
+                ifield += 15
+                assert len(card) < ifield, 'len(card)=%s is too long; max=%s' % (len(card), ifield)
 
 
             is_cdef = False
@@ -284,9 +570,9 @@ class PBEAM(IntegratedLineProperty):
     #    return self.nsm[0]
 
     def I1_I2_I12(self):
-        assert self.i1  is not None, 'I1=%r' % self.i1
-        assert self.i2  is not None, 'I2=%r' % self.i2
-        assert self.i12 is not None, 'I12=%r' % self.i12
+        #assert self.i1  is not None, 'I1=%r' % self.i1
+        #assert self.i2  is not None, 'I2=%r' % self.i2
+        #assert self.i12 is not None, 'I12=%r' % self.i12
         return self.i1[0], self.i2[0], self.i12[0]
 
     def MassPerLength(self):
@@ -328,7 +614,7 @@ class PBEAM(IntegratedLineProperty):
             assert self.mid.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid.type=%s' % (self.type, self.mid.type)
             #self.MassPerLength()
 
-    def writeCodeAster(self):  # PBEAM
+    def _write_code_aster(self):  # PBEAM
         a = self.Area()
         iy = self.I11()
         iz = self.I22()
@@ -366,8 +652,13 @@ class PBEAM(IntegratedLineProperty):
                 list_fields += [A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             else:
-                list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
-                                c1, c2, d1, d2, e1, e2, f1, f2]
+                if so == 'YES':
+                    list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
+                                    c1, c2, d1, d2, e1, e2, f1, f2]
+                elif so in ['NO', 'YESA']:
+                    list_fields += [so, xxb, A, i1, i2, i12, j, nsm]
+                else:
+                    raise RuntimeError(so)
             i += 1
 
         footer = [self.k1, self.k2, self.s1, self.s2, self.nsia, self.nsib,
@@ -411,11 +702,17 @@ class PBEAM(IntegratedLineProperty):
                 list_fields += [A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             else:
-                list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
-                                c1, c2, d1, d2, e1, e2, f1, f2]
+                if so == 'YES':
+                    list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
+                                    c1, c2, d1, d2, e1, e2, f1, f2]
+                elif so in ['NO', 'YESA']:
+                    list_fields += [so, xxb, A, i1, i2, i12, j, nsm]
+                else:
+                    raise RuntimeError(so)
+
             i += 1
-        k1 = set_blank_if_default(self.k1, 1.0)
-        k2 = set_blank_if_default(self.k2, 1.0)
+        #k1 = set_blank_if_default(self.k1, 1.0)
+        #k2 = set_blank_if_default(self.k2, 1.0)
         s1 = set_blank_if_default(self.s1, 0.0)
         s2 = set_blank_if_default(self.s2, 0.0)
         #k1 = self.k1
@@ -496,7 +793,7 @@ class PBEAML(IntegratedLineProperty):
         "HEXA": 3,
         "HAT": 4,
         "HAT1": 5,
-        "DBOX": 10,  # was 12
+        "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
 
     def __init__(self, card=None, data=None, comment=''):
@@ -648,10 +945,10 @@ class PBEAML(IntegratedLineProperty):
         i12 = None
         return i12
 
-    def writeCodeAster(self, iCut=0, iFace=0, iStart=0):  # PBEAML
+    def _write_code_aster(self, iCut=0, iFace=0, iStart=0):  # PBEAML
         msg = ''
         msg2 = 'Cut_%s = geompy.MakeCut(' % (iCut + 1)
-        for (xxb, so, dim, nsm) in zip(self.xxb, self.so, self.dim, self.nsm):
+        for xxb, dim, nsm in zip(self.xxb, self.dim, self.nsm):
             msg += self.CA_Section(iFace, iStart, self.dim)
             msg2 += 'Face_%i, ' % (iFace + 1)
             iFace += 1
@@ -782,7 +1079,7 @@ class PBCOMP(LineProperty):
         symopt = set_blank_if_default(self.symopt, 0)
 
         list_fields = ['PBCOMP', self.pid, self.Mid(), area, i1, i2, i12, j,
-                  nsm, k1, k2, m1, m2, n1, n2, symopt, None]
+                       nsm, k1, k2, m1, m2, n1, n2, symopt, None]
 
         for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.mids):
             ci = set_blank_if_default(ci, 0.0)

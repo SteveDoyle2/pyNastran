@@ -237,7 +237,7 @@ class TestBeams(unittest.TestCase):
                 #msg += 'expected = %r' % expected
                 #self.assertEqual(actual, expected, msg)
 
-    def test_pbeam_08(self):  # should fail...
+    def test_pbeam_08(self):
         lines = [
             'PBEAM*   4570049         4570010        .12             2.56-4          *    HRY',
             '*    HRY.005625                         8.889-4         6.4444-7        *    HRZ',
@@ -265,7 +265,6 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        #with self.assertRaises(RuntimeError):  # temporary RuntimeError
         card2 = PBEAM(card)
 
         if 1:
@@ -287,11 +286,11 @@ class TestBeams(unittest.TestCase):
 
     def test_pbeam_09(self):
         fields = [
-            u'PBEAM', 4570049, 4570010, 0.12, 0.000256, 0.005625, None,
-            0.0008889, 6.4444e-07, -0.04, -0.75, 0.04, -0.75, 0.04, 0.75,
-            -0.04, 0.75, 'YES', 1.0, 0.12, 0.000256, 0.005625, 0.000256,
-            None, 0.0008889, 6.4444e-07, -0.04, -0.75, 0.04, -0.75, 0.04,
-            0.75, -0.04, 0.853433, 0.849842
+            u'PBEAM', 4570049, 4570010, 0.12, 0.000256, 0.005625, None, 0.0008889, 6.4444e-07,
+            -0.04, -0.75, 0.04, -0.75, 0.04, 0.75, -0.04, 0.75,
+            'YES', 1.0, 0.12, 0.000256, 0.005625, 0.000256, None, 0.0008889,
+            6.4444e-07, -0.04, -0.75, 0.04, -0.75, 0.04, 0.75, -0.04,
+            0.853433, 0.849842
         ]
         #fields = [u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14,
         #4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0,
@@ -306,6 +305,59 @@ class TestBeams(unittest.TestCase):
         pbeam = PBEAM(card2)
         fields2 = pbeam.repr_fields()
         assert fields == fields
+
+    def test_pbeam_10(self):
+        """
+        The number of continuation lines on a PBEAM for a NO/YESA is 0.
+        The number of continuation lines on a PBEAM for a YES is 1.
+        """
+        model = BDF()
+
+        # correct
+        lines = [
+            'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '    0.',
+            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '    0.      0.                    .872    .718',
+            '    0.  .33936      0.  .31983',
+        ]
+        lines_expected = lines
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        # correct
+        lines = [
+            'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '+',
+            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '    0.      0.                    .872    .718',
+            '    0.  .33936      0.  .31983',
+        ]
+        lines_expected = lines
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        # error
+        lines = [
+            'PBEAM          1       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '    0.',
+            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '    0.',
+            '    0.      0.                    .872    .718',
+            '    0.  .33936      0.  .31983',
+        ]
+        with self.assertRaises(RuntimeError):
+            model.add_card(lines, 'PBEAM', is_list=False)
+
+        # error
+        lines = [
+            'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '+',
+            '    NO      1.4.7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '    0.      0.                    .872    .718',
+            '    0.  .33936      0.  .31983',
+        ]
+        lines_expected = lines
+        with self.assertRaises(RuntimeError):
+            model.add_card(lines, 'PBEAM', is_list=False)
 
 
 if __name__ == '__main__':  # pragma: no cover
