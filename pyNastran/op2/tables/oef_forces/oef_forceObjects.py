@@ -30,7 +30,7 @@ class RealRodForceArray(ScalarObject):
         self.ielement = 0
 
     def get_headers(self):
-        headers = ['axial', 'torsion', 'SMa', 'SMt']
+        headers = ['axial', 'torsion']
         return headers
 
     #def get_headers(self):
@@ -201,6 +201,10 @@ class RealRodForce(ScalarObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
+            #if ntimes == 0:
+            #    time0 = None
+            #    nelements = None
+            #else:
             time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
