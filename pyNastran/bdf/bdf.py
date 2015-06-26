@@ -1046,6 +1046,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             bdf_filename, wildcard_level = load_file_dialog(title, wildcard_wx, wildcard_qt)
             assert bdf_filename is not None, bdf_filename
 
+        if not os.path.exists(bdf_filename):
+            msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
+            raise IOError(msg)
+
         #: the active filename (string)
         self.bdf_filename = bdf_filename
         if include_dir is None:
@@ -1053,10 +1057,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         #: the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = include_dir
-
-        if not os.path.exists(bdf_filename):
-            msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
-            raise IOError(msg)
 
         self.punch = punch
         if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
@@ -2103,13 +2103,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self.card_count[card_name] = n
 
     def _open_file(self, bdf_filename):
-        #import io
-        bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
-        if not os.path.exists(bdf_filename):
-            msg = 'No such bdf_filename: %r\n' % bdf_filename
+        bdf_filename_inc = os.path.join(self.include_dir, str(bdf_filename))
+        if not os.path.exists(bdf_filename_inc):
+            msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
             msg += 'cwd: %r\n' % os.getcwd()
-            msg += print_bad_path(bdf_filename)
+            msg += 'include_dir: %r\n' % self.include_dir
+            msg += print_bad_path(bdf_filename_inc)
             raise IOError(msg)
+        bdf_filename = bdf_filename_inc
 
         if bdf_filename in self.active_filenames:
             msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
