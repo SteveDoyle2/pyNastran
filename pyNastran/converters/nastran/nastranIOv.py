@@ -2215,23 +2215,3 @@ class NastranIO(object):
             ncase += 1
         return icase, ncase, case, header, form0
 
-def main():
-    """
-    Tests Nastran GUI loading
-    """
-    from pyNastran.gui.testing_methods import add_dummy_gui_functions
-    test = NastranIO()
-    test.is_nodal = False
-    test.is_centroidal = True
-
-    add_dummy_gui_functions(test)
-
-    #test.load_panair_geometry('SWB.INP','')
-    test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
-    test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
-
-    keys = test.resultCases.keys()
-    assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
