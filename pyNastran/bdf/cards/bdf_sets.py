@@ -565,6 +565,12 @@ class SET1(Set):
         if self.isSkin:
             skin = ['SKIN']
 
+        # checked in NX 2014 / MSC 2005.1
+        return print_card_8(['SET1', self.sid] + skin + self.get_IDs())
+
+        # I thought this worked in the new MSC Nastran...
+        # Doesn't work in NX 2014 / MSC 2005.1 (multiple duplicate sids).
+        # It may work with one sid, with singles and doubles on one card.
         field_packs = []
         singles, doubles = collapse_thru_packs(self.get_IDs())
         if singles:

@@ -430,6 +430,9 @@ class CBAR(LineElement):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
+    def get_edge_ids(self):
+        return [tuple(self.node_ids)]
+
     @property
     def nodes(self):
         return [self.ga, self.gb]
