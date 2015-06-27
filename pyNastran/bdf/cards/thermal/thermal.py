@@ -127,6 +127,10 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model):
         pass
 
+    def get_edge_ids(self):
+        # TODO: not implemented
+        return []
+
     def _verify(self, xref=False):
         eid = self.Eid()
         eid2 = self.Eid2()
@@ -230,6 +234,15 @@ class CHBDYG(ThermalElement):
         pid = self.Pid()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
+
+    @property
+    def node_ids(self):
+        # TODO: is this correct?
+        return self.grids
+
+    def get_edge_ids(self):
+        # TODO: not implemented
+        return []
 
     def cross_reference(self, model):
         pass

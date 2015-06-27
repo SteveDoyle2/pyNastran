@@ -28,15 +28,15 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         self.pid = model.Property(self.pid, msg=msg)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
 
     def Rho(self):
         r"""returns the material density  \f$ \rho \f$"""

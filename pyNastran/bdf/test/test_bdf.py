@@ -291,6 +291,8 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
             msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
             raise NotImplementedError(msg)
         #fem1.writeAsCTRIA3(outModel)
+
+    fem1._get_maps()
     return outModel
 
 

@@ -192,6 +192,18 @@ class CELAS2(SpringElement):
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
+    def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        return self.node_ids
+
+    @property
+    def node_ids(self):
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
+
+    def get_edge_ids(self):
+        return [sorted(self.node_ids)]
+
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)

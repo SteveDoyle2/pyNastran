@@ -6,11 +6,12 @@ from six import string_types, iteritems, integer_types
 from numpy import ndarray
 
 from pyNastran.bdf.deprecated import GetMethodsDeprecated
-from pyNastran.bdf.cards.nodes import SPOINT
+from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 
 
 class GetMethods(GetMethodsDeprecated):
     def __init__(self):
+        #self._type_to_slot_map = {}
         pass
 
     def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False, stop_on_missing_card=False):
@@ -103,6 +104,47 @@ class GetMethods(GetMethodsDeprecated):
 
     def get_node_ids_with_element(self, eid, msg=''):
         return self.get_node_ids_with_elements([eid], msg=msg)
+
+    def _get_maps(self, map_names=None):
+        if map_names is None:
+            map_names = []
+        allowed_maps = [
+            'edge_to_eid_map',
+            'eid_to_edge_map',
+            'nid_to_edge_map',
+            'edge_to_nid_map',
+        ]
+
+        for name in map_names:
+            assert name in allowed_maps, 'name=%s; allowed=%s' % (name, sorted(allowed_maps.keys()))
+
+        from collections import defaultdict
+        eid_to_edge_map = {}
+        eid_to_nid_map = {}
+
+        edge_to_eid_map = {}
+        #edge_to_nid_map = {}  # unnecessary
+
+        nid_to_edge_map = defaultdict(set)  #set([]) ???
+        nid_to_eid_map = defaultdict(list)
+
+        for eid, elem in iteritems(self.elements):
+            node_ids = elem.node_ids
+            edges = elem.get_edge_ids()
+            eid_to_edge_map[eid] = edges
+            eid_to_nid_map[eid] = node_ids
+
+            for nid in node_ids:
+                nid_to_eid_map[nid].append(eid)
+            for edge in edges:
+                for nid in edge:
+                    nid_to_edge_map[nid].add(edge)
+        out = (
+            edge_to_eid_map,
+            eid_to_edge_map,
+            nid_to_edge_map,
+        )
+        return out
 
     def get_node_ids_with_elements(self, eids, msg=''):
         """
