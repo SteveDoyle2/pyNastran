@@ -16,10 +16,17 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
-class WriteMeshDeprecated(object):
-    """Storage contained for deprecated functions"""
+class WriteMesh(object):
+    """
+    Major methods:
+      - model.write_bdf(...)
+      - model.echo_bdf(...)
+      - model.auto_reject_bdf(...)
+    """
     def __init__(self):
+        self._auto_reject = True
         self.cards_to_read = set([])
+
 
     def echo_bdf(self, infile_name):
         """
@@ -33,19 +40,9 @@ class WriteMeshDeprecated(object):
           model = BDF()
           model.echo_bdf(bdf_filename)
         """
+        self.deprecated('self.echo_bdf()', 'removed...', '0.8')
         self.cards_to_read = set([])
         return self.read_bdf(infile_name)
-
-class WriteMesh(WriteMeshDeprecated):
-    """
-    Major methods:
-      - model.write_bdf(...)
-      - model.echo_bdf(...)
-      - model.auto_reject_bdf(...)
-    """
-    def __init__(self):
-        WriteMeshDeprecated.__init__(self)
-        self._auto_reject = True
 
     def auto_reject_bdf(self, infile_name):
         """
@@ -54,6 +51,7 @@ class WriteMesh(WriteMeshDeprecated):
 
         .. todo:: maybe add the write method
         """
+        self.deprecated('self.auto_reject_bdf()', 'removed...', '0.8')
         self._auto_reject = True
         return self.read_bdf(infile_name)
 
@@ -141,7 +139,6 @@ class WriteMesh(WriteMeshDeprecated):
 
         :param self: the BDF object
         """
-
         if self.punch is None:
             # writing a mesh without using read_bdf
             if self.executive_control_lines or self.caseControlDeck:

@@ -282,7 +282,7 @@ def cut_model(model, axis='-y'):
     remove_eids = []
     for eid, element in iteritems(model.elements):
         c = element.Centroid()
-        if c[iaxis] < 0.0:
+        if c[iaxis] <= 0.0:
             remove_eids.append(eid)
 
     for nid in remove_nids:
@@ -926,7 +926,11 @@ def _update_case_control(model, mapper):
     # map them
     # TODO: renumber the sets
     set_locations = {}
-    for isubcase, subcase in sorted(iteritems(model.caseControlDeck.subcases)):
+    case_control = model.caseControlDeck
+    if case_control is None:
+        return
+
+    for isubcase, subcase in sorted(iteritems(case_control.subcases)):
         for key, values in sorted(iteritems(subcase.params)):
             value, options, param_type = values
             if 'SET ' in key:
@@ -939,7 +943,6 @@ def _update_case_control(model, mapper):
 
     #print('set_locations =', set_locations)
     #iset = 1
-    case_control = model.caseControlDeck
     global_subcase = case_control.subcases[0]
     for isubcase, subcase in sorted(iteritems(case_control.subcases)):
         #print('-----------------------')
