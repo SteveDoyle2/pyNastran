@@ -43,12 +43,18 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     all_nids = set(model.nodes.keys())
 
     nodes_to_remove = all_nids - nids_used
-    #print('nodes_to_remove = %s' % nodes_to_remove)
     for nid in nodes_to_remove:
         del model.nodes[nid]
 
     if renumber:
-        bdf_renumber(model, bdf_filename_out, size=8, is_double=False)
+        starting_id_dict = {
+            'nid' : 1,
+            'eid' : 1,
+            'pid' : 1,
+            'mid' : 1,
+        }
+        bdf_renumber(model, bdf_filename_out, size=8, is_double=False,
+                     starting_id_dict=starting_id_dict)
     else:
         model.write_bdf(bdf_filename_out)
 
@@ -78,6 +84,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
     """
+    assert isinstance(tol, float), tol
     if isinstance(bdf_filename, str):
         xref = True
         model = BDF()

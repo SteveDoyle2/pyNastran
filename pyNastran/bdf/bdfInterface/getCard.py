@@ -1,4 +1,4 @@
-# pylint: disable=E1101,C0103,C0111
+# pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, integer_types
@@ -11,15 +11,17 @@ from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 
 class GetMethods(GetMethodsDeprecated):
     def __init__(self):
-        #self._type_to_slot_map = {}
-        pass
+        self._type_to_slot_map = {}
 
-    def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False, stop_on_missing_card=False):
+    def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False,
+                                   stop_on_missing_card=False):
         """
         :param card_types: the list of keys to consider (list of strings; string)
         :param reset_type_to_slot_map:
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
+        :param stop_on_missing_card:
+            crashes if you request a card and it doesn't exist
         :retval out: the key=card_type, value=the ID of the card object
         """
         if isinstance(card_types, string_types):
@@ -40,16 +42,20 @@ class GetMethods(GetMethodsDeprecated):
                 out[key] = self._type_to_id_map[key]
             else:
                 if stop_on_missing_card:
-                    raise RuntimeError('%r is not in the card_count; keys=%s' % str(sorted(self.card_count.keys())))
+                    raise RuntimeError('%r is not in the card_count; keys=%s' %
+                                       str(sorted(self.card_count.keys())))
                 out[key] = []
         return out
 
-    def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False, stop_on_missing_card=False):
+    def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
+                                stop_on_missing_card=False):
         """
         :param card_types: the list of keys to consider
         :param reset_type_to_slot_map:
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
+        :param stop_on_missing_card:
+            crashes if you request a card and it doesn't exist
         :retval out: the key=card_type, value=the card object
         """
         if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
@@ -72,7 +78,8 @@ class GetMethods(GetMethodsDeprecated):
         for card_type in card_types:
             if card_type not in self.card_count:
                 if stop_on_missing_card:
-                    raise RuntimeError('%r is not in the card_count; keys=%s' % str(sorted(self.card_count.keys())))
+                    raise RuntimeError('%r is not in the card_count; keys=%s'
+                                       % str(sorted(self.card_count.keys())))
                 out[card_type] = []
                 continue
 
@@ -81,14 +88,14 @@ class GetMethods(GetMethodsDeprecated):
             slot = getattr(self, key)
             ids = self._type_to_id_map[card_type]
             cards = []
-            for id in ids:
+            for idi in ids:
                 try:
-                    card = slot[id]
+                    card = slot[idi]
                 except KeyError:
-                    msg = 'key=%s id=%s cannot be found' % (key, id)
+                    msg = 'key=%s id=%s cannot be found' % (key, idi)
                     raise KeyError(msg)
                 except TypeError:
-                    msg = 'key=%s id=%s cannot be found' % (key, id)
+                    msg = 'key=%s id=%s cannot be found' % (key, idi)
                     raise TypeError(msg)
 
                 if isinstance(card, list):
@@ -138,7 +145,7 @@ class GetMethods(GetMethodsDeprecated):
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
                 for nid in edge:
-                    nid_to_edge_map[nid].add(edge)
+                    nid_to_edge_map[nid].add(tuple(edge))
         out = (
             edge_to_eid_map,
             eid_to_edge_map,
@@ -457,7 +464,8 @@ class GetMethods(GetMethodsDeprecated):
         if sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (sid, msg, sorted(self.loads.keys())))
+            raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (
+                sid, msg, sorted(self.loads.keys())))
         return load
 
     def DLoad(self, sid, msg=''):
@@ -465,7 +473,8 @@ class GetMethods(GetMethodsDeprecated):
         if sid in self.dloads:
             load = self.dloads[sid]
         else:
-            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (sid, msg, sorted(self.dloads.keys())))
+            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (
+                sid, msg, sorted(self.dloads.keys())))
         return load
 
     def get_dload_entries(self, sid, msg=''):
@@ -473,7 +482,8 @@ class GetMethods(GetMethodsDeprecated):
         if sid in self.dload_entries:
             load = self.dload_entries[sid]
         else:
-            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (sid, msg, sorted(self.dload_entries.keys())))
+            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (
+                sid, msg, sorted(self.dload_entries.keys())))
         return load
 
     #--------------------
@@ -815,6 +825,7 @@ class GetMethods(GetMethodsDeprecated):
 
         mids2 = self.get_x_associated_with_y(
             self.elements, None, ['pid', 'mid', 'mid'])
+        #print('*mids2', mids2)
 
         E = self.get_x_associated_with_y(
             self.elements, None, ['pid', 'mid', 'e'])

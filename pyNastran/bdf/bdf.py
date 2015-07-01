@@ -25,7 +25,6 @@ from pyNastran.bdf.utils import (to_fields, get_include_filename,
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
-from pyNastran.utils import (object_attributes, print_bad_path)
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.log import get_logger2
 
@@ -1649,10 +1648,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # elements that violate the QRG...no duplicate elements on card...lies
             if card_name == 'CDAMP4':
-                    self.add_damper(CDAMP4(card_obj, comment=comment))
-                    if card_obj.field(5):
-                        self.add_damper(CDAMP4(card_obj, 1, comment=''))
-                    return card_obj
+                self.add_damper(CDAMP4(card_obj, comment=comment))
+                if card_obj.field(5):
+                    self.add_damper(CDAMP4(card_obj, 1, comment=''))
+                return card_obj
 
             # elements that violate the QRG...no duplicate elements on card...lies
             if card_name == 'TEMPD':
@@ -1987,32 +1986,41 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
     def _show_bad_file(self, bdf_filename):
         lines = []
         print('ENCODING - show_bad_file=%r' % self._encoding)
-        with codec_open(bdf_filename, 'rU', encoding=self._encoding) as f:
-            i = 0
-            n = 0
+        with codec_open(bdf_filename, 'rU', encoding=self._encoding) as bdf_file:
+            iline = 0
+            nblank = 0
             while 1:
                 try:
-                    line = f.readline().rstrip()
+                    line = bdf_file.readline().rstrip()
                 except UnicodeDecodeError as e:
-                    i0 = max([i-10, 0])
-                    for i1, line in enumerate(lines[i0:i]):
+                    i0 = max([iline-10, 0])
+                    for i1, line in enumerate(lines[i0:iline]):
                         self.log.error('lines[%i]=%r' % (i0+i1, line))
-                    msg = "\n%s encoding error on line=%s of %s; not '%s'" % (self._encoding, i, bdf_filename, self._encoding)
+                    msg = "\n%s encoding error on line=%s of %s; not '%s'" % (self._encoding, iline, bdf_filename, self._encoding)
                     raise RuntimeError(msg)
                 if line:
-                    n = 0
+                    nblank = 0
                 else:
-                    n += 1
-                if n == 20:
+                    nblank += 1
+                if nblank == 20:
                     raise RuntimeError('20 blank lines')
-                i += 1
+                iline += 1
                 lines.append(line)
 
     def _get_lines(self, bdf_filename, punch=False):
+        """
+        Opens the bdf and extracts the lines
 
-        with self._open_file(bdf_filename) as f:
+        :param bdf_filename: the main bdf_filename
+        :param punch: is this a punch file (default=False; no executive/case control decks)
+
+        :retval executive_control_lines:  the executive control deck as a list of strings
+        :retval case_control_lines:  the case control deck as a list of strings
+        :retval bulk_data_lines:  the bulk data deck as a list of strings
+        """
+        with self._open_file(bdf_filename) as bdf_file:
             try:
-                lines = f.readlines()
+                lines = bdf_file.readlines()
             except:
                 self._show_bad_file(bdf_filename)
 
@@ -2031,9 +2039,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #print('****f = %r' % bdf_filename2)
 
 
-                with self._open_file(bdf_filename2) as f:
-                    #print('f.name = %s' % f.name)
-                    lines2 = f.readlines()
+                with self._open_file(bdf_filename2) as bdf_file:
+                    #print('bdf_file.name = %s' % bdf_file.name)
+                    lines2 = bdf_file.readlines()
 
                 #print('lines2 = %s' % lines2)
                 nlines += len(lines2)
@@ -2120,8 +2128,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.active_filenames.append(bdf_filename)
 
         #print('ENCODING - _open_file=%r' % self._encoding)
-        f = codec_open(bdf_filename, 'rU', encoding=self._encoding)
-        return f
+        bdf_file = codec_open(bdf_filename, 'rU', encoding=self._encoding)
+        return bdf_file
 
     def _parse_cards(self, cards, card_count):
         #print('card_count = %s' % card_count)
@@ -2208,11 +2216,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         ..warning :: pyNastran lines must be at the top of the file
         """
-        f = open(bdf_filename, 'r')
+        bdf_file = open(bdf_filename, 'r')
         check_header = True
         while check_header:
             try:
-                line = f.readline()
+                line = bdf_file.readline()
             except:
                 break
 
@@ -2233,7 +2241,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     break
             else:
                 break
-        f.close()
+        bdf_file.close()
 
     def _verify_bdf(self):
         """
@@ -2349,5 +2357,5 @@ def main():
 
 
 if __name__ == '__main__':  # pragma: no cover
-    from pyNastran.bdf.dev_unicode.test.test_bdf import main
+    from pyNastran.bdf.test.test_bdf import main
     #main()
