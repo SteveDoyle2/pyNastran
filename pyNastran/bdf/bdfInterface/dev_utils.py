@@ -304,6 +304,7 @@ def cut_model(model, axis='-y'):
         loads2[load_id] = loadcase2
     model.loads = loads2
 
+
 def _write_nodes(self, outfile, size, is_double):
     """
     Writes the NODE-type cards

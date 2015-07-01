@@ -5,10 +5,50 @@ from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
+def cart3d_to_nastran(cart3d_filename, log=None, debug=False):
+    """
+    Converts a Cart3D file to Nastran format and returns a BDF() object.
+
+    :param cart3d_filename: path to the input Cart3D file
+    :param log:             a logger object (or None)
+    :param debug:           True/False (used if log is not defined)
+    :retval bdf_model:      BDF() model object
+    """
+    from pyNastran.bdf.bdf import BDF
+    cart3d = Cart3DReader(log=log, debug=debug)
+    (nodes, elements, regions, loads) = cart3d.read_cart3d(cart3d_filename)
+    i = 0
+    nid = 1
+    cid = 0
+    model = BDF(log=log, debug=debug)
+    for node in nodes:
+        card = ['GRID', nid, cid] + list(node)
+        model.add_card(card, 'GRID', is_list=True)
+        nid += 1
+
+    eid = 1
+    for (n1, n2, n3), pid in zip(elements, regions):
+        card = ['CTRIA3', eid, pid, n1, n2, n3]
+        model.add_card(card, 'CTRIA3', is_list=True)
+        #print(model.elements[eid])
+        eid += 1
+
+    t = 0.1
+    E = 1e7
+    nu = 0.3
+    for pid in unique(regions):
+        mid = pid
+        card = ['PSHELL', pid, mid, t]
+        model.add_card(card, 'PSHELL', is_list=True)
+        card = ['MAT1', mid, E, None, nu]
+        model.add_card(card, 'MAT1', is_list=True)
+    model.pop_parse_errors()
+    return model
+
 
 def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=False):
     """
-    Converts a Cart3D file to STL format.
+    Converts a Cart3D file to Nastran format.
 
     :param cart3d_filename: path to the input Cart3D file
     :param bdf_filename:    path to the output BDF file

@@ -7,6 +7,8 @@ from six import integer_types
 from six.moves import range
 
 import sys
+from numpy import float32
+
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 
@@ -196,7 +198,7 @@ def print_field_16(value):
     """
     if isinstance(value, integer_types):
         field = "%16s" % value
-    elif isinstance(value, float):
+    elif isinstance(value, float) or isinstance(value, float32):
         field = print_float_16(value)
     elif value is None:
         field = "                "
