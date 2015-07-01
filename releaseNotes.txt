@@ -105,6 +105,9 @@ BDF:
    - self.setSuper is now self.se_sets
    - RBE3 is ambiguous; no longer handling bad cards
    - model.material_ids
+   - MPC writing bug
+   - add_card and print_card_16 now handles float32
+
  - API changes:
    - case control now returns PRESSURE as DISPLACEMENT and not VECTOR
    - SPCD is now in self.loads, not self.spcs
@@ -114,7 +117,19 @@ BDF:
    - deprecated echo_bdf
 
 OP2:
-
+ - automatically identifying NX vs MSC Nastran if header table found
+ - RealCRodForce, RealCTubeForce, RealConrodForce not identified separately
+   - RealRodForceArray headers bug
+   - added write_f06
+ - using _eigenvalue header across all transient results
+ - CBushStrain/CBush1dStrain f06 writing
+ - element_names removed from objects (element_name is used instead)
+ - SPOINTs in tables (e.g. displacement/spc forces) now write properly
+ - added subtable_name to objects
+ 
+F06:
+ - reworked subcase/label parsing
+ - still bad
 
 -----------------------v0.7.2 released 2015/04/25-----------------------
 Relase notes:
