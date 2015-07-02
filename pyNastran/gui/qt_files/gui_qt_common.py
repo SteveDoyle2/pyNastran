@@ -204,6 +204,9 @@ class GuiCommon(object):
         self.grid.Modified()
         self.vtk_interactor.Render()
 
+        self.hide_labels()
+        self.show_labels(result_names=[resultType])
+
     def _get_icase(self, result_name):
         found_case = False
         print(self.resultCases.keys())

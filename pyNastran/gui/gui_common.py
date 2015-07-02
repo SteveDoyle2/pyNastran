@@ -171,7 +171,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
                 ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
                 ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
-                ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_col),
+
+                ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
+                ('label_col', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
+                ('text_col', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
+
+                ('label_clear', 'Clear current labels', '', None, 'Clear current labels', self.clear_labels),
+                ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
+
                 ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
                 ('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
@@ -239,7 +246,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.menu_scripts = None
 
         menu_window = ['toolbar', 'reswidget']
-        menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend', 'axis', ]
+        menu_view = [
+            'scshot', '', 'wireframe', 'surface', 'creset', '',
+            'back_col', 'text_col', '',
+            'label_col', 'label_clear', 'label_reset', '',
+            'legend', 'axis',
+        ]
         if self.html_logging:
             actions['logwidget'] = self.log_dock.toggleViewAction()
             actions['logwidget'].setStatusTip("Show/Hide application log")
@@ -393,13 +405,53 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
         self.log.simple_msg(msg, 'GUI ERROR')
 
-    def change_background_col(self):
+    def change_background_color(self):
         """ Choose a background color """
         c = [int(255 * i) for i in self.background_col]
         col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a background color")
         if col.isValid():
-            self.background_col = col.getRgbF()[:3]
-            self.rend.SetBackground(*self.background_col)
+            color = col.getRgbF()[:3]
+            self.set_background_color(color)
+
+    def change_label_color(self):
+        """ Choose a label color """
+        c = [int(255 * i) for i in self.label_col]
+        #(font, ok) = QtGui.QFontDialog.getFont()
+        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a label color")
+        if col.isValid():
+            color = col.getRgbF()[:3]
+            self.set_label_color(color)
+
+    def change_text_color(self):
+        """ Choose a text color """
+        c = [int(255 * i) for i in self.text_col]
+        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a text color")
+        if col.isValid():
+            color = col.getRgbF()[:3]
+            self.set_text_color(color)
+
+    def set_background_color(self, color):
+        """Set the background color"""
+        self.background_col = color
+        self.rend.SetBackground(*color)
+        self.log_command('set_background_color(%s, %s, %s)' % color)
+
+    def set_label_color(self, color):
+        """Set the label color"""
+        self.label_col = color
+        for key, follower_actors in iteritems(self.label_actors):
+            for follower_actor in follower_actors:
+                prop = follower_actor.GetProperty()
+                prop.SetColor(*color)
+        self.log_command('set_label_color(%s, %s, %s)' % color)
+
+    def set_text_color(self, color):
+        """Set the text color"""
+        self.text_col = color
+        for itext, text_actor in iteritems(self.textActors):
+            text_actor.GetTextProperty().SetColor(color)
+        self.log_command('set_text_color(%s, %s, %s)' % color)
+
 
     def create_coordinate_system(self, label='', origin=None, matrix_3x3=None, Type='xyz'):
         """
@@ -549,6 +601,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(*self.background_col)
+
         self.rend.ResetCamera()
         self._simulate_key_press('t') # change mouse style to trackball
         self.build_lookup_table()
@@ -763,7 +816,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         txtprop = txt.GetTextProperty()
         #txtprop.SetFontFamilyToArial()
         txtprop.SetFontSize(textSize)
-        txtprop.SetColor(1, 1, 1)
+        txtprop.SetColor(self.text_col)
         txt.SetDisplayPosition(*position)
 
         #print("dir(text) = ",dir(txt))
@@ -1116,8 +1169,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.create_vtk_actors()
 
         # build GUI and restore saved application state
+        nice_blue = (0.1, 0.2, 0.4)
+        white = (1.0, 1.0, 1.0)
+        black = (0.0, 0.0, 0.0)
+        red = (1.0, 0.0, 0.0)
         self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-        self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
+        self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
+        self.label_col = settings.value("labelColor", red).toPyObject()
+        self.text_col = settings.value("textColor", white).toPyObject()
 
         self.init_ui()
         self.init_cell_picker()
@@ -1197,7 +1256,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 renderLarge.SetInput(self.rend)
             else:
                 renderLarge.SetInput(self.rend)
-            renderLarge.SetMagnification(self.magnify)
+
+            magnify_min = 5
+            magnify = self.magnify if self.magnify > magnify_min else magnify_min
+            renderLarge.SetMagnification(magnify)
 
             nam, ext = os.path.splitext(fname)
             ext = ext.lower()
@@ -1214,7 +1276,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 writer = vtk.vtkPNGWriter()
 
             if self.vtk_version[0] >= 6:
-                writer.SetInputData(renderLarge.GetOutputPort())
+                writer.SetInputConnection(renderLarge.GetOutputPort())
             else:
                 writer.SetInputConnection(renderLarge.GetOutputPort())
             writer.SetFileName(fname)
@@ -1354,6 +1416,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.iCase = -1
             self.nCases = 0
 
+        self.reset_labels()
         self.cycleResults_explicit()  # start at nCase=0
         if self.nCases:
             self.scalarBar.VisibilityOn()
@@ -1381,7 +1444,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def finish_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        print("caseKeys = ", self.caseKeys)
+        #print("caseKeys = ", self.caseKeys)
 
         if len(self.resultCases) == 0:
             self.nCases = 1
@@ -1399,26 +1462,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.scalarBar.Modified()
 
     def get_result_by_cell_id(self, cell_id):
-        print('self.caseKeys =', self.caseKeys)
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.caseKeys[self.iCase]
+
+        # TODO: this probably isn't always right...
         result_name = case_key[2]
-        print('result_name =', result_name)
-        print('icase=%s cell_id=%s'  % (self.iCase, cell_id))
-        #result_values = self.resultCases[self.iCase][cell_id]
-        #print(self.results_data[self.iCase])# [cell_id]
+
         result_values = self.resultCases[case_key][cell_id]
         return result_name, result_values
 
-    #@property
-    #def results_data(self):
-        #return self.res_widget.result_data_window.data
 
     def _finish_results_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        #print("ncases =", len(cases))
-        #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
             #print("finish_io case A")
@@ -1457,3 +1513,79 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
+
+
+    def reset_labels(self):
+        self._remove_labels()
+
+        # new geometry
+        self.label_actors = {}
+
+        #self.caseKeys= [(1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')]
+        for case_key in self.caseKeys:
+            # TODO: this probably isn't always right...
+            result_name = case_key[2] #  ElementID
+
+            self.label_actors[result_name] = []
+
+
+    def _remove_labels(self):
+        if len(self.label_actors) == 0:
+            self.log.warning('No actors to remove')
+            return
+
+        # existing geometry
+        for result_name, actors in iteritems(self.label_actors):
+            for actor in actors:
+                self.rend.RemoveActor(actor)
+            self.label_actors[result_name] = []
+
+    def clear_labels(self):
+        if len(self.label_actors) == 0:
+            self.log.warning('No actors to clear')
+            return
+
+        # existing geometry
+        case_key = self.caseKeys[self.iCase]
+
+        # TODO: this probably isn't always right...
+        result_name = case_key[2]
+
+        actors = self.label_actors[result_name]
+        for actor in actors:
+            self.rend.RemoveActor(actor)
+        self.label_actors[result_name] = []
+
+    def hide_labels(self, result_names=None):
+        if result_names is None:
+            names = 'None)  # None -> all'
+            result_names = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(result_names)
+            names = '[' + mid[:-1] + '])'
+
+        count = 0
+        for key in result_names:
+            actors = self.label_actors[key]
+            for actor in actors:
+                actor.VisibilityOff()
+                count += 1
+        if count:
+            self.log_command('hide_labels(%s' % names)
+
+    def show_labels(self, result_names=None):
+        if result_names is None:
+            names = 'None)  # None -> all'
+            result_names = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(result_names)
+            names = mid[:-1] % result_names + ')'
+
+        count = 0
+        for key in result_names:
+            actors = self.label_actors[key]
+            for actor in actors:
+                actor.VisibilityOn()
+                count += 1
+        if count:
+            self.log_command('show_labels(%s' % names)

@@ -96,7 +96,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         ]
         self.build_fmts(fmt_order, stop_on_failure=False)
 
-        self.label_actors = []
+        self.label_actors = {}
 
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
@@ -163,7 +163,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #ds = picker.GetDataSet()
                 select_point = picker.GetSelectionPoint()
                 self.log_command("annotate_picker()")
-                self.log_info("world_position = %s" % str(world_position))
+                self.log_info("XYZ Global = %s" % str(world_position))
                 #self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
                 #self.log_info("selPt = %s" % str(select_point))
@@ -199,10 +199,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 follower.SetMapper(mapper)
                 follower.SetPosition((x, y, z))
                 follower.SetScale(0.5)
-                black = (0, 0, 0)
-                red = (1, 0, 0)
+                #black = (0., 0., 0.)
+                #red = (1., 0., 0.)
                 prop = follower.GetProperty()
-                prop.SetColor(red)
+                prop.SetColor(self.label_col)
 
                 #prop.SetEdgeColor(black)
                 #prop.EdgeVisibilityOn()
@@ -214,7 +214,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 self.rend.AddActor(follower)
                 camera = self.rend.GetActiveCamera()
                 follower.SetCamera(camera)
-                self.label_actors.append(follower)
+                self.label_actors[result_name].append(follower)
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
                 #self.picker_textActor.SetPosition(select_point[:2])
@@ -257,15 +257,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
-    def clear_labels(self):
-        for actor in self.label_actors:
-            self.rend.RemoveActor(actor)
-        self.label_actors = []
-
     def about_dialog(self):
         """ Display about dialog """
-        self.clear_labels()
-
         if fmode == 1:  # PyQt
             copyright = pyNastran.__pyqt_copyright__
         else:
@@ -341,6 +334,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
         settings.setValue("backgroundColor", self.background_col)
+        settings.setValue("textColor", self.text_col)
+        settings.setValue("labelColor", self.label_col)
         QtGui.qApp.quit()
 
 
