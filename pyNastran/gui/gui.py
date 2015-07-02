@@ -169,7 +169,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #self.log_info("selPt = %s" % str(select_point))
 
                 #method = 'get_result_by_cell_id()' # self.modelType
-                result_name, result_value = self.get_result_by_cell_id(cell_id)
+                if self.is_centroidal:
+                    result_name, result_value = self.get_result_by_cell_id(cell_id)
+                else:
+                    result_name, result_value = self.get_result_by_node_xyz_cell_id(world_position, cell_id)
                 self.log_info("%s = %s" % (result_name, result_value))
 
 

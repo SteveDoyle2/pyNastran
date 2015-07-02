@@ -16,6 +16,8 @@ from PyQt4 import QtCore, QtGui
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from numpy import eye
+from numpy import array
+from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
@@ -1462,13 +1464,42 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.scalarBar.Modified()
 
     def get_result_by_cell_id(self, cell_id):
-        # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
+        """should handle multiple cell_ids"""
         case_key = self.caseKeys[self.iCase]
-
-        # TODO: this probably isn't always right...
-        result_name = case_key[2]
+        result_name = self.result_name
 
         result_values = self.resultCases[case_key][cell_id]
+        return result_name, result_values
+
+    @property
+    def result_name(self):
+        # TODO: this probably isn't always right...
+        # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
+        case_key = self.caseKeys[self.iCase]
+        return case_key[2]
+
+    def get_result_by_node_xyz_cell_id(self, node_xyz, cell_id):
+        """won't handle multiple cell_ids/node_xyz"""
+        case_key = self.caseKeys[self.iCase]
+        result_name = self.result_name
+
+        cell = self.grid.GetCell(cell_id)
+        nnodes = cell.GetNumberOfPoints()
+        points = cell.GetPoints()
+
+        node_xyz = array(node_xyz, dtype='float32')
+        point0 = points.GetPoint(0)
+        dist_min = norm(array(point0, dtype='float32') - node_xyz)
+        imin = 0
+        for ipoint in range(1, nnodes):
+            point = points.GetPoint(ipoint)
+            dist = norm(array(point, dtype='float32') - node_xyz)
+            if dist < dist_min:
+                dist_min = dist
+                imin = ipoint
+        node_id = cell.GetPointId(imin)
+
+        result_values = self.resultCases[case_key][node_id]
         return result_name, result_values
 
 
@@ -1547,16 +1578,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # existing geometry
         case_key = self.caseKeys[self.iCase]
-
-        # TODO: this probably isn't always right...
-        result_name = case_key[2]
+        result_name = self.result_name
 
         actors = self.label_actors[result_name]
         for actor in actors:
             self.rend.RemoveActor(actor)
         self.label_actors[result_name] = []
 
-    def hide_labels(self, result_names=None):
+    def hide_labels(self, result_names=None, show_msg=True):
         if result_names is None:
             names = 'None)  # None -> all'
             result_names = sorted(self.label_actors.keys())
@@ -1570,10 +1599,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             for actor in actors:
                 actor.VisibilityOff()
                 count += 1
-        if count:
+        if count and show_msg:
             self.log_command('hide_labels(%s' % names)
 
-    def show_labels(self, result_names=None):
+    def show_labels(self, result_names=None, show_msg=True):
         if result_names is None:
             names = 'None)  # None -> all'
             result_names = sorted(self.label_actors.keys())
@@ -1587,5 +1616,5 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             for actor in actors:
                 actor.VisibilityOn()
                 count += 1
-        if count:
+        if count and show_msg:
             self.log_command('show_labels(%s' % names)
