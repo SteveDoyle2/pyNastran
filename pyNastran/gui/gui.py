@@ -96,6 +96,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         ]
         self.build_fmts(fmt_order, stop_on_failure=False)
 
+        self.label_actors = []
+
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
         self.set_script_path(script_path)
@@ -162,9 +164,13 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 select_point = picker.GetSelectionPoint()
                 self.log_command("annotate_picker()")
                 self.log_info("world_position = %s" % str(world_position))
-                self.log_info("cell_id = %s" % cell_id)
+                #self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
-                self.log_info("selPt = %s" % str(select_point))
+                #self.log_info("selPt = %s" % str(select_point))
+
+                #method = 'get_result_by_cell_id()' # self.modelType
+                result_name, result_value = self.get_result_by_cell_id(cell_id)
+                self.log_info("%s = %s" % (result_name, result_value))
 
 
                 x, y, z = world_position
@@ -177,13 +183,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #cell_mapper = vtk.vtkLabeledDataMapper()
                 #cell_mapper.SetInputConnection()
 
-                text = '(%.3g, %.3g, %.3g)' % (x, y, z)
+                text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
+                text = str(result_value)
 
                 # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
                 source = vtk.vtkVectorText()
                 #source.SetTextScaleModeToNone()
                 source.SetText(text)
-
+                #tprop = source.GetProperty()
+                #print(dir(tprop))
 
                 mapper = vtk.vtkPolyDataMapper()
                 mapper.SetInputConnection(source.GetOutputPort())
@@ -193,12 +201,20 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 follower.SetScale(0.5)
                 black = (0, 0, 0)
                 red = (1, 0, 0)
-                follower.GetProperty().SetColor(red)
+                prop = follower.GetProperty()
+                prop.SetColor(red)
+
+                #prop.SetEdgeColor(black)
+                #prop.EdgeVisibilityOn()
+                #prop.SetShadowOffset (10,10)
+                #prop.SetLineWidth(0.1)
+                #follower.SetDragable(True)
+                #print(dir(prop))
                 #follower.GetProperty().SetBackgroundColor(white)
                 self.rend.AddActor(follower)
                 camera = self.rend.GetActiveCamera()
                 follower.SetCamera(camera)
-
+                self.label_actors.append(follower)
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
                 #self.picker_textActor.SetPosition(select_point[:2])
@@ -241,8 +257,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
+    def clear_labels(self):
+        for actor in self.label_actors:
+            self.rend.RemoveActor(actor)
+        self.label_actors = []
+
     def about_dialog(self):
         """ Display about dialog """
+        self.clear_labels()
+
         if fmode == 1:  # PyQt
             copyright = pyNastran.__pyqt_copyright__
         else:

@@ -1398,6 +1398,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
 
+    def get_result_by_cell_id(self, cell_id):
+        print('self.caseKeys =', self.caseKeys)
+        # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
+        case_key = self.caseKeys[self.iCase]
+        result_name = case_key[2]
+        print('result_name =', result_name)
+        print('icase=%s cell_id=%s'  % (self.iCase, cell_id))
+        #result_values = self.resultCases[self.iCase][cell_id]
+        #print(self.results_data[self.iCase])# [cell_id]
+        result_values = self.resultCases[case_key][cell_id]
+        return result_name, result_values
+
+    #@property
+    #def results_data(self):
+        #return self.res_widget.result_data_window.data
+
     def _finish_results_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
