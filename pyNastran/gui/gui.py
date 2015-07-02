@@ -70,7 +70,10 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO,
                  TetgenIO, Usm3dIO, Plot3d_io, ADB_IO, FastIO):
-
+    """
+    glyphs
+    http://www.itk.org/Wiki/VTK/Examples/Python/Visualization/ElevationBandsWithGlyphs
+    """
     def __init__(self, inputs):
         html_logging = True
         GuiCommon2.__init__(self, html_logging, inputs)
@@ -131,6 +134,21 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.vtk_interactor.SetPicker(self.cell_picker)
         #self.vtk_interactor.SetPicker(self.point_picker)
 
+        #words = vtk.vtkCharArray()
+        #words.SetNumberOfComponents(4)
+        #words.SetArray(['a', 'b', 'asdf'], 4)
+
+        #cell_mapper = vtk.vtkLabeledDataMapper()
+        #cell_mapper.SetInputConnection(words.GetOutputPort())
+        #cell_mapper.SetLabelFormat("%s")
+        #cell_mapper.SetLabelModeToLabelFieldData()
+
+        #label_poly_data = vtk.LabelPolyData()
+
+        #label_actor.SetInput(label_poly_data)
+        #self.rend.AddActor(label_actor)
+
+
         def annotate_cell_picker(object, event):
             self.log_command("annotate_cell_picker()")
             picker = self.cell_picker
@@ -147,6 +165,40 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
                 self.log_info("selPt = %s" % str(select_point))
+
+
+                x, y, z = world_position
+                #x = 100.
+                #y = 50.
+                #z = 10.
+                #label_actor.SetPosition(x, y)
+                #label_actor.SetPosition2(x, y)
+
+                #cell_mapper = vtk.vtkLabeledDataMapper()
+                #cell_mapper.SetInputConnection()
+
+                text = '(%.3g, %.3g, %.3g)' % (x, y, z)
+
+                # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
+                source = vtk.vtkVectorText()
+                #source.SetTextScaleModeToNone()
+                source.SetText(text)
+
+
+                mapper = vtk.vtkPolyDataMapper()
+                mapper.SetInputConnection(source.GetOutputPort())
+                follower = vtk.vtkFollower()
+                follower.SetMapper(mapper)
+                follower.SetPosition((x, y, z))
+                follower.SetScale(0.5)
+                black = (0, 0, 0)
+                red = (1, 0, 0)
+                follower.GetProperty().SetColor(red)
+                #follower.GetProperty().SetBackgroundColor(white)
+                self.rend.AddActor(follower)
+                camera = self.rend.GetActiveCamera()
+                follower.SetCamera(camera)
+
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
                 #self.picker_textActor.SetPosition(select_point[:2])
