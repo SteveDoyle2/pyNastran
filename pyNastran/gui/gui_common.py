@@ -145,17 +145,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not inputs['format']:
             return
         form = inputs['format'].lower()
-        input = inputs['input']
-        output = inputs['output']
+        input_filename = inputs['input']
+        results_filename = inputs['output']
         plot = True
-        if output:
+        if results_filename:
             plot = False
 
-        is_failed = self.on_load_geometry(input, form, plot=plot)
+        is_failed = self.on_load_geometry(input_filename, form, plot=plot)
         if is_failed:
-            return
+            results_filename
         if output:
-            self.on_load_results(output)
+            self.on_load_results(results_filename)
         self._simulate_key_press('r')
         self.vtk_interactor.Modified()
 
@@ -370,12 +370,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
+
         #message colors
         dark_orange = '#EB9100'
         cols = {
-            "GUI": "blue",
-            "COMMAND":"green",
-            "GUI ERROR":"Crimson",
+            "GUI" : "blue",
+            "COMMAND" : "green",
+            "GUI ERROR" : "Crimson",
             "DEBUG" : dark_orange,
             'WARNING' : "purple",
             # INFO - black
@@ -552,7 +553,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             for key, axis in iteritems(self.axes):
                 axis.VisibilityOn()
-        self._is_axes_shown = not(self._is_axes_shown)
+        self._is_axes_shown = not self._is_axes_shown
 
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
@@ -648,11 +649,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         if len(key) == 5:
-            (subcaseID, resultType, vectorSize, location, data_format) = key
+            (subcaseID, resultType, vector_size, location, data_format) = key
         elif len(key) == 6:
-            (subcaseID, i, resultType, vectorSize, location, data_format) = key
+            (subcaseID, i, resultType, vector_size, location, data_format) = key
         else:
-            (subcaseID, i, resultType, vectorSize, location, data_format, label2) = key
+            (subcaseID, i, resultType, vector_size, location, data_format, label2) = key
 
         data = {
             'name' : resultType,
@@ -1173,7 +1174,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # build GUI and restore saved application state
         nice_blue = (0.1, 0.2, 0.4)
         white = (1.0, 1.0, 1.0)
-        black = (0.0, 0.0, 0.0)
+        #black = (0.0, 0.0, 0.0)
         red = (1.0, 0.0, 0.0)
         self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
         self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
@@ -1192,13 +1193,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def setup_post(self, inputs):
         self.load_batch_inputs(inputs)
 
-        #-------------
         shots = inputs['shots']
-        geometry_format = inputs['format']  # the active format loaded into the gui
-        fname_input = inputs['input']
-        fname_output = inputs['output']
+        #geometry_format = inputs['format']  # the active format loaded into the gui
+        #fname_input = inputs['input']
+        #fname_output = inputs['output']
         script = inputs['script']
-        #-------------
 
         if shots is None:
             shots = []
