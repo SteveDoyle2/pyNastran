@@ -1127,6 +1127,118 @@ def eq1():
     tol = 0.2
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 
+
+def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
+    """
+    Extracts the unique patches of a model based on a list of starting
+    element ids and surface curvature.
+
+    :param bdf_filename: the bdf_filename
+    :param starting_eids:  a list of starting element ids
+    :param theta_tols:     a list of tolerances for each element id
+        (e.g. the nose has a different tolerance than the base)
+
+    .. warning :: only supports CTRIA3 & CQUAD4
+    """
+    from numpy import zeros, searchsorted, float32, arccos, dot, degrees, radians
+    from collections import defaultdict
+
+    if isinstance(theta_tols, float) or isinstance(theta_tols, float32):
+        theta_tols = [theta_tols] * len(starting_eids)
+
+    model = BDF()
+    model.read_bdf(bdf_filename)
+
+    # get data for all shell elemenst
+    card_types = ['CTRIA3', 'CQUAD4']
+    out = model.get_card_ids_by_card_types(card_types,
+                                           reset_type_to_slot_map=False,
+                                           stop_on_missing_card=False)
+    shell_eids = hstack([out[card_type] for card_type in card_types])
+    shell_eids.sort()
+
+    set_shell_eids = set(shell_eids)
+    neids = len(shell_eids)
+    assert neids > 0, neids
+    normals = zeros((neids, 3), dtype='float32')
+    for i, eid in enumerate(shell_eids):
+        element = model.elements[eid]
+        normal = element.Normal()
+        normals[i, :] = normal
+
+    #print('shell_eids = %s' % shell_eids)
+
+    # get neighboring shell elements
+    out = model._get_maps(eids=shell_eids)
+    (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
+
+    eid_to_eid_map = defaultdict(set)
+    if 1:
+        for edge, eids in iteritems(edge_to_eid_map):
+            for eid_a in eids:
+                for eid_b in eids:
+                    eid_to_eid_map[eid_a].add(eid_b)
+    else:
+        for edge, eids in iteritems(edge_to_eid_map):
+            for eid_a in eids:
+                for eid_b in eids:
+                    if eid_a < eid_b:
+                        eid_to_eid_map[eid_a].add(eid_b)
+                        eid_to_eid_map[eid_b].add(eid_a)
+
+    #print('\neid_to_eid_map:')
+    #for eid, eids in iteritems(eid_to_eid_map):
+        #print('%-6s %s' % (eid, eids))
+
+    groups = []
+    # now trace the model
+    for starting_eid, theta_tol in zip(starting_eids, theta_tols):
+        print('starting_eid = %s' % starting_eid)
+        group = set([])
+        check = set([starting_eid])
+        while check:
+            eid = next(iter(check))
+            #print('  eid = %s' % eid)
+            neighboring_eids = eid_to_eid_map[eid]
+            #print('    neighbors = %s' % neighboring_eids)
+
+            # don't double check eids
+            neigboring_eids_to_check = array(list(neighboring_eids - group), dtype='int32')
+            nneighbors = len(neigboring_eids_to_check)
+            if nneighbors == 0:
+                check.remove(eid)
+                continue
+            assert nneighbors > 0, neigboring_eids_to_check
+
+            i = searchsorted(shell_eids, eid)
+            #assert len(i) > 0, 'eid=%s cant be found' % eid
+            local_normal = normals[i, :]
+
+            # find the normals
+            i = searchsorted(shell_eids, neigboring_eids_to_check)
+            assert len(i) > 0, 'eid=%s cant be found' % eid
+            normal = normals[i, :]
+
+            # a * b = |a| |b| cos(theta)
+            # |a| = |b| = 1
+            # cos^-1(a*b) = theta
+
+            # we flip the dimensions because matrix shapes are stupid
+            #theta = degrees(arccos(dot(local_normal, normal)))
+            theta = degrees(arccos(dot(local_normal, normal.T).T))
+
+            #print('    theta[eid=%s] = %s; n=%s' % (eid, theta, nneighbors))
+            assert len(theta) == nneighbors, len(theta)
+
+            itol = where(theta <= theta_tol)[0]
+            eids_within_tol = neigboring_eids_to_check[itol]
+            group.update(eids_within_tol)
+            check.update(eids_within_tol)
+            check.remove(eid)
+        groups.append(group)
+    return model, groups
+
+
 if __name__ == '__main__':
     eq1()
     eq2()

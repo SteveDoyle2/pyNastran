@@ -112,7 +112,7 @@ class GetMethods(GetMethodsDeprecated):
     def get_node_ids_with_element(self, eid, msg=''):
         return self.get_node_ids_with_elements([eid], msg=msg)
 
-    def _get_maps(self, map_names=None):
+    def _get_maps(self, eids=None, map_names=None):
         if map_names is None:
             map_names = []
         allowed_maps = [
@@ -120,6 +120,7 @@ class GetMethods(GetMethodsDeprecated):
             'eid_to_edge_map',
             'nid_to_edge_map',
             'edge_to_nid_map',
+            'eid_to_eid_map',
         ]
 
         for name in map_names:
@@ -129,13 +130,18 @@ class GetMethods(GetMethodsDeprecated):
         eid_to_edge_map = {}
         eid_to_nid_map = {}
 
-        edge_to_eid_map = {}
+        edge_to_eid_map = defaultdict(set)
         #edge_to_nid_map = {}  # unnecessary
 
         nid_to_edge_map = defaultdict(set)  #set([]) ???
         nid_to_eid_map = defaultdict(list)
 
-        for eid, elem in iteritems(self.elements):
+
+        if eids is None:
+            eids = iterkeys(self.elements.keys())
+
+        for eid in eids:
+            elem = self.elements[eid]
             node_ids = elem.node_ids
             edges = elem.get_edge_ids()
             eid_to_edge_map[eid] = edges
@@ -144,6 +150,8 @@ class GetMethods(GetMethodsDeprecated):
             for nid in node_ids:
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
+                assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
+                edge_to_eid_map[edge].add(eid)
                 for nid in edge:
                     nid_to_edge_map[nid].add(tuple(edge))
         out = (

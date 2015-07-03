@@ -149,9 +149,11 @@ class TriShell(ShellElement):
         Return the edge IDs
         """
         node_ids = self.node_ids
-        return [(node_ids[0], node_ids[1]),
-                (node_ids[1], node_ids[2]),
-                (node_ids[2], node_ids[0])]
+        return [
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]]))
+        ]
 
     def Thickness(self):
         """
@@ -350,6 +352,7 @@ class CTRIA3(TriShell):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -669,6 +672,7 @@ class CTRIAR(TriShell):
             assert isinstance(mass, float), 'mass=%r' % mass
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -920,6 +924,7 @@ class CTRIAX6(TriShell):
         self.nodes = [n1, n6, n5, n4, n3, n2]
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -969,10 +974,12 @@ class QuadShell(ShellElement):
         Return the edge IDs
         """
         node_ids = self.node_ids
-        return [(node_ids[0], node_ids[1]),
-                (node_ids[1], node_ids[2]),
-                (node_ids[2], node_ids[3]),
-                (node_ids[3], node_ids[0])]
+        return [
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+            tuple(sorted([node_ids[3], node_ids[0]]))
+        ]
 
     def Thickness(self):
         """
