@@ -7,7 +7,8 @@ from docopt import docopt
 def run_arg_parse():
     msg  = "Usage:\n"
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
-    msg += '                  [-s SHOT] [-m MAGNIFY] [-p SCRIPT]\n'  #  [-r XYZ]
+    msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '                  [-q] [-e] [-n | -c]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
@@ -21,7 +22,8 @@ def run_arg_parse():
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
 
     #if mode != 'qt':
-    msg += "  -p SCRIPT, --pyscript SCRIPT  path to script file\n"
+    msg += "  -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)\n"
+    msg += "  -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)\n"
     msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
     msg += "  -m MAGNIFY, --magnify       MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
 
@@ -37,9 +39,9 @@ def run_arg_parse():
     #print(data)
 
     format  = data['--format']
-    input   = data['--input']
-    output  = data['--output']
-    debug   = not(data['--quiet'])
+    input = data['--input']
+    output = data['--output']
+    debug = not(data['--quiet'])
     is_nodal = data['--nodalResults']
     is_centroidal = data['--centroidalResults']
 
@@ -51,9 +53,14 @@ def run_arg_parse():
     if '--shots' in data:
         shots = data['--shots']
 
-    script = None
-    if '--pyscript' in data:
-        script = data['--pyscript']
+    geom_script = None
+    if '--geomscript' in data:
+        geom_script = data['--geomscript']
+
+    post_script = None
+    if '--postscript' in data:
+        post_script = data['--postscript']
+
     magnify = 1
     if '--magnify' in data and data['--magnify'] is not None:
         magnify = int(data['--magnify'])
@@ -70,7 +77,7 @@ def run_arg_parse():
         #print("shots2 = %r" % shots, type(shots))
         shots = shots.split(';')[0]
     return (edges, is_nodal, is_centroidal, format, input, output, shots,
-            magnify, rotation, script, debug)
+            magnify, rotation, geom_script, post_script, debug)
 
 
 def get_inputs():
@@ -85,14 +92,15 @@ def get_inputs():
     magnify = 1
     rotation = None
     shots = None
-    script = None
+    geom_script = None
+    post_script = None
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
             (is_edges, is_nodal, is_centroidal, format, input, output, shots, magnify,
-             rotation, script, debug) = run_arg_parse()
+             rotation, geom_script, post_script, debug) = run_arg_parse()
 
     if format is not None and is_centroidal == is_nodal:
         if format.lower() == 'nastran':
@@ -119,6 +127,7 @@ def get_inputs():
         'magnify' : magnify,
         'rotation' : rotation,
         'debug' : debug,
-        'script' : script,
-        }
+        'geomscript' : geom_script,
+        'postscript' : post_script,
+    }
     return inputs

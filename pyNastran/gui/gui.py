@@ -73,6 +73,13 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     """
     glyphs
     http://www.itk.org/Wiki/VTK/Examples/Python/Visualization/ElevationBandsWithGlyphs
+
+    list of VTK6 classes
+    http://www.vtk.org/doc/nightly/html/annotated.html
+
+    background grid
+    http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/CubeAxesActor
+
     """
     def __init__(self, inputs):
         html_logging = True
@@ -177,51 +184,37 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
 
                 x, y, z = world_position
-                #x = 100.
-                #y = 50.
-                #z = 10.
-                #label_actor.SetPosition(x, y)
-                #label_actor.SetPosition2(x, y)
-
-                #cell_mapper = vtk.vtkLabeledDataMapper()
-                #cell_mapper.SetInputConnection()
-
                 text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
                 text = str(result_value)
 
                 # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
                 source = vtk.vtkVectorText()
-                #source.SetTextScaleModeToNone()
                 source.SetText(text)
-                #tprop = source.GetProperty()
-                #print(dir(tprop))
 
+                # mappers are weird; they seem to do nothing
                 mapper = vtk.vtkPolyDataMapper()
                 mapper.SetInputConnection(source.GetOutputPort())
+
+                # the follower lets us set the position/size/color
                 follower = vtk.vtkFollower()
                 follower.SetMapper(mapper)
                 follower.SetPosition((x, y, z))
                 follower.SetScale(0.5)
-                #black = (0., 0., 0.)
-                #red = (1., 0., 0.)
                 prop = follower.GetProperty()
                 prop.SetColor(self.label_col)
 
-                #prop.SetEdgeColor(black)
-                #prop.EdgeVisibilityOn()
-                #prop.SetShadowOffset (10,10)
-                #prop.SetLineWidth(0.1)
-                #follower.SetDragable(True)
-                #print(dir(prop))
-                #follower.GetProperty().SetBackgroundColor(white)
-                self.rend.AddActor(follower)
+                # we need to make sure the text rotates when the camera is changed
                 camera = self.rend.GetActiveCamera()
                 follower.SetCamera(camera)
+
+                # finish adding the actor
+                self.rend.AddActor(follower)
                 self.label_actors[result_name].append(follower)
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(select_point[:2])
-                #self.picker_textActor.VisibilityOn()
+                camera.GetPosition()
+                camera.GetClippingRange()
+                camera.GetFocalPoint()
 
         def annotate_point_picker(object, event):
             self.log_command("annotate_point_picker()")

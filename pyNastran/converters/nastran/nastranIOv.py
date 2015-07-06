@@ -23,7 +23,7 @@ from six.moves import zip, range
 
 import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack
-from numpy import searchsorted, sqrt, pi, arange, unique, allclose
+from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32
 from numpy.linalg import norm
 
 import vtk
@@ -112,6 +112,10 @@ class NastranIO(object):
                 return
             self.alt_geometry_actor.VisibilityOff()
 
+    def _create_coord(self, cid, coord, Type):
+        origin = coord.origin
+        beta = coord.beta()
+        self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=Type)
 
     def _create_nastran_coords(self, model):
         cid_types = {
@@ -122,12 +126,16 @@ class NastranIO(object):
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
-            if cid in self.show_cids:
-                # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
-                origin = coord.origin
-                beta = coord.beta()
-                Type = cid_types[coord.Type]
-                self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=Type)
+            Type = cid_types[coord.Type]
+            if self.show_cids is True:
+                self._create_coord(cid, coord, Type)
+            elif isinstance(self.show_cids, (int, int32)):
+                if cid == self.show_cids:
+                    self._create_coord(cid, coord, Type)
+            elif isinstance(self.show_cids, (list, tuple, ndarray)):
+                if cid in self.show_cids:
+                    # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
+                    self._create_coord(cid, coord, Type)
             else:
                 print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 

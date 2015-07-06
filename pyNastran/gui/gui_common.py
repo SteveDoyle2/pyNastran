@@ -145,11 +145,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not inputs['format']:
             return
         form = inputs['format'].lower()
+        geom_script = inputs['geomscript']
         input = inputs['input']
         output = inputs['output']
         plot = True
         if output:
             plot = False
+
+        if geom_script:
+            self.on_run_script(geom_script)
 
         is_failed = self.on_load_geometry(input, form, plot=plot)
         if is_failed:
@@ -1197,7 +1201,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         geometry_format = inputs['format']  # the active format loaded into the gui
         fname_input = inputs['input']
         fname_output = inputs['output']
-        script = inputs['script']
+        post_script = inputs['postscript']
         #-------------
 
         if shots is None:
@@ -1208,8 +1212,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.on_take_screenshot(shots)
             sys.exit('took screenshot %r' % shots)
 
-        if script:
-            self.on_run_script(script)
+        if post_script:
+            self.on_run_script(post_script)
 
     def take_screenshot(self):
         """ Take a screenshot of a current view and save as a file"""
