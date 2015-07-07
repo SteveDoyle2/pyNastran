@@ -162,7 +162,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
 
         def annotate_cell_picker(object, event):
-            self.log_command("annotate_cell_picker()")
+            #self.log_command("annotate_cell_picker()")
             picker = self.cell_picker
             if picker.GetCellId() < 0:
                 #self.picker_textActor.VisibilityOff()
@@ -172,7 +172,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 cell_id = picker.GetCellId()
                 #ds = picker.GetDataSet()
                 #select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
+                self.log_command("annotate_cell_picker()")
                 self.log_info("XYZ Global = %s" % str(world_position))
                 #self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
@@ -180,9 +180,33 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
                 #method = 'get_result_by_cell_id()' # self.modelType
                 if self.is_centroidal:
-                    result_name, result_value = self.get_result_by_cell_id(cell_id)
+                    if self.pick_state == 'centroidal':
+                        result_name, result_value = self.get_result_by_cell_id(cell_id)
+                    else:
+                        cell = self.grid.GetCell(cell_id)
+                        # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
+                        method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
+                        if hasattr(self, method):
+                            methodi = getattr(self, method)
+                            methodi(xyz, cell_id)
+                        else:
+                            msg = "pick_state is set to 'nodal', but the result is 'centroidal'\n"
+                            msg += '  cannot find: self.%s(xyz, cell_id)' % method
+                            self.log_error(msg)
+                        return
                 else:
-                    result_name, result_value = self.get_result_by_node_xyz_cell_id(world_position, cell_id)
+                    if self.pick_state == 'nodal':
+                        result_name, result_value = self.get_result_by_xyz_cell_id(world_position, cell_id)
+                    else:
+                        method = 'get_nodal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
+                        if hasattr(self, method):
+                            methodi = getattr(self, method)
+                            methodi(xyz, cell_id)
+                        else:
+                            msg = "pick_state is set to 'centroidal', but the result is 'nodal'\n"
+                            msg += '  cannot find: self.%s(xyz, cell_id)' % method
+                            self.log_error(msg)
+                        return
                 self.log_info("%s = %s" % (result_name, result_value))
 
 
@@ -274,17 +298,17 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
         #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
 
-    def on_cell_picker(self):
-        self.log_command("on_cell_picker()")
-        picker = self.cell_picker
-        world_position = picker.GetPickPosition()
-        cell_id = picker.GetCellId()
-        #ds = picker.GetDataSet()
-        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+    #def on_cell_picker(self):
+        #self.log_command("on_cell_picker()")
+        #picker = self.cell_picker
+        #world_position = picker.GetPickPosition()
+        #cell_id = picker.GetCellId()
+        ##ds = picker.GetDataSet()
+        #select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
 
-        self.log_info("world_position = %s" % str(world_position))
-        self.log_info("cell_id = %s" % cell_id)
-        self.log_info("select_point = %s" % str(select_point))
+        #self.log_info("world_position = %s" % str(world_position))
+        #self.log_info("cell_id = %s" % cell_id)
+        #self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
     def about_dialog(self):

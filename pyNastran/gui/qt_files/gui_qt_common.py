@@ -63,7 +63,8 @@ class GuiCommon(object):
             if self.nCases == 0:
                 self.scalarBar.SetVisibility(False)
             return
-        self.cycleResults_explicit(result_name, explicit=False)
+        result_type = self.cycleResults_explicit(result_name, explicit=False)
+        self.log_command('cycleResults(result_name=%r)' % result_type)
 
     def cycleResults_explicit(self, result_name=None, explicit=True):
         #if explicit:
@@ -72,9 +73,12 @@ class GuiCommon(object):
 
         found_cases = self.incrementCycle(result_name)
         if found_cases:
-            self._set_case(result_name, self.iCase, explicit=explicit, cycle=True)
+            result_type = self._set_case(result_name, self.iCase, explicit=explicit, cycle=True)
+        else:
+            result_type = None
         #else:
             #self.log_command(""didn't find case...")
+        return result_type
 
     def _set_case(self, result_name, icase, explicit=False, cycle=False):
         if not cycle and icase == self.iCase:
@@ -128,6 +132,7 @@ class GuiCommon(object):
         self.final_grid_update(grid_result, key, subtitle, label)
         if explicit:
             self.log_command('cycleResults(result_name=%r)' % result_type)
+        return result_type
 
     def set_grid_values(self, grid_result, case, vector_size, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red

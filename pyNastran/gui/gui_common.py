@@ -12,20 +12,43 @@ import cgi #  html lib
 import inspect
 import traceback
 
-import vtk
 from PyQt4 import QtCore, QtGui
+import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import eye
-from numpy import array
+from numpy import eye, array
 from numpy.linalg import norm
 
 import pyNastran
+from pyNastran.bdf.cards.baseCard import deprecated
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.gui.ex_tree import Sidebar
 from pyNastran.utils import print_bad_path
+
+class Interactor(vtk.vtkGenericRenderWindowInteractor):
+
+    def __init__(self):
+        #vtk.vtkGenericRenderWindowInteractor()
+        pass
+
+    def HighlightProp(self):
+        print('highlight')
+
+class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
+    def __init__(self, parent=None):
+
+        render_window = vtk.vtkRenderWindow()
+        iren = Interactor()
+        iren.SetRenderWindow(render_window)
+        kwargs = {
+            'iren' : iren,
+            'rw' : render_window,
+        }
+        QVTKRenderWindowInteractor.__init__(self, parent=parent,
+                                            iren=iren, rw=render_window)
+        #self.Highlight
 
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
@@ -45,14 +68,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._is_axes_shown = True
         self.nvalues = 9
         self.is_wireframe = False
-
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
-        assert self.is_centroidal != self.is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
+        if self.is_centroidal == self.is_nodal:
+            msg = "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
+            raise RuntimeError(msg)
 
         #self.format = ''
         debug = inputs['debug']
@@ -91,6 +115,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.set_tools()
 
         self.geometry_actors = []
+        self.pick_state = 'centroidal' if self.is_centroidal else 'nodal'
 
     def set_window_title(self, msg):
         #msg2 = "%s - "  % self.base_window_title
@@ -200,7 +225,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
                 ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
-                ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
+                ('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
 
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
@@ -224,8 +249,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.tools = tools
         self.checkables = checkables
 
+    def deprecated(self, old_name, new_name, deprecated_version):
+        deprecated(old_name, new_name, deprecated_version, levels=[-1])
+
     def add_tools(self, tools):
+        self.deprecated('add_tools', 'removed...', '0.7')
         self.tools += tools
+
+    def on_flip_picker(self):
+        if self.pick_state == 'centroidal':
+            self.pick_state = 'nodal'
+
+        elif self.pick_state == 'nodal':
+            self.pick_state = 'centroidal'
+        else:
+            raise RuntimeError(self.pick_state)
+        self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
 
     def _create_menu_items(self, actions):
         self.menu_file = self.menubar.addMenu('&File')
@@ -271,7 +310,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
-            (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
+            (self.toolbar, ('flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))
@@ -361,7 +400,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         actions = {}
         for tool in tools:
             (nam, txt, icon, shortcut, tip, func) = tool
-            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
+            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s"
+                  #% (nam, txt, icon, short, tip, func))
             #if icon is None:
                 #print("missing_icon = %r!!!" % nam)
                 #icon = os.path.join(icon_path, 'no.png')
@@ -634,8 +674,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #Frame that VTK will render on
         self.vtk_frame = QtGui.QFrame()
 
-        #Qt VTK RenderWindowInteractor
+        #Qt VTK QVTKRenderWindowInteractor
         self.vtk_interactor = QVTKRenderWindowInteractor(parent=self.vtk_frame)
+        #self.vtk_interactor = PyNastranRenderWindowInteractor(parent=self.vtk_frame)
         self.iren = self.vtk_interactor
 
     def build_vtk_frame(self):
@@ -759,8 +800,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         gridResult = self.build_grid_result(vector_size, location)
         norm_value, nvalues_set = self.set_grid_values(gridResult, case, vector_size,
-                                                       min_value, max_value, is_blue_to_red=is_blue_to_red)
-        self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format, is_blue_to_red=is_blue_to_red)
+                                                       min_value, max_value,
+                                                       is_blue_to_red=is_blue_to_red)
+        self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format,
+                             is_blue_to_red=is_blue_to_red)
         self.final_grid_update(gridResult, key, subtitle, label)
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
                          '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
@@ -801,7 +844,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def on_surface(self):
         if self.is_wireframe:
             self.log_command('on_surface()')
-            #self._simulate_key_press('s')
             for actor in self.get_geometry_actors():
                 prop = actor.GetProperty()
                 prop.SetRepresentationToSurface()
@@ -814,7 +856,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def on_wireframe(self):
         if not self.is_wireframe:
             self.log_command('on_wireframe()')
-            #self._simulate_key_press('w')
             for actor in self.get_geometry_actors():
                 prop = actor.GetProperty()
                 prop.SetRepresentationToWireframe()
@@ -855,7 +896,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.zoom(1.1)
 
     def on_decrease_magnification(self):
-        self.zoom(1.0/1.1)
+        self.zoom(1.0 / 1.1)
 
     def on_flip_edges(self):
         self.is_edges = not self.is_edges
@@ -897,12 +938,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         txtprop.SetColor(self.text_col)
         txt.SetDisplayPosition(*position)
 
-        #print("dir(text) = ",dir(txt))
+        #print("dir(text) = ", dir(txt))
         txt.VisibilityOff()
 
-        #txt.SetDisplayPosition(5,5) # bottom left
-        #txt.SetDisplayPosition(5,95)
-        #txt.SetPosition(0.1,0.5)
+        #txt.SetDisplayPosition(5, 5) # bottom left
+        #txt.SetDisplayPosition(5, 95)
+        #txt.SetPosition(0.1, 0.5)
 
         # assign actor to the renderer
         self.rend.AddActor(txt)
@@ -910,11 +951,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.iText += 1
 
     def TurnTextOff(self):
-        for (i, text) in iteritems(self.textActors):
+        for text in itervalues(self.textActors):
             text.VisibilityOff()
 
     def TurnTextOn(self):
-        for (i, text) in iteritems(self.textActors):
+        for text in itervalues(self.textActors):
             text.VisibilityOn()
 
     def build_lookup_table(self):
@@ -973,7 +1014,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
         # getOpenFileName return QString and we want Python string
-        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(self, Title, self.last_dir, qt_wildcard)
+        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
+            self, Title, self.last_dir, qt_wildcard)
         return str(wildcard_level), str(fname)
 
     def start_logging(self):
@@ -1401,7 +1443,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_error("failed applying the data formatter format=%r and should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
             return
         self.data_format = data_format
-        self.log_command('on_update_scalar_bar(%r, %r, %r')
+        self.log_command('on_update_scalar_bar(%r, %r, %r, %r)' % (title, min_value, max_value, data_format))
 
     def ResetCamera(self):
         self.GetCamera().ResetCamera()
@@ -1473,8 +1515,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _finish_results_io2(self, form, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        #print("ncases =", len(cases))
-        #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
             self.iCase = -1
@@ -1511,42 +1551,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
 
-    def finish_io(self, cases):
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        #print("caseKeys = ", self.caseKeys)
-
-        if len(self.resultCases) == 0:
-            self.nCases = 1
-            self.iCase = 0
-        elif len(self.resultCases) == 1:
-            self.nCases = 1
-            self.iCase = 0
-        else:
-            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-            self.iCase = -1
-        self.cycleResults()  # start at nCase=0
-
-        if self.nCases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
-
     def get_result_by_cell_id(self, cell_id):
         """should handle multiple cell_ids"""
         case_key = self.caseKeys[self.iCase]
         result_name = self.result_name
-
         result_values = self.resultCases[case_key][cell_id]
         return result_name, result_values
 
-    @property
-    def result_name(self):
-        # TODO: this probably isn't always right...
-        # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
-        case_key = self.caseKeys[self.iCase]
-        return case_key[2]
-
-    def get_result_by_node_xyz_cell_id(self, node_xyz, cell_id):
+    def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
         """won't handle multiple cell_ids/node_xyz"""
         case_key = self.caseKeys[self.iCase]
         result_name = self.result_name
@@ -1570,6 +1582,33 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         result_values = self.resultCases[case_key][node_id]
         return result_name, result_values
 
+    @property
+    def result_name(self):
+        """creates the self.result_name variable"""
+        # TODO: this probably isn't always right...
+        # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
+        case_key = self.caseKeys[self.iCase]
+        return case_key[2]
+
+    def finish_io(self, cases):
+        self.resultCases = cases
+        self.caseKeys = sorted(cases.keys())
+        #print("caseKeys = ", self.caseKeys)
+
+        if len(self.resultCases) == 0:
+            self.nCases = 1
+            self.iCase = 0
+        elif len(self.resultCases) == 1:
+            self.nCases = 1
+            self.iCase = 0
+        else:
+            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+            self.iCase = -1
+        self.cycleResults()  # start at nCase=0
+
+        if self.nCases:
+            self.scalarBar.VisibilityOn()
+            self.scalarBar.Modified()
 
     def _finish_results_io(self, cases):
         self.resultCases = cases
@@ -1617,7 +1656,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # new geometry
         self.label_actors = {}
 
-        #self.caseKeys= [(1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')]
+        #self.caseKeys= [
+            #(1, 'ElementID', 1, 'centroid', '%.0f'),
+            #(1, 'Region', 1, 'centroid', '%.0f')
+        #]
         for case_key in self.caseKeys:
             # TODO: this probably isn't always right...
             result_name = case_key[2] #  ElementID
