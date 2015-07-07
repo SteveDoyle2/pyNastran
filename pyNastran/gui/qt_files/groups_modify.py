@@ -212,7 +212,7 @@ class GroupsModify(QtGui.QDialog):
 
     def _apply_cids_eids(self):
         ctext = _get_collapsed_text(self.cids)
-        etext = _get_collapsed_text(self.cids)
+        etext = _get_collapsed_text(self.eids)
 
         self.coords_edit.setText(str(ctext.lstrip()))
         self.elements_edit.setText(str(etext.lstrip()))
@@ -225,8 +225,8 @@ class GroupsModify(QtGui.QDialog):
 
         self.eids = _remove(adict, ['e', 'elem', 'element'], self.eids)
         self.cids = _remove(adict, ['c', 'cid', 'coord'], self.cids)
-
         self._apply_cids_eids()
+
         self.remove_edit.clear()
         self.remove_edit.setStyleSheet("QLineEdit{background: white;}")
 
