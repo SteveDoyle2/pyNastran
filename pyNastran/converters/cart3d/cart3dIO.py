@@ -144,9 +144,7 @@ class Cart3dIO(object):
         cases = {}
         ID = 1
 
-        #print("nElements = ",nElements)
         form, cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
-        #self._finish_results_io(cases)
         self._finish_results_io2(form, cases)
 
     def clear_cart3d(self):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0111
 from __future__ import division, unicode_literals, print_function
-from six import string_types, iteritems
+#from six import string_types, iteritems
 from six.moves import range
 
 # standard library
@@ -16,8 +17,8 @@ import pyNastran
 from pyNastran.gui.utils import check_for_newer_version
 
 
-self = None
-check_for_newer_version(self, pop_msg=True)
+window = None
+check_for_newer_version(window, pop_msg=True)
 
 print("Using PyQt4")
 fmode = 1
@@ -35,12 +36,13 @@ assert fmode in [1, 2]
 import vtk
 
 # pyNastran
-from pyNastran.utils import print_bad_path
+#from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs,
-    is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d, is_openvsp,
-    is_fast)
+    #is_nastran, is_cart3d, is_panair, is_lawgs,
+    #is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d, is_openvsp,
+    #is_fast
+    )
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -73,6 +75,13 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     """
     glyphs
     http://www.itk.org/Wiki/VTK/Examples/Python/Visualization/ElevationBandsWithGlyphs
+
+    list of VTK6 classes
+    http://www.vtk.org/doc/nightly/html/annotated.html
+
+    background grid
+    http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/CubeAxesActor
+
     """
     def __init__(self, inputs):
         html_logging = True
@@ -97,6 +106,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.build_fmts(fmt_order, stop_on_failure=False)
 
         self.label_actors = {}
+        self.label_scale = 1.0 # in percent
 
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
@@ -152,7 +162,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
 
         def annotate_cell_picker(object, event):
-            self.log_command("annotate_cell_picker()")
+            #self.log_command("annotate_cell_picker()")
             picker = self.cell_picker
             if picker.GetCellId() < 0:
                 #self.picker_textActor.VisibilityOff()
@@ -161,8 +171,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 world_position = picker.GetPickPosition()
                 cell_id = picker.GetCellId()
                 #ds = picker.GetDataSet()
-                select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
+                #select_point = picker.GetSelectionPoint()
+                self.log_command("annotate_cell_picker()")
                 self.log_info("XYZ Global = %s" % str(world_position))
                 #self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
@@ -170,58 +180,99 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
                 #method = 'get_result_by_cell_id()' # self.modelType
                 if self.is_centroidal:
-                    result_name, result_value = self.get_result_by_cell_id(cell_id)
+                    if self.pick_state == 'centroidal':
+                        result_name, result_value = self.get_result_by_cell_id(cell_id)
+                    else:
+                        cell = self.grid.GetCell(cell_id)
+                        # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
+                        method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
+                        if hasattr(self, method):
+                            methodi = getattr(self, method)
+                            methodi(xyz, cell_id)
+                        else:
+                            msg = "pick_state is set to 'nodal', but the result is 'centroidal'\n"
+                            msg += '  cannot find: self.%s(xyz, cell_id)' % method
+                            self.log_error(msg)
+                        return
                 else:
-                    result_name, result_value = self.get_result_by_node_xyz_cell_id(world_position, cell_id)
+                    if self.pick_state == 'nodal':
+                        result_name, result_value = self.get_result_by_xyz_cell_id(world_position, cell_id)
+                    else:
+                        method = 'get_nodal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
+                        if hasattr(self, method):
+                            methodi = getattr(self, method)
+                            methodi(xyz, cell_id)
+                        else:
+                            msg = "pick_state is set to 'centroidal', but the result is 'nodal'\n"
+                            msg += '  cannot find: self.%s(xyz, cell_id)' % method
+                            self.log_error(msg)
+                        return
                 self.log_info("%s = %s" % (result_name, result_value))
 
 
                 x, y, z = world_position
-                #x = 100.
-                #y = 50.
-                #z = 10.
-                #label_actor.SetPosition(x, y)
-                #label_actor.SetPosition2(x, y)
-
-                #cell_mapper = vtk.vtkLabeledDataMapper()
-                #cell_mapper.SetInputConnection()
-
                 text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
                 text = str(result_value)
 
                 # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
-                source = vtk.vtkVectorText()
-                #source.SetTextScaleModeToNone()
-                source.SetText(text)
-                #tprop = source.GetProperty()
-                #print(dir(tprop))
+                if 1:
+                    source = vtk.vtkVectorText()
+                    source.SetText(text)
 
-                mapper = vtk.vtkPolyDataMapper()
-                mapper.SetInputConnection(source.GetOutputPort())
-                follower = vtk.vtkFollower()
-                follower.SetMapper(mapper)
-                follower.SetPosition((x, y, z))
-                follower.SetScale(0.5)
-                #black = (0., 0., 0.)
-                #red = (1., 0., 0.)
-                prop = follower.GetProperty()
-                prop.SetColor(self.label_col)
+                    # mappers are weird; they seem to do nothing
+                    mapper = vtk.vtkPolyDataMapper()
+                    mapper.SetInputConnection(source.GetOutputPort())
 
-                #prop.SetEdgeColor(black)
-                #prop.EdgeVisibilityOn()
-                #prop.SetShadowOffset (10,10)
-                #prop.SetLineWidth(0.1)
-                #follower.SetDragable(True)
-                #print(dir(prop))
-                #follower.GetProperty().SetBackgroundColor(white)
+                    # the follower lets us set the position/size/color
+                    follower = vtk.vtkFollower()
+                    follower.SetMapper(mapper)
+                    follower.SetPosition((x, y, z))
+
+                    # 1 point = 1/72"
+                    # SetScale works on model scale size
+                    #follower.SetScale(0.5)
+                    follower.SetScale(self.dim_max * 0.01 * self.label_scale)
+
+                    prop = follower.GetProperty()
+                    prop.SetColor(self.label_col)
+                    #prop.SetOpacity( 0.3 );
+
+                    # we need to make sure the text rotates when the camera is changed
+                    camera = self.rend.GetActiveCamera()
+                    follower.SetCamera(camera)
+                else:
+                    # Create a text mapper and actor to display the results of picking.
+                    textMapper = vtk.vtkTextMapper()
+                    textMapper.SetInput(text)
+
+                    tprop = textMapper.GetTextProperty()
+                    tprop.SetFontFamilyToArial()
+                    tprop.SetFontSize(10)
+                    tprop.BoldOn()
+                    tprop.ShadowOn()
+                    tprop.SetColor(self.label_col)
+
+                    textActor = vtk.vtkActor2D()
+                    #textActor.SetPosition((x, y, z))
+                    print(world_position)
+                    #textActor.SetPosition(select_point[:2])
+                    textActor.GetPositionCoordinate().SetCoordinateSystemToWorld()
+                    textActor.SetPosition(world_position[:2])
+                    #textActor.VisibilityOff()
+                    textActor.SetMapper(textMapper)
+                    #textActor.VisibilityOn()
+
+                    follower = textActor
+
+
+                # finish adding the actor
                 self.rend.AddActor(follower)
-                camera = self.rend.GetActiveCamera()
-                follower.SetCamera(camera)
                 self.label_actors[result_name].append(follower)
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(select_point[:2])
-                #self.picker_textActor.VisibilityOn()
+                #camera.GetPosition()
+                #camera.GetClippingRange()
+                #camera.GetFocalPoint()
 
         def annotate_point_picker(object, event):
             self.log_command("annotate_point_picker()")
@@ -247,17 +298,17 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
         #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
 
-    def on_cell_picker(self):
-        self.log_command("on_cell_picker()")
-        picker = self.cell_picker
-        world_position = picker.GetPickPosition()
-        cell_id = picker.GetCellId()
-        #ds = picker.GetDataSet()
-        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+    #def on_cell_picker(self):
+        #self.log_command("on_cell_picker()")
+        #picker = self.cell_picker
+        #world_position = picker.GetPickPosition()
+        #cell_id = picker.GetCellId()
+        ##ds = picker.GetDataSet()
+        #select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
 
-        self.log_info("world_position = %s" % str(world_position))
-        self.log_info("cell_id = %s" % cell_id)
-        self.log_info("select_point = %s" % str(select_point))
+        #self.log_info("world_position = %s" % str(world_position))
+        #self.log_info("cell_id = %s" % cell_id)
+        #self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
     def about_dialog(self):
@@ -344,6 +395,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
 def main():
     app = QtGui.QApplication(sys.argv)
+
     QtGui.QApplication.setOrganizationName("pyNastran")
     QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
     QtGui.QApplication.setApplicationName("pyNastran")

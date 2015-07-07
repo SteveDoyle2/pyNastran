@@ -845,7 +845,6 @@ class NastranIO(NastranIO_xref):
                 cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
                 cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
         self.log.info(cases.keys())
-        #self.finish_io(cases)
 
         self.finish_nastran_io(cases)
 
@@ -856,15 +855,12 @@ class NastranIO(NastranIO_xref):
         print("caseKeys = %s" % self.caseKeys)
 
         if len(self.caseKeys) > 1:
-            print("finish_io case A")
             self.iCase = -1
             self.nCases = len(self.resultCases)  # number of keys in dictionary
         elif len(self.caseKeys) == 1:
-            print("finish_io case B")
             self.iCase = -1
             self.nCases = 1
         else:
-            print("finish_io case C")
             self.iCase = -1
             self.nCases = 0
 
@@ -1113,26 +1109,6 @@ class NastranIO(NastranIO_xref):
                         #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
                         cases[(subcaseID, name, 1, 'node', '%g')] = temperatures
         return cases
-
-    def finish_io(self, cases):
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        print("caseKeys = ", self.caseKeys)
-
-        if len(self.resultCases) == 0:
-            self.nCases = 1
-            self.iCase = 0
-        elif len(self.resultCases) == 1:
-            self.nCases = 1
-            self.iCase = 0
-        else:
-            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-            self.iCase = -1
-        self.cycleResults()  # start at nCase=0
-
-        if self.nCases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
 
     def clear_nastran(self):
         self.eidMap = {}
