@@ -856,15 +856,12 @@ class NastranIO(NastranIO_xref):
         print("caseKeys = %s" % self.caseKeys)
 
         if len(self.caseKeys) > 1:
-            print("finish_io case A")
             self.iCase = -1
             self.nCases = len(self.resultCases)  # number of keys in dictionary
         elif len(self.caseKeys) == 1:
-            print("finish_io case B")
             self.iCase = -1
             self.nCases = 1
         else:
-            print("finish_io case C")
             self.iCase = -1
             self.nCases = 0
 
