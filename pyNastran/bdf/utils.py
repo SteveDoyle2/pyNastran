@@ -7,8 +7,8 @@ Defines various utilities for BDF parsing including:
  - PositionWRT
  - TransformLoadWRT
 """
-from __future__ import print_function
-from six import iteritems, StringIO
+from __future__ import print_function, unicode_literals
+from six import iteritems, StringIO, string_types
 import os
 from numpy import unique, cross, dot, array
 
@@ -259,7 +259,7 @@ def print_filename(filename, relpath):
     return filename
 
 
-def parse_patran_syntax(node_sets):
+def parse_patran_syntax(node_sets, pound=None):
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -291,10 +291,12 @@ def parse_patran_syntax(node_sets):
       Don't include the n/node or e/element or any other identifier,
       just a string of "1 2 3 5:10 12:20:2".
       Use parse_patran_syntax_dict to consider the identifier.
-
-    .. note::
-      doesn't support "1:#"
     """
+    assert isinstance(node_sets, string_types), type(node_sets)
+    if pound is not None:
+        assert isinstance(pound, (str, int)), type(pound)
+        node_sets = node_sets.replace('#', str(pound).strip())
+
     snodes = node_sets.split()
     nodes = []
     for snode in snodes:
@@ -305,17 +307,17 @@ def parse_patran_syntax(node_sets):
                 new_set = list(range(nmin, nmax + 1))
             elif len(ssnode) == 3:
                 nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
-
-                nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
+                nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
                 if delta > 0:
                     new_set = list(range(nmin, nmax + 1, delta))
                 else:
-                    new_set = list(range(nmax, nmin + 1, -delta))
+                    new_set = list(range(nmin, nmax + 1, -delta))
             else:
                 raise NotImplementedError(snode)
             nodes += new_set
         else:
             nodes.append(int(snode))
+    print('nodes =', nodes)
     return unique(nodes)
 
 
@@ -342,9 +344,14 @@ def parse_patran_syntax_dict(node_sets):
       doesn't support "1:#"
     """
     data = {}
-    snodes = node_sets.split()
+    try:
+        snodes = node_sets.split()
+    except TypeError:
+        print('node_sets =', node_sets, type(node_sets))
+        raise
     key = None
     for snode in snodes:
+        print('snode =', snode)
         if ':' in snode:
             ssnode = snode.split(':')
             if len(ssnode) == 2:
@@ -352,10 +359,11 @@ def parse_patran_syntax_dict(node_sets):
                 new_set = list(range(nmin, nmax + 1))
             elif len(ssnode) == 3:
                 nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
+                nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
                 if delta > 0:
                     new_set = list(range(nmin, nmax + 1, delta))
                 else:
-                    new_set = list(range(nmax, nmin + 1, -delta))
+                    new_set = list(range(nmin, nmax + 1, -delta))
             else:
                 raise NotImplementedError(snode)
             if key is None:
@@ -375,6 +383,7 @@ def parse_patran_syntax_dict(node_sets):
                     data[key] = []
     for key, ints in iteritems(data):
         data[key] = unique(ints)
+    print(data)
     return data
 
 
