@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
-from six import string_types, iteritems
+from six import string_types, iteritems, itervalues
 from six.moves import range
 
 # standard library
@@ -89,6 +89,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # initializes tools/checkables
         self.set_tools()
 
+        self.geometry_actors = []
+
     def set_window_title(self, msg):
         #msg2 = "%s - "  % self.base_window_title
         #msg2 += msg
@@ -134,6 +136,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
         #===============================================
 
+        self._create_vtk_objects()
         self._build_menubar()
 
         # right sidebar
@@ -160,7 +163,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
         if output:
             self.on_load_results(output)
-        self._simulate_key_press('r')
+        #self._simulate_key_press('r')
+        self.on_reset_camera()
         self.vtk_interactor.Modified()
 
     def set_script_path(self, script_path):
@@ -246,7 +250,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #self.menu_scripts = self.menubar.addMenu('&Scripts')
             #for script in scripts:
                 #fname = os.path.join(script_path, script)
-                #tool = (script, script, 'python48.png', None, '', lambda: self.on_run_script(fname) )
+                #tool = (script, script, 'python48.png', None, '',
+                        #lambda: self.on_run_script(fname) )
                 #tools.append(tool)
         #else:
         self.menu_scripts = None
@@ -303,6 +308,52 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
                     action = actions[i] #if isinstance(i, string_types) else i()
                     menu.addAction(action)
+        #self._create_plane_from_points(None)
+
+    def _create_plane_from_points(self, points):
+        origin, vx, vy, vz, x_limits, y_limits = self._fit_plane(points)
+
+        # We create a 100 by 100 point plane to sample
+        splane = vtk.vtkPlaneSource()
+        plane = splane.GetOutput()
+
+        dx = 50.
+        dy = 100.
+
+        # we need to offset the origin of the plane because the "origin"
+        # is at the lower left corner of the plane and not the centroid
+        offset = (dx * vx + dy * vy) / 2.
+        origin -= offset
+        splane.SetCenter(origin)
+
+        splane.SetNormal(vz)
+
+        # Point 1 defines the x-axis and the x-size
+        # Point 2 defines the y-axis and the y-size
+        splane.SetPoint1(origin + dx * vx)
+        splane.SetPoint2(origin + dy * vy)
+
+        actor = vtk.vtkActor()
+        mapper = vtk.vtkPolyDataMapper()
+
+        if self.vtk_version <= 5:
+            mapper.SetInputData(plane)
+        else:
+            mapper.SetInput(plane)
+
+        actor.GetProperty().SetColor(1.,0.,0.)
+        actor.SetMapper(mapper)
+        self.rend.AddActor(actor)
+        splane.Update()
+
+    def _fit_plane(self, points):
+        origin = array([34.60272856552356, 16.92028913186242, 37.805958003209184])
+        vx = array([1., 0., 0.])
+        vy = array([0., 1., 0.])
+        vz = array([0., 0., 1.])
+        x_limits = [-1., 2.]
+        y_limits = [0., 1.]
+        return origin, vx, vy, vz, x_limits, y_limits
 
     def _prepare_actions(self, icon_path, tools, checkables):
         """
@@ -310,7 +361,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         that's independent of the  menus & toolbar
         """
         actions = {}
-        for (nam, txt, icon, shortcut, tip, func) in tools:
+        for tool in tools:
+            (nam, txt, icon, shortcut, tip, func) = tool
             #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
             #if icon is None:
                 #print("missing_icon = %r!!!" % nam)
@@ -335,6 +387,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
             if shortcut:
                 actions[nam].setShortcut(shortcut)
+                #actions[nam].setShortcutContext(QtCore.Qt.WidgetShortcut)
             if tip:
                 actions[nam].setStatusTip(tip)
             if func:
@@ -454,10 +507,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def set_text_color(self, color):
         """Set the text color"""
         self.text_col = color
-        for itext, text_actor in iteritems(self.textActors):
+        for text_actor in itervalues(self.textActors):
             text_actor.GetTextProperty().SetColor(color)
         self.log_command('set_text_color(%s, %s, %s)' % color)
-
 
     def create_coordinate_system(self, label='', origin=None, matrix_3x3=None, Type='xyz'):
         """
@@ -551,10 +603,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # this method should handle all the coords when
         # there are more then one
         if self._is_axes_shown:
-            for key, axis in iteritems(self.axes):
+            for axis in itervalues(self.axes):
                 axis.VisibilityOff()
         else:
-            for key, axis in iteritems(self.axes):
+            for axis in itervalues(self.axes):
                 axis.VisibilityOn()
         self._is_axes_shown = not(self._is_axes_shown)
 
@@ -579,20 +631,23 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.scalarBar = vtk.vtkScalarBarActor()
         self.create_global_axes()
 
-    def build_vtk_frame(self):
+    def _create_vtk_objects(self):
         #Frame that VTK will render on
-        vtk_frame = QtGui.QFrame()
+        self.vtk_frame = QtGui.QFrame()
+
+        #Qt VTK RenderWindowInteractor
+        self.vtk_interactor = QVTKRenderWindowInteractor(parent=self.vtk_frame)
+        self.iren = self.vtk_interactor
+
+    def build_vtk_frame(self):
         vtk_hbox = QtGui.QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
-        #Qt VTK RenderWindowInteractor
-        self.vtk_interactor = QVTKRenderWindowInteractor(parent=vtk_frame)
-        self.iren = self.vtk_interactor
         vtk_hbox.addWidget(self.vtk_interactor)
-        vtk_frame.setLayout(vtk_hbox)
-        vtk_frame.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
+        self.vtk_frame.setLayout(vtk_hbox)
+        self.vtk_frame.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
         # this is our main, 'central' widget
-        self.setCentralWidget(vtk_frame)
+        self.setCentralWidget(self.vtk_frame)
 
         #=============================================================
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
@@ -652,11 +707,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         if len(key) == 5:
-            (subcaseID, resultType, vectorSize, location, data_format) = key
+            (subcaseID, resultType, vector_size, location, data_format) = key
         elif len(key) == 6:
-            (subcaseID, i, resultType, vectorSize, location, data_format) = key
+            (subcaseID, i, resultType, vector_size, location, data_format) = key
         else:
-            (subcaseID, i, resultType, vectorSize, location, data_format, label2) = key
+            (subcaseID, i, resultType, vector_size, location, data_format, label2) = key
 
         data = {
             'name' : resultType,
@@ -675,13 +730,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.apply_legend(data)
 
     def apply_legend(self, data):
-        Title = data['name']
+        title = data['name']
         min_value = data['min']
         max_value = data['max']
         data_format = data['format']
         is_blue_to_red = data['is_blue_to_red']
         is_discrete = data['is_discrete']
-        self.on_update_legend(Title=Title, min_value=min_value, max_value=max_value,
+        self.on_update_legend(Title=title, min_value=min_value, max_value=max_value,
                               data_format=data_format,
                               is_blue_to_red=is_blue_to_red,
                               is_discrete=is_discrete)
@@ -704,7 +759,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         (subtitle, label) = caseName
 
         gridResult = self.build_grid_result(vector_size, location)
-        norm_value, nValueSet = self.set_grid_values(gridResult, case, vector_size, min_value, max_value, is_blue_to_red=is_blue_to_red)
+        norm_value, nValueSet = self.set_grid_values(gridResult, case, vector_size,
+                                                     min_value, max_value, is_blue_to_red=is_blue_to_red)
         self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format, is_blue_to_red=is_blue_to_red)
         self.final_grid_update(gridResult, key, subtitle, label)
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
@@ -721,7 +777,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 is_failed = True
                 return is_failed # user clicked cancel
 
-            python_file = os.path.join(script_path, infile_name)
+            python_file = os.path.join(infile_name)
         execfile(python_file)
         self.log_command('self.on_run_script(%r)' % python_file)
 
@@ -740,17 +796,32 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
         self._simulate_key_press('r')
+        self.vtk_interactor.Render()
 
     def on_surface(self):
         if self.is_wireframe:
             self.log_command('on_surface()')
-            self._simulate_key_press('s')
+            for actor in self.get_geometry_actors():
+                prop = actor.GetProperty()
+                prop.SetRepresentationToSurface()
             self.is_wireframe = False
+            self.vtk_interactor.Render()
+
+
+    def get_geometry_actors(self):
+        return self.geometry_actors
 
     def on_wireframe(self):
         if not self.is_wireframe:
             self.log_command('on_wireframe()')
-            self._simulate_key_press('w')
+            for actor in self.get_geometry_actors():
+                prop = actor.GetProperty()
+                prop.SetRepresentationToWireframe()
+                #prop.SetRepresentationToPoints()
+                #prop.GetPointSize()
+                #prop.SetPointSize(5.0)
+                #prop.ShadingOff()
+            self.vtk_interactor.Render()
             self.is_wireframe = True
 
     def _update_camera(self, camera=None):
@@ -1177,7 +1248,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # build GUI and restore saved application state
         nice_blue = (0.1, 0.2, 0.4)
         white = (1.0, 1.0, 1.0)
-        black = (0.0, 0.0, 0.0)
+        #black = (0.0, 0.0, 0.0)
         red = (1.0, 0.0, 0.0)
         self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
         self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
@@ -1198,9 +1269,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #-------------
         shots = inputs['shots']
-        geometry_format = inputs['format']  # the active format loaded into the gui
-        fname_input = inputs['input']
-        fname_output = inputs['output']
+        #geometry_format = inputs['format']  # the active format loaded into the gui
+        #fname_input = inputs['input']
+        #fname_output = inputs['output']
         post_script = inputs['postscript']
         #-------------
 
@@ -1301,12 +1372,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.warpVector.SetInput(self.aQuadMapper.GetUnstructuredGridOutput())
         #aQuadMapper.SetInput(Filter.GetOutput())
 
-        geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(self.aQuadMapper)
+        self.geom_actor = vtk.vtkActor()
+        self.geom_actor.SetMapper(self.aQuadMapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        geometryActor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
-        self.rend.AddActor(geometryActor)
+        self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
+        self.rend.AddActor(self.geom_actor)
 
     def addAltGeometry(self):
         self.aQuadMapper = vtk.vtkDataSetMapper()
@@ -1324,6 +1395,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.rend.AddActor(self.alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
+
+        self.geometry_actors = [self.geom_actor, self.alt_geometry_actor]
 
     def on_update_scalar_bar(self, Title, min_value, max_value, data_format):
         self.Title = str(Title)
@@ -1395,6 +1468,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         print("key = ", key)
         if key == 'f':  # change focal point
+            #print('focal_point!')
             return
         self.vtk_interactor._Iren.SetEventInformation(0, 0, 0, 0, key, 0, None)
         self.vtk_interactor._Iren.KeyPressEvent()
@@ -1573,6 +1647,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         for result_name, actors in iteritems(self.label_actors):
             for actor in actors:
                 self.rend.RemoveActor(actor)
+                del actor
             self.label_actors[result_name] = []
 
     def clear_labels(self):
@@ -1581,12 +1656,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
 
         # existing geometry
-        case_key = self.caseKeys[self.iCase]
+        #case_key = self.caseKeys[self.iCase]
         result_name = self.result_name
 
         actors = self.label_actors[result_name]
         for actor in actors:
             self.rend.RemoveActor(actor)
+            del actor
         self.label_actors[result_name] = []
 
     def hide_labels(self, result_names=None, show_msg=True):

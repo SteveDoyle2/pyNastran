@@ -104,6 +104,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.build_fmts(fmt_order, stop_on_failure=False)
 
         self.label_actors = {}
+        self.label_scale = 1.0 # in percent
 
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
@@ -188,33 +189,64 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 text = str(result_value)
 
                 # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
-                source = vtk.vtkVectorText()
-                source.SetText(text)
+                if 1:
+                    source = vtk.vtkVectorText()
+                    source.SetText(text)
 
-                # mappers are weird; they seem to do nothing
-                mapper = vtk.vtkPolyDataMapper()
-                mapper.SetInputConnection(source.GetOutputPort())
+                    # mappers are weird; they seem to do nothing
+                    mapper = vtk.vtkPolyDataMapper()
+                    mapper.SetInputConnection(source.GetOutputPort())
 
-                # the follower lets us set the position/size/color
-                follower = vtk.vtkFollower()
-                follower.SetMapper(mapper)
-                follower.SetPosition((x, y, z))
-                follower.SetScale(0.5)
-                prop = follower.GetProperty()
-                prop.SetColor(self.label_col)
+                    # the follower lets us set the position/size/color
+                    follower = vtk.vtkFollower()
+                    follower.SetMapper(mapper)
+                    follower.SetPosition((x, y, z))
 
-                # we need to make sure the text rotates when the camera is changed
-                camera = self.rend.GetActiveCamera()
-                follower.SetCamera(camera)
+                    # 1 point = 1/72"
+                    # SetScale works on model scale size
+                    #follower.SetScale(0.5)
+                    follower.SetScale(self.dim_max * 0.01 * self.label_scale)
+
+                    prop = follower.GetProperty()
+                    prop.SetColor(self.label_col)
+                    #prop.SetOpacity( 0.3 );
+
+                    # we need to make sure the text rotates when the camera is changed
+                    camera = self.rend.GetActiveCamera()
+                    follower.SetCamera(camera)
+                else:
+                    # Create a text mapper and actor to display the results of picking.
+                    textMapper = vtk.vtkTextMapper()
+                    textMapper.SetInput(text)
+
+                    tprop = textMapper.GetTextProperty()
+                    tprop.SetFontFamilyToArial()
+                    tprop.SetFontSize(10)
+                    tprop.BoldOn()
+                    tprop.ShadowOn()
+                    tprop.SetColor(self.label_col)
+
+                    textActor = vtk.vtkActor2D()
+                    #textActor.SetPosition((x, y, z))
+                    print(world_position)
+                    #textActor.SetPosition(select_point[:2])
+                    textActor.GetPositionCoordinate().SetCoordinateSystemToWorld()
+                    textActor.SetPosition(world_position[:2])
+                    #textActor.VisibilityOff()
+                    textActor.SetMapper(textMapper)
+                    #textActor.VisibilityOn()
+
+                    follower = textActor
+
 
                 # finish adding the actor
                 self.rend.AddActor(follower)
                 self.label_actors[result_name].append(follower)
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                camera.GetPosition()
-                camera.GetClippingRange()
-                camera.GetFocalPoint()
+                #camera.GetPosition()
+                #camera.GetClippingRange()
+                #camera.GetFocalPoint()
 
         def annotate_point_picker(object, event):
             self.log_command("annotate_point_picker()")
@@ -337,6 +369,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
 def main():
     app = QtGui.QApplication(sys.argv)
+
     QtGui.QApplication.setOrganizationName("pyNastran")
     QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
     QtGui.QApplication.setApplicationName("pyNastran")

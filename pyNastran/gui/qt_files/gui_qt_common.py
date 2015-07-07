@@ -12,6 +12,7 @@ class GuiCommon(object):
         self._group_elements = {}
         self._group_coords = {}
         self._group_shown = {}
+        self.dim_max = 1.0
         self.vtk_version = [int(i) for i in vtk.VTK_VERSION.split('.')[:1]]
         print('vtk_version = %s' % (self.vtk_version))
 
@@ -38,6 +39,7 @@ class GuiCommon(object):
         """
         scale coordinate system based on model length
         """
+        self.dim_max = dim_max
         dim_max *= 0.10
         if hasattr(self, 'axes'):
             for cid, axes in iteritems(self.axes):
