@@ -668,11 +668,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.magnify = 1
         self.iText = 0
-        textSize = 14 * self.magnify
-        self.createText([5, 50], 'Max  ', textSize)  # text actor 0
-        self.createText([5, 35], 'Min  ', textSize)  # text actor 1
-        self.createText([5, 20], 'Word1', textSize)  # text actor 2
-        self.createText([5, 5], 'Word2', textSize)  # text actor 3
+        text_size = 14 * self.magnify
+        self.createText([5, 50], 'Max  ', text_size)  # text actor 0
+        self.createText([5, 35], 'Min  ', text_size)  # text actor 1
+        self.createText([5, 20], 'Word1', text_size)  # text actor 2
+        self.createText([5, 5], 'Word2', text_size)  # text actor 3
 
         self.get_edges()
         if self.is_edges:
@@ -706,14 +706,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         if len(key) == 5:
-            (subcaseID, resultType, vector_size, location, data_format) = key
+            (subcase_id, result_type, vector_size, location, data_format) = key
         elif len(key) == 6:
-            (subcaseID, i, resultType, vector_size, location, data_format) = key
+            (subcase_id, i, result_type, vector_size, location, data_format) = key
         else:
-            (subcaseID, i, resultType, vector_size, location, data_format, label2) = key
+            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
 
         data = {
-            'name' : resultType,
+            'name' : result_type,
             'min' : case.min(),
             'max' : case.max(),
             'format' : data_format,
@@ -752,14 +752,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (subcase_id, i, _result_type, vector_size, location, _data_format, label2) = key
 
         try:
-            caseName = self.iSubcaseNameMap[subcase_id]
+            case_name = self.iSubcaseNameMap[subcase_id]
         except KeyError:
-            caseName = ('case=NA', 'label=NA')
-        (subtitle, label) = caseName
+            case_name = ('case=NA', 'label=NA')
+        (subtitle, label) = case_name
 
         gridResult = self.build_grid_result(vector_size, location)
-        norm_value, nValueSet = self.set_grid_values(gridResult, case, vector_size,
-                                                     min_value, max_value, is_blue_to_red=is_blue_to_red)
+        norm_value, nvalues_set = self.set_grid_values(gridResult, case, vector_size,
+                                                       min_value, max_value, is_blue_to_red=is_blue_to_red)
         self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format, is_blue_to_red=is_blue_to_red)
         self.final_grid_update(gridResult, key, subtitle, label)
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
@@ -942,22 +942,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # after the width is set, this is adjusted
         self.scalarBar.SetPosition(0.77, 0.1)
 
-        propTitle = vtk.vtkTextProperty()
-        propTitle.SetFontFamilyToArial()
-        #propTitle.ItalicOff()
-        propTitle.BoldOn()
-        propTitle.ShadowOn()
+        prop_title = vtk.vtkTextProperty()
+        prop_title.SetFontFamilyToArial()
+        #prop_title.ItalicOff()
+        prop_title.BoldOn()
+        prop_title.ShadowOn()
 
-        propLabel = vtk.vtkTextProperty()
-        propLabel.BoldOff()
-        propLabel.ShadowOn()
+        prop_label = vtk.vtkTextProperty()
+        prop_label.BoldOff()
+        prop_label.ShadowOn()
 
         scalar_range = self.grid.GetScalarRange()
         self.aQuadMapper.SetScalarRange(scalar_range)
         self.aQuadMapper.SetLookupTable(self.colorFunction)
 
-        #self.scalarBar.SetTitleTextProperty(propTitle)
-        #self.scalarBar.SetLabelTextProperty(propLabel)
+        #self.scalarBar.SetTitleTextProperty(prop_title)
+        #self.scalarBar.SetLabelTextProperty(prop_label)
         self.scalarBar.SetLabelFormat("%i")
 
         # allows 0-1 to be nice number when ranging values (gotta pick something)
@@ -1065,7 +1065,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
                 return is_failed
-                raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
+                #raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
             formats = [geometry_format]
             filter_index = 0
         else:
@@ -1091,8 +1091,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if infile_name is not None and geometry_format is not None:
                 filter_index = formats.index(geometry_format)
             else:
-                Title = 'Choose a Geometry File to Load'
-                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
+                title = 'Choose a Geometry File to Load'
+                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, title)
                 #print("infile_name = %r" % infile_name)
                 #print("wildcard_index = %r" % wildcard_index)
                 if not infile_name:
@@ -1184,7 +1184,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise RuntimeError(msg)
 
         if out_filename in [None, False]:
-            Title = 'Select a Results File for %s' % self.format
+            title = 'Select a Results File for %s' % self.format
             wildcard = None
             load_function = None
 
@@ -1203,7 +1203,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 msg = 'format=%r has no method to load results' % geometry_format
                 self.log_error(msg)
                 return
-            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
+            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, title)
         else:
 
             for fmt in self.fmts:
@@ -1289,9 +1289,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             filt = QtCore.QString()
             default_filename = ''
 
-            Title = ''
+            title = ''
             if self.Title is not None:
-                Title = self.Title
+                title = self.Title
 
             if self.out_filename is None:
                 default_filename = ''
@@ -1300,7 +1300,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     default_filename = self.infile_name
             else:
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
-                default_filename = Title + '_' + base
+                default_filename = title + '_' + base
 
             fname = str(QtGui.QFileDialog.getSaveFileName(self, (
                 'Choose a filename and type'), default_filename, (
@@ -1321,34 +1321,34 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 flt = 'png'
 
         if fname:
-            renderLarge = vtk.vtkRenderLargeImage()
+            render_large = vtk.vtkRenderLargeImage()
             if self.vtk_version[0] >= 6:
-                renderLarge.SetInput(self.rend)
+                render_large.SetInput(self.rend)
             else:
-                renderLarge.SetInput(self.rend)
+                render_large.SetInput(self.rend)
 
             magnify_min = 5
             magnify = self.magnify if self.magnify > magnify_min else magnify_min
-            renderLarge.SetMagnification(magnify)
+            render_large.SetMagnification(magnify)
 
             nam, ext = os.path.splitext(fname)
             ext = ext.lower()
-            for nam, exts, ob in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
-                                  ("BMP", ['.bmp'], vtk.vtkBMPWriter),
-                                  ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
-                                  ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
+            for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
+                                   ("BMP", ['.bmp'], vtk.vtkBMPWriter),
+                                   ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
+                                   ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
                 if flt == nam:
                     fname = fname if ext in exts else fname + exts[0]
-                    writer = ob()
+                    writer = obj()
                     break
             else:
                 fname = fname if ext == '.png' else fname + '.png'
                 writer = vtk.vtkPNGWriter()
 
             if self.vtk_version[0] >= 6:
-                writer.SetInputConnection(renderLarge.GetOutputPort())
+                writer.SetInputConnection(render_large.GetOutputPort())
             else:
-                writer.SetInputConnection(renderLarge.GetOutputPort())
+                writer.SetInputConnection(render_large.GetOutputPort())
             writer.SetFileName(fname)
             writer.Write()
             #self.log_info("Saved screenshot: " + fname)
@@ -1391,8 +1391,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.geometry_actors = [self.geom_actor, self.alt_geometry_actor]
 
-    def on_update_scalar_bar(self, Title, min_value, max_value, data_format):
-        self.Title = str(Title)
+    def on_update_scalar_bar(self, title, min_value, max_value, data_format):
+        self.Title = str(title)
         self.min_value = float(min_value)
         self.max_value = float(max_value)
         try:
@@ -1477,15 +1477,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
-            #print("finish_io case A")
             self.iCase = -1
             self.nCases = len(self.resultCases)  # number of keys in dictionary
         elif len(self.caseKeys) == 1:
-            #print("finish_io case B")
             self.iCase = -1
             self.nCases = 1
         else:
-            #print("finish_io case C")
             self.iCase = -1
             self.nCases = 0
 
@@ -1579,15 +1576,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.caseKeys = sorted(cases.keys())
 
         if len(self.caseKeys) > 1:
-            #print("finish_io case A")
             self.iCase = -1
             self.nCases = len(self.resultCases)  # number of keys in dictionary
         elif len(self.caseKeys) == 1:
-            #print("finish_io case B")
             self.iCase = -1
             self.nCases = 1
         else:
-            #print("finish_io case C")
             self.iCase = -1
             self.nCases = 0
 

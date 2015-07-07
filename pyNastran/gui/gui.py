@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0111
 from __future__ import division, unicode_literals, print_function
-from six import string_types, iteritems
+#from six import string_types, iteritems
 from six.moves import range
 
 # standard library
@@ -16,8 +17,8 @@ import pyNastran
 from pyNastran.gui.utils import check_for_newer_version
 
 
-self = None
-check_for_newer_version(self, pop_msg=True)
+window = None
+check_for_newer_version(window, pop_msg=True)
 
 print("Using PyQt4")
 fmode = 1
@@ -35,12 +36,13 @@ assert fmode in [1, 2]
 import vtk
 
 # pyNastran
-from pyNastran.utils import print_bad_path
+#from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
-    is_nastran, is_cart3d, is_panair, is_lawgs,
-    is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d, is_openvsp,
-    is_fast)
+    #is_nastran, is_cart3d, is_panair, is_lawgs,
+    #is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d, is_openvsp,
+    #is_fast
+    )
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -169,7 +171,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 world_position = picker.GetPickPosition()
                 cell_id = picker.GetCellId()
                 #ds = picker.GetDataSet()
-                select_point = picker.GetSelectionPoint()
+                #select_point = picker.GetSelectionPoint()
                 self.log_command("annotate_picker()")
                 self.log_info("XYZ Global = %s" % str(world_position))
                 #self.log_info("cell_id = %s" % cell_id)
