@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0201,C0111
 from __future__ import division, unicode_literals, print_function
 from six import string_types, iteritems, itervalues
 from six.moves import range
@@ -148,22 +149,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not inputs['format']:
             return
         form = inputs['format'].lower()
-        geom_script = inputs['geomscript']
-        input = inputs['input']
-        output = inputs['output']
+        input_filename = inputs['input']
+        results_filename = inputs['output']
         plot = True
-        if output:
+        if results_filename:
             plot = False
 
-        if geom_script:
-            self.on_run_script(geom_script)
-
-        is_failed = self.on_load_geometry(input, form, plot=plot)
+        is_failed = self.on_load_geometry(input_filename, form, plot=plot)
         if is_failed:
             return
-        if output:
-            self.on_load_results(output)
-        #self._simulate_key_press('r')
+        if results_filename:
+            self.on_load_results(results_filename)
         self.on_reset_camera()
         self.vtk_interactor.Modified()
 
@@ -317,8 +313,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         splane = vtk.vtkPlaneSource()
         plane = splane.GetOutput()
 
-        dx = 50.
-        dy = 100.
+        dx = max(x_limits) - min(x_limits)
+        dy = max(y_limits) - min(y_limits)
+        #dx = 1.
+        #dy = 3.
 
         # we need to offset the origin of the plane because the "origin"
         # is at the lower left corner of the plane and not the centroid
@@ -341,7 +339,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             mapper.SetInput(plane)
 
-        actor.GetProperty().SetColor(1.,0.,0.)
+        actor.GetProperty().SetColor(1., 0., 0.)
         actor.SetMapper(mapper)
         self.rend.AddActor(actor)
         splane.Update()
@@ -427,12 +425,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
+
         #message colors
         dark_orange = '#EB9100'
         cols = {
-            "GUI": "blue",
-            "COMMAND":"green",
-            "GUI ERROR":"Crimson",
+            "GUI" : "blue",
+            "COMMAND" : "green",
+            "GUI ERROR" : "Crimson",
             "DEBUG" : dark_orange,
             'WARNING' : "purple",
             # INFO - black
@@ -608,7 +607,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             for axis in itervalues(self.axes):
                 axis.VisibilityOn()
-        self._is_axes_shown = not(self._is_axes_shown)
+        self._is_axes_shown = not self._is_axes_shown
 
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
@@ -777,6 +776,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 is_failed = True
                 return is_failed # user clicked cancel
 
+            #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
         execfile(python_file)
         self.log_command('self.on_run_script(%r)' % python_file)
@@ -801,12 +801,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def on_surface(self):
         if self.is_wireframe:
             self.log_command('on_surface()')
+            #self._simulate_key_press('s')
             for actor in self.get_geometry_actors():
                 prop = actor.GetProperty()
                 prop.SetRepresentationToSurface()
             self.is_wireframe = False
             self.vtk_interactor.Render()
-
 
     def get_geometry_actors(self):
         return self.geometry_actors
@@ -814,6 +814,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def on_wireframe(self):
         if not self.is_wireframe:
             self.log_command('on_wireframe()')
+            #self._simulate_key_press('w')
             for actor in self.get_geometry_actors():
                 prop = actor.GetProperty()
                 prop.SetRepresentationToWireframe()
@@ -1267,13 +1268,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def setup_post(self, inputs):
         self.load_batch_inputs(inputs)
 
-        #-------------
         shots = inputs['shots']
-        #geometry_format = inputs['format']  # the active format loaded into the gui
-        #fname_input = inputs['input']
-        #fname_output = inputs['output']
-        post_script = inputs['postscript']
-        #-------------
 
         if shots is None:
             shots = []
@@ -1283,8 +1278,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.on_take_screenshot(shots)
             sys.exit('took screenshot %r' % shots)
 
-        if post_script:
-            self.on_run_script(post_script)
 
     def take_screenshot(self):
         """ Take a screenshot of a current view and save as a file"""

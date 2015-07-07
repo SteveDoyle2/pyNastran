@@ -121,22 +121,13 @@ class GuiCommon(object):
         norm_value, nValueSet = self.set_grid_values(grid_result, case, vector_size, min_value, max_value)
         self.update_text_actors(case, subcase_id, subtitle, min_value, max_value, label)
         self.UpdateScalarBar(result_type, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
-        #self.scalarBar.SetNumberOfLabels(nValueSet)
-        #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
-        #prop = self.scalarBar.GetLabelTextProperty()
-        #fontSize = prop.GetFontSize()
-        #print("fontSize = %s" % fontSize)
-        #prop.SetFontSize(40)
 
-        # TODO results can only go from centroid->node and not back to
-        # centroid
-        #print(dir(self.grid))
-        #self.grid.Reset()
+        # TODO: results can only go from centroid->node and not back to centroid
         self.final_grid_update(grid_result, key, subtitle, label)
         if explicit:
             self.log_command('cycleResults(result_name=%r)' % result_type)
 
-    def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
+    def set_grid_values(self, gridResult, case, vector_size, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red
         norm_value = float(max_value - min_value)
         #print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
@@ -145,7 +136,7 @@ class GuiCommon(object):
         #    norm_value = 1.
 
         valueSet = set()
-        if vectorSize == 1:
+        if vector_size == 1:
             if is_blue_to_red:
                 if norm_value == 0:
                     for i, value in enumerate(case):
@@ -160,7 +151,7 @@ class GuiCommon(object):
                 else:
                     for i, value in enumerate(case):
                         gridResult.InsertNextValue((value - min_value) / norm_value)
-        else:  # vectorSize=3
+        else:  # vector_size=3
             for value in case:
                 gridResult.InsertNextTuple3(value)  # x,y,z
 
@@ -169,11 +160,11 @@ class GuiCommon(object):
 
     def final_grid_update(self, gridResult, key, subtitle, label):
         if len(key) == 5:
-            (subcaseID, resultType, vectorSize, location, data_format) = key
+            (subcaseID, resultType, vector_size, location, data_format) = key
         elif len(key) == 6:
-            (subcaseID, j, resultType, vectorSize, location, data_format) = key
+            (subcaseID, j, resultType, vector_size, location, data_format) = key
         else:
-            (subcaseID, j, resultType, vectorSize, location, data_format, label2) = key
+            (subcaseID, j, resultType, vector_size, location, data_format, label2) = key
         npoints = self.nPoints()
         ncells = self.nCells()
 
@@ -183,22 +174,22 @@ class GuiCommon(object):
                 point_data = self.grid.GetPointData()
                 point_data.Reset()
             self.grid.GetCellData().SetScalars(gridResult)
-            self.log_info("centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+            self.log_info("centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vector_size, subcaseID, resultType, subtitle, label))
         elif location == 'node':
         #elif location == 'node' and self.is_nodal:
             if ncells:
                 cell_data = self.grid.GetCellData()
                 #print(dir(cell_data))
                 cell_data.Reset()
-            if vectorSize == 1:
-                self.log_info("node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+            if vector_size == 1:
+                self.log_info("node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vector_size, subcaseID, resultType, subtitle, label))
                 self.grid.GetPointData().SetScalars(gridResult)
-            elif vectorSize == 3:
-                self.log_info("node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+            elif vector_size == 3:
+                self.log_info("node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vector_size, subcaseID, resultType, subtitle, label))
                 self.grid.GetPointData().SetScalars(gridResult)
             else:
                 #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID, resultType, subtitle, label))
-                raise RuntimeError(vectorSize)
+                raise RuntimeError(vector_size)
         else:
             raise RuntimeError(location)
             self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
@@ -214,14 +205,12 @@ class GuiCommon(object):
         print(self.resultCases.keys())
         i = 0
         for icase, cases in sorted(iteritems(self.resultCases)):
-            #print(cases[1])
             if result_name == icase[1]:
                 found_case = True
                 iCase = i
                 break
             i += 1
         assert found_case == True, 'result_name=%r' % result_name
-        #print('***icase = %s' % iCase)
         return iCase
 
     def incrementCycle(self, result_name=False):
@@ -233,7 +222,6 @@ class GuiCommon(object):
                     self.iCase = icase  # no idea why this works...if it does...
 
         if not found_case:
-            #print('iCase=%s nCases=%s' % (self.iCase, self.nCases))
             if self.iCase is not self.nCases:
                 self.iCase += 1
             else:
@@ -242,7 +230,6 @@ class GuiCommon(object):
             self.iCase = 0
 
         if len(self.caseKeys) > 0:
-            #print('caseKeys =', self.caseKeys)
             try:
                 key = self.caseKeys[self.iCase]
             except IndexError:
@@ -261,24 +248,20 @@ class GuiCommon(object):
         #print("next iCase=%s key=%s" % (self.iCase, key))
         return foundCases
 
-    def build_grid_result(self, vectorSize, location):
-        #gridResult.Reset()
+    def build_grid_result(self, vector_size, location):
         gridResult = vtk.vtkFloatArray()
-        #gridResult.Reset()
-        #gridResult.Modified()
         self.rend.Modified()
-        #emptyResult = vtk.vtkFloatArray()
 
-        gridResult.SetNumberOfComponents(vectorSize)
+        gridResult.SetNumberOfComponents(vector_size)
         if location == 'centroid':
         #if location == 'centroid' and self.is_centroidal:
-            #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
+            #allocationSize = vector_size*location (where location='centroid'-> self.nElements)
             gridResult.Allocate(self.nElements, 1000)
         #elif location == 'node' and self.is_nodal:
         elif location == 'node':
-            #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
-            gridResult.Allocate(self.nNodes * vectorSize, 1000)
-            #gridResult.SetNumberOfComponents(vectorSize)
+            #allocationSize = vector_size*self.nNodes # (where location='node'-> self.nNodes)
+            gridResult.Allocate(self.nNodes * vector_size, 1000)
+            #gridResult.SetNumberOfComponents(vector_size)
         else:
             raise RuntimeError(location)
             #print("***%s skipping" % location)
@@ -327,160 +310,4 @@ class GuiCommon(object):
         self.scalarBar.SetMaximumNumberOfColors(nvalues)
         self.scalarBar.Modified()
 
-
-#========================================================================================
-# Groups - not done
-
-    def clear_groups(self):
-        all_groups = self.groups # set
-        self.remove_groups(all_groups)
-
-    def remove_groups(self, groups):
-        assert isinstance(groups, list), type(groups)
-        assert len(groups) >= 0, 'groups is empty'
-        assert len(all_groups) >= 0, 'all_groups is empty'
-
-        all_groups = self.groups # set
-        for group in all_groups:
-            if group in groups:
-                self.remove_group(group)
-
-    def remove_group(self, group):
-        if group not in all_groups:
-            raise RuntimeError('group=%r not found' % group)
-
-    def show_group(self, name):
-        self._group_shown[name] = True
-
-    def hide_group(self, name):
-        self._group_shown[name] = False
-
-    def post_groups(self, groups):
-        assert isinstance(groups, list), type(groups)
-        assert len(groups) >= 0, 'groups is empty'
-
-        all_groups = self.groups # set
-        assert len(all_groups) >= 0, 'all_groups is empty'
-
-        for group in all_groups:
-            if group in groups:
-                self.show_group(group)
-            else:
-                self.show_group(group)
-
-    def _check_add(self, Format, name, element_id=None, property_id=None, coord_id=None):
-        if element_id is None and property_id is None:
-            raise RuntimeError('either element_id or property_id must be set')
-        if isinstance(element_id, int):
-            element_id = [element_id]
-        if isinstance(property_id, int):
-            property_id = [property_id]
-
-        if Format == 'nastran':
-            if property_id:
-                element_id = self.model.get_element_id_by_property_id(property_id)
-
-        elif Format == 'cart3d':
-            if property_id:
-                element_id = self.model.get_gelement_id_by_region_id(property_id)
-        elif Format == 'panair':
-            if element_id is None:
-                raise RuntimeError('element_id must be set for panair')
-        else:
-            msg = "Format=%r is not supported; use 'nastran', 'cart3d', 'panair'" % Format
-            raise NotImplementedError(msg)
-
-        if coord_id is not None and Format != 'nastran':
-            raise RuntimeError('coord_id must be None for format=%r' % Format)
-
-        element_id = asarray(element_id)
-        return element_id
-
-    def _add_coord_id(self, name, coord_id):
-        if coord_id is None:
-            coord_id = set([0])
-        elif isinstance(coord_id, int):
-            coord_id = set([coord_id])
-        else:
-            for cid in coord_id:
-                assert isinstance(cid, int), type(cid)
-        if name in self._group_coords:
-            self._group_coords[name].union(set(coord_id))
-        else:
-            self._group_coords[name] = set(coord_id)
-
-    def _create_grid_mapper(self, name):
-        self.grid = vtk.vtkUnstructuredGrid()
-        self.aQuadMapper = vtk.vtkDataSetMapper()
-        self.aQuadMapper.SetInput(self.grid)
-
-        geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(self.aQuadMapper)
-        geometryActor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
-        self.rend.AddActor(geometryActor)
-
-class Groups(object):
-    def __init__(self):
-        self.nNodes = None
-        self.model = None
-        self.grid = None
-
-    def add_to_group(self, Format, name, element_id=None, property_id=None, coord_id=None):
-        assert name in self._group_elements
-        element_id = self._check_add(Format, name,
-                                     element_id=element_id, property_id=property_id,
-                                     coord_id=coord_id)
-        self._group_elements[name] = hstack([self._group_elements[name],
-                                             element_id])
-        self._add_coord_id(name, coord_id)
-
-    def create_group(self, Format, name,
-                     element_id=None, property_id=None, coord_id=None, show=True):
-        element_id = self._check_add(Format, name,
-                                     element_id=element_id, property_id=property_id,
-                                     coord_id=coord_id)
-
-        self.groups.add(name)
-        self._group_elements[name] = element_id
-        self._add_coord_id(name, coord_id)
-        self._group_shown[name] = show
-        if Format == 'nastran':
-            self._create_nastran_group(name, self.model, element_id)
-        elif Format == 'cart3d':
-            self._create_cart3d_group(name, self.model, element_id)
-        #elif Format == 'panair':
-            #self._create_panair_group(name, self.model, element_id)
-
-    def _create_nastran_group(self, name, model, element_id):
-        pass
-
-    def _create_cart3d_group(self, name, model, element_id):
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        nelements = len(element_id)
-        self.grid.Allocate(nelements, 1000)
-
-        nodes = self.model.get_nodes_associated_with_elements(element_id)
-        nodes.sort()
-
-        nid = 0
-        all_nodes = self.nodes
-        for i in all_nodes:
-            #if nid in nodes:
-                points.InsertPoint(nid, all_nodes[i, :])
-                nid += 1
-
-        from vtk import vtkTriangle
-        for eid in element_id:
-            elem = vtkTriangle()
-            node_ids = elements[eid, :]
-            elem_nodes = searchsorted(nodes, node_ids)
-            elem.GetPointIds().SetId(0, elem_nodes[0])
-            elem.GetPointIds().SetId(1, elem_nodes[1])
-            elem.GetPointIds().SetId(2, elem_nodes[2])
-            self.grid.InsertNextCell(5, elem.GetPointIds())
-
-        self.grid[name].SetPoints(points)
-        self.grid[name].Modified()
-        self.grid[name].Update()
 

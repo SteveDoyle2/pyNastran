@@ -793,7 +793,7 @@ class NastranIO(object):
             self.element_ids = eids
             eidsSet = True
 
-        # subcase_id, resultType, vectorSize, location, dataFormat
+        # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties) and self.is_centroidal:
             cases[(0, icase, 'Property_ID', 1, 'centroid', '%i')] = pids
             form0.append(('Property_ID', icase, []))
@@ -819,7 +819,7 @@ class NastranIO(object):
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-            # subcase_id, resultType, vectorSize, location, dataFormat
+            # subcase_id, resultType, vector_size, location, dataFormat
             cases[(0, icase, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
             form0.append(('Normal_x', icase, []))
             icase += 1
@@ -900,7 +900,7 @@ class NastranIO(object):
             if abs(pressures).max():
                 case_name = 'Pressure Case=%i' % subcase_id
                 print(case_name)
-                # subcase_id, resultType, vectorSize, location, dataFormat
+                # subcase_id, resultType, vector_size, location, dataFormat
                 cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
                 form0.append((case_name, icase, []))
                 icase += 1
@@ -2154,7 +2154,7 @@ class NastranIO(object):
 
         form0 = (word, None, [])
         formis = form0[2]
-        # subcase_id, icase, resultType, vectorSize, location, dataFormat
+        # subcase_id, icase, resultType, vector_size, location, dataFormat
         if is_stress and itime == 0:
             if isElementOn.min() == 0:  # if all elements aren't on
                 ioff = where(isElementOn == 0)[0]
