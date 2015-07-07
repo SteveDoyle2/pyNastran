@@ -317,7 +317,6 @@ def parse_patran_syntax(node_sets, pound=None):
             nodes += new_set
         else:
             nodes.append(int(snode))
-    print('nodes =', nodes)
     return unique(nodes)
 
 
@@ -351,7 +350,6 @@ def parse_patran_syntax_dict(node_sets):
         raise
     key = None
     for snode in snodes:
-        print('snode =', snode)
         if ':' in snode:
             ssnode = snode.split(':')
             if len(ssnode) == 2:
@@ -383,7 +381,6 @@ def parse_patran_syntax_dict(node_sets):
                     data[key] = []
     for key, ints in iteritems(data):
         data[key] = unique(ints)
-    print(data)
     return data
 
 

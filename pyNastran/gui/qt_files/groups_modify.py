@@ -210,16 +210,9 @@ class GroupsModify(QtGui.QDialog):
         self.add_edit.clear()
         self.add_edit.setStyleSheet("QLineEdit{background: white;}")
 
-
     def _apply_cids_eids(self):
-        singles, doubles = collapse_colon_packs(self.cids)
-        ctext = ' '.join([str(s) for s in singles]) + ' '
-        ctext += ' '.join([''.join([str(doublei) for doublei in double]) for double in doubles])
-
-
-        singles, doubles = collapse_colon_packs(self.eids)
-        etext = ' '.join([str(s) for s in singles]) + ' '
-        etext += ' '.join([''.join([str(doublei) for doublei in double]) for double in doubles])
+        ctext = _get_collapsed_text(self.cids)
+        etext = _get_collapsed_text(self.cids)
 
         self.coords_edit.setText(str(ctext.lstrip()))
         self.elements_edit.setText(str(etext.lstrip()))
@@ -361,7 +354,7 @@ class GroupsModify(QtGui.QDialog):
     def on_apply(self):
         passed = self.on_validate()
         if passed:
-            self.win_parent.apply_group(self.out_data)
+            self.win_parent.on_modify_group(self.out_data)
 
     def on_ok(self):
         passed = self.on_validate()
@@ -371,6 +364,12 @@ class GroupsModify(QtGui.QDialog):
 
     def on_cancel(self):
         self.close()
+
+def _get_collapsed_text(values):
+    singles, doubles = collapse_colon_packs(values)
+    text = ' '.join([str(s) for s in singles]) + ' '
+    text += ' '.join([''.join([str(doublei) for doublei in double]) for double in doubles])
+    return text
 
 def _add(adict, keys, values_to_add):
     value_stack = []
