@@ -2,8 +2,11 @@
 # pylint: disable=C0111
 from __future__ import print_function
 from six import iteritems
+from copy import deepcopy
+
+from numpy import ndarray, asarray, hstack, searchsorted, ones
 import vtk
-from numpy import ndarray, asarray, hstack, searchsorted
+from vtk.util.numpy_support import numpy_to_vtk
 
 
 class GuiCommon(object):
@@ -110,23 +113,18 @@ class GuiCommon(object):
               % (subcase_id, result_type, subtitle, label))
 
         #================================================
-        grid_result = self.build_grid_result(vector_size, location)
-        #================================================
         if isinstance(case, ndarray):
             max_value = case.max()
             min_value = case.min()
         else:
-            raise RuntimeError('list-based results have been disabled; use numpy.array')
-            print('resultType=%r should really use numpy arrays...' % result_type)
-            max_value = case[0]
-            min_value = case[0]
-            for value in case:
-                max_value = max(value, max_value)
-                min_value = min(value, min_value)
+            raise RuntimeError('list-based results have been removed; use numpy.array')
 
-        norm_value, nvalues_set = self.set_grid_values(grid_result, case, vector_size, min_value, max_value)
-        self.update_text_actors(case, subcase_id, subtitle, min_value, max_value, label)
-        self.UpdateScalarBar(result_type, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
+        norm_value, grid_result = self.set_grid_values(case, vector_size,
+                                                       min_value, max_value)
+        self.update_text_actors(case, subcase_id, subtitle,
+                                min_value, max_value, label)
+        self.UpdateScalarBar(result_type, min_value, max_value, norm_value,
+                             data_format, is_blue_to_red=True)
 
         # TODO: results can only go from centroid->node and not back to centroid
         self.final_grid_update(grid_result, key, subtitle, label)
@@ -134,7 +132,11 @@ class GuiCommon(object):
             self.log_command('cycleResults(result_name=%r)' % result_type)
         return result_type
 
-    def set_grid_values(self, grid_result, case, vector_size, min_value, max_value, is_blue_to_red=True):
+    def set_grid_values(self, case, vector_size, min_value, max_value,
+                        is_blue_to_red=True):
+        """
+        https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
+        """
         # flips sign to make colors go from blue -> red
         norm_value = float(max_value - min_value)
         #print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
@@ -142,28 +144,50 @@ class GuiCommon(object):
         #if norm_value == 0.: # avoids division by 0.
         #    norm_value = 1.
 
-        value_set = set()
+        #warp_vector = vtk.vtkWarpVector()
+        #warp_vector.setInput(grid_result.GetOuput())
+
         if vector_size == 1:
             if is_blue_to_red:
                 if norm_value == 0:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue(1 - min_value)
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue(1 - min_value)
+                    nvalues = len(case)
+                    case2 = 1 - ones(nvalues) * min_value
                 else:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue(1.0 - (value - min_value) / norm_value)
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue(1.0 - (value - min_value) / norm_value)
+                    case2 = 1.0 - (case - min_value) / norm_value
             else:
                 if norm_value == 0:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue(min_value)
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue(min_value)
+                    case2 = ones(nvalues) * min_value
                 else:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue((value - min_value) / norm_value)
-        else:  # vector_size=3
-            for value in case:
-                grid_result.InsertNextTuple3(value)  # x, y, z
-
-        nvalues_set = len(value_set)
-        return norm_value, nvalues_set
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue((value - min_value) / norm_value)
+                    case2 = (case - min_value) / norm_value
+            grid_result = numpy_to_vtk(
+                num_array=case2,
+                deep=False,
+                array_type=vtk.VTK_FLOAT
+            )
+        else:
+            # vector_size=3
+            #for value in case:
+                #grid_result.InsertNextTuple3(*value)  # x, y, z
+            if case.flags.contiguous:
+                case2 = case
+                deep = False
+            else:
+                case2 = deepcopy(case)
+                deep = True
+            grid_result = numpy_to_vtk(
+                num_array=case2,
+                deep=deep,
+                array_type=vtk.VTK_FLOAT
+            )
+        return norm_value, grid_result
 
     def final_grid_update(self, grid_result, key, subtitle, label):
         if len(key) == 5:
@@ -261,32 +285,14 @@ class GuiCommon(object):
         #print("next iCase=%s key=%s" % (self.iCase, key))
         return found_cases
 
-    def build_grid_result(self, vector_size, location):
-        grid_result = vtk.vtkFloatArray()
-        self.rend.Modified()
-
-        grid_result.SetNumberOfComponents(vector_size)
-        if location == 'centroid':
-        #if location == 'centroid' and self.is_centroidal:
-            #allocationSize = vector_size*location (where location='centroid'-> self.nElements)
-            grid_result.Allocate(self.nElements, 1000)
-        #elif location == 'node' and self.is_nodal:
-        elif location == 'node':
-            #allocationSize = vector_size*self.nNodes # (where location='node'-> self.nNodes)
-            grid_result.Allocate(self.nNodes * vector_size, 1000)
-            #grid_result.SetNumberOfComponents(vector_size)
-        else:
-            raise RuntimeError(location)
-            #print("***%s skipping" % location)
-        return grid_result
-
-    def UpdateScalarBar(self, title, min_value, max_value, norm_value, data_format,
-                        is_blue_to_red=True):
+    def UpdateScalarBar(self, title, min_value, max_value, norm_value,
+                        data_format, is_blue_to_red=True):
         """
         :param title:       the scalar bar title
         :param min_value:   the blue value
         :param max_value:   the red value
         :param data_format: '%g','%f','%i', etc.
+        :param is_blue_to_red:  flips the order of the RGB points
         """
         print("UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.colorFunction.RemoveAllPoints()

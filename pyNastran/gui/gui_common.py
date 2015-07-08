@@ -126,7 +126,28 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._logo = logo
 
     def init_ui(self):
-        """ Initialize user iterface"""
+        """
+        Initialize user iterface
+
+        +--------------+
+        | Window Title |
+        +--------------+----------------+
+        |  Menubar                      |
+        +-------------------------------+
+        |  Toolbar                      |
+        +---------------------+---------+
+        |                     |         |
+        |                     |         |
+        |                     | Results |
+        |       VTK Frame     |  Dock   |
+        |                     |         |
+        |                     |         |
+        +---------------------+---------+
+        |                               |
+        |      HTML Logging Dock        |
+        |                               |
+        +-------------------------------+
+        """
         self.resize(800, 600)
         self.statusBar().showMessage('Ready')
 
@@ -1397,6 +1418,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command('on_take_screenshot(%r)' % fname)
 
     def addGeometry(self):
+        """
+        #(N,)  for stress, x-disp
+        #(N,3) for warp vectors/glyphs
+        grid_result = vtk.vtkFloatArray()
+
+        point_data = self.grid.GetPointData()
+        cell_data = self.grid.GetCellData()
+
+        self.grid.GetCellData().SetScalars(grid_result)
+        self.grid.GetPointData().SetScalars(grid_result)
+
+
+        self.aQuadMapper   <-input-> self.grid
+        vtkDataSetMapper() <-input-> vtkUnstructuredGrid()
+
+        self.aQuadMapper   <--map--> self.geom_actor <-add-> self.rend
+        vtkDataSetMapper() <--map--> vtkActor()      <-add-> vtkRenderer()
+        """
         self.aQuadMapper = vtk.vtkDataSetMapper()
         if self.vtk_version[0] >= 6:
             self.aQuadMapper.SetInputData(self.grid)
@@ -1584,11 +1623,25 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     @property
     def result_name(self):
-        """creates the self.result_name variable"""
-        # TODO: this probably isn't always right...
+        """
+        creates the self.result_name variable
+
+        .. python ::
+
+          if len(key) == 5:
+              (subcase_id, result_type, vector_size, location, data_format) = key
+          elif len(key) == 6:
+              (subcase_id, j, result_type, vector_size, location, data_format) = key
+          else:
+              (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+        """
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.caseKeys[self.iCase]
-        return case_key[2]
+        if len(case_key) == 5:
+            value = case_key[1]
+        else:
+            value = case_key[2]
+        return value
 
     def finish_io(self, cases):
         self.resultCases = cases
