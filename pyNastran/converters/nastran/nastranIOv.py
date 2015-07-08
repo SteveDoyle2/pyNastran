@@ -1126,6 +1126,9 @@ class NastranIO(object):
                             t2 = case.data[itime, :, 1]
                             t3 = case.data[itime, :, 2]
 
+                            t123 = case.data[itime, :, :3]
+                            #tnorm = norm(t123, axis=1)
+
                             if(t1.min() == t1.max() and t2.min() == t2.max() and
                                t3.min() == t3.max()):
                                 continue
@@ -1166,12 +1169,17 @@ class NastranIO(object):
                             formi2.append((name + 'Z', icase, []))
                             icase += 1
 
+                            cases[(subcase_id, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
+                            formi2.append((name + 'XYZ', icase, []))
+                            icase += 1
+
                             formi.append(form0)
                     else:
                         t1 = case.data[0, :, 0]
                         t2 = case.data[0, :, 1]
                         t3 = case.data[0, :, 2]
-                        t123 = norm(case.data[0, :, :3], axis=1)
+                        t123 = case.data[0, :, :3]
+                        tnorm = norm(t123, axis=1)
 
 
                         if(t1.min() == t1.max() and t2.min() == t2.max() and
@@ -1193,7 +1201,8 @@ class NastranIO(object):
                         icase += 1
 
                         #if t123.min() != t123.max():
-                        cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = t123
+                        cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
+                        #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
                         formi.append((name + 'XYZ', icase, []))
                         icase += 1
 

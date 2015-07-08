@@ -1623,11 +1623,25 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     @property
     def result_name(self):
-        """creates the self.result_name variable"""
-        # TODO: this probably isn't always right...
+        """
+        creates the self.result_name variable
+
+        .. python ::
+
+          if len(key) == 5:
+              (subcase_id, result_type, vector_size, location, data_format) = key
+          elif len(key) == 6:
+              (subcase_id, j, result_type, vector_size, location, data_format) = key
+          else:
+              (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+        """
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.caseKeys[self.iCase]
-        return case_key[2]
+        if len(case_key) == 5:
+            value = case_key[1]
+        else:
+            value = case_key[2]
+        return value
 
     def finish_io(self, cases):
         self.resultCases = cases
