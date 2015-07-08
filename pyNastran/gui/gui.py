@@ -129,7 +129,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         #self.cell_picker.SetTolerance(0.0005)
 
     def mousePressEvent(self, ev):
-        print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
+        #print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
         if self.is_pick:
             #self.___saveX = ev.x()
             #self.___saveY = ev.y()
@@ -141,7 +141,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         #asfd
 
     def mouseReleaseEvent(self, ev):
-        print('release x,y = (%s, %s)' % (ev.x(), ev.y()))
+        #print('release x,y = (%s, %s)' % (ev.x(), ev.y()))
         if self.is_pick:
             pass
         else:
@@ -302,17 +302,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             tprop.SetColor(self.label_col)
 
             textActor = vtk.vtkActor2D()
-            #textActor.SetPosition((x, y, z))
-            print(world_position)
-            #textActor.SetPosition(select_point[:2])
             textActor.GetPositionCoordinate().SetCoordinateSystemToWorld()
             textActor.SetPosition(world_position[:2])
-            #textActor.VisibilityOff()
             textActor.SetMapper(textMapper)
-            #textActor.VisibilityOn()
-
             follower = textActor
-
 
         # finish adding the actor
         self.rend.AddActor(follower)
@@ -322,7 +315,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         #camera.GetPosition()
         #camera.GetClippingRange()
         #camera.GetFocalPoint()
-
 
     def _on_cell_picker(self, a):
         self.vtk_interactor.SetPicker(self.cell_picker)
@@ -392,6 +384,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             'CTRL+L - cycle results',
             #'m/M    - scale up/scale down by 1.1 times',
             #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
+            'p      - pick node/element',
             's      - view model as a surface',
             'w      - view model as a wireframe',
             '',
