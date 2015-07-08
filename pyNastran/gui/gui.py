@@ -179,8 +179,22 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #self.log_info("selPt = %s" % str(select_point))
 
                 #method = 'get_result_by_cell_id()' # self.modelType
+                #print('pick_state =', self.pick_state)
                 if self.is_centroidal:
                     if self.pick_state == 'centroidal':
+                        if 0:
+                            # We use vtkExtractUnstructuredGrid because we are interested in
+                            # looking at just a few cells. We use cell clipping via cell id to
+                            # extract the portion of the grid we are interested in.
+                            extractGrid = vtk.vtkExtractUnstructuredGrid()
+                            extractGrid.SetInputConnection(connect2.GetOutputPort())
+                            extractGrid.CellClippingOn()
+                            extractGrid.SetCellMinimum(0)
+                            extractGrid.SetCellMaximum(23)
+
+                            parison = vtk.vtkGeometryFilter()
+                            parison.SetInputConnection(extractGrid.GetOutputPort())
+
                         result_name, result_value = self.get_result_by_cell_id(cell_id)
                     else:
                         cell = self.grid.GetCell(cell_id)

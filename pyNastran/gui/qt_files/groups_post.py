@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 from PyQt4 import QtCore, QtGui
+from six.moves import range
 
-from numpy import setdiff1d, unique, array, hstack, argsort
+from numpy import array, arange
 
-from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
-from pyNastran.bdf.cards.baseCard import collapse_colon_packs
-from pyNastran.gui.qt_files.groups_modify import ColorDisplay, _get_collapsed_text
+from pyNastran.gui.qt_files.groups_modify import _get_collapsed_text
+
 
 class GroupsPostView(QtGui.QDialog):
     """
@@ -27,21 +27,29 @@ class GroupsPostView(QtGui.QDialog):
         #Init the base class
 
         groups = data['groups']
-        self.names = array([group.name for group in groups])
-        self.inames = argsort(self.names)
+        inames = data['inames']
+        self.imain = data['imain']
+        self.names = [group.name for group in groups]
+        self.white = (255, 255, 255)
+        self.light_grey = (211, 211, 211)
+        self.inames = inames
+        self.shown_set = data['shown']
+        self.deleted_groups = set([])
+        #self.inames = argsort(self.names)
         #print('inames =', inames)
 
-        for iname, name in enumerate(self.names[self.inames]):
+        anames = array(self.names)
+        for iname, name in enumerate(anames[self.inames]):
             print('name[%s] = %r' % (iname, name))
 
         # ignore these...
-        self._default_name = data['name']
-        self._default_coords = data['coords']
-        self._default_elements = data['elements']
-        self._default_color = data['color']
+        #self._default_name = data['name']
+        #self._default_coords = data['coords']
+        #self._default_elements = data['elements']
+        #self._default_color = data['color']
 
-        self.coords_pound = data['coords_pound']
-        self.elements_pound = data['elements_pound']
+        #self.coords_pound = data['coords_pound']
+        #self.elements_pound = data['elements_pound']
 
         #self._default_is_discrete = data['is_discrete']
 
@@ -56,121 +64,98 @@ class GroupsPostView(QtGui.QDialog):
         #self.show()
 
     def create_widgets(self):
-        # Name
-        self.name = QtGui.QLabel("Name:")
-        self.name_edit = QtGui.QLineEdit(str(self._default_name).strip())
-        self.name_button = QtGui.QPushButton("Default")
-
-        # Name
-        self.coords = QtGui.QLabel("Coord IDs:")
-        self.coords_edit = QtGui.QLineEdit(str(self._default_coords).strip())
-        self.coords_button = QtGui.QPushButton("Default")
-
-
-        # elements
-        self.elements = QtGui.QLabel("Element IDs:")
-        self.elements_edit = QtGui.QLineEdit(str(self._default_elements).strip())
-        self.elements_button = QtGui.QPushButton("Default")
-
-        # add
-        self.add = QtGui.QLabel("Add:")
-        self.add_edit = QtGui.QLineEdit(str(''))
-        self.add_button = QtGui.QPushButton("Add")
-
-        # remove
-        self.remove = QtGui.QLabel("Remove:")
-        self.remove_edit = QtGui.QLineEdit(str(''))
-        self.remove_button = QtGui.QPushButton("Remove")
-
-        # color
-        self.color = QtGui.QLabel("Color:")
-        #self.color_edit = QtGui.QPushButton()
-        #self.color_edit.setColor(self._default_color)
-        #self.color_edit = ColorDisplay(self, self._default_color)
-        #self.color_button = QtGui.QPushButton("Default")
-
-        # applies a unique implicitly
-        self.eids = parse_patran_syntax(str(self._default_elements), pound=self.elements_pound)
-        self.cids = parse_patran_syntax(str(self._default_coords), pound=self.coords_pound)
-
-        # continuous / discrete
-        #self.checkbox_continuous = QtGui.QCheckBox("Continuous")
-        #self.checkbox_discrete = QtGui.QCheckBox("Discrete")
-        #self.checkbox_discrete.setChecked(self._default_is_discrete)
-
-        # put these in a group
-        #checkboxs2 = QtGui.QButtonGroup(self)
-        #checkboxs2.addButton(self.checkbox_continuous)
-        #checkboxs2.addButton(self.checkbox_discrete)
-
         # main/delete/supergroup
         self.set_as_main_button = QtGui.QPushButton("Set As Main")
         self.create_super_group_button = QtGui.QPushButton("Create Super Group")
         self.delete_groups_button = QtGui.QPushButton("Delete Groups")
+        self.revert_groups_button = QtGui.QPushButton("Revert Groups")
+
+        self.show_groups_button = QtGui.QPushButton("Show Groups")
+        self.hide_groups_button = QtGui.QPushButton("Hide Groups")
 
         # closing
         self.apply_button = QtGui.QPushButton("Apply")
         self.ok_button = QtGui.QPushButton("OK")
         self.cancel_button = QtGui.QPushButton("Cancel")
 
+        #table
+        self.table = QtGui.QTableWidget()
         self.checks = []
         self.names_text = []
-        for iname, name in enumerate(self.names[self.inames]):
 
-            # TODO: create signal when clicked and SetAsMain is pressed
+        bold = QtGui.QFont()
+        bold.setBold(True)
+        bold.setItalic(True)
+        bold.setWeight(75)
+        anames = array(self.names)
+        for iname, name in enumerate(anames[self.inames]):
             check = QtGui.QTableWidgetItem()
             check.setCheckState(False)
 
-            # TODO: create right click menu
+            # TODO: create right click menu ???
             name_text = QtGui.QTableWidgetItem(str(name))
+            if iname == self.imain:
+                name_text.setFont(bold)
+                self.shown_set.add(iname)
+                check.setCheckState(2)
+                name_text.setBackground(QtGui.QColor(*self.light_grey))
+            elif iname in self.shown_set:
+                name_text.setBackground(QtGui.QColor(*self.light_grey))
 
             self.checks.append(check)
             self.names_text.append(name_text)
 
     def create_layout(self):
-        if 1:
-            nrows = len(self.names)
-            grid = QtGui.QTableWidget()
-            grid.setRowCount(nrows)
-            grid.setColumnCount(2)
-            headers = [QtCore.QString('Is Active?'), QtCore.QString('Name')]
-            grid.setHorizontalHeaderLabels(headers)
-            #grid.resize(400, 250)
-            for iname, name in enumerate(self.names[self.inames]):
-                #print('name[%s] = %r' % (iname, name))
-                check = self.checks[iname]
-                name_text = self.names_text[iname]
-                # row, col, value
-                grid.setItem(iname, 0, check)
-                grid.setItem(iname, 1, name_text)
-            #grid.horizontalHeaderItem(1).setTextAlignment(QtCore.AlignHCenter)
-        else:
-            grid = QtGui.QGridLayout()
-            for iname, name in enumerate(self.names[self.inames]):
-                #print('name[%s] = %r' % (iname, name))
-                grid.addWidget(check, iname, 0)
-                grid.addWidget(name_text, iname, 1)
+        nrows = len(self.names)
+        table = self.table
+        table.setRowCount(nrows)
+        table.setColumnCount(2)
+        headers = [QtCore.QString('Operate On'), QtCore.QString('Name')]
+        table.setHorizontalHeaderLabels(headers)
 
+        header = table.horizontalHeader()
+        header.setStretchLastSection(True)
 
-        #grid.addWidget(self.set_as_main_button, 6, 1)
+        #table.setAlternatingRowColors(True)
 
+        #header = table.verticalHeader()
+        #header.setStretchLastSection(True)
+        #table.resize(400, 250)
+
+        #heighti = table.rowHeight(0)
+        #total_height = nrows * heighti
+        #table.setMaximumHeight(total_height)
+        #table.resize(total_height, None)
+
+        #for iname, name in enumerate(self.names[self.inames]):
+        #print('name[%s] = %r' % (iname, name))
+        for iname in self.inames:
+            check = self.checks[iname]
+            name_text = self.names_text[iname]
+            # row, col, value
+            table.setItem(iname, 0, check)
+            table.setItem(iname, 1, name_text)
+        table.resizeRowsToContents()
+        #table.horizontalHeaderItem(1).setTextAlignment(QtCore.AlignHCenter)
 
         #= QtGui.QVBoxLayout()
-
         ok_cancel_box = QtGui.QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-
         vbox = QtGui.QVBoxLayout()
-        if 1:
-            vbox.addWidget(grid)
-        else:
-            vbox.addLayout(grid)
+        vbox.addWidget(table)
         vbox.addWidget(self.set_as_main_button)
-        vbox.addWidget(self.create_super_group_button)
+        #vbox.addWidget(self.create_super_group_button)
+
+        vbox.addStretch()
+        vbox.addWidget(self.show_groups_button)
+        vbox.addWidget(self.hide_groups_button)
+        vbox.addStretch()
         vbox.addWidget(self.delete_groups_button)
+        vbox.addWidget(self.revert_groups_button)
+        vbox.addStretch()
 
         vbox.addStretch()
         vbox.addLayout(ok_cancel_box)
@@ -178,20 +163,13 @@ class GroupsPostView(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        #self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
-        #self.connect(self.coords_button, QtCore.SIGNAL('clicked()'), self.on_default_coords)
-        #self.connect(self.elements_button, QtCore.SIGNAL('clicked()'), self.on_default_elements)
-
-        #self.connect(self.add_button, QtCore.SIGNAL('clicked()'), self.on_add)
-        #self.connect(self.remove_button, QtCore.SIGNAL('clicked()'), self.on_remove)
-
-        #self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_edit_color)
-        #self.color_edit.clicked.connect(self.on_edit_color)
-
-
-        #self.connect(self.color_button, QtCore.SIGNAL('clicked()'), self.on_default_color)
         self.connect(self.set_as_main_button, QtCore.SIGNAL('clicked()'), self.on_set_as_main)
         self.connect(self.delete_groups_button, QtCore.SIGNAL('clicked()'), self.on_delete_groups)
+        self.connect(self.revert_groups_button, QtCore.SIGNAL('clicked()'), self.on_revert_groups)
+
+        self.connect(self.show_groups_button, QtCore.SIGNAL('clicked()'), self.on_show_groups)
+        self.connect(self.hide_groups_button, QtCore.SIGNAL('clicked()'), self.on_hide_groups)
+
         self.connect(self.create_super_group_button, QtCore.SIGNAL('clicked()'), self.on_create_super_group)
 
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
@@ -201,72 +179,153 @@ class GroupsPostView(QtGui.QDialog):
     def closeEvent(self, event):
         event.accept()
 
+    @property
+    def nrows(self):
+        return self.table.rowCount()
+
+    def on_hide_groups(self):
+        self._set_highlight(self.white)
+
+    def on_show_groups(self):
+        self._set_highlight(self.light_grey)
+
+    def _set_highlight(self, color):
+        for irow in range(self.nrows):
+            check = self.checks[irow]
+            is_checked = check.checkState()
+
+            # 0 - unchecked
+            # 1 - partially checked (invalid)
+            # 2 - checked
+            if is_checked:
+                name_text = self.names_text[irow]
+                name_text.setBackground(QtGui.QColor(*color))
+
     def on_delete_groups(self):
-        pass
+        for irow in range(self.nrows):
+            check = self.checks[irow]
+            is_checked = check.checkState()
+
+            # 0 - unchecked
+            # 1 - partially checked (invalid)
+            # 2 - checked
+            if irow == 0 and is_checked:
+                # TODO: change this to a log
+                print('error deleting group ALL...change this to a log')
+                #self.window_parent.log
+                return
+            if is_checked:
+                self.table.hideRow(irow)
+                self.deleted_groups.add(irow)
+                check.setCheckState(0)
+
+        if self.imain > 0 and self.shown_set == set([0]):
+            bold = QtGui.QFont()
+            bold.setBold(True)
+            bold.setItalic(True)
+
+            self.imain = 0
+            irow = 0
+            check = self.checks[irow]
+            name_text = self.names_texts[irow]
+            name_text.setFont(bold)
+            name_text.setBackground(QtGui.QColor(*self.light_grey))
+
+    def on_revert_groups(self):
+        for irow in range(self.nrows):
+            self.table.showRow(irow)
+        self.deleted_groups = set([])
 
     def on_create_super_group(self):
-        pass
+        inames = [iname for iname, check in enumerate(self.checks)
+                        if bool(check.checkState())]
+
+        if not len(inames):
+            # TODO: add logging
+            print('nothing is checked...')
+            return
+        if inames[0] == 0:
+            # TODO: add logging
+            print("cannot include 'ALL' in supergroup...")
+            return
+
+        name = 'SuperGroup'
+        # popup gui and get a name
+
+        irow = self.table.rowCount()
+        self.table.insertRow(irow)
+
+
+        check = QtGui.QTableWidgetItem()
+        check.setCheckState(False)
+        name_text = QtGui.QTableWidgetItem(str(name))
+
+        self.names.extend(name)
+        self.names_text.append(name_text)
+        self.checks.append(check)
+
+        self.table.setItem(irow, 0, check)
+        self.table.setItem(irow, 1, name_text)
+
 
     def on_set_as_main(self):
-        pass
+        bold = QtGui.QFont()
+        bold.setBold(True)
+        bold.setItalic(True)
 
-    def on_add(self):
-        adict, is_valid = self.check_patran_syntax_dict(self.add_edit)
-        if not is_valid:
-            #self.add_edit.setStyleSheet("QLineEdit{background: red;}")
-            return
+        normal = QtGui.QFont()
+        normal.setBold(False)
+        normal.setItalic(False)
 
-        self.eids = _add(adict, ['e', 'elem', 'element'], self.eids)
-        self.cids = _add(adict, ['c', 'cid', 'coord'], self.cids)
-        self._apply_cids_eids()
+        imain = None
+        imain_set = False
+        for irow in range(self.nrows):
+            check = self.checks[irow]
+            name_text = self.names_text[irow]
+            is_checked = check.checkState()
 
-        self.add_edit.clear()
-        self.add_edit.setStyleSheet("QLineEdit{background: white;}")
+            # 0 - unchecked
+            # 1 - partially checked (invalid)
+            # 2 - checked
+            if is_checked and not imain_set:
+                # TODO: change this to a log
+                #self.window_parent.log
+                imain_set = True
+                imain = irow
+                name_text.setFont(bold)
+                name_text.setBackground(QtGui.QColor(*self.light_grey))
+                self.shown_set.add(irow)
+            elif irow == self.imain:
+                name_text.setFont(normal)
+                if irow == 0:
+                    name_text.setBackground(QtGui.QColor(*self.white))
+                    if irow in self.shown_set:
+                        self.shown_set.remove(irow)
+                elif imain == 0:
+                    name_text.setBackground(QtGui.QColor(*self.white))
+                    self.shown_set.remove(imain)
+        self.imain = imain
 
-    def _apply_cids_eids(self):
-        ctext = _get_collapsed_text(self.cids)
-        etext = _get_collapsed_text(self.cids)
+    def get_main_group(self):
+        return self.imain
 
-        self.coords_edit.setText(str(ctext.lstrip()))
-        self.elements_edit.setText(str(etext.lstrip()))
+    def get_shown_group(self):
+        return self.shown_set
 
-    def on_remove(self):
-        adict, is_valid = self.check_patran_syntax_dict(self.remove_edit)
-        if not is_valid:
-            #self.remove_edit.setStyleSheet("QLineEdit{background: red;}")
-            return
-
-        self.eids = _remove(adict, ['e', 'elem', 'element'], self.eids)
-        self.cids = _remove(adict, ['c', 'cid', 'coord'], self.cids)
-
-        self._apply_cids_eids()
-        self.remove_edit.clear()
-        self.remove_edit.setStyleSheet("QLineEdit{background: white;}")
-
-    def on_default_name(self):
-        self.name_edit.setText(str(self._default_name))
-        self.name_edit.setStyleSheet("QLineEdit{background: white;}")
-
-    def on_default_coords(self):
-        self.coords_edit.setText(str(self._default_coords))
-        self.coords_edit.setStyleSheet("QLineEdit{background: white;}")
-
-    def on_default_elements(self):
-        self.elements_edit.setText(str(self._default_elements))
-        self.elements_edit.setStyleSheet("QLineEdit{background: white;}")
+    def get_deleted_groups(self):
+        return self.deleted_groups
 
     def on_validate(self):
-        flag0 = flag1 = flag2 = False
-        if flag0 and flag1 and flag2:
-            self.out_data['name'] = name_value
-            self.out_data['elements'] = elements_value
-            self.out_data['coords'] = coords_value
-            self.out_data['clicked_ok'] = True
+        flag0 = flag1 = flag2 = True
+        main_group_id = self.get_main_group()
+        shown_groups_ids = self.get_shown_group()
+        deleted_group_ids = self.get_deleted_groups()
 
-            #print("name = %r" % self.name_edit.text())
-            #print("min = %r" % self.min_edit.text())
-            #print("max = %r" % self.max_edit.text())
-            #print("format = %r" % self.format_edit.text())
+        if flag0 and flag1 and flag2:
+            self.out_data['imain'] = main_group_id
+            self.out_data['shown'] = shown_groups_ids
+            self.out_data['remove'] = deleted_group_ids
+            self.out_data['clicked_ok'] = True
             return True
         return False
 
@@ -297,6 +356,9 @@ class Group(object):
         msg += '  eids: [%s]\n' % _get_collapsed_text(self.eids).strip()
         return msg
 
+def on_post_group(data):
+    print('hi')
+
 def main():
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
@@ -307,27 +369,28 @@ def main():
     # Someone is launching this directly
     # Create the QApplication
     app = QtGui.QApplication(sys.argv)
-
-    nice_blue = (0.1, 0.2, 0.4)
+    app.on_post_group = on_post_group
 
     group1 = Group('this is a really long name')
     group2 = Group('frog')
     group3 = Group('dog')
+    all_group = Group('ALL')
     print(group3)
     groups = [
-        group1, group2, group3,
+        all_group, group1, group2, group3,
+        all_group, group1, group2, group3,
+        all_group, group1, group2, group3,
     ]
     #The Main window
-    d = {
+    data = {
         'groups' : groups,
-        'name' : 'asdf',
-        'coords' : 0,
-        'coords_pound' : 4,
-        'elements_pound' : 103,
-        'elements' : '1:#',
-        'color' : nice_blue,
+        'inames' : arange(len(groups)),
+        'imain' : 0,
+        'shown' : set([1, 2, 3]),
+        'remove' : None,
     }
-    main_window = GroupsPostView(d)
+    win_parent = None
+    main_window = GroupsPostView(data, win_parent=win_parent)
     main_window.show()
     # Enter the main loop
     app.exec_()
