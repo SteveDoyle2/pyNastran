@@ -82,6 +82,11 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     background grid
     http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/CubeAxesActor
 
+    pick visible
+    http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/ExtractVisibleCells
+
+    warping
+    http://engronline.ee.memphis.edu/eece4731/djr_lec16.pdf
     """
     def __init__(self, inputs):
         html_logging = True
@@ -106,6 +111,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.build_fmts(fmt_order, stop_on_failure=False)
 
         self.label_actors = {}
+        self.label_ids = {}
         self.label_scale = 1.0 # in percent
 
         logo = os.path.join(icon_path, 'logo.png')
@@ -119,7 +125,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     def create_cell_picker(self):
         # cell picker
         self.cell_picker = vtk.vtkCellPicker()
-        #self.point_picker = vtk.vtkPointPicker()
+        self.node_picker = vtk.vtkPointPicker()
         #self.cell_picker.SetTolerance(0.0005)
 
     def mousePressEvent(self, ev):
@@ -143,24 +149,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
     def init_cell_picker(self):
         self.is_pick = False
+
         self.vtk_interactor.SetPicker(self.cell_picker)
-        #self.vtk_interactor.SetPicker(self.point_picker)
-
-        #words = vtk.vtkCharArray()
-        #words.SetNumberOfComponents(4)
-        #words.SetArray(['a', 'b', 'asdf'], 4)
-
-        #cell_mapper = vtk.vtkLabeledDataMapper()
-        #cell_mapper.SetInputConnection(words.GetOutputPort())
-        #cell_mapper.SetLabelFormat("%s")
-        #cell_mapper.SetLabelModeToLabelFieldData()
-
-        #label_poly_data = vtk.LabelPolyData()
-
-        #label_actor.SetInput(label_poly_data)
-        #self.rend.AddActor(label_actor)
-
-
         def annotate_cell_picker(object, event):
             #self.log_command("annotate_cell_picker()")
             picker = self.cell_picker
@@ -180,8 +170,12 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
                 #method = 'get_result_by_cell_id()' # self.modelType
                 #print('pick_state =', self.pick_state)
+
+                duplicate_key = None
                 if self.is_centroidal:
                     if self.pick_state == 'centroidal':
+                        duplicate_key = cell_id
+
                         if 0:
                             # We use vtkExtractUnstructuredGrid because we are interested in
                             # looking at just a few cells. We use cell clipping via cell id to
@@ -195,14 +189,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                             parison = vtk.vtkGeometryFilter()
                             parison.SetInputConnection(extractGrid.GetOutputPort())
 
-                        result_name, result_value = self.get_result_by_cell_id(cell_id)
+                        result_name, result_value, xyz = self.get_result_by_cell_id(cell_id, world_position)
+                        assert result_name in self.label_actors, result_name
                     else:
                         cell = self.grid.GetCell(cell_id)
                         # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
                         method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
                             methodi = getattr(self, method)
-                            methodi(xyz, cell_id)
+                            methodi(world_position, cell_id)
                         else:
                             msg = "pick_state is set to 'nodal', but the result is 'centroidal'\n"
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
@@ -210,83 +205,34 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                         return
                 else:
                     if self.pick_state == 'nodal':
-                        result_name, result_value = self.get_result_by_xyz_cell_id(world_position, cell_id)
+                        result_name, result_value, node_id, xyz = self.get_result_by_xyz_cell_id(world_position, cell_id)
+                        assert result_name in self.label_actors, result_name
+                        assert not isinstance(xyz, int), xyz
+                        duplicate_key = node_id
                     else:
                         method = 'get_nodal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
                             methodi = getattr(self, method)
-                            methodi(xyz, cell_id)
+                            methodi(world_position, cell_id)
                         else:
                             msg = "pick_state is set to 'centroidal', but the result is 'nodal'\n"
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
                             self.log_error(msg)
                         return
+
+                #print('key=%s exists=%s' % (duplicate_key, duplicate_key in self.label_ids[result_name]))
+                if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
+                    return
+                self.label_ids[result_name].add(duplicate_key)
                 self.log_info("%s = %s" % (result_name, result_value))
 
 
-                x, y, z = world_position
+                #x, y, z = world_position
+                x, y, z = xyz
                 text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
                 text = str(result_value)
-
-                # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
-                if 1:
-                    source = vtk.vtkVectorText()
-                    source.SetText(text)
-
-                    # mappers are weird; they seem to do nothing
-                    mapper = vtk.vtkPolyDataMapper()
-                    mapper.SetInputConnection(source.GetOutputPort())
-
-                    # the follower lets us set the position/size/color
-                    follower = vtk.vtkFollower()
-                    follower.SetMapper(mapper)
-                    follower.SetPosition((x, y, z))
-
-                    # 1 point = 1/72"
-                    # SetScale works on model scale size
-                    #follower.SetScale(0.5)
-                    follower.SetScale(self.dim_max * 0.01 * self.label_scale)
-
-                    prop = follower.GetProperty()
-                    prop.SetColor(self.label_col)
-                    #prop.SetOpacity( 0.3 );
-
-                    # we need to make sure the text rotates when the camera is changed
-                    camera = self.rend.GetActiveCamera()
-                    follower.SetCamera(camera)
-                else:
-                    # Create a text mapper and actor to display the results of picking.
-                    textMapper = vtk.vtkTextMapper()
-                    textMapper.SetInput(text)
-
-                    tprop = textMapper.GetTextProperty()
-                    tprop.SetFontFamilyToArial()
-                    tprop.SetFontSize(10)
-                    tprop.BoldOn()
-                    tprop.ShadowOn()
-                    tprop.SetColor(self.label_col)
-
-                    textActor = vtk.vtkActor2D()
-                    #textActor.SetPosition((x, y, z))
-                    print(world_position)
-                    #textActor.SetPosition(select_point[:2])
-                    textActor.GetPositionCoordinate().SetCoordinateSystemToWorld()
-                    textActor.SetPosition(world_position[:2])
-                    #textActor.VisibilityOff()
-                    textActor.SetMapper(textMapper)
-                    #textActor.VisibilityOn()
-
-                    follower = textActor
-
-
-                # finish adding the actor
-                self.rend.AddActor(follower)
-                self.label_actors[result_name].append(follower)
-
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #camera.GetPosition()
-                #camera.GetClippingRange()
-                #camera.GetFocalPoint()
+                assert result_name in self.label_actors, result_name
+                self._create_annotation(text, result_name, x, y, z)
 
         def annotate_point_picker(object, event):
             self.log_command("annotate_point_picker()")
@@ -310,7 +256,95 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #self.picker_textActor.VisibilityOn()
 
         self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
-        #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
+        self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
+
+        #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
+        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)
+
+    def _create_annotation(self, text, result_name, x, y, z):
+        assert isinstance(result_name, str), result_name
+        # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
+        if 1:
+            source = vtk.vtkVectorText()
+            source.SetText(text)
+
+            # mappers are weird; they seem to do nothing
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(source.GetOutputPort())
+
+            # the follower lets us set the position/size/color
+            follower = vtk.vtkFollower()
+            follower.SetMapper(mapper)
+            follower.SetPosition((x, y, z))
+
+            # 1 point = 1/72"
+            # SetScale works on model scale size
+            #follower.SetScale(0.5)
+            follower.SetScale(self.dim_max * 0.01 * self.label_scale)
+
+            prop = follower.GetProperty()
+            prop.SetColor(self.label_col)
+            #prop.SetOpacity( 0.3 );
+
+            # we need to make sure the text rotates when the camera is changed
+            camera = self.rend.GetActiveCamera()
+            follower.SetCamera(camera)
+        else:
+            # Create a text mapper and actor to display the results of picking.
+            textMapper = vtk.vtkTextMapper()
+            textMapper.SetInput(text)
+
+            tprop = textMapper.GetTextProperty()
+            tprop.SetFontFamilyToArial()
+            tprop.SetFontSize(10)
+            tprop.BoldOn()
+            tprop.ShadowOn()
+            tprop.SetColor(self.label_col)
+
+            textActor = vtk.vtkActor2D()
+            #textActor.SetPosition((x, y, z))
+            print(world_position)
+            #textActor.SetPosition(select_point[:2])
+            textActor.GetPositionCoordinate().SetCoordinateSystemToWorld()
+            textActor.SetPosition(world_position[:2])
+            #textActor.VisibilityOff()
+            textActor.SetMapper(textMapper)
+            #textActor.VisibilityOn()
+
+            follower = textActor
+
+
+        # finish adding the actor
+        self.rend.AddActor(follower)
+        self.label_actors[result_name].append(follower)
+
+        #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+        #camera.GetPosition()
+        #camera.GetClippingRange()
+        #camera.GetFocalPoint()
+
+
+    def _on_cell_picker(self, a):
+        self.vtk_interactor.SetPicker(self.cell_picker)
+        picker = self.cell_picker
+        world_position = picker.GetPickPosition()
+        cell_id = picker.GetCellId()
+        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
+        self.log_info("world_position = %s" % str(world_position))
+        self.log_info("cell_id = %s" % cell_id)
+        self.log_info("select_point = %s" % str(select_point))
+
+    def _on_node_picker(self, a):
+        self.vtk_interactor.SetPicker(self.node_picker)
+        picker = self.node_picker
+        world_position = picker.GetPickPosition()
+        node_id = picker.GetPointId()
+        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
+        self.log_info("world_position = %s" % str(world_position))
+        self.log_info("node_id = %s" % node_id)
+        self.log_info("select_point = %s" % str(select_point))
 
     #def on_cell_picker(self):
         #self.log_command("on_cell_picker()")

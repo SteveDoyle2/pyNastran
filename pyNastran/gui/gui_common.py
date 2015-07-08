@@ -16,7 +16,7 @@ from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import eye, array
+from numpy import eye, array, zeros
 from numpy.linalg import norm
 
 import pyNastran
@@ -247,6 +247,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
                 ('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
+                #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
+                #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
@@ -334,7 +336,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.toolbar, ('flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                            'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))
+                            'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit')),
+            #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
         ]
         return menu_items
 
@@ -342,6 +345,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
+        self._dummy_toolbar = self.addToolBar('Show toolbar')
 
         ## menubar
         self.menubar = self.menuBar()
@@ -1590,12 +1594,40 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
 
-    def get_result_by_cell_id(self, cell_id):
+    def get_result_by_cell_id(self, cell_id, world_position):
         """should handle multiple cell_ids"""
         case_key = self.caseKeys[self.iCase]
         result_name = self.result_name
         result_values = self.resultCases[case_key][cell_id]
-        return result_name, result_values
+        cell = self.grid.GetCell(cell_id)
+
+        nnodes = cell.GetNumberOfPoints()
+        points = cell.GetPoints()
+        cell_type = cell.GetCellType()
+
+        if cell_type in [5, 9]:  # CTRIA3, CQUAD4
+            node_xyz = zeros((nnodes, 3), dtype='float32')
+            for ipoint in range(nnodes):
+                point = points.GetPoint(ipoint)
+                node_xyz[ipoint, :] = point
+            xyz = node_xyz.mean(axis=0)
+        elif cell_type in [10, 12, 13]: # CTETRA, CHEXA8, CPENTA6
+            #faces = cell.GetFaces()
+            #nfaces = cell.GetNumberOfFaces()
+            #for iface in range(nfaces):
+                #face = cell.GetFace(iface)
+                #points = face.GetPoints()
+            #faces
+            xyz = world_position
+        else:
+            #self.log.error(msg)
+            msg = 'cell_type=%s nnodes=%s' % (cell_type, nnodes)
+            raise NotImplementedError(msg)
+        #print('')
+        #print(node_xyz)
+        #print(xyz)
+
+        return result_name, result_values, xyz
 
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
         """won't handle multiple cell_ids/node_xyz"""
@@ -1607,19 +1639,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         points = cell.GetPoints()
 
         node_xyz = array(node_xyz, dtype='float32')
-        point0 = points.GetPoint(0)
-        dist_min = norm(array(point0, dtype='float32') - node_xyz)
+        point0 = array(points.GetPoint(0), dtype='float32')
+        dist_min = norm(point0 - node_xyz)
+
+        point_min = point0
         imin = 0
         for ipoint in range(1, nnodes):
-            point = points.GetPoint(ipoint)
-            dist = norm(array(point, dtype='float32') - node_xyz)
+            point = array(points.GetPoint(ipoint), dtype='float32')
+            dist = norm(point - node_xyz)
             if dist < dist_min:
                 dist_min = dist
                 imin = ipoint
-        node_id = cell.GetPointId(imin)
+                point_min = point
 
+        node_id = cell.GetPointId(imin)
+        xyz = point_min
         result_values = self.resultCases[case_key][node_id]
-        return result_name, result_values
+        assert not isinstance(xyz, int), xyz
+        return result_name, result_values, node_id, xyz
 
     @property
     def result_name(self):
@@ -1708,6 +1745,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # new geometry
         self.label_actors = {}
+        self.label_ids = {}
 
         #self.caseKeys= [
             #(1, 'ElementID', 1, 'centroid', '%.0f'),
@@ -1718,6 +1756,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             result_name = case_key[2] #  ElementID
 
             self.label_actors[result_name] = []
+            self.label_ids[result_name] = set([])
 
 
     def _remove_labels(self):
@@ -1731,6 +1770,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 self.rend.RemoveActor(actor)
                 del actor
             self.label_actors[result_name] = []
+            self.label_ids[result_name] = set([])
 
     def clear_labels(self):
         if len(self.label_actors) == 0:
@@ -1746,6 +1786,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.rend.RemoveActor(actor)
             del actor
         self.label_actors[result_name] = []
+        self.label_ids[result_name] = set([])
 
     def hide_labels(self, result_names=None, show_msg=True):
         if result_names is None:
@@ -1779,4 +1820,5 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 actor.VisibilityOn()
                 count += 1
         if count and show_msg:
+            # yes the ) is intentionally left off because it's already been added
             self.log_command('show_labels(%s' % names)
