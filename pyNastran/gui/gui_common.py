@@ -126,7 +126,28 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._logo = logo
 
     def init_ui(self):
-        """ Initialize user iterface"""
+        """
+        Initialize user iterface
+
+        +--------------+
+        | Window Title |
+        +--------------+----------------+
+        |  Menubar                      |
+        +-------------------------------+
+        |  Toolbar                      |
+        +---------------------+---------+
+        |                     |         |
+        |                     |         |
+        |                     | Results |
+        |       VTK Frame     |  Dock   |
+        |                     |         |
+        |                     |         |
+        +---------------------+---------+
+        |                               |
+        |      HTML Logging Dock        |
+        |                               |
+        +-------------------------------+
+        """
         self.resize(800, 600)
         self.statusBar().showMessage('Ready')
 
@@ -1397,6 +1418,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command('on_take_screenshot(%r)' % fname)
 
     def addGeometry(self):
+        """
+        #(N,)  for stress, x-disp
+        #(N,3) for warp vectors/glyphs
+        grid_result = vtk.vtkFloatArray()
+
+        point_data = self.grid.GetPointData()
+        cell_data = self.grid.GetCellData()
+
+        self.grid.GetCellData().SetScalars(grid_result)
+        self.grid.GetPointData().SetScalars(grid_result)
+
+
+        self.aQuadMapper   <-input-> self.grid
+        vtkDataSetMapper() <-input-> vtkUnstructuredGrid()
+
+        self.aQuadMapper   <--map--> self.geom_actor <-add-> self.rend
+        vtkDataSetMapper() <--map--> vtkActor()      <-add-> vtkRenderer()
+        """
         self.aQuadMapper = vtk.vtkDataSetMapper()
         if self.vtk_version[0] >= 6:
             self.aQuadMapper.SetInputData(self.grid)
