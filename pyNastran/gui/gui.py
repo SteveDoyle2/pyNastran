@@ -85,8 +85,14 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     pick visible
     http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/ExtractVisibleCells
 
+    plane projection
+    http://www.igstk.org/Wiki/VTK/Examples/Cxx/SimpleOperations/ProjectPointPlane
+
     warping
     http://engronline.ee.memphis.edu/eece4731/djr_lec16.pdf
+
+    banded filter
+    http://www.igstk.org/Wiki/VTK/Examples/Cxx/VisualizationAlgorithms/BandedPolyDataContourFilter
     """
     def __init__(self, inputs):
         html_logging = True

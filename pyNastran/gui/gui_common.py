@@ -117,6 +117,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.geometry_actors = []
         self.pick_state = 'centroidal' if self.is_centroidal else 'nodal'
 
+    #def dragEnterEvent(self, e):
+        #print(e)
+        #print('drag event')
+        #if e.mimeData().hasFormat('text/plain'):
+            #e.accept()
+        #else:
+            #e.ignore()
+
+    #def dropEvent(self, e):
+        #print(e)
+        #print('drop event')
+
     def set_window_title(self, msg):
         #msg2 = "%s - "  % self.base_window_title
         #msg2 += msg
@@ -345,7 +357,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
-        self._dummy_toolbar = self.addToolBar('Show toolbar')
+        self._dummy_toolbar = self.addToolBar('Dummy toolbar')
 
         ## menubar
         self.menubar = self.menuBar()
@@ -395,7 +407,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         splane.SetPoint1(origin + dx * vx)
         splane.SetPoint2(origin + dy * vy)
 
-        actor = vtk.vtkActor()
+        actor = vtk.vtkLODActor()
         mapper = vtk.vtkPolyDataMapper()
 
         if self.vtk_version <= 5:
@@ -562,7 +574,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def set_label_color(self, color):
         """Set the label color"""
         self.label_col = color
-        for key, follower_actors in iteritems(self.label_actors):
+        for follower_actors in itervalues(self.label_actors):
             for follower_actor in follower_actors:
                 prop = follower_actor.GetProperty()
                 prop.SetColor(*color)
@@ -686,7 +698,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.vectorResult = vtk.vtkFloatArray()
 
         # edges
-        self.edgeActor = vtk.vtkActor()
+        self.edgeActor = vtk.vtkLODActor()
         self.edgeMapper = vtk.vtkPolyDataMapper()
 
         self.create_cell_picker()
@@ -811,25 +823,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         if len(key) == 5:
-            (subcase_id, _result_type, vector_size, location, _data_format) = key
+            (subcase_id, result_type, vector_size, location, _data_format) = key
         elif len(key) == 6:
-            (subcase_id, i, _result_type, vector_size, location, _data_format) = key
+            (subcase_id, i, result_type, vector_size, location, _data_format) = key
         else:
-            (subcase_id, i, _result_type, vector_size, location, _data_format, label2) = key
+            (subcase_id, i, result_type, vector_size, location, _data_format, label2) = key
 
-        try:
-            case_name = self.iSubcaseNameMap[subcase_id]
-        except KeyError:
-            case_name = ('case=NA', 'label=NA')
-        (subtitle, label) = case_name
+        subtitle, label = self.get_subtitle_label(subcase_id)
+        name = (vector_size, subcase_id, result_type, label, min_value, max_value)
 
-        gridResult = self.build_grid_result(vector_size, location)
-        norm_value, nvalues_set = self.set_grid_values(gridResult, case, vector_size,
-                                                       min_value, max_value,
-                                                       is_blue_to_red=is_blue_to_red)
-        self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format,
-                             is_blue_to_red=is_blue_to_red)
-        self.final_grid_update(gridResult, key, subtitle, label)
+
+        norm_value = float(max_value - min_value)
+        #if name not in self._loaded_names:
+        grid_result = self.set_grid_values(name, case, vector_size,
+                                           min_value, max_value, norm_value,
+                                           is_blue_to_red=is_blue_to_red)
+        self.UpdateScalarBar(Title, min_value, max_value, norm_value,
+                             data_format, is_blue_to_red=is_blue_to_red)
+        self.final_grid_update(name, grid_result, key, subtitle, label)
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
                          '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
                          % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
@@ -988,25 +999,54 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.colorFunction = vtk.vtkColorTransferFunction()
         self.colorFunction.SetColorSpaceToHSV()
         self.colorFunction.HSVWrapOff()
+        #self.colorFunction.SetNanColor(1., 1., 1., 0.)
+        #self.colorFunction.SetColorSpaceToLab()
+        #self.colorFunction.SetColorSpaceToRGB()
+        self.scalarBar.SetDragable(True)
+        self.scalarBar.SetPickable(True)
 
         drange = [10., 20.]
+        self.colorFunction.SetRange(*drange)
+
         # blue - low
         # red - high
         self.colorFunction.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
         self.colorFunction.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
 
         self.scalarBar.SetTitle("Title1")
+
         self.scalarBar.SetLookupTable(self.colorFunction)
-        self.scalarBar.SetOrientationToVertical()
         #print(dir(self.scalarBar))
         #print(dir(self.colorFunction))
         #self.scalarBar.SetNanColor(0., 0., 0.) # RGB color - black
         #self.scalarBar.SetNanColor(1., 1., 1., 0.) # RGBA color - white
 
-        self.scalarBar.SetHeight(0.9)
-        self.scalarBar.SetWidth(0.20)  # the width is set first
-        # after the width is set, this is adjusted
-        self.scalarBar.SetPosition(0.77, 0.1)
+        # old
+        #self.scalarBar.SetHeight(0.9)
+        #self.scalarBar.SetWidth(0.20)  # the width is set first
+        #self.scalarBar.SetPosition(0.77, 0.1)
+        if 1:
+            # put the scalar bar at the right side
+            self.scalarBar.SetOrientationToVertical()
+            self.scalarBar.SetHeight(0.9)
+            self.scalarBar.SetWidth(0.20)  # the width is set first
+            # after the width is set, this is adjusted
+
+            width = 0.2
+            height = 0.9
+            x = 1 - 0.01 - width
+            y = (1 - height) / 2.
+            self.scalarBar.SetPosition(x, y)
+        else:
+            # put the scalar bar at the top
+            self.scalarBar.SetOrientationToHorizontal()
+            width = 0.95
+            height = 0.15
+            x = (1 - width) / 2.
+            y = 1 - 0.02 - height
+        self.scalarBar.SetHeight(height)
+        self.scalarBar.SetWidth(width)
+        self.scalarBar.SetPosition(x, y)
 
         prop_title = vtk.vtkTextProperty()
         prop_title.SetFontFamilyToArial()
@@ -1446,11 +1486,46 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self.aQuadMapper.SetInput(self.grid)
 
+        if 0:
+            self.warp_filter = vtk.vtkWarpVector()
+            self.warp_filter.SetScaleFactor(50.0)
+            self.warp_filter.SetInput(self.aQuadMapper.GetUnstructuredGridOutput())
+
+            self.geom_filter = vtk.vtkGeometryFilter()
+            self.geom_filter.SetInput(self.warp_filter.GetUnstructuredGridOutput())
+
+            self.geom_mapper = vtk.vtkPolyDataMapper()
+            self.geom_actor.setMapper(self.geom_mapper)
+
+        if 0:
+            #from vtk.numpy_interface import algorithms
+
+            arrow = vtk.vtkArrowSource()
+            arrow.PickableOff()
+
+            self.glyph_transform = vtk.vtkTransform()
+            self.glyph_transform_filter = vtk.vtkTransformPolyDataFilter()
+            self.glyph_transform_filter.SetInputConnection(arrow.GetOutputPort())
+            self.glyph_transform_filter.SetTransform(self.glyph_transform)
+
+            self.glyph = vtk.vtkGlyph3D()
+            self.glyph.setInput(xxx)
+            self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
+
+            self.glyph.SetVectorModeToUseVector()
+            self.glyph.SetColorModeToColorByVector()
+            self.glyph.SetScaleModeToScaleByVector()
+            self.glyph.SetScaleFactor(1.0)
+
+            self.append_filter = vtk.vtkAppendFilter()
+            self.append_filter.AddInputConnection(self.grid.GetOutput())
+
+
         #self.warpVector = vtk.vtkWarpVector()
         #self.warpVector.SetInput(self.aQuadMapper.GetUnstructuredGridOutput())
         #aQuadMapper.SetInput(Filter.GetOutput())
 
-        self.geom_actor = vtk.vtkActor()
+        self.geom_actor = vtk.vtkLODActor()
         self.geom_actor.SetMapper(self.aQuadMapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
@@ -1480,6 +1555,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.Title = str(title)
         self.min_value = float(min_value)
         self.max_value = float(max_value)
+
         try:
             data_format % 1
         except:
@@ -1493,6 +1569,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def GetCamera(self):
         return self.rend.GetActiveCamera()
+
 
     def update_camera(self, code):
         camera = self.GetCamera()
@@ -1638,22 +1715,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
 
-        node_xyz = array(node_xyz, dtype='float32')
-        point0 = array(points.GetPoint(0), dtype='float32')
-        dist_min = norm(point0 - node_xyz)
+        #node_xyz = array(node_xyz, dtype='float32')
+        #point0 = array(points.GetPoint(0), dtype='float32')
+        #dist_min = norm(point0 - node_xyz)
+        point0 = points.GetPoint(0)
+        dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
 
         point_min = point0
         imin = 0
         for ipoint in range(1, nnodes):
-            point = array(points.GetPoint(ipoint), dtype='float32')
-            dist = norm(point - node_xyz)
+            #point = array(points.GetPoint(ipoint), dtype='float32')
+            #dist = norm(point - node_xyz)
+            point = points.GetPoint(ipoint)
+            dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
             if dist < dist_min:
                 dist_min = dist
                 imin = ipoint
                 point_min = point
 
         node_id = cell.GetPointId(imin)
-        xyz = point_min
+        xyz = array(point_min, dtype='float32')
         result_values = self.resultCases[case_key][node_id]
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
