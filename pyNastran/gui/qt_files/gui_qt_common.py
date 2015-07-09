@@ -199,6 +199,8 @@ class GuiCommon(object):
         self.UpdateScalarBar(result_type, min_value, max_value, norm_value,
                              data_format, is_blue_to_red=True)
 
+        location = self.get_case_location(key)
+        self.res_widget.update_method(location)
         if explicit:
             self.log_command('cycleResults(result_name=%r)' % result_type)
         return result_type
@@ -314,7 +316,13 @@ class GuiCommon(object):
         if location == 'centroid':
             cell_data = self.grid.GetCellData()
             cell_data.SetActiveScalars(name_str)
+
+            point_data = self.grid.GetPointData()
+            point_data.SetActiveScalars(None)
         elif location == 'node':
+            cell_data = self.grid.GetCellData()
+            cell_data.SetActiveScalars(None)
+
             point_data = self.grid.GetPointData()
             if vector_size == 1:
                 point_data.SetActiveScalars(name_str)
@@ -367,18 +375,28 @@ class GuiCommon(object):
                 found_cases = False
                 return found_cases
 
+            location = self.get_case_location(key)
             print("key = %s" % str(key))
             #if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 #self.incrementCycle()
             found_cases = True
         else:
-            result_type = 'centroidal' if self.is_centroidal else 'nodal'
+            result_type = 'centroidal' if location == 'centroid' else 'nodal'
             self.log_error("No Results found.  Many results are not supported in the GUI.\nTry using %s results."
                            % result_type)
             self.scalarBar.SetVisibility(False)
             found_cases = False
         #print("next iCase=%s key=%s" % (self.iCase, key))
         return found_cases
+
+    def get_case_location(self, key):
+        if len(key) == 5:
+            (subcase_id, result_type, vector_size, location, data_format) = key
+        elif len(key) == 6:
+            (subcase_id, i, result_type, vector_size, location, data_format) = key
+        else:
+            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+        return location
 
     def UpdateScalarBar(self, title, min_value, max_value, norm_value,
                         data_format, is_blue_to_red=True):

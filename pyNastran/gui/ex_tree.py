@@ -205,6 +205,11 @@ class Sidebar(QWidget):
         layout.addWidget(self.apply_button)
         self.setLayout(layout)
 
+    def update_method(self, method):
+        datai = self.result_data_window.data[0]
+        self.result_data_window.data[0] = (method, datai[1], datai[2])
+        self.result_data_window.update_data(self.result_data_window.data)
+
     def update_results(self, data):
         self.result_case_window.update_data(data)
         self.apply_button.setEnabled(True)
@@ -259,8 +264,8 @@ class ResultsWindow(QWidget):
 
     def __init__(self, name, data):
         QWidget.__init__(self)
-        self.data = data
         self.name = name
+        self.data = data
 
         self.treeView = QTreeView2(self.data)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
