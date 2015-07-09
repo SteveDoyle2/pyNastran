@@ -179,6 +179,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
                 duplicate_key = None
 
+                icase = self.iCase
                 key = self.caseKeys[icase]
                 location = self.get_case_location(key)
                 if location == 'centroid':
