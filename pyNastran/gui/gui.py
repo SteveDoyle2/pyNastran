@@ -178,7 +178,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #print('pick_state =', self.pick_state)
 
                 duplicate_key = None
-                if self.is_centroidal:
+
+                key = self.caseKeys[icase]
+                location = self.get_case_location(key)
+                if location == 'centroid':
                     if self.pick_state == 'centroidal':
                         duplicate_key = cell_id
 

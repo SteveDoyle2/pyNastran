@@ -37,7 +37,9 @@ PyQt4 unique (PySide is broken)
    - red to blue; blue to red
    - continuous to discrete (doesn't work)***
    - doesn't save results***
-   - can't move legend***
+   - can't move legend
+     - horizontal/veterical
+     - can't explicitly place it***
    - can't show/hide legend***
    - Cancel button doesn't go to original settings if you click apply***
      - should maybe remove the OK button and rename Cancel to Close***
@@ -57,6 +59,13 @@ PyQt4 unique (PySide is broken)
    - python scripting
    - edges
    - nodal or centroidal
+
+ - picking
+   - cell/node picking based on result type
+   - kind of a hackish picking method
+
+ - both nodal/centroidal work regardless of self.is_centroidal/self.is_nodal
+   - cart3d only***
 
  - results sidebar
    - data is put in the same order as the cycleResults capability (Control+L)
@@ -193,11 +202,9 @@ plot3d
 
 ----------------------------------------------------
 ---NOT DONE---
- - make both nodal/centroidal work regardless of flag
  - make vector results work
  - marker plots (arrows) & scale
  - displacement plots & scale
- - cell picker to get element/node info
  - usm3d surface/boundary layer/incomplete volume
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys

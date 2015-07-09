@@ -197,7 +197,7 @@ class GuiCommon(object):
         self.final_grid_update(name, grid_result, key, subtitle, label)
 
         self.UpdateScalarBar(result_type, min_value, max_value, norm_value,
-                             data_format, is_blue_to_red=True)
+                             data_format, is_blue_to_red=True, is_horizontal=self.is_horizontal_scalar_bar)
 
         location = self.get_case_location(key)
         self.res_widget.update_method(location)
@@ -399,7 +399,7 @@ class GuiCommon(object):
         return location
 
     def UpdateScalarBar(self, title, min_value, max_value, norm_value,
-                        data_format, is_blue_to_red=True):
+                        data_format, is_blue_to_red=True, is_horizontal=True):
         """
         :param title:       the scalar bar title
         :param min_value:   the blue value
@@ -416,6 +416,24 @@ class GuiCommon(object):
         else:
             self.colorFunction.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
             self.colorFunction.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
+
+        if is_horizontal:
+            # put the scalar bar at the top
+            self.scalarBar.SetOrientationToHorizontal()
+            width = 0.95
+            height = 0.15
+            x = (1 - width) / 2.
+            y = 1 - 0.02 - height
+        else:
+            # put the scalar bar at the right side
+            self.scalarBar.SetOrientationToVertical()
+            width = 0.2
+            height = 0.9
+            x = 1 - 0.01 - width
+            y = (1 - height) / 2.
+        self.scalarBar.SetHeight(height)
+        self.scalarBar.SetWidth(width)
+        self.scalarBar.SetPosition(x, y)
 
         if 0:
             self.colorFunction.SetRange(min_value, max_value)

@@ -11,6 +11,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_format = data['format']
         self._default_is_blue_to_red = data['is_blue_to_red']
         self._default_is_discrete = data['is_discrete']
+        self._default_is_horizontal = data['is_horizontal']
 
         self.out_data = data
 
@@ -55,6 +56,14 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.checkbox_continuous = QtGui.QCheckBox("Continuous")
         self.checkbox_discrete = QtGui.QCheckBox("Discrete")
         self.checkbox_discrete.setChecked(self._default_is_discrete)
+        self.checkbox_continuous.setDisabled(True)
+        self.checkbox_discrete.setDisabled(True)
+
+        # horizontal / vertical
+        self.checkbox_horizontal = QtGui.QCheckBox("Horizontal")
+        self.checkbox_vertical = QtGui.QCheckBox("Vertical")
+        self.checkbox_horizontal.setChecked(self._default_is_horizontal)
+        self.checkbox_vertical.setChecked(not self._default_is_horizontal)
 
         #checkbox3.setChecked(False)
 
@@ -66,6 +75,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
         checkboxs2 = QtGui.QButtonGroup(self)
         checkboxs2.addButton(self.checkbox_continuous)
         checkboxs2.addButton(self.checkbox_discrete)
+
+        checkboxs3 = QtGui.QButtonGroup(self)
+        checkboxs3.addButton(self.checkbox_vertical)
+        checkboxs3.addButton(self.checkbox_horizontal)
 
         # closing
         self.apply_button = QtGui.QPushButton("Apply")
@@ -104,9 +117,14 @@ class LegendPropertiesWindow(QtGui.QDialog):
             vbox2.addWidget(self.checkbox_continuous)
             vbox2.addWidget(self.checkbox_discrete)
 
+            vbox3 = QtGui.QVBoxLayout()
+            vbox3.addWidget(self.checkbox_vertical)
+            vbox3.addWidget(self.checkbox_horizontal)
+
             checkboxes = QtGui.QHBoxLayout()
             checkboxes.addLayout(vbox1)
             checkboxes.addLayout(vbox2)
+            checkboxes.addLayout(vbox3)
 
         else:
             grid2 = QtGui.QGridLayout()
@@ -118,6 +136,9 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
             grid2.addWidget(self.checkbox_continuous, 1, 1)
             grid2.addWidget(self.checkbox_discrete, 2, 1)
+
+            grid2.addWidget(self.checkbox_vertical, 1, 2)
+            grid2.addWidget(self.checkbox_horizontal, 2, 2)
             #grid2.setSpacing(0)
 
         vbox = QtGui.QVBoxLayout()
@@ -231,6 +252,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['format'] = format_value
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
             self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
+            self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()
             self.out_data['clicked_ok'] = True
 
             #print("name = %r" % self.name_edit.text())
@@ -268,6 +290,7 @@ def main():
         'format' : '%g',
         'is_blue_to_red': True,
         'is_discrete' : False,
+        'is_horizontal' : False,
     }
     main_window = LegendPropertiesWindow(d)
     main_window.show()

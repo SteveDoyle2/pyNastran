@@ -68,6 +68,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._is_axes_shown = True
         self.nvalues = 9
         self.is_wireframe = False
+        self.is_horizontal_scalar_bar = False
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
@@ -797,6 +798,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'format' : data_format,
             'is_blue_to_red' : True,
             'is_discrete': True,
+            'is_horizontal': False,
             'clicked_ok' : False,
         }
         legend = LegendPropertiesWindow(data, win_parent=self)
@@ -813,13 +815,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         data_format = data['format']
         is_blue_to_red = data['is_blue_to_red']
         is_discrete = data['is_discrete']
+        is_horizontal = data['is_horizontal']
         self.on_update_legend(Title=title, min_value=min_value, max_value=max_value,
                               data_format=data_format,
                               is_blue_to_red=is_blue_to_red,
-                              is_discrete=is_discrete)
+                              is_discrete=is_discrete, is_horizontal=is_horizontal)
 
     def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
-                         data_format='%.0f', is_blue_to_red=True, is_discrete=True):
+                         data_format='%.0f',
+                         is_blue_to_red=True, is_discrete=True, is_horizontal=True):
+
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         if len(key) == 5:
@@ -832,15 +837,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         subtitle, label = self.get_subtitle_label(subcase_id)
         name = (vector_size, subcase_id, result_type, label, min_value, max_value)
 
-
         norm_value = float(max_value - min_value)
         #if name not in self._loaded_names:
         grid_result = self.set_grid_values(name, case, vector_size,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)
         self.UpdateScalarBar(Title, min_value, max_value, norm_value,
-                             data_format, is_blue_to_red=is_blue_to_red)
+                             data_format, is_blue_to_red=is_blue_to_red,
+                             is_horizontal=is_horizontal)
         self.final_grid_update(name, grid_result, key, subtitle, label)
+        self.is_horizontal_scalar_bar = is_horizontal
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
                          '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
                          % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
@@ -974,7 +980,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         txtprop.SetColor(self.text_col)
         txt.SetDisplayPosition(*position)
 
-        #print("dir(text) = ", dir(txt))
         txt.VisibilityOff()
 
         #txt.SetDisplayPosition(5, 5) # bottom left
@@ -1016,8 +1021,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.scalarBar.SetTitle("Title1")
 
         self.scalarBar.SetLookupTable(self.colorFunction)
-        #print(dir(self.scalarBar))
-        #print(dir(self.colorFunction))
         #self.scalarBar.SetNanColor(0., 0., 0.) # RGB color - black
         #self.scalarBar.SetNanColor(1., 1., 1., 0.) # RGBA color - white
 
@@ -1025,25 +1028,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.scalarBar.SetHeight(0.9)
         #self.scalarBar.SetWidth(0.20)  # the width is set first
         #self.scalarBar.SetPosition(0.77, 0.1)
-        if 1:
-            # put the scalar bar at the right side
-            self.scalarBar.SetOrientationToVertical()
-            self.scalarBar.SetHeight(0.9)
-            self.scalarBar.SetWidth(0.20)  # the width is set first
-            # after the width is set, this is adjusted
-
-            width = 0.2
-            height = 0.9
-            x = 1 - 0.01 - width
-            y = (1 - height) / 2.
-            self.scalarBar.SetPosition(x, y)
-        else:
+        is_horizontal = self.is_horizontal_scalar_bar
+        if is_horizontal:
             # put the scalar bar at the top
             self.scalarBar.SetOrientationToHorizontal()
             width = 0.95
             height = 0.15
             x = (1 - width) / 2.
             y = 1 - 0.02 - height
+        else:
+            # put the scalar bar at the right side
+            self.scalarBar.SetOrientationToVertical()
+
+            width = 0.2
+            height = 0.9
+            x = 1 - 0.01 - width
+            y = (1 - height) / 2.
+            self.scalarBar.SetPosition(x, y)
+
+        # the width is set first
+        # after the width is set, this is adjusted
         self.scalarBar.SetHeight(height)
         self.scalarBar.SetWidth(width)
         self.scalarBar.SetPosition(x, y)
@@ -1075,7 +1079,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.scalarBar.RepositionableOn()
         self.rend.AddActor(self.scalarBar)
         self.scalarBar.VisibilityOff()
-        #return scalarBar
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
         # getOpenFileName return QString and we want Python string
@@ -1086,8 +1089,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def start_logging(self):
         if self.html_logging:
             log = SimpleLogger('debug', 'utf-8', lambda x, y: self.logg_msg(x, y))
-            # logging needs synchronizing, so the messages from different threads
-            # would not be interleave
+            # logging needs synchronizing, so the messages from different
+            # threads would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()
         else:
             log = SimpleLogger('debug', 'utf-8', lambda x, y: print(x, y))
@@ -1666,7 +1669,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #data = self.caseKeys
         #print(data)
         self.res_widget.update_results(form)
-        method = 'centroid' if self.is_centroidal else 'nodal'
+
+        key = self.caseKeys[0]
+        location = self.get_case_location(key)
+        method = 'centroid' if location else 'nodal'
 
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
