@@ -116,10 +116,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         ]
         self.build_fmts(fmt_order, stop_on_failure=False)
 
-        self.label_actors = {}
-        self.label_ids = {}
-        self.label_scale = 1.0 # in percent
-
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
         self.set_script_path(script_path)
