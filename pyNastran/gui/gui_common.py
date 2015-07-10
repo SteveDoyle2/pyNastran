@@ -117,6 +117,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.geometry_actors = []
         self.pick_state = 'centroidal' if self.is_centroidal else 'nodal'
+        self.label_actors = {}
+        self.label_ids = {}
+        self.label_scale = 1.0 # in percent
+
 
     #def dragEnterEvent(self, e):
         #print(e)

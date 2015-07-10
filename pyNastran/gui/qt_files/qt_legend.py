@@ -1,3 +1,4 @@
+from six import string_types
 from PyQt4 import QtCore, QtGui
 
 class LegendPropertiesWindow(QtGui.QDialog):
@@ -186,7 +187,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def check_float(self, cell):
         text = cell.text()
         try:
-            value = float(text)
+            value = eval_float_from_string(text)
             cell.setStyleSheet("QLineEdit{background: white;}")
             return value, True
         except ValueError:
@@ -276,6 +277,23 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def on_cancel(self):
         self.close()
 
+def eval_float_from_string(value_str):
+    """
+    Allows for basic calculator functionality in legend menus.
+
+    ..note :: I don't really care about the speed since it's for a GUI.
+    """
+    value_str = str(value_str)
+    if not isinstance(value_str, string_types):
+        raise ValueError('%s  must be a string' % value_str)
+    if len(value_str)  > 50:
+        raise ValueError('%s must be less than 50 characters' % value_str)
+    allowed_letters = r'0123456789.()+-*/'
+
+    for letter in value_str:
+        if letter not in allowed_letters:
+            raise ValueError('%r is an invalid character' % allowed_letters)
+    return eval(value_str)
 
 def main():
     import sys
