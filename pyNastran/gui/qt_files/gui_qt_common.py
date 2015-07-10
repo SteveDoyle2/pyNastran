@@ -2,9 +2,67 @@
 # pylint: disable=C0111
 from __future__ import print_function
 from six import iteritems
-import vtk
-from numpy import ndarray, asarray, hstack, searchsorted
+from copy import deepcopy
 
+from numpy import ndarray, asarray, hstack, searchsorted, ones, full
+import vtk
+from vtk.util.numpy_support import numpy_to_vtk
+
+
+class NamesStorage(object):
+    def __init__(self):
+        self.loaded_names = {}
+
+    #def __contains__(self, name):
+        #"""finds out if the approximate key is in the loaded_names dictionary"""
+        ##name = (vector_size, subcase_id, result_type, label, min_value, max_value)
+        #key = name[:4]
+        #value = name[4:]
+        #assert len(key) == 4, key
+        #assert len(value) == 2, value
+        #if key in self.loaded_names:
+            #value2 = self.loaded_names[key]
+            #if value == value2:
+                #return True
+        #return False
+        #return  in self.loaded_names
+
+    def add(self, name):
+        """
+        adds the approximate name and value to the loaded_names dictionary
+        """
+        key = name[:4]
+        value = name[4:]
+        assert len(key) == 4, key
+        assert len(value) == 2, value
+        assert key not in self.loaded_names
+        self.loaded_names[key] = value
+        #self.loaded_names.add(name)
+
+    def remove(self, name):
+        """removes the approximate name from the loaded_names dictionary"""
+        key = name[:4]
+        del self.loaded_names[key]
+
+    def get_name_string(self, name):
+        """Gets the approximate name as a string"""
+        key = name[:4]
+        value = name[4:]
+        return '_'.join([str(k) for k in key])
+
+    def has_close_name(self, name):
+        """checks to see if the approximate key is in loaded_names"""
+        key = name[:4]
+        return key in self.loaded_names
+
+    def has_exact_name(self, name):
+        """
+        checks to see if the approximate key is in loaded_names
+        and the value is the expected value
+        """
+        key = name[:4]
+        value = name[4:]
+        return key in self.loaded_names and self.loaded_names[key] == value
 
 class GuiCommon(object):
     def __init__(self):
@@ -13,6 +71,8 @@ class GuiCommon(object):
         self._group_elements = {}
         self._group_coords = {}
         self._group_shown = {}
+        self._names_storage = NamesStorage()
+
         self.dim_max = 1.0
         self.vtk_version = [int(i) for i in vtk.VTK_VERSION.split('.')[:1]]
         print('vtk_version = %s' % (self.vtk_version))
@@ -46,7 +106,7 @@ class GuiCommon(object):
             for cid, axes in iteritems(self.axes):
                 axes.SetTotalLength(dim_max, dim_max, dim_max)
 
-    def update_text_actors(self, case, subcase_id, subtitle, min_value, max_value, label):
+    def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         self.textActors[0].SetInput('Max:  %g' % max_value)  # max
         self.textActors[1].SetInput('Min:  %g' % min_value)  # min
         self.textActors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
@@ -65,6 +125,14 @@ class GuiCommon(object):
             return
         result_type = self.cycleResults_explicit(result_name, explicit=False)
         self.log_command('cycleResults(result_name=%r)' % result_type)
+
+    def get_subtitle_label(self, subcase_id):
+        try:
+            subtitle, label = self.iSubcaseNameMap[subcase_id]
+        except KeyError:
+            subtitle = 'case=NA'
+            label = 'label=NA'
+        return subtitle, label
 
     def cycleResults_explicit(self, result_name=None, explicit=True):
         #if explicit:
@@ -100,112 +168,171 @@ class GuiCommon(object):
         else:
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
 
-        try:
-            case_name = self.iSubcaseNameMap[subcase_id]
-        except KeyError:
-            case_name = ('case=NA', 'label=NA')
-        (subtitle, label) = case_name
+        subtitle, label = self.get_subtitle_label(subcase_id)
         label += label2
         print("subcase_id=%s result_type=%r subtitle=%r label=%r"
               % (subcase_id, result_type, subtitle, label))
 
         #================================================
-        grid_result = self.build_grid_result(vector_size, location)
-        #================================================
         if isinstance(case, ndarray):
             max_value = case.max()
             min_value = case.min()
         else:
-            raise RuntimeError('list-based results have been disabled; use numpy.array')
-            print('resultType=%r should really use numpy arrays...' % result_type)
-            max_value = case[0]
-            min_value = case[0]
-            for value in case:
-                max_value = max(value, max_value)
-                min_value = min(value, min_value)
+            raise RuntimeError('list-based results have been removed; use numpy.array')
 
-        norm_value, nvalues_set = self.set_grid_values(grid_result, case, vector_size, min_value, max_value)
-        self.update_text_actors(case, subcase_id, subtitle, min_value, max_value, label)
-        self.UpdateScalarBar(result_type, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
+        name = (vector_size, subcase_id, result_type, label, min_value, max_value)
+        # flips sign to make colors go from blue -> red
+        norm_value = float(max_value - min_value)
+
+        if self._names_storage.has_exact_name(name):
+            grid_result = None
+        else:
+            grid_result = self.set_grid_values(name, case, vector_size,
+                                               min_value, max_value, norm_value)
+
+        self.update_text_actors(subcase_id, subtitle,
+                                min_value, max_value, label)
 
         # TODO: results can only go from centroid->node and not back to centroid
-        self.final_grid_update(grid_result, key, subtitle, label)
+        self.final_grid_update(name, grid_result, key, subtitle, label)
+
+        self.UpdateScalarBar(result_type, min_value, max_value, norm_value,
+                             data_format, is_blue_to_red=True, is_horizontal=self.is_horizontal_scalar_bar)
+
+        location = self.get_case_location(key)
+        self.res_widget.update_method(location)
         if explicit:
             self.log_command('cycleResults(result_name=%r)' % result_type)
         return result_type
 
-    def set_grid_values(self, grid_result, case, vector_size, min_value, max_value, is_blue_to_red=True):
-        # flips sign to make colors go from blue -> red
-        norm_value = float(max_value - min_value)
-        #print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
-        #print("case = ", case)
-        #if norm_value == 0.: # avoids division by 0.
-        #    norm_value = 1.
+    def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
+                        is_blue_to_red=True):
+        """
+        https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
+        """
+        if self._names_storage.has_exact_name(name):
+            return
 
-        value_set = set()
+        if 0: # nan testing
+            from numpy import float32, int32
+            if case.dtype.name == 'float32':
+                case[50] = float32(1) / float32(0)
+            else:
+                case[50] = int32(1) / int32(0)
+
         if vector_size == 1:
             if is_blue_to_red:
                 if norm_value == 0:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue(1 - min_value)
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue(1 - min_value)
+                    nvalues = len(case)
+                    case2 = full((nvalues), 1.0 - min_value, dtype='float32')
+                    #case2 = 1 - ones(nvalues) * min_value
                 else:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue(1.0 - (value - min_value) / norm_value)
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue(1.0 - (value - min_value) / norm_value)
+                    case2 = 1.0 - (case - min_value) / norm_value
             else:
                 if norm_value == 0:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue(min_value)
+                    # how do you even get a constant nodal result on a surface?
+                    # nodal normals on a constant surface, but that's a bit of an edge case
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue(min_value)
+                    case2 = full((nvalues), min_value, dtype='float32')
+                    #case2 = case
                 else:
-                    for i, value in enumerate(case):
-                        grid_result.InsertNextValue((value - min_value) / norm_value)
-        else:  # vector_size=3
-            for value in case:
-                grid_result.InsertNextTuple3(value)  # x, y, z
+                    #for i, value in enumerate(case):
+                        #grid_result.InsertNextValue((value - min_value) / norm_value)
+                    case2 = (case - min_value) / norm_value
 
-        nvalues_set = len(value_set)
-        return norm_value, nvalues_set
+            #case2 = case
+            #print('max =', case2.max())
 
-    def final_grid_update(self, grid_result, key, subtitle, label):
+            grid_result = numpy_to_vtk(
+                num_array=case2,
+                deep=True,
+                array_type=vtk.VTK_FLOAT
+            )
+            #print('max2 =', grid_result.GetRange())
+        else:
+            # vector_size=3
+            #for value in case:
+                #grid_result.InsertNextTuple3(*value)  # x, y, z
+            #if case.flags.contiguous:
+                #case2 = case
+                #deep = False
+            #else:
+                #case2 = deepcopy(case)
+                #deep = True
+            deep = True
+            grid_result = numpy_to_vtk(
+                num_array=case2,
+                deep=deep,
+                array_type=vtk.VTK_FLOAT
+            )
+        return grid_result
+
+    def final_grid_update(self, name, grid_result, key, subtitle, label):
         if len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
         elif len(key) == 6:
             (subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
-        npoints = self.nPoints()
-        ncells = self.nCells()
+
+        name_str = self._names_storage.get_name_string(name)
+        if not self._names_storage.has_exact_name(name):
+            grid_result.SetName(name_str)
+            self._names_storage.add(name)
+
+            if location == 'centroid':
+                cell_data = self.grid.GetCellData()
+                if self._names_storage.has_close_name(name):
+                    cell_data.RemoveArray(name_str)
+                    self._names_storage.remove(name)
+
+                cell_data.AddArray(grid_result)
+                self.log_info("centroidal plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
+                              % (vector_size, subcase_id, result_type, subtitle, label))
+            elif location == 'node':
+                point_data = self.grid.GetPointData()
+                if self._names_storage.has_close_name(name):
+                    point_data.RemoveArray(name_str)
+                    self._names_storage.remove(name)
+
+                if vector_size == 1:
+                    self.log_info("node plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
+                                  % (vector_size, subcase_id, result_type, subtitle, label))
+                    point_data.AddArray(grid_result)
+                elif vector_size == 3:
+                    self.log_info("node plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
+                                  % (vector_size, subcase_id, result_type, subtitle, label))
+                    point_data.AddVector(grid_result)
+                else:
+                    raise RuntimeError(vector_size)
+            else:
+                raise RuntimeError(location)
 
         if location == 'centroid':
-        #if location == 'centroid' and self.is_centroidal:
-            if npoints:
-                point_data = self.grid.GetPointData()
-                point_data.Reset()
-            self.grid.GetCellData().SetScalars(grid_result)
-            self.log_info("centroidal plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
-                          % (vector_size, subcase_id, result_type, subtitle, label))
+            cell_data = self.grid.GetCellData()
+            cell_data.SetActiveScalars(name_str)
+
+            point_data = self.grid.GetPointData()
+            point_data.SetActiveScalars(None)
         elif location == 'node':
-        #elif location == 'node' and self.is_nodal:
-            if ncells:
-                cell_data = self.grid.GetCellData()
-                #print(dir(cell_data))
-                cell_data.Reset()
+            cell_data = self.grid.GetCellData()
+            cell_data.SetActiveScalars(None)
+
+            point_data = self.grid.GetPointData()
             if vector_size == 1:
-                self.log_info("node plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
-                              % (vector_size, subcase_id, result_type, subtitle, label))
-                self.grid.GetPointData().SetScalars(grid_result)
+                point_data.SetActiveScalars(name_str)
             elif vector_size == 3:
-                self.log_info("node plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
-                              % (vector_size, subcase_id, result_type, subtitle, label))
-                self.grid.GetPointData().SetScalars(grid_result)
+                point_data.SetActiveVectors(name_str)
             else:
-                #print("***node skipping - subcase_id=%s result_type=%s subtitle=%s label=%s"
-                      #% (subcase_id, result_type, subtitle, label))
                 raise RuntimeError(vector_size)
         else:
             raise RuntimeError(location)
-            #self.log_info("***D%s skipping - subcase_id=%s result_type=%s subtitle=%s label=%s"
-                          #% (location, subcase_id, result_type, subtitle, label))
-            #self.scalarBar.SetVisibility(False)
+
         self.grid.Modified()
         self.vtk_interactor.Render()
 
@@ -248,12 +375,13 @@ class GuiCommon(object):
                 found_cases = False
                 return found_cases
 
+            location = self.get_case_location(key)
             print("key = %s" % str(key))
             #if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 #self.incrementCycle()
             found_cases = True
         else:
-            result_type = 'centroidal' if self.is_centroidal else 'nodal'
+            result_type = 'centroidal' if location == 'centroid' else 'nodal'
             self.log_error("No Results found.  Many results are not supported in the GUI.\nTry using %s results."
                            % result_type)
             self.scalarBar.SetVisibility(False)
@@ -261,32 +389,23 @@ class GuiCommon(object):
         #print("next iCase=%s key=%s" % (self.iCase, key))
         return found_cases
 
-    def build_grid_result(self, vector_size, location):
-        grid_result = vtk.vtkFloatArray()
-        self.rend.Modified()
-
-        grid_result.SetNumberOfComponents(vector_size)
-        if location == 'centroid':
-        #if location == 'centroid' and self.is_centroidal:
-            #allocationSize = vector_size*location (where location='centroid'-> self.nElements)
-            grid_result.Allocate(self.nElements, 1000)
-        #elif location == 'node' and self.is_nodal:
-        elif location == 'node':
-            #allocationSize = vector_size*self.nNodes # (where location='node'-> self.nNodes)
-            grid_result.Allocate(self.nNodes * vector_size, 1000)
-            #grid_result.SetNumberOfComponents(vector_size)
+    def get_case_location(self, key):
+        if len(key) == 5:
+            (subcase_id, result_type, vector_size, location, data_format) = key
+        elif len(key) == 6:
+            (subcase_id, i, result_type, vector_size, location, data_format) = key
         else:
-            raise RuntimeError(location)
-            #print("***%s skipping" % location)
-        return grid_result
+            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+        return location
 
-    def UpdateScalarBar(self, title, min_value, max_value, norm_value, data_format,
-                        is_blue_to_red=True):
+    def UpdateScalarBar(self, title, min_value, max_value, norm_value,
+                        data_format, is_blue_to_red=True, is_horizontal=True):
         """
         :param title:       the scalar bar title
         :param min_value:   the blue value
         :param max_value:   the red value
         :param data_format: '%g','%f','%i', etc.
+        :param is_blue_to_red:  flips the order of the RGB points
         """
         print("UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.colorFunction.RemoveAllPoints()
@@ -297,6 +416,35 @@ class GuiCommon(object):
         else:
             self.colorFunction.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
             self.colorFunction.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
+
+        if is_horizontal:
+            # put the scalar bar at the top
+            self.scalarBar.SetOrientationToHorizontal()
+            width = 0.95
+            height = 0.15
+            x = (1 - width) / 2.
+            y = 1 - 0.02 - height
+        else:
+            # put the scalar bar at the right side
+            self.scalarBar.SetOrientationToVertical()
+            width = 0.2
+            height = 0.9
+            x = 1 - 0.01 - width
+            y = (1 - height) / 2.
+        self.scalarBar.SetHeight(height)
+        self.scalarBar.SetWidth(width)
+        self.scalarBar.SetPosition(x, y)
+
+        if 0:
+            self.colorFunction.SetRange(min_value, max_value)
+            #self.colorFunction.Update()
+
+            #scalar_range = self.grid.GetScalarRange()
+            #print('scalar_range', scalar_range)
+            #self.aQuadMapper.SetScalarRange(scalar_range)
+            #self.aQuadMapper.SetScalarRange(min_value, max_value)
+            self.aQuadMapper.SetScalarRange(max_value, min_value)
+            self.aQuadMapper.Update()
 
         #self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetTitle(title)

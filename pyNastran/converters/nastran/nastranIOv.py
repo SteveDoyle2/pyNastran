@@ -771,7 +771,7 @@ class NastranIO(object):
 
         # set to True to enable nodeIDs as an result
         nidsSet = True
-        if nidsSet and self.is_nodal:
+        if nidsSet:
             nids = zeros(self.nNodes, dtype='int32')
             for (nid, nid2) in iteritems(self.nidMap):
                 nids[nid2] = nid
@@ -783,7 +783,7 @@ class NastranIO(object):
 
         # set to True to enable elementIDs as a result
         eidsSet = True
-        if eidsSet and self.is_centroidal:
+        if eidsSet:
             eids = zeros(nelements, dtype='int32')
             for (eid, eid2) in iteritems(self.eidMap):
                 eids[eid2] = eid
@@ -794,7 +794,7 @@ class NastranIO(object):
             eidsSet = True
 
         # subcase_id, resultType, vector_size, location, dataFormat
-        if len(model.properties) and self.is_centroidal:
+        if len(model.properties):
             cases[(0, icase, 'Property_ID', 1, 'centroid', '%i')] = pids
             form0.append(('Property_ID', icase, []))
             icase += 1
@@ -840,8 +840,8 @@ class NastranIO(object):
         """
         pressure act normal to the face (as opposed to anti-normal)
         """
-        if not self.is_centroidal:
-            return icase
+        #if not self.is_centroidal:
+            #return icase
         assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
         try:
             sucaseIDs = model.caseControlDeck.get_subcase_list()
@@ -1071,143 +1071,149 @@ class NastranIO(object):
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
         nnodes = self.nNodes
-        if self.is_nodal: # nodal results don't work with centroidal ones
-            displacement_like = [
-                (model.displacements, 'Displacement'),
-                (model.velocities, 'Velocity'),
-                (model.accelerations, 'Acceleration'),
-                (model.eigenvectors, 'Eigenvectors'),
-                (model.spc_forces, 'SPC Forces'),
-                (model.mpc_forces, 'MPC Forces'),
+        displacement_like = [
+            (model.displacements, 'Displacement'),
+            (model.velocities, 'Velocity'),
+            (model.accelerations, 'Acceleration'),
+            (model.eigenvectors, 'Eigenvectors'),
+            (model.spc_forces, 'SPC Forces'),
+            (model.mpc_forces, 'MPC Forces'),
 
-                # untested
-                (model.load_vectors, 'LoadVectors'),
-                (model.applied_loads, 'AppliedLoads'),
-                (model.force_vectors, 'ForceVectors'),
-                #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
-            ]
-            temperature_like = [
-                (model.temperatures, 'Temperature'),
-            ]
-            nids = self.node_ids
+            # untested
+            (model.load_vectors, 'LoadVectors'),
+            (model.applied_loads, 'AppliedLoads'),
+            (model.force_vectors, 'ForceVectors'),
+            #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
+        ]
+        temperature_like = [
+            (model.temperatures, 'Temperature'),
+        ]
+        nids = self.node_ids
 
-            for (result, name) in displacement_like:
-                if subcase_id in result:
-                    case = result[subcase_id]
-                    if not hasattr(case, 'data'):
-                        continue
-                    if not case.is_real():
-                        continue
-                    if case.nonlinear_factor is not None: # transient
-                        #ntimes = len(case._times)
-                        code_name = case.data_code['name']
-                        has_cycle = hasattr(case, 'mode_cycle')
+        for (result, name) in displacement_like:
+            if subcase_id in result:
+                case = result[subcase_id]
+                if not hasattr(case, 'data'):
+                    continue
+                if not case.is_real():
+                    continue
+                if case.nonlinear_factor is not None: # transient
+                    #ntimes = len(case._times)
+                    code_name = case.data_code['name']
+                    has_cycle = hasattr(case, 'mode_cycle')
 
-                        itime0 = 0
-                        t1 = case.data[itime0, :, 0]
-                        ndata = t1.shape[0]
-                        if nnodes != ndata:
-                            nidsi = case.node_gridtype[:, 0]
-                            assert len(nidsi) == nnodes
-                            j = searchsorted(nids, nidsi)  # searching for nidsi
+                    itime0 = 0
+                    t1 = case.data[itime0, :, 0]
+                    ndata = t1.shape[0]
+                    if nnodes != ndata:
+                        nidsi = case.node_gridtype[:, 0]
+                        assert len(nidsi) == nnodes
+                        j = searchsorted(nids, nidsi)  # searching for nidsi
 
-                            try:
-                                if not allclose(nids[j], nidsi):
-                                    msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
-                                    raise RuntimeError(msg)
-                            except IndexError:
-                                msg = 'node_ids = %s\n' % list(nids)
-                                msg += 'nidsi in disp = %s\n' % list(nidsi)
-                                raise IndexError(msg)
+                        try:
+                            if not allclose(nids[j], nidsi):
+                                msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                                raise RuntimeError(msg)
+                        except IndexError:
+                            msg = 'node_ids = %s\n' % list(nids)
+                            msg += 'nidsi in disp = %s\n' % list(nidsi)
+                            raise IndexError(msg)
 
-                        for itime in range(case.ntimes):
-                            dt = case._times[itime]
-                            t1 = case.data[itime, :, 0]
-                            t2 = case.data[itime, :, 1]
-                            t3 = case.data[itime, :, 2]
+                    for itime in range(case.ntimes):
+                        dt = case._times[itime]
+                        t1 = case.data[itime, :, 0]
+                        t2 = case.data[itime, :, 1]
+                        t3 = case.data[itime, :, 2]
 
-                            if(t1.min() == t1.max() and t2.min() == t2.max() and
-                               t3.min() == t3.max()):
-                                continue
-                            if nnodes != ndata:
-                                t1i = zeros(nnodes, dtype='float32')
-                                t2i = zeros(nnodes, dtype='float32')
-                                t3i = zeros(nnodes, dtype='float32')
-                                t1i[j] = t1
-                                t2i[j] = t2
-                                t3i[j] = t3
-                                t1 = t1i
-                                t2 = t2i
-                                t3 = t3i
-
-                            if isinstance(dt, float):
-                                header = ' %s = %.4E' % (code_name, dt)
-                            else:
-                                header = ' %s = %i' % (code_name, dt)
-
-                            if has_cycle:
-                                freq = case.eigrs[itime]
-                                #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-                                cycle = sqrt(abs(freq))/(2. * pi)
-                                header += '; freq=%g' % cycle
-
-                            form0 = (header, None, [])
-                            formi2 = form0[2]
-
-                            cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
-                            formi2.append((name + 'X', icase, []))
-                            icase += 1
-
-                            cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
-                            formi2.append((name + 'Y', icase, []))
-                            icase += 1
-
-                            cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                            formi2.append((name + 'Z', icase, []))
-                            icase += 1
-
-                            formi.append(form0)
-                    else:
-                        t1 = case.data[0, :, 0]
-                        t2 = case.data[0, :, 1]
-                        t3 = case.data[0, :, 2]
-                        t123 = norm(case.data[0, :, :3], axis=1)
-
+                        t123 = case.data[itime, :, :3]
+                        #tnorm = norm(t123, axis=1)
 
                         if(t1.min() == t1.max() and t2.min() == t2.max() and
-                           t3.min() == t3.max() and t123.min() == t123.max()):
+                           t3.min() == t3.max()):
                             continue
-                        #if t1.min() != t1.max():
-                        cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
-                        formi.append((name + 'X', icase, []))
+                        if nnodes != ndata:
+                            t1i = zeros(nnodes, dtype='float32')
+                            t2i = zeros(nnodes, dtype='float32')
+                            t3i = zeros(nnodes, dtype='float32')
+                            t1i[j] = t1
+                            t2i[j] = t2
+                            t3i[j] = t3
+                            t1 = t1i
+                            t2 = t2i
+                            t3 = t3i
+
+                        if isinstance(dt, float):
+                            header = ' %s = %.4E' % (code_name, dt)
+                        else:
+                            header = ' %s = %i' % (code_name, dt)
+
+                        if has_cycle:
+                            freq = case.eigrs[itime]
+                            #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
+                            cycle = sqrt(abs(freq))/(2. * pi)
+                            header += '; freq=%g' % cycle
+
+                        form0 = (header, None, [])
+                        formi2 = form0[2]
+
+                        cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
+                        formi2.append((name + 'X', icase, []))
                         icase += 1
 
-                        #if t2.min() != t2.max():
-                        cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
-                        formi.append((name + 'Y', icase, []))
+                        cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
+                        formi2.append((name + 'Y', icase, []))
                         icase += 1
 
-                        #if t3.min() != t3.max():
-                        cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
-                        formi.append((name + 'Z', icase, []))
+                        cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                        formi2.append((name + 'Z', icase, []))
                         icase += 1
 
-                        #if t123.min() != t123.max():
-                        cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = t123
-                        formi.append((name + 'XYZ', icase, []))
+                        cases[(subcase_id, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
+                        formi2.append((name + 'XYZ', icase, []))
                         icase += 1
 
-            for (result, name) in temperature_like:
-                if subcase_id in result:
-                    case = result[subcase_id]
-                    if not hasattr(case, 'data'):
+                        formi.append(form0)
+                else:
+                    t1 = case.data[0, :, 0]
+                    t2 = case.data[0, :, 1]
+                    t3 = case.data[0, :, 2]
+                    t123 = case.data[0, :, :3]
+                    tnorm = norm(t123, axis=1)
+
+
+                    if(t1.min() == t1.max() and t2.min() == t2.max() and
+                       t3.min() == t3.max() and t123.min() == t123.max()):
                         continue
-                    temperatures = case.data[0, :, 0]
-                    cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
-                    formi.append((name, icase, []))
+                    #if t1.min() != t1.max():
+                    cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
+                    formi.append((name + 'X', icase, []))
                     icase += 1
-        else: # centroidal
-            pass
+
+                    #if t2.min() != t2.max():
+                    cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
+                    formi.append((name + 'Y', icase, []))
+                    icase += 1
+
+                    #if t3.min() != t3.max():
+                    cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
+                    formi.append((name + 'Z', icase, []))
+                    icase += 1
+
+                    #if t123.min() != t123.max():
+                    cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
+                    #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
+                    formi.append((name + 'XYZ', icase, []))
+                    icase += 1
+
+        for (result, name) in temperature_like:
+            if subcase_id in result:
+                case = result[subcase_id]
+                if not hasattr(case, 'data'):
+                    continue
+                temperatures = case.data[0, :, 0]
+                cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
+                formi.append((name, icase, []))
+                icase += 1
         return icase
 
     def clear_nastran(self):
@@ -1218,12 +1224,12 @@ class NastranIO(object):
         self.node_ids = None
 
     def fill_stress(self, cases, model, subcase_id, formi, icase):
-        if self.is_centroidal:
-            icase = self._fill_stress_centroidal(cases, model, subcase_id, formi, icase)
-        elif self.is_nodal:
-            icase = self._fill_stress_nodal(cases, model, subcase_id, formi, icase)
-        else:
-            raise RuntimeError('this shouldnt happen...')
+        #if self.is_centroidal:
+        icase = self._fill_stress_centroidal(cases, model, subcase_id, formi, icase)
+        #elif self.is_nodal:
+            #icase = self._fill_stress_nodal(cases, model, subcase_id, formi, icase)
+        #else:
+            #raise RuntimeError('this shouldnt happen...')
         return icase
 
     def _fill_stress_nodal(self, cases, model, subcase_id, formi, icase):

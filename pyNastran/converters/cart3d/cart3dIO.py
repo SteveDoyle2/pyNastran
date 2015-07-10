@@ -286,3 +286,92 @@ class Cart3dIO(object):
             #obj = Cart3dResultsObj(form, new_cases)
             #obj.get_result_index_by_form_key()
             #obj.get_result_by_index(1)
+
+
+    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model):
+        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
+        assert self.is_centroidal != self.is_nodal
+
+        result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
+                        'rhoU', 'rhoV', 'rhoW', 'rhoE']
+        nelements = elements.shape[0]
+        nnodes = nodes.shape[0]
+
+        cases_new = []
+        new = False
+        is_normals = True
+
+        results_form = []
+        geometry_form = [
+            ('Region', 0, []),
+            ('ElementID', 1, []),
+            ('NodeID', 2, []),
+        ]
+
+        eids = arange(1, nelements + 1)
+        nids = arange(1, nnodes+1)
+
+        if new:
+            cases_new[0] = (ID, regions, 'Region', 'centroid', '%i')
+            cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i')
+            cases_new[2] = (ID, nids, 'NodeID', 'node', '%i')
+        else:
+            cases[(ID, 0, 'Region', 1, 'centroid', '%i')] = regions
+            cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
+            cases[(ID, 2, 'NodeID', 1, 'node', '%i')] = nids
+
+        i = 3
+
+        if is_normals:
+            geometry_form.append(('Normal X', i, []))
+            geometry_form.append(('Normal Y', i + 1, []))
+            geometry_form.append(('Normal Z', i + 2, []))
+
+            cnormals = model.get_normals(nodes, elements, shift_nodes=False)
+            cnnodes = cnormals.shape[0]
+            assert cnnodes == nelements, len(cnnodes)
+
+            if new:
+                cases_new[i] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
+                cases_new[i + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
+                cases_new[i + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
+            else:
+                cases[(ID, i, 'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
+                cases[(ID, i + 1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
+                cases[(ID, i + 2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
+            i += 3
+
+        #if is_normals:
+            #geometry_form.append(('Normal X', 1, []))
+            #geometry_form.append(('Normal Y', 2, []))
+            #geometry_form.append(('Normal Z', 3, []))
+
+            #cnormals = model.get_normals(nodes, elements, shift_nodes=False)
+            #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals, shift_nodes=False)
+
+            #if new:
+                #cases_new[i] = (ID, nnormals[:, 0], 'Normal X', 'node', '%.3f')
+                #cases_new[i + 1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')
+                #cases_new[i + 2] = (ID, nnormals[:, 2], 'Normal Z', 'node', '%.3f')
+            #else:
+                #cases[(ID, i, 'Normal X', 1, 'node', '%.3f')] = nnormals[:, 0]
+                #cases[(ID, i + 1, 'Normal Y', 1, 'node', '%.3f')] = nnormals[:, 1]
+                #cases[(ID, i + 2, 'Normal Z', 1, 'node', '%.3f')] = nnormals[:, 2]
+            #i += 3
+
+        for result_name in result_names:
+            if result_name in loads:
+                nodal_data = loads[result_name]
+                if new:
+                    cases_new[i] = (result, result_name, 1, 'node', '%.3f')
+                else:
+                    cases[(ID, i, result_name, 1, 'node', '%.3f')] = nodal_data
+                results_form.append((result_name, i, []))
+                i += 1
+
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+        if len(results_form):
+            form.append(('Results', None, results_form))
+        return form, cases

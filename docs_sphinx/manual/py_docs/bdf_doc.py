@@ -369,6 +369,30 @@ def example7():
     ## $
     ## CBEAM         12       5      14      18      0.      1.      0.     GGG
 
+def example8():
+    """
+    Example 1: Read/Write - Level 2
+    """
+    # this example will demonstate:
+    #  - reading the BDF
+    #  - getting some basic information
+    #  - writing the BDF
+
+    # our model
+    import pyNastran
+    pkg_path = pyNastran.__path__[0]
+    test_path = os.path.join(pkg_path, '..', 'models', 'solid_bending')
+    bdf_filename = os.path.join(test_path, 'solid_bending.bdf')
+    bdf_filename2 = os.path.join(test_path, 'solid_bending2.bdf')
+    bdf_filename2 = 'solid_bending2.bdf'
+
+    # instantiate the model
+    from pyNastran.bdf.bdf import BDF
+    model = BDF()
+    model.read_bdf(bdf_filename)
+    model.sol = 103
+    model.write_bdf(bdf_filename2)
+
 
 def main():  ## pragma: no cover
     """
@@ -383,6 +407,7 @@ def main():  ## pragma: no cover
     example5()
     example6()
     example7()
+    example8()
 
 
 def head(fname, n):
