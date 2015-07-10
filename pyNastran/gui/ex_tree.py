@@ -205,6 +205,8 @@ class Sidebar(QWidget):
         layout.addWidget(self.apply_button)
         self.setLayout(layout)
 
+        self.clear_data()
+
     def update_method(self, method):
         datai = self.result_data_window.data[0]
         self.result_data_window.data[0] = (method, datai[1], datai[2])
