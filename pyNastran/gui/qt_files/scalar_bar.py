@@ -79,8 +79,6 @@ class ScalarBar(object):
         self.scalar_bar.VisibilityOff()
 
 
-
-
     def update(self, title, min_value, max_value, norm_value,
                data_format, is_blue_to_red=True, is_horizontal=True):
         self.color_function.RemoveAllPoints()

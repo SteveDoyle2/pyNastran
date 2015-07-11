@@ -87,6 +87,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #-------------
         # file
+        self.menu_bar_format = None
         self.format = None
         self.infile_name = None
         self.out_filename = None
@@ -112,6 +113,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.tools = []
         self.checkables = []
+        self.actions = {}
 
         # initializes tools/checkables
         self.set_tools()
@@ -325,7 +327,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise RuntimeError(self.pick_state)
         self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
 
-    def _create_menu_items(self, actions):
+    def _create_menu_items(self, actions=None):
+        if actions is None:
+            actions = self.actions
         self.menu_file = self.menubar.addMenu('&File')
         self.menu_view = self.menubar.addMenu('&View')
         self.menu_window = self.menubar.addMenu('&Window')
@@ -358,8 +362,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'legend', 'axis',
         ]
         if self.html_logging:
-            actions['logwidget'] = self.log_dock.toggleViewAction()
-            actions['logwidget'].setStatusTip("Show/Hide application log")
+            self.actions['logwidget'] = self.log_dock.toggleViewAction()
+            self.actions['logwidget'].setStatusTip("Show/Hide application log")
             menu_view += ['', 'show_info', 'show_debug', 'show_gui', 'show_command']
             menu_window += ['logwidget']
 
@@ -381,6 +385,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
+
+        # the dummy toolbar stores actions but doesn't get shown
+        # in other words, it can set shortcuts
         self._dummy_toolbar = self.addToolBar('Dummy toolbar')
 
         ## menubar
@@ -388,9 +395,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
         menu_items = self._create_menu_items(actions)
-        self._populate_menu(menu_items, actions)
+        self._populate_menu(menu_items)
 
-    def _populate_menu(self, menu_items, actions):
+    def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
         for menu, items in menu_items:
             if menu is None:
@@ -402,9 +409,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     if not isinstance(i, string_types):
                         raise RuntimeError('what is this...action i() = %r' % i())
 
-                    action = actions[i] #if isinstance(i, string_types) else i()
+                    action = self.actions[i] #if isinstance(i, string_types) else i()
                     menu.addAction(action)
         #self._create_plane_from_points(None)
+
+    def _update_menu(self, menu_items):
+        for menu, items in menu_items:
+            menu.clear()
+        self._populate_menu(menu_items)
 
     def _create_plane_from_points(self, points):
         origin, vx, vy, vz, x_limits, y_limits = self._fit_plane(points)
@@ -453,16 +465,21 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         y_limits = [0., 1.]
         return origin, vx, vy, vz, x_limits, y_limits
 
-    def _prepare_actions(self, icon_path, tools, checkables):
+    def _prepare_actions(self, icon_path, tools, checkables=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
         """
-        actions = {}
+        if checkables is None:
+            checkables = []
+        print('---------------------------')
         for tool in tools:
             (nam, txt, icon, shortcut, tip, func) = tool
-            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s"
-                  #% (nam, txt, icon, short, tip, func))
+            if nam in self.actions:
+                self.log_error('trying to create a duplicate action %r' % nam)
+                continue
+            #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
+                  #% (nam, txt, icon, shortcut, tip, func))
             #if icon is None:
                 #print("missing_icon = %r!!!" % nam)
                 #icon = os.path.join(icon_path, 'no.png')
@@ -479,25 +496,25 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ico.addPixmap(QtGui.QPixmap(pth), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
             if nam in checkables:
-                actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
-                actions[nam].setChecked(True)
+                self.actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
+                self.actions[nam].setChecked(True)
             else:
-                actions[nam] = QtGui.QAction(ico, txt, self)
+                self.actions[nam] = QtGui.QAction(ico, txt, self)
 
             if shortcut:
-                actions[nam].setShortcut(shortcut)
+                self.actions[nam].setShortcut(shortcut)
                 #actions[nam].setShortcutContext(QtCore.Qt.WidgetShortcut)
             if tip:
-                actions[nam].setStatusTip(tip)
+                self.actions[nam].setStatusTip(tip)
             if func:
-                actions[nam].triggered.connect(func)
+                self.actions[nam].triggered.connect(func)
 
-        actions['toolbar'] = self.toolbar.toggleViewAction()
-        actions['toolbar'].setStatusTip("Show/Hide application toolbar")
+        self.actions['toolbar'] = self.toolbar.toggleViewAction()
+        self.actions['toolbar'].setStatusTip("Show/Hide application toolbar")
 
-        actions['reswidget'] = self.res_dock.toggleViewAction()
-        actions['reswidget'].setStatusTip("Show/Hide results selection")
-        return actions
+        self.actions['reswidget'] = self.res_dock.toggleViewAction()
+        self.actions['reswidget'].setStatusTip("Show/Hide results selection")
+        return self.actions
 
     def logg_msg(self, typ, msg):
         """
@@ -1220,7 +1237,65 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #else:
         msg = '%s - %s' % (self.format, self.infile_name)
         self.set_window_title(msg)
+        #self.update_menu_bar()
         self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
+
+    def _create_nastran_tools_and_menu_items(self):
+        tools = [
+            ('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
+            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
+        ]
+        self.menu_help2 = self.menubar.addMenu('&HelpMenuNew')
+        self.menu_help.menuAction().setVisible(False)
+        #self.file.menuAction().setVisible(False)
+        #self.menu_help.
+
+        #self.actions['about'].Disable()
+
+        menu_items = [
+            (self.menu_help2, ('about_nastran',)),
+            #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
+            #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
+        ]
+        return tools, menu_items
+
+    def _cleanup_nastran_tools_and_menu_items(self):
+        self.menu_help.menuAction().setVisible(True)
+        self.menu_help2.menuAction().setVisible(False)
+
+    def _update_menu_bar_to_format(self, fmt, method):
+        self.menu_bar_format = fmt
+        tools, menu_items = getattr(self, method)()
+        actions = self._prepare_actions(self._icon_path, tools, self.checkables)
+        self._update_menu(menu_items)
+
+    def update_menu_bar(self):
+        # the format we're switching to
+        method_new = '_create_%s_tools_and_menu_items' % self.format
+        method_cleanup = '_cleanup_%s_tools_and_menu_items' % self.menu_bar_format
+
+        # the current state of the format
+        #method_new = '_create_%s_tools_and_menu_items' % self.menu_bar_format
+        self.menu_bar_format = 'cwo'
+        if self.menu_bar_format is None:
+            self._update_menu_bar_to_format(self.format, method_new)
+        else:
+            print('need to add %r' % method_new)
+            if self.menu_bar_format != self.format:
+                if hasattr(self, method_cleanup):
+                #if hasattr(self, method_old):
+                    self.menu_bar_format = None
+                    getattr(self, method_cleanup)()
+
+            if hasattr(self, method_new):
+                self._update_menu_bar_to_format(self.format, method_new)
+
+                    #self._update_menu_bar_to_format(self.format)
+                    #actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
+                    #menu_items = self._create_menu_items(actions)
+                    #menu_items = self._create_menu_items()
+                    #self._populate_menu(menu_items)
+
 
     def on_load_results(self, out_filename=None):
         """
@@ -1957,6 +2032,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.iCase = -1
             self.nCases = 0
 
+        self.reset_labels()
         self.cycleResults_explicit()  # start at nCase=0
         if self.nCases:
             self.scalarBar.VisibilityOn()
@@ -1984,6 +2060,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
 
     def reset_labels(self):
+        """
+        Wipe all labels and regenerate the key slots based on the case keys.
+        This is used when changing the model.
+        """
+        print('reset labels...')
         self._remove_labels()
 
         # new geometry
@@ -1996,13 +2077,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #]
         for case_key in self.caseKeys:
             # TODO: this probably isn't always right...
-            result_name = case_key[2] #  ElementID
+            #result_name = case_key[2] #  ElementID
+            result_name = self.get_result_name(case_key)
 
             self.label_actors[result_name] = []
             self.label_ids[result_name] = set([])
 
 
     def _remove_labels(self):
+        """
+        Remove all labels from the current result case.
+        This happens when the user explictly selects the clear label button.
+        """
         if len(self.label_actors) == 0:
             self.log.warning('No actors to remove')
             return
@@ -2016,6 +2102,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.label_ids[result_name] = set([])
 
     def clear_labels(self):
+        """
+        This clears out all labels from all result cases.
+        """
         if len(self.label_actors) == 0:
             self.log.warning('No actors to clear')
             return
