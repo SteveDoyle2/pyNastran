@@ -50,7 +50,7 @@ class LOAD(LoadCombination):
         load_IDs = []
         for loads in self.loadIDs:
             for load in loads:
-                #if isinstance(load,int):
+                #if isinstance(load, int):
                     #load_IDs += [load]
 
                 if isinstance(load, LOAD):
@@ -61,14 +61,14 @@ class LOAD(LoadCombination):
                         load_IDs += load.getLoadIDs()
                 elif (isinstance(load, Force) or isinstance(load, Moment) or
                       isinstance(load, PLOAD4) or isinstance(load, GRAV)):
-                    load_IDs += [load.lid]
+                    load_IDs += [load.sid]
                 else:
                     msg = ('The getLoadIDs method doesnt support %s cards.\n'
                            '%s' % (load.__class__.__name__, str(load)))
                     raise NotImplementedError(msg)
 
         load_IDs = list(set(load_IDs))
-        #print "load_IDs = ",load_IDs
+        #print("load_IDs = ", load_IDs)
         return load_IDs
 
     def getLoadTypes(self):
@@ -91,7 +91,7 @@ class LOAD(LoadCombination):
                     raise NotImplementedError(load)
 
         loadTypes = list(set(loadTypes))
-        #print "loadTypes = ",loadTypes
+        #print("loadTypes = ", loadTypes)
         return loadTypes
 
     def write_calculix_GRAV(self, gx, gy, gz):
@@ -118,9 +118,9 @@ class LOAD(LoadCombination):
         if nids:
             msg += '# typesFound = %s\n' % (list(typesFound))
             msg += '# loadIDs    = %s\n' % (loadIDs)
-            msg += "load_bc=AFFE_CHAR_MECA(MODELE=modmod,\n"
-            #msg += "                      DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
-            msg += "                       FORCE_NODALE=(\n"
+            msg += "load_bc = AFFE_CHAR_MECA(MODELE=modmod,\n"
+            #msg += "                        DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
+            msg += "                         FORCE_NODALE=(\n"
 
         #CHAR=AFFE_CHAR_MECA(MODELE=MODE,
         #             FORCE_NODALE=(
@@ -128,30 +128,30 @@ class LOAD(LoadCombination):
         #                        FZ=-500.0),)
 
         #print("nids = ",nids)
-        spaces = "                                 "
+        spaces = "                           "
         for nid in sorted(nids):  # ,load in sorted(iteritems(forceLoads))
-            #print("nid = ",nid)
-            msg += spaces + "_F(NOEUD='%s%s',\n" % (grid_word, nid)
-            #print "load = ",load
+            #print("nid = ", nid)
+            msg += spaces + "_F(NOEUD='%s%s'," % (grid_word, nid)
+            #print("load = ", load)
 
             if nid in forceLoads:
                 force = forceLoads[nid]
                 if abs(force[0]) > 0.:
-                    msg += spaces + "  FX=%s,\n" % force[0]
+                    msg += " FX=%s," % force[0]
                 if abs(force[1]) > 0.:
-                    msg += spaces + "  FY=%s,\n" % force[1]
+                    msg += " FY=%s," % force[1]
                 if abs(force[2]) > 0.:
-                    msg += spaces + "  FZ=%s,\n" % force[2]
+                    msg += " FZ=%s," % force[2]
 
             if nid in momentLoads:
                 moment = momentLoads[nid]
                 if abs(moment[0]) > 0.:
-                    msg += spaces + "  MX=%s,\n" % moment[0]
+                    msg += " MX=%s," % moment[0]
                 if abs(moment[1]) > 0.:
-                    msg += spaces + "  MY=%s,\n" % moment[1]
+                    msg += " MY=%s," % moment[1]
                 if abs(moment[2]) > 0.:
-                    msg += spaces + "  MZ=%s,\n" % moment[2]
-            msg = msg[:-2]
+                    msg += " MZ=%s," % moment[2]
+            #msg = msg[:-2]
             msg += '),\n'
             # finish the load
 
@@ -165,8 +165,8 @@ class LOAD(LoadCombination):
         msg += ');\n'
 
         for gravity_load in gravityLoads:
-            msg += 'CA_GRAVITY(%s);\n' % (str(gravity_load))
-        return (msg, loadIDs, loadTypes)
+            msg += 'CA_GRAVITY(%s);\n' % str(gravity_load)
+        return msg, loadIDs, loadTypes
 
     def getReducedLoads(self):
         """
@@ -350,7 +350,7 @@ class GRAV(BaseCard):
         g2, matrix = self.cid.transformToGlobal(g)
         return g2
 
-    #def writeCodeAster(self,mag):
+    #write_code_aster_load(self,mag):
         #p = self.GravityVector()
         #msg = 'GRAV([%s,%s,%s])' %(p)
         #return msg
@@ -819,9 +819,9 @@ class FORCE2(Force):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          FORCE2 SID G F G1 G2 G3 G4
+        +--------+-----+---+---+----+----+----+----+
+        | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
+        +--------+-----+---+---+----+----+----+----+
         """
         Force.__init__(self, card, data)
         if comment:
@@ -925,8 +925,11 @@ class MOMENT(Moment):
         Defines a static concentrated moment at a grid point by specifying a
         scale factor and a vector that determines the direction.::
 
-          MOMENT SID G CID M    N1  N2  N3
-          MOMENT 2   5   6 2.9 0.0 1.0 0.0
+        +--------+-----+---+-----+-----+-----+-----+-----+
+        | MOMENT | SID | G | CID | M   |  N1 |  N2 |  N3 |
+        +--------+-----+---+-----+-----+-----+-----+-----+
+        | MOMENT | 2   | 5 |  6  | 2.9 | 0.0 | 1.0 | 0.0 |
+        +--------+-----+---+-----+-----+-----+-----+-----+
         """
         Moment.__init__(self, card, data)
         if comment:
@@ -990,7 +993,9 @@ class MOMENT1(Moment):
         Defines a static concentrated moment at a grid point by specifying a
         magnitude and two grid points that determine the direction.::
 
-          MOMENT1 SID G M G1 G2
+        +---------+-----+---+---+----+----+
+        | MOMENT1 | SID | G | M | G1 | G2 |
+        +---------+-----+---+---+----+----+
         """
         Moment.__init__(self, card, data)
         if comment:
@@ -1070,7 +1075,9 @@ class MOMENT2(Moment):
         Defines a static concentrated moment at a grid point by specification
         of a magnitude and four grid points that determine the direction.::
 
-          MOMENT2 SID G M G1 G2 G3 G4
+        +---------+-----+---+---+----+----+----+----+
+        | MOMENT2 | SID | G | M | G1 | G2 | G3 | G4 |
+        +---------+-----+---+---+----+----+----+----+
         """
         Moment.__init__(self, card, data)
         if comment:
@@ -1529,7 +1536,6 @@ class PLOAD2(Load):
             self.sid = data[0]
             self.p = data[1]
             self.eids = list(data[2:])
-            #print "PLOAD2 = ",data
 
     def cross_reference(self, model):
         """
@@ -1597,7 +1603,6 @@ class PLOAD4(Load):
             #: Coordinate system identification number. See Remark 2.
             #: (Integer >= 0;Default=0)
             self.cid = integer_or_blank(card, 9, 'cid', 0)
-            #print "PLOAD4 cid = ",self.cid
             self.NVector = array([double_or_blank(card, 10, 'N1', 0.0),
                                   double_or_blank(card, 11, 'N2', 0.0),
                                   double_or_blank(card, 12, 'N3', 0.0)])
@@ -1722,7 +1727,6 @@ class PLOAD4(Load):
             nodeIDs = self.nodeIDs([self.g1, self.g34])
             list_fields += nodeIDs
         else:
-            #print "eids = %s" %(self.eids)
             if len(self.eids) > 1:
                 #print("self.eids = %s" %(self.eids))
                 try:

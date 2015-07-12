@@ -304,12 +304,13 @@ class MAT1(IsotropicMaterial):
         return msg
 
     def write_code_aster(self):
-        msg = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1 mid=%s\n' % (
-            self.mid, self.e, self.mid)
+        pre = 'M%s = DEFI_MATRIAU(ELAS=_F(' % self.mid
+        spaces = ' ' * len(pre)
+        msg = '%sE=%g, # MAT1 mid=%s\n' % (pre, self.e, self.mid)
         #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
-        #msg += '                       E  =%g,\n'  %(self.e)
-        msg += '                       NU =%g,\n' % (self.nu)
-        msg += '                       RHO=%g),);\n' % (self.rho)
+        #msg += spaces + 'E  =%g,\n'  %(self.e)
+        msg += spaces + 'NU=%g,\n' % (self.nu)
+        msg += spaces + 'RHO=%g));\n' % (self.rho)
         return msg
 
     def cross_reference(self, model):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from six import iteritems
 from pyNastran.bdf.bdf import BDF, PBARL, PBEAML  # PBAR,PBEAM,
@@ -35,7 +36,7 @@ class CodeAsterConverter(BDF):
       SPC, SPC1, MPC,
       RBE2, RBE3
     """
-    def __init__(self, language='english', encoding='ascii'):
+    def __init__(self, language='english'):
         self.language = 'english'
         BDF.__init__(self)
 
@@ -50,6 +51,7 @@ class CodeAsterConverter(BDF):
         for eid, element in iteritems(self.elements):
             pid = element.Pid()
             props[pid].append(eid)
+        mats = []
         return mats
 
     def getElementsByMid(self):
@@ -111,7 +113,7 @@ class CodeAsterConverter(BDF):
         comm = ''
         if self.sol == 101:
             comm += 'MECA_STATIQUE % SOL 101 - linear statics\n'
-            comm += 'stat(MECA_STATIQUE(MODELE=model,CHAM_MATER=material,CARA_ELEM=elemcar,\n'
+            comm += 'stat(MECA_STATIQUE(MODELE=model, CHAM_MATER=material, CARA_ELEM=elemcar,\n'
 
             comm += 'ECIT=(_F(Charge=AllBoundaryConditions,),\n',
             comm += '      _F(Charge=AllLoads,),\n',
@@ -127,17 +129,17 @@ class CodeAsterConverter(BDF):
             pass
 
         k = "#Calculate data for the stiffness Matrix\n"
-        k += "StiffMtx=CALC_MATR_ELEM( OPTION='RIGI_MECA',MODELE=ModelDef,CHAM_MATER=MtrlFld,);\n\n"
+        k += "StiffMtx = CALC_MATR_ELEM(OPTION='RIGI_MECA', MODELE=ModelDef, CHAM_MATER=MtrlFld);\n\n"
         m = "#Calculate data for the Mass Matrix\n"
-        m += "MassMtx=CALC_MATR_ELEM( OPTION='MASS_MECA',MODELE=ModelDef,CHAM_MATER=MtrlFld,);\n\n"
+        m += "MassMtx = CALC_MATR_ELEM(OPTION='MASS_MECA', MODELE=ModelDef, CHAM_MATER=MtrlFld);\n\n"
 
         K = "#Assign the Stiffness Matrix to the DOFs to be solved\n"
-        K += "K=ASSE_MATRICE(MATR_ELEM=StiffMtx,NUME_DDL=NDOFs,);\n\n"
+        K += "K = ASSE_MATRICE(MATR_ELEM=StiffMtx, NUME_DDL=NDOFs);\n\n"
         M = "#Assign the Mass Matrix to the DOFs to be solved\n"
-        M += "M=ASSE_MATRICE(MATR_ELEM=MassMtx,NUME_DDL=NDOFs,);\n"
+        M += "M = ASSE_MATRICE(MATR_ELEM=MassMtx, NUME_DDL=NDOFs);\n"
         return comm
 
-    def CA_Nodes(self, gridWord='grid'):
+    def CA_Nodes(self, grid_word='grid'):
         mail = ''
         mail += '# CA_Nodes\n'
         if self.language == 'english':
@@ -150,12 +152,12 @@ class CodeAsterConverter(BDF):
 
         for nid, node in sorted(iteritems(self.nodes)):
             p = node.Position()
-            mail += form % (gridWord, nid, p[0], p[1], p[2])
+            mail += form % (grid_word, nid, p[0], p[1], p[2])
         mail += 'FINSF\n\n'
         mail += self.breaker()
         return mail
 
-    def CA_Elements(self, elemWord='elem', gridWord='grid'):
+    def CA_Elements(self, elem_word='elem', grid_word='grid'):
         mail = ''
         mail += '# CA_Elements\n'
         if self.language == 'english':
@@ -170,10 +172,10 @@ class CodeAsterConverter(BDF):
         for Type, eids in sorted(iteritems(elems)):
             mail += '%s\n' % (Type)
             for eid in eids:
-                mail += formE % (elemWord, eid)
+                mail += formE % (elem_word, eid)
                 element = self.elements[eid]
-                for nid in element.nodeIDs():
-                    mail += formG % (gridWord, nid)
+                for nid in element.node_ids:
+                    mail += formG % (grid_word, nid)
                 mail += '\n'
             mail += 'FINSF\n\n'
         mail += self.breaker()
@@ -188,8 +190,8 @@ class CodeAsterConverter(BDF):
             comm += ''
 
         #p = []
-        #for pid,prop in sorted(iteritems(self.properties)):
-        #    p.append('%s_%s' %(prop.type,pid))
+        #for pid, prop in sorted(iteritems(self.properties)):
+        #    p.append('%s_%s' % (prop.type, pid))
         #p = str(p)[1:-1] # chops the [] signs
         #comm += "MODEL=AFFE_MODELE(MAILLAGE=MESH,\n"
         #comm += "          AFFE=_F(GROUP_MA=(%s),\n" %(p)
@@ -233,13 +235,13 @@ class CodeAsterConverter(BDF):
             comm += ''
         mats = self.getElementsByMid()
         for mid, material in sorted(iteritems(self.materials)):
-            #comm += 'GROUP_MA name = %s_%s\n' %(material.type,mid)
+            #comm += 'GROUP_MA name = %s_%s\n' % (material.type, mid)
             comm += material.write_code_aster()
 
             eids = mats[mid]
             #comm += '    '
             #for eid in eids:
-            #    comm += 'elem%s ' %(eid)
+            #    comm += 'elem%s ' % (eid)
             #comm = comm[:-1]
             #comm += '\n'
         #comm = comm[:-2]
@@ -265,10 +267,10 @@ class CodeAsterConverter(BDF):
         comm += 'MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,\n'
         comm += '                      AFFE=(\n'
 
-        mat2Props = self.getPropertiesByMid()
+        mat_to_props = self.getPropertiesByMid()
         for mid, material in sorted(iteritems(self.materials)):
             comm += '                      _F(GROUP_MA=('
-            pids = mat2Props[mid]
+            pids = mat_to_props[mid]
             #comm += "                      "
             for pid in pids:
                 comm += "'P%s'," % (pid)
@@ -295,19 +297,20 @@ class CodeAsterConverter(BDF):
             comm += '# LOADS\n'
             #loadKeys = self.loads.keys()
 
-            key = self.caseControlDeck.getSubcaseParameter(
-                isubcase, paramName)[0]
+            key = self.caseControlDeck.get_subcase_parameter(isubcase, paramName)[0]
             loadcase = self.loads[key]
             #print(loadcase)
             for i, load in enumerate(loadcase):
-                comm += '# main LOAD lid=%s type=%s\n' % (loadcase[
-                    i].lid, loadcase[i].__class__.__name__)
-
+                loadi = loadcase[i]
+                comm += '# main LOAD sid=%s type=%s\n' % (loadi.sid, loadi.__class__.__name__)
+                if load.type != 'LOAD':
+                    msg = 'LOAD card must be referenced in case control deck, not %s' % load.type
+                    raise RuntimeError(msg)
                 #try:
                 if 1:  # LOAD card
-                    out = load.write_code_asterLoad(self, gridWord='N')
+                    out = load.write_code_aster_load(self, grid_word='N')
                     if len(out) == 3:  # LOAD card
-                        (commi, loadIDs, loadTypes) = out
+                        (commi, load_ids, load_types) = out
                         comm += commi
                     else:  # FORCEx, MOMENTx, GRAV
                         #skippedLids[(load.lid, load.type)] = out
@@ -326,7 +329,7 @@ class CodeAsterConverter(BDF):
         return comm
 
     def CA_SPCs(self):
-        #for spcID,spcs in iteritems(self.spcObject2):
+        #for spc_id, spcs in iteritems(self.spcObject2):
         comm = ''
         comm += '# CA_SPCs\n'
         comm += self.breaker()
@@ -355,15 +358,16 @@ class CodeAsterConverter(BDF):
 
         #comm += "#'MECA_STATIQUE' % SOL 101 - linear statics\n"
         comm += "# Assigning the model for which CA will calculate the results:\n"
-        comm += "# 'Mecanique' - since we are dealing with a linear elastic model and '3D' since it's a 3D model.\n"
-        comm += 'Meca=AFFE_MODELE(MAILLAGE=mesh,\n'
-        comm += "                 AFFE=_F(TOUT='OUI',\n"
-        comm += "                         PHENOMENE='MECANIQUE',\n"
-        comm += "                         MODELISATION='3D',),);\n\n"
+        comm += "#   'Mecanique' - since we are dealing with a linear elastic model\n"
+        comm += "#   '3D' since it's a 3D model.\n"
+        comm += 'Meca = AFFE_MODELE(MAILLAGE=mesh,\n'
+        comm += "                   AFFE=_F(TOUT='OUI',\n"
+        comm += "                           PHENOMENE='MECANIQUE',\n"
+        comm += "                           MODELISATION='3D'));\n\n"
         comm += self.breaker()
 
-        mail += self.CA_Nodes(gridWord='N')
-        mail += self.CA_Elements(elemWord='E', gridWord='N')
+        mail += self.CA_Nodes(grid_word='N')
+        mail += self.CA_Elements(elem_word='E', grid_word='N')
         comm += self.CA_Materials()
         comm += self.CA_MaterialField()
         commi, pyCA = self.CA_Properties()
@@ -374,28 +378,25 @@ class CodeAsterConverter(BDF):
         comm += 'FIN();\n'
         comm += '# ENDDATA\n'
         print("writing fname=%s" % (model + '.comm'))
-        f = open(model + '.comm', 'wb')
-        f.write(comm)
-        f.close()
+        with open(model + '.comm', 'wb') as f:
+            f.write(comm)
 
         if mail:
-            f = open(fname + '.mail', 'wb')
-            print("writing fname=%s" % (fname + '.mail'))
-            f.write(mail)
-            f.close()
+            with open(model + '.mail', 'wb') as f:
+                print("writing fname=%s" % (model + '.mail'))
+                f.write(mail)
 
         if pyCA:
-            f = open(fname + '.py', 'wb')
-            print("writing fname=%s" % (fname + '.py'))
-            f.write(pyCA)
-            f.close()
+            with open(model + '.py', 'wb') as f:
+                print("writing fname=%s" % (model + '.py'))
+                f.write(pyCA)
 
 
 def main():
     import sys
     import pyNastran
     from docopt import docopt
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
     msg += "  nastranToCodeAster [-o] BDF_FILENAME\n" #
     msg += '  nastranToCodeAster -h | --help\n'
     msg += '  nastranToCodeAster -v | --version\n'
@@ -420,10 +421,10 @@ def main():
         print("%-12s = %r" % (key.strip('--'), value))
 
     bdf_filename = data['BDF_FILENAME']
-    fname_base, extension = os.path.splitext(bdf_filename)
+    fname_base = os.path.splitext(bdf_filename)[0]
 
     ca = CodeAsterConverter()
-    ca.read_bdf(bdf_filename)
+    ca.read_bdf(bdf_filename, encoding='ascii')
     ca.write_as_code_aster(fname_base)  # comm, py
 
 if __name__ == '__main__':  # pragma: no cover
