@@ -1,5 +1,6 @@
 from six import string_types
 from PyQt4 import QtCore, QtGui
+from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 class LegendPropertiesWindow(QtGui.QDialog):
 
@@ -267,9 +268,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
         passed = self.on_validate()
         if passed:
             self.win_parent.apply_legend(self.out_data)
+        return passed
 
     def on_ok(self):
-        passed = self.on_validate()
+        passed = self.on_apply()
         if passed:
             self.close()
             #self.destroy()
@@ -277,25 +279,14 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def on_cancel(self):
         self.close()
 
-def eval_float_from_string(value_str):
-    """
-    Allows for basic calculator functionality in legend menus.
-
-    ..note :: I don't really care about the speed since it's for a GUI.
-    """
-    value_str = str(value_str)
-    if not isinstance(value_str, string_types):
-        raise ValueError('%s  must be a string' % value_str)
-    if len(value_str)  > 50:
-        raise ValueError('%s must be less than 50 characters' % value_str)
-    allowed_letters = r'0123456789.()+-*/'
-
-    for letter in value_str:
-        if letter not in allowed_letters:
-            raise ValueError('%r is an invalid character' % allowed_letters)
-    return eval(value_str)
 
 def main():
+    # kills the program when you hit Cntl+C from the command line
+    # doesn't save the current state as presumably there's been an error
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+
     import sys
     # Someone is launching this directly
     # Create the QApplication
