@@ -1,6 +1,5 @@
 from copy import deepcopy
 from PyQt4 import QtCore, QtGui
-from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 
 class CameraWindow(QtGui.QDialog):
@@ -9,7 +8,7 @@ class CameraWindow(QtGui.QDialog):
         +--------+
         | Camera |
         +--------+---------------+
-        |  Camera List           |
+        |  Camera Name           |
         |  +-------------------+ |
         |  |                   | |
         |  |                   | |
@@ -18,14 +17,16 @@ class CameraWindow(QtGui.QDialog):
         |  |                   | |
         |  +-------------------+ |
         |                        |
-        | Name xxx               |
-        | Save   Delete   Set    |
+        | Name xxx       Save    |
+        | Delete   Set           |
         |                        |
         |    Apply   OK  Cancel  |
         +--------+---------------+
         """
         QtGui.QDialog.__init__(self, win_parent)
         self.win_parent = win_parent
+        self.setWindowTitle('Camera Views')
+        #self.setWindowIcon(view_icon)
 
         self._default_name = 'Camera'
         self.out_data = data
@@ -48,24 +49,9 @@ class CameraWindow(QtGui.QDialog):
         self.cancel_button = QtGui.QPushButton("Cancel")
 
         self.table = QtGui.QTableWidget()
-
-        bold = QtGui.QFont()
-        bold.setBold(True)
-        bold.setItalic(True)
-        bold.setWeight(75)
         names_text = []
         for iname, name in enumerate(self.names):
-            print(iname, name)
             name_text = QtGui.QTableWidgetItem(str(name))
-            #if iname == self.imain:
-                #name_text.setFont(bold)
-                #self.shown_set.add(iname)
-                #check.setCheckState(2)
-                #name_text.setBackground(QtGui.QColor(*self.light_grey))
-            #elif iname in self.shown_set:
-                #name_text.setBackground(QtGui.QColor(*self.light_grey))
-
-            #self.checks.append(check)
             names_text.append(name_text)
         self.create_layout(names_text)
         self.set_connections()
@@ -147,7 +133,6 @@ class CameraWindow(QtGui.QDialog):
             self.save_camera(name)
 
     def set_camera(self, name):
-        self.names.append(name)
         camera_data = self.cameras[name]
         if self.win_parent is None:
             return
@@ -182,12 +167,18 @@ class CameraWindow(QtGui.QDialog):
         return self.table.rowCount()
 
     def on_delete(self):
+        irows = []
         for obj in self.table.selectedIndexes():
             irow = obj.row()
+            irows.append(irow)
+        irows.sort()
+
+        for irow in reversed(irows):
             self.table.removeRow(irow)
+            #print('delete', self.names)
             name = self.names.pop(irow)
             del self.cameras[name]
-            print('removing irow=%s name=%r' % (irow, name))
+            #print('  removing irow=%s name=%r' % (irow, name))
 
     def closeEvent(self, event):
         event.accept()
@@ -201,14 +192,13 @@ class CameraWindow(QtGui.QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
-    def on_validate(self):
-        name_value, flag0 = self.check_name(self.name_edit)
-        if flag0:
-            self.out_data['cameras'] = self.cameras
-            self.out_data['clicked_ok'] = True
-
-            return True
-        return False
+    #def on_validate(self):
+        #name_value, flag0 = self.check_name(self.name_edit)
+        #if flag0:
+            #self.out_data['cameras'] = self.cameras
+            #self.out_data['clicked_ok'] = True
+            #return True
+        #return False
 
     def on_apply(self):
         passed = self.on_set()
