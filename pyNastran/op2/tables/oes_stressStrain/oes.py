@@ -1564,7 +1564,9 @@ class OES(OP2Common):
                     edata = data[n:n+44]  # 4*11
                     out = s.unpack(edata)
                     (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
-                    eid = (eid_device - self.device_code) // 10
+                    # TODO: this is a hack that I think is composite specific
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = (eid_device) // 10
 
                     if self.debug4():
                         self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))

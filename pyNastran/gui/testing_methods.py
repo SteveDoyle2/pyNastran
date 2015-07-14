@@ -1,7 +1,7 @@
 from __future__ import print_function
 from pyNastran.utils.log import get_logger
 
-def add_dummy_gui_functions(test):
+def add_dummy_gui_functions(test, debug=True):
     def removeOldGeometry(self):
         pass
     def cycleResults(self):
@@ -16,6 +16,13 @@ def add_dummy_gui_functions(test):
         pass
     def passer2(a, b):
         pass
+    def log_info(msg):
+        if debug:
+            print('INFO:  ', msg)
+
+    def log_error(msg):
+        if debug:
+            print('ERROR:  ', msg)
 
     class Grid(object):
         def Reset(self):
@@ -47,7 +54,9 @@ def add_dummy_gui_functions(test):
     test.alt_geometry_actor = ScalarBar()
 
     test.log = get_logger(log=None, level='debug')
-    test.log_info = print
+    test.log_error = log_error
+    #test.log_info = print
+    test.log_info = log_info
     test.removeOldGeometry = removeOldGeometry
     test.cycleResults = cycleResults
     test.TurnTextOn = TurnTextOn

@@ -815,6 +815,7 @@ class OP2Common(Op2Codes, F06Writer):
         #: inside a result, STRESS(PLOT,PRINT), are used.
         self.device_code = approach_code % 10
         self.data_code['device_code'] = self.device_code
+        assert self.device_code in [0, 1, 2, 3, 4, 5, 6, 7], self.device_code
 
         #: what solution was run (e.g. Static/Transient/Modal)
         self.analysis_code = (approach_code - self.device_code) // 10
@@ -822,16 +823,17 @@ class OP2Common(Op2Codes, F06Writer):
 
         #print('parse_approach_code - approach_code=%s tCode=%s int3=%s isubcase=%s' % (approach_code, tCode, int3, isubcase))
         #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
-        if self.device_code == 3:
-            #sys.stderr.write('The op2 may be inconsistent...\n')
-            #sys.stderr.write("  print and plot can cause bad results..."
-            #                 "if there's a crash, try plot only\n")
-            self.device_code = 1
+        if 0:
+            if self.device_code == 3:
+                #sys.stderr.write('The op2 may be inconsistent...\n')
+                #sys.stderr.write("  print and plot can cause bad results..."
+                #                 "if there's a crash, try plot only\n")
+                self.device_code = 1
 
-            #self.log.info('The op2 may be inconsistent...')
-            #self.log.info('  print and plot can cause bad results...'
-            #              'if there's a crash, try plot only')
-            self.data_code['device_code'] = self.device_code
+                #self.log.info('The op2 may be inconsistent...')
+                #self.log.info('  print and plot can cause bad results...'
+                #              'if there's a crash, try plot only')
+                self.data_code['device_code'] = self.device_code
 
         if self.debug3():
             self.binary_debug.write('  table_name    = %r\n' % self.table_name)
