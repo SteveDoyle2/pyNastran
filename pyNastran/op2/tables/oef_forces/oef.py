@@ -1,4 +1,4 @@
-#pylint: disable=C0111,C0301,C0103
+#pylint: disable=C0301
 from __future__ import print_function
 from six.moves import range
 from struct import Struct
@@ -7,19 +7,27 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
+    # not vectorized
+    # TODO: vectorize 7
     HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D, HeatFlux_VU,
     HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
-    RealCRodForce, RealCTubeForce, RealConrodForce,
+    # vectorized
     RealRodForceArray,
-    RealCBeamForce, RealCShearForce,
-    RealSpringForce, RealDamperForce, RealViscForce,
-    RealPlateForce, RealPlateForceArray,
-    RealConeAxForce, RealPlateBilinearForce,
-    RealCBar100Force, RealCGapForce, RealBendForce,
-    RealPentaPressureForce, RealCBushForce,
-    RealForce_VU_2D, RealCBarForce, RealForce_VU)
+    RealPlateForceArray,
+
+    # not vectorized
+    RealCRodForce, RealCTubeForce, RealConrodForce,
+    RealCBeamForce, RealCShearForce,                  # TODO: vectorize 2
+    RealSpringForce, RealDamperForce, RealViscForce,  # TODO: vectorize 3
+    RealPlateForce, RealPlateBilinearForce,           # TODO: vectorize 1
+    RealConeAxForce,                                  # TODO: vectorize 1
+    RealCBar100Force, RealCGapForce, RealBendForce,   # TODO: vectorize 3
+    RealPentaPressureForce, RealCBushForce,           # TODO: vectorize 2
+    RealForce_VU_2D, RealCBarForce, RealForce_VU)     # TODO: vectorize 3
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
+    # not vectorized
+    # TODO: vectorize 14
     ComplexRodForce, ComplexCBeamForce,
     ComplexCShearForce, ComplexSpringForce,
     ComplexDamperForce, ComplexViscForce,
@@ -31,6 +39,7 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
 
 
 class OEF(OP2Common):
+    """Defines OEFx table reading for element forces/heat flux"""
     def __init__(self):
         OP2Common.__init__(self)
 
@@ -40,7 +49,7 @@ class OEF(OP2Common):
         the real or complex result should be found.
         The format and sort codes do not always give the right answer...
         """
-        realMapper = {
+        real_mapper = {
             1: 3,    # CROD
             2: 1 + (10 - 1) * 11,  # CBEAM
             3: 3,    # CTUBE
@@ -90,7 +99,7 @@ class OEF(OP2Common):
             235: 9,    # punch CQUADR...num_wide in DMAP is wrong...left out first entry...
             236: 8,    # punch CTRIAR
         }
-        imagMapper = {
+        imag_mapper = {
             1: 5,    # CROD
             2: 1 + (17 - 1) * 11,  # CBEAM
             3: 5,    # CTUBE
@@ -140,17 +149,18 @@ class OEF(OP2Common):
             236: 16,   # punch CTRIAR
         }
         try:
-            real = realMapper[self.element_type]
+            real = real_mapper[self.element_type]
         except KeyError:
             real = None
 
         try:
-            imag = imagMapper[self.element_type]
+            imag = imag_mapper[self.element_type]
         except KeyError:
             imag = None
         return (real, imag)
 
     def _read_oef1_3(self, data):
+        """Table 3 parser for OEF1 table"""
         self.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
             '???', '???', '???', '???',
@@ -236,7 +246,8 @@ class OEF(OP2Common):
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
             self.dataNames = self.apply_data_code_value('dataNames', ['loadID'])
         else:
-            raise RuntimeError('invalid analysis_code...analysis_code=%s' % str(self.analysis_code))
+            msg = 'invalid analysis_code...analysis_code=%s' % str(self.analysis_code)
+            raise RuntimeError(msg)
 
         self.element_name = self.element_mapper[self.element_type]
         self.data_code['element_name'] = self.element_name
@@ -254,9 +265,11 @@ class OEF(OP2Common):
         self._write_debug_bits()
 
     def _read_oef2_3(self, data):
+        """Table 3 parser for OEF2 table"""
         pass
 
     def _read_oef1_4(self, data):
+        """Table 4 parser for OEF1 table"""
         if self.thermal == 0:
             n = self._read_oef1_loads(data)
         elif self.thermal == 1:
@@ -266,6 +279,7 @@ class OEF(OP2Common):
         return n
 
     def _read_oef1_thermal(self, data):
+        """Table 4 parser for OEF1 thermal table"""
         if self.read_mode == 1:
             return len(data)
         if self._results.is_not_saved('element_forces'):
@@ -291,10 +305,10 @@ class OEF(OP2Common):
                     edata = data[n:n+ntotal]
 
                     out = s.unpack(edata)
-                    (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
+                    (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
                     eid = (eid_device - self.device_code) // 10
 
-                    data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+                    data_in = [eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
                     #eid = self.obj.add_new_eid(out)
                     self.obj.add(dt, data_in)
@@ -326,9 +340,9 @@ class OEF(OP2Common):
                     edata = data[n:n+ntotal]
                     n += ntotal
                     out = s.unpack(edata)
-                    (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
+                    (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
                     eid = (eid_device - self.device_code) // 10
-                    data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+                    data_in = [eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     self.obj.add(dt, data_in)
 
             elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
@@ -342,9 +356,9 @@ class OEF(OP2Common):
                     edata = data[n:n+ntotal]
                     n += ntotal
                     out = s.unpack(edata)
-                    (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux, zed) = out
+                    (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed) = out
                     eid = (eid_device - self.device_code) // 10
-                    data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+                    data_in = [eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     self.obj.add(dt, data_in)
             else:
                 msg = 'num_wide=%s' % self.num_wide
@@ -363,11 +377,11 @@ class OEF(OP2Common):
                     edata = data[n:n+32]
                     n += ntotal
                     out = s1.unpack(edata)
-                    (eid_device, eType, fApplied, freeConv, forceConv, fRad, fTotal) = out
+                    (eid_device, eType, fapplied, free_conv, force_conv, frad, ftotal) = out
                     eid = (eid_device - self.device_code) // 10
 
-                    data_in = [eid, eType, fApplied, freeConv, forceConv, fRad, fTotal]
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)),data_in
+                    data_in = [eid, etype, fapplied, free_conv, force_conv, frad, ftotal]
+                    #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
                 msg = 'num_wide=%s' % self.num_wide
@@ -384,10 +398,10 @@ class OEF(OP2Common):
                     edata = data[n:n+16]
                     n += 16
                     out = s1.unpack(edata)
-                    (eid_device, cntlNode, freeConv, freeConvK) = out
+                    (eid_device, cntl_node, free_conv, free_conv_k) = out
                     eid = (eid_device - self.device_code) // 10
-                    data_in = [eid, cntlNode, freeConv, freeConvK]
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)),data_in
+                    data_in = [eid, cntl_node, free_conv, free_conv_k]
+                    #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
                 msg = 'num_wide=%s' % self.num_wide
@@ -398,11 +412,11 @@ class OEF(OP2Common):
             # 146-VUPENTA
             # 147-VUTETRA
             self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
-            if self.element_type in [147]:  # VUTETRA
+            if self.element_type == 147:  # VUTETRA
                 nnodes = 4
-            elif self.element_type in [146]:  # VUPENTA
+            elif self.element_type == 146:  # VUPENTA
                 nnodes = 6
-            elif self.element_type in [145]:  # VUHEXA
+            elif self.element_type == 145:  # VUHEXA
                 nnodes = 8
             else:
                 msg = 'num_wide=%s' % self.num_wide
@@ -421,15 +435,15 @@ class OEF(OP2Common):
                     (eid_device, parent) = out
                     eid = (eid_device - self.device_code) // 10
                     data_in = [eid, parent]
-                    gradFluxes = []
+                    grad_fluxes = []
                     for i in range(nnodes):
                         edata = data[0:28]
                         n += 28
                         #print "i=%s len(edata)=%s" %(i,len(edata))
                         out = s2.unpack(edata)
-                        gradFluxes.append(out)
-                    data_in.append(gradFluxes)
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)),data_in
+                        grad_fluxes.append(out)
+                    data_in.append(grad_fluxes)
+                    #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = 'num_wide=%s' % self.num_wide
@@ -440,11 +454,11 @@ class OEF(OP2Common):
             # 190-VUTRIA
             if self.format_code == 1 and self.num_wide == 27:  # real
                 self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
-                if self.element_type in [189]:
+                if self.element_type == 189:
                     nnodes = 4
-                elif self.element_type in [190]:
+                elif self.element_type == 190:
                     nnodes = 3
-                elif self.element_type in [191]:
+                elif self.element_type == 191:
                     nnodes = 2
                 else:
                     raise NotImplementedError(self.code_information())
@@ -462,15 +476,15 @@ class OEF(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     data_in = [eid, parent, coord, icord, theta]
 
-                    gradFluxes = []
+                    grad_fluxes = []
                     for i in range(nnodes):
                         edata = data[n:n+28]  # 7*4
                         n += 28
                         out = s2.unpack(edata)
-                        gradFluxes.append(out)
-                    data_in.append(gradFluxes)
-                    #data_in = [eid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)),data_in
+                        grad_fluxes.append(out)
+                    data_in.append(grad_fluxes)
+                    #data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+                    #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = 'num_wide=%s' % self.num_wide
@@ -497,16 +511,16 @@ class OEF(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     data_in = [eid, parent, coord, icord]
 
-                    gradFluxes = []
+                    grad_fluxes = []
                     for i in range(nnodes):
                         edata = data[n:n+28]  # 7*4
                         n += 28
                         out = s2.unpack(edata)
-                        gradFluxes.append(out)
-                    data_in.append(gradFluxes)
+                        grad_fluxes.append(out)
+                    data_in.append(grad_fluxes)
 
-                    #data_in = [eid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)),data_in
+                    #data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+                    #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
@@ -526,7 +540,7 @@ class OEF(OP2Common):
 
     def print_obj_name_on_crash(func):
         """
-        Debugging function to print the object name and an needed parameters
+        Decorator debugging function to print the object name and an needed parameters
         """
         def new_func(self, data):
             """
@@ -552,6 +566,9 @@ class OEF(OP2Common):
 
     @print_obj_name_on_crash
     def _read_oef1_loads(self, data):
+        """
+        Reads the OEF1 table; stores the element forces/heat flux.
+        """
         if self._results.is_not_saved('element_forces'):
             return len(data)
         (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
@@ -1542,9 +1559,9 @@ class OEF(OP2Common):
                         trqB = complex(trqBr, trqBi)
 
                     data_in = [eid, nidA,
-                              bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                              nidB,
-                              bm1B, bm2B, ts1B, ts2B, afB, trqB]
+                               bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                               nidB,
+                               bm1B, bm2B, ts1B, ts2B, afB, trqB]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
@@ -1583,11 +1600,11 @@ class OEF(OP2Common):
                     out = s.unpack(edata)
                     if self.debug4():
                         self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
-                    (eid_device, eName, ax, ay, az, vx, vy, vz, pressure) = out
+                    (eid_device, ename, ax, ay, az, vx, vy, vz, pressure) = out
                     eid = (eid_device - self.device_code) // 10
                     #print "eType=%s" % eType
 
-                    data_in = [eid, eName, ax, ay, az, vx, vy, vz, pressure]
+                    data_in = [eid, ename, ax, ay, az, vx, vy, vz, pressure]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
 
@@ -1598,10 +1615,10 @@ class OEF(OP2Common):
                 ntotal = 64
                 nelements = len(data) // ntotal
                 for i in range(nelements):
-                    eData = data[n:n+64]
+                    edata = data[n:n+64]
                     n += 64
 
-                    out = s.unpack(eData)
+                    out = s.unpack(edata)
                     (eid_device, eName,
                      axr, ayr, azr, vxr, vyr, vzr, pressure,
                      axi, ayi, azi, vxi, vyi, vzi) = out
@@ -1734,41 +1751,41 @@ class OEF(OP2Common):
 
             self._results._found_result('force_VU_2D')
             if self.element_type in [189]:  # VUQUAD
-                nNodes = 4
-                eType = 'VUQUAD4'
+                nnodes = 4
+                etype = 'VUQUAD4'
             elif self.element_type in [190]:  # VUTRIA
-                nNodes = 3
-                eType = 'VUTRIA3'
+                nnodes = 3
+                etype = 'VUTRIA3'
             else:
                 raise NotImplementedError(self.code_information())
-            numwide_real = 6 + 13 * nNodes
-            numwide_imag = 6 + 25 * nNodes
+            numwide_real = 6 + 13 * nnodes
+            numwide_imag = 6 + 25 * nnodes
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 self.create_transient_object(self.force_VU_2D, RealForce_VU_2D)
 
-                ntotal = 24 + 52 * nNodes
+                ntotal = 24 + 52 * nnodes
                 nelements = len(data) // ntotal
 
                 s1 = Struct(b'iii4sii')
                 s2 = Struct(b'i3f3i5fi')
                 for i in range(nelements):
-                    eData = data[n:n+24]  # 6*4
+                    edata = data[n:n+24]  # 6*4
                     n += 24
 
-                    out = s1.unpack(eData)
+                    out = s1.unpack(edata)
                     if self.debug4():
-                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (eType, self.element_type, str(out)))
+                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
                     (eid_device, parent, coord, icord, theta, _) = out
 
                     eid = (eid_device - self.device_code) // 10
                     data_in = [eid, parent, coord, icord, theta]
 
                     forces = []
-                    for i in range(nNodes):
-                        eData = data[n:n+52]  # 13*4
+                    for i in range(nnodes):
+                        edata = data[n:n+52]  # 13*4
                         n += 52
-                        out = s2.unpack(eData)
+                        out = s2.unpack(edata)
                         if self.debug4():
                             self.binary_debug.write('%s\n' % (str(out)))
                         (vugrid, mfx, mfy, mfxy, a, b, c, bmx, bmy,
@@ -1776,33 +1793,33 @@ class OEF(OP2Common):
                         out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                         forces.append(out2)
                     data_in.append(forces)
-                    #print "eType=%s" %(eType)
+                    #print "etype=%s" %(etype)
 
                     #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
                     #print "force %s" %(self.get_element_type(self.element_type)),data_in
-                    self.obj.add(nNodes, dt, data_in)
+                    self.obj.add(nnodes, dt, data_in)
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 self.create_transient_object(self.force_VU_2D, ComplexForce_VU_2D)
-                ntotal = 24 + 100 * nNodes
+                ntotal = 24 + 100 * nnodes
                 s1 = Struct(b'iii4sii')
                 s2 = Struct(b'i3f3i5fi3f3i5fi')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
-                    eData = data[n:n+24]  # 6*4
+                    edata = data[n:n+24]  # 6*4
                     n += 24
 
-                    out = s1.unpack(eData)
+                    out = s1.unpack(edata)
                     (eid_device, parent, coord, icord, theta, _) = out
 
                     eid = (eid_device - self.device_code) // 10
                     data_in = [eid, parent, coord, icord, theta]
 
                     forces = []
-                    for i in range(nNodes):
-                        eData = data[n:n+100]  # 13*4
+                    for i in range(nnodes):
+                        edata = data[n:n+100]  # 13*4
                         n += 100
-                        out = s2.unpack(eData)
+                        out = s2.unpack(edata)
                         [vugrid, mfxr, mfyr, mfxyr, a, b, c, bmxr, bmyr, bmxyr, syzr, szxr, d,
                          mfxi, mfyi, mfxyi, a, b, c, bmxi, bmyi, bmxyi, syzi, szxi, d] = out
 
@@ -1832,7 +1849,7 @@ class OEF(OP2Common):
                     #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                                      #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
                     #print "force %s" %(self.get_element_type(self.element_type)),data_in
-                    self.obj.add(nNodes, dt, data_in)
+                    self.obj.add(nnodes, dt, data_in)
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
@@ -1847,8 +1864,8 @@ class OEF(OP2Common):
             if self.format_code == 1 and self.num_wide == 20:  # real
                 self.create_transient_object(self.force_VU, RealForce_VU)
                 # 20 = 4 + 8 * 2 = 4 = 16
-                nNodes = 2
-                #ntotal = 16 + 32 * nNodes
+                nnodes = 2
+                #ntotal = 16 + 32 * nnodes
                 ntotal = self.num_wide * 4
                 nelements = len(data) // ntotal
                 self.create_transient_object(self.force_VU, RealForce_VU)
@@ -1856,10 +1873,10 @@ class OEF(OP2Common):
                 s1 = Struct(b'iii4s')
                 s2 = Struct(b'i7f')
                 for i in range(nelements):
-                    eData = data[n:n+16]  # 8*4
+                    edata = data[n:n+16]  # 8*4
                     n += 16
 
-                    out = s1.unpack(eData)
+                    out = s1.unpack(edata)
                     if self.debug4():
                         self.binary_debug.write('OEF_Force_VU-191 - %s\n' % (str(out)))
                     (eid_device, parent, coord, icord) = out
@@ -1868,75 +1885,75 @@ class OEF(OP2Common):
                     data_in = [eid, parent, coord, icord]
 
                     forces = []
-                    for i in range(nNodes):
-                        eData = data[n:n+32]  # 8*4
+                    for i in range(nnodes):
+                        edata = data[n:n+32]  # 8*4
                         n += 32
-                        #print "i=%s len(data)=%s" %(i,len(eData))
-                        out = s2.unpack(eData)
+                        #print "i=%s len(data)=%s" % (i, len(edata))
+                        out = s2.unpack(edata)
                         if self.debug4():
                             self.binary_debug.write('%s\n' % str(out))
                         forces.append(out)
                     data_in.append(forces)
-                    #print "eType=%s" %(eType)
+                    #print "eType=%s" % (eType)
 
-                    #data_in = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
-                    #print "force %s" %(self.get_element_type(self.element_type)),data_in
-                    self.obj.add(nNodes, dt, data_in)
+                    #data_in = [vugrid, posit, forceX, shearY, shearZ, torsion, bendY, bendZ]
+                    #print "force %s" %(self.get_element_type(self.element_type)), data_in
+                    self.obj.add(nnodes, dt, data_in)
             elif self.format_code == 1 and self.num_wide == 32:  # random
                 return len(data)
             elif self.format_code in [2, 3] and self.num_wide == 32:  # imag
                 # 32 = 4 + 56/4 * 2 = 4 + 14 * 2 = 4 + 28
                 self.create_transient_object(self.force_VU, ComplexForce_VU)
-                nNodes = 2
-                #ntotal = 16 + 56 * nNodes
+                nnodes = 2
+                #ntotal = 16 + 56 * nnodes
                 ntotal = self.num_wide * 4
                 s1 = Struct(b'i2i4s')
                 s2 = Struct(b'i13f')
                 n = 0
                 nelements = len(data) // ntotal
                 for i in range(nelements):
-                    eData = data[n:n+16]  # 8*4
+                    edata = data[n:n+16]  # 8*4
                     n += 16
 
-                    out = s1.unpack(eData)
+                    out = s1.unpack(edata)
                     (eid_device, parent, coord, icord) = out
 
                     eid = (eid_device - self.device_code) // 10
                     data_in = [eid, parent, coord, icord]
 
                     forces = []
-                    for i in range(nNodes):
-                        eData = data[n:n+56]  # 14*4
+                    for i in range(nnodes):
+                        edata = data[n:n+56]  # 14*4
                         n += 56
-                        out = s2.unpack(eData)
+                        out = s2.unpack(edata)
                         [vugrid, posit,
-                         forceXr, shearYr, shearZr, torsionr, bendingYr, bendingZr,
-                         forceXi, shearYi, shearZi, torsioni, bendingYi, bendingZi] = out
+                         force_xr, shear_yr, shear_zr, torsionr, bending_yr, bending_zr,
+                         force_xi, shear_yi, shear_zi, torsioni, bending_yi, bending_zi] = out
 
                         if is_magnitude_phase:
-                            forceX = polar_to_real_imag(forceXr, forceXi)
-                            shearY = polar_to_real_imag(shearYr, shearYi)
-                            shearZ = polar_to_real_imag(shearZr, shearZi)
+                            force_x = polar_to_real_imag(force_xr, force_xi)
+                            shear_y = polar_to_real_imag(shear_yr, shear_yi)
+                            shear_z = polar_to_real_imag(shear_zr, shear_zi)
                             torsion = polar_to_real_imag(torsionr, torsioni)
-                            bendingY = polar_to_real_imag(bendingYr, bendingYi)
-                            bendingZ = polar_to_real_imag(bendingZr, bendingZi)
+                            bending_y = polar_to_real_imag(bending_yr, bending_yi)
+                            bending_z = polar_to_real_imag(bending_zr, bending_zi)
                         else:
-                            forceX = complex(forceXr, forceXi)
-                            shearY = complex(shearYr, shearYi)
-                            shearZ = complex(shearZr, shearZi)
+                            force_x = complex(force_xr, force_xi)
+                            shear_y = complex(shear_yr, shear_yi)
+                            shear_z = complex(shear_zr, shear_zi)
                             torsion = complex(torsionr, torsioni)
-                            bendingY = complex(bendingYr, bendingYi)
-                            bendingZ = complex(bendingZr, bendingZi)
+                            bending_y = complex(bending_yr, bending_yi)
+                            bending_z = complex(bending_zr, bending_zi)
 
-                        out2 = [vugrid, posit, forceX, shearY,
-                                shearZ, torsion, bendingY, bendingZ]
+                        out2 = [vugrid, posit, force_x, shear_y,
+                                shear_z, torsion, bending_z, bending_z]
                         forces.append(out2)
                     data_in.append(forces)
                     #print "eType=%s" %(eType)
 
                     #data_in = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
                     #print "force %s" %(self.get_element_type(self.element_type)),data_in
-                    self.obj.add(nNodes, dt, data_in)
+                    self.obj.add(nnodes, dt, data_in)
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
@@ -1960,4 +1977,5 @@ class OEF(OP2Common):
         return n
 
     def _read_oef2_4(self, data):
+        """Table 4 parser for OEF2 thermal table"""
         pass

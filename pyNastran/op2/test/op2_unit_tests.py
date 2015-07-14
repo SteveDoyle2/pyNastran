@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError
 from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.bdf.test.bdf_unit_tests import Tester
-
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForce, RealPlateForceArray, RealPlateForce
 
 class TestOP2(Tester):
     def _spike(self):
@@ -20,7 +20,7 @@ class TestOP2(Tester):
     def test_set_results(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         op2_filename = os.path.join(folder, 'solid_bending', 'solid_bending.op2')
-        op2 = OP2()
+        op2 = OP2(debug=False)
         op2.set_results('stress')
         op2.read_op2(op2_filename, vectorized=False)
         self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
@@ -28,7 +28,7 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
         self.assertEqual(len(op2.displacements), 0), len(op2.displacements)
 
-        op2 = OP2()
+        op2 = OP2(debug=False)
         op2.set_results(['stress', 'displacements'])
         op2.read_op2(op2_filename, vectorized=False)
         self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
@@ -36,7 +36,7 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
         self.assertEqual(len(op2.displacements), 1), len(op2.displacements)
 
-        op2 = OP2()
+        op2 = OP2(debug=False)
         op2.set_results('stress')
         op2.read_op2(op2_filename, vectorized=True)
         self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
@@ -44,7 +44,7 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
         self.assertEqual(len(op2.displacements), 0), len(op2.displacements)
 
-        op2 = OP2()
+        op2 = OP2(debug=False)
         op2.set_results(['stress', 'displacements'])
         op2.read_op2(op2_filename, vectorized=True)
         self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
@@ -103,18 +103,22 @@ class TestOP2(Tester):
         write_f06 = True
         debug = False
         op2file = os.path.join(folder, op2_filename)
-        bdf = BDF()
+        bdf = BDF(debug=False)
         bdf.read_bdf(bdf_filename)
 
-        debug = True
+        debug = False
         debug_file = 'debug.out'
+        op2v = OP2(debug=debug, debug_file=debug_file)
+        op2v.read_op2(op2_filename, vectorized=True)
+
         op2 = OP2(debug=debug, debug_file=debug_file)
-        op2.read_op2(op2_filename, vectorized=True)
+        op2.read_op2(op2_filename, vectorized=False)
         assert os.path.exists('debug.out'), os.listdir('.')
 
-        self._verify_ids(bdf, op2, isubcase=1)
+        self._verify_ids(bdf, op2, vectorized=False, isubcase=1)
+        self._verify_ids(bdf, op2v, vectorized=True, isubcase=1)
 
-    def _verify_ids(self, bdf, op2, isubcase=1):
+    def _verify_ids(self, bdf, op2, vectorized=True, isubcase=1):
         types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
         out = bdf.get_card_ids_by_card_types(types)
 
@@ -131,14 +135,30 @@ class TestOP2(Tester):
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_strain:
             case = op2.cquad4_composite_strain[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            if vectorized:
+                eids = unique(case.element_layer[:, 0])
+            else:
+                eids = unique(case.angle.keys())
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_stress:
             case = op2.cquad4_composite_stress[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            if vectorized:
+                eids = unique(case.element_layer[:, 0])
+            else:
+                eids = unique(case.angle.keys())
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+        if op2.cquad4_force:
+            case = op2.cquad4_force[isubcase]
+            if isinstance(case, RealPlateBilinearForce):
+                eids = unique(case.tx.keys())
+            else:
+                assert isinstance(case, RealPlateBilinearForce), 'update this...'
+
+            for eid in eids:
+                assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+
 
         card_type = 'CTRIA3'
         if op2.ctria3_stress:
@@ -153,14 +173,30 @@ class TestOP2(Tester):
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_composite_strain:
             case = op2.ctria3_composite_strain[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            if vectorized:
+                eids = unique(case.element_layer[:, 0])
+            else:
+                eids = unique(case.angle.keys())
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_composite_stress:
             case = op2.ctria3_composite_stress[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            if vectorized:
+                eids = unique(case.element_layer[:, 0])
+            else:
+                eids = unique(case.angle.keys())
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+        if op2.ctria3_force:
+            case = op2.ctria3_force[isubcase]
+            if isinstance(case, RealPlateForceArray):
+                eids = unique(case.element)
+            else:
+                assert isinstance(case, RealPlateForce), case
+                eids = unique(case.tx.keys())
+            for eid in eids:
+                assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+
 
 
 
