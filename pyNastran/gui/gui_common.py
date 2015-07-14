@@ -11,6 +11,7 @@ import datetime
 import cgi #  html lib
 import inspect
 import traceback
+from copy import deepcopy
 
 from PyQt4 import QtCore, QtGui
 import vtk
@@ -21,20 +22,23 @@ from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.bdf.cards.baseCard import deprecated
-from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
-from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.gui.ex_tree import Sidebar
 from pyNastran.utils import print_bad_path
 
-class Interactor(vtk.vtkGenericRenderWindowInteractor):
+from pyNastran.gui.ex_tree import Sidebar
+from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.qt_files.camera import CameraWindow
+from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
+class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
         #vtk.vtkGenericRenderWindowInteractor()
         pass
 
     def HighlightProp(self):
         print('highlight')
+
 
 class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
     def __init__(self, parent=None):
@@ -68,7 +72,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._is_axes_shown = True
         self.nvalues = 9
         self.is_wireframe = False
-        self.is_horizontal_scalar_bar = False
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
@@ -86,6 +89,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #-------------
         # file
+        self.menu_bar_format = None
         self.format = None
         self.infile_name = None
         self.out_filename = None
@@ -111,15 +115,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.tools = []
         self.checkables = []
+        self.actions = {}
 
         # initializes tools/checkables
         self.set_tools()
 
+        # actor_slots
+        self.textActors = {}
         self.geometry_actors = []
+
+        self.magnify = 1
+        self.iText = 0
+
         self.pick_state = 'centroidal' if self.is_centroidal else 'nodal'
         self.label_actors = {}
         self.label_ids = {}
+        self.cameras = {}
         self.label_scale = 1.0 # in percent
+
+        self.is_horizontal_scalar_bar = False
+        self.scalar_bar = ScalarBar(self.is_horizontal_scalar_bar)
 
 
     #def dragEnterEvent(self, e):
@@ -133,6 +148,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     #def dropEvent(self, e):
         #print(e)
         #print('drop event')
+
+    @property
+    def scalarBar(self):
+        return self.scalar_bar.scalar_bar
+
+    @property
+    def colorFunction(self):
+        return self.scalar_bar.color_function
+
+    #def get_color_function(self):
+        #return self.scalar_bar.color_function
 
     def set_window_title(self, msg):
         #msg2 = "%s - "  % self.base_window_title
@@ -165,7 +191,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         |                               |
         +-------------------------------+
         """
-        self.resize(800, 600)
+        self.resize(1000, 700)
         self.statusBar().showMessage('Ready')
 
         # windows title and aplication icon
@@ -182,9 +208,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.res_dock.setWidget(self.res_widget)
 
         self.res_widget = Sidebar(self)
-        self.res_widget.clear_data()
         #self.res_widget.update_results(data)
-
         #self.res_widget.setWidget(sidebar)
 
         self.res_dock.setWidget(self.res_widget)
@@ -272,6 +296,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
                 ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
                 ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
+                ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
                 ('creset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
                 ('reload', 'Reload model', 'treload.png', 'r', 'Reload the model', self.on_reload),
 
@@ -306,7 +331,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise RuntimeError(self.pick_state)
         self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
 
-    def _create_menu_items(self, actions):
+    def _create_menu_items(self, actions=None):
+        if actions is None:
+            actions = self.actions
         self.menu_file = self.menubar.addMenu('&File')
         self.menu_view = self.menubar.addMenu('&View')
         self.menu_window = self.menubar.addMenu('&Window')
@@ -339,8 +366,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'legend', 'axis',
         ]
         if self.html_logging:
-            actions['logwidget'] = self.log_dock.toggleViewAction()
-            actions['logwidget'].setStatusTip("Show/Hide application log")
+            self.actions['logwidget'] = self.log_dock.toggleViewAction()
+            self.actions['logwidget'].setStatusTip("Show/Hide application log")
             menu_view += ['', 'show_info', 'show_debug', 'show_gui', 'show_command']
             menu_window += ['logwidget']
 
@@ -353,7 +380,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.toolbar, ('flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                            'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit')),
+                            'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
             #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
         ]
         return menu_items
@@ -362,6 +389,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
+
+        # the dummy toolbar stores actions but doesn't get shown
+        # in other words, it can set shortcuts
         self._dummy_toolbar = self.addToolBar('Dummy toolbar')
 
         ## menubar
@@ -369,9 +399,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
         menu_items = self._create_menu_items(actions)
-        self._populate_menu(menu_items, actions)
+        self._populate_menu(menu_items)
 
-    def _populate_menu(self, menu_items, actions):
+    def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
         for menu, items in menu_items:
             if menu is None:
@@ -383,9 +413,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     if not isinstance(i, string_types):
                         raise RuntimeError('what is this...action i() = %r' % i())
 
-                    action = actions[i] #if isinstance(i, string_types) else i()
+                    action = self.actions[i] #if isinstance(i, string_types) else i()
                     menu.addAction(action)
         #self._create_plane_from_points(None)
+
+    def _update_menu(self, menu_items):
+        for menu, items in menu_items:
+            menu.clear()
+        self._populate_menu(menu_items)
 
     def _create_plane_from_points(self, points):
         origin, vx, vy, vz, x_limits, y_limits = self._fit_plane(points)
@@ -434,16 +469,21 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         y_limits = [0., 1.]
         return origin, vx, vy, vz, x_limits, y_limits
 
-    def _prepare_actions(self, icon_path, tools, checkables):
+    def _prepare_actions(self, icon_path, tools, checkables=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
         """
-        actions = {}
+        if checkables is None:
+            checkables = []
+        print('---------------------------')
         for tool in tools:
             (nam, txt, icon, shortcut, tip, func) = tool
-            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s"
-                  #% (nam, txt, icon, short, tip, func))
+            if nam in self.actions:
+                self.log_error('trying to create a duplicate action %r' % nam)
+                continue
+            #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
+                  #% (nam, txt, icon, shortcut, tip, func))
             #if icon is None:
                 #print("missing_icon = %r!!!" % nam)
                 #icon = os.path.join(icon_path, 'no.png')
@@ -460,25 +500,25 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ico.addPixmap(QtGui.QPixmap(pth), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
             if nam in checkables:
-                actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
-                actions[nam].setChecked(True)
+                self.actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
+                self.actions[nam].setChecked(True)
             else:
-                actions[nam] = QtGui.QAction(ico, txt, self)
+                self.actions[nam] = QtGui.QAction(ico, txt, self)
 
             if shortcut:
-                actions[nam].setShortcut(shortcut)
+                self.actions[nam].setShortcut(shortcut)
                 #actions[nam].setShortcutContext(QtCore.Qt.WidgetShortcut)
             if tip:
-                actions[nam].setStatusTip(tip)
+                self.actions[nam].setStatusTip(tip)
             if func:
-                actions[nam].triggered.connect(func)
+                self.actions[nam].triggered.connect(func)
 
-        actions['toolbar'] = self.toolbar.toggleViewAction()
-        actions['toolbar'].setStatusTip("Show/Hide application toolbar")
+        self.actions['toolbar'] = self.toolbar.toggleViewAction()
+        self.actions['toolbar'].setStatusTip("Show/Hide application toolbar")
 
-        actions['reswidget'] = self.res_dock.toggleViewAction()
-        actions['reswidget'].setStatusTip("Show/Hide results selection")
-        return actions
+        self.actions['reswidget'] = self.res_dock.toggleViewAction()
+        self.actions['reswidget'].setStatusTip("Show/Hide results selection")
+        return self.actions
 
     def logg_msg(self, typ, msg):
         """
@@ -547,28 +587,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def change_background_color(self):
         """ Choose a background color """
-        c = [int(255 * i) for i in self.background_col]
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a background color")
-        if col.isValid():
-            color = col.getRgbF()[:3]
-            self.set_background_color(color)
+        self._change_color('background', self.background_col, self.set_background_color)
 
     def change_label_color(self):
         """ Choose a label color """
-        c = [int(255 * i) for i in self.label_col]
-        #(font, ok) = QtGui.QFontDialog.getFont()
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a label color")
-        if col.isValid():
-            color = col.getRgbF()[:3]
-            self.set_label_color(color)
+        self._change_color('label', self.label_col, self.set_label_color)
 
     def change_text_color(self):
         """ Choose a text color """
-        c = [int(255 * i) for i in self.text_col]
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a text color")
+        self._change_color('text', self.text_col, self.set_text_color)
+
+    def _change_color(self, msg, rgb_color_floats, call_func):
+        c = [int(255 * i) for i in rgb_color_floats]
+        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a %s color" % msg)
         if col.isValid():
             color = col.getRgbF()[:3]
-            self.set_text_color(color)
+            call_func(color)
 
     def set_background_color(self, color):
         """Set the background color"""
@@ -681,6 +715,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def on_show_hide_axes(self):
+        """
+        show/hide axes
+        """
         # this method should handle all the coords when
         # there are more then one
         if self._is_axes_shown:
@@ -696,7 +733,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
-        #gridResult = vtk.vtkFloatArray()
 
         self.grid2 = vtk.vtkUnstructuredGrid()
         #self.emptyResult = vtk.vtkFloatArray()
@@ -708,11 +744,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.create_cell_picker()
 
-        # scalar bar
-        self.scalarBar = vtk.vtkScalarBarActor()
+        # axes
         self.create_global_axes()
 
     def _create_vtk_objects(self):
+        """creates some of the vtk objects"""
         #Frame that VTK will render on
         self.vtk_frame = QtGui.QFrame()
 
@@ -735,8 +771,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
-        self.textActors = {}
-
 
         #for cid, axes in iteritems(self.axes):
             #self.rend.AddActor(axes)
@@ -749,8 +783,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._simulate_key_press('t') # change mouse style to trackball
         self.build_lookup_table()
 
-        self.magnify = 1
-        self.iText = 0
         text_size = 14 * self.magnify
         self.createText([5, 50], 'Max  ', text_size)  # text actor 0
         self.createText([5, 35], 'Min  ', text_size)  # text actor 1
@@ -768,6 +800,57 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     #def _script_helper(self, python_file=False):
         #if python_file in [None, False]:
             #self.on_run_script(python_file)
+
+
+    def view_camera(self):
+        camera = self.rend.GetActiveCamera()
+        position = camera.GetPosition()
+        clip_range = camera.GetClippingRange()
+        focal_point = camera.GetFocalPoint()
+
+        data = {'cameras' : self.cameras}
+        window = CameraWindow(data, win_parent=self)
+        window.show()
+        window.exec_()
+
+        if data['clicked_ok']:
+            self.cameras = deepcopy(data['cameras'])
+            #self._apply_camera(data)
+        #self.log_info('position = %s' % str(position))
+        #self.log_info('clip_range = %s' % str(clip_range))
+        #self.log_info('focal_point = %s' % str(focal_point))
+
+    #def _apply_camera(self, data):
+        #name = data['name']
+        #self.cameras = deepcopy(data['cameras'])
+        #self.on_set_camera(name)
+
+    def on_set_camera(self, name):
+        camera_data = self.cameras[name]
+        #position, clip_range, focal_point, view_up, distance = camera_data
+        self.on_set_camera_data(camera_data)
+
+    def on_set_camera_data(self, camera_data):
+        #position, clip_range, focal_point, view_up, distance = camera_data
+        position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
+
+        camera = self.rend.GetActiveCamera()
+        camera.SetPosition(position)
+        camera.SetFocalPoint(focal_point)
+        camera.SetViewAngle(view_angle)
+        camera.SetViewUp(view_up)
+        camera.SetClippingRange(clip_range)
+
+        camera.SetParallelScale(parallel_scale)
+        #parallel_proj
+
+        camera.SetDistance(distance)
+
+        camera.Modified()
+        self.vtk_interactor.Render()
+        self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
+                         % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
+
 
     def set_legend(self):
         """
@@ -805,9 +888,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'is_horizontal': False,
             'clicked_ok' : False,
         }
-        legend = LegendPropertiesWindow(data, win_parent=self)
-        legend.show()
-        legend.exec_()
+        window = LegendPropertiesWindow(data, win_parent=self)
+        window.show()
+        window.exec_()
 
         if data['clicked_ok']:
             self.apply_legend(data)
@@ -846,9 +929,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         grid_result = self.set_grid_values(name, case, vector_size,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)
-        self.UpdateScalarBar(Title, min_value, max_value, norm_value,
-                             data_format, is_blue_to_red=is_blue_to_red,
-                             is_horizontal=is_horizontal)
+        self.update_scalar_bar(Title, min_value, max_value, norm_value,
+                               data_format, is_blue_to_red=is_blue_to_red,
+                               is_horizontal=is_horizontal)
         self.final_grid_update(name, grid_result, key, subtitle, label)
         self.is_horizontal_scalar_bar = is_horizontal
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
@@ -1005,84 +1088,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def build_lookup_table(self):
         """TODO: add support for NanColors"""
-        self.colorFunction = vtk.vtkColorTransferFunction()
-        self.colorFunction.SetColorSpaceToHSV()
-        self.colorFunction.HSVWrapOff()
-        #self.colorFunction.SetNanColor(1., 1., 1., 0.)
-        #self.colorFunction.SetColorSpaceToLab()
-        #self.colorFunction.SetColorSpaceToRGB()
-        self.scalarBar.SetDragable(True)
-        self.scalarBar.SetPickable(True)
-
-        drange = [10., 20.]
-        self.colorFunction.SetRange(*drange)
-
-        # blue - low
-        # red - high
-        self.colorFunction.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
-        self.colorFunction.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
-
-        self.scalarBar.SetTitle("Title1")
-
-        self.scalarBar.SetLookupTable(self.colorFunction)
-        #self.scalarBar.SetNanColor(0., 0., 0.) # RGB color - black
-        #self.scalarBar.SetNanColor(1., 1., 1., 0.) # RGBA color - white
-
-        # old
-        #self.scalarBar.SetHeight(0.9)
-        #self.scalarBar.SetWidth(0.20)  # the width is set first
-        #self.scalarBar.SetPosition(0.77, 0.1)
-        is_horizontal = self.is_horizontal_scalar_bar
-        if is_horizontal:
-            # put the scalar bar at the top
-            self.scalarBar.SetOrientationToHorizontal()
-            width = 0.95
-            height = 0.15
-            x = (1 - width) / 2.
-            y = 1 - 0.02 - height
-        else:
-            # put the scalar bar at the right side
-            self.scalarBar.SetOrientationToVertical()
-
-            width = 0.2
-            height = 0.9
-            x = 1 - 0.01 - width
-            y = (1 - height) / 2.
-            self.scalarBar.SetPosition(x, y)
-
-        # the width is set first
-        # after the width is set, this is adjusted
-        self.scalarBar.SetHeight(height)
-        self.scalarBar.SetWidth(width)
-        self.scalarBar.SetPosition(x, y)
-
-        prop_title = vtk.vtkTextProperty()
-        prop_title.SetFontFamilyToArial()
-        #prop_title.ItalicOff()
-        prop_title.BoldOn()
-        prop_title.ShadowOn()
-
-        prop_label = vtk.vtkTextProperty()
-        prop_label.BoldOff()
-        prop_label.ShadowOn()
-
         scalar_range = self.grid.GetScalarRange()
         self.aQuadMapper.SetScalarRange(scalar_range)
         self.aQuadMapper.SetLookupTable(self.colorFunction)
-
-        #self.scalarBar.SetTitleTextProperty(prop_title)
-        #self.scalarBar.SetLabelTextProperty(prop_label)
-        self.scalarBar.SetLabelFormat("%i")
-
-        # allows 0-1 to be nice number when ranging values (gotta pick something)
-        self.scalarBar.SetNumberOfLabels(11)
-        self.scalarBar.SetMaximumNumberOfColors(11)
-
-        #self.scalarBar.VisibilityOff()  # first load -> scalar bar off
-        #self.scalarBar.ShadowOn()
-        #self.scalarBar.RepositionableOn()
         self.rend.AddActor(self.scalarBar)
-        self.scalarBar.VisibilityOff()
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
         # getOpenFileName return QString and we want Python string
@@ -1283,7 +1292,65 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #else:
         msg = '%s - %s' % (self.format, self.infile_name)
         self.set_window_title(msg)
+        self.update_menu_bar()
         self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
+
+    def _create_nastran_tools_and_menu_items(self):
+        tools = [
+            ('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
+            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
+        ]
+        self.menu_help2 = self.menubar.addMenu('&HelpMenuNew')
+        self.menu_help.menuAction().setVisible(False)
+        #self.file.menuAction().setVisible(False)
+        #self.menu_help.
+
+        #self.actions['about'].Disable()
+
+        menu_items = [
+            (self.menu_help2, ('about_nastran',)),
+            #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
+            #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
+        ]
+        return tools, menu_items
+
+    def _cleanup_nastran_tools_and_menu_items(self):
+        self.menu_help.menuAction().setVisible(True)
+        self.menu_help2.menuAction().setVisible(False)
+
+    def _update_menu_bar_to_format(self, fmt, method):
+        self.menu_bar_format = fmt
+        tools, menu_items = getattr(self, method)()
+        actions = self._prepare_actions(self._icon_path, tools, self.checkables)
+        self._update_menu(menu_items)
+
+    def update_menu_bar(self):
+        # the format we're switching to
+        method_new = '_create_%s_tools_and_menu_items' % self.format
+        method_cleanup = '_cleanup_%s_tools_and_menu_items' % self.menu_bar_format
+
+        # the current state of the format
+        #method_new = '_create_%s_tools_and_menu_items' % self.menu_bar_format
+        self.menu_bar_format = 'cwo'
+        if self.menu_bar_format is None:
+            self._update_menu_bar_to_format(self.format, method_new)
+        else:
+            print('need to add %r' % method_new)
+            if self.menu_bar_format != self.format:
+                if hasattr(self, method_cleanup):
+                #if hasattr(self, method_old):
+                    self.menu_bar_format = None
+                    getattr(self, method_cleanup)()
+
+            if hasattr(self, method_new):
+                self._update_menu_bar_to_format(self.format, method_new)
+
+                    #self._update_menu_bar_to_format(self.format)
+                    #actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
+                    #menu_items = self._create_menu_items(actions)
+                    #menu_items = self._create_menu_items()
+                    #self._populate_menu(menu_items)
+
 
     def on_load_results(self, out_filename=None):
         """
@@ -1391,6 +1458,221 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #for shot in shots:
             self.on_take_screenshot(shots)
             sys.exit('took screenshot %r' % shots)
+
+
+    def create_cell_picker(self):
+        # cell picker
+        self.cell_picker = vtk.vtkCellPicker()
+        self.node_picker = vtk.vtkPointPicker()
+        #self.cell_picker.SetTolerance(0.0005)
+
+    def init_cell_picker(self):
+        self.is_pick = False
+
+        self.vtk_interactor.SetPicker(self.cell_picker)
+        def annotate_cell_picker(object, event):
+            #self.log_command("annotate_cell_picker()")
+            picker = self.cell_picker
+            if picker.GetCellId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                world_position = picker.GetPickPosition()
+                cell_id = picker.GetCellId()
+                #ds = picker.GetDataSet()
+                #select_point = picker.GetSelectionPoint()
+                self.log_command("annotate_cell_picker()")
+                self.log_info("XYZ Global = %s" % str(world_position))
+                #self.log_info("cell_id = %s" % cell_id)
+                #self.log_info("data_set = %s" % ds)
+                #self.log_info("selPt = %s" % str(select_point))
+
+                #method = 'get_result_by_cell_id()' # self.modelType
+                #print('pick_state =', self.pick_state)
+
+                duplicate_key = None
+
+                icase = self.iCase
+                key = self.caseKeys[icase]
+                location = self.get_case_location(key)
+                if location == 'centroid':
+                    if self.pick_state == 'centroidal':
+                        duplicate_key = cell_id
+
+                        if 0:
+                            # We use vtkExtractUnstructuredGrid because we are interested in
+                            # looking at just a few cells. We use cell clipping via cell id to
+                            # extract the portion of the grid we are interested in.
+                            extractGrid = vtk.vtkExtractUnstructuredGrid()
+                            extractGrid.SetInputConnection(connect2.GetOutputPort())
+                            extractGrid.CellClippingOn()
+                            extractGrid.SetCellMinimum(0)
+                            extractGrid.SetCellMaximum(23)
+
+                            parison = vtk.vtkGeometryFilter()
+                            parison.SetInputConnection(extractGrid.GetOutputPort())
+
+                        result_name, result_value, xyz = self.get_result_by_cell_id(cell_id, world_position)
+                        assert result_name in self.label_actors, result_name
+                    else:
+                        cell = self.grid.GetCell(cell_id)
+                        # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
+                        method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
+                        if hasattr(self, method):
+                            methodi = getattr(self, method)
+                            methodi(world_position, cell_id)
+                        else:
+                            msg = "pick_state is set to 'nodal', but the result is 'centroidal'\n"
+                            msg += '  cannot find: self.%s(xyz, cell_id)' % method
+                            self.log_error(msg)
+                        return
+                else:
+                    if self.pick_state == 'nodal':
+                        result_name, result_value, node_id, xyz = self.get_result_by_xyz_cell_id(world_position, cell_id)
+                        assert result_name in self.label_actors, result_name
+                        assert not isinstance(xyz, int), xyz
+                        duplicate_key = node_id
+                    else:
+                        method = 'get_nodal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
+                        if hasattr(self, method):
+                            methodi = getattr(self, method)
+                            methodi(world_position, cell_id)
+                        else:
+                            msg = "pick_state is set to 'centroidal', but the result is 'nodal'\n"
+                            msg += '  cannot find: self.%s(xyz, cell_id)' % method
+                            self.log_error(msg)
+                        return
+
+                #print('key=%s exists=%s' % (duplicate_key, duplicate_key in self.label_ids[result_name]))
+                if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
+                    return
+                self.label_ids[result_name].add(duplicate_key)
+                self.log_info("%s = %s" % (result_name, result_value))
+
+
+                #x, y, z = world_position
+                x, y, z = xyz
+                text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
+                text = str(result_value)
+                assert result_name in self.label_actors, result_name
+                self._create_annotation(text, result_name, x, y, z)
+
+        def annotate_point_picker(object, event):
+            self.log_command("annotate_point_picker()")
+            picker = self.cell_picker
+            if picker.GetPointId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                world_position = picker.GetPickPosition()
+                point_id = picker.GetPointId()
+                #ds = picker.GetDataSet()
+                select_point = picker.GetSelectionPoint()
+                self.log_command("annotate_picker()")
+                self.log_info("world_position = %s" % str(world_position))
+                self.log_info("point_id = %s" % point_id)
+                #self.log_info("data_set = %s" % ds)
+                self.log_info("select_point = %s" % str(select_point))
+
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textActor.SetPosition(select_point[:2])
+                #self.picker_textActor.VisibilityOn()
+
+        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
+        self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
+
+        #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
+        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)
+
+    def _create_annotation(self, text, result_name, x, y, z):
+        assert isinstance(result_name, str), result_name
+        # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
+        if 1:
+            source = vtk.vtkVectorText()
+            source.SetText(text)
+
+            # mappers are weird; they seem to do nothing
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(source.GetOutputPort())
+
+            # the follower lets us set the position/size/color
+            follower = vtk.vtkFollower()
+            follower.SetMapper(mapper)
+            follower.SetPosition((x, y, z))
+
+            # 1 point = 1/72"
+            # SetScale works on model scale size
+            #follower.SetScale(0.5)
+            follower.SetScale(self.dim_max * 0.01 * self.label_scale)
+
+            prop = follower.GetProperty()
+            prop.SetColor(self.label_col)
+            #prop.SetOpacity( 0.3 );
+
+            # we need to make sure the text rotates when the camera is changed
+            camera = self.rend.GetActiveCamera()
+            follower.SetCamera(camera)
+        else:
+            # Create a text mapper and actor to display the results of picking.
+            textMapper = vtk.vtkTextMapper()
+            textMapper.SetInput(text)
+
+            tprop = textMapper.GetTextProperty()
+            tprop.SetFontFamilyToArial()
+            tprop.SetFontSize(10)
+            tprop.BoldOn()
+            tprop.ShadowOn()
+            tprop.SetColor(self.label_col)
+
+            textActor = vtk.vtkActor2D()
+            textActor.GetPositionCoordinate().SetCoordinateSystemToWorld()
+            textActor.SetPosition(world_position[:2])
+            textActor.SetMapper(textMapper)
+            follower = textActor
+
+        # finish adding the actor
+        self.rend.AddActor(follower)
+        self.label_actors[result_name].append(follower)
+
+        #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+        #camera.GetPosition()
+        #camera.GetClippingRange()
+        #camera.GetFocalPoint()
+
+    def _on_cell_picker(self, a):
+        self.vtk_interactor.SetPicker(self.cell_picker)
+        picker = self.cell_picker
+        world_position = picker.GetPickPosition()
+        cell_id = picker.GetCellId()
+        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
+        self.log_info("world_position = %s" % str(world_position))
+        self.log_info("cell_id = %s" % cell_id)
+        self.log_info("select_point = %s" % str(select_point))
+
+    def _on_node_picker(self, a):
+        self.vtk_interactor.SetPicker(self.node_picker)
+        picker = self.node_picker
+        world_position = picker.GetPickPosition()
+        node_id = picker.GetPointId()
+        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
+        self.log_info("world_position = %s" % str(world_position))
+        self.log_info("node_id = %s" % node_id)
+        self.log_info("select_point = %s" % str(select_point))
+
+    #def on_cell_picker(self):
+        #self.log_command("on_cell_picker()")
+        #picker = self.cell_picker
+        #world_position = picker.GetPickPosition()
+        #cell_id = picker.GetCellId()
+        ##ds = picker.GetDataSet()
+        #select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
+        #self.log_info("world_position = %s" % str(world_position))
+        #self.log_info("cell_id = %s" % cell_id)
+        #self.log_info("select_point = %s" % str(select_point))
+        #self.log_info("data_set = %s" % ds)
 
 
     def take_screenshot(self):
@@ -1805,6 +2087,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.iCase = -1
             self.nCases = 0
 
+        self.reset_labels()
         self.cycleResults_explicit()  # start at nCase=0
         if self.nCases:
             self.scalarBar.VisibilityOn()
@@ -1832,6 +2115,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
 
     def reset_labels(self):
+        """
+        Wipe all labels and regenerate the key slots based on the case keys.
+        This is used when changing the model.
+        """
+        print('reset labels...')
         self._remove_labels()
 
         # new geometry
@@ -1844,13 +2132,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #]
         for case_key in self.caseKeys:
             # TODO: this probably isn't always right...
-            result_name = case_key[2] #  ElementID
+            #result_name = case_key[2] #  ElementID
+            result_name = self.get_result_name(case_key)
 
             self.label_actors[result_name] = []
             self.label_ids[result_name] = set([])
 
 
     def _remove_labels(self):
+        """
+        Remove all labels from the current result case.
+        This happens when the user explictly selects the clear label button.
+        """
         if len(self.label_actors) == 0:
             self.log.warning('No actors to remove')
             return
@@ -1864,6 +2157,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.label_ids[result_name] = set([])
 
     def clear_labels(self):
+        """
+        This clears out all labels from all result cases.
+        """
         if len(self.label_actors) == 0:
             self.log.warning('No actors to clear')
             return
@@ -1913,3 +2209,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if count and show_msg:
             # yes the ) is intentionally left off because it's already been added
             self.log_command('show_labels(%s' % names)
+
+    def update_scalar_bar(self, title, min_value, max_value, norm_value,
+                        data_format, is_blue_to_red=True, is_horizontal=True):
+        """
+            :param title:       the scalar bar title
+            :param min_value:   the blue value
+            :param max_value:   the red value
+            :param data_format: '%g','%f','%i', etc.
+            :param is_blue_to_red:  flips the order of the RGB points
+            """
+        print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
+        self.scalar_bar.update(title, min_value, max_value, norm_value,
+                               data_format, is_blue_to_red, is_horizontal)

@@ -8,61 +8,8 @@ from numpy import ndarray, asarray, hstack, searchsorted, ones, full
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
+from pyNastran.gui.names_storage import NamesStorage
 
-class NamesStorage(object):
-    def __init__(self):
-        self.loaded_names = {}
-
-    #def __contains__(self, name):
-        #"""finds out if the approximate key is in the loaded_names dictionary"""
-        ##name = (vector_size, subcase_id, result_type, label, min_value, max_value)
-        #key = name[:4]
-        #value = name[4:]
-        #assert len(key) == 4, key
-        #assert len(value) == 2, value
-        #if key in self.loaded_names:
-            #value2 = self.loaded_names[key]
-            #if value == value2:
-                #return True
-        #return False
-        #return  in self.loaded_names
-
-    def add(self, name):
-        """
-        adds the approximate name and value to the loaded_names dictionary
-        """
-        key = name[:4]
-        value = name[4:]
-        assert len(key) == 4, key
-        assert len(value) == 2, value
-        assert key not in self.loaded_names
-        self.loaded_names[key] = value
-        #self.loaded_names.add(name)
-
-    def remove(self, name):
-        """removes the approximate name from the loaded_names dictionary"""
-        key = name[:4]
-        del self.loaded_names[key]
-
-    def get_name_string(self, name):
-        """Gets the approximate name as a string"""
-        key = name[:4]
-        value = name[4:]
-        return '_'.join([str(k) for k in key])
-
-    def has_close_name(self, name):
-        """checks to see if the approximate key is in loaded_names"""
-        key = name[:4]
-        return key in self.loaded_names
-
-    def has_exact_name(self, name):
-        """
-        checks to see if the approximate key is in loaded_names
-        and the value is the expected value
-        """
-        key = name[:4]
-        value = name[4:]
-        return key in self.loaded_names and self.loaded_names[key] == value
 
 class GuiCommon(object):
     def __init__(self):
@@ -90,11 +37,6 @@ class GuiCommon(object):
             return point_data.GetNumberOfPoints()
         except AttributeError:
             return 0
-
-    def _is_int_result(self, data_format):
-        if 'i' in data_format:
-            return True
-        return False
 
     def update_axes_length(self, dim_max):
         """
@@ -196,8 +138,8 @@ class GuiCommon(object):
         # TODO: results can only go from centroid->node and not back to centroid
         self.final_grid_update(name, grid_result, key, subtitle, label)
 
-        self.UpdateScalarBar(result_type, min_value, max_value, norm_value,
-                             data_format, is_blue_to_red=True, is_horizontal=self.is_horizontal_scalar_bar)
+        self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+                               data_format, is_blue_to_red=True, is_horizontal=self.is_horizontal_scalar_bar)
 
         location = self.get_case_location(key)
         self.res_widget.update_method(location)
@@ -389,6 +331,15 @@ class GuiCommon(object):
         #print("next iCase=%s key=%s" % (self.iCase, key))
         return found_cases
 
+    def get_result_name(self, key):
+        if len(key) == 5:
+            (subcase_id, result_type, vector_size, location, data_format) = key
+        elif len(key) == 6:
+            (subcase_id, i, result_type, vector_size, location, data_format) = key
+        else:
+            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+        return result_type
+
     def get_case_location(self, key):
         if len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
@@ -397,80 +348,4 @@ class GuiCommon(object):
         else:
             (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
         return location
-
-    def UpdateScalarBar(self, title, min_value, max_value, norm_value,
-                        data_format, is_blue_to_red=True, is_horizontal=True):
-        """
-        :param title:       the scalar bar title
-        :param min_value:   the blue value
-        :param max_value:   the red value
-        :param data_format: '%g','%f','%i', etc.
-        :param is_blue_to_red:  flips the order of the RGB points
-        """
-        print("UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
-        self.colorFunction.RemoveAllPoints()
-
-        if is_blue_to_red:
-            self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
-            self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
-        else:
-            self.colorFunction.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
-            self.colorFunction.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
-
-        if is_horizontal:
-            # put the scalar bar at the top
-            self.scalarBar.SetOrientationToHorizontal()
-            width = 0.95
-            height = 0.15
-            x = (1 - width) / 2.
-            y = 1 - 0.02 - height
-        else:
-            # put the scalar bar at the right side
-            self.scalarBar.SetOrientationToVertical()
-            width = 0.2
-            height = 0.9
-            x = 1 - 0.01 - width
-            y = (1 - height) / 2.
-        self.scalarBar.SetHeight(height)
-        self.scalarBar.SetWidth(width)
-        self.scalarBar.SetPosition(x, y)
-
-        if 0:
-            self.colorFunction.SetRange(min_value, max_value)
-            #self.colorFunction.Update()
-
-            #scalar_range = self.grid.GetScalarRange()
-            #print('scalar_range', scalar_range)
-            #self.aQuadMapper.SetScalarRange(scalar_range)
-            #self.aQuadMapper.SetScalarRange(min_value, max_value)
-            self.aQuadMapper.SetScalarRange(max_value, min_value)
-            self.aQuadMapper.Update()
-
-        #self.scalarBar.SetLookupTable(self.colorFunction)
-        self.scalarBar.SetTitle(title)
-
-        nvalues = 11
-        data_format_display = data_format
-        if data_format == '%i':
-            data_format_display = '%.0f'
-            nvalues = int(max_value - min_value) + 1
-            if nvalues < 7:
-                nvalues = 7
-            elif nvalues > 30:
-                nvalues = 11
-        self.scalarBar.SetLabelFormat(data_format_display)
-
-        #if title in ['ElementID', 'Eids', 'Region'] and norm_value < 11:
-            #nvalues = int(max_value - min_value) + 1
-            #print("need to adjust axes...max_value=%s" % max_value)
-
-        if self.nvalues is not None:
-            if not self._is_int_result(data_format):
-                # don't change nvalues for int results
-                nvalues = self.nvalues
-
-        self.scalarBar.SetNumberOfLabels(nvalues)
-        self.scalarBar.SetMaximumNumberOfColors(nvalues)
-        self.scalarBar.Modified()
-
 
