@@ -11,6 +11,7 @@ import datetime
 import cgi #  html lib
 import inspect
 import traceback
+from copy import deepcopy
 
 from PyQt4 import QtCore, QtGui
 import vtk
@@ -27,6 +28,7 @@ from pyNastran.utils import print_bad_path
 from pyNastran.gui.ex_tree import Sidebar
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.qt_files.camera import CameraWindow
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -128,6 +130,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.pick_state = 'centroidal' if self.is_centroidal else 'nodal'
         self.label_actors = {}
         self.label_ids = {}
+        self.cameras = {}
         self.label_scale = 1.0 # in percent
 
         self.is_horizontal_scalar_bar = False
@@ -188,7 +191,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         |                               |
         +-------------------------------+
         """
-        self.resize(800, 600)
+        self.resize(1000, 700)
         self.statusBar().showMessage('Ready')
 
         # windows title and aplication icon
@@ -293,6 +296,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
                 ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
                 ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
+                ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
                 ('creset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
                 ('reload', 'Reload model', 'treload.png', 'r', 'Reload the model', self.on_reload),
 
@@ -376,7 +380,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.toolbar, ('flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                            'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit')),
+                            'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
             #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
         ]
         return menu_items
@@ -797,6 +801,57 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #if python_file in [None, False]:
             #self.on_run_script(python_file)
 
+
+    def view_camera(self):
+        camera = self.rend.GetActiveCamera()
+        position = camera.GetPosition()
+        clip_range = camera.GetClippingRange()
+        focal_point = camera.GetFocalPoint()
+
+        data = {'cameras' : self.cameras}
+        window = CameraWindow(data, win_parent=self)
+        window.show()
+        window.exec_()
+
+        if data['clicked_ok']:
+            self.cameras = deepcopy(data['cameras'])
+            #self._apply_camera(data)
+        #self.log_info('position = %s' % str(position))
+        #self.log_info('clip_range = %s' % str(clip_range))
+        #self.log_info('focal_point = %s' % str(focal_point))
+
+    #def _apply_camera(self, data):
+        #name = data['name']
+        #self.cameras = deepcopy(data['cameras'])
+        #self.on_set_camera(name)
+
+    def on_set_camera(self, name):
+        camera_data = self.cameras[name]
+        #position, clip_range, focal_point, view_up, distance = camera_data
+        self.on_set_camera_data(camera_data)
+
+    def on_set_camera_data(self, camera_data):
+        #position, clip_range, focal_point, view_up, distance = camera_data
+        position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
+
+        camera = self.rend.GetActiveCamera()
+        camera.SetPosition(position)
+        camera.SetFocalPoint(focal_point)
+        camera.SetViewAngle(view_angle)
+        camera.SetViewUp(view_up)
+        camera.SetClippingRange(clip_range)
+
+        camera.SetParallelScale(parallel_scale)
+        #parallel_proj
+
+        camera.SetDistance(distance)
+
+        camera.Modified()
+        self.vtk_interactor.Render()
+        self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
+                         % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
+
+
     def set_legend(self):
         """
         Opens a dialog box to set:
@@ -833,9 +888,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'is_horizontal': False,
             'clicked_ok' : False,
         }
-        legend = LegendPropertiesWindow(data, win_parent=self)
-        legend.show()
-        legend.exec_()
+        window = LegendPropertiesWindow(data, win_parent=self)
+        window.show()
+        window.exec_()
 
         if data['clicked_ok']:
             self.apply_legend(data)
@@ -1237,7 +1292,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #else:
         msg = '%s - %s' % (self.format, self.infile_name)
         self.set_window_title(msg)
-        #self.update_menu_bar()
+        self.update_menu_bar()
         self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
 
     def _create_nastran_tools_and_menu_items(self):
