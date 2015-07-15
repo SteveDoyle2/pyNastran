@@ -287,11 +287,13 @@ class GetMethods(GetMethodsDeprecated):
         for (eid, element) in iteritems(self.elements):  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
-                nids = element.nodeIDs()
+                nids = element.node_ids
+            except AttributeError:
+                print(element.type)
+            else:
                 for nid in nids:  # (e.g. CQUAD8 with missing node)
                     nidToElementsMap[nid].append(eid)
-            except:
-                pass
+
         return nidToElementsMap
 
     def get_property_id_to_element_ids_map(self):
