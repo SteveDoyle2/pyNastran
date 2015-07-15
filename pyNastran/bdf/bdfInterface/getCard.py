@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, integer_types
+from six import string_types, iteritems, integer_types, iterkeys
 #import sys
 from numpy import ndarray
 
@@ -138,7 +138,7 @@ class GetMethods(GetMethodsDeprecated):
 
 
         if eids is None:
-            eids = iterkeys(self.elements.keys())
+            eids = iterkeys(self.elements)
 
         for eid in eids:
             elem = self.elements[eid]
@@ -151,7 +151,11 @@ class GetMethods(GetMethodsDeprecated):
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
                 assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
-                edge_to_eid_map[edge].add(eid)
+                try:
+                    edge_to_eid_map[edge].add(eid)
+                except TypeError:
+                    print(elem)
+                    raise
                 for nid in edge:
                     nid_to_edge_map[nid].add(tuple(edge))
         out = (
@@ -287,11 +291,13 @@ class GetMethods(GetMethodsDeprecated):
         for (eid, element) in iteritems(self.elements):  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
-                nids = element.nodeIDs()
+                nids = element.node_ids
+            except AttributeError:
+                print(element.type)
+            else:
                 for nid in nids:  # (e.g. CQUAD8 with missing node)
                     nidToElementsMap[nid].append(eid)
-            except:
-                pass
+
         return nidToElementsMap
 
     def get_property_id_to_element_ids_map(self):

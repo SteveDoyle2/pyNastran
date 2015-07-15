@@ -93,7 +93,7 @@ class CELAS1(SpringElement):
         return self._nodeIDs(allowEmptyNodes=True, msg=msg)
 
     def get_edge_ids(self):
-        return [sorted(self.node_ids)]
+        return [tuple(sorted(self.node_ids))]
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -205,7 +205,7 @@ class CELAS2(SpringElement):
         return self._nodeIDs(allowEmptyNodes=True, msg=msg)
 
     def get_edge_ids(self):
-        return [sorted(self.node_ids)]
+        return [tuple(sorted(self.node_ids))]
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
@@ -276,6 +276,9 @@ class CELAS2(SpringElement):
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         return self._nodeIDs(allowEmptyNodes=True, msg=msg)
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
 
     def raw_fields(self):
         nodes = self.node_ids

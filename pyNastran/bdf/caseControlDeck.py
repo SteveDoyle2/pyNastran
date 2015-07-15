@@ -567,7 +567,6 @@ class CaseControlDeck(object):
 
         self:  the CaseControlDeck object
         """
-        #self.debug = True
         if self.debug:
             a = 'key=%r' % key
             b = 'value=%r' % value

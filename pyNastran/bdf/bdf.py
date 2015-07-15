@@ -1001,15 +1001,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._stop_on_parsing_error = stop_on_parsing_error
         self._stop_on_xref_error = stop_on_xref_error
 
-    def read_bdf(self, bdf_filename=None, include_dir=None,
+    def read_bdf(self, bdf_filename=None,
                  xref=True, punch=False, encoding=None):
         """
         Read method for the bdf files
 
         :param self:         the BDF object
         :param bdf_filename: the input bdf (default=None; popup a dialog)
-        :param include_dir:  the relative path to any include files
-                             (default=None if no include files)
         :param xref:  should the bdf be cross referenced (default=True)
         :param punch: indicates whether the file is a punch file (default=False)
         :param encoding:  the unicode encoding (default=None; system default)
@@ -1051,11 +1049,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         #: the active filename (string)
         self.bdf_filename = bdf_filename
-        if include_dir is None:
-            include_dir = os.path.dirname(bdf_filename)
-
-        #: the directory of the 1st BDF (include BDFs are relative to this one)
-        self.include_dir = include_dir
 
         self.punch = punch
         if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
@@ -2018,7 +2011,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         :retval case_control_lines:  the case control deck as a list of strings
         :retval bulk_data_lines:  the bulk data deck as a list of strings
         """
-        with self._open_file(bdf_filename) as bdf_file:
+        #: the directory of the 1st BDF (include BDFs are relative to this one)
+        self.include_dir = os.path.dirname(os.path.abspath(bdf_filename))
+
+        with self._open_file(bdf_filename, basename=True) as bdf_file:
             try:
                 lines = bdf_file.readlines()
             except:
@@ -2036,10 +2032,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #print('*** %s' % line)
                 #bdf_filename2 = line[7:].strip(" '")
                 bdf_filename2 = get_include_filename([line], include_dir=self.include_dir)
-                #print('****f = %r' % bdf_filename2)
 
-
-                with self._open_file(bdf_filename2) as bdf_file:
+                with self._open_file(bdf_filename2, basename=False) as bdf_file:
                     #print('bdf_file.name = %s' % bdf_file.name)
                     lines2 = bdf_file.readlines()
 
@@ -2110,8 +2104,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         else:
             self.card_count[card_name] = n
 
-    def _open_file(self, bdf_filename):
-        bdf_filename_inc = os.path.join(self.include_dir, str(bdf_filename))
+    def _open_file(self, bdf_filename, basename=False):
+        if basename:
+            bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
+        else:
+            bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
         if not os.path.exists(bdf_filename_inc):
             msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
             msg += 'cwd: %r\n' % os.getcwd()

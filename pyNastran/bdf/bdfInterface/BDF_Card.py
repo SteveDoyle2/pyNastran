@@ -7,18 +7,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from six.moves import range
 
 
-class BDFCardDeprecated(object):
-    """deprecated"""
-    def nFields(self):
-        """
-        Gets how many fields are on the card
-
-        :param self:      the object pointer
-        :returns nfields: the number of fields on the card
-        """
-        return self.nfields
-
-class BDFCard(BDFCardDeprecated):
+class BDFCard(object):
     """
     A BDFCard is a list that has a default value of None for fields out of
     range.
@@ -67,6 +56,16 @@ class BDFCard(BDFCardDeprecated):
         :returns msg: the string representation of the card
         """
         return str(self.card)
+
+    def nFields(self):
+        """
+        Gets how many fields are on the card
+
+        :param self:      the object pointer
+        :returns nfields: the number of fields on the card
+        """
+        self.deprecated('self.nFields()', 'self.nfields', '0.8')
+        return self.nfields
 
     def __len__(self):
         """len(card)"""

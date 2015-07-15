@@ -194,7 +194,7 @@ class NastranIO(object):
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.modelType = model.modelType
-            model.read_bdf(bdf_filename, include_dir=dirname,
+            model.read_bdf(bdf_filename,
                            punch=punch, xref=False)
             model.cross_reference(xref=True, xref_loads=xref_loads,
                                   xref_constraints=False)
@@ -1156,17 +1156,18 @@ class NastranIO(object):
                         form0 = (header, None, [])
                         formi2 = form0[2]
 
-                        cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
-                        formi2.append((name + 'X', icase, []))
-                        icase += 1
+                        if 1:
+                            cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
+                            formi2.append((name + 'X', icase, []))
+                            icase += 1
 
-                        cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
-                        formi2.append((name + 'Y', icase, []))
-                        icase += 1
+                            cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
+                            formi2.append((name + 'Y', icase, []))
+                            icase += 1
 
-                        cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                        formi2.append((name + 'Z', icase, []))
-                        icase += 1
+                            cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                            formi2.append((name + 'Z', icase, []))
+                            icase += 1
 
                         cases[(subcase_id, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
                         formi2.append((name + 'XYZ', icase, []))

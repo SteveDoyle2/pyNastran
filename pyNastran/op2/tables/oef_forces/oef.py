@@ -1793,7 +1793,7 @@ class OEF(OP2Common):
                         out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                         forces.append(out2)
                     data_in.append(forces)
-                    #print "etype=%s" %(etype)
+                    #print "etype=%s" % (etype)
 
                     #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
                     #print "force %s" %(self.get_element_type(self.element_type)),data_in

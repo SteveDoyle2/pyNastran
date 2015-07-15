@@ -34,18 +34,12 @@ class BushElement(Element):
     def Mass(self):
         return 0.
 
-    def get_edges(self):
-        """
-        Return the edges
-        """
-        return [(self.ga[0], self.gb[1])]
-
     def get_edge_ids(self):
         """
         Return the edge IDs
         """
         node_ids = self.node_ids
-        return [(node_ids[0], node_ids[1])]
+        return [tuple(sorted(node_ids))]
 
 class CBUSH(BushElement):
     type = 'CBUSH'
