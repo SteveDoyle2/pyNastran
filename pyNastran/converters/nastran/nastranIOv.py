@@ -1156,17 +1156,18 @@ class NastranIO(object):
                         form0 = (header, None, [])
                         formi2 = form0[2]
 
-                        cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
-                        formi2.append((name + 'X', icase, []))
-                        icase += 1
+                        if 1:
+                            cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
+                            formi2.append((name + 'X', icase, []))
+                            icase += 1
 
-                        cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
-                        formi2.append((name + 'Y', icase, []))
-                        icase += 1
+                            cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
+                            formi2.append((name + 'Y', icase, []))
+                            icase += 1
 
-                        cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                        formi2.append((name + 'Z', icase, []))
-                        icase += 1
+                            cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                            formi2.append((name + 'Z', icase, []))
+                            icase += 1
 
                         cases[(subcase_id, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
                         formi2.append((name + 'XYZ', icase, []))
