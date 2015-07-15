@@ -61,50 +61,33 @@ class MainWindow(GuiCommon2, Cart3dIO):
         self.setup_gui()
         self.setup_post(inputs)
 
-    def create_cell_picker(self):
-        # cell picker
-        self.cell_picker = vtk.vtkCellPicker()
+    def _cart3d_remap_bcs(self):
+        pass
 
-    def init_cell_picker(self):
-        self.is_pick = False
-        self.vtk_interactor.SetPicker(self.cell_picker)
-        #self.vtk_interactor.SetPicker(self.point_picker)
+    def _create_cart3d_tools_and_menu_items(self):
+        tools = [
+            ('about_cart3d', 'About Cart3d GUI', 'tabout.png', 'CTRL+H', 'About Cart3d GUI and help on shortcuts', self.about_dialog),
+            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
+        ]
+        self.menu_edit = self.menubar.addMenu('Edit Cart3d')
+        self.menu_help_cart3d = self.menubar.addMenu('&Help')
+        self.menu_help.menuAction().setVisible(False)
+        #self.file.menuAction().setVisible(False)
+        #self.menu_help.
 
-        def annotate_cell_picker(object, event):
-            self.log_command("annotate_cell_picker()")
-            picker = self.cell_picker
-            if picker.GetCellId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                worldPosition = picker.GetPickPosition()
-                cell_id = picker.GetCellId()
-                #ds = picker.GetDataSet()
-                selPt = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
-                self.log_info("worldPosition = %s" % str(worldPosition))
-                self.log_info("cell_id = %s" % cell_id)
-                #self.log_info("data_set = %s" % ds)
-                self.log_info("selPt = %s" % str(selPt))
+        #self.actions['about'].Disable()
 
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(selPt[:2])
-                #self.picker_textActor.VisibilityOn()
+        menu_items = [
+            (self.menu_help_cart3d, ('about_cart3d',)),
+            #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
+            #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
+        ]
+        return tools, menu_items
 
-        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
-
-    def on_cell_picker(self):
-        self.log_command("on_cell_picker()")
-        picker = self.cell_picker
-        worldPosition = picker.GetPickPosition()
-        cell_id = picker.GetCellId()
-        #ds = picker.GetDataSet()
-        selPt = picker.GetSelectionPoint()  # get x,y pixel coordinate
-
-        self.log_info("worldPosition = %s" % str(worldPosition))
-        self.log_info("cell_id = %s" % cell_id)
-        self.log_info("selPt = %s" % str(selPt))
-        #self.log_info("data_set = %s" % ds)
+    def _cleanup_cart3d_tools_and_menu_items(self):
+        self.menu_help.menuAction().setVisible(True)
+        self.menu_help2.menuAction().setVisible(False)
+        self.menu_edit.menuAction().setVisible(False)
 
     def about_dialog(self):
         """ Display about dialog """
@@ -173,6 +156,7 @@ class MainWindow(GuiCommon2, Cart3dIO):
         settings.setValue("mainWindowState", self.saveState())
         settings.setValue("backgroundColor", self.background_col)
         QtGui.qApp.quit()
+
 
 def main():
     app = QtGui.QApplication(sys.argv)

@@ -106,8 +106,7 @@ class NastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, dirname)
         #test.load_nastran_results(op2_filename, dirname)
 
-        with self.assertRaises(IOError):
-            test.load_nastran_geometry(bdf_filename, '')
+        test.load_nastran_geometry(bdf_filename, '')
 
     def test_beam_modes_02(self):
         dirname = bdf_filename = os.path.join(model_path, 'beam_modes')
@@ -126,8 +125,7 @@ class NastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, dirname)
         test.load_nastran_results(op2_filename, dirname)
 
-        with self.assertRaises(IOError):
-            test.load_nastran_geometry(bdf_filename, '')
+        test.load_nastran_geometry(bdf_filename, '')
 
 
 def test_bottle():

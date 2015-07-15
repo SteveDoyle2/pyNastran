@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 import unittest
 from six import PY2
 from codecs import open as codec_open
@@ -36,7 +36,8 @@ class TestReadWrite(unittest.TestCase):
         Tests punch file reading
         """
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
+        print('test_path =', test_path)
+        bdf_name = os.path.join(test_path, 'include_dir', 'include_alt.inc')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         model2 = BDF(debug=False)
@@ -50,7 +51,8 @@ class TestReadWrite(unittest.TestCase):
         # fails correctly
         model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'test_include.bdf')
-        self.assertRaises(IOError, model.read_bdf, bdf_name, include_dir=None, xref=True, punch=False)
+        model.read_bdf(bdf_name, xref=True, punch=False)
+        #self.assertRaises(IOError, model.read_bdf, bdf_name, xref=True, punch=False)
 
         # passes
         full_path = os.path.join(test_path, 'include_dir')
@@ -58,7 +60,7 @@ class TestReadWrite(unittest.TestCase):
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
             bdf_filename = os.path.join(test_path, 'test_include.bdf')
-        model2.read_bdf(bdf_filename, include_dir=full_path, xref=True, punch=False)
+        model2.read_bdf(bdf_filename, xref=True, punch=False)
 
     def test_enddata_1(self):
         """
@@ -71,7 +73,7 @@ class TestReadWrite(unittest.TestCase):
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
             bdf_filename = os.path.join(test_path, bdf_filename)
-        model2.read_bdf(bdf_filename, include_dir=full_path, xref=True, punch=False)
+        model2.read_bdf(bdf_filename, xref=True, punch=False)
         for out_filename, is_enddata, write_flag in [
             ('enddata1.bdf', True, None),
             ('enddata2.bdf', True, True),
@@ -94,7 +96,7 @@ class TestReadWrite(unittest.TestCase):
         full_path = os.path.join(test_path, 'include_dir')
         model2 = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'test_mass.dat')
-        model2.read_bdf(bdf_name, include_dir=full_path, xref=True, punch=False)
+        model2.read_bdf(bdf_name, xref=True, punch=False)
         for out_filename, is_enddata, write_flag in [
             ('test_mass1.dat', False, None),
             ('test_mass2.dat', True, True),
