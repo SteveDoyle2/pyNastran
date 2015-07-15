@@ -2032,8 +2032,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #print('*** %s' % line)
                 #bdf_filename2 = line[7:].strip(" '")
                 bdf_filename2 = get_include_filename([line], include_dir=self.include_dir)
-                print('****f = %r' % bdf_filename2)
-
 
                 with self._open_file(bdf_filename2, basename=False) as bdf_file:
                     #print('bdf_file.name = %s' % bdf_file.name)

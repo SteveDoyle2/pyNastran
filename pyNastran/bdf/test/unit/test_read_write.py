@@ -36,7 +36,6 @@ class TestReadWrite(unittest.TestCase):
         Tests punch file reading
         """
         model = BDF(debug=False)
-        print('test_path =', test_path)
         bdf_name = os.path.join(test_path, 'include_dir', 'include_alt.inc')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
