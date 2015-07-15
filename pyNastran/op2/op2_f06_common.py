@@ -320,7 +320,7 @@ class OP2_F06_Common(object):
           RealCTubeStrain - CTUBE
         """
         res_length = 0
-        print(res_key)
+        #print(res_key)
         for res_type in res_types:
             if res_key in res_type:
                 # the res_key is

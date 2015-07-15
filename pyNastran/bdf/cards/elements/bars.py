@@ -136,13 +136,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
 
-    def get_edges(self):
-        """
-        Return the edges
-        """
-        return [(self.nodes[0], self.nodes[1])]
-
-    def get_edges(self):
+    def get_edge_ids(self):
         """
         Return the edge IDs
         """
@@ -306,7 +300,6 @@ class CBAR(LineElement):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        edges = self.get_edges()
         edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
@@ -431,7 +424,7 @@ class CBAR(LineElement):
         return [self.Ga(), self.Gb()]
 
     def get_edge_ids(self):
-        return [tuple(self.node_ids)]
+        return [tuple(sorted(self.node_ids))]
 
     @property
     def nodes(self):
@@ -568,7 +561,7 @@ class CBEAM3(CBAR):
         return self.comment + print_card_16(card)
 
     def _verify(self, xref=False):
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
 class CBEND(LineElement):
     type = 'CBEND'
@@ -634,7 +627,7 @@ class CBEND(LineElement):
         return self.pid.Area()
 
     def _verify(self, xref):
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()

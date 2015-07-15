@@ -198,7 +198,7 @@ def print_field_16(value):
     """
     if isinstance(value, integer_types):
         field = "%16s" % value
-    elif isinstance(value, float) or isinstance(value, float32):
+    elif isinstance(value, (float, float32)):
         field = print_float_16(value)
     elif value is None:
         field = "                "

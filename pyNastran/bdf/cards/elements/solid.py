@@ -237,30 +237,6 @@ class CHEXA8(SolidElement):
 
     def get_edge_ids(self):
         """
-        Return the edges
-        """
-        return [
-            # btm (1-2-3-4)
-            (self.nodes[0], self.nodes[1]),
-            (self.nodes[1], self.nodes[2]),
-            (self.nodes[2], self.nodes[3]),
-            (self.nodes[3], self.nodes[0]),
-
-            # top (5-6-7-8)
-            (self.nodes[4], self.nodes[5]),
-            (self.nodes[5], self.nodes[6]),
-            (self.nodes[6], self.nodes[7]),
-            (self.nodes[7], self.nodes[4]),
-
-            # up - (4-8, 3-7, 1-5, 2-6)
-            (self.nodes[0], self.nodes[4]),
-            (self.nodes[1], self.nodes[5]),
-            (self.nodes[2], self.nodes[6]),
-            (self.nodes[3], self.nodes[7]),
-        ]
-
-    def get_edge_ids(self):
-        """
         Return the edge IDs
         """
         # top (5-6-7-8)
@@ -317,7 +293,6 @@ class CHEXA20(SolidElement):
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
-
         data = [self.eid, self.Pid()] + nodes[:8] + nodes2
         msg = ('CHEXA*  %16i%16i%16i%16i\n'
                '*       %16i%16i%16i%16i\n'
@@ -1039,22 +1014,6 @@ class CTETRA4(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def get_edges(self):
-        """
-        Return the edges
-        """
-        return [
-            # base
-            (self.nodes[0], self.nodes[1]),
-            (self.nodes[1], self.nodes[2]),
-            (self.nodes[2], self.nodes[0]),
-
-            # sides
-            (self.nodes[0], self.nodes[3]),
-            (self.nodes[1], self.nodes[3]),
-            (self.nodes[2], self.nodes[3]),
-        ]
-
     def get_edge_ids(self):
         """
         Return the edge IDs
@@ -1140,7 +1099,6 @@ class CTETRA10(SolidElement):
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%16i' % node for node in nodes[4:]]
-
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
         msg = ('CTETRA  %16i%16i%16i%16i\n'
                '        %16i%16i%16s%16s\n'

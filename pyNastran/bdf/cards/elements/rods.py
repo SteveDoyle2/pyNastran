@@ -62,12 +62,6 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         mass = (self.Rho() * self.Area() + self.Nsm()) * L
         return mass
 
-    def get_edges(self):
-        """
-        Return the edges
-        """
-        return [(self.nodes[0], self.nodes[1])]
-
 
 class CROD(RodElement):
     type = 'CROD'
@@ -103,7 +97,7 @@ class CROD(RodElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
         if xref:  # True
             mid = self.Mid()
@@ -224,7 +218,7 @@ class CTUBE(RodElement):
     def _verify(self, xref=False):
         pid = self.Pid()
         A = self.Area()
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(A, float), 'A=%r' % A
         if xref:
@@ -339,7 +333,7 @@ class CONROD(RodElement):
     def _verify(self, xref=False):
         pid = self.Pid()
         assert pid is None, 'pid=%r' % pid
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
             L = self.Length()

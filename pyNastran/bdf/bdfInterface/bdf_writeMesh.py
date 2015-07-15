@@ -27,7 +27,6 @@ class WriteMesh(object):
         self._auto_reject = True
         self.cards_to_read = set([])
 
-
     def echo_bdf(self, infile_name):
         """
         This method removes all comment lines from the bdf

@@ -13,8 +13,8 @@ import inspect
 import traceback
 from copy import deepcopy
 
-from PyQt4 import QtCore, QtGui
 import vtk
+from PyQt4 import QtCore, QtGui
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from numpy import eye, array, zeros
@@ -1093,10 +1093,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.aQuadMapper.SetLookupTable(self.colorFunction)
         self.rend.AddActor(self.scalarBar)
 
-    def _create_load_file_dialog(self, qt_wildcard, Title):
+    def _create_load_file_dialog(self, qt_wildcard, title):
         # getOpenFileName return QString and we want Python string
         fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
-            self, Title, self.last_dir, qt_wildcard)
+            self, title, self.last_dir, qt_wildcard)
         return str(wildcard_level), str(fname)
 
     def start_logging(self):
@@ -1858,7 +1858,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def GetCamera(self):
         return self.rend.GetActiveCamera()
-
 
     def update_camera(self, code):
         camera = self.GetCamera()
