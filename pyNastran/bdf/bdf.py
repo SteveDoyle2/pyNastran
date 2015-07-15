@@ -1052,7 +1052,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         #: the active filename (string)
         self.bdf_filename = bdf_filename
         if include_dir is None:
-            include_dir = os.path.dirname(bdf_filename)
+            include_dir = os.path.dirname(os.path.abspath(bdf_filename))
 
         #: the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = include_dir
@@ -2018,7 +2018,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         :retval case_control_lines:  the case control deck as a list of strings
         :retval bulk_data_lines:  the bulk data deck as a list of strings
         """
-        with self._open_file(bdf_filename) as bdf_file:
+        with self._open_file(bdf_filename, basename=True) as bdf_file:
             try:
                 lines = bdf_file.readlines()
             except:
@@ -2039,7 +2039,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #print('****f = %r' % bdf_filename2)
 
 
-                with self._open_file(bdf_filename2) as bdf_file:
+                with self._open_file(bdf_filename2, basename=False) as bdf_file:
                     #print('bdf_file.name = %s' % bdf_file.name)
                     lines2 = bdf_file.readlines()
 
@@ -2110,8 +2110,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         else:
             self.card_count[card_name] = n
 
-    def _open_file(self, bdf_filename):
-        bdf_filename_inc = os.path.join(self.include_dir, str(bdf_filename))
+    def _open_file(self, bdf_filename, basename=False):
+        if basename:
+            bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
+        else:
+            bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
         if not os.path.exists(bdf_filename_inc):
             msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
             msg += 'cwd: %r\n' % os.getcwd()
