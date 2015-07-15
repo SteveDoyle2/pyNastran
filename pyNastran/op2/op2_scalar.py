@@ -767,7 +767,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.binary_debug.write('table_name = %r\n' % (table_name))
 
             if is_release:
-                self.log.info('  table_name=%r' % table_name)
+                self.log.debug('  table_name=%r' % table_name)
 
             self.table_name = table_name
             if 0:

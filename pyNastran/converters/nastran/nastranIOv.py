@@ -1855,10 +1855,12 @@ class NastranIO(object):
             oxx[i] = axial
 
             ## TODO :not sure if this block is general for multiple CBAR elements
-            samax = max(smaxa, smaxb)
-            samin = min(smina, sminb)
-            savm = max(abs([smina, sminb,
-                            smaxa, smaxb, axial]))
+            samax = amax([smaxa, smaxb], axis=0)
+            samin = amin([smaxa, smaxb], axis=0)
+            assert len(samax) == len(i), len(samax)
+            assert len(samin) == len(i)
+            savm = amax(abs([smina, sminb,
+                            smaxa, smaxb, axial]), axis=0)
 
             max_principal[i] = samax
             min_principal[i] = samin
@@ -1980,18 +1982,18 @@ class NastranIO(object):
 
         if is_stress:
             cplates = [
-                model.ctria3_composite_stress, model.cquad4_composite_stress,
-                model.ctria6_composite_stress, model.cquad8_composite_stress,
+                ('CTRIA3', model.ctria3_composite_stress), ('CQUAD4', model.cquad4_composite_stress),
+                ('CTRIA6', model.ctria6_composite_stress), ('CQUAD8', model.cquad8_composite_stress),
                 #model.ctriar_composite_stress, model.cquadr_composite_stress,
             ]
         else:
             cplates = [
-                model.ctria3_composite_strain, model.cquad4_composite_strain,
-                model.ctria6_composite_strain, model.cquad8_composite_strain,
+                ('CTRIA3', model.ctria3_composite_strain), ('CQUAD4', model.cquad4_composite_strain),
+                ('CTRIA6', model.ctria6_composite_strain), ('CQUAD8', model.cquad8_composite_strain),
                 #model.ctriar_composite_strain, model.cquadr_composite_strain,
             ]
 
-        for result in cplates:
+        for cell_type, result in cplates:
             if subcase_id not in result:
                 continue
 
@@ -2017,7 +2019,10 @@ class NastranIO(object):
             ovms = case.data[itime, :, 8]
 
             j = 0
-            for eid, layer in zip(eidsi, layers):
+            for eid in unique(eidsi):
+                ieid = where(eidsi == eid)[0]
+                ieid.sort()
+                layersi = layers[ieid]
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
 
@@ -2029,7 +2034,8 @@ class NastranIO(object):
                 omaxi = 0.
                 omini = 0.
                 ovmi = 0.
-                for ilayer in range(layer):
+                nlayers = len(layersi)
+                for ilayer in range(nlayers):
                     oxxi = max(oxxs[j], oxxi)
                     oyyi = max(oyys[j], oyyi)
                     txyi = max(txys[j], txyi)
