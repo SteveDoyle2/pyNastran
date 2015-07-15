@@ -151,7 +151,11 @@ class GetMethods(GetMethodsDeprecated):
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
                 assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
-                edge_to_eid_map[edge].add(eid)
+                try:
+                    edge_to_eid_map[edge].add(eid)
+                except TypeError:
+                    print(elem)
+                    raise
                 for nid in edge:
                     nid_to_edge_map[nid].add(tuple(edge))
         out = (

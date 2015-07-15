@@ -1062,14 +1062,14 @@ class CTETRA4(SolidElement):
         node_ids = self.node_ids
         return [
             # base
-            (node_ids[0], node_ids[1]),
-            (node_ids[1], node_ids[2]),
-            (node_ids[2], node_ids[0]),
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]])),
 
             # sides
-            (node_ids[0], node_ids[3]),
-            (node_ids[1], node_ids[3]),
-            (node_ids[2], node_ids[3]),
+            tuple(sorted([node_ids[0], node_ids[3]])),
+            tuple(sorted([node_ids[1], node_ids[3]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
         ]
 
     def Volume(self):
