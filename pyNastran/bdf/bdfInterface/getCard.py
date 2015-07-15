@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, integer_types
+from six import string_types, iteritems, integer_types, iterkeys
 #import sys
 from numpy import ndarray
 
@@ -138,7 +138,7 @@ class GetMethods(GetMethodsDeprecated):
 
 
         if eids is None:
-            eids = iterkeys(self.elements.keys())
+            eids = iterkeys(self.elements)
 
         for eid in eids:
             elem = self.elements[eid]
