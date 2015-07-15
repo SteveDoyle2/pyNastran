@@ -55,33 +55,33 @@ class TrashWriter(object):
         pass
 
 GEOM_TABLES = [
-     b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4',  # regular
-     b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
-     b'GEOM1N', b'GEOM1VU', b'GEOM2VU',
-     b'GEOM1OLD', b'GEOM2OLD', b'GEOM4OLD',
+    b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4',  # regular
+    b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
+    b'GEOM1N', b'GEOM1VU', b'GEOM2VU',
+    b'GEOM1OLD', b'GEOM2OLD', b'GEOM4OLD',
 
-     b'EPT', b'EPTS', b'EPTOLD',
-     b'EDTS',
-     b'MPT', b'MPTS',
+    b'EPT', b'EPTS', b'EPTOLD',
+    b'EDTS',
+    b'MPT', b'MPTS',
 
-     b'PVT0', b'CASECC',
-     b'EDOM', b'OGPFB1',
-     b'BGPDT', b'BGPDTS', b'BGPDTOLD',
-     b'DYNAMIC', b'DYNAMICS',
-     b'EQEXIN', b'EQEXINS',
-     b'GPDT', b'ERRORN',
-     b'DESTAB', b'R1TABRG', b'HISADD',
+    b'PVT0', b'CASECC',
+    b'EDOM', b'OGPFB1',
+    b'BGPDT', b'BGPDTS', b'BGPDTOLD',
+    b'DYNAMIC', b'DYNAMICS',
+    b'EQEXIN', b'EQEXINS',
+    b'GPDT', b'ERRORN',
+    b'DESTAB', b'R1TABRG', b'HISADD',
 
-     # eigenvalues
-     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
-     # strain energy
-     b'ONRGY1',
-     # grid point weight
-     b'OGPWG', b'OGPWGM',
+    # eigenvalues
+    b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
+    # strain energy
+    b'ONRGY1',
+    # grid point weight
+    b'OGPWG', b'OGPWGM',
 
-     # other
-     b'CONTACT', b'VIEWTB',
-     b'KDICT', b'MONITOR', b'PERF',
+    # other
+    b'CONTACT', b'VIEWTB',
+    b'KDICT', b'MONITOR', b'PERF',
 ]
 
 RESULT_TABLES = [
@@ -296,9 +296,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         expected_times = {}
         for (isubcase, eTimes) in iteritems(times):
-            eTimes = list(times)
-            eTimes.sort()
-            expected_times[isubcase] = array(eTimes)
+            etimes = list(times)
+            etimes.sort()
+            expected_times[isubcase] = array(etimes)
         self.expected_times = expected_times
 
     def _get_table_mapper(self):
@@ -1038,9 +1038,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 16:  # KELM
-            table_name, dummyA, dummyB = unpack(b'8sii', data)
-            assert dummyA == 170, dummyA
-            assert dummyB == 170, dummyB
+            table_name, dummy_a, dummy_b = unpack(b'8sii', data)
+            assert dummy_a == 170, dummy_a
+            assert dummy_b == 170, dummy_b
         else:
             raise NotImplementedError(self.show_data(data))
 
@@ -1531,12 +1531,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 16:
-            subtable_name, dummyA, dummyB = unpack(b'8sii', data)
+            subtable_name, dummy_a, dummy_b = unpack(b'8sii', data)
             if self.debug:
-                self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (subtable_name, dummyA, dummyB))
+                self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (subtable_name, dummy_a, dummy_b))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-                assert dummyA == 170, dummyA
-                assert dummyB == 170, dummyB
+                assert dummy_a == 170, dummy_a
+                assert dummy_b == 170, dummy_b
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % len(data)
@@ -1637,17 +1637,17 @@ def main():
     """testing pickling"""
     from pickle import dumps, dump, load, loads
     txt_filename = 'solid_shell_bar.txt'
-    f = open(txt_filename, 'wb')
+    pickle_file = open(txt_filename, 'wb')
     op2_filename = 'solid_shell_bar.op2'
     op2 = OP2_Scalar()
     op2.read_op2(op2_filename)
     print(op2.displacements[1])
-    dump(op2, f)
-    f.close()
+    dump(op2, pickle_file)
+    pickle_file.close()
 
-    f = open(txt_filename, 'r')
-    op2 = load(f)
-    f.close()
+    pickle_file = open(txt_filename, 'r')
+    op2 = load(pickle_file)
+    pickle_file.close()
     print(op2.displacements[1])
 
 

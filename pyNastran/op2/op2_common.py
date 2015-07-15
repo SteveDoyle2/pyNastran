@@ -495,11 +495,11 @@ class OP2Common(Op2Codes, F06Writer):
                 if i % 5 == 4:
                     msg += '\n             '
             if hasattr(self, 'format_code'):
-                self.binary_debug.write('  sort_bits[0] = %i -> is_sort1 =%s\n' % (self.sort_bits[0], self.is_sort1() ))
-                self.binary_debug.write('  sort_bits[1] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[1], self.is_real()   ))
-                self.binary_debug.write('  sort_bits[2] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[2], self.is_random() ))
+                self.binary_debug.write('  sort_bits[0] = %i -> is_sort1 =%s\n' % (self.sort_bits[0], self.is_sort1()))
+                self.binary_debug.write('  sort_bits[1] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[1], self.is_real()))
+                self.binary_debug.write('  sort_bits[2] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[2], self.is_random()))
                 if self.is_complex():
-                    self.binary_debug.write('  format_code  = %i -> is_mag_phase=%s vs is_real_imag\n' % (self.format_code, self.is_mag_phase() ))
+                    self.binary_debug.write('  format_code  = %i -> is_mag_phase=%s vs is_real_imag\n' % (self.format_code, self.is_mag_phase()))
                 else:
                     self.binary_debug.write('  format_code  = %i\n' % self.format_code)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
@@ -537,7 +537,9 @@ class OP2Common(Op2Codes, F06Writer):
             n = 0
             keys = self.geom_keys
         else:
-            raise NotImplementedError('keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s' % (str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old))
+            msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s' % (
+                str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old)
+            raise NotImplementedError(msg)
 
         name, func = mapper[keys]
         self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
@@ -732,44 +734,44 @@ class OP2Common(Op2Codes, F06Writer):
             n += ntotal
         return n
 
-    def create_transient_object(self, storageObj, classObj, is_cid=False, debug=False):
+    def create_transient_object(self, storage_obj, class_obj, is_cid=False, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
 
         :param storageName:  the name of the dictionary to store the object in (e.g. 'displacements')
-        :param classObj:    the class object to instantiate
-        :param debug:       developer debug
+        :param class_obj:    the class object to instantiate
+        :param debug:        developer debug
 
         .. note:: dt can also be load_step depending on the class
         """
-        assert not isinstance(classObj, string_types), 'classObj=%r' % classObj
+        assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
         if debug:
             print("create Transient Object")
             print("***NF = %s" % self.nonlinear_factor)
         #if not hasattr(self, storageName):
             #attrs =  object_attributes(obj, mode="public")
-            #msg = 'storage_obj=%r does not exist.\n' % storageObj
+            #msg = 'storage_obj=%r does not exist.\n' % storage_obj
             #msg += 'Attributes = [%s]' , ', %s'.join(attrs)
             #raise RuntimeError(msg)
-        #storageObj = getattr(self, storageName)
-        #assert classObj is not None, 'name=%r has no associated classObject' % storageName
+        #storage_obj = getattr(self, storageName)
+        #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
         self.data_code['table_name'] = self.table_name
         assert self.log is not None
 
         code = self._get_code()
         if hasattr(self, 'isubcase'):
-            if self.code in storageObj:
-                self.obj = storageObj[code]
+            if self.code in storage_obj:
+                self.obj = storage_obj[code]
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
-                classObj.is_cid = is_cid
-                self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
-            storageObj[code] = self.obj
+                class_obj.is_cid = is_cid
+                self.obj = class_obj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
+            storage_obj[code] = self.obj
         else:
-            if code in storageObj:
-                self.obj = storageObj[code]
+            if code in storage_obj:
+                self.obj = storage_obj[code]
             else:
-                storageObj[code] = self.obj
+                storage_obj[code] = self.obj
 
     def _get_code(self):
         code = self.isubcase
@@ -945,7 +947,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def is_complex(self):
         sort_method, is_real, is_random = self._table_specs()
-        return not(is_real)
+        return not is_real
         #if self.sort_bits[1] == 1:
         #    return True
         #return False
