@@ -256,12 +256,33 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def set_icon_path(self, icon_path):
         self._icon_path = icon_path
 
+    def on_export_to_vtk(self, filename=None):
+        """
+        TODO: scale results to be correct values instead of ranging from 0. to 1.0
+
+        http://www.visitusers.org/index.php?title=ASCII_VTK_Files
+        http://www.vtk.org/wp-content/uploads/2015/04/file-formats.pdf
+        """
+        if not filename:
+            title = 'Export %s to VTK' % self.format
+            wildcard = 'VTK (*.vtu)'
+            #wildcard = ''
+            wildcard_index, filename = self._create_save_file_dialog(wildcard, title)
+        if filename:
+            assert isinstance(filename, string_types), filename
+            writer = vtk.vtkUnstructuredGridWriter()
+            writer.SetFileName(filename)
+            writer.SetInput(self.grid)
+            writer.Write()
+            self.log_command(("on_export_to_vtk(r'%s')" % filename))
+
     def set_tools(self, tools=None, checkables=None):
         if checkables is None:
             checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
         if tools is None:
             tools = [
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
+                ('export_to_vtk', 'Export To VTK...', '', '', 'Exports the model to VTK', self.on_export_to_vtk),  ## @todo no picture...
                 ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
                 ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
 
@@ -372,7 +393,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             menu_window += ['logwidget']
 
         menu_items = [
-            (self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
+            (self.menu_file, ('load_geometry', 'load_results', 'script', 'export_to_vtk', '', 'exit')),
             (self.menu_view, tuple(menu_view)),
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
@@ -1096,6 +1117,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _create_load_file_dialog(self, qt_wildcard, title):
         # getOpenFileName return QString and we want Python string
         fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
+            self, title, self.last_dir, qt_wildcard)
+        return str(wildcard_level), str(fname)
+
+    def _create_save_file_dialog(self, qt_wildcard, title):
+        # getOpenFileName return QString and we want Python string
+        fname, wildcard_level = QtGui.QFileDialog.getSaveFileNameAndFilter(
             self, title, self.last_dir, qt_wildcard)
         return str(wildcard_level), str(fname)
 

@@ -383,7 +383,7 @@ class Cart3DReader(object):
             loads = self.read_results_ascii(0, self.infile, result_names=result_names)
 
         self.infile.close()
-        self.log.info("nPoints=%s nElements=%s" % (self.nPoints, self.nElements))
+        self.log.debug("nPoints=%s nElements=%s" % (self.nPoints, self.nElements))
         self.log.info("---finished reading cart3d file...%r---" % self.infilename)
         assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
         assert self.nElements > 0, 'nElements=%s' % self.nElements
@@ -435,9 +435,9 @@ class Cart3DReader(object):
         minY = self.get_min(points, 1)
         minZ = self.get_min(points, 2)
 
-        self.log.info("X  max=%g min=%g" % (maxX, minX))
-        self.log.info("Y  max=%g min=%g" % (maxY, minY))
-        self.log.info("Z  max=%g min=%g" % (maxZ, minZ))
+        self.log.debug("X  max=%g min=%g" % (maxX, minX))
+        self.log.debug("Y  max=%g min=%g" % (maxY, minY))
+        self.log.debug("Z  max=%g min=%g" % (maxZ, minZ))
         return points
 
     def get_min(self, points, i):
@@ -454,7 +454,7 @@ class Cart3DReader(object):
         assert self.nElementsRead > 0, 'nPoints=%s' % self.nPoints
         elements = zeros((self.nElementsRead, 3), dtype='int32')
 
-        self.log.info("nElementsRead=%s nElementsSkip=%s" % (self.nElementsRead, self.nElementsSkip))
+        self.log.debug("nElementsRead=%s nElementsSkip=%s" % (self.nElementsRead, self.nElementsSkip))
 
         e = 0
         data = []
