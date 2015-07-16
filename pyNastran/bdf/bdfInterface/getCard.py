@@ -13,7 +13,7 @@ class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         self._type_to_slot_map = {}
 
-    def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False,
+    def get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
                                    stop_on_missing_card=False):
         """
         :param card_types: the list of keys to consider (list of strings; string)
@@ -24,6 +24,8 @@ class GetMethods(GetMethodsDeprecated):
             crashes if you request a card and it doesn't exist
         :retval out: the key=card_type, value=the ID of the card object
         """
+        if card_types is None:
+            card_types = list(self.cards_to_read)
         if isinstance(card_types, string_types):
             card_types = [card_types]
         elif not(isinstance(card_types, list) or isinstance(card_types, tuple)):

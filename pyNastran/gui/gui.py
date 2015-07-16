@@ -115,9 +115,9 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
         fmt_order = [
             'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', # results
-            'lawgs', 'tetgen', 'stl', 'fast', #'plot3d',  # no results
+            'lawgs', 'stl', 'fast', #'tetgen', 'plot3d',  # no results
         ]
-        self.build_fmts(fmt_order, stop_on_failure=False)
+        self.build_fmts(fmt_order, stop_on_failure=True)
 
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
@@ -126,6 +126,21 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
         self.setup_gui()
         self.setup_post(inputs)
+
+    def get_vtk_wildcard_geometry_results_functions(self, plot=False):
+        data = ('VTK',
+                'VTK (*.vtk)', self.load_vtk,
+                None, None)
+        return data
+
+    def load_vtk(self, vtk_filename, dirname, plot=True):
+        grid = vtk.vtkUnstructuredGridReader()
+        grid.SetFileName(vtk_filename)
+        grid.Update()
+        #grid.Modified()
+        #self.grid = grid
+        self.aQuadMapper.SetInputData(grid)
+        print('load_vtk finished')
 
     def mousePressEvent(self, ev):
         #print('press x,y = (%s, %s)' % (ev.x(), ev.y()))

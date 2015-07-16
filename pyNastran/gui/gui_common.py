@@ -272,7 +272,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             assert isinstance(filename, string_types), filename
             writer = vtk.vtkUnstructuredGridWriter()
             writer.SetFileName(filename)
-            writer.SetInput(self.grid)
+
+            if self.vtk_version[0] >= 6:
+                writer.SetInputData(self.grid)
+            else:
+                writer.SetInput(self.grid)
             writer.Write()
             self.log_command(("on_export_to_vtk(r'%s')" % filename))
 

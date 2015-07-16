@@ -207,8 +207,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PARAM',
 
             ## nodes
-            'GRID', 'GRDSET', 'SPOINT',
-            #'POINT', 'POINTAX', 'RINGAX', 'EPOINT', 'GRIDG'
+            'GRID', 'GRDSET', 'SPOINT', 'EPOINT',
+            #'POINT', 'POINTAX', 'RINGAX', 'GRIDG'
 
             # mass
             'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
