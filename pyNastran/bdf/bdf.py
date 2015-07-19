@@ -1774,7 +1774,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)
                 #raise NotImplementedError(card)
-        except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+        except (SyntaxError, AssertionError, KeyError, ValueError) as e:
+            # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+            #tpl/cc451.bdf
+
             # NameErrors should be caught
             self._iparse_errors += 1
             var = traceback.format_exception_only(type(e), e)
