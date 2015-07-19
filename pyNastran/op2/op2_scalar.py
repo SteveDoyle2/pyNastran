@@ -1609,8 +1609,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
         #if self.debug:
         self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
-        #assert zero == 0  # is this the RTABLE indicator???
-        assert one == 1
+        #assert zero == 0, zero  # is this the RTABLE indicator???
+        assert one == 1, one  # 0, 50
 
     def finish(self):
         """

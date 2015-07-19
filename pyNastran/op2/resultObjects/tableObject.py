@@ -41,8 +41,8 @@ class TableArray(ScalarObject):  # displacement style table
 
         ntimes = len(self._times)
         #len(self.node_gridtype)
-        nnodes, two = self.node_gridtype.shape
-        ntimes, ntotal, six = self.data.shape
+        nnodes = self.node_gridtype.shape[0]
+        ntimes, ntotal = self.data.shape[:2]
         assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
         assert self.ntotal == ntotal, 'ntotal=%s expected=%s' % (self.ntimes, ntimes)
 
@@ -201,8 +201,8 @@ class RealTableArray(TableArray):  # displacement style table
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        format_table4_1 = Struct(b'15i')
-        format_table4_2 = Struct(b'3i')
+        #format_table4_1 = Struct(b'15i')
+        #format_table4_2 = Struct(b'3i')
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -219,7 +219,7 @@ class RealTableArray(TableArray):  # displacement style table
         device_code = self.device_code
         fascii.write('  ntimes = %s\n' % self.ntimes)
 
-        fmt = '%2i %6f'
+        #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
         for itime in range(self.ntimes):
             self._write_table_3(f, fascii, itable, itime)
@@ -538,30 +538,30 @@ class RealTableObject(ScalarObject):  # displacement style table
         rotations2 = {}
         if self.dt is not None:
             for dt, translations in sorted(iteritems(self.translations)):
-                nodeIDs = translations.keys()
-                for nodeID in nodeIDs:
-                    translations2[nodeID] = {}
-                    rotations2[nodeID] = {}
+                node_ids = translations.keys()
+                for node_id in node_ids:
+                    translations2[node_id] = {}
+                    rotations2[node_id] = {}
 
             for dt, translations in sorted(iteritems(self.translations)):
-                for nodeID, translation in sorted(iteritems(translations)):
-                    rotation = self.rotations[dt][nodeID]
-                    translations2[nodeID][dt] = translation
-                    rotations2[nodeID][dt] = rotation
+                for node_id, translation in sorted(iteritems(translations)):
+                    rotation = self.rotations[dt][node_id]
+                    translations2[node_id][dt] = translation
+                    rotations2[node_id][dt] = rotation
         else:
             return (self.translations, self.rotations)
-            #for nodeID,translation in sorted(iteritems(self.translations)):
-            #    rotation = self.rotations[nodeID]
-            #    translations2[nodeID] = translation
-            #    rotations2[nodeID]    = rotation
+            #for node_id, translation in sorted(iteritems(self.translations)):
+            #    rotation = self.rotations[node_id]
+            #    translations2[node_id] = translation
+            #    rotations2[node_id]    = rotation
         return (translations2, rotations2)
 
     def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None):
         msg = words
         #assert f is not None # remove
-        for nodeID, translation in sorted(iteritems(self.translations)):
-            rotation = self.rotations[nodeID]
-            grid_type = self.gridTypes[nodeID]
+        for node_id, translation in sorted(iteritems(self.translations)):
+            rotation = self.rotations[node_id]
+            grid_type = self.gridTypes[node_id]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -570,11 +570,11 @@ class RealTableObject(ScalarObject):  # displacement style table
             #if not is_all_zeros:
             (dx, dy, dz, rx, ry, rz) = vals2
             if grid_type == 'S':
-                msg.append('%14i %6s     %-13s  %s\n'
-                           % (nodeID, grid_type, dx.rstrip()))
+                msg.append('%14i %6s     %s\n'
+                           % (node_id, grid_type, dx.rstrip()))
             else:
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                        % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num

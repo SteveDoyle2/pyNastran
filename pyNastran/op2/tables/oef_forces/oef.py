@@ -377,10 +377,13 @@ class OEF(OP2Common):
                     edata = data[n:n+32]
                     n += ntotal
                     out = s1.unpack(edata)
-                    (eid_device, eType, fapplied, free_conv, force_conv, frad, ftotal) = out
+                    (eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal) = out
                     eid = (eid_device - self.device_code) // 10
 
                     data_in = [eid, etype, fapplied, free_conv, force_conv, frad, ftotal]
+                    if self.debug4():
+                        self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]'
+                                                % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
                     #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
