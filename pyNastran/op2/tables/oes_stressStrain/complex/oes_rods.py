@@ -36,7 +36,23 @@ class ComplexRodStress(StressObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def getLength(self):
+        raise RuntimeError('is this used???')
         return (20, '4f')
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.axial)
+            s0 = get_key0(self.axial)
+            nelements = len(self.axial[s0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.axial)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  axial, torsion\n')
+        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:

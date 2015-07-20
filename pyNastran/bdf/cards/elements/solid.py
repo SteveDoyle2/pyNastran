@@ -776,7 +776,7 @@ class CPYRAM5(SolidElement):
             #: Element ID
             self.eid = integer(card, 1, 'eid')
             #: Property ID
-            self.pid = integer(card, 2, 'pid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
                     integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
                     integer(card, 7, 'nid5')]
@@ -875,7 +875,7 @@ class CPYRAM13(SolidElement):
             #: Element ID
             self.eid = integer(card, 1, 'eid')
             #: Property ID
-            self.pid = integer(card, 2, 'pid')
+            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [
                 integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
                 integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
