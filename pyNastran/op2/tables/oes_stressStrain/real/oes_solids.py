@@ -84,8 +84,8 @@ class RealSolidArray(OES_Object):
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #assert cid >= 0
-        assert eid >= 0
+        assert cid >= -1, cid
+        assert eid >= 0, eid
 
         #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
         self._times[self.itime] = dt
@@ -736,8 +736,8 @@ class RealSolidStress(StressObject):
 
     def add_eid(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         #assert eid not in self.oxx
-        assert cid >= 0
-        assert eid >= 0
+        assert cid >= -1, cid
+        assert eid >= 0, eid
         assert isinstance(node_id, int), node_id
         self.eType[eid] = eType
         self.cid[eid] = cid
@@ -759,8 +759,8 @@ class RealSolidStress(StressObject):
         #print msg
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        assert cid >= 0
-        assert eid >= 0
+        assert cid >= -1, cid
+        assert eid >= 0, eid
         assert isinstance(node_id, int), node_id
 
         if dt not in self.oxx:
@@ -1237,8 +1237,8 @@ class RealSolidStrain(StrainObject):
 
     def add_eid(self, eType, cid, dt, eid, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         assert eid not in self.exx
-        assert cid >= 0
-        assert eid >= 0
+        assert cid >= -1, cid
+        assert eid >= 0, eid
         assert isinstance(node_id, int), node_id
         self.eType[eid] = eType
         self.cid[eid] = cid
@@ -1258,8 +1258,8 @@ class RealSolidStrain(StrainObject):
         self.evmShear[eid] = {node_id : evm}
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        assert cid >= 0
-        assert eid >= 0
+        assert cid >= -1, cid
+        assert eid >= 0, eid
         if dt not in self.exx:
             self.add_new_transient(dt)
 

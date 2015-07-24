@@ -15,6 +15,10 @@ from pyNastran.op2.op2Codes import Op2Codes
 class SortCodeError(RuntimeError):
     pass
 
+class DeviceCodeError(SyntaxError):
+    pass
+
+
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
         Op2Codes.__init__(self)
@@ -335,9 +339,12 @@ class OP2Common(Op2Codes, F06Writer):
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
 
-            msg = '  %s=%i; %s\n' % (flag, eid, str(out))
-            msg += str(self.code_information())
-            assert eid > 0, msg
+            if eid <= 0:
+                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
+                msg += str(self.code_information())
+                raise DeviceCodeError(msg)
             obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
@@ -405,9 +412,12 @@ class OP2Common(Op2Codes, F06Writer):
             if self.debug4():
                 self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
 
-            msg = '  %s=%i; %s\n' % (flag, eid, str(out))
-            msg += str(self.code_information())
-            assert eid > 0, msg
+            if eid <= 0:
+                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
+                msg += str(self.code_information())
+                raise DeviceCodeError(msg)
 
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
@@ -689,12 +699,12 @@ class OP2Common(Op2Codes, F06Writer):
     def is_sort2(self):
         sort_method, is_real, is_random = self._table_specs()
         return True if sort_method == 2 else False
-        #return not(self.is_sort1())
+        #return not self.is_sort1()
 
     def is_real(self):
         sort_method, is_real, is_random = self._table_specs()
         return is_real
-        #return not(self.is_complex())
+        #return not self.is_complex()
 
     def is_complex(self):
         sort_method, is_real, is_random = self._table_specs()

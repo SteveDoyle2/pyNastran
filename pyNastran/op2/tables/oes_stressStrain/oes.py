@@ -656,7 +656,7 @@ class OES(OP2Common):
 
                     if self.debug4():
                         self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axial_real, axial_imag))
-                    assert eid > 0
+                    assert eid > 0, eid
                     self.obj.add_new_eid_sort1(dt, eid, axial)
                     n += ntotal
             else:

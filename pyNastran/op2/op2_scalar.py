@@ -14,7 +14,7 @@ from scipy.sparse import coo_matrix
 
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.op2_common import SortCodeError
+from pyNastran.op2.op2_common import SortCodeError, DeviceCodeError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 #============================
@@ -35,7 +35,6 @@ from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
-
 
 class TrashWriter(object):
     """

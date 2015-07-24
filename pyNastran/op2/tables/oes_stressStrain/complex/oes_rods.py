@@ -226,16 +226,12 @@ class ComplexRodStrain(StrainObject):
         self.torsion[self.dt] = {}
 
     def add_new_eid(self, dt, eid, axial, torsion):
-        #(axial, torsion) = out
-        assert eid >= 0
-        #self.eType = self.eType
+        assert eid >= 0, eid
         self.axial[eid] = axial
         self.torsion[eid] = torsion
 
     def add_new_eid_sort1(self, dt, eid, axial, torsion):
-        #(axial, torsion) = out
-        assert eid >= 0
-        #self.eType[eid] = self.element_type
+        assert eid >= 0, eid
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
@@ -243,8 +239,7 @@ class ComplexRodStrain(StrainObject):
 
     def add_new_eid_sort2(self, eid, dt, out):
         (axial, torsion) = out
-        assert eid >= 0
-        #self.eType[eid] = self.element_type
+        assert eid >= 0, eid
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial

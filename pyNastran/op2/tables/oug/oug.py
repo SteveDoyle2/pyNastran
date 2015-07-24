@@ -254,11 +254,6 @@ class OUG(OP2Common):
         self._write_debug_bits()
 
     def _read_oug1_4(self, data):
-        if is_release:
-            if self.is_sort2():
-                raise NotImplementedError('SORT2!!!!!')
-
-
         if self.table_code == 1:   # Displacements
             if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUPV1', b'OUGV1PAT',
                                        b'OUGV2']:

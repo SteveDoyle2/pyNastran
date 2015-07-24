@@ -175,13 +175,13 @@ class ComplexCelasStrain(complexStrainObject):
         self.strain[dt] = {}
 
     def add_new_eid(self, dt, eid, strain):
-        assert eid >= 0
+        assert eid >= 0, eid
         #self.eType = self.eType
         self.eType[eid] = self.element_name
         self.strain[eid] = strain
 
     def add_new_eid_sort1(self, dt, eid, strain):
-        assert eid >= 0
+        assert eid >= 0, eid
         if dt not in self.strain:
             self.add_new_transient(dt)
         self.eType[eid] = self.element_type

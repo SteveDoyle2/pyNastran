@@ -304,7 +304,7 @@ class RealShearStress(StressObject):
         if dt not in self.maxShear:
             self.add_new_transient(dt)
         assert isinstance(eid, int)
-        assert eid >= 0
+        assert eid >= 0, eid
         self.maxShear[dt][eid] = maxShear
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
@@ -389,7 +389,7 @@ class RealShearStrain(StrainObject):
         raise NotImplementedError()
         (axial, SMa, torsion, SMt) = out
         #print "Rod Strain add..."
-        assert eid >= 0
+        assert eid >= 0, eid
         #self.eType = self.eType
         self.maxShear[eid] = axial
         self.avgShear[eid] = SMa
@@ -399,7 +399,7 @@ class RealShearStrain(StrainObject):
         (maxShear, avgShear, margin) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
-        assert eid >= 0
+        assert eid >= 0, eid
 
         #self.eType[eid] = self.element_type
         self.maxShear[dt][eid] = maxShear
@@ -410,7 +410,7 @@ class RealShearStrain(StrainObject):
         (maxShear, avgShear, margin) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
-        assert eid >= 0
+        assert eid >= 0, eid
 
         #self.eType[eid] = self.element_type
         self.maxShear[dt][eid] = maxShear

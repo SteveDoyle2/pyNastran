@@ -1065,7 +1065,7 @@ class OEF(OP2Common):
                      mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     eid = (eid_device - self.device_code) // 10
-                    assert eid > 0
+                    assert eid > 0, eid
                     if self.debug4():
                         self.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
 

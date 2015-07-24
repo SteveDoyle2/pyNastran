@@ -480,7 +480,7 @@ class ComplexPlateStress(StressObject):
 
     def add_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
         msg = "dt=%s eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (dt, eid, node_id, fdr, oxx, oyy, txy)
-        assert eid is not None
+        assert eid is not None, eid
         assert isinstance(node_id, int), node_id
         self.fiberCurvature[eid][node_id].append(fdr)
         self.oxx[dt][eid][node_id].append(oxx)
@@ -488,7 +488,7 @@ class ComplexPlateStress(StressObject):
         self.txy[dt][eid][node_id].append(txy)
 
     def addNewNodeSort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
-        assert eid is not None
+        assert eid is not None, eid
         assert isinstance(node_id, int), node_id
         #msg = "eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (eid, node_id, fdr, oxx, oyy, txy)
         #assert node_id not in self.oxx[dt][eid]
