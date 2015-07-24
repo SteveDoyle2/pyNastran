@@ -378,6 +378,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGV1PAT': [self._read_oug1_3, self._read_oug1_4],  # OUG1 + coord ID
             b'OUPV1'   : [self._read_oug1_3, self._read_oug1_4],  # scaled response spectra - displacement
 
+            b'OUGV2'   : [self._read_oug2_3, self._read_oug1_4],  # displacements in nodal frame
+
             #=======================
             # OGPWG
             # grid point weight

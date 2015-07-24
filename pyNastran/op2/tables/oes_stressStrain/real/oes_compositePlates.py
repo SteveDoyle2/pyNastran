@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems
 from six.moves import zip, range
-from numpy import zeros, searchsorted, unique
+from numpy import zeros, searchsorted, unique, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats12E, _eigenvalue_header
@@ -87,7 +87,7 @@ class RealCompositePlateArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add(self,  dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
+    def add(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                  major, minor, ovm):
         self.add_sort1( dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                  major, minor, ovm)
@@ -483,6 +483,20 @@ class RealCompositePlateStress(StressObject):
             headers.append('maxShear')
         return headers
 
+    def _is_cquad4(self, etype):
+        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+            return True
+        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC']:
+            return False
+        raise NotImplementedError(etype)
+
+    def _is_ctria3(self, etype):
+        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+            return False
+        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC']:
+            return True
+        raise NotImplementedError(etype)
+
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
@@ -498,53 +512,53 @@ class RealCompositePlateStress(StressObject):
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
         etypes = list(self.eType.values())
-        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
-            quadMsg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
+        if self._is_cquad4(etypes[0]):
+            quad_msg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
-            quadMsg = []
+            quad_msg = []
             isQuad = False
 
-        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
+        if self._is_ctria3(etypes[0]):
             isTri = True
-            triMsg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
+            tri_msg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
             isTri = False
-            triMsg = []
+            tri_msg = []
 
         for eid, o11s in sorted(iteritems(self.o11)):
             out = ''
-            eType = self.eType[eid]
-            for iLayer in range(len(o11s)):
-                o11 = self.o11[eid][iLayer]
-                o22 = self.o22[eid][iLayer]
-                t12 = self.t12[eid][iLayer]
-                t1z = self.t1z[eid][iLayer]
-                t2z = self.t2z[eid][iLayer]
+            etype = self.eType[eid]
+            for ilayer in range(len(o11s)):
+                o11 = self.o11[eid][ilayer]
+                o22 = self.o22[eid][ilayer]
+                t12 = self.t12[eid][ilayer]
+                t1z = self.t1z[eid][ilayer]
+                t2z = self.t2z[eid][ilayer]
 
-                angle = self.angle[eid][iLayer]
-                major = self.majorP[eid][iLayer]
-                minor = self.minorP[eid][iLayer]
-                ovm = self.ovmShear[eid][iLayer]
+                angle = self.angle[eid][ilayer]
+                major = self.majorP[eid][ilayer]
+                minor = self.minorP[eid][ilayer]
+                ovm = self.ovmShear[eid][ilayer]
                 (vals2, is_all_zeros) = writeFloats12E([o11, o22, t12, t1z, t2z, major, minor, ovm])
                 [o11, o22, t12, t1z, t2z, major, minor, ovm] = vals2
-                out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
+                out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, ilayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
-            if eType in ['CQUAD4', 'QUAD4LC']:
-                quadMsg.append(out)
-            elif eType in ['CTRIA3', 'TRIA3LC']:
-                triMsg.append(out)
+            if self._is_cquad4(etype):
+                quad_msg.append(out)
+            elif self._is_ctria3(etype):
+                tri_msg.append(out)
             #else:
-                #raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
+                #raise NotImplementedError('etype = %r' % etype) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(page_stamp % page_num)
+            quad_msg.append(page_stamp % page_num)
             page_num += 1
         if isTri:
-            triMsg.append(page_stamp % page_num)
+            tri_msg.append(page_stamp % page_num)
             page_num += 1
 
-        f.write(''.join(quadMsg + triMsg))
+        f.write(''.join(quad_msg + tri_msg))
         return page_num
 
     def _write_f06_transient(self, header, page_stamp,
@@ -560,14 +574,14 @@ class RealCompositePlateStress(StressObject):
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
         etypes = list(self.eType.values())
-        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
+        if self._is_cquad4(etypes[0]):
             quadWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
             quadWords = []
             isQuad = False
 
-        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
+        if self._is_ctria3(etypes[0]):
             isTri = True
             triWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -575,48 +589,48 @@ class RealCompositePlateStress(StressObject):
             triWords = []
 
         for dt, O11s in sorted(iteritems(self.o11)):
-            quadMsg = []
-            triMsg = []
+            quad_msg = []
+            tri_msg = []
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             if isQuad:
-                quadMsg = header + quadWords
+                quad_msg = header + quadWords
             if isTri:
-                triMsg = header + triWords
+                tri_msg = header + triWords
 
             for eid, o11s in sorted(iteritems(O11s)):
                 out = ''
                 eType = self.eType[eid]
-                for iLayer in range(len(o11s)):
-                    o11 = self.o11[dt][eid][iLayer]
-                    o22 = self.o22[dt][eid][iLayer]
-                    t12 = self.t12[dt][eid][iLayer]
-                    t1z = self.t1z[dt][eid][iLayer]
-                    t2z = self.t2z[dt][eid][iLayer]
+                for ilayer in range(len(o11s)):
+                    o11 = self.o11[dt][eid][ilayer]
+                    o22 = self.o22[dt][eid][ilayer]
+                    t12 = self.t12[dt][eid][ilayer]
+                    t1z = self.t1z[dt][eid][ilayer]
+                    t2z = self.t2z[dt][eid][ilayer]
 
-                    angle = self.angle[dt][eid][iLayer]
-                    major = self.majorP[dt][eid][iLayer]
-                    minor = self.minorP[dt][eid][iLayer]
-                    ovm = self.ovmShear[dt][eid][iLayer]
+                    angle = self.angle[dt][eid][ilayer]
+                    major = self.majorP[dt][eid][ilayer]
+                    minor = self.minorP[dt][eid][ilayer]
+                    ovm = self.ovmShear[dt][eid][ilayer]
                     (vals2, is_all_zeros) = writeFloats12E([o11, o22,
                                                           t12, t1z, t2z,
                                                           major, minor, ovm])
                     [o11, o22, t12, t1z, t2z, major, minor, ovm] = vals2
-                    out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
+                    out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, ilayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
-                if eType in ['CQUAD4', 'QUAD4LC']:
-                    quadMsg.append(out)
-                elif eType in ['CTRIA3', 'TRIA3LC']:
-                    triMsg.append(out)
+                if self._is_cquad4(eType):
+                    quad_msg.append(out)
+                elif self._is_ctria3(eType):
+                    tri_msg.append(out)
                 #else:
                 #    raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
             if isQuad:
-                quadMsg.append(page_stamp % page_num)
-                f.write(''.join(quadMsg))
+                quad_msg.append(page_stamp % page_num)
+                f.write(''.join(quad_msg))
                 page_num += 1
             if isTri:
-                triMsg.append(page_stamp % page_num)
-                f.write(''.join(triMsg))
+                tri_msg.append(page_stamp % page_num)
+                f.write(''.join(tri_msg))
                 page_num += 1
         return page_num - 1
 
@@ -686,7 +700,7 @@ class RealCompositePlateStrain(StrainObject):
         if transient is None:
             for line in data:
                 if eType in ['CQUAD4', 'CTRIA3']:
-                    (eid, iLayer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evmShear) = line
+                    (eid, ilayer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evmShear) = line
                     if eid not in self.eType:
                         self.eType[eid] = eType
                         self.e11[eid] = [e11]
@@ -830,19 +844,19 @@ class RealCompositePlateStrain(StrainObject):
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
         etypes = list(self.eType.values())
-        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
-            quadMsg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
+        if self._is_cquad4(etypes[0]):
+            quad_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
-            quadMsg = []
+            quad_msg = []
             isQuad = False
 
-        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
+        if self._is_ctria3(etypes[0]):
             isTri = True
-            triMsg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
+            tri_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
             isTri = False
-            triMsg = []
+            tri_msg = []
 
         for eid, e11s in sorted(iteritems(self.e11)):
             out = ''
@@ -864,22 +878,36 @@ class RealCompositePlateStrain(StrainObject):
                 [e11, e22, e12, e1z, e2z, major, minor, evm] = vals2
                 out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)
 
-            if eType in ['CQUAD4', 'QUAD4LC']:
-                quadMsg.append(out)
-            elif eType in ['CTRIA3', 'TRIA3LC']:
-                triMsg.append(out)
+            if self._is_cquad4(eType):
+                quad_msg.append(out)
+            elif self._is_ctria3(eType):
+                tri_msg.append(out)
             #else:
                 #raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(page_stamp % page_num)
+            quad_msg.append(page_stamp % page_num)
             page_num += 1
         if isTri:
-            triMsg.append(page_stamp % page_num)
+            tri_msg.append(page_stamp % page_num)
             page_num += 1
 
-        f.write(''.join(quadMsg + triMsg))
+        f.write(''.join(quad_msg + tri_msg))
         return page_num
+
+    def _is_cquad4(self, etype):
+        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+            return True
+        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC']:
+            return False
+        raise NotImplementedError(etype)
+
+    def _is_ctria3(self, etype):
+        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+            return False
+        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC']:
+            return True
+        raise NotImplementedError(etype)
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.is_von_mises():
@@ -893,14 +921,14 @@ class RealCompositePlateStrain(StrainObject):
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
         etypes = set(self.eType.values())
-        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
+        if self._is_cquad4(etypes[0]):
             quad_words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             is_quad = True
         else:
             quad_words = []
             is_quad = False
 
-        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
+        if self._is_ctria3(etypes[0]):
             is_tria = True
             tria_words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -935,12 +963,12 @@ class RealCompositePlateStrain(StrainObject):
                     [e11, e22, e12, e1z, e2z, major, minor, evm] = vals2
                     out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)
 
-                if eType in ['CQUAD4', 'QUAD4LC']:
+                if self._is_cquad4(eType):
                     quad_msg.append(out)
-                elif eType in ['CTRIA3', 'TRIA3LC']:
+                elif self._is_ctria3(eType):
                     tria_msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' % (eType))
+                    raise NotImplementedError('eType = %r' % eType)
 
             if is_quad:
                 quad_msg.append(page_stamp % page_num)

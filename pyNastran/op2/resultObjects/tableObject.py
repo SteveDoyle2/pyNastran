@@ -85,15 +85,35 @@ class TableArray(ScalarObject):  # displacement style table
         self.data = zeros((self.ntimes, self.ntotal, 6), self.data_type())
         #print(str(self))
 
-    def add(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        self.add_sort1(dt, node_id, grid_type, v1, v2, v3, v4, v5, v6)
-
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         #print "dt=%s out=%s" %(dt,out)
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
         msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
         msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
+        #print(msg)
+        #assert node_id == 1575, msg
+        assert -1 < node_id < 1000000000, msg
+        assert isinstance(node_id, int), node_id
+        #assert isinstance(nodeID, int), msg
+        #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
+
+        #self.gridTypes[nodeID] = self.recastGridType(grid_type)
+
+        # [t1, t2, t3, r1, r2, r3]
+        #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
+        #print "%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6])
+        self._times[self.itime] = dt
+        self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+        self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+        self.itotal += 1
+
+    def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        #print "dt=%s out=%s" %(dt,out)
+        #if dt not in self.translations:
+        #    self.add_new_transient(dt)
+        msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
+        msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
         #print(msg)
         #assert node_id == 1575, msg
         assert -1 < node_id < 1000000000, msg

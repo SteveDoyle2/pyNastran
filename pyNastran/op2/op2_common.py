@@ -68,16 +68,16 @@ class OP2Common(Op2Codes, F06Writer):
         #: currently unused
         self.expected_times = None
 
-        self.show_table3_map = [
-            #'OUGV1',
-            #'OEF1X',
-            #'OES1X1',
-        ]
-        self.show_table4_map = [
-            #'OUGV1',
-            #'OEF1X',
-            #'OES1X1',
-        ]
+        #self.show_table3_map = [
+            ##'OUGV1',
+            ##'OEF1X',
+            ##'OES1X1',
+        #]
+        #self.show_table4_map = [
+            ##'OUGV1',
+            ##'OEF1X',
+            ##'OES1X1',
+        #]
 
         # sets the element mapper
         self.get_element_type(33)
@@ -87,12 +87,16 @@ class OP2Common(Op2Codes, F06Writer):
         datai = data[4*(field_num-1) : 4*(field_num)]
         assert len(datai) == 4, len(datai)
         value, = unpack(Type, datai)
+        if fixDeviceCode:
+            value = (value - self.device_code) // 10
         if self.debug:
             self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
 
         if applyNonlinearFactor:
             self.nonlinear_factor = value
+            #if self.table_name == b'OUGV2':
+                #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
             self.data_code['nonlinear_factor'] = value
             self.data_code['name'] = var_name
 
@@ -239,7 +243,17 @@ class OP2Common(Op2Codes, F06Writer):
             auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector, is_cid=is_cid)
             if auto_return:
                 return len(data)
-            n = self._read_real_table(data, result_name, node_elem, is_cid=is_cid)
+
+            if self.is_sort1():
+                n = self._read_real_table_sort1(data, result_name, node_elem, is_cid=is_cid)
+                #msg = 'This is weird...'
+                #n = self._not_implemented_or_skip(data, msg)
+                #n = len(data)
+            else:
+                #n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
+                #n = len(data)
+                msg = 'SORT2!'
+                n = self._not_implemented_or_skip(data, msg)
         elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
@@ -248,7 +262,12 @@ class OP2Common(Op2Codes, F06Writer):
             auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
             if auto_return:
                 return len(data)
-            n = self._read_complex_table(data, result_name, node_elem)
+            if self.is_sort1():
+                n = self._read_complex_table_sort1(data, result_name, node_elem)
+            else:
+                msg = 'SORT2!'
+                #n = self._read_complex_table_sort2(data, result_name, node_elem)
+                n = self._not_implemented_or_skip(data, msg)
         elif self.format_code in [2, 3] and self.num_wide == 8:  # real mag/phase - this is confusing...I think there is no phase?
             # real_obj
             assert real_obj is not None
@@ -256,7 +275,7 @@ class OP2Common(Op2Codes, F06Writer):
             auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
             if auto_return:
                 return len(data)
-            n = self._read_real_table(data, result_name, node_elem)
+            n = self._read_real_table_sort1(data, result_name, node_elem)
         else:
             msg = 'only num_wide=8 or 14 is allowed;  num_wide=%s' % self.num_wide
             n = self._not_implemented_or_skip(data, msg)
@@ -265,9 +284,35 @@ class OP2Common(Op2Codes, F06Writer):
         #n = self._not_implemented_or_skip(data, msg)
         return n
 
-    def _read_real_table(self, data, result_name, flag, is_cid=False):
+    def function_code(value):
+        """
+        This is a new specification from NX that's really important and
+        not in the MSC manual, even though they use it.
+
+        ACODE,4=05 vs. ACODE=05  -> function code 4
+        TCODE,1=02 vs. TCODE=02  -> function code 1
+        """
+        if self._function_code == 1:
+            if value // 1000 in [2, 3, 6]:
+                return 2
+            return 1
+        elif self._function_code == 2:
+            return value % 100
+        elif self._function_code == 3:
+            return value % 1000
+        elif self._function_code == 4:
+            return value // 10
+        elif self._function_code == 5:
+            return value % 10
+        #elif self._function_code == 6:
+            #raise NotImplementedError(self.function_code)
+        #elif self._function_code == 7:
+            #raise NotImplementedError(self.function_code)
+        raise NotImplementedError(self.function_code)
+
+    def _read_real_table_sort1(self, data, result_name, flag, is_cid=False):
         if self.debug4():
-            self.binary_debug.write('  _read_real_table\n')
+            self.binary_debug.write('  _read_real_table_sort1\n')
         assert flag in ['node', 'elem'], flag
         n = 0
         ntotal = 32 # 8 * 4
@@ -278,7 +323,6 @@ class OP2Common(Op2Codes, F06Writer):
         format1 = '2i6f' # 8
 
         nnodes = len(data) // ntotal
-
         assert nnodes > 0
         #assert len(data) % ntotal == 0
         s = Struct(format1)
@@ -288,16 +332,50 @@ class OP2Common(Op2Codes, F06Writer):
             (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
             eid = (eid_device - self.device_code) // 10
-            assert eid > 0, eid
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-            obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+
+            msg = '  %s=%i; %s\n' % (flag, eid, str(out))
+            msg += str(self.code_information())
+            assert eid > 0, msg
+            obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
-    def _read_complex_table(self, data, result_name, flag):
+    def _read_real_table_sort2(self, data, result_name, flag, is_cid=False):
         if self.debug4():
-            self.binary_debug.write('  _read_complex_table\n')
+            self.binary_debug.write('  _read_real_table_sort2\n')
+        assert flag in ['node', 'elem'], flag
+        n = 0
+        ntotal = 32 # 8 * 4
+        eid = self.nonlinear_factor
+        assert self.obj is not None
+
+        obj = self.obj
+        format1 = self._analysis_code_fmt + 'i6f'
+
+        nnodes = len(data) // ntotal
+        assert nnodes > 0
+        #assert len(data) % ntotal == 0
+
+        flag = 'freq/dt/mode'
+        s = Struct(format1)
+        assert eid > 0, self.code_information()
+        for inode in range(nnodes):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
+
+            #eid = (eid_device - self.device_code) // 10
+            if self.debug4():
+                self.binary_debug.write('  %s=%i; %s\n' % (flag, dt, str(out)))
+            obj.add_sort2(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+            n += ntotal
+        return n
+
+    def _read_complex_table_sort1(self, data, result_name, flag):
+        if self.debug4():
+            self.binary_debug.write('  _read_complex_table_sort1\n')
         assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
 
@@ -324,9 +402,13 @@ class OP2Common(Op2Codes, F06Writer):
             (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
             eid = (eid_device - self.device_code) // 10
-
             if self.debug4():
                 self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
+
+            msg = '  %s=%i; %s\n' % (flag, eid, str(out))
+            msg += str(self.code_information())
+            assert eid > 0, msg
+
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 ty = polar_to_real_imag(tyr, tyi)
@@ -344,18 +426,19 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
 
-            obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+            obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
-    def _read_complex_table2(self, data, result_name, flag):
+    def _read_complex_table_sort2(self, data, result_name, flag):
         #return
         if self.debug4():
             self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
-        dt = self.nonlinear_factor
+        flag = 'freq/dt/mode'
+        node_id = self.nonlinear_factor
 
-        format1 = 'fi12f'
+        format1 = self._analysis_code_fmt + 'i12f'
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
@@ -375,7 +458,7 @@ class OP2Common(Op2Codes, F06Writer):
              txi, tyi, tzi, rxi, ryi, rzi) = out
 
             if self.debug4():
-                self.binary_debug.write('  %s=%i %s\n' % ('freq', freq, str(out)))
+                self.binary_debug.write('  %s=%i %s\n' % (flag, freq, str(out)))
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 ty = polar_to_real_imag(tyr, tyi)
@@ -393,8 +476,7 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
 
-            data_in = [freq, grid_type, tx, ty, tz, rx, ry, rz]
-            self.obj.add(dt, data_in)
+            self.obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
@@ -419,6 +501,8 @@ class OP2Common(Op2Codes, F06Writer):
             #raise RuntimeError(msg)
         #storage_obj = getattr(self, storageName)
         #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
+
+        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (self.table_name, self.isubcase, self.subtitle.strip()))
         self.data_code['table_name'] = self.table_name
         assert self.log is not None
 
@@ -472,8 +556,6 @@ class OP2Common(Op2Codes, F06Writer):
         #: used to create sort_bits
         self.sort_code = tCode // 1000
 
-        #: .. todo::  sort_code2 seems to be unused...
-        self.sort_code2 = ((tCode // 1000) + 2) // 2
         self.data_code['sort_code'] = self.sort_code
 
         #: what type of data was saved from the run; used to parse the
@@ -507,7 +589,6 @@ class OP2Common(Op2Codes, F06Writer):
             self.binary_debug.write('  tCode         = %r\n' % self.tCode)
             self.binary_debug.write('  table_code    = %r\n' % self.table_code)
             self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
-            self.binary_debug.write('  sort_code2    = %r\n' % self.sort_code2)
             self.binary_debug.write('  device_code   = %r\n' % self.device_code)
             self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
 
@@ -532,14 +613,17 @@ class OP2Common(Op2Codes, F06Writer):
         +------------+------------+
 
         ::
-          sort_code = 0 -> sort_bits = [0,0,0]
-          sort_code = 1 -> sort_bits = [0,0,1]
-          sort_code = 2 -> sort_bits = [0,1,0]
-          sort_code = 3 -> sort_bits = [0,1,1]
-          etc.
-          sort_code = 7 -> sort_bits = [1,1,1]
+          sort_code = 0 -> sort_bits = [0,0,0]  #         sort1, real
+          sort_code = 1 -> sort_bits = [0,0,1]  #         sort1, complex
+          sort_code = 2 -> sort_bits = [0,1,0]  #         sort2, real
+          sort_code = 3 -> sort_bits = [0,1,1]  #         sort2, complex
+          sort_code = 4 -> sort_bits = [1,0,0]  # random, sort1, real
+          sort_code = 5 -> sort_bits = [1,0,1]  # random, sort1, real
+          sort_code = 6 -> sort_bits = [1,1,0]  # random, sort2, real
+          sort_code = 7 -> sort_bits = [1,1,1]  # random, sort2, complex
+          # random, sort2, complex <- [1, 1, 1]
 
-          sort_bits[0] = 0 -> is_sort1=True  isSort2=False
+          sort_bits[0] = 0 -> is_sort1=True  is_sort2=False
           sort_bits[1] = 0 -> isReal=True   isReal/Imaginary=False
           sort_bits[2] = 0 -> isSorted=True isRandom=False
         """
@@ -548,8 +632,8 @@ class OP2Common(Op2Codes, F06Writer):
 
         # Sort codes can range from 0 to 7, but most of the examples
         # are covered by these.  The ones that break are incredibly large.
-        if self.sort_code not in [0, 1]:
-            msg = 'Invalid sort_code=%s sort_code2=%s' % (self.sort_code, self.sort_code2)
+        if self.sort_code not in [0, 1, 2, 3, 4, 5, 6, 7]:
+            msg = 'Invalid sort_code=%s' % (self.sort_code)
             raise SortCodeError(msg)
         i = 2
         while sort_code > 0:
@@ -576,10 +660,13 @@ class OP2Common(Op2Codes, F06Writer):
         +-------+-----------+-------------+----------+
         |   4   |   SORT1   |    Real     |   Yes    |
         +-------+-----------+-------------+----------+
-        |   5   |   SORT2   |    Real     |   Yes    |
+        |   5   |   SORT1   |    Real     |   ???    |
+        +-------+-----------+-------------+----------+
+        |   6   |   SORT2   |    Real     |   Yes    |
         +-------+-----------+-------------+----------+
         """
-        tcode = self.table_code // 1000
+        #tcode = self.table_code // 1000
+        tcode = self.sort_code
         sort_method = 1
         is_real = True
         is_random = False
@@ -623,9 +710,12 @@ class OP2Common(Op2Codes, F06Writer):
         #    return True
         #return False
 
+    #def is_mag_phase(self):
+        #assert self.format_code in [0, 1], self.format_code
+        #return bool(self.format_code)
+
     def is_mag_phase(self):
-        assert self.format_code in [0, 1], self.format_code
-        return bool(self.format_code)
+        return self.is_magnitude_phase()
 
     def is_magnitude_phase(self):
         if self.format_code == 3:

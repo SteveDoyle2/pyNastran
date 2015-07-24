@@ -9,6 +9,7 @@ This file defines the OUG Table, which contains:
 """
 from struct import unpack
 
+from pyNastran import is_release
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
@@ -49,7 +50,117 @@ class OUG(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
+    def _read_oug2_3(self, data):
+        #return self._read_oug1_3(data)
+        self.nonlinear_factor = None
+
+        self.is_table_1 = False
+        self.is_table_2 = True
+        three = self.parse_approach_code(data)
+        self.words = [
+            'approach_code','table_code','???',         'isubcase',
+             '???',         '???',      '???',          'random_code'
+             'format_code', 'num_wide', '???',          '???',
+            'acoustic_flag','???',      '???',          '???',
+             '???',         '???',      '???',          '???',
+             '???',         '???',      'thermal',      '???',
+             '???', 'Title', 'subtitle', 'label']
+
+        ## random code
+        self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
+
+        ## format code
+        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+
+        ## number of words per entry in record
+        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+
+        ## acoustic pressure flag
+        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', 'i', 13, False)
+
+        ## thermal flag; 1 for heat transfer, 0 otherwise
+        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
+
+        self.node_id = self.add_data_parameter(data, 'node_id', 'i', 5, fixDeviceCode=True)
+        #if self.analysis_code == 1:   # statics / displacement / heat flux
+            # load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            #self.dataNames = self.apply_data_code_value('dataNames', ['node_id'])
+            #self.setNullNonlinearFactor()
+        if self.analysis_code == 2:  # real eigenvalues
+            # mode number
+            #self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            # real eigenvalue
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id', 'eigr', 'mode_cycle'])
+            self._analysis_code_fmt = 'i'
+        #elif self.analysis_code == 3: # differential stiffness
+            #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number
+            #self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code == 4: # differential stiffness
+            #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number
+        elif self.analysis_code == 5:   # frequency
+            # frequency
+            #self.freq = self.add_data_parameter(data, 'freq', 'f', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id'])
+            self._analysis_code_fmt = 'f'
+        elif self.analysis_code == 6:  # transient
+            # time step
+            #self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id'])
+            self._analysis_code_fmt = 'f'
+        elif self.analysis_code == 7:  # pre-buckling
+            # load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id'])
+            self._analysis_code_fmt = 'i'
+        elif self.analysis_code == 8:  # post-buckling
+            # load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            # real eigenvalue
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id', 'eigr'])
+            self._analysis_code_fmt = 'f'
+        elif self.analysis_code == 9:  # complex eigenvalues
+            # mode number
+            #self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            # real eigenvalue
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            # imaginary eigenvalue
+            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id', 'eigr', 'eigi'])
+            self._analysis_code_fmt = 'i'
+        elif self.analysis_code == 10:  # nonlinear statics
+            # load step
+            #self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id'])
+            self._analysis_code_fmt = 'f'
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            # load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id'])
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            # load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['node_id'])
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+
+        #print self.code_information()
+        if self.debug:
+            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
+            self.binary_debug.write('  tCode    = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
+        self._read_title(data)
+        self._write_debug_bits()
+        assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
+
     def _read_oug1_3(self, data):
+        self.nonlinear_factor = None
+        self.is_table_1 = True
+        self.is_table_2 = False
         three = self.parse_approach_code(data)
         self.words = [
             'approach_code','table_code','???',         'isubcase',
@@ -143,11 +254,16 @@ class OUG(OP2Common):
         self._write_debug_bits()
 
     def _read_oug1_4(self, data):
-        if self.is_sort2():
-            raise NotImplementedError('SORT2!!!!!')
+        if is_release:
+            if self.is_sort2():
+                raise NotImplementedError('SORT2!!!!!')
+
 
         if self.table_code == 1:   # Displacements
-            assert self.table_name in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUPV1', b'OUGV1PAT'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUPV1', b'OUGV1PAT',
+                                       b'OUGV2']:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
             is_cid = False
             if self.table_name == b'OUGV1PAT':
                 is_cid = True
@@ -362,7 +478,7 @@ class OUG(OP2Common):
                     auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
                     if auto_return:
                         return len(data)
-                    n = self._read_real_table(data, result_name, node_elem)
+                    n = self._read_real_table_sort1(data, result_name, node_elem)
                 elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real (fsi.op2 odd...) or real/imaginary or mag/phase
                     complex_obj = ComplexEigenvector
                     #assert complex_obj is not None
@@ -370,7 +486,7 @@ class OUG(OP2Common):
                     auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
                     if auto_return:
                         return len(data)
-                    n = self._read_complex_table(data, result_name, node_elem)
+                    n = self._read_complex_table_sort1(data, result_name, node_elem)
                 else:
                     msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
                     n = self._not_implemented_or_skip(data, msg)
