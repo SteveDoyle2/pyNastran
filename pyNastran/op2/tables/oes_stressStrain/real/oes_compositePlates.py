@@ -850,10 +850,12 @@ class RealCompositePlateStrain(StrainObject):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
         elif self._is_ctria3(list(etypes)[0]):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-        elif self._is_ctria3(list(etypes)[0]):
+        elif self._is_ctria6(list(etypes)[0]):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-        elif self._is_ctria3(list(etypes)[0]):
+        elif self._is_cquad8(list(etypes)[0]):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
+        else:
+            raise NotImplementedError(etypes)
 
         for eid, e11s in sorted(iteritems(self.e11)):
             out = ''
@@ -884,7 +886,7 @@ class RealCompositePlateStrain(StrainObject):
     def _is_cquad4(self, etype):
         if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return True
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC']:
+        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return False
         elif etype in ['QUAD8LC-composite']:
             return False
@@ -895,7 +897,7 @@ class RealCompositePlateStrain(StrainObject):
     def _is_ctria3(self, etype):
         if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return False
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC']:
+        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return True
         elif etype in ['QUAD8LC-composite']:
             return False
@@ -938,13 +940,13 @@ class RealCompositePlateStrain(StrainObject):
         words = []
 
         etypes = set(self.eType.values())
-        if self._is_cquad4(etypes[0]):
+        if self._is_cquad4(list(etypes)[0]):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + common_words
-        elif self._is_ctria3(etypes[0]):
+        elif self._is_ctria3(list(etypes)[0]):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + common_words
-        elif self._is_ctria6(etypes[0]):
+        elif self._is_ctria6(list(etypes)[0]):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + common_words
-        elif self._is_cquad8(etypes[0]):
+        elif self._is_cquad8(list(etypes)[0]):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + common_words
         else:
             raise NotImplementedError(etypes)
