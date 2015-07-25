@@ -249,10 +249,10 @@ class OP2Common(Op2Codes, F06Writer):
                 return len(data)
 
             if self.is_sort1():
-                n = self._read_real_table_sort1(data, result_name, node_elem, is_cid=is_cid)
-                #msg = 'This is weird...'
-                #n = self._not_implemented_or_skip(data, msg)
-                #n = len(data)
+                if self.nonlinear_factor is None:
+                    n = self._read_real_table_static(data, result_name, node_elem, is_cid=is_cid)
+                else:
+                    n = self._read_real_table_sort1(data, result_name, node_elem, is_cid=is_cid)
             else:
                 #n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
                 #n = len(data)
@@ -314,6 +314,40 @@ class OP2Common(Op2Codes, F06Writer):
             #raise NotImplementedError(self.function_code)
         raise NotImplementedError(self.function_code)
 
+    def _read_real_table_static(self, data, result_name, flag, is_cid=False):
+        if self.debug4():
+            self.binary_debug.write('  _read_real_table_static\n')
+        assert flag in ['node', 'elem'], flag
+        n = 0
+        ntotal = 32 # 8 * 4
+        dt = self.nonlinear_factor
+        assert self.obj is not None
+
+        obj = self.obj
+        format1 = '2i6f' # 8
+
+        nnodes = len(data) // ntotal
+        assert nnodes > 0, nnodes
+        s = Struct(format1)
+        for inode in range(nnodes):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+
+            eid = (eid_device - self.device_code) // 10
+            if self.debug4():
+                self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+
+            if eid <= 0:
+                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
+                msg += str(self.code_information())
+                raise DeviceCodeError(msg)
+            obj.add(eid, grid_type, tx, ty, tz, rx, ry, rz)
+            n += ntotal
+        return n
+
     def _read_real_table_sort1(self, data, result_name, flag, is_cid=False):
         if self.debug4():
             self.binary_debug.write('  _read_real_table_sort1\n')
@@ -327,8 +361,7 @@ class OP2Common(Op2Codes, F06Writer):
         format1 = '2i6f' # 8
 
         nnodes = len(data) // ntotal
-        assert nnodes > 0
-        #assert len(data) % ntotal == 0
+        assert nnodes > 0, nnodes
         s = Struct(format1)
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
