@@ -149,11 +149,11 @@ class RealShearArray(OES_Object):
                 out.append([eid, max_sheari, avg_sheari, margini])
 
             for i in range(0, nwrite, 2):
-                outLine = '      %8i   %13s  %10.4E %13s  %8i   %13s  %10.4E %s\n' % (tuple(out[i] + out[i + 1]))
-                f.write(outLine)
+                out_line = '      %8i   %13s  %10.4E %13s  %8i   %13s  %10.4E %s\n' % (tuple(out[i] + out[i + 1]))
+                f.write(out_line)
             if is_odd:
-                outLine = '      %8i   %13s  %10.4E %s\n' % tuple(out[-1])
-                f.write(outLine)
+                out_line = '      %8i   %13s  %10.4E %s\n' % tuple(out[-1])
+                f.write(out_line)
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

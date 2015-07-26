@@ -161,11 +161,11 @@ class RealRodArray(OES_Object):
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
             for i in range(0, nwrite, 2):
-                outLine = '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (tuple(out[i] + out[i + 1]))
-                f.write(outLine)
+                out_line = '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (tuple(out[i] + out[i + 1]))
+                f.write(out_line)
             if is_odd:
-                outLine = '      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1]))
-                f.write(outLine)
+                out_line = '      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1]))
+                f.write(out_line)
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -422,13 +422,13 @@ class RealRodStress(StressObject):
             nWrite = nOut - 1
         for i in range(0, nWrite, 2):
             #print i,out[i:]
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-            msg.append(outLine)
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+            msg.append(out_line)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
                 tuple(out[-1]))
-            msg.append(outLine)
+            msg.append(out_line)
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -459,12 +459,12 @@ class RealRodStress(StressObject):
             if nOut % 2 == 1:
                 nWrite = nOut - 1
             for i in range(0, nWrite, 2):
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-                msg.append(outLine)
+                out_line = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+                msg.append(out_line)
 
             if nOut % 2 == 1:
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
-                msg.append(outLine)
+                out_line = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
+                msg.append(out_line)
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
@@ -632,12 +632,12 @@ class RealRodStrain(StrainObject):
         if nOut % 2 == 1:
             nWrite = nOut - 1
         for i in range(0, nWrite, 2):
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-            msg.append(outLine)
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+            msg.append(out_line)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
-            msg.append(outLine)
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
+            msg.append(out_line)
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -666,13 +666,13 @@ class RealRodStrain(StrainObject):
             if nOut % 2 == 1:
                 nWrite = nOut - 1
             for i in range(0, nWrite, 2):
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-                msg.append(outLine)
+                out_line = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+                msg.append(out_line)
 
             if nOut % 2 == 1:
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (
+                out_line = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (
                     tuple(out[-1]))
-                msg.append(outLine)
+                msg.append(out_line)
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
