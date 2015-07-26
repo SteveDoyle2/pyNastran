@@ -96,7 +96,7 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
         """initializes the transient variables"""
         self.temperatures[dt] = {}
 
-    def add(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+    def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         # v2-v6 are 0
         assert 0 < node_id < 1000000000, 'node_id=%s' % node_id
         #assert nodeID not in self.temperatures
