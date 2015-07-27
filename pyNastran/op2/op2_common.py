@@ -226,6 +226,21 @@ class OP2Common(Op2Codes, F06Writer):
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
         return n
 
+    def _fix_format_code(self, format_code=1):
+        """
+        Nastran can mess up the format code by using what the user specified,
+        which may be wrong.
+
+        For a SOL 101, if the user uses the following in their BDF:
+            DISP(PLOT,PHASE)=ALL
+        it's wrong, and should be:
+            DISP(PLOT,REAL)=ALL
+        """
+        if self.format_code != format_code:
+            self.format_code = format_code
+            self.obj.format_code = format_code
+            self.obj.data_code['format_code'] = format_code
+
     def _read_table(self, data, result_name, storage_obj,
                     real_obj, complex_obj,
                     real_vector, complex_vector,
@@ -240,7 +255,7 @@ class OP2Common(Op2Codes, F06Writer):
         #print('self.num_wide =', self.num_wide)
         #print('random...%s' % self.isRandomResponse())
         #if not self.isRandomResponse():
-        if self.format_code == 1 and self.num_wide == 8:  # real/random
+        if self.format_code in [1, 2, 3] and self.num_wide == 8:  # real/random
             # real_obj
             assert real_obj is not None
             nnodes = len(data) // 32  # 8*4
@@ -248,6 +263,7 @@ class OP2Common(Op2Codes, F06Writer):
             if auto_return:
                 return len(data)
 
+            self._fix_format_code(format_code=1)
             if self.is_sort1():
                 if self.nonlinear_factor is None:
                     n = self._read_real_table_static(data, result_name, node_elem, is_cid=is_cid)
@@ -272,16 +288,11 @@ class OP2Common(Op2Codes, F06Writer):
                 msg = 'SORT2!'
                 #n = self._read_complex_table_sort2(data, result_name, node_elem)
                 n = self._not_implemented_or_skip(data, msg)
-        elif self.format_code in [2, 3] and self.num_wide == 8:  # real mag/phase - this is confusing...I think there is no phase?
-            # real_obj
-            assert real_obj is not None
-            nnodes = len(data) // 32  # 8*4
-            auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
-            if auto_return:
-                return len(data)
-            n = self._read_real_table_sort1(data, result_name, node_elem)
         else:
-            msg = 'only num_wide=8 or 14 is allowed;  num_wide=%s' % self.num_wide
+            #msg = 'COMPLEX/PHASE is included in:\n'
+            #msg += '  DISP(PLOT)=ALL\n'
+            #msg += '  but the result type is REAL\n'
+            msg = self.code_information()
             n = self._not_implemented_or_skip(data, msg)
         #else:
         #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
@@ -573,6 +584,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _not_implemented_or_skip(self, data, msg=''):
         if is_release:
+            self.log.warning(msg)
             return len(data)
         else:
             raise NotImplementedError('table_name=%s table_code=%s %s\n%s' % (self.table_name, self.table_code, msg, self.code_information()))

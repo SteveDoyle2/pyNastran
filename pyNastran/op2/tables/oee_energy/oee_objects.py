@@ -25,8 +25,6 @@ class RealStrainEnergy(ScalarObject):
         self.energy = {}
         self.percent = {}
         self.density = {}
-        #print self.data_code
-        #print "num_wide = %s %s"  % (self.data_code['num_wide'], type(self.data_code['num_wide']))
 
         self.dt = dt
         if is_sort1:
@@ -62,7 +60,6 @@ class RealStrainEnergy(ScalarObject):
         #assert dt >= 0.
         self.log.debug("updating %s...%s=%s  isubcase=%s" % (
             self.name, self.name, dt, self.isubcase))
-        #print "data_code = ", self.data_code
         if dt is not None:
             self.dt = dt
             self.add_new_transient(dt)

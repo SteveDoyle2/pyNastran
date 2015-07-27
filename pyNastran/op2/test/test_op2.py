@@ -7,7 +7,7 @@ from traceback import print_exc
 import pyNastran
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.op2 import OP2, FatalError, SortCodeError
+from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError
 
 try:
     from pyNastran.op2.op2_geom import OP2Geom_Scalar, OP2Geom
@@ -321,14 +321,20 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #isPassed = True
     #except UnicodeDecodeError:  # this block should be commented
         #isPassed = True
+    #except NotImplementedError:  # this block should be commented
+        #isPassed = True
     #except FatalError:  # this block should be commented
         #if stopOnFailure:
             #raise
         #isPassed = True
-    #except AssertionError:  # comment this
-    #    isPassed = True
+    #except KeyError:  # this block should be commented
+        #isPassed = True
+    #except DeviceCodeError:  # this block should be commented
+        #isPassed = True
+    #except AssertionError:  # this block should be commented
+        #isPassed = True
     #except RuntimeError: #invalid analysis code; this block should be commented
-    #    isPassed = True
+        #isPassed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
         #sys.exit('stopping on sys.exit')
@@ -338,12 +344,12 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     #        raise
     #    else:
     #        isPassed = True
-    #except IndexError: # bad bdf
-    #    isPassed = True
-    except SyntaxError: #Param Parse; this block should be commented
-        if stopOnFailure:
-            raise
-        isPassed = True
+    #except IndexError: # this block should be commented
+        #isPassed = True
+    #except SyntaxError: #Param Parse; this block should be commented
+        #if stopOnFailure:
+            #raise
+        #isPassed = True
     except:
         #print e
         if stopOnFailure:

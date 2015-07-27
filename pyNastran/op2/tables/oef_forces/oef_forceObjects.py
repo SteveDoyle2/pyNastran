@@ -39,9 +39,9 @@ class RealRodForceArray(ScalarObject):
     def _get_msgs(self):
         base_msg = ['       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
                     '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
-        crod_msg   = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        crod_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
         conrod_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
-        ctube_msg  = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        ctube_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
         crod_msg += base_msg
         conrod_msg += base_msg
         ctube_msg += base_msg
@@ -139,7 +139,8 @@ class RealRodForceArray(ScalarObject):
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
-        (ntimes, ntotal, two) = self.data.shape
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element
         is_odd = False
@@ -511,7 +512,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
-        return (page_num - 1)
+        return page_num - 1
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -732,11 +733,14 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
                     kick4, tau41,
             ]
             (vals2, is_all_zeros) = writeFloats12E(vals)
-            [f14, f12,  f21, f23,  f32, f34,  f43, f41,
+            [f14, f12,
+             f21, f23,
+             f32, f34,
+             f43, f41,
              kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
             ] = vals2
             msg.append('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, f14, f12, f21, f23, f32, f34, f43, f41))
-            msg.append('                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % ( kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
+            msg.append('                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
 
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
@@ -1105,12 +1109,13 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             #return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = [
-            '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
-            ' '
-            '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -'
-            '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY'
+            '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
+            ' \n'
+            '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -\n'
+            '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n'
         ]
-        f.write('      ID      FX                            FY                            FXY                           MX                            MY                            MXY                           QX                            QY\n')
+        #f.write('      ID      FX                            FY                            FXY                           MX                            MY                            MXY                           QX                            QY\n')
+        f.write(''.join(words))
         for eid in self.mx:
             mx = self.mx[eid]
             my = self.my[eid]
@@ -1122,7 +1127,11 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 
             tx = self.tx[eid]
             ty = self.ty[eid]
-            Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+            #Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+
+            ([mx, my, mxy, bmx, bmy, bmxy, tx, ty],
+             is_all_zeros) = writeFloats13E([mx, my, mxy, bmx, bmy, bmxy, tx, ty])
+            Fmt = '% 8i   ' + '%s ' * 8 + '\n'
             f.write(Fmt % (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty))
         return page_num
 
@@ -1286,7 +1295,6 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             ty = self.data[itime, :, 7]
 
             # loop over all the elements
-            out = []
             if self.element_type == 74:
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
@@ -1481,7 +1489,7 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None,  is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
 
@@ -1665,7 +1673,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         headers = [
             'bending_moment_a1', 'bending_moment_a2',
             'bending_moment_b1', 'bending_moment_b2',
-            'shear1' 'shear2',
+            'shear1', 'shear2',
             'axial', 'torque']
         return headers
 
@@ -1697,15 +1705,17 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     def add(self, dt, data):
-        data = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-        self.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
+        self.add_sort1(dt, data)
 
-    def add_sort1(self, dt, eid, bending_moment_a1, bending_moment_a2,
-                  bending_moment_b1, bending_moment_b2, shear, axial, torque):
+    def add_sort1(self, dt, data):
+        data = [eid, bending_moment_a1, bending_moment_a2,
+                bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
         self.times[self.itime] = dt
         self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [bending_moment_a1, bending_moment_a2,
-                       bending_moment_b1, bending_moment_b2, shear, axial, torque]
+        self.data[self.itime, self.ielement, :] = [
+            bending_moment_a1, bending_moment_a2,
+            bending_moment_b1, bending_moment_b2,
+            shear1, shear2, axial, torque]
         self.ielement += 1
 
     def get_stats(self):
@@ -1738,11 +1748,6 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         msg += self.get_data_code()
         return msg
 
-    def get_element_index(self, eids):
-        # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
-        return itot
-
     def eid_to_element_node_index(self, eids):
         ind = searchsorted(eids, self.element)
         return ind
@@ -1774,17 +1779,16 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
         msg = []
         #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-        eids = self.elements
+        eids = self.element
         #f.write(''.join(words))
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f.write(''.join(header + words))
 
             # loop over all the elements
-            out = []
             bm1a = self.data[itime, :, 0]
             bm2a = self.data[itime, :, 1]
             bm1b = self.data[itime, :, 2]
@@ -1795,7 +1799,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             trq = self.data[itime, :, 7]
             for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
                 ([bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi], is_all_zeros) = writeFloats13E([
-                    bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi])
+                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi])
             f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
             f.write(page_stamp % page_num)
         return page_num

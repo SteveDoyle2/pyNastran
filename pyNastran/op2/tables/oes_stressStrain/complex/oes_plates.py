@@ -482,15 +482,18 @@ class ComplexPlateStress(StressObject):
         msg = "dt=%s eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (dt, eid, node_id, fdr, oxx, oyy, txy)
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
+        assert node_id > -1, msg
+
         self.fiberCurvature[eid][node_id].append(fdr)
         self.oxx[dt][eid][node_id].append(oxx)
         self.oyy[dt][eid][node_id].append(oyy)
         self.txy[dt][eid][node_id].append(txy)
 
     def addNewNodeSort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+        msg = "eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (eid, node_id, fdr, oxx, oyy, txy)
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
-        #msg = "eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (eid, node_id, fdr, oxx, oyy, txy)
+        assert node_id > -1, msg
         #assert node_id not in self.oxx[dt][eid]
         self.fiberCurvature[eid][node_id] = [fdr]
         self.oxx[dt][eid][node_id] = [oxx]
@@ -798,6 +801,11 @@ class ComplexPlateStrain(StrainObject):
         #if node_id != 'C':  # centroid
             #assert 0 < node_id < 1000000000, 'node_id=%s %s' % (node_id, msg)
         assert isinstance(node_id, int), node_id
+        assert node_id > -1, msg
+
+        if dt not in self.exx:
+            msg = "dt=%s eid=%s node_id=%s" % (dt, eid, node_id)
+            self.add_new_transient(dt)
 
         if 0: # this is caused by superelements
             if dt in self.exx and eid in self.exx[dt]:  # SOL200, erase the old result
@@ -822,6 +830,7 @@ class ComplexPlateStrain(StrainObject):
         msg = "eid=%s node_id=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, node_id, curvature, exx, eyy, exy)
         assert isinstance(node_id, int), node_id
+        assert node_id > -1, msg
 
         self.fiberCurvature[eid][node_id].append(curvature)
         self.exx[dt][eid][node_id].append(exx)
