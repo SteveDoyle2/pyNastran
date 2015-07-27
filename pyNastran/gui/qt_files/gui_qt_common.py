@@ -4,7 +4,8 @@ from __future__ import print_function
 from six import iteritems
 from copy import deepcopy
 
-from numpy import ndarray, asarray, hstack, searchsorted, ones, full
+import numpy
+from numpy import ndarray, asarray, hstack, searchsorted, ones, full, int32, float32, issubdtype
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
@@ -155,6 +156,14 @@ class GuiCommon(object):
         if self._names_storage.has_exact_name(name):
             return
 
+        if issubdtype(case.dtype, numpy.integer):
+            data_type = vtk.VTK_INT
+        elif issubdtype(case.dtype, numpy.float):
+            data_type = vtk.VTK_FLOAT
+        else:
+            raise NotImplementedError(case.dtype.type)
+
+
         if 0: # nan testing
             from numpy import float32, int32
             if case.dtype.name == 'float32':
@@ -187,14 +196,16 @@ class GuiCommon(object):
                         #grid_result.InsertNextValue((value - min_value) / norm_value)
                     case2 = (case - min_value) / norm_value
 
-            #case2 = case
-            #print('max =', case2.max())
+            #scalar_range = self.grid.GetScalarRange()
+            #print(scalar_range)
+            #self.aQuadMapper.SetScalarRange(scalar_range)
 
             grid_result = numpy_to_vtk(
-                num_array=case2,
+                num_array=case,
                 deep=True,
-                array_type=vtk.VTK_FLOAT
+                array_type=data_type
             )
+            #print('grid_result = %s' % grid_result)
             #print('max2 =', grid_result.GetRange())
         else:
             # vector_size=3
@@ -210,7 +221,7 @@ class GuiCommon(object):
             grid_result = numpy_to_vtk(
                 num_array=case2,
                 deep=deep,
-                array_type=vtk.VTK_FLOAT
+                array_type=data_type
             )
         return grid_result
 
