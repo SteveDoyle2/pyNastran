@@ -691,8 +691,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             version = data.strip()
             if version.startswith(b'NX'):
                 self.set_as_nx()
+                self.set_table_type()
             elif version == b'XXXXXXXX':
                 self.set_as_msc()
+                self.set_table_type()
             else:
                 raise RuntimeError('unknown version=%r' % version)
 

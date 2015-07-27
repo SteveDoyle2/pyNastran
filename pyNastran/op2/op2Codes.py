@@ -6,6 +6,13 @@ class Op2Codes(object):
     def __init__(self):
         pass
 
+    def set_table_type(self):
+        msc_elements, nx_elements = self._get_element_mappers()
+        if self.is_msc:
+            self.element_mapper = msc_elements
+        else:
+            self.element_mapper = nx_elements
+
     def get_element_type(self, elem_code):
         msc_elements, nx_elements = self._get_element_mappers()
         if self.is_msc:
