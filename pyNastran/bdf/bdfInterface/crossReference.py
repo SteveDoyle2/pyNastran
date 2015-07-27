@@ -287,6 +287,8 @@ class XrefMesh(object):
         for element in self.elements.values():
             if element.nodes is not None:
                 for node in element.nodes:
+                    if node is None:
+                        continue
                     nodes[node.nid].add(element)
         for node in self.nodes.values():
             node.elements = nodes[node.nid]
