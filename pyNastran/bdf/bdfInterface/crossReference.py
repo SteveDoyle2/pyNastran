@@ -64,6 +64,7 @@ around the idea of cross-referencing, so it's recommended that you use it.
 
 from __future__ import print_function
 from six import iteritems, itervalues
+from collections import defaultdict
 import warnings
 import traceback
 
@@ -86,6 +87,7 @@ class XrefMesh(object):
 
     def cross_reference(self, xref=True,
                         xref_elements=True,
+                        xref_nodes_with_elements=True,
                         xref_properties=True,
                         xref_masses=True,
                         xref_materials=True,
@@ -128,6 +130,8 @@ class XrefMesh(object):
 
             if xref_elements:
                 self._cross_reference_elements()
+            if xref_nodes_with_elements:
+                self._cross_reference_nodes_with_elements()
             if xref_properties:
                 self._cross_reference_properties()
             if xref_masses:
@@ -275,6 +279,19 @@ class XrefMesh(object):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
+    def _cross_reference_nodes_with_elements(self):
+        """
+        Links the nodes to all connected elements
+        """
+        nodes = defaultdict(set)
+        for element in self.elements.values():
+            if element.nodes is not None:
+                for node in element.nodes:
+                    if node is None:
+                        continue
+                    nodes[node.nid].add(element)
+        for node in self.nodes.values():
+            node.elements = nodes[node.nid]
 
     def _cross_reference_masses(self):
         """
