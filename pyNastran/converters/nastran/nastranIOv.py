@@ -61,13 +61,13 @@ class NastranIO(object):
         #: flips the nastran CAERO subpaneling
         #:   False -> borders of CAEROs can be seen
         #:   True  -> individual subpanels can be seen
-        self.is_sub_panels = False
+        self.show_caero_sub_panels = False
 
         #: coordinate systems can be messy, so this is the
         #: list of coords to show
         self.show_cids = []
         self.save_data = False
-        self.show_alt_actor = True  # show the caero mesh
+        self.show_caero_actor = True  # show the caero mesh
 
         self.element_ids = None
         self.node_ids = None
@@ -100,17 +100,50 @@ class NastranIO(object):
         msg = 'self.show_alt_actor=True/False and self.is_sub_panels=True/False may be used'
         self.log.info(msg)
         if is_shown is None:
-            is_shown = not self.show_alt_actor
+            is_shown = not self.show_caero_actor
 
-        self.show_alt_actor = is_shown
+        self.show_caero_actor = is_shown
         if is_shown:
-            if not self.show_alt_actor:
+            if not self.show_caero_actor:
                 return
-            self.alt_geometry_actor.VisibilityOn()
+            self.geometry_actors['caero'].VisibilityOn()
+            if self.show_caero_sub_panels:
+                self.geometry_actors['caero_sub'].VisibilityOn()
         else:
-            if self.show_alt_actor:
+            if self.show_caero_actor:
                 return
-            self.alt_geometry_actor.VisibilityOff()
+            self.geometry_actors['caero'].VisibilityOff()
+            self.geometry_actors['caero_sub'].VisibilityOff()
+
+    def toggle_caero_panels(self):
+        """
+        Toggle the visibility of the CAERO panels. The visibility of the sub panels
+        or panels will be set according to the current show_caero_sub_panels state.
+        """
+        self.show_caero_actor = not self.show_caero_actor
+        if self.show_caero_actor:
+            if self.show_caero_sub_panels:
+                self.geometry_actors['caero_sub'].VisibilityOn()
+            else:
+                self.geometry_actors['caero'].VisibilityOn()
+        else:
+            self.geometry_actors['caero'].VisibilityOff()
+            self.geometry_actors['caero_sub'].VisibilityOff()
+        self.vtk_interactor.Render()
+
+    def toggle_caero_sub_panels(self):
+        """
+        Toggle the visibility of the CAERO sub panels
+        """
+        self.show_caero_sub_panels = not self.show_caero_sub_panels
+        if self.show_caero_actor:
+            if self.show_caero_sub_panels:
+                self.geometry_actors['caero'].VisibilityOff()
+                self.geometry_actors['caero_sub'].VisibilityOn()
+            else:
+                self.geometry_actors['caero'].VisibilityOn()
+                self.geometry_actors['caero_sub'].VisibilityOff()
+        self.vtk_interactor.Render()
 
     def _create_coord(self, cid, coord, Type):
         origin = coord.origin
@@ -161,6 +194,14 @@ class NastranIO(object):
             self.TurnTextOff()
             self.grid.Reset()
             self.grid2.Reset()
+
+            # create alt grids
+            if 'caero' not in self.alt_grids.keys():
+                self.create_alternate_vtk_grid('caero')
+            if 'caero_sub' not in self.alt_grids.keys():
+                self.create_alternate_vtk_grid('caero_sub')
+            #print('alt_grids', self.alt_grids.keys())
+
             #self.gridResult = vtk.vtkFloatArray()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
@@ -204,21 +245,18 @@ class NastranIO(object):
         nelements = model.nelements
         assert nelements > 0
 
-        if self.is_sub_panels:
-            nsub_elements_caeros = 0
-            nsub_points_caeros = 0
-            for caero in itervalues(model.caeros):
-                if hasattr(caero, 'panel_points_elements'):
-                    npoints, nelements = caero.get_npanel_points_elements()
-                    nsub_elements_caeros += npoints
-                    nsub_points_caeros += nelements
-                else:
-                    print('%r doesnt support panel_points_elements' % caero.type)
-            ncaeros = nsub_elements_caeros
-            ncaeros_points = nsub_points_caeros
-        else:
-            ncaeros = model.ncaeros
-            ncaeros_points = ncaeros * 4
+        # count caeros
+        ncaeros_sub = 0
+        ncaero_sub_points = 0
+        for caero in itervalues(model.caeros):
+            if hasattr(caero, 'panel_points_elements'):
+                npoints, nelements = caero.get_npanel_points_elements()
+                ncaeros_sub += npoints
+                ncaero_sub_points += nelements
+            else:
+                print('%r doesnt support panel_points_elements' % caero.type)
+        ncaeros = model.ncaeros
+        ncaeros_points = ncaeros * 4
 
         self.nNodes = nnodes
         self.nElements = nelements  # approximate...
@@ -229,16 +267,18 @@ class NastranIO(object):
         for msgi in msg:
             model.log.debug(msgi)
 
-        #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
-
         if 'CONM2' in model.card_count:
             nCONM2 = model.card_count['CONM2']
         else:
             nCONM2 = 0
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        self.grid2.Allocate(ncaeros + nCONM2, 1000)
-        self.show_caero_mesh(is_shown=self.show_alt_actor)
+
+        self.grid2.Allocate(nCONM2, 1000)
+        self.alt_grids['caero'].Allocate(ncaeros, 1000)
+        self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
+        #self.show_caero_mesh(is_shown=self.show_caero_actor)
+        #if self.show_caero_sub_panels:
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -320,43 +360,29 @@ class NastranIO(object):
                     if None in node_ids:
                         nsprings += 1
 
-        points2.SetNumberOfPoints(ncaeros_points * 4 + nCONM2 + nsprings)
-        for eid, element in sorted(iteritems(model.caeros)):
-            if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
-               isinstance(element, CAERO4) or isinstance(element, CAERO5)):
-                if self.is_sub_panels:
-                    pointsi, elementsi = element.panel_points_elements()
-                    for ipoint, pointii in enumerate(pointsi):
-                        points2.InsertPoint(j + ipoint, *pointii)
+        self.set_caero_grid(ncaeros_points, model)
+        self.set_caero_subpanel_grid(ncaero_sub_points, model)
+        self._add_alt_actors(self.alt_grids)
 
-                    elem = vtkQuad()
-                    eType = elem.GetCellType()
-                    for elementsi in elementsi:
-                        elem = vtkQuad()
-                        elem.GetPointIds().SetId(0, j + elementsi[0])
-                        elem.GetPointIds().SetId(1, j + elementsi[1])
-                        elem.GetPointIds().SetId(2, j + elementsi[2])
-                        elem.GetPointIds().SetId(3, j + elementsi[3])
-                        self.grid2.InsertNextCell(eType, elem.GetPointIds())
-                    j += ipoint + 1
-                    #isubpanel += ipoint
-                else:
-                    cpoints = element.Points()
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, j)
-                    elem.GetPointIds().SetId(1, j + 1)
-                    elem.GetPointIds().SetId(2, j + 2)
-                    elem.GetPointIds().SetId(3, j + 3)
-                    points2.InsertPoint(j, *cpoints[0])
-                    points2.InsertPoint(j + 1, *cpoints[1])
-                    points2.InsertPoint(j + 2, *cpoints[2])
-                    points2.InsertPoint(j + 3, *cpoints[3])
-                    self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                    j += 4
-            #elif isinstance(element, CAERO2): # cylinder
-                #pass
+        if self.show_caero_actor:
+            if self.show_caero_sub_panels:
+                self.geometry_actors['caero'].VisibilityOff()
+                self.geometry_actors['caero_sub'].VisibilityOn()
             else:
-                self.log_info("skipping %s" % element.type)
+                self.geometry_actors['caero'].VisibilityOn()
+                self.geometry_actors['caero_sub'].VisibilityOff()
+        else:
+            self.geometry_actors['caero'].VisibilityOff()
+            self.geometry_actors['caero_sub'].VisibilityOff()
+
+        self.geometry_actors['caero'].Modified()
+        self.geometry_actors['caero_sub'].Modified()
+        if hasattr(self.geometry_actors['caero'], 'Update'):
+            self.geometry_actors['caero'].Update()
+        if hasattr(self.geometry_actors['caero_sub'], 'Update'):
+            self.geometry_actors['caero_sub'].Update()
+
+        points2.SetNumberOfPoints(nCONM2 + nsprings)
 
         sphere_size = self._get_sphere_size(dim_max)
         for eid, element in sorted(iteritems(model.masses)):
@@ -384,13 +410,74 @@ class NastranIO(object):
                 j += 1
             else:
                 self.log_info("skipping %s" % element.type)
-
+        print('j = ', j)
         self.mapElements(points, points2, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+
+    def set_caero_grid(self, ncaeros_points, model, j=0):
+        """
+        Sets the CAERO panel geometry.
+
+        Returns the current id counter.
+        """
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(ncaeros_points)
+
+        for eid, element in sorted(iteritems(model.caeros)):
+            if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
+               isinstance(element, CAERO4) or isinstance(element, CAERO5)):
+                cpoints = element.Points()
+                elem = vtkQuad()
+                elem.GetPointIds().SetId(0, j)
+                elem.GetPointIds().SetId(1, j + 1)
+                elem.GetPointIds().SetId(2, j + 2)
+                elem.GetPointIds().SetId(3, j + 3)
+                points.InsertPoint(j, *cpoints[0])
+                points.InsertPoint(j + 1, *cpoints[1])
+                points.InsertPoint(j + 2, *cpoints[2])
+                points.InsertPoint(j + 3, *cpoints[3])
+                self.alt_grids['caero'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                j += 4
+            else:
+                self.log_info("skipping %s" % element.type)
+        self.alt_grids['caero'].SetPoints(points)
+        return j
+
+    def set_caero_subpanel_grid(self, ncaero_sub_points, model, j=0):
+        """
+        Sets the CAERO panel geometry.
+
+        Returns the current id counter.
+        """
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(ncaero_sub_points)
+
+        for eid, element in sorted(iteritems(model.caeros)):
+            if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
+               isinstance(element, CAERO4) or isinstance(element, CAERO5)):
+                pointsi, elementsi = element.panel_points_elements()
+                for ipoint, pointii in enumerate(pointsi):
+                    points.InsertPoint(j + ipoint, *pointii)
+
+                elem = vtkQuad()
+                eType = elem.GetCellType()
+                for elementsi in elementsi:
+                    elem = vtkQuad()
+                    elem.GetPointIds().SetId(0, j + elementsi[0])
+                    elem.GetPointIds().SetId(1, j + elementsi[1])
+                    elem.GetPointIds().SetId(2, j + elementsi[2])
+                    elem.GetPointIds().SetId(3, j + elementsi[3])
+                    self.alt_grids['caero_sub'].InsertNextCell(eType, elem.GetPointIds())
+                j += ipoint + 1
+            else:
+                self.log_info("skipping %s" % element.type)
+        self.alt_grids['caero_sub'].SetPoints(points)
+        return j
 
     def _get_sphere_size(self, dim_max):
         return 0.05 * dim_max
 
-    def mapElements(self, points, points2, nidMap, model, j, dim_max, plot=True, xref_loads=True):
+    def mapElements(self, points, points2, nidMap, model, j, dim_max,
+                    plot=True, xref_loads=True):
         sphere_size = self._get_sphere_size(dim_max)
         #self.eidMap = {}
 
@@ -738,11 +825,21 @@ class NastranIO(object):
         #print(dir(self.grid)) #.SetNumberOfComponents(0)
         #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
+
+
+
+        #print('a', self.geometry_actors['caero'].GetVisibility())
+        #print('b', self.geometry_actors['caero_sub'].GetVisibility())
+
+        #self.alt_grids['caero'].Modified()
+        #self.alt_grids['caero_sub'].Modified()
+        #if hasattr(self.grid, 'Update'):
+            #self.alt_grids['caero'].Update()
+            #self.alt_grids['caero_sub'].Update()
+
         self.grid.Modified()
-        self.grid2.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            self.grid2.Update()
         #self.log_info("updated grid")
 
         cases = {}

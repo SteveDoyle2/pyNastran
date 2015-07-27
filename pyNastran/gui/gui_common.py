@@ -122,7 +122,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # actor_slots
         self.textActors = {}
-        self.geometry_actors = []
+        self.geometry_actors = {}
+        self.alt_grids = {} #additional grids
 
         self.magnify = 1
         self.iText = 0
@@ -279,6 +280,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
 
+                ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
+                ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
+
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
                 ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
@@ -393,7 +397,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # the dummy toolbar stores actions but doesn't get shown
         # in other words, it can set shortcuts
         self._dummy_toolbar = self.addToolBar('Dummy toolbar')
-
+        self._dummy_toolbar.setObjectName('dummy_toolbar')
         ## menubar
         self.menubar = self.menuBar()
 
@@ -733,7 +737,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
-
         self.grid2 = vtk.vtkUnstructuredGrid()
         #self.emptyResult = vtk.vtkFloatArray()
         #self.vectorResult = vtk.vtkFloatArray()
@@ -746,6 +749,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # axes
         self.create_global_axes()
+
+    def create_alternate_vtk_grid(self, name):
+        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -775,7 +781,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #for cid, axes in iteritems(self.axes):
             #self.rend.AddActor(axes)
         self.addGeometry()
-        self.addAltGeometry()
+
+        # initialize geometry_actors
+        self.geometry_actors = {
+            'main' : self.geom_actor,
+        }
+        #self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(*self.background_col)
 
@@ -973,19 +984,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def on_surface(self):
         if self.is_wireframe:
             self.log_command('on_surface()')
-            for actor in self.get_geometry_actors():
+            for name, actor in iteritems(self.geometry_actors):
                 prop = actor.GetProperty()
                 prop.SetRepresentationToSurface()
             self.is_wireframe = False
             self.vtk_interactor.Render()
 
-    def get_geometry_actors(self):
-        return self.geometry_actors
-
     def on_wireframe(self):
         if not self.is_wireframe:
             self.log_command('on_wireframe()')
-            for actor in self.get_geometry_actors():
+            for name, actor in iteritems(self.geometry_actors):
                 prop = actor.GetProperty()
                 prop.SetRepresentationToWireframe()
                 #prop.SetRepresentationToPoints()
@@ -1052,6 +1060,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.edgeActor.SetMapper(self.edgeMapper)
         self.edgeActor.GetProperty().SetColor(0, 0, 0)
+        self.edgeMapper.SetLookupTable(self.colorFunction)
+        self.edgeMapper.SetResolveCoincidentTopologyToPolygonOffset()
 
         prop = self.edgeActor.GetProperty()
         prop.SetColor(0, 0, 0)
@@ -1089,6 +1099,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def build_lookup_table(self):
         """TODO: add support for NanColors"""
         scalar_range = self.grid.GetScalarRange()
+        #print('min = %s\nmax = %s' % scalar_range)
         self.aQuadMapper.SetScalarRange(scalar_range)
         self.aQuadMapper.SetLookupTable(self.colorFunction)
         self.rend.AddActor(self.scalarBar)
@@ -1235,6 +1246,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.grid.Modified()
             self.grid2.Reset()
             self.grid2.Modified()
+            # reset alt grids
+            names = self.alt_grids.keys()
+            for name in names:
+                self.alt_grids[name].Reset()
+                self.alt_grids[name].Modified()
+
             #gridResult.Reset()
             #gridResult.Modified()
 
@@ -1302,6 +1319,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         ]
         self.menu_help2 = self.menubar.addMenu('&HelpMenuNew')
         self.menu_help.menuAction().setVisible(False)
+        if hasattr(self, 'nastran_toolbar'):
+            self.nastran_toolbar.setVisible(True)
+        else:
+            self.nastran_toolbar = self.addToolBar('Nastran Toolbar')
+            self.nastran_toolbar.setObjectName('nastran_toolbar')
         #self.file.menuAction().setVisible(False)
         #self.menu_help.
 
@@ -1309,6 +1331,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         menu_items = [
             (self.menu_help2, ('about_nastran',)),
+            (self.nastran_toolbar, ('caero', 'caero_sub'))
+
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
         ]
@@ -1317,6 +1341,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _cleanup_nastran_tools_and_menu_items(self):
         self.menu_help.menuAction().setVisible(True)
         self.menu_help2.menuAction().setVisible(False)
+        self.nastran_toolbar.setVisible(False)
+
 
     def _update_menu_bar_to_format(self, fmt, method):
         self.menu_bar_format = fmt
@@ -1821,24 +1847,60 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
         self.rend.AddActor(self.geom_actor)
 
-    def addAltGeometry(self):
-        self.aQuadMapper = vtk.vtkDataSetMapper()
-        if self.vtk_version[0] >= 6:
-            self.aQuadMapper.SetInputData(self.grid2)
-        else:
-            self.aQuadMapper.SetInput(self.grid2)
-        #aQuadMapper.SetInput(Filter.GetOutput())
-        self.alt_geometry_actor = vtk.vtkActor()
-        self.alt_geometry_actor.SetMapper(self.aQuadMapper)
-        #geometryActor.AddPosition(2, 0, 2)
-        #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        self.alt_geometry_actor.GetProperty().SetDiffuseColor(1, 1, 0)  # green
-        self.alt_geometry_actor.GetProperty().SetLineWidth(5)
+    def _add_alt_actors(self, grids_dict, names_to_ignore=None):
+        if names_to_ignore is None:
+            names_to_ignore = ['main']
 
-        self.rend.AddActor(self.alt_geometry_actor)
+        names = set(list(grids_dict.keys()))
+        names_old = set(list(self.geometry_actors.keys()))
+        names_old = names_old - set(names_to_ignore)
+        print('names_old1 =', names_old)
+
+        names_to_clear = names_old - names
+        #self._remove_alt_actors(names_to_clear)
+        print('names_old2 =', names_old)
+        print('names =', names)
+        for name in names:
+            print('adding %s' % name)
+            grid = grids_dict[name]
+            self._add_alt_geometry(grid, name)
+
+    def _remove_alt_actors(self, names=None):
+        if names is None:
+            names = list(self.geometry_actors.keys())
+            names.remove('main')
+        for name in names:
+            actor = self.geometry_actors[name]
+            self.rend.RemoveActor(actor)
+            del actor
+
+    def _add_alt_geometry(self, grid, name):
+        quadMapper = vtk.vtkDataSetMapper()
+        if name in self.geometry_actors:
+            alt_geometry_actor = self.geometry_actors[name]
+            if self.vtk_version[0] >= 6:
+                alt_geometry_actor.GetMapper().SetInputData(grid)
+            else:
+                alt_geometry_actor.GetMapper().SetInput(grid)
+        else:
+            if self.vtk_version[0] >= 6:
+                quadMapper.SetInputData(grid)
+            else:
+                quadMapper.SetInput(grid)
+            alt_geometry_actor = vtk.vtkActor()
+            alt_geometry_actor.SetMapper(quadMapper)
+            self.geometry_actors[name] = alt_geometry_actor
+
+        #geometryActor.AddPosition(2, 0, 2)
+        alt_geometry_actor.GetProperty().SetDiffuseColor(1, 1, 0)  # yellow - rgb
+        alt_geometry_actor.GetProperty().SetLineWidth(5)
+
+        self.rend.AddActor(alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
-        self.geometry_actors = [self.geom_actor, self.alt_geometry_actor]
+        print('current_actors = ', self.geometry_actors.keys())
+        grid.Update()
+        alt_geometry_actor.Modified()
 
     def on_update_scalar_bar(self, title, min_value, max_value, data_format):
         self.Title = str(title)
@@ -1858,7 +1920,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def GetCamera(self):
         return self.rend.GetActiveCamera()
-
 
     def update_camera(self, code):
         camera = self.GetCamera()
