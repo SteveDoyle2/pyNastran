@@ -1,0 +1,1497 @@
+1
+ 
+ 
+ 
+ 
+                                                             
+                 Copyright 2011 Siemens Product Lifecycle    
+                        Management Software Inc.             
+                         All Rights Reserved.                
+                                                             
+               This software and related documentation are   
+                 proprietary to Siemens Product Lifecycle    
+                        Management Software Inc.             
+                                                             
+              Siemens and the Siemens logo are registered    
+             trademarks of Siemens AG. NX is a trademark or  
+                registered trademark of Siemens Product      
+               Lifecycle Management Software Inc. or its     
+             subsidiaries in the United States and in other  
+             countries.  NASTRAN is a registered trademark   
+                 of the National Aeronautics and Space       
+                 Administration.  All other trademarks,      
+              registered trademarks or service marks belong  
+                      to their respective holders.           
+                                                             
+           LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED
+           - RIGHTS RESERVED UNDER THE COPYRIGHT LAWS OF THE 
+            UNITED STATES. This computer software and related
+               computer software documentation have been     
+            developed exclusively at private expense and are 
+           provided subject to the following rights:  If this
+               computer software and computer  software      
+            documentation qualify as "commercial items" (as  
+             that term is defined in FAR 2.101), their use,  
+            duplication or disclosure by the U.S. Government 
+           is subject to the protections and restrictions as 
+            set forth in the Siemens commercial license for  
+            software and/or documentation, as prescribed in  
+           FAR 12.212 and FAR 27.405(b)(2)(i) (for civilian  
+             agencies) and in DFARS 227.7202-1(a) and DFARS  
+           227.7202-3(a) (for the Department of Defense), or 
+           any successor or similar regulation, as applicable
+           or as amended from time to time.  If this computer
+           software and computer documentation do not qualify
+            as "commercial items", then they are "restricted 
+           computer software" and are provided with "restric-
+            tive rights", and their use, duplication or dis- 
+            closure by the U.S. Government is subject to the 
+            protections and restrictions as set forth in FAR 
+           27.404(b) and FAR 52-227-14 (for civilian agencies
+           ), and DFARS 227.7203-5(c) and DFARS 252.227-7014 
+           (for the Department of Defense), or any successor 
+           or similar regulation, as applicable or as amended
+              from time to time.  Siemens PLM Software Inc.  
+              5400 Legacy Drive, Plano, Texas 75024-3199.    
+
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *       N X   N a s t r a n       * *
+                * *                                 * *
+                * *       VERSION -  8.5 MP1        * *
+                * *                                 * *
+                * *          JAN 24, 2013           * *
+                * *                                 * *
+                * *                                 * *
+                * *Intel64 Family 6 Model 45 Steppi * *
+                * *                                 * *
+                * * Intel(R) Core(TM) i7-3820 CPU @ * *
+                * *                                 * *
+                * *            Windows 7            * *
+                * *                                 * *
+                * *       Compiled for X86-64       * *
+                * *                                 * *
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+1                                                                              JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN BUFFSIZE=8193 $(F:/PROGRAM FILES (X86)/FEMAPV1101/NASTRAN/CONF/NAST8.RCF
+     NASTRAN DIAGA=128 DIAGB=0 $(F:/PROGRAM FILES (X86)/FEMAPV1101/NASTRAN/CONF/NAST8
+     NASTRAN REAL=2147483647 $(PROGRAM DEFAULT)                                      
+     $ DEC/CMS REPLACEMENT HISTORY, ELEMENT HD15901.DAT                              
+     $ *2    13-JAN-1994 16:42:38 A_BOYADJIAN "68 PLUS/G/ HEAT TRANSFER CONVERTED DEC
+     $ *1    15-JUN-1990 16:38:23 CMSMGR "66B PLUS/G 66B/ INITIAL INSTALLATION OF DEM
+     $ DEC/CMS REPLACEMENT HISTORY, ELEMENT HD15901.DAT                              
+     $ DEC/CMS REPLACEMENT HISTORY, ELEMENT HD15901.DAT                              
+     $ *1    15-JUN-1990 16:38:23 CMSMGR "66B PLUS/G 66B/ INITIAL INSTALLATION OF DEM
+     $ DEC/CMS REPLACEMENT HISTORY, ELEMENT HD15901.DAT                              
+1                                                                              JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     ID MSC, HD15901 $ DBS=HD15901                                                           
+     $ID MSC, HDEM03   $                                                                     
+     $ID MSC, HDEMO03  $                                                                     
+     $ID CLASS PROBLEM THREE. C.E.JACKSON                                                    
+     $                                                                                       
+     $       MAXIMUM CPU TIME ALLOWED FOR THE JOB                                            
+     $                                                                                       
+     TIME 10 $ UNITS ARE MINUTES                                                             
+     $                                                                                       
+     $       THE THERMAL ANALYZER PORTION OF MSC/NASTRAN IS TO BE USED                       
+     $                                                                                       
+     $                                                                                       
+     $       THE NON-LINEAR TRANSIENT SOLUTION ALGORITHM IS TO BE USED                       
+     $                                                                                       
+     $SOL 89                                                                                 
+     SOL 159                                                                                 
+     CEND $ END OF EXECUTIVE CONTROL DECK                                                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      ANALYSIS = HEAT                                                                         
+                  2      $                                                                                       
+                  3      $*******                                                                                
+                  4      $       END OF EXECUTIVE CONTROL  ...  START CASE CONTROL                               
+                  5      $*******                                                                                
+                  6      $                                                                                       
+                  7      TITLE=          NON-LINEAR TRANSIENT PROBLEM                   HD15901                  
+                  8      $       REQUEST SORTED AND UNSORTED CARD ECHO=S  TO SEE COMMENTS                        
+                  9      $       IF THIS CARD IS OMITTED ONLY THE SORTED BULK DATA WILL APPEAR                   
+                 10      $       COMMENT CARDS WOULD THEN NOT BE PRINTED                                         
+                 11      ECHO = BOTH                                                                             
+                 12      $                                                                                       
+                 13      $       SPECIFY THE SUPERELEMENTS TO BE RUN                                             
+                 14      $       THIS CARD IS REQUIRED AND SPECIFIES ALL                                         
+                 15      $       FOR THIS MODEL THERE IS BUT A SINGLE SUPERELEMENT WHICH                         
+                 16      $               ENCOMPASSES THE ENTIRE MODEL                                            
+                 17      $SEALL=ALL $ SEALL=ALL IS DEFAULT IN THIS SOL                                           
+                 18      $                                                                                       
+                 19      $                                                                                       
+                 20      $       SELECT THE MPC AND LOAD SETS TO BE USED IN THIS RUN                             
+                 21      $       NOTE THAT NO SPC SET IS SELECTED AND THAT DLOAD HAS REPLACED                    
+                 22      $               LOAD                                                                    
+                 23      $                                                                                       
+                 24      MPC=200                                                                                 
+                 25      DLOAD=300                                                                               
+                 26      $                                                                                       
+                 27      $       SELECT THE TEMPERATURE SET WHICH IS AN ESTIMATE OF THE FINAL                    
+                 28      $               SOLUTION VECTOR                                                         
+                 29      $       THE SELECTION IS OPTIONAL FOR SOL 89 BUT SHOULD BE MADE IF                      
+                 30      $       THE FINAL TEMPERATURE IS SEVERAL HUNDRED DEGREES DIFFERENT                      
+                 31      $       FROM THE INITIAL CONDITIONS VECTOR AND RADIATIVE                                
+                 32      $       INTERCHANGES ARE INCLUDED                                                       
+                 33      $                                                                                       
+                 34      $                                                                                       
+                 35      $       SELECT THE STEP SIZE , NUMBER OF INCREMENTS AND PRINT FREQ                      
+                 36      $                                                                                       
+                 37      TSTEPNL = 500                                                                           
+                 38      $                                                                                       
+                 39      $       SELECT THE TEMPERATURE SET DEFINING THE TEMPERATURE VECTOR AT                   
+                 40      $       TIME = O.                                                                       
+                 41      $                                                                                       
+                 42      IC  = 600                                                                               
+                 43      $                                                                                       
+                 44      $       SELECT THE OUTPUT DESIRED (TEMPERATURES AND LOADS)                              
+                 45      $                                                                                       
+                 46      OUTPUT                                                                                  
+                 47      THERMAL = ALL                                                                           
+                 48      $                                                                                       
+                 49      $       DEFINE A GROUP OF GRID POINTS TO BE REFERENCED BY AN OUTPUT                     
+                 50      $       REQUEST                                                                         
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                 51      $                                                                                       
+                 52      SET 5 = 1,2,3,4,5,6,7,8,100                                                             
+                 53      $                                                                                       
+                 54      $       REFERENCE A PREVIOUSLY DEFINED GROUP OF GRID POINTS                             
+                 55      $                                                                                       
+                 56      OLOAD = 5                                                                               
+                 57      $*******                                                                                
+                 58      $       PLOT PACKAGE TO DISPLAY MODEL AND SOLUTION                                      
+                 59      $*******                                                                                
+                 60      OUTPUT(PLOT)                                                                            
+                 61      CSCALE 1.8                                                                              
+                 62      PLOTTER NASTRAN                                                                         
+                 63      SET 1 INCLUDE ALL EXCEPT HBDY                                                           
+                 64      FIND SET 1 ORIGIN 1 SCALE                                                               
+                 65      PTITLE = BASIC MODEL                                                                    
+                 66      PLOT SET 1                                                                              
+                 67      PTITLE = LABEL GRIDS                                                                    
+                 68      PLOT SET 1 LABEL GRIDS                                                                  
+                 69      PTITLE = LABEL ELEMENTS                                                                 
+                 70      PLOT SET 1 LABEL ELEMENTS                                                               
+                 71      PTITLE = LABEL ELEMENT PROPERTIES                                                       
+                 72      PLOT SET 1 LABEL EPID                                                                   
+                 73      PTITLE = CHECK RADIATION ELEMENTS                                                       
+                 74      SET 2 INCLUDE HBDY                                                                      
+                 75      FIND SET 2 ORIGIN 2 SCALE                                                               
+                 76      PLOT SET 2 ORIGIN 2                                                                     
+                 77      PTITLE = THERMAL DEFORMATION                                                            
+                 78      PLOT TRANSIENT DEFORMATION 0,TIME 920.,940. SET 1 ORIGIN 1                              
+                 79      PTITLE = THERMAL CONTOUR                                                                
+                 80      CONTOUR MAGNITUDE                                                                       
+                 81      PLOT CONTOUR 0,TIME 920.,940. SET 1 OUTLINE PRINT                                       
+                 82      $       THE FOLLOWING CARDS REQUEST 4 FRAMES OF TRANSIENT PLOTS                         
+                 83      $       THESE PLOTS WILL BE PRODUCED ON THE PRINTER AND PLOTTER                         
+                 84      $                                                                                       
+                 85      OUTPUT(XYOUT)                                                                           
+                 86      SEPLOT 0                                                                                
+                 87      CSCALE = 1.8                                                                            
+                 88      PLOTTER = NASTRAN                                                                       
+                 89      XTITLE=TIME IN SECONDS                                                                  
+                 90      YTITLE = DEGREES CELSIUS GP(100,1,4)                                                    
+                 91      $                                                                                       
+                 92      $       =TEMP= MEANS THAT THE GRID POINT TEMPERATURE WILL BE PLOTTED                    
+                 93      $       VERSUS TIME                                                                     
+                 94      $       =T1= IS A REQUIRED (VESTIGIAL REMNANT FROM THE STRUCTURAL                       
+                 95      $       VERSION OF MSC/NASTRAN                                                          
+                 96      $                                                                                       
+                 97      XYPLOT,XYPAPLOT TEMP/100(T1),1(T1),4(T1)                                                
+                 98      XTITLE=TIME IN SECONDS                                                                  
+                 99      YTITLE = DEGREES CELSIUS PER SECOND GP(100,1,4)                                         
+                100      $                                                                                       
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                101      $       =VELO= MEANS THAT THE THERMAL VELOCITY WILL BE PLOTTED AS                       
+                102      $       A FUNCTION OF TIME                                                              
+                103      $       THESE THREE PLOTS WILL APPEAR ON THREE DIFFERENT FRAMES                         
+                104      XYPLOT,XYPAPLOT VELO /100(T1)/1(T1)/4(T1)                                               
+                105      $                                                                                       
+                106      $*******                                                                                
+                107      $       END CASE CONTROL ... START BULK DATA                                            
+                108      $                                                                                       
+                109      BEGIN BULK $ ENDS CASECONTROL DECK                                                      
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+0                                             I N P U T   B U L K   D A T A   E C H O                                               
+                                                                                                                                    
+                              .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                              $                                                                               
+                              $                                                                               
+                              $       UNITS MUST BE CONSISTENT                                                
+                              $       IN THIS PROBLEM METERS,WATTS,AND DEGREES CELSIUS ARE USED.              
+                              $                                                                               
+                              $       DEFINE GRID POINTS                                                      
+                              $                                                                               
+                              $                                                                               
+                              $       CONNECT GRID POINTS                                                     
+                              $                                                                               
+                              $                                                                               
+                              $       THE FOLLOWING CARDS IMPROVE THE PLOT                                    
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINE CROSS-SECTIONAL AREAS AND/OR THICKNESS                           
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINE MATERIAL THERMAL CONDUCTIVITY AND THERMAL CAPACITY               
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINE CONVECTIVE AREA AND CONVECTIVE COEFFICIENT =H=                   
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINE CONSTRAINTS                                                      
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINE APPLIED LOADS                                                    
+                              $                                                                               
+                              $                                                                               
+                              $*************                                                                  
+                              $       THE FOLLOWING BULK DATA CARDS WERE ADDED TO CONVERT PROBLEM ONE         
+                              $       PROBLEM TWO.                                                            
+                              $                                                                               
+                              $       THIS SPC1 REPRESENTS THE CONSTRAINTS FOR PROBLEM TWO                    
+                              $                                                                               
+                              $                                                                               
+                              $       RADIATION BOUNDARY ELEMENTS                                             
+                              $                                                                               
+                              $                                                                               
+                              $       EMISSIVITY OF RADIATING ELEMENT                                         
+                              $                                                                               
+                              $                                                                               
+                              $       ESTIMATE OF FINAL TRANSIENT SOLUTION SOLUTION VECTOR --REFERENCE        
+                              $       TEMP(ESTIMATE) IN CASE CONTROL                                          
+                              $                                                                               
+                              $                                                                               
+                              $       PARAMETERS CONTROLLING RADIATION LOADING AND THE ITERATION LOOPI        
+                              $                                                                               
+                              $                                                                               
+                              $       PARAMETER TO TURN OFF PLOT MESSAGES                                     
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+0                                             I N P U T   B U L K   D A T A   E C H O                                               
+                                                                                                                                    
+                              .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINITION OF THE RADIATION MATRIX                                      
+                              $               ALL OF THE RADIATION GOES TO SPACE                              
+                              $                                                                               
+                              $**********                                                                     
+                              $       THE FOLLOWING BULK DATA CARDS WERE ADDED FOR THE TRANSIENT              
+                              $               SOLUTION                                                        
+                              $       THEY CONVERT PROBLEM TWO TO PROBLEM THREE                               
+                              $       NOTE THAT THE SPC1 SET WAS NOT SELECTED IN CASE CONTROL                 
+                              $       NOTE THAT SPCF OUTPUT IS NOT REQUESTED IN TRANSIENT                     
+                              $       NOTE THAT THE LOAD REQUEST IN CASE CONTROL IS NOW A DLOAD               
+                              $               REQUEST                                                         
+                              $       NOTE THAT THERMAL CAPACITY WAS ADDED TO MAT4 CARD 1000                  
+                              $                                                                               
+                              $                                                                               
+                              $       TRANSIENT SINGLE POINT CONSTRAINT METHOD                                
+                              $       CONSTRAIN GRID POINT 100 TO 300 DEGREES CELSIUS                         
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINES A CONSTANT LOAD SET APPLIED FROM T=0. TO T=1.+6 SECONDS         
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINES THE NUMBER OF INCREMENTS,THE STEP SIZE AND THE                  
+                              $       PRINTOUT FREQUENCY                                                      
+                              $       REFERENCED IN CASE CONTROL AS =TSTEP=                                   
+                              $       EACH TIME STEP IS 30 SECONDS                                            
+                              $       31 ITERATIONS ARE SELECTED TO ALLOW PRINTERPLOT TO FIT ON               
+                              $       ONE PAGE                                                                
+                              $                                                                               
+                              $                                                                               
+                              $       DEFINES A TEMPERATURE VECTOR ... REFERENCED IN CASE CONTROL             
+                              $               AS =IC=                                                         
+                              $                                                                               
+                              $                                                                               
+                              $*******                                                                        
+                              $       END OF BULK DATA DECK                                                   
+                              $                                                                               
+                              CELAS2  300     1.+5    100     1                                               
+                              CHBDYP  60      300     LINE                    1       5                       
+                                                                                      1.                      
+                              CHBDYG  200             AREA4                   2000                            
+                                      1       2       6       5                                               
+                              CHBDYG  300             AREA4                   2000                            
+                                      2       3       7       6                                               
+                              CHBDYG  400             AREA4                   2000                            
+                                      3       4       8       7                                               
+                              CHBDYG  500             AREA4                   2000                            
+                                      5       6       2       1                                               
+                              CHBDYG  600             AREA4                   2000                            
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     8
+                                                                                                                                    
+0                                                                                                                                   
+0                                             I N P U T   B U L K   D A T A   E C H O                                               
+                                                                                                                                    
+                              .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                                      6       7       3       2                                               
+                              CHBDYG  700             AREA4                   2000                            
+                                      7       8       4       3                                               
+                              PHBDY   300     .314                                                            
+                              PCONV   300     3000                                                            
+                              CONV    60      300                     100     100                             
+                              RADM    2000            .90                                                     
+                              CQUAD4  30      200     1       2       6       5                               
+                              CQUAD4  40      200     2       3       7       6                               
+                              CQUAD4  50      200     3       4       8       7                               
+                              CROD    10      100     10      2                                               
+                              CROD    20      100     9       6                                               
+                              GRID    1                                                                       
+                              GRID    2               .1                                                      
+                              GRID    3               .2                                                      
+                              GRID    4               .3                                                      
+                              GRID    5                       .1                                              
+                              GRID    6               .1      .1                                              
+                              GRID    7               .2      .1                                              
+                              GRID    8               .3      .1                                              
+                              GRID    9                       .2                                              
+                              GRID    10                      -.1                                             
+                              GRID    100             -.05    .05                                             
+                              MAT4    1000    200.    2.426+6                                                 
+                              MAT4    3000                            200.                                    
+                              MPC     200     9       1       1.      5       1       -1.                     
+                              MPC     200     10      1       1.      1       1       -1.                     
+                              PARAM   EPSHT   .0001                                                           
+                              PARAM   MAXIT   8                                                               
+                              PARAM   PDRMSG  1                                                               
+                              PARAM   PLTMSG  0                                                               
+                              PARAM   SIGMA   5.685E-8                                                        
+                              PARAM   TABS    273.15                                                          
+                              PLOTEL  70      5       9                                                       
+                              PLOTEL  80      1       10                                                      
+                              PROD    100     1000    .001                                                    
+                              PSHELL  200     1000    .01                                                     
+                              RADLST  1       1       200     300     400     500     600     700             
+                              RADCAV  1                                               0.1                     
+                              RADSET  1                                                                       
+                              RADMTX  1       1       0.      0.      0.      0.      0.      0.              
+                              RADMTX  1       2       0.      0.      0.      0.      0.                      
+                              RADMTX  1       3       0.      0.      0.      0.                              
+                              RADMTX  1       4       0.      0.      0.                                      
+                              RADMTX  1       5       0.      0.                                              
+                              RADMTX  1       6       0.                                                      
+                              SLOAD   300     1       4.      2       8.                                      
+                              SLOAD   300     3       8.      4       4.                                      
+                              SLOAD   300     5       4.      6       8.                                      
+                              SLOAD   300     7       8.      8       4.                                      
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE     9
+                                                                                                                                    
+0                                                                                                                                   
+0                                             I N P U T   B U L K   D A T A   E C H O                                               
+                                                                                                                                    
+                              .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                              SLOAD   300     100     300.+5                                                  
+                              SPC     100     100     1       300.                                            
+                              TEMP    400     100     300.                                                    
+                              TEMPD   400     300.                                                            
+                              TEMPD   600     300.                                                            
+                              TLOAD2  300     300                     0.      1.+6    0.      0.              
+                                      0.      0.                                                              
+                              TSTEPNL 500     31      30.     1                                               
+                              $                                                                               
+                              $USER INFORMATION MESSAGE: A NUMBER OF DEFAULT VALUES ARE USED WHEN CERTAIN PARA
+                              $                          THESE PARAMETERS ARE GIVEN AS THE FOLLOWS:           
+                              $CHBDYP  E1=3.141 E2=1.414 E3=1.732                                             
+                              $PHBDY   D1=1. D2=1.                                                            
+                              $PCONVM  FORM=0 FLAG=1 COEF=1.E-6 EXPR=0. EXPPI=0. EXPPO=0.                     
+                              $CONVM   TA1=99999                                                              
+                              $SPC     C1=1                                                                   
+                              $MAT4    RHO (DENSITY) = 1.                                                     
+                              $VIEW3D  ICAVITY=1                                                              
+                              $RADCAV  ICAVITY=1 RMAX=0.1                                                     
+                              $RADMTX  ICAVITY=1                                                              
+                              $RADLST  ICAVITY=1 MTXTYP=1                                                     
+                              PARAM,POST,-1                                                                   
+                              ENDDATA
+0                             INPUT BULK DATA ENTRY COUNT =         173
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+0                                                 S O R T E D   B U L K   D A T A   E C H O                                         
+                 ENTRY                                                                                                              
+                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                    1-        CELAS2  300     1.+5    100     1                                               
+                    2-        CHBDYG  200             AREA4                   2000                     0000003
+                    3-        +00000031       2       6       5                                        0000004
+                    4-        CHBDYG  300             AREA4                   2000                     0000005
+                    5-        +00000052       3       7       6                                        0000006
+                    6-        CHBDYG  400             AREA4                   2000                     0000007
+                    7-        +00000073       4       8       7                                        0000008
+                    8-        CHBDYG  500             AREA4                   2000                     0000009
+                    9-        +00000095       6       2       1                                        000000A
+                   10-        CHBDYG  600             AREA4                   2000                     000000B
+                   11-        +000000B6       7       3       2                                        000000C
+                   12-        CHBDYG  700             AREA4                   2000                     000000D
+                   13-        +000000D7       8       4       3                                        000000E
+                   14-        CHBDYP  60      300     LINE                    1       5                0000001
+                   15-        +0000001                                                1.               0000002
+                   16-        CONV    60      300                     100     100                             
+                   17-        CQUAD4  30      200     1       2       6       5                               
+                   18-        CQUAD4  40      200     2       3       7       6                               
+                   19-        CQUAD4  50      200     3       4       8       7                               
+                   20-        CROD    10      100     10      2                                               
+                   21-        CROD    20      100     9       6                                               
+                   22-        GRID    1                                                                       
+                   23-        GRID    2               .1                                                      
+                   24-        GRID    3               .2                                                      
+                   25-        GRID    4               .3                                                      
+                   26-        GRID    5                       .1                                              
+                   27-        GRID    6               .1      .1                                              
+                   28-        GRID    7               .2      .1                                              
+                   29-        GRID    8               .3      .1                                              
+                   30-        GRID    9                       .2                                              
+                   31-        GRID    10                      -.1                                             
+                   32-        GRID    100             -.05    .05                                             
+                   33-        MAT4    1000    200.    2.426+6                                                 
+                   34-        MAT4    3000                            200.                                    
+                   35-        MPC     200     9       1       1.      5       1       -1.                     
+                   36-        MPC     200     10      1       1.      1       1       -1.                     
+                   37-        PARAM   EPSHT   .0001                                                           
+                   38-        PARAM   MAXIT   8                                                               
+                   39-        PARAM   PDRMSG  1                                                               
+                   40-        PARAM   PLTMSG  0                                                               
+                   41-        PARAM   POST    -1                                                              
+                   42-        PARAM   SIGMA   5.685E-8                                                        
+                   43-        PARAM   TABS    273.15                                                          
+                   44-        PCONV   300     3000                                                            
+                   45-        PHBDY   300     .314                                                            
+                   46-        PLOTEL  70      5       9                                                       
+                   47-        PLOTEL  80      1       10                                                      
+                   48-        PROD    100     1000    .001                                                    
+                   49-        PSHELL  200     1000    .01                                                     
+                   50-        RADCAV  1                                               0.1                     
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+0                                                 S O R T E D   B U L K   D A T A   E C H O                                         
+                 ENTRY                                                                                                              
+                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                   51-        RADLST  1       1       200     300     400     500     600     700             
+                   52-        RADM    2000            .90                                                     
+                   53-        RADMTX  1       1       0.      0.      0.      0.      0.      0.              
+                   54-        RADMTX  1       2       0.      0.      0.      0.      0.                      
+                   55-        RADMTX  1       3       0.      0.      0.      0.                              
+                   56-        RADMTX  1       4       0.      0.      0.                                      
+                   57-        RADMTX  1       5       0.      0.                                              
+                   58-        RADMTX  1       6       0.                                                      
+                   59-        RADSET  1                                                                       
+                   60-        SLOAD   300     1       4.      2       8.                                      
+                   61-        SLOAD   300     3       8.      4       4.                                      
+                   62-        SLOAD   300     5       4.      6       8.                                      
+                   63-        SLOAD   300     7       8.      8       4.                                      
+                   64-        SLOAD   300     100     300.+5                                                  
+                   65-        SPC     100     100     1       300.                                            
+                   66-        TEMP    400     100     300.                                                    
+                   67-        TEMPD   400     300.                                                            
+                   68-        TEMPD   600     300.                                                            
+                   69-        TLOAD2  300     300                     0.      1.+6    0.      0.       000000F
+                   70-        +000000F0.      0.                                                       000000G
+                   71-        TSTEPNL 500     31      30.     1                                               
+                              ENDDATA 
+0                       TOTAL COUNT=        72
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+0
+0
+0
+ 
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       11
+ 
+ 
+                                   NUMBER OF CELAS2   ELEMENTS =        1
+                                   NUMBER OF CHBDYG   ELEMENTS =        6
+                                   NUMBER OF CHBDYP   ELEMENTS =        1
+                                   NUMBER OF CONV     ELEMENTS =        1
+                                   NUMBER OF CQUAD4   ELEMENTS =        3
+                                   NUMBER OF CROD     ELEMENTS =        2
+                                   NUMBER OF PLOTEL   ELEMENTS =        2
+ 
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS NX8.5    FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =        8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL =       17 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                38                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       38 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       62 WORDS.)
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    13
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 1                 0               605                 1                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      605 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      629 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1S   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0                 0                 8                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       91 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      122 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM2S   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102           1573376            131076                 0             12288                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       99 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       54 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      263 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM3S   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    103                 0                 0                 0              1152             32768                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       30 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       34 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       82 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM4S   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    104                 0                 0                 0             33280                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       23 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       29 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       65 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EPTS     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101            262272               528                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       14 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       39 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       80 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0              2050                 0                 0                 0               256
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       25 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       34 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       96 WORDS.)
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    14
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK DYNAMICS WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102                 0                 0                 0                 0               256                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       14 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       45 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK BGPDTS   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                11                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       44 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       68 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EQEXINS  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                11                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       22 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       72 WORDS.)
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    15
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00
+ *** USER WARNING MESSAGE 6427 (VIEWD)
+     VIEW FACTORS WILL NOT BE COMPUTED FOR RADIATION CAVITY ID=       1 BECAUSE A RADIATION MATRIX IS ALREADY DEFINED.
+     USER INFORMATION:  THE RADIATION MATRIX IS DEFINED ON RADLST OR RADMTX BULK DATA ENTRIES.
+ ^^^ USER INFORMATION MESSAGE 9048 (NLTRAN)  
+ ^^^ LINEAR ELEMENTS ARE CONNECTED TO THE ANALYSIS   SET (A-SET).    
+ *** USER INFORMATION MESSAGE 7559 (TRLGCD)
+     THIS TRANSIENT RESPONSE ANALYSIS INVOLVES THE FOLLOWING TYPES OF EXCITATION --
+
+     * APPLIED LOADS
+ *** USER INFORMATION MESSAGE 4534 (RMG2)
+        6 ELEMENTS HAVE A TOTAL VIEW FACTOR (FA/A) LESS THAN 0.99, ENERGY MAY BE LOST TO SPACE.
+ *** USER INFORMATION MESSAGE 6204 (NLTRD2)
+        0.000 SECONDS REQUIRED TO DECOMPOSE MATRIX.
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    16
+                                                                                                                                    
+0                                                                                                                                   
+0                             N O N - L I N E A R   I T E R A T I O N   M O D U L E   O U T P U T
+
+     STIFFNESS UPDATE TIME          0.02 SECONDS                                                               SUBCASE        1
+            ITERATION TIME          0.00 SECONDS
+
+                   - - - -   ERROR  FACTORS    - - -   CONVERGENCE  FACTORS  - - - LINE SEARCH DATA - - -         ITR MAT NO.
+      TIME    ITER   DISP.       LOAD        WORK     LAMBDA(I)     DLMAG     FACTOR  E-FIRST    E-FINAL NQNV NLS DIV DIV BIS ADJUST
+
+  3.000000E+01  1  1.0000E+00  1.3236E-08  4.0612E-10 9.9900E-01  4.4120E-02  1.000  0.000E+00  0.000E+00   0   0   0   1     1.000
+  6.000000E+01  1  1.0000E+00  3.2033E-08  8.4099E-10 9.9900E-01  1.0678E-01  1.000  0.000E+00  0.000E+00   0   0   0   1     1.000
+ *** USER INFORMATION MESSAGE 6204 (NLTRD2)
+        0.000 SECONDS REQUIRED TO DECOMPOSE MATRIX.
+  1.200000E+02  1  1.0000E+00  9.1379E-08  3.8638E-09 9.9900E-01  3.0460E-01  1.000  0.000E+00  0.000E+00   0   0   0   1     2.000
+  1.800000E+02  1  1.0000E+00  1.0211E-07  3.2825E-09 9.9900E-01  3.4036E-01  1.000  0.000E+00  0.000E+00   0   0   0   1     2.000
+  2.400000E+02  1  1.0000E+00  9.8389E-08  2.4530E-09 9.9900E-01  3.2797E-01  1.000  0.000E+00  0.000E+00   0   0   0   1     2.000
+  3.000000E+02  1  1.0000E+00  8.8905E-08  1.7420E-09 9.9900E-01  2.9635E-01  1.000  0.000E+00  0.000E+00   0   0   0   1     2.000
+  3.600000E+02  1  1.0000E+00  7.7614E-08  1.2059E-09 9.9900E-01  2.5872E-01  1.000  0.000E+00  0.000E+00   0   0   0   1
+  4.200000E+02  1  1.0000E+00  6.6360E-08  8.2258E-10 9.9900E-01  2.2120E-01  1.000  0.000E+00  0.000E+00   0   0   0   1
+  4.800000E+02  1  1.0000E+00  5.5967E-08  5.5591E-10 9.9900E-01  1.8656E-01  1.000  0.000E+00  0.000E+00   0   0   0   1
+  5.400000E+02  1  1.0000E+00  4.6759E-08  3.7330E-10 9.9900E-01  1.5586E-01  1.000  0.000E+00  0.000E+00   0   0   0   1
+  6.000000E+02  1  1.0000E+00  3.8801E-08  2.4954E-10 9.9900E-01  1.2934E-01  1.000  0.000E+00  0.000E+00   0   0   0   1     2.000
+  6.600000E+02  1  1.0000E+00  3.2036E-08  1.6624E-10 9.9900E-01  1.0679E-01  1.000  0.000E+00  0.000E+00   0   0   0   1
+  7.200000E+02  1  1.0000E+00  2.6351E-08  1.1047E-10 9.9900E-01  8.7836E-02  1.000  0.000E+00  0.000E+00   0   0   0   1
+  7.800000E+02  1  1.0000E+00  2.1611E-08  7.3255E-11 9.9900E-01  7.2037E-02  1.000  0.000E+00  0.000E+00   0   0   0   1
+  8.400000E+02  1  1.0000E+00  1.7684E-08  4.8503E-11 9.9900E-01  5.8947E-02  1.000  0.000E+00  0.000E+00   0   0   0   1
+  9.000000E+02  1  1.0000E+00  1.4445E-08  3.2074E-11 9.9900E-01  4.8150E-02  1.000  0.000E+00  0.000E+00   0   0   0   1     2.000
+ *** USER INFORMATION MESSAGE 4550 (NLTRD2)
+     *** NEW STIFFNESS MATRIX IS REQUIRED ***
+ ^^^ USER INFORMATION MESSAGE 9010 (NLTRAN)  
+ ^^^ LAST ADJUSTED DELTA T: OLDDT=    6.000000E+01 
+ ^^^ USER INFORMATION MESSAGE 9003 (NLTRAN)  
+ ^^^ CURRENT VALUE OF STIME IS    9.000000E+02 
+ ^^^ USER INFORMATION MESSAGE 9005 (NLTRAN)  
+ ^^^ THE SOLUTION FOR LOOPID=            1 IS SAVED FOR RESTART.   
+ *** USER INFORMATION MESSAGE 7559 (TRLGCD)
+     THIS TRANSIENT RESPONSE ANALYSIS INVOLVES THE FOLLOWING TYPES OF EXCITATION --
+
+     * APPLIED LOADS
+ ^^^     
+ ^^^     
+ ^^^     
+ ^^^ ******************************************************************************* 
+ ^^^    THE TABLE(S) STARTING ON THE FOLLOWING PAGE CONTAIN(S) THE MODAL SOLUTION    
+ ^^^ ******************************************************************************* 
+ ^^^     
+ ^^^     
+ ^^^     
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUGV2    WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0              1904                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      154 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     4080 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0              1904                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      354 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     7165 WORDS.)
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    17
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         1
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.972444E+02                    
+   6.000000E+01     S      2.949387E+02                    
+   1.200000E+02     S      2.910682E+02                    
+   1.800000E+02     S      2.879234E+02                    
+   2.400000E+02     S      2.853547E+02                    
+   3.000000E+02     S      2.832737E+02                    
+   3.600000E+02     S      2.815955E+02                    
+   4.200000E+02     S      2.802449E+02                    
+   4.800000E+02     S      2.791587E+02                    
+   5.400000E+02     S      2.782848E+02                    
+   6.000000E+02     S      2.775814E+02                    
+   6.600000E+02     S      2.770146E+02                    
+   7.200000E+02     S      2.765577E+02                    
+   7.800000E+02     S      2.761889E+02                    
+   8.400000E+02     S      2.758911E+02                    
+   9.000000E+02     S      2.756504E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    18
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         2
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.952291E+02                    
+   6.000000E+01     S      2.906824E+02                    
+   1.200000E+02     S      2.826612E+02                    
+   1.800000E+02     S      2.760649E+02                    
+   2.400000E+02     S      2.707293E+02                    
+   3.000000E+02     S      2.664337E+02                    
+   3.600000E+02     S      2.629814E+02                    
+   4.200000E+02     S      2.602080E+02                    
+   4.800000E+02     S      2.579789E+02                    
+   5.400000E+02     S      2.561860E+02                    
+   6.000000E+02     S      2.547424E+02                    
+   6.600000E+02     S      2.535791E+02                    
+   7.200000E+02     S      2.526406E+02                    
+   7.800000E+02     S      2.518830E+02                    
+   8.400000E+02     S      2.512709E+02                    
+   9.000000E+02     S      2.507760E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    19
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         3
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.894327E+02                    
+   6.000000E+01     S      2.807070E+02                    
+   1.200000E+02     S      2.668659E+02                    
+   1.800000E+02     S      2.564042E+02                    
+   2.400000E+02     S      2.482733E+02                    
+   3.000000E+02     S      2.418714E+02                    
+   3.600000E+02     S      2.367881E+02                    
+   4.200000E+02     S      2.327281E+02                    
+   4.800000E+02     S      2.294721E+02                    
+   5.400000E+02     S      2.268533E+02                    
+   6.000000E+02     S      2.247425E+02                    
+   6.600000E+02     S      2.230387E+02                    
+   7.200000E+02     S      2.216618E+02                    
+   7.800000E+02     S      2.205481E+02                    
+   8.400000E+02     S      2.196468E+02                    
+   9.000000E+02     S      2.189170E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    20
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         4
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.889609E+02                    
+   6.000000E+01     S      2.792170E+02                    
+   1.200000E+02     S      2.633841E+02                    
+   1.800000E+02     S      2.513866E+02                    
+   2.400000E+02     S      2.421599E+02                    
+   3.000000E+02     S      2.349480E+02                    
+   3.600000E+02     S      2.292459E+02                    
+   4.200000E+02     S      2.247021E+02                    
+   4.800000E+02     S      2.210619E+02                    
+   5.400000E+02     S      2.181349E+02                    
+   6.000000E+02     S      2.157756E+02                    
+   6.600000E+02     S      2.138704E+02                    
+   7.200000E+02     S      2.123301E+02                    
+   7.800000E+02     S      2.110837E+02                    
+   8.400000E+02     S      2.100745E+02                    
+   9.000000E+02     S      2.092571E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    21
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         5
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.972444E+02                    
+   6.000000E+01     S      2.949387E+02                    
+   1.200000E+02     S      2.910682E+02                    
+   1.800000E+02     S      2.879234E+02                    
+   2.400000E+02     S      2.853547E+02                    
+   3.000000E+02     S      2.832737E+02                    
+   3.600000E+02     S      2.815955E+02                    
+   4.200000E+02     S      2.802449E+02                    
+   4.800000E+02     S      2.791587E+02                    
+   5.400000E+02     S      2.782848E+02                    
+   6.000000E+02     S      2.775814E+02                    
+   6.600000E+02     S      2.770146E+02                    
+   7.200000E+02     S      2.765577E+02                    
+   7.800000E+02     S      2.761889E+02                    
+   8.400000E+02     S      2.758911E+02                    
+   9.000000E+02     S      2.756504E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    22
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         6
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.952291E+02                    
+   6.000000E+01     S      2.906824E+02                    
+   1.200000E+02     S      2.826612E+02                    
+   1.800000E+02     S      2.760649E+02                    
+   2.400000E+02     S      2.707293E+02                    
+   3.000000E+02     S      2.664337E+02                    
+   3.600000E+02     S      2.629814E+02                    
+   4.200000E+02     S      2.602080E+02                    
+   4.800000E+02     S      2.579789E+02                    
+   5.400000E+02     S      2.561860E+02                    
+   6.000000E+02     S      2.547424E+02                    
+   6.600000E+02     S      2.535791E+02                    
+   7.200000E+02     S      2.526406E+02                    
+   7.800000E+02     S      2.518830E+02                    
+   8.400000E+02     S      2.512709E+02                    
+   9.000000E+02     S      2.507760E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    23
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         7
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.894327E+02                    
+   6.000000E+01     S      2.807070E+02                    
+   1.200000E+02     S      2.668659E+02                    
+   1.800000E+02     S      2.564042E+02                    
+   2.400000E+02     S      2.482733E+02                    
+   3.000000E+02     S      2.418714E+02                    
+   3.600000E+02     S      2.367881E+02                    
+   4.200000E+02     S      2.327281E+02                    
+   4.800000E+02     S      2.294721E+02                    
+   5.400000E+02     S      2.268533E+02                    
+   6.000000E+02     S      2.247425E+02                    
+   6.600000E+02     S      2.230387E+02                    
+   7.200000E+02     S      2.216618E+02                    
+   7.800000E+02     S      2.205481E+02                    
+   8.400000E+02     S      2.196468E+02                    
+   9.000000E+02     S      2.189170E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    24
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         8
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.889609E+02                    
+   6.000000E+01     S      2.792170E+02                    
+   1.200000E+02     S      2.633841E+02                    
+   1.800000E+02     S      2.513866E+02                    
+   2.400000E+02     S      2.421599E+02                    
+   3.000000E+02     S      2.349480E+02                    
+   3.600000E+02     S      2.292459E+02                    
+   4.200000E+02     S      2.247021E+02                    
+   4.800000E+02     S      2.210619E+02                    
+   5.400000E+02     S      2.181349E+02                    
+   6.000000E+02     S      2.157756E+02                    
+   6.600000E+02     S      2.138704E+02                    
+   7.200000E+02     S      2.123301E+02                    
+   7.800000E+02     S      2.110837E+02                    
+   8.400000E+02     S      2.100745E+02                    
+   9.000000E+02     S      2.092571E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    25
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         9
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.972444E+02                    
+   6.000000E+01     S      2.949387E+02                    
+   1.200000E+02     S      2.910682E+02                    
+   1.800000E+02     S      2.879234E+02                    
+   2.400000E+02     S      2.853547E+02                    
+   3.000000E+02     S      2.832737E+02                    
+   3.600000E+02     S      2.815955E+02                    
+   4.200000E+02     S      2.802449E+02                    
+   4.800000E+02     S      2.791587E+02                    
+   5.400000E+02     S      2.782848E+02                    
+   6.000000E+02     S      2.775814E+02                    
+   6.600000E+02     S      2.770146E+02                    
+   7.200000E+02     S      2.765577E+02                    
+   7.800000E+02     S      2.761889E+02                    
+   8.400000E+02     S      2.758911E+02                    
+   9.000000E+02     S      2.756504E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    26
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =        10
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.972444E+02                    
+   6.000000E+01     S      2.949387E+02                    
+   1.200000E+02     S      2.910682E+02                    
+   1.800000E+02     S      2.879234E+02                    
+   2.400000E+02     S      2.853547E+02                    
+   3.000000E+02     S      2.832737E+02                    
+   3.600000E+02     S      2.815955E+02                    
+   4.200000E+02     S      2.802449E+02                    
+   4.800000E+02     S      2.791587E+02                    
+   5.400000E+02     S      2.782848E+02                    
+   6.000000E+02     S      2.775814E+02                    
+   6.600000E+02     S      2.770146E+02                    
+   7.200000E+02     S      2.765577E+02                    
+   7.800000E+02     S      2.761889E+02                    
+   8.400000E+02     S      2.758911E+02                    
+   9.000000E+02     S      2.756504E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    27
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =       100
+                                              T E M P E R A T U R E   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+02                    
+   3.000000E+01     S      2.999998E+02                    
+   6.000000E+01     S      2.999997E+02                    
+   1.200000E+02     S      2.999995E+02                    
+   1.800000E+02     S      2.999992E+02                    
+   2.400000E+02     S      2.999991E+02                    
+   3.000000E+02     S      2.999990E+02                    
+   3.600000E+02     S      2.999988E+02                    
+   4.200000E+02     S      2.999987E+02                    
+   4.800000E+02     S      2.999987E+02                    
+   5.400000E+02     S      2.999986E+02                    
+   6.000000E+02     S      2.999986E+02                    
+   6.600000E+02     S      2.999986E+02                    
+   7.200000E+02     S      2.999985E+02                    
+   7.800000E+02     S      2.999985E+02                    
+   8.400000E+02     S      2.999985E+02                    
+   9.000000E+02     S      2.999985E+02                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    28
+                                                                                                                                    
+0                                                                                                                                   
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    29
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         1
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      4.000000E+00                    
+   3.000000E+01     S      4.000000E+00                    
+   6.000000E+01     S      4.000000E+00                    
+   1.200000E+02     S      4.000000E+00                    
+   1.800000E+02     S      4.000000E+00                    
+   2.400000E+02     S      4.000000E+00                    
+   3.000000E+02     S      4.000000E+00                    
+   3.600000E+02     S      4.000000E+00                    
+   4.200000E+02     S      4.000000E+00                    
+   4.800000E+02     S      4.000000E+00                    
+   5.400000E+02     S      4.000000E+00                    
+   6.000000E+02     S      4.000000E+00                    
+   6.600000E+02     S      4.000000E+00                    
+   7.200000E+02     S      4.000000E+00                    
+   7.800000E+02     S      4.000000E+00                    
+   8.400000E+02     S      4.000000E+00                    
+   9.000000E+02     S      4.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    30
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         2
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      8.000000E+00                    
+   3.000000E+01     S      8.000000E+00                    
+   6.000000E+01     S      8.000000E+00                    
+   1.200000E+02     S      8.000000E+00                    
+   1.800000E+02     S      8.000000E+00                    
+   2.400000E+02     S      8.000000E+00                    
+   3.000000E+02     S      8.000000E+00                    
+   3.600000E+02     S      8.000000E+00                    
+   4.200000E+02     S      8.000000E+00                    
+   4.800000E+02     S      8.000000E+00                    
+   5.400000E+02     S      8.000000E+00                    
+   6.000000E+02     S      8.000000E+00                    
+   6.600000E+02     S      8.000000E+00                    
+   7.200000E+02     S      8.000000E+00                    
+   7.800000E+02     S      8.000000E+00                    
+   8.400000E+02     S      8.000000E+00                    
+   9.000000E+02     S      8.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    31
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         3
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      8.000000E+00                    
+   3.000000E+01     S      8.000000E+00                    
+   6.000000E+01     S      8.000000E+00                    
+   1.200000E+02     S      8.000000E+00                    
+   1.800000E+02     S      8.000000E+00                    
+   2.400000E+02     S      8.000000E+00                    
+   3.000000E+02     S      8.000000E+00                    
+   3.600000E+02     S      8.000000E+00                    
+   4.200000E+02     S      8.000000E+00                    
+   4.800000E+02     S      8.000000E+00                    
+   5.400000E+02     S      8.000000E+00                    
+   6.000000E+02     S      8.000000E+00                    
+   6.600000E+02     S      8.000000E+00                    
+   7.200000E+02     S      8.000000E+00                    
+   7.800000E+02     S      8.000000E+00                    
+   8.400000E+02     S      8.000000E+00                    
+   9.000000E+02     S      8.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    32
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         4
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      4.000000E+00                    
+   3.000000E+01     S      4.000000E+00                    
+   6.000000E+01     S      4.000000E+00                    
+   1.200000E+02     S      4.000000E+00                    
+   1.800000E+02     S      4.000000E+00                    
+   2.400000E+02     S      4.000000E+00                    
+   3.000000E+02     S      4.000000E+00                    
+   3.600000E+02     S      4.000000E+00                    
+   4.200000E+02     S      4.000000E+00                    
+   4.800000E+02     S      4.000000E+00                    
+   5.400000E+02     S      4.000000E+00                    
+   6.000000E+02     S      4.000000E+00                    
+   6.600000E+02     S      4.000000E+00                    
+   7.200000E+02     S      4.000000E+00                    
+   7.800000E+02     S      4.000000E+00                    
+   8.400000E+02     S      4.000000E+00                    
+   9.000000E+02     S      4.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    33
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         5
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      4.000000E+00                    
+   3.000000E+01     S      4.000000E+00                    
+   6.000000E+01     S      4.000000E+00                    
+   1.200000E+02     S      4.000000E+00                    
+   1.800000E+02     S      4.000000E+00                    
+   2.400000E+02     S      4.000000E+00                    
+   3.000000E+02     S      4.000000E+00                    
+   3.600000E+02     S      4.000000E+00                    
+   4.200000E+02     S      4.000000E+00                    
+   4.800000E+02     S      4.000000E+00                    
+   5.400000E+02     S      4.000000E+00                    
+   6.000000E+02     S      4.000000E+00                    
+   6.600000E+02     S      4.000000E+00                    
+   7.200000E+02     S      4.000000E+00                    
+   7.800000E+02     S      4.000000E+00                    
+   8.400000E+02     S      4.000000E+00                    
+   9.000000E+02     S      4.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    34
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         6
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      8.000000E+00                    
+   3.000000E+01     S      8.000000E+00                    
+   6.000000E+01     S      8.000000E+00                    
+   1.200000E+02     S      8.000000E+00                    
+   1.800000E+02     S      8.000000E+00                    
+   2.400000E+02     S      8.000000E+00                    
+   3.000000E+02     S      8.000000E+00                    
+   3.600000E+02     S      8.000000E+00                    
+   4.200000E+02     S      8.000000E+00                    
+   4.800000E+02     S      8.000000E+00                    
+   5.400000E+02     S      8.000000E+00                    
+   6.000000E+02     S      8.000000E+00                    
+   6.600000E+02     S      8.000000E+00                    
+   7.200000E+02     S      8.000000E+00                    
+   7.800000E+02     S      8.000000E+00                    
+   8.400000E+02     S      8.000000E+00                    
+   9.000000E+02     S      8.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    35
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         7
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      8.000000E+00                    
+   3.000000E+01     S      8.000000E+00                    
+   6.000000E+01     S      8.000000E+00                    
+   1.200000E+02     S      8.000000E+00                    
+   1.800000E+02     S      8.000000E+00                    
+   2.400000E+02     S      8.000000E+00                    
+   3.000000E+02     S      8.000000E+00                    
+   3.600000E+02     S      8.000000E+00                    
+   4.200000E+02     S      8.000000E+00                    
+   4.800000E+02     S      8.000000E+00                    
+   5.400000E+02     S      8.000000E+00                    
+   6.000000E+02     S      8.000000E+00                    
+   6.600000E+02     S      8.000000E+00                    
+   7.200000E+02     S      8.000000E+00                    
+   7.800000E+02     S      8.000000E+00                    
+   8.400000E+02     S      8.000000E+00                    
+   9.000000E+02     S      8.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    36
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =         8
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      4.000000E+00                    
+   3.000000E+01     S      4.000000E+00                    
+   6.000000E+01     S      4.000000E+00                    
+   1.200000E+02     S      4.000000E+00                    
+   1.800000E+02     S      4.000000E+00                    
+   2.400000E+02     S      4.000000E+00                    
+   3.000000E+02     S      4.000000E+00                    
+   3.600000E+02     S      4.000000E+00                    
+   4.200000E+02     S      4.000000E+00                    
+   4.800000E+02     S      4.000000E+00                    
+   5.400000E+02     S      4.000000E+00                    
+   6.000000E+02     S      4.000000E+00                    
+   6.600000E+02     S      4.000000E+00                    
+   7.200000E+02     S      4.000000E+00                    
+   7.800000E+02     S      4.000000E+00                    
+   8.400000E+02     S      4.000000E+00                    
+   9.000000E+02     S      4.000000E+00                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    37
+                                                                                                                                    
+0                                                                                                                                   
+      POINT-ID =       100
+                                                     L O A D   V E C T O R
+ 
+      TIME        TYPE        VALUE
+   0.0              S      3.000000E+07                    
+   3.000000E+01     S      3.000000E+07                    
+   6.000000E+01     S      3.000000E+07                    
+   1.200000E+02     S      3.000000E+07                    
+   1.800000E+02     S      3.000000E+07                    
+   2.400000E+02     S      3.000000E+07                    
+   3.000000E+02     S      3.000000E+07                    
+   3.600000E+02     S      3.000000E+07                    
+   4.200000E+02     S      3.000000E+07                    
+   4.800000E+02     S      3.000000E+07                    
+   5.400000E+02     S      3.000000E+07                    
+   6.000000E+02     S      3.000000E+07                    
+   6.600000E+02     S      3.000000E+07                    
+   7.200000E+02     S      3.000000E+07                    
+   7.800000E+02     S      3.000000E+07                    
+   8.400000E+02     S      3.000000E+07                    
+   9.000000E+02     S      3.000000E+07                    
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    38
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OPG2     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0              1224                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      104 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     2630 WORDS.)
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    39
+                                                                                                                                    
+0                                                                                                                                   
+0                             X Y - O U T P U T  S U M M A R Y  ( R E S P O N S E )
+0 SUBCASE  CURVE FRAME    CURVE ID./       XMIN-FRAME/    XMAX-FRAME/    YMIN-FRAME/      X FOR        YMAX-FRAME/      X FOR
+     ID     TYPE   NO.  PANEL  : GRID ID     ALL DATA       ALL DATA       ALL DATA       YMIN           ALL DATA       YMAX
+0       1  DISP      6        1(  3)      0.000000E+00   9.000000E+02   2.756504E+02   9.000000E+02   3.000000E+02   0.000000E+00
+                                          0.000000E+00   9.000000E+02   2.756504E+02   9.000000E+02   3.000000E+02   0.000000E+00
+0       1  DISP      6        4(  3)      0.000000E+00   9.000000E+02   2.092571E+02   9.000000E+02   3.000000E+02   0.000000E+00
+                                          0.000000E+00   9.000000E+02   2.092571E+02   9.000000E+02   3.000000E+02   0.000000E+00
+0       1  DISP      6      100(  3)      0.000000E+00   9.000000E+02   2.999985E+02   8.400000E+02   3.000000E+02   0.000000E+00
+                                          0.000000E+00   9.000000E+02   2.999985E+02   8.400000E+02   3.000000E+02   0.000000E+00
+0       1  VELO      7      100(  3)      0.000000E+00   9.000000E+02   0.000000E+00   0.000000E+00   0.000000E+00   0.000000E+00
+                                          0.000000E+00   9.000000E+02   0.000000E+00   0.000000E+00   0.000000E+00   0.000000E+00
+0       1  VELO      8        1(  3)      0.000000E+00   9.000000E+02   6.400439E+04   9.000000E+02   6.965823E+04   0.000000E+00
+                                          0.000000E+00   9.000000E+02   6.400439E+04   9.000000E+02   6.965823E+04   0.000000E+00
+0       1  VELO      9        4(  3)      0.000000E+00   9.000000E+02   1.269144E+04   9.000000E+02   1.819500E+04   0.000000E+00
+                                          0.000000E+00   9.000000E+02   1.269144E+04   9.000000E+02   1.819500E+04   0.000000E+00
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    40
+                                                                                                                                    
+0                                                                                                                                   
+0 XYPAPLOT FRAME        6
+0                                                                                                                                   
+0    X-AXIS TITLE = TIME IN SECONDS                                                                                                 
+0
+             +---------------------------------------------------------------------------------------------------------------------+
+             I                                                                                                                     I
+             I  DEGREES CELSIUS GP(100,1,4)                                                                                        I
+             I                                                                                                                     I
+             I  2.000000E+02                                       2.500000E+02                                       3.000000E+02 I
+             +---------------------------------------------------------------------------------------------------------------------+
+  0.0000E+00 I                                                          I                                                          A
+  3.0000E+01 I                                                          I                                             0         *  A
+  6.0000E+01 I                                                          I                                 0                  *     A
+  9.0000E+01 I                                                          I                                                          I
+  1.2000E+02 I                                                          I               0                               *          A
+  1.5000E+02 I                                                          I                                                          I
+  1.8000E+02 I                                                          I 0                                          *             A
+  2.1000E+02 I                                                          I                                                          I
+  2.4000E+02 I                                                 0        I                                         *                A
+  2.7000E+02 I                                                          I                                                          I
+  3.0000E+02 I                                        0                 I                                      *                   A
+  3.3000E+02 I                                                          I                                                          I
+  3.6000E+02 I                                  0                       I                                    *                     A
+  3.9000E+02 I                                                          I                                                          I
+  4.2000E+02 I                            0                             I                                   *                      A
+  4.5000E+02 I                                                          I                                                          I
+  4.8000E+02 I                        0                                 I                                 *                        A
+  5.1000E+02 I                                                          I                                                          I
+  5.4000E+02 I                    0                                     I                                *                         A
+  5.7000E+02 I                                                          I                                                          I
+  6.0000E+02 I                  0                                       I                                *                         A
+  6.3000E+02 I                                                          I                                                          I
+  6.6000E+02 I               0                                          I                               *                          A
+  6.9000E+02 I                                                          I                                                          I
+  7.2000E+02 I              0                                           I                              *                           A
+  7.5000E+02 I                                                          I                                                          I
+  7.8000E+02 I            0                                             I                              *                           A
+  8.1000E+02 I                                                          I                                                          I
+  8.4000E+02 I           0                                              I                              *                           A
+  8.7000E+02 I                                                          I                                                          I
+  9.0000E+02 I          0                                               I                             *                            A
+  9.3000E+02 I                                                          I                                                          I
+  9.6000E+02 I                                                          I                                                          I
+  9.9000E+02 I                                                          I                                                          I
+             +---------------------------------------------------------------------------------------------------------------------+
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    41
+                                                                                                                                    
+0                                                                                                                                   
+0 XYPAPLOT FRAME        7
+0                                                                                                                                   
+0    X-AXIS TITLE = TIME IN SECONDS                                                                                                 
+0
+             +---------------------------------------------------------------------------------------------------------------------+
+             I                                                                                                                     I
+             I  DEGREES CELSIUS PER SECOND GP(100,1,4)                                                                             I
+             I                                                                                                                     I
+             I  0.000000E+00                                       5.000000E-01                                       1.000000E+00 I
+             +---------------------------------------------------------------------------------------------------------------------+
+  0.0000E+00 *                                                          I                                                          I
+  3.0000E+01 *                                                          I                                                          I
+  6.0000E+01 *                                                          I                                                          I
+  9.0000E+01 I                                                          I                                                          I
+  1.2000E+02 *                                                          I                                                          I
+  1.5000E+02 I                                                          I                                                          I
+  1.8000E+02 *                                                          I                                                          I
+  2.1000E+02 I                                                          I                                                          I
+  2.4000E+02 *                                                          I                                                          I
+  2.7000E+02 I                                                          I                                                          I
+  3.0000E+02 *                                                          I                                                          I
+  3.3000E+02 I                                                          I                                                          I
+  3.6000E+02 *                                                          I                                                          I
+  3.9000E+02 I                                                          I                                                          I
+  4.2000E+02 *                                                          I                                                          I
+  4.5000E+02 I                                                          I                                                          I
+  4.8000E+02 *                                                          I                                                          I
+  5.1000E+02 I                                                          I                                                          I
+  5.4000E+02 *                                                          I                                                          I
+  5.7000E+02 I                                                          I                                                          I
+  6.0000E+02 *                                                          I                                                          I
+  6.3000E+02 I                                                          I                                                          I
+  6.6000E+02 *                                                          I                                                          I
+  6.9000E+02 I                                                          I                                                          I
+  7.2000E+02 *                                                          I                                                          I
+  7.5000E+02 I                                                          I                                                          I
+  7.8000E+02 *                                                          I                                                          I
+  8.1000E+02 I                                                          I                                                          I
+  8.4000E+02 *                                                          I                                                          I
+  8.7000E+02 I                                                          I                                                          I
+  9.0000E+02 *                                                          I                                                          I
+  9.3000E+02 I                                                          I                                                          I
+  9.6000E+02 I                                                          I                                                          I
+  9.9000E+02 I                                                          I                                                          I
+             +---------------------------------------------------------------------------------------------------------------------+
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    42
+                                                                                                                                    
+0                                                                                                                                   
+0 XYPAPLOT FRAME        8
+0                                                                                                                                   
+0    X-AXIS TITLE = TIME IN SECONDS                                                                                                 
+0
+             +---------------------------------------------------------------------------------------------------------------------+
+             I                                                                                                                     I
+             I  DEGREES CELSIUS PER SECOND GP(100,1,4)                                                                             I
+             I                                                                                                                     I
+             I  6.400000E+04                                       6.700000E+04                                       7.000000E+04 I
+             +---------------------------------------------------------------------------------------------------------------------+
+  0.0000E+00 I                                                          I                                                   *      I
+  3.0000E+01 I                                                          I                                       *                  I
+  6.0000E+01 I                                                          I                            *                             I
+  9.0000E+01 I                                                          I                                                          I
+  1.2000E+02 I                                                          I          *                                               I
+  1.5000E+02 I                                                          I                                                          I
+  1.8000E+02 I                                                       *  I                                                          I
+  2.1000E+02 I                                                          I                                                          I
+  2.4000E+02 I                                           *              I                                                          I
+  2.7000E+02 I                                                          I                                                          I
+  3.0000E+02 I                                  *                       I                                                          I
+  3.3000E+02 I                                                          I                                                          I
+  3.6000E+02 I                          *                               I                                                          I
+  3.9000E+02 I                                                          I                                                          I
+  4.2000E+02 I                    *                                     I                                                          I
+  4.5000E+02 I                                                          I                                                          I
+  4.8000E+02 I               *                                          I                                                          I
+  5.1000E+02 I                                                          I                                                          I
+  5.4000E+02 I           *                                              I                                                          I
+  5.7000E+02 I                                                          I                                                          I
+  6.0000E+02 I        *                                                 I                                                          I
+  6.3000E+02 I                                                          I                                                          I
+  6.6000E+02 I     *                                                    I                                                          I
+  6.9000E+02 I                                                          I                                                          I
+  7.2000E+02 I   *                                                      I                                                          I
+  7.5000E+02 I                                                          I                                                          I
+  7.8000E+02 I  *                                                       I                                                          I
+  8.1000E+02 I                                                          I                                                          I
+  8.4000E+02 I*                                                         I                                                          I
+  8.7000E+02 I                                                          I                                                          I
+  9.0000E+02 *                                                          I                                                          I
+  9.3000E+02 I                                                          I                                                          I
+  9.6000E+02 I                                                          I                                                          I
+  9.9000E+02 I                                                          I                                                          I
+             +---------------------------------------------------------------------------------------------------------------------+
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    43
+                                                                                                                                    
+0                                                                                                                                   
+0 XYPAPLOT FRAME        9
+0                                                                                                                                   
+0    X-AXIS TITLE = TIME IN SECONDS                                                                                                 
+0
+             +---------------------------------------------------------------------------------------------------------------------+
+             I                                                                                                                     I
+             I  DEGREES CELSIUS PER SECOND GP(100,1,4)                                                                             I
+             I                                                                                                                     I
+             I  1.200000E+04                                       1.550000E+04                                       1.900000E+04 I
+             +---------------------------------------------------------------------------------------------------------------------+
+  0.0000E+00 I                                                          I                                            *             I
+  3.0000E+01 I                                                          I                                 *                        I
+  6.0000E+01 I                                                          I                       *                                  I
+  9.0000E+01 I                                                          I                                                          I
+  1.2000E+02 I                                                          I       *                                                  I
+  1.5000E+02 I                                                          I                                                          I
+  1.8000E+02 I                                                      *   I                                                          I
+  2.1000E+02 I                                                          I                                                          I
+  2.4000E+02 I                                            *             I                                                          I
+  2.7000E+02 I                                                          I                                                          I
+  3.0000E+02 I                                     *                    I                                                          I
+  3.3000E+02 I                                                          I                                                          I
+  3.6000E+02 I                               *                          I                                                          I
+  3.9000E+02 I                                                          I                                                          I
+  4.2000E+02 I                          *                               I                                                          I
+  4.5000E+02 I                                                          I                                                          I
+  4.8000E+02 I                       *                                  I                                                          I
+  5.1000E+02 I                                                          I                                                          I
+  5.4000E+02 I                    *                                     I                                                          I
+  5.7000E+02 I                                                          I                                                          I
+  6.0000E+02 I                 *                                        I                                                          I
+  6.3000E+02 I                                                          I                                                          I
+  6.6000E+02 I               *                                          I                                                          I
+  6.9000E+02 I                                                          I                                                          I
+  7.2000E+02 I              *                                           I                                                          I
+  7.5000E+02 I                                                          I                                                          I
+  7.8000E+02 I             *                                            I                                                          I
+  8.1000E+02 I                                                          I                                                          I
+  8.4000E+02 I           *                                              I                                                          I
+  8.7000E+02 I                                                          I                                                          I
+  9.0000E+02 I           *                                              I                                                          I
+  9.3000E+02 I                                                          I                                                          I
+  9.6000E+02 I                                                          I                                                          I
+  9.9000E+02 I                                                          I                                                          I
+             +---------------------------------------------------------------------------------------------------------------------+
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OPG1     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0              1224                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      184 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     3867 WORDS.)
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    44
+                                                                                                                                    
+0                                                                                                                                   
+                                  ERROR MESSAGES FROM THE PLOT SET DEFINITION MODULE (PLTSET)                                     
+
+                                 NO PLOTABLE STRUCTURAL ELEMENTS EXIST IN SET       2
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    45
+                                                                                                                                    
+0                                                                                                                                   
+                                                  MESSAGES FROM THE PLOT MODULE                                                   
+
+                                ALL REFERENCES TO SET       2 WILL BE IGNORED
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    46
+                                                                                                                                    
+0                                                                                                                                   
+0                                                    MESSAGES FROM THE PLOT MODULE                                                  
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1             NON-LINEAR TRANSIENT PROBLEM                   HD15901           JULY  21, 2015  NX NASTRAN  1/24/13   PAGE    47
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     29
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 'HEAT    '    T    T    T    T    T     F      F      T      0     F      0            0           F
+     0     0    1    1 'HEAT    '    F    F    F    F    F     F      F      F      0     T      1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+1                                        * * * END OF JOB * * *
+ 
+ 

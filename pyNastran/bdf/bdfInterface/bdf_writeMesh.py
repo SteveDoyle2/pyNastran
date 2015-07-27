@@ -27,7 +27,6 @@ class WriteMesh(object):
         self._auto_reject = True
         self.cards_to_read = set([])
 
-
     def echo_bdf(self, infile_name):
         """
         This method removes all comment lines from the bdf
@@ -93,7 +92,6 @@ class WriteMesh(object):
                              (default=None; pops a dialog)
         :param encoding:     the unicode encoding (latin1, and utf8 are generally good options)
                              default=None -> system specified encoding
-
         :param size:      the field size (8 is recommended)
         :param is_double: small field (False) or large field (True); default=False
         :param interspersed: Writes a bdf with properties & elements

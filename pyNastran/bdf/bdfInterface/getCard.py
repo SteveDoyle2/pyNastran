@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, integer_types
+from six import string_types, iteritems, integer_types, iterkeys
 #import sys
 from numpy import ndarray
 
@@ -13,7 +13,7 @@ class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         self._type_to_slot_map = {}
 
-    def get_card_ids_by_card_types(self, card_types, reset_type_to_slot_map=False,
+    def get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
                                    stop_on_missing_card=False):
         """
         :param card_types: the list of keys to consider (list of strings; string)
@@ -24,6 +24,8 @@ class GetMethods(GetMethodsDeprecated):
             crashes if you request a card and it doesn't exist
         :retval out: the key=card_type, value=the ID of the card object
         """
+        if card_types is None:
+            card_types = list(self.cards_to_read)
         if isinstance(card_types, string_types):
             card_types = [card_types]
         elif not(isinstance(card_types, list) or isinstance(card_types, tuple)):
@@ -138,7 +140,7 @@ class GetMethods(GetMethodsDeprecated):
 
 
         if eids is None:
-            eids = iterkeys(self.elements.keys())
+            eids = iterkeys(self.elements)
 
         for eid in eids:
             elem = self.elements[eid]
@@ -151,7 +153,11 @@ class GetMethods(GetMethodsDeprecated):
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
                 assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
-                edge_to_eid_map[edge].add(eid)
+                try:
+                    edge_to_eid_map[edge].add(eid)
+                except TypeError:
+                    print(elem)
+                    raise
                 for nid in edge:
                     nid_to_edge_map[nid].add(tuple(edge))
         out = (
@@ -270,19 +276,19 @@ class GetMethods(GetMethodsDeprecated):
 
     def get_node_id_to_element_ids_map(self):
         """
-        Returns a dictionary that maps a node ID to a list of elemnents
+        Returns a dictionary that maps node IDs to a list of elemnent IDs
 
         .. todo:: support 0d or 1d elements
         .. todo:: support elements with missing nodes
                   (e.g. CQUAD8 with missing nodes)
         """
-        nidToElementsMap = {}
+        nid_to_eids_map = {}
         for nid in self.nodes:  # initalize the mapper
-            nidToElementsMap[nid] = []
+            nid_to_eids_map[nid] = []
 
         if self.spoints:  # SPOINTs
             for nid in sorted(self.spoints.spoints):  # SPOINTs
-                nidToElementsMap[nid] = []
+                nid_to_eids_map[nid] = []
 
         for (eid, element) in iteritems(self.elements):  # load the mapper
             try:
@@ -292,9 +298,37 @@ class GetMethods(GetMethodsDeprecated):
                 print(element.type)
             else:
                 for nid in nids:  # (e.g. CQUAD8 with missing node)
-                    nidToElementsMap[nid].append(eid)
+                    nid_to_eids_map[nid].append(eid)
 
-        return nidToElementsMap
+        return nid_to_eids_map
+
+    def get_node_id_to_elements_map(self):
+        """
+        Returns a dictionary that maps node IDs to a list of elemnents
+
+        .. todo:: support 0d or 1d elements
+        .. todo:: support elements with missing nodes
+                  (e.g. CQUAD8 with missing nodes)
+        """
+        nid_to_elements_map = {}
+        for nid in self.nodes:  # initalize the mapper
+            nid_to_elements_map[nid] = []
+
+        if self.spoints:  # SPOINTs
+            for nid in sorted(self.spoints.spoints):  # SPOINTs
+                nid_to_elements_map[nid] = []
+
+        for (_, element) in iteritems(self.elements):  # load the mapper
+            try:
+                # not supported for 0-D and 1-D elements
+                nids = element.node_ids
+            except AttributeError:
+                print(element.type)
+            else:
+                for nid in nids:  # (e.g. CQUAD8 with missing node)
+                    nid_to_elements_map[nid].append(element)
+
+        return nid_to_elements_map
 
     def get_property_id_to_element_ids_map(self):
         """

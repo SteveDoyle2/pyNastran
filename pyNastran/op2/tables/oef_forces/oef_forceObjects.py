@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
-from numpy import zeros, searchsorted
+from numpy import array, zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
@@ -13,7 +13,6 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenv
 class RealRodForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -40,9 +39,9 @@ class RealRodForceArray(ScalarObject):
     def _get_msgs(self):
         base_msg = ['       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
                     '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
-        crod_msg   = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        crod_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
         conrod_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
-        ctube_msg  = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        ctube_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
         crod_msg += base_msg
         conrod_msg += base_msg
         ctube_msg += base_msg
@@ -140,7 +139,8 @@ class RealRodForceArray(ScalarObject):
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
-        (ntimes, ntotal, two) = self.data.shape
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element
         is_odd = False
@@ -167,11 +167,11 @@ class RealRodForceArray(ScalarObject):
                 out.append([eid, axiali, torsioni])
 
             for i in range(0, nwrite, 2):
-                outLine = '      %8i   %-13s  %-13s  %8i   %-13s  %s\n' % tuple(out[i] + out[i + 1])
-                f.write(outLine)
+                out_line = '      %8i   %-13s  %-13s  %8i   %-13s  %s\n' % tuple(out[i] + out[i + 1])
+                f.write(out_line)
             if is_odd:
-                outLine = '      %8i   %-13s  %s\n' % tuple(out[-1])
-                f.write(outLine)
+                out_line = '      %8i   %-13s  %s\n' % tuple(out[-1])
+                f.write(out_line)
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -279,13 +279,13 @@ class RealRodForce(ScalarObject):
                 #            14       -3.826978E+05   2.251969E+03                       15       -4.054566E+05   8.402607E+02
 
 
-                outLine = '      %8i       %13.6E  %13.6E                 %8i       %13.6E  %13.6E\n' % (tuple(out[i] + out[i + 1]))
-                msg.append(outLine)
+                out_line = '      %8i       %13.6E  %13.6E                 %8i       %13.6E  %13.6E\n' % (tuple(out[i] + out[i + 1]))
+                msg.append(out_line)
 
             if nOut % 2 == 1:
-                outLine = '      %8i       %13.6E  %13.6E\n' % (
+                out_line = '      %8i       %13.6E  %13.6E\n' % (
                     tuple(out[-1]))
-                msg.append(outLine)
+                msg.append(out_line)
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
@@ -306,12 +306,12 @@ class RealRodForce(ScalarObject):
         if nOut % 2 == 1:
             nWrite = nOut - 1
         for i in range(0, nWrite, 2):
-            outLine = '      %8i   %-13s  %-13s  %8i   %-13s  %-13s\n' % tuple(out[i] + out[i + 1])
-            msg.append(outLine)
+            out_line = '      %8i   %-13s  %-13s  %8i   %-13s  %-13s\n' % tuple(out[i] + out[i + 1])
+            msg.append(out_line)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %-13s  %-13s\n' % tuple(out[-1])
-            msg.append(outLine)
+            out_line = '      %8i   %-13s  %-13s\n' % tuple(out[-1])
+            msg.append(out_line)
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -362,7 +362,6 @@ class RealConrodForce(RealRodForce):  # 10-CONROD
 class RealCBeamForce(ScalarObject):  # 2-CBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.nodes = {}
         self.bendingMoment = {}
         self.shear = {}
@@ -430,8 +429,6 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
 
     def add_new_element(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        #print "CBEAM addnew",data
-        #self.eType[eid] = eType
         self.nodes[eid] = {sd: nid}
         self.bendingMoment[eid] = {sd: [bm1, bm2]}
         self.shear[eid] = {sd: [ts1, ts2]}
@@ -441,9 +438,6 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
 
     def add(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        #print "CBEAM add   ",data
-
-        #self.eType[eid] = eType
         self.nodes[eid][sd] = nid
         self.bendingMoment[eid][sd] = [bm1, bm2]
         self.shear[eid][sd] = [ts1, ts2]
@@ -471,7 +465,6 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
     def _fillObject(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         #if dt not in self.axial:
             #self.add_new_transient(dt)
-        #self.eType[eid] = eType
         self.nodes[eid][sd] = nid
         self.bendingMoment[dt][eid][sd] = [bm1, bm2]
         self.shear[dt][eid][sd] = [ts1, ts2]
@@ -482,7 +475,6 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
     def _fillObjectNew(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         if dt not in self.axial:
             self.add_new_transient(dt)
-        #self.eType[eid] = eType
         self.nodes[eid] = {sd: nid}
         self.bendingMoment[dt][eid] = {sd: [bm1, bm2]}
         self.shear[dt][eid] = {sd: [ts1, ts2]}
@@ -520,7 +512,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
-        return (page_num - 1)
+        return page_num - 1
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -549,7 +541,6 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
 class RealCShearForce(ScalarObject):  # 4-CSHEAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force41 = {}
         self.force14 = {}
         self.force21 = {}
@@ -614,7 +605,6 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
     def add(self, dt, data):
         [eid, f41, f21, f12, f32, f23, f43, f34, f14,
          kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        #self.eType[eid] = eType
         self.force41[eid] = f41
         self.force14[eid] = f14
         self.force21[eid] = f21
@@ -683,7 +673,6 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
                     kf1, s12, kf2, s23, kf3, s34, kf4, s41):
         if dt not in self.force41:
             self.add_new_transient(dt)
-        #self.eType[eid] = eType
         self.force41[dt][eid] = f41
         self.force14[dt][eid] = f14
         self.force21[dt][eid] = f21
@@ -744,11 +733,14 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
                     kick4, tau41,
             ]
             (vals2, is_all_zeros) = writeFloats12E(vals)
-            [f14, f12,  f21, f23,  f32, f34,  f43, f41,
+            [f14, f12,
+             f21, f23,
+             f32, f34,
+             f43, f41,
              kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
             ] = vals2
             msg.append('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, f14, f12, f21, f23, f32, f34, f43, f41))
-            msg.append('                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % ( kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
+            msg.append('                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
 
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
@@ -758,7 +750,6 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
 class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force = {}
 
         self.dt = dt
@@ -801,24 +792,18 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
     def add(self, dt, data):
         [eid, force] = data
-
-        #self.eType[eid] = eType
         self.force[eid] = force
 
     def add_sort1(self, dt, data):
         [eid, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def add_sort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
@@ -870,7 +855,6 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force = {}
 
         self.dt = dt
@@ -902,24 +886,18 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
 
     def add(self, dt, data):
         [eid, force] = data
-
-        #self.eType[eid] = eType
         self.force[eid] = force
 
     def add_sort1(self, dt, data):
         [eid, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def add_sort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
@@ -983,7 +961,6 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
 class RealViscForce(ScalarObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.axialForce = {}
         self.torque = {}
 
@@ -1017,8 +994,6 @@ class RealViscForce(ScalarObject):  # 24-CVISC
 
     def add(self, dt, data):
         [eid, axialForce, torque] = data
-
-        #self.eType[eid] = eType
         self.axialForce[eid] = axialForce
         self.torque[eid] = torque
 
@@ -1026,8 +1001,6 @@ class RealViscForce(ScalarObject):  # 24-CVISC
         [eid, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -1035,8 +1008,6 @@ class RealViscForce(ScalarObject):  # 24-CVISC
         [dt, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -1044,7 +1015,6 @@ class RealViscForce(ScalarObject):  # 24-CVISC
 class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.mx = {}
         self.my = {}
         self.mxy = {}
@@ -1099,7 +1069,6 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
                 #raise NotImplementedError()
 
     def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        #self.eType[eid] = eType
         self.mx[eid] = mx
         self.my[eid] = my
         self.mxy[eid] = mxy
@@ -1112,8 +1081,6 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.mx[dt][eid] = mx
         self.my[dt][eid] = my
         self.mxy[dt][eid] = mxy
@@ -1126,8 +1093,6 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def add_sort2(self, eid, dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.mx[dt][eid] = mx
         self.my[dt][eid] = my
         self.mxy[dt][eid] = mxy
@@ -1144,12 +1109,13 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             #return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = [
-            '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
-            ' '
-            '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -'
-            '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY'
+            '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
+            ' \n'
+            '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -\n'
+            '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n'
         ]
-        f.write('      ID      FX                            FY                            FXY                           MX                            MY                            MXY                           QX                            QY\n')
+        #f.write('      ID      FX                            FY                            FXY                           MX                            MY                            MXY                           QX                            QY\n')
+        f.write(''.join(words))
         for eid in self.mx:
             mx = self.mx[eid]
             my = self.my[eid]
@@ -1161,7 +1127,11 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 
             tx = self.tx[eid]
             ty = self.ty[eid]
-            Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+            #Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+
+            ([mx, my, mxy, bmx, bmy, bmxy, tx, ty],
+             is_all_zeros) = writeFloats13E([mx, my, mxy, bmx, bmy, bmxy, tx, ty])
+            Fmt = '% 8i   ' + '%s ' * 8 + '\n'
             f.write(Fmt % (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty))
         return page_num
 
@@ -1226,7 +1196,6 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        #self.eType[eid] = eType
         self.times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1237,8 +1206,6 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         #if dt not in self.mx:
             #self.add_new_transient(dt)
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-
-        ##self.eType[eid] = eType
 
     def get_stats(self):
         if not self.is_built:
@@ -1265,7 +1232,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1328,7 +1295,6 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             ty = self.data[itime, :, 7]
 
             # loop over all the elements
-            out = []
             if self.element_type == 74:
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
@@ -1356,7 +1322,6 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.term = {}
         self.ngrids = {}
         self.mx = {}
@@ -1444,12 +1409,8 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
                 #raise NotImplementedError()
 
     def add_new_element(self, eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        #print "eid = ",eid
-
-        #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = [nid]
-
         self.mx[eid] = [mx]
         self.my[eid] = [my]
         self.mxy[eid] = [mxy]
@@ -1460,8 +1421,6 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.ty[eid] = [ty]
 
     def add(self, eid, dt, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        #self.eType[eid] = eType
-        #print "mx = ",self.mx,mx
         self.ngrids[eid].append(nid)
         self.mx[eid].append(mx)
         self.my[eid].append(my)
@@ -1476,7 +1435,6 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         if dt not in self.mx:
             self.add_new_transient(dt)
 
-        #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = [nid]
         self.mx[dt][eid] = [mx]
@@ -1492,7 +1450,6 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         if dt not in self.mx:
             self.add_new_transient(dt)
 
-        #self.eType[eid] = eType
         self.ngrids[eid].append(nid)
         self.mx[dt][eid].append(mx)
         self.my[dt][eid].append(my)
@@ -1507,7 +1464,6 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         if dt not in self.mx:
             self.add_new_transient(dt)
 
-        #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = nid
 
@@ -1524,7 +1480,6 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         if dt not in self.mx:
             self.add_new_transient(dt)
 
-        #self.eType[eid] = eType
         self.mx[dt][eid].append(mx)
         self.my[dt][eid].append(my)
         self.mxy[dt][eid].append(mxy)
@@ -1534,7 +1489,7 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None,  is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
 
@@ -1575,7 +1530,6 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 class RealCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.bendingMomentA = {}
         self.bendingMomentB = {}
         self.shear = {}
@@ -1615,8 +1569,6 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
 
     def add(self, dt, data):
         [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-
-        #self.eType[eid] = eType
         self.bendingMomentA[eid] = [bm1a, bm2a]
         self.bendingMomentB[eid] = [bm1b, bm2b]
         self.shear[eid] = [ts1, ts2]
@@ -1628,7 +1580,6 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         if dt not in self.axial:
             self.add_new_transient(dt)
 
-        #self.eType[eid] = eType
         self.bendingMomentA[dt][eid] = [bm1a, bm2a]
         self.bendingMomentB[dt][eid] = [bm1b, bm2b]
         self.shear[dt][eid] = [ts1, ts2]
@@ -1640,7 +1591,6 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         if dt not in self.axial:
             self.add_new_transient(dt)
 
-        #self.eType[eid] = eType
         self.bendingMomentA[dt][eid] = [bm1a, bm2a]
         self.bendingMomentB[dt][eid] = [bm1b, bm2b]
         self.shear[dt][eid] = [ts1, ts2]
@@ -1696,11 +1646,168 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
             page_num += 1
         return page_num - 1
 
+class RealCBarForceArray(ScalarObject):  # 34-CBAR
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        #self.bendingMomentA = {}
+        #self.bendingMomentB = {}
+        #self.shear = {}
+        #self.axial = {}
+        #self.torque = {}
+        headers = [
+            'bending_moment_a1', 'bending_moment_a2',
+            'bending_moment_b1', 'bending_moment_b2',
+            'shear1', 'shear2',
+            'axial', 'torque']
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self.times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def add(self, dt, data):
+        self.add_sort1(dt, data)
+
+    def add_sort1(self, dt, data):
+        data = [eid, bending_moment_a1, bending_moment_a2,
+                bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
+        self.times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [
+            bending_moment_a1, bending_moment_a2,
+            bending_moment_b1, bending_moment_b2,
+            shear1, shear2, axial, torque]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return ['<%s>\n' % self.__class__.__name__,
+                    '  ntimes: %i\n' % self.ntimes,
+                    '  ntotal: %i\n' % self.ntotal,
+                    ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def eid_to_element_node_index(self, eids):
+        ind = searchsorted(eids, self.element)
+        return ind
+
+    #def _get_msgs(self):
+        #base_msg = ['       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
+                    #'         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        #crod_msg   = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        #conrod_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
+        #ctube_msg  = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        #crod_msg += base_msg
+        #conrod_msg += base_msg
+        #ctube_msg += base_msg
+        #return crod_msg, conrod_msg, ctube_msg
+
+    #def get_f06_header(self, is_mag_phase=True):
+        #crod_msg, conrod_msg, ctube_msg = self._get_msgs()
+        #if 'CROD' in self.element_name:
+            #msg = crod_msg
+        #elif 'CONROD' in self.element_name:
+            #msg = conrod_msg
+        #elif 'CTUBE' in self.element_name:
+            #msg = ctube_msg
+        #return self.element_name, msg
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+        msg = []
+        #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+        eids = self.element
+        #f.write(''.join(words))
+
+        ntimes = self.data.shape[0]
+        for itime in range(ntimes):
+            dt = self.times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + words))
+
+            # loop over all the elements
+            bm1a = self.data[itime, :, 0]
+            bm2a = self.data[itime, :, 1]
+            bm1b = self.data[itime, :, 2]
+            bm2b = self.data[itime, :, 3]
+            ts1 = self.data[itime, :, 4]
+            ts2 = self.data[itime, :, 5]
+            af = self.data[itime, :, 6]
+            trq = self.data[itime, :, 7]
+            for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+                ([bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi], is_all_zeros) = writeFloats13E([
+                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi])
+            f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+            f.write(page_stamp % page_num)
+        return page_num
+
 
 class RealCBar100Force(ScalarObject):  # 100-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.bendingMoment = {}
         self.shear = {}
         self.axial = {}
@@ -1738,8 +1845,6 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
 
     def add(self, dt, data):
         [eid, sd, bm1, bm2, ts1, ts2, af, trq] = data
-
-        #self.eType[eid] = eType
         self.bendingMoment[eid] = [bm1, bm2]
         self.shear[eid] = [ts1, ts2]
         self.axial[eid] = af
@@ -1749,8 +1854,6 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
         [eid, sd, bm1, bm2, ts1, ts2, af, trq] = data
         if dt not in self.axial:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.bendingMoment[dt][eid] = [bm1, bm2]
         self.shear[dt][eid] = [ts1, ts2]
         self.axial[dt][eid] = af
@@ -1760,8 +1863,6 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
         [dt, sd, bm1, bm2, ts1, ts2, af, trq] = data
         if dt not in self.axial:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.bendingMoment[dt][eid] = [bm1, bm2]
         self.shear[dt][eid] = [ts1, ts2]
         self.axial[dt][eid] = af
@@ -1771,7 +1872,6 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
 class RealConeAxForce(ScalarObject):  # 35-CCONEAX
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.hopa = {}
         self.bmu = {}
         self.bmv = {}
@@ -1813,8 +1913,6 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
 
     def add(self, dt, data):
         [eid, hopa, bmu, bmv, tm, su, sv] = data
-
-        #self.eType[eid] = eType
         self.hopa[eid] = hopa
         self.bmu[eid] = bmu
         self.bmv[eid] = bmv
@@ -1826,8 +1924,6 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
         [eid, hopa, bmu, bmv, tm, su, sv] = data
         if dt not in self.hopa:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.hopa[dt][eid] = hopa
         self.bmu[dt][eid] = bmu
         self.bmv[dt][eid] = bmv
@@ -1839,8 +1935,6 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
         [dt, hopa, bmu, bmv, tm, su, sv] = data
         if dt not in self.hopa:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.hopa[dt][eid] = hopa
         self.bmu[dt][eid] = bmu
         self.bmv[dt][eid] = bmv
@@ -1852,7 +1946,6 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
 class RealCGapForce(ScalarObject):  # 38-CGAP
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.fx = {}
         self.sfy = {}
         self.sfz = {}
@@ -1898,8 +1991,6 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
 
     def add(self, dt, data):
         [eid, fx, sfy, sfz, u, v, w, sv, sw] = data
-
-        #self.eType[eid] = eType
         self.fx[eid] = fx
         self.sfy[eid] = sfy
         self.sfz[eid] = sfz
@@ -1913,8 +2004,6 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
         [eid, fx, sfy, sfz, u, v, w, sv, sw] = data
         if dt not in self.fx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.fx[dt][eid] = fx
         self.sfy[dt][eid] = sfy
         self.sfz[dt][eid] = sfz
@@ -1928,8 +2017,6 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
         [dt, fx, sfy, sfz, u, v, w, sv, sw] = data
         if dt not in self.fx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.fx[dt][eid] = fx
         self.sfy[dt][eid] = sfy
         self.sfz[dt][eid] = sfz
@@ -1943,7 +2030,6 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
 class RealBendForce(ScalarObject):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.nodeIDs = {}
         self.bendingMoment1 = {}
         self.bendingMoment2 = {}
@@ -1988,8 +2074,6 @@ class RealBendForce(ScalarObject):  # 69-CBEND
     def add(self, dt, data):
         [eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
          nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
-
-        #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA, nidB]
         self.bendingMoment1[eid] = [bm1A, bm1B]
         self.bendingMoment2[eid] = [bm2A, bm2B]
@@ -2015,8 +2099,6 @@ class RealBendForce(ScalarObject):  # 69-CBEND
                                    nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB):
         if dt not in self.axial:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA, nidB]
         self.bendingMoment1[dt][eid] = [bm1A, bm1B]
         self.bendingMoment2[dt][eid] = [bm2A, bm2B]
@@ -2029,7 +2111,6 @@ class RealBendForce(ScalarObject):  # 69-CBEND
 class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.acceleration = {}
         self.velocity = {}
         self.pressure = {}
@@ -2065,8 +2146,6 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
 
     def add(self, dt, data):
         [eid, eName, ax, ay, az, vx, vy, vz, pressure] = data
-
-        #self.eType[eid] = eType
         self.acceleration[eid] = [ax, ay, az]
         self.velocity[eid] = [vx, vy, vz]
         self.pressure[eid] = pressure
@@ -2075,8 +2154,6 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         [eid, eName, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.acceleration[dt][eid] = [ax, ay, az]
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
@@ -2085,8 +2162,6 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         [dt, eName, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.acceleration[dt][eid] = [ax, ay, az]
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
@@ -2128,7 +2203,6 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
 class RealCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force = {}
         self.moment = {}
 
@@ -2162,34 +2236,27 @@ class RealCBushForce(ScalarObject):  # 102-CBUSH
 
     def add(self, dt, data):
         [eid, fx, fy, fz, mx, my, mz] = data
-
-        #self.eType[eid] = eType
-        self.force[eid] = [fx, fy, fz]
-        self.moment[eid] = [mx, my, mz]
+        self.force[eid] = array([fx, fy, fz], dtype='float32')
+        self.moment[eid] = array([mx, my, mz], dtype='float32')
 
     def add_sort1(self, dt, data):
         [eid, fx, fy, fz, mx, my, mz] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
-        self.force[dt][eid] = [fx, fy, fz]
-        self.moment[dt][eid] = [mx, my, mz]
+        self.force[dt][eid] = array([fx, fy, fz], dtype='float32')
+        self.moment[dt][eid] = array([mx, my, mz], dtype='float32')
 
     def add_sort2(self, eid, data):
         [dt, fx, fy, fz, mx, my, mz] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
-        self.force[dt][eid] = [fx, fy, fz]
-        self.moment[dt][eid] = [mx, my, mz]
+        self.force[dt][eid] = array([fx, fy, fz], dtype='float32')
+        self.moment[dt][eid] = array([mx, my, mz], dtype='float32')
 
 
 class RealForce_VU(ScalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.parent = {}
         self.coord = {}
         self.icord = {}
@@ -2201,7 +2268,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.bendingY = {}
         self.bendingZ = {}
 
-        # TODO if dt=None, handle SORT1 case
+        # handle SORT1 case
         self.dt = dt
         if is_sort1:
             if dt is not None:
@@ -2238,7 +2305,6 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
-        #self.eType[eid]    = eType
 
         self.forceX[eid] = {}
         self.shearY[eid] = {}
@@ -2264,7 +2330,6 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
-        #self.eType[eid]    = eType
 
         self.forceX[dt][eid] = {}
         self.shearY[dt][eid] = {}
@@ -2290,7 +2355,6 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
-        #self.eType[eid]    = eType
 
         self.forceX[dt][eid] = {}
         self.shearY[dt][eid] = {}
@@ -2312,7 +2376,6 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
 class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.parent = {}
         self.coord = {}
         self.icord = {}
@@ -2327,7 +2390,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.shearYZ = {}
         self.shearXZ = {}
 
-        # TODO if dt=None, handle SORT1 case
+        # handle SORT1 case
         self.dt = dt
         if is_sort1:
             if dt is not None:
@@ -2367,7 +2430,6 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
-        #self.eType[eid]    = eType
 
         self.membraneX[eid] = {}
         self.membraneY[eid] = {}
@@ -2405,7 +2467,6 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
-        #self.eType[eid]    = eType
 
         self.membraneX[dt][eid] = {}
         self.membraneY[dt][eid] = {}

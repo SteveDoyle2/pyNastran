@@ -141,7 +141,7 @@ class RealTriaxStress(StressObject):
 
     def add_new_eid_sort1(self, dt, eid, nid, rs, azs, As, ss, maxp, tmax, octs):
         #assert isinstance(eid,int)
-        #assert eid >= 0
+        #assert eid >= 0, eid
         #print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         if dt not in self.radial:
             self.add_new_transient(dt)
@@ -332,7 +332,7 @@ class RealTriaxStrain(StrainObject):
 
     def add_new_eid_sort1(self, dt, eid, nid, rs, azs, As, ss, maxp, emax, ects):
         #assert isinstance(eid,int)
-        #assert eid >= 0
+        #assert eid >= 0, eid
         #print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[dt][eid] = {nid: rs}
         self.azimuthal[dt][eid] = {nid: azs}

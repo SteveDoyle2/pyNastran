@@ -136,14 +136,6 @@ class TriShell(ShellElement):
     def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
 
-    def get_edges(self):
-        """
-        Returns the edges
-        """
-        return [(self.nodes[0], self.nodes[1]),
-                (self.nodes[1], self.nodes[2]),
-                (self.nodes[2], self.nodes[0])]
-
     def get_edge_ids(self):
         """
         Return the edge IDs
@@ -445,7 +437,7 @@ class CTRIA6(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -651,7 +643,7 @@ class CTRIAR(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -730,7 +722,7 @@ class CTRIAX(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -853,7 +845,7 @@ class CTRIAX6(TriShell):
     def _verify(self, xref=True):
         eid = self.Eid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
         assert self.pid == 0, 'pid = %s' % self.pid
         assert isinstance(eid, integer_types)
@@ -959,15 +951,6 @@ class CTRIAX6(TriShell):
 class QuadShell(ShellElement):
     def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
-
-    def get_edges(self):
-        """
-        Returns the edges
-        """
-        return [(self.nodes[0], self.nodes[1]),
-                (self.nodes[1], self.nodes[2]),
-                (self.nodes[2], self.nodes[3]),
-                (self.nodes[3], self.nodes[0])]
 
     def get_edge_ids(self):
         """
@@ -1161,7 +1144,7 @@ class CSHEAR(QuadShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -1310,7 +1293,7 @@ class CQUAD4(QuadShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
@@ -1676,7 +1659,7 @@ class CQUAD8(QuadShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)

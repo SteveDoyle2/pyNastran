@@ -145,7 +145,7 @@ class RealBarArray(OES_Object):
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -553,28 +553,15 @@ class RealBarStrain(StrainObject):
         self.eType = {}
 
         self.code = [self.format_code, self.sort_code, self.s_code]
-        if self.code in [[1, 0, 0], [1, 0, 1]]:
-            self.e1 = {}
-            self.e2 = {}
-            self.e3 = {}
-            self.e4 = {}
-            self.axial = {}
-            self.emax = {}
-            self.emin = {}
-            #self.MS_tension = {}
-            #self.MS_compression = {}
-        elif self.code == [1, 0, 10]:
-            self.e1 = {}
-            self.e2 = {}
-            self.e3 = {}
-            self.e4 = {}
-            self.axial = {}
-            self.emax = {}
-            self.emin = {}
-            self.MS_tension = {}
-            self.MS_compression = {}
-        else:
-            raise RuntimeError("Invalid Code: barStrain - get the format/sort/stressCode=%s" % (self.code))
+        self.e1 = {}
+        self.e2 = {}
+        self.e3 = {}
+        self.e4 = {}
+        self.axial = {}
+        self.emax = {}
+        self.emin = {}
+        self.MS_tension = {}
+        self.MS_compression = {}
 
         if is_sort1:
             if dt is not None:

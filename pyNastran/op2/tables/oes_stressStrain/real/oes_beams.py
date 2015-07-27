@@ -147,7 +147,7 @@ class RealBeamArray(OES_Object):
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -320,7 +320,7 @@ class RealNonlinearBeamArray(OES_Object):
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -590,7 +590,7 @@ class RealBeamStress(StressObject):
 
     def add_new_eid(self, dt, eid, out):
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        assert eid >= 0
+        assert eid >= 0, eid
         #assert isinstance(eid, int)
         #assert isinstance(grid, int)
         self.grids[eid] = [grid]
@@ -636,7 +636,7 @@ class RealBeamStress(StressObject):
     def add_new_eid_sort1(self, dt, eid, out):
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
-        assert eid >= 0
+        assert eid >= 0, eid
         if dt not in self.sxc:
             self.add_new_transient(dt)
         self.grids[eid] = [grid]
@@ -859,9 +859,9 @@ class RealBeamStrain(StrainObject):
 
     def add_new_eid(self, dt, eid, out):
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        assert eid >= 0
-        #assert isinstance(eid,int)
-        #assert isinstance(grid,int)
+        assert eid >= 0, eid
+        #assert isinstance(eid, int)
+        #assert isinstance(grid, int)
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
         self.sxc[eid] = [sxc]
@@ -875,7 +875,6 @@ class RealBeamStrain(StrainObject):
         return eid
 
     def add(self, dt, eid, out):
-        #print "Beam Stress add..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         if grid:
             self.grids[eid].append(grid)
@@ -892,7 +891,7 @@ class RealBeamStrain(StrainObject):
     def add_new_eid_sort1(self, dt, eid, out):
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
-        assert eid >= 0
+        assert eid >= 0, eid
         if dt not in self.sxc:
             self.add_new_transient(dt)
 

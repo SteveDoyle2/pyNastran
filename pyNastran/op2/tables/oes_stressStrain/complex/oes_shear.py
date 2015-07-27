@@ -89,7 +89,7 @@ class ComplexShearStress(StressObject):
         if dt not in self.maxShear:
             self.add_new_transient(dt)
         assert isinstance(eid, int)
-        assert eid >= 0
+        assert eid >= 0, eid
         self.maxShear[dt][eid] = maxShear
         self.avgShear[dt][eid] = avgShear
 
@@ -170,7 +170,7 @@ class ComplexShearStrain(StrainObject):
         (maxShear, avgShear) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
-        assert eid >= 0
+        assert eid >= 0, eid
 
         #self.eType[eid] = self.element_type
         self.maxShear[dt][eid] = maxShear
@@ -180,7 +180,7 @@ class ComplexShearStrain(StrainObject):
         (maxShear, avgShear) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
-        assert eid >= 0
+        assert eid >= 0, eid
 
         #self.eType[eid] = self.element_type
         self.maxShear[dt][eid] = maxShear

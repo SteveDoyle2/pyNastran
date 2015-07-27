@@ -154,7 +154,11 @@ class OES(OP2Common):
         #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
-        self.element_name = self.element_mapper[self.element_type]
+        try:
+            self.element_name = self.element_mapper[self.element_type]
+        except KeyError:
+            self.log.error(self.code_information())
+            raise
         self.data_code['element_name'] = self.element_name
         if self.debug3():
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
@@ -656,7 +660,7 @@ class OES(OP2Common):
 
                     if self.debug4():
                         self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axial_real, axial_imag))
-                    assert eid > 0
+                    assert eid > 0, eid
                     self.obj.add_new_eid_sort1(dt, eid, axial)
                     n += ntotal
             else:

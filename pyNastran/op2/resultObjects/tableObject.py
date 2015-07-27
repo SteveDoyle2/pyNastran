@@ -41,8 +41,8 @@ class TableArray(ScalarObject):  # displacement style table
 
         ntimes = len(self._times)
         #len(self.node_gridtype)
-        nnodes, two = self.node_gridtype.shape
-        ntimes, ntotal, six = self.data.shape
+        nnodes = self.node_gridtype.shape[0]
+        ntimes, ntotal = self.data.shape[:2]
         assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
         assert self.ntotal == ntotal, 'ntotal=%s expected=%s' % (self.ntimes, ntimes)
 
@@ -85,8 +85,8 @@ class TableArray(ScalarObject):  # displacement style table
         self.data = zeros((self.ntimes, self.ntotal, 6), self.data_type())
         #print(str(self))
 
-    def add(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        self.add_sort1(dt, node_id, grid_type, v1, v2, v3, v4, v5, v6)
+    def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        self.add_sort1(None, node_id, grid_type, v1, v2, v3, v4, v5, v6)
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         #print "dt=%s out=%s" %(dt,out)
@@ -98,10 +98,33 @@ class TableArray(ScalarObject):  # displacement style table
         #assert node_id == 1575, msg
         assert -1 < node_id < 1000000000, msg
         assert isinstance(node_id, int), node_id
-        #assert isinstance(nodeID, int), msg
-        #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
+        #assert isinstance(node_id, int), msg
+        #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
 
-        #self.gridTypes[nodeID] = self.recastGridType(grid_type)
+        #self.gridTypes[node_id] = self.recastGridType(grid_type)
+
+        # [t1, t2, t3, r1, r2, r3]
+        #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
+        #print "%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6])
+        self._times[self.itime] = dt
+        self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+        self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+        self.itotal += 1
+
+    def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        #print "dt=%s out=%s" %(dt,out)
+        #if dt not in self.translations:
+        #    self.add_new_transient(dt)
+        msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
+        msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
+        #print(msg)
+        #assert node_id == 1575, msg
+        assert -1 < node_id < 1000000000, msg
+        assert isinstance(node_id, int), node_id
+        #assert isinstance(node_id, int), msg
+        #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
+
+        #self.gridTypes[node_id] = self.recastGridType(grid_type)
 
         # [t1, t2, t3, r1, r2, r3]
         #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
@@ -201,8 +224,8 @@ class RealTableArray(TableArray):  # displacement style table
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        format_table4_1 = Struct(b'15i')
-        format_table4_2 = Struct(b'3i')
+        #format_table4_1 = Struct(b'15i')
+        #format_table4_2 = Struct(b'3i')
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -219,7 +242,7 @@ class RealTableArray(TableArray):  # displacement style table
         device_code = self.device_code
         fascii.write('  ntimes = %s\n' % self.ntimes)
 
-        fmt = '%2i %6f'
+        #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
         for itime in range(self.ntimes):
             self._write_table_3(f, fascii, itable, itime)
@@ -391,12 +414,6 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.rotations = {}
 
         self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
@@ -447,7 +464,6 @@ class RealTableObject(ScalarObject):  # displacement style table
                         self.rotations[node_id2] = array([r1, r2, r3], dtype='float32')
                 else:
                     raise NotImplementedError(line)
-
             return
 
         (dtName, dt) = transient
@@ -456,10 +472,10 @@ class RealTableObject(ScalarObject):  # displacement style table
             self.update_dt(self.data_code, dt)
 
         for line in data:
-            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
-            self.gridTypes[nodeID] = grid_type
-            self.translations[dt][nodeID] = array([t1, t2, t3], dtype='float32')
-            self.rotations[dt][nodeID] = array([r1, r2, r3], dtype='float32')
+            (node_id, grid_type, t1, t2, t3, r1, r2, r3) = line
+            self.gridTypes[node_id] = grid_type
+            self.translations[dt][node_id] = array([t1, t2, t3], dtype='float32')
+            self.rotations[dt][node_id] = array([r1, r2, r3], dtype='float32')
 
     def update_dt(self, data_code, dt):
         self.data_code = data_code
@@ -486,13 +502,13 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    def add(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+    def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         msg = "node_id=%s gridType=%s v1=%s v2=%s v3=%s" % (
             node_id, grid_type, v1, v2, v3)
         #print(msg)
         assert -1 < node_id < 1000000000, msg
         assert isinstance(node_id, int), msg
-        #assert nodeID not in self.translations,'displacementObject - static failure'
+        #assert node_id not in self.translations,'displacementObject - static failure'
 
         self.gridTypes[node_id] = self.recast_gridtype_as_string(grid_type)
         self.translations[node_id] = array([v1, v2, v3], dtype='float32')  # dx,dy,dz
@@ -505,6 +521,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         if dt not in self.translations:
             self.add_new_transient(dt)
         assert -1 < node_id < 1000000000, msg
+        assert dt is not None
         #assert isinstance(node_id,int),msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
 
@@ -521,6 +538,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         msg = 'dt=%s node_id=%s' % (dt, node_id)
         #print msg
         assert 0 < node_id < 1000000000, msg    # remove
+        assert dt is not None
         assert isinstance(node_id, int), msg  # remove
         assert -0.5 < dt, msg  # remove
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
@@ -538,30 +556,30 @@ class RealTableObject(ScalarObject):  # displacement style table
         rotations2 = {}
         if self.dt is not None:
             for dt, translations in sorted(iteritems(self.translations)):
-                nodeIDs = translations.keys()
-                for nodeID in nodeIDs:
-                    translations2[nodeID] = {}
-                    rotations2[nodeID] = {}
+                node_ids = translations.keys()
+                for node_id in node_ids:
+                    translations2[node_id] = {}
+                    rotations2[node_id] = {}
 
             for dt, translations in sorted(iteritems(self.translations)):
-                for nodeID, translation in sorted(iteritems(translations)):
-                    rotation = self.rotations[dt][nodeID]
-                    translations2[nodeID][dt] = translation
-                    rotations2[nodeID][dt] = rotation
+                for node_id, translation in sorted(iteritems(translations)):
+                    rotation = self.rotations[dt][node_id]
+                    translations2[node_id][dt] = translation
+                    rotations2[node_id][dt] = rotation
         else:
             return (self.translations, self.rotations)
-            #for nodeID,translation in sorted(iteritems(self.translations)):
-            #    rotation = self.rotations[nodeID]
-            #    translations2[nodeID] = translation
-            #    rotations2[nodeID]    = rotation
+            #for node_id, translation in sorted(iteritems(self.translations)):
+            #    rotation = self.rotations[node_id]
+            #    translations2[node_id] = translation
+            #    rotations2[node_id]    = rotation
         return (translations2, rotations2)
 
     def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None):
         msg = words
         #assert f is not None # remove
-        for nodeID, translation in sorted(iteritems(self.translations)):
-            rotation = self.rotations[nodeID]
-            grid_type = self.gridTypes[nodeID]
+        for node_id, translation in sorted(iteritems(self.translations)):
+            rotation = self.rotations[node_id]
+            grid_type = self.gridTypes[node_id]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -570,11 +588,11 @@ class RealTableObject(ScalarObject):  # displacement style table
             #if not is_all_zeros:
             (dx, dy, dz, rx, ry, rz) = vals2
             if grid_type == 'S':
-                msg.append('%14i %6s     %-13s  %s\n'
-                           % (nodeID, grid_type, dx.rstrip()))
+                msg.append('%14i %6s     %s\n'
+                           % (node_id, grid_type, dx.rstrip()))
             else:
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                        % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -590,9 +608,9 @@ class RealTableObject(ScalarObject):  # displacement style table
                 #header[1] = ' %s = %10i integer %s\n' % (self.data_code['name'], dt, self.analysis_code)
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             msg += header + words
-            for nodeID, translation in sorted(iteritems(translations)):
-                rotation = self.rotations[dt][nodeID]
-                grid_type = self.gridTypes[nodeID]
+            for node_id, translation in sorted(iteritems(translations)):
+                rotation = self.rotations[dt][node_id]
+                grid_type = self.gridTypes[node_id]
 
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
@@ -601,9 +619,9 @@ class RealTableObject(ScalarObject):  # displacement style table
                 #if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 if grid_type == 'S':
-                    msg.append('%14i %6s     %s\n' % (nodeID, grid_type, dx))
+                    msg.append('%14i %6s     %s\n' % (node_id, grid_type, dx))
                 else:
-                    msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
+                    msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz))
 
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
@@ -686,14 +704,7 @@ class ComplexTableObject(ScalarObject):
         self.gridTypes = {}
         self.translations = {}
         self.rotations = {}
-
         self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            #self.add = self.addSort2
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
@@ -716,13 +727,13 @@ class ComplexTableObject(ScalarObject):
         if transient is None:
             for line in data:
                 try:
-                    (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = line[2:]
+                    (node_id, grid_type, v1, v2, v3, v4, v5, v6) = line[2:]
                 except:
                     print('line = %r' % line)
                     raise
-                self.gridTypes[nodeID] = grid_type
-                self.translations[self.dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
-                self.rotations[self.dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
+                self.gridTypes[node_id] = grid_type
+                self.translations[self.dt][node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+                self.rotations[self.dt][node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
             return
 
         (dtName, dt) = transient
@@ -732,14 +743,14 @@ class ComplexTableObject(ScalarObject):
 
         for line in data:
             try:
-                (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = line
+                (node_id, grid_type, v1, v2, v3, v4, v5, v6) = line
             except:
                 print('line = %r' % line)
                 raise
             #print "*dt=%s line=%s" % (self.dt, str(line))
-            self.gridTypes[nodeID] = grid_type
-            self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
-            self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
+            self.gridTypes[node_id] = grid_type
+            self.translations[dt][node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+            self.rotations[dt][node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
     def add_complex_f06_data(self, data, transient):
         raise NotImplementedError()
@@ -766,60 +777,60 @@ class ComplexTableObject(ScalarObject):
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    def add(self, dt, nodeID, grid_type, v1, v2, v3, v4, v5, v6):
-        #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
-        #assert isinstance(nodeID,int),nodeID
-        msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
+    def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        #msg = "node_id=%s v1=%s v2=%s v3=%s" %(node_id, v1, v2, v3)
+        #assert isinstance(node_id, int), node_id
+        msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
         msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
         #print(msg)
-        assert 0 < nodeID < 1000000000, msg  # -1
+        assert 0 < node_id < 1000000000, msg  # -1
         assert -0.5 < dt, msg              # remove
-        assert isinstance(nodeID, int), msg
-        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
+        assert isinstance(node_id, int), msg
+        #assert node_id not in self.translations,'complexDisplacementObject - static failure'
 
-        self.gridTypes[nodeID] = self.recast_gridtype_as_string(grid_type)
-        self.translations[nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
-        self.rotations[nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
+        self.gridTypes[node_id] = self.recast_gridtype_as_string(grid_type)
+        self.translations[node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+        self.rotations[node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
-    def add_sort1(self, dt, nodeID, grid_type, v1, v2, v3, v4, v5, v6):
-        #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
+    def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s" %(dt, node_id, v1, v2, v3)
         #print msg
         if dt not in self.translations:
             self.add_new_transient(dt)
         #print msg
-        if isinstance(nodeID, float):
-            msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
+        if isinstance(node_id, float):
+            msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
             msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
             print(msg)
 
-        if not 0 < nodeID < 1000000000:
-            msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
+        if not 0 < node_id < 1000000000:
+            msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
             msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
             raise ValueError(msg)
         #assert -0.5 < dt, msg  # TODO: remove
-        #assert isinstance(nodeID, int), msg  # TODO: remove
-        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
+        #assert isinstance(node_id, int), msg  # TODO: remove
+        #assert node_id not in self.translations,'complexDisplacementObject - static failure'
 
-        self.gridTypes[nodeID] = self.recast_gridtype_as_string(grid_type)
-        self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
-        self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
+        self.gridTypes[node_id] = self.recast_gridtype_as_string(grid_type)
+        self.translations[dt][node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+        self.rotations[dt][node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
-    def add_sort2(self, nodeID, data):
+    def add_sort2(self, node_id, data):
         [dt, grid_type, v1, v2, v3, v4, v5, v6] = data
 
         if dt not in self.translations:
             self.add_new_transient(dt)
 
-        msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s\n" % (dt, nodeID, v1, v2, v3)
+        msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
         msg += "                v4=%s v5=%s v6=%s" % (v4, v5, v6)
         #print msg
-        assert 0 < nodeID < 1000000000, msg  # -1
+        assert 0 < node_id < 1000000000, msg  # -1
         assert -0.5 < dt, msg  # remove
-        assert isinstance(nodeID, int), msg
+        assert isinstance(node_id, int), msg
 
-        self.gridTypes[nodeID] = self.recast_gridtype_as_string(grid_type)
-        self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
-        self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
+        self.gridTypes[node_id] = self.recast_gridtype_as_string(grid_type)
+        self.translations[dt][node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+        self.rotations[dt][node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
     def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         raise RuntimeError('is this function used???')

@@ -120,7 +120,7 @@ class RealPlateArray(OES_Object):
         self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        assert eid is not None
+        assert eid is not None, eid
         assert isinstance(node_id, int), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -156,7 +156,7 @@ class RealPlateArray(OES_Object):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
-        msg.append('  element types: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 

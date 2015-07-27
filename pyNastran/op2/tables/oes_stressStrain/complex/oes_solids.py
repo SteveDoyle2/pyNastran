@@ -382,8 +382,8 @@ class ComplexSolidStress(StressObject):
 
 
     def add_eid_sort1(self, element_num, eType, dt, eid, cid, ctype, nodef):
-        assert cid >= 0
-        assert eid >= 0
+        assert cid >= -1, cid
+        assert eid >= 0, eid
 
         #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
         self.eType[eid] = eType
@@ -613,8 +613,8 @@ class ComplexSolidStrain(StrainObject):
         self.exz[dt] = {}
 
     def add_eid_sort1(self, element_num, eType, dt, eid, cid, ctype, nodef):
-        assert cid >= 0
-        assert eid >= 0
+        assert cid >= -1, cid
+        assert eid >= 0, eid
 
         if dt not in self.exx:
             self.add_new_transient(dt)

@@ -264,13 +264,13 @@ class RealCelasStrain(StrainObject):
 
     def add_new_eid(self, dt, eid, out):
         (strain,) = out
-        assert eid >= 0
+        assert eid >= 0, eid
         self.eType[eid] = self.element_name
         self.strain[eid] = strain
 
     def add_new_eid_sort1(self, dt, eid, out):
         (strain,) = out
-        assert eid >= 0
+        assert eid >= 0, eid
 
         self.eType[eid] = self.element_type
         self.strain[dt][eid] = strain

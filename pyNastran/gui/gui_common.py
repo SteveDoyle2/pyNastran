@@ -13,6 +13,7 @@ import inspect
 import traceback
 from copy import deepcopy
 
+import vtk
 from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor

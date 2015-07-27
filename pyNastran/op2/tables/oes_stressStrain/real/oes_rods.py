@@ -100,7 +100,7 @@ class RealRodArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element types: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -161,11 +161,11 @@ class RealRodArray(OES_Object):
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
             for i in range(0, nwrite, 2):
-                outLine = '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (tuple(out[i] + out[i + 1]))
-                f.write(outLine)
+                out_line = '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (tuple(out[i] + out[i + 1]))
+                f.write(out_line)
             if is_odd:
-                outLine = '      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1]))
-                f.write(outLine)
+                out_line = '      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1]))
+                f.write(out_line)
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -422,13 +422,13 @@ class RealRodStress(StressObject):
             nWrite = nOut - 1
         for i in range(0, nWrite, 2):
             #print i,out[i:]
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-            msg.append(outLine)
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+            msg.append(out_line)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
                 tuple(out[-1]))
-            msg.append(outLine)
+            msg.append(out_line)
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -459,12 +459,12 @@ class RealRodStress(StressObject):
             if nOut % 2 == 1:
                 nWrite = nOut - 1
             for i in range(0, nWrite, 2):
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-                msg.append(outLine)
+                out_line = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+                msg.append(out_line)
 
             if nOut % 2 == 1:
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
-                msg.append(outLine)
+                out_line = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
+                msg.append(out_line)
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
@@ -582,16 +582,14 @@ class RealRodStrain(StrainObject):
         self.MS_torsion[self.dt] = {}
 
     def add_new_eid(self, dt, eid, axial, SMa, torsion, SMt):
-        assert eid >= 0
-        #self.eType = self.eType
+        assert eid >= 0, eid
         self.axial[eid] = axial
         self.MS_axial[eid] = SMa
         self.torsion[eid] = torsion
         self.MS_torsion[eid] = SMt
 
     def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
-        assert eid >= 0
-        #self.eType[eid] = self.element_type
+        assert eid >= 0, eid
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
@@ -600,7 +598,7 @@ class RealRodStrain(StrainObject):
         self.MS_torsion[dt][eid] = SMt
 
     def add_new_eid_sort2(self, eid, dt, axial, SMa, torsion, SMt):
-        assert eid >= 0
+        assert eid >= 0, eid
         #self.eType[eid] = self.element_type
         if dt not in self.axial:
             self.add_new_transient(dt)
@@ -634,12 +632,12 @@ class RealRodStrain(StrainObject):
         if nOut % 2 == 1:
             nWrite = nOut - 1
         for i in range(0, nWrite, 2):
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-            msg.append(outLine)
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+            msg.append(out_line)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
-            msg.append(outLine)
+            out_line = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
+            msg.append(out_line)
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -668,13 +666,13 @@ class RealRodStrain(StrainObject):
             if nOut % 2 == 1:
                 nWrite = nOut - 1
             for i in range(0, nWrite, 2):
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-                msg.append(outLine)
+                out_line = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+                msg.append(out_line)
 
             if nOut % 2 == 1:
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (
+                out_line = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (
                     tuple(out[-1]))
-                msg.append(outLine)
+                msg.append(out_line)
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1

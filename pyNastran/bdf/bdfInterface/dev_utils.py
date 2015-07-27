@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, itervalues, integer_types, PY2
+from six import iteritems, itervalues, integer_types, string_types, PY2
 from six.moves import zip, range
 
 import os
@@ -85,7 +85,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     .. warning:: xref not fully implemented (assumes cid=0)
     """
     assert isinstance(tol, float), tol
-    if isinstance(bdf_filename, str):
+    if isinstance(bdf_filename, string_types):
         xref = True
         model = BDF()
         model.read_bdf(bdf_filename, xref=True)
@@ -285,6 +285,8 @@ def cut_model(model, axis='-y'):
         if c[iaxis] <= 0.0:
             remove_eids.append(eid)
 
+    #print('remove_nids =', remove_nids)
+    #print('remove_eids =', remove_eids)
     for nid in remove_nids:
         del model.nodes[nid]
     for eid in remove_eids:
@@ -334,13 +336,33 @@ def _roundup(x, n=100):
 
 def bdf_merge(bdf_filenames, bdf_filenames_out=None, renumber=True):
     """
+    Merges multiple BDF into one file
+
+    :param bdf_filenames: list of bdf filenames
+    :param bdf_filenames_out: the output bdf filename
+    :param renumber: should the bdf be renumbered (default=True)
+
+    Supports
+    --------
+      nodes:      GRID
+      coords:     CORDx
+      elements:   CQUAD4, CTRIA3, CTETRA, CPENTA, CHEXA, CELASx, CBAR, CBEAM
+                  CONM1, CONM2, CMASS
+      properties: PSHELL, PCOMP, PSOLID, PMASS
+      materials:  MAT1, MAT8
+
     .. todo :: doesn't support SPOINTs/EPOINTs
     .. warning :: still very preliminary
     """
-    if isinstance(bdf_filenames, str):
-        bdf_filenames = [bdf_filenames]
-    elif not (isinstance(bdf_filenames, list) or isinstance(bdf_filenames, tuple)):
-        raise TypeError(bdf_filenames)
+    if not isinstance(bdf_filenames, (list, tuple)):
+        raise TypeError('bdf_filenames is not a list/tuple...%s' % str(bdf_filenames))
+
+    if not len(bdf_filenames) > 1:
+        raise RuntimeError("You can't merge one BDF...bdf_filenames=%s" % str(bdf_filenames))
+    for bdf_filename in bdf_filenames:
+        if not isinstance(bdf_filename, string_types):
+            raise TypeError('bdf_filenames is not a string...%s' % bdf_filename)
+        #bdf_filenames = [bdf_filenames]
 
     #starting_id_dict_default = {
         #'cid' : max(model.coords.keys()),
@@ -571,7 +593,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     suport_map = {}
     suport1_map = {}
 
-    if isinstance(bdf_filename, str):
+    if isinstance(bdf_filename, string_types):
         model = BDF()
         model.read_bdf(bdf_filename)
     else:

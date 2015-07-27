@@ -36,7 +36,23 @@ class ComplexRodStress(StressObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def getLength(self):
+        raise RuntimeError('is this used???')
         return (20, '4f')
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.axial)
+            s0 = get_key0(self.axial)
+            nelements = len(self.axial[s0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.axial)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  axial, torsion\n')
+        return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -158,6 +174,21 @@ class ComplexRodStrain(StrainObject):
             #self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
 
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.axial)
+            s0 = get_key0(self.axial)
+            nelements = len(self.axial[s0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.axial)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  axial, torsion\n')
+        return msg
+
     def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
@@ -195,16 +226,12 @@ class ComplexRodStrain(StrainObject):
         self.torsion[self.dt] = {}
 
     def add_new_eid(self, dt, eid, axial, torsion):
-        #(axial, torsion) = out
-        assert eid >= 0
-        #self.eType = self.eType
+        assert eid >= 0, eid
         self.axial[eid] = axial
         self.torsion[eid] = torsion
 
     def add_new_eid_sort1(self, dt, eid, axial, torsion):
-        #(axial, torsion) = out
-        assert eid >= 0
-        #self.eType[eid] = self.element_type
+        assert eid >= 0, eid
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
@@ -212,8 +239,7 @@ class ComplexRodStrain(StrainObject):
 
     def add_new_eid_sort2(self, eid, dt, out):
         (axial, torsion) = out
-        assert eid >= 0
-        #self.eType[eid] = self.element_type
+        assert eid >= 0, eid
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial

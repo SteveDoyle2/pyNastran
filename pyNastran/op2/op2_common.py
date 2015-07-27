@@ -15,6 +15,10 @@ from pyNastran.op2.op2Codes import Op2Codes
 class SortCodeError(RuntimeError):
     pass
 
+class DeviceCodeError(SyntaxError):
+    pass
+
+
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
         Op2Codes.__init__(self)
@@ -68,368 +72,35 @@ class OP2Common(Op2Codes, F06Writer):
         #: currently unused
         self.expected_times = None
 
-        self.show_table3_map = [
-            #'OUGV1',
-            #'OEF1X',
-            #'OES1X1',
-        ]
-        self.show_table4_map = [
-            #'OUGV1',
-            #'OEF1X',
-            #'OES1X1',
-        ]
+        #self.show_table3_map = [
+            ##'OUGV1',
+            ##'OEF1X',
+            ##'OES1X1',
+        #]
+        #self.show_table4_map = [
+            ##'OUGV1',
+            ##'OEF1X',
+            ##'OES1X1',
+        #]
 
-        self.element_mapper = {
-            # rods
-            1 : 'CROD',
-            3 : 'CTUBE',
-            10: 'CONROD',
-
-            # beam
-            2 : 'CBEAM',
-
-            # springs
-            11: 'CELAS1',
-            12: 'CELAS2',
-            13: 'CELAS3',
-            14: 'CELAS4',
-
-            # bar
-            34 : 'CBAR',
-
-            # solids
-            39: 'CTETRA',
-            67: 'CHEXA',
-            68: 'CPENTA',
-
-            # triax
-            53 : 'CTRIAX6',
-
-            # centroidal plate
-            33: 'CQUAD4', # 1 node
-            74: 'CTRIA3', # 1 node
-
-            # bilinear plate
-            144: 'CQUAD4', # 5 nodes
-
-            # composite plates
-            95 : 'CQUAD4',
-            96 : 'CQUAD8',
-            97 : 'CTRIA3',
-            98 : 'CTRIA6',
-
-            # unorganized
-            None: '',
-            0: 'GRID',
-            #1: 'ROD',
-            #2: 'BEAM',
-            #3: 'TUBE',
-            4: 'SHEAR',
-            5: 'FORMON12',
-            6: 'FORCE',
-            7: 'PLOAD4',
-            8: 'PLOADX1',
-            9: 'PLOAD/PLOAD2',
-            #10: 'CONROD',
-            #11: 'ELAS1',
-            #12: 'ELAS2',
-            #13: 'ELAS3',
-            #14: 'ELAS4',
-            15: 'AEROT3',
-            16: 'AEROBEAM',
-            17: None,
-            18: None,
-            19: None,
-            20: 'DAMP1',
-            21: 'DAMP2',
-            22: 'DAMP3',
-            23: 'DAMP4',
-            24: 'VISC',
-            25: 'MASS1',
-            26: 'MASS2',
-            27: 'MASS3',
-            28: 'MASS4',
-            29: 'CONM1',
-            30: 'CONM2',
-            31: 'PLOTEL',
-            32: None,
-            #33: 'QUAD4',
-            #34: 'BAR',
-            35: 'CON',
-            36: None,
-            37: None,
-            38: 'GAP',
-            #39: 'TETRA',
-            40: 'BUS1D',
-            41: None,
-            42: None,
-            43: 'FLUID2',
-            44: 'FLUID3',
-            45: 'FLUID4',
-            46: 'FLMASS',
-            47: 'AXIF2',
-            48: 'AXIF3',
-            49: 'AXIF4',
-            50: 'SLOT3',
-            51: 'SLOT4',
-            52: 'HBDY',
-            #53: 'TRIAX6',
-            54: None,
-            55: 'DUM3',
-            56: 'DUM4',
-            57: 'DUM5',
-            58: 'DUM6',
-            59: 'DUM7',
-            60: 'DUM8',
-            61: 'DUM9',
-            62: None,
-            63: None,
-            64: 'CQUAD8',
-            65: None,
-            66: None,
-            #67: 'HEXA',
-            #68: 'PENTA',
-            69: 'CBEND',
-            70: 'CTRIAR',
-            71: None,
-            72: 'AEROQ4',
-            73: None,
-            #74: 'TRIA3',
-            75: 'CTRIA6',
-            76: 'HEXPR',
-            77: 'PENPR',
-            78: 'TETPR',
-            79: None,
-            80: None,
-            81: None,
-            82: 'CQUADR',
-            83: 'HACAB',
-            84: 'HACBR',
-            85: 'TETRANL',
-            86: 'GAPNL',
-            87: 'TUBENL',
-            88: 'TRIA3NL',
-            89: 'RODNL',
-            90: 'QUAD4NL',
-            91: 'PENTANL',
-            92: 'CONRODNL',
-            93: 'HEXANL',
-            94: 'BEAMNL',
-            #95: 'QUAD4LC',
-            #96: 'QUAD8LC',
-            #97: 'TRIA3LC',
-            #98: 'TRIA6LC',
-            99: None,
-            100: 'BARS',
-            101: 'AABSF',
-            102: 'BUSH',
-            103: 'QUADP',
-            104: 'TRIAP',
-            105: 'BEAMP',
-            106: 'DAMP5',
-            107: 'CHBDYE',
-            108: 'CHBDYG',
-            109: 'CHBDYP',
-            110: 'CONV',
-            111: 'CONVM',
-            112: 'QBDY3',
-            113: 'QVECT',
-            114: 'QVOL',
-            115: 'RADBC',
-            116: 'SLIF1D',
-            117: 'WELDC',
-            118: 'WELDP',
-            119: 'GENEL',
-            120: 'DMIG',
-            121: None,
-            122: None,
-            123: None,
-            124: None,
-            125: None,
-            126: None,
-            127: None,
-            128: None,
-            129: None,
-            130: None,
-            131: None,
-            132: None,
-            133: None,
-            134: None,
-            135: None,
-            136: None,
-            137: None,
-            138: None,
-            139: 'QUAD4FD',
-            140: 'HEXA8FD',
-            141: 'HEXAP',
-            142: 'PENTAP',
-            143: 'TETRAP',
-            #144: 'QUAD144',
-            145: 'VUHEXA',
-            146: 'VUPENTA',
-            147: 'VUTETRA',
-            148: None,
-            149: None,
-            150: None,
-            151: None,
-            152: None,
-            153: None,
-            154: None,
-            155: None,
-            156: None,
-            157: None,
-            158: None,
-            159: None,
-            160: 'PENTA6FD',
-            161: 'TETRA4FD',
-            162: 'TRIA3FD',
-            163: 'HEXAFD',
-            164: 'QUADFD',
-            165: 'PENTAFD',
-            166: 'TETRAFD',
-            167: 'TRIAFD',
-            168: 'TRIAX3FD',
-            169: 'TRIAXFD',
-            170: 'QUADX4FD',
-            171: 'QUADXFD',
-            172: 'QUADRNL',
-            173: 'TRIARNL',
-            174: None,
-            175: None,
-            176: None,
-            177: None,
-            178: None,
-            179: None,
-            180: None,
-            181: None,
-            182: None,
-            183: None,
-            184: None,
-            185: None,
-            186: None,
-            187: None,
-            188: None,
-            189: 'VUQUAD',
-            190: 'VUTRIA',
-            191: 'VUBEAM',
-            192: 'CVINT',
-            193: None,
-            194: None,
-            195: None,
-            196: None,
-            197: 'SFINT',
-            198: 'CNVPEL',
-            199: 'VUHBDY',
-            200: 'WELD',
-            201: 'QUAD4FD',
-            202: 'HEXA8FD',
-            203: 'SLIF1D?',
-            204: 'PENTA6FD',
-            205: 'TETRA4FD',
-            206: 'TRIA3FD',
-            207: 'HEXAFD',
-            208: 'QUADFD',
-            209: 'PENTAFD',
-            210: 'TETRAFD',
-            211: 'TRIAFD',
-            212: 'TRIAX3FD',
-            213: 'TRIAXFD',
-            214: 'QUADX4FD',
-            215: 'QUADXFD',
-            216: 'TETRA4FD',
-            217: 'TRIA3FD',
-            218: 'HEXAFD',
-            219: 'QUADFD',
-            220: 'PENTAFD',
-            221: 'TETRAFD',
-            222: 'TRIAX3FD',
-            223: 'QUADXFD',
-            224: 'ELAS1',
-            225: 'ELAS3',
-            226: 'BUSH',
-            227: 'RBAR',
-            228: 'RBE1',
-            229: 'RBE3',
-            230: 'RJOINT',
-            231: 'RROD',
-            232: 'QUADRLC',
-            233: 'TRIARLC',
-            234: '???',
-            235: 'CQUADR',  # was blank in DMAP, found reference in OEF table
-            236: 'CTRIAR',  # was blank in DMAP, found reference in OEF table
-
-            #--------------------------------------------------
-            # per NX 8.5 DMAP
-            240 : 'CTRIA6',
-            241 : 'CQUAD8',
-            242 : 'CTRAX3',
-            243 : 'CQUADX4',
-            244 : 'CTRAX6',
-            245 : 'CQUADX8',
-            246 : 'CTRAX3',
-            247 : 'CQUADX4',
-            248 : 'CTRAX6',
-            249 : 'CQUADX8',
-            #250 : '',
-            #251 : '',
-            #252 : '',
-            #253 : '',
-            #254 : '',
-            255 : 'CPYRAM',
-            256 : 'CPYRAM',
-            257 : 'CPYRAMFD',
-            258 : 'CPYRAMFD',
-            #259 : '',
-            #260 : '',
-            261 : 'CTRAX3FD',
-            262 : 'CQUADX4FD',
-            263 : 'CTRAX6FD',
-            264 : 'CQUADX8FD',
-            #265 : '',
-            266 : 'CQUADX8FD',
-
-            271 : 'CPSTN3',
-            272 : 'CPSTN4',
-            273 : 'CPSTN6',
-            274 : 'CPSTN8',
-            275 : 'CPSTN3',
-            276 : 'CPSTN4',
-            277 : 'CPSTN6',
-            278 : 'CPSTN8',
-
-            281 : 'CPSTN3',
-            #282
-            283 : 'CPSTN6',
-            284 : 'CPSTN8',
-            285 : 'CPSTN3',
-            #286 : 'CPSTN',
-            287 : 'CPSTN6',
-            288 : 'CPSTN8',
-            289 : 'CPSTN4',
-
-            290 : 'CPSTN4',
-            291 : 'CPSTN3',
-            292 : 'CPSTN4',
-            293 : 'CPSTN6',
-            294 : 'CPSTN8',
-            295 : 'CPSTN3',
-            296 : 'CPSTN4',
-            297 : 'CPSTN6',
-            298 : 'CPSTN8',
-        }
-        pass
+        # sets the element mapper
+        self.get_element_type(33)
 
     def add_data_parameter(self, data, var_name, Type, field_num,
                            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
         datai = data[4*(field_num-1) : 4*(field_num)]
         assert len(datai) == 4, len(datai)
         value, = unpack(Type, datai)
+        if fixDeviceCode:
+            value = (value - self.device_code) // 10
         if self.debug:
             self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
 
         if applyNonlinearFactor:
             self.nonlinear_factor = value
+            #if self.table_name == b'OUGV2':
+                #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
             self.data_code['nonlinear_factor'] = value
             self.data_code['name'] = var_name
 
@@ -495,11 +166,11 @@ class OP2Common(Op2Codes, F06Writer):
                 if i % 5 == 4:
                     msg += '\n             '
             if hasattr(self, 'format_code'):
-                self.binary_debug.write('  sort_bits[0] = %i -> is_sort1 =%s\n' % (self.sort_bits[0], self.is_sort1() ))
-                self.binary_debug.write('  sort_bits[1] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[1], self.is_real()   ))
-                self.binary_debug.write('  sort_bits[2] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[2], self.is_random() ))
+                self.binary_debug.write('  sort_bits[0] = %i -> is_sort1 =%s\n' % (self.sort_bits[0], self.is_sort1()))
+                self.binary_debug.write('  sort_bits[1] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[1], self.is_real()))
+                self.binary_debug.write('  sort_bits[2] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[2], self.is_random()))
                 if self.is_complex():
-                    self.binary_debug.write('  format_code  = %i -> is_mag_phase=%s vs is_real_imag\n' % (self.format_code, self.is_mag_phase() ))
+                    self.binary_debug.write('  format_code  = %i -> is_mag_phase=%s vs is_real_imag\n' % (self.format_code, self.is_mag_phase()))
                 else:
                     self.binary_debug.write('  format_code  = %i\n' % self.format_code)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
@@ -537,7 +208,9 @@ class OP2Common(Op2Codes, F06Writer):
             n = 0
             keys = self.geom_keys
         else:
-            raise NotImplementedError('keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s' % (str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old))
+            msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s' % (
+                str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old)
+            raise NotImplementedError(msg)
 
         name, func = mapper[keys]
         self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
@@ -553,6 +226,21 @@ class OP2Common(Op2Codes, F06Writer):
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
         return n
 
+    def _fix_format_code(self, format_code=1):
+        """
+        Nastran can mess up the format code by using what the user specified,
+        which may be wrong.
+
+        For a SOL 101, if the user uses the following in their BDF:
+            DISP(PLOT,PHASE)=ALL
+        it's wrong, and should be:
+            DISP(PLOT,REAL)=ALL
+        """
+        if self.format_code != format_code:
+            self.format_code = format_code
+            self.obj.format_code = format_code
+            self.obj.data_code['format_code'] = format_code
+
     def _read_table(self, data, result_name, storage_obj,
                     real_obj, complex_obj,
                     real_vector, complex_vector,
@@ -567,14 +255,25 @@ class OP2Common(Op2Codes, F06Writer):
         #print('self.num_wide =', self.num_wide)
         #print('random...%s' % self.isRandomResponse())
         #if not self.isRandomResponse():
-        if self.format_code == 1 and self.num_wide == 8:  # real/random
+        if self.format_code in [1, 2, 3] and self.num_wide == 8:  # real/random
             # real_obj
             assert real_obj is not None
             nnodes = len(data) // 32  # 8*4
             auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector, is_cid=is_cid)
             if auto_return:
                 return len(data)
-            n = self._read_real_table(data, result_name, node_elem, is_cid=is_cid)
+
+            self._fix_format_code(format_code=1)
+            if self.is_sort1():
+                if self.nonlinear_factor is None:
+                    n = self._read_real_table_static(data, result_name, node_elem, is_cid=is_cid)
+                else:
+                    n = self._read_real_table_sort1(data, result_name, node_elem, is_cid=is_cid)
+            else:
+                #n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
+                #n = len(data)
+                msg = 'SORT2!'
+                n = self._not_implemented_or_skip(data, msg)
         elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
@@ -583,26 +282,52 @@ class OP2Common(Op2Codes, F06Writer):
             auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
             if auto_return:
                 return len(data)
-            n = self._read_complex_table(data, result_name, node_elem)
-        elif self.format_code in [2, 3] and self.num_wide == 8:  # real mag/phase - this is confusing...I think there is no phase?
-            # real_obj
-            assert real_obj is not None
-            nnodes = len(data) // 32  # 8*4
-            auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
-            if auto_return:
-                return len(data)
-            n = self._read_real_table(data, result_name, node_elem)
+            if self.is_sort1():
+                n = self._read_complex_table_sort1(data, result_name, node_elem)
+            else:
+                msg = 'SORT2!'
+                #n = self._read_complex_table_sort2(data, result_name, node_elem)
+                n = self._not_implemented_or_skip(data, msg)
         else:
-            msg = 'only num_wide=8 or 14 is allowed;  num_wide=%s' % self.num_wide
+            #msg = 'COMPLEX/PHASE is included in:\n'
+            #msg += '  DISP(PLOT)=ALL\n'
+            #msg += '  but the result type is REAL\n'
+            msg = self.code_information()
             n = self._not_implemented_or_skip(data, msg)
         #else:
         #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
         #n = self._not_implemented_or_skip(data, msg)
         return n
 
-    def _read_real_table(self, data, result_name, flag, is_cid=False):
+    def function_code(value):
+        """
+        This is a new specification from NX that's really important and
+        not in the MSC manual, even though they use it.
+
+        ACODE,4=05 vs. ACODE=05  -> function code 4
+        TCODE,1=02 vs. TCODE=02  -> function code 1
+        """
+        if self._function_code == 1:
+            if value // 1000 in [2, 3, 6]:
+                return 2
+            return 1
+        elif self._function_code == 2:
+            return value % 100
+        elif self._function_code == 3:
+            return value % 1000
+        elif self._function_code == 4:
+            return value // 10
+        elif self._function_code == 5:
+            return value % 10
+        #elif self._function_code == 6:
+            #raise NotImplementedError(self.function_code)
+        #elif self._function_code == 7:
+            #raise NotImplementedError(self.function_code)
+        raise NotImplementedError(self.function_code)
+
+    def _read_real_table_static(self, data, result_name, flag, is_cid=False):
         if self.debug4():
-            self.binary_debug.write('  _read_real_table\n')
+            self.binary_debug.write('  _read_real_table_static\n')
         assert flag in ['node', 'elem'], flag
         n = 0
         ntotal = 32 # 8 * 4
@@ -613,9 +338,7 @@ class OP2Common(Op2Codes, F06Writer):
         format1 = '2i6f' # 8
 
         nnodes = len(data) // ntotal
-
-        assert nnodes > 0
-        #assert len(data) % ntotal == 0
+        assert nnodes > 0, nnodes
         s = Struct(format1)
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
@@ -625,13 +348,85 @@ class OP2Common(Op2Codes, F06Writer):
             eid = (eid_device - self.device_code) // 10
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-            obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+
+            if eid <= 0:
+                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
+                msg += str(self.code_information())
+                raise DeviceCodeError(msg)
+            obj.add(eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
-    def _read_complex_table(self, data, result_name, flag):
+    def _read_real_table_sort1(self, data, result_name, flag, is_cid=False):
         if self.debug4():
-            self.binary_debug.write('  _read_complex_table\n')
+            self.binary_debug.write('  _read_real_table_sort1\n')
+        assert flag in ['node', 'elem'], flag
+        n = 0
+        ntotal = 32 # 8 * 4
+        dt = self.nonlinear_factor
+        assert self.obj is not None
+
+        obj = self.obj
+        format1 = '2i6f' # 8
+
+        nnodes = len(data) // ntotal
+        assert nnodes > 0, nnodes
+        s = Struct(format1)
+        for inode in range(nnodes):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+
+            eid = (eid_device - self.device_code) // 10
+            if self.debug4():
+                self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+
+            if eid <= 0:
+                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
+                msg += str(self.code_information())
+                raise DeviceCodeError(msg)
+            obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+            n += ntotal
+        return n
+
+    def _read_real_table_sort2(self, data, result_name, flag, is_cid=False):
+        if self.debug4():
+            self.binary_debug.write('  _read_real_table_sort2\n')
+        assert flag in ['node', 'elem'], flag
+        n = 0
+        ntotal = 32 # 8 * 4
+        eid = self.nonlinear_factor
+        assert self.obj is not None
+
+        obj = self.obj
+        format1 = self._analysis_code_fmt + 'i6f'
+
+        nnodes = len(data) // ntotal
+        assert nnodes > 0
+        #assert len(data) % ntotal == 0
+
+        flag = 'freq/dt/mode'
+        s = Struct(format1)
+        assert eid > 0, self.code_information()
+        for inode in range(nnodes):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
+
+            #eid = (eid_device - self.device_code) // 10
+            if self.debug4():
+                self.binary_debug.write('  %s=%i; %s\n' % (flag, dt, str(out)))
+            obj.add_sort2(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+            n += ntotal
+        return n
+
+    def _read_complex_table_sort1(self, data, result_name, flag):
+        if self.debug4():
+            self.binary_debug.write('  _read_complex_table_sort1\n')
         assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
 
@@ -658,9 +453,16 @@ class OP2Common(Op2Codes, F06Writer):
             (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
             eid = (eid_device - self.device_code) // 10
-
             if self.debug4():
                 self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
+
+            if eid <= 0:
+                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
+                msg += str(self.code_information())
+                raise DeviceCodeError(msg)
+
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 ty = polar_to_real_imag(tyr, tyi)
@@ -678,18 +480,19 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
 
-            obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+            obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
-    def _read_complex_table2(self, data, result_name, flag):
+    def _read_complex_table_sort2(self, data, result_name, flag):
         #return
         if self.debug4():
             self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
-        dt = self.nonlinear_factor
+        flag = 'freq/dt/mode'
+        node_id = self.nonlinear_factor
 
-        format1 = 'fi12f'
+        format1 = self._analysis_code_fmt + 'i12f'
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
@@ -709,7 +512,7 @@ class OP2Common(Op2Codes, F06Writer):
              txi, tyi, tzi, rxi, ryi, rzi) = out
 
             if self.debug4():
-                self.binary_debug.write('  %s=%i %s\n' % ('freq', freq, str(out)))
+                self.binary_debug.write('  %s=%i %s\n' % (flag, freq, str(out)))
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 ty = polar_to_real_imag(tyr, tyi)
@@ -727,49 +530,50 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
 
-            data_in = [freq, grid_type, tx, ty, tz, rx, ry, rz]
-            self.obj.add(dt, data_in)
+            self.obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
-    def create_transient_object(self, storageObj, classObj, is_cid=False, debug=False):
+    def create_transient_object(self, storage_obj, class_obj, is_cid=False, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
 
         :param storageName:  the name of the dictionary to store the object in (e.g. 'displacements')
-        :param classObj:    the class object to instantiate
-        :param debug:       developer debug
+        :param class_obj:    the class object to instantiate
+        :param debug:        developer debug
 
         .. note:: dt can also be load_step depending on the class
         """
-        assert not isinstance(classObj, string_types), 'classObj=%r' % classObj
+        assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
         if debug:
             print("create Transient Object")
             print("***NF = %s" % self.nonlinear_factor)
         #if not hasattr(self, storageName):
             #attrs =  object_attributes(obj, mode="public")
-            #msg = 'storage_obj=%r does not exist.\n' % storageObj
+            #msg = 'storage_obj=%r does not exist.\n' % storage_obj
             #msg += 'Attributes = [%s]' , ', %s'.join(attrs)
             #raise RuntimeError(msg)
-        #storageObj = getattr(self, storageName)
-        #assert classObj is not None, 'name=%r has no associated classObject' % storageName
+        #storage_obj = getattr(self, storageName)
+        #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
+
+        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (self.table_name, self.isubcase, self.subtitle.strip()))
         self.data_code['table_name'] = self.table_name
         assert self.log is not None
 
         code = self._get_code()
         if hasattr(self, 'isubcase'):
-            if self.code in storageObj:
-                self.obj = storageObj[code]
+            if self.code in storage_obj:
+                self.obj = storage_obj[code]
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
-                classObj.is_cid = is_cid
-                self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
-            storageObj[code] = self.obj
+                class_obj.is_cid = is_cid
+                self.obj = class_obj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
+            storage_obj[code] = self.obj
         else:
-            if code in storageObj:
-                self.obj = storageObj[code]
+            if code in storage_obj:
+                self.obj = storage_obj[code]
             else:
-                storageObj[code] = self.obj
+                storage_obj[code] = self.obj
 
     def _get_code(self):
         code = self.isubcase
@@ -780,6 +584,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _not_implemented_or_skip(self, data, msg=''):
         if is_release:
+            self.log.warning(msg)
             return len(data)
         else:
             raise NotImplementedError('table_name=%s table_code=%s %s\n%s' % (self.table_name, self.table_code, msg, self.code_information()))
@@ -806,8 +611,6 @@ class OP2Common(Op2Codes, F06Writer):
         #: used to create sort_bits
         self.sort_code = tCode // 1000
 
-        #: .. todo::  sort_code2 seems to be unused...
-        self.sort_code2 = ((tCode // 1000) + 2) // 2
         self.data_code['sort_code'] = self.sort_code
 
         #: what type of data was saved from the run; used to parse the
@@ -841,7 +644,6 @@ class OP2Common(Op2Codes, F06Writer):
             self.binary_debug.write('  tCode         = %r\n' % self.tCode)
             self.binary_debug.write('  table_code    = %r\n' % self.table_code)
             self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
-            self.binary_debug.write('  sort_code2    = %r\n' % self.sort_code2)
             self.binary_debug.write('  device_code   = %r\n' % self.device_code)
             self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
 
@@ -866,14 +668,17 @@ class OP2Common(Op2Codes, F06Writer):
         +------------+------------+
 
         ::
-          sort_code = 0 -> sort_bits = [0,0,0]
-          sort_code = 1 -> sort_bits = [0,0,1]
-          sort_code = 2 -> sort_bits = [0,1,0]
-          sort_code = 3 -> sort_bits = [0,1,1]
-          etc.
-          sort_code = 7 -> sort_bits = [1,1,1]
+          sort_code = 0 -> sort_bits = [0,0,0]  #         sort1, real
+          sort_code = 1 -> sort_bits = [0,0,1]  #         sort1, complex
+          sort_code = 2 -> sort_bits = [0,1,0]  #         sort2, real
+          sort_code = 3 -> sort_bits = [0,1,1]  #         sort2, complex
+          sort_code = 4 -> sort_bits = [1,0,0]  # random, sort1, real
+          sort_code = 5 -> sort_bits = [1,0,1]  # random, sort1, real
+          sort_code = 6 -> sort_bits = [1,1,0]  # random, sort2, real
+          sort_code = 7 -> sort_bits = [1,1,1]  # random, sort2, complex
+          # random, sort2, complex <- [1, 1, 1]
 
-          sort_bits[0] = 0 -> is_sort1=True  isSort2=False
+          sort_bits[0] = 0 -> is_sort1=True  is_sort2=False
           sort_bits[1] = 0 -> isReal=True   isReal/Imaginary=False
           sort_bits[2] = 0 -> isSorted=True isRandom=False
         """
@@ -882,8 +687,8 @@ class OP2Common(Op2Codes, F06Writer):
 
         # Sort codes can range from 0 to 7, but most of the examples
         # are covered by these.  The ones that break are incredibly large.
-        if self.sort_code not in [0, 1]:
-            msg = 'Invalid sort_code=%s sort_code2=%s' % (self.sort_code, self.sort_code2)
+        if self.sort_code not in [0, 1, 2, 3, 4, 5, 6, 7]:
+            msg = 'Invalid sort_code=%s' % (self.sort_code)
             raise SortCodeError(msg)
         i = 2
         while sort_code > 0:
@@ -910,10 +715,13 @@ class OP2Common(Op2Codes, F06Writer):
         +-------+-----------+-------------+----------+
         |   4   |   SORT1   |    Real     |   Yes    |
         +-------+-----------+-------------+----------+
-        |   5   |   SORT2   |    Real     |   Yes    |
+        |   5   |   SORT1   |    Real     |   ???    |
+        +-------+-----------+-------------+----------+
+        |   6   |   SORT2   |    Real     |   Yes    |
         +-------+-----------+-------------+----------+
         """
-        tcode = self.table_code // 1000
+        #tcode = self.table_code // 1000
+        tcode = self.sort_code
         sort_method = 1
         is_real = True
         is_random = False
@@ -936,16 +744,16 @@ class OP2Common(Op2Codes, F06Writer):
     def is_sort2(self):
         sort_method, is_real, is_random = self._table_specs()
         return True if sort_method == 2 else False
-        #return not(self.is_sort1())
+        #return not self.is_sort1()
 
     def is_real(self):
         sort_method, is_real, is_random = self._table_specs()
         return is_real
-        #return not(self.is_complex())
+        #return not self.is_complex()
 
     def is_complex(self):
         sort_method, is_real, is_random = self._table_specs()
-        return not(is_real)
+        return not is_real
         #if self.sort_bits[1] == 1:
         #    return True
         #return False
@@ -957,9 +765,12 @@ class OP2Common(Op2Codes, F06Writer):
         #    return True
         #return False
 
+    #def is_mag_phase(self):
+        #assert self.format_code in [0, 1], self.format_code
+        #return bool(self.format_code)
+
     def is_mag_phase(self):
-        assert self.format_code in [0, 1], self.format_code
-        return bool(self.format_code)
+        return self.is_magnitude_phase()
 
     def is_magnitude_phase(self):
         if self.format_code == 3:
