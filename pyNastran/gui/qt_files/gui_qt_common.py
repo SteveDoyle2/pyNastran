@@ -200,8 +200,12 @@ class GuiCommon(object):
             #print(scalar_range)
             #self.aQuadMapper.SetScalarRange(scalar_range)
 
+            if case.flags.contiguous:
+                case2 = case
+            else:
+                case2 = deepcopy(case)
             grid_result = numpy_to_vtk(
-                num_array=case,
+                num_array=case2,
                 deep=True,
                 array_type=data_type
             )
@@ -211,16 +215,13 @@ class GuiCommon(object):
             # vector_size=3
             #for value in case:
                 #grid_result.InsertNextTuple3(*value)  # x, y, z
-            #if case.flags.contiguous:
-                #case2 = case
-                #deep = False
-            #else:
-                #case2 = deepcopy(case)
-                #deep = True
-            deep = True
+            if case.flags.contiguous:
+                case2 = case
+            else:
+                case2 = deepcopy(case)
             grid_result = numpy_to_vtk(
                 num_array=case2,
-                deep=deep,
+                deep=True,
                 array_type=data_type
             )
         return grid_result

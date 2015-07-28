@@ -1855,14 +1855,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         names = set(list(grids_dict.keys()))
         names_old = set(list(self.geometry_actors.keys()))
         names_old = names_old - set(names_to_ignore)
-        print('names_old1 =', names_old)
+        #print('names_old1 =', names_old)
 
         names_to_clear = names_old - names
         #self._remove_alt_actors(names_to_clear)
-        print('names_old2 =', names_old)
-        print('names =', names)
+        #print('names_old2 =', names_old)
+        #print('names =', names)
         for name in names:
-            print('adding %s' % name)
+            #print('adding %s' % name)
             grid = grids_dict[name]
             self._add_alt_geometry(grid, name)
 
@@ -1899,8 +1899,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.rend.AddActor(alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
-        print('current_actors = ', self.geometry_actors.keys())
-        grid.Update()
+        #print('current_actors = ', self.geometry_actors.keys())
+        if hasattr(grid, 'Update'):
+            grid.Update()
         alt_geometry_actor.Modified()
 
     def on_update_scalar_bar(self, title, min_value, max_value, data_format):
@@ -1924,7 +1925,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def update_camera(self, code):
         camera = self.GetCamera()
-        print("code =", code)
+        #print("code =", code)
         if code == '+x':  # set x-axis
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
@@ -2181,7 +2182,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         Wipe all labels and regenerate the key slots based on the case keys.
         This is used when changing the model.
         """
-        print('reset labels...')
+        #print('reset labels...')
         self._remove_labels()
 
         # new geometry

@@ -410,7 +410,7 @@ class NastranIO(object):
                 j += 1
             else:
                 self.log_info("skipping %s" % element.type)
-        print('j = ', j)
+        #print('j = ', j)
         self.mapElements(points, points2, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
     def set_caero_grid(self, ncaeros_points, model, j=0):
