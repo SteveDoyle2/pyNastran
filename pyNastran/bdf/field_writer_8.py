@@ -168,7 +168,11 @@ def print_float_8(value):
             field = "%8.1f" % value   # -10000>x>-100000
         else:
             field = "%8.1f" % value
-            if field.index('.') < 8:
+            try:
+                ifield = field.index('.')
+            except ValueError:
+                raise ValueError('error printing float; cant find decimal; field=%r value=%s' % (field, value))
+            if ifield < 8:
                 field = '%7s.' % int(round(value, 0))
                 #assert '.' != field[0], field
             else:

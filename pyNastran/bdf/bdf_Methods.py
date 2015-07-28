@@ -94,6 +94,7 @@ class BDFMethods(BDFMethodsDeprecated):
             masses = [mass for eid, mass in self.masses.items() if eid in element_ids]
             nelements = len(element_ids)
 
+        num_cpus = 1
         if num_cpus > 1:
             mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses,
                                                    nelements,

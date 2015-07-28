@@ -246,25 +246,31 @@ class CHEXA8(SolidElement):
         # front (1-5-8-4)
         # back (2-6-7-3)
         node_ids = self.node_ids
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
         return [
             # btm (1-2-3-4)
-            (node_ids[0], node_ids[1]),
-            (node_ids[1], node_ids[2]),
-            (node_ids[2], node_ids[3]),
-            (node_ids[3], node_ids[0]),
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+            tuple(sorted([node_ids[3], node_ids[0]])),
 
             # top (5-6-7-8)
-            (node_ids[4], node_ids[5]),
-            (node_ids[5], node_ids[6]),
-            (node_ids[6], node_ids[7]),
-            (node_ids[7], node_ids[4]),
+            tuple(sorted([node_ids[4], node_ids[5]])),
+            tuple(sorted([node_ids[5], node_ids[6]])),
+            tuple(sorted([node_ids[6], node_ids[7]])),
+            tuple(sorted([node_ids[7], node_ids[4]])),
 
             # up - (4-8, 3-7, 1-5, 2-6)
-            (node_ids[0], node_ids[4]),
-            (node_ids[1], node_ids[5]),
-            (node_ids[2], node_ids[6]),
-            (node_ids[3], node_ids[7]),
+            tuple(sorted([node_ids[0], node_ids[4]])),
+            tuple(sorted([node_ids[1], node_ids[5]])),
+            tuple(sorted([node_ids[2], node_ids[6]])),
+            tuple(sorted([node_ids[3], node_ids[7]])),
         ]
+
 
 class CHEXA20(SolidElement):
     """
@@ -343,9 +349,35 @@ class CHEXA20(SolidElement):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+            tuple(sorted([node_ids[3], node_ids[0]])),
+
+            # top
+            tuple(sorted([node_ids[4], node_ids[5]])),
+            tuple(sorted([node_ids[5], node_ids[6]])),
+            tuple(sorted([node_ids[6], node_ids[7]])),
+            tuple(sorted([node_ids[7], node_ids[4]])),
+
+            # sides
+            tuple(sorted([node_ids[0], node_ids[4]])),
+            tuple(sorted([node_ids[1], node_ids[5]])),
+            tuple(sorted([node_ids[2], node_ids[6]])),
+            tuple(sorted([node_ids[3], node_ids[7]])),
+        ]
+
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
+        edges = self.get_edge_ids()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(self.node_ids):
@@ -455,6 +487,28 @@ class CPENTA6(SolidElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]])),
+
+            # top
+            tuple(sorted([node_ids[3], node_ids[4]])),
+            tuple(sorted([node_ids[4], node_ids[5]])),
+            tuple(sorted([node_ids[5], node_ids[3]])),
+
+            # sides
+            tuple(sorted([node_ids[0], node_ids[3]])),
+            tuple(sorted([node_ids[1], node_ids[4]])),
+            tuple(sorted([node_ids[2], node_ids[5]])),
+        ]
 
     def getFaceAreaCentroidNormal(self, nidOpposite, nid):
         nids = self.node_ids[:6]
@@ -693,6 +747,28 @@ class CPENTA15(SolidElement):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]])),
+
+            # top
+            tuple(sorted([node_ids[3], node_ids[4]])),
+            tuple(sorted([node_ids[4], node_ids[5]])),
+            tuple(sorted([node_ids[5], node_ids[3]])),
+
+            # sides
+            tuple(sorted([node_ids[0], node_ids[3]])),
+            tuple(sorted([node_ids[1], node_ids[4]])),
+            tuple(sorted([node_ids[2], node_ids[5]])),
+        ]
+
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
@@ -793,6 +869,25 @@ class CPYRAM5(SolidElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+            tuple(sorted([node_ids[3], node_ids[0]])),
+
+            # sides
+            tuple(sorted([node_ids[0], node_ids[4]])),
+            tuple(sorted([node_ids[1], node_ids[4]])),
+            tuple(sorted([node_ids[2], node_ids[4]])),
+            tuple(sorted([node_ids[3], node_ids[4]])),
+        ]
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -902,6 +997,25 @@ class CPYRAM13(SolidElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+            tuple(sorted([node_ids[3], node_ids[0]])),
+
+            # sides
+            tuple(sorted([node_ids[0], node_ids[4]])),
+            tuple(sorted([node_ids[1], node_ids[4]])),
+            tuple(sorted([node_ids[2], node_ids[4]])),
+            tuple(sorted([node_ids[3], node_ids[4]])),
+        ]
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1137,6 +1251,23 @@ class CTETRA10(SolidElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]])),
+
+            # sides
+            tuple(sorted([node_ids[0], node_ids[3]])),
+            tuple(sorted([node_ids[1], node_ids[3]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+        ]
 
     def _verify(self, xref=False):
         eid = self.Eid()

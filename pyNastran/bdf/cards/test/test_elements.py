@@ -29,7 +29,7 @@ class TestElements(unittest.TestCase):
         self.assertEqual(card.Eid(), 2001)
         self.assertEqual(card.Pid(), 20)
         node_ids = card.node_ids
-        assert node_ids == [1001, 0], node_ids
+        assert node_ids == [1001, None], node_ids
         card.write_card(size, 'dummy')
         card.raw_fields()
 

@@ -17,6 +17,7 @@ from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
+from numpy import int32
 
 
 class DamperElement(Element):
@@ -91,13 +92,16 @@ class CDAMP1(LineDamper):
     def Eid(self):
         return self.eid
 
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
+
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+        return self._nodeIDs(allowEmptyNodes=True)
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
@@ -186,7 +190,7 @@ class CDAMP2(LineDamper):
         assert isinstance(eid, int)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
     def Eid(self):
         return self.eid
@@ -198,12 +202,19 @@ class CDAMP2(LineDamper):
         msg = ' which is required by CDAMP2 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
+    def get_edge_ids(self):
+        node_ids = self._nodeIDs(allowEmptyNodes=True)
+        if isinstance(node_ids[0], (int, int32)) and isinstance(node_ids[0], (int, int32)):
+            return [tuple(sorted(node_ids))]
+        return []
+
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+        return self._nodeIDs(allowEmptyNodes=True)
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -256,7 +267,7 @@ class CDAMP3(LineDamper):
         assert isinstance(pid, int)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid.type in ['PDAMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
 
@@ -277,7 +288,7 @@ class CDAMP3(LineDamper):
 
     @property
     def node_ids(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+        return self._nodeIDs(allowEmptyNodes=True)
 
     def raw_fields(self):
         list_fields = ['CDAMP3', self.eid, self.Pid()] + self.node_ids
@@ -330,7 +341,7 @@ class CDAMP4(LineDamper):
         assert isinstance(eid, int)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
 
     def Eid(self):
         return self.eid
@@ -400,7 +411,7 @@ class CDAMP5(LineDamper):
         assert isinstance(pid, int)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid.type in ['PDAMP5'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
 
@@ -421,7 +432,7 @@ class CDAMP5(LineDamper):
 
     @property
     def node_ids(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+        return self._nodeIDs(allowEmptyNodes=True)
 
     @node_ids.setter
     def node_ids(self, value):
@@ -477,7 +488,7 @@ class CVISC(LineDamper):
         assert isinstance(pid, int)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid.type in ['PVISC'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
 
@@ -487,13 +498,16 @@ class CVISC(LineDamper):
     def B(self):
         return self.pid.ce
 
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
+
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
+        return self._nodeIDs(allowEmptyNodes=True)
 
     def raw_fields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids

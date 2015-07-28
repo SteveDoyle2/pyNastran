@@ -7,7 +7,7 @@ from six.moves import range
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
-                                          collapse_thru_by)
+                                          collapse_thru_by, _node_ids)
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, double,
     integer_or_blank, double_or_blank, integer_or_string, string, blank)
 
@@ -127,6 +127,14 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model):
         pass
 
+    @property
+    def nodes(self):
+        return []
+
+    @property
+    def node_ids(self):
+        return _node_ids(self, nodes=self.grids, allowEmptyNodes=False, msg='')
+
     def get_edge_ids(self):
         # TODO: not implemented
         return []
@@ -236,6 +244,10 @@ class CHBDYG(ThermalElement):
         assert isinstance(pid, int)
 
     @property
+    def nodes(self):
+        return self.grids
+
+    @property
     def node_ids(self):
         # TODO: is this correct?
         return self.grids
@@ -343,6 +355,10 @@ class CHBDYP(ThermalElement):
             assert len(card) <= 16, 'len(CHBDYP card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
+    @property
+    def nodes(self):
+        return [self.g1, self.g2, self.g0, self.gmid]
 
     def cross_reference(self, model):
         msg = ' which is required by CHBDYP pid=%s' % self.pid

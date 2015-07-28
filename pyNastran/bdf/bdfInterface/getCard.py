@@ -152,6 +152,7 @@ class GetMethods(GetMethodsDeprecated):
             for nid in node_ids:
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
+                assert not isinstance(edge, int), 'edge=%s elem=\n%s' % (edge, elem)
                 assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
                 try:
                     edge_to_eid_map[edge].add(eid)
@@ -529,6 +530,13 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (
                 sid, msg, sorted(self.dload_entries.keys())))
         return load
+
+    def DELAY(self, id, msg=''):
+        try:
+            return self.delays[id]
+        except KeyError:
+            raise KeyError('id=%s not found%s.  Allowed DELAY=%s'
+                           % (id, msg, self.delays.keys()))
 
     #--------------------
     def MPC(self, conid, msg=''):

@@ -289,7 +289,12 @@ class XrefMesh(object):
                 for node in element.nodes:
                     if node is None:
                         continue
-                    nodes[node.nid].add(element)
+                    try:
+                        nodes[node.nid].add(element)
+                    except AttributeError:
+                        print(element)
+                        print('node = %s' % str(node))
+                        raise
         for node in self.nodes.values():
             node.elements = nodes[node.nid]
 

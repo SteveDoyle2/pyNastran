@@ -285,7 +285,7 @@ class CTRIA3(TriShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edges()
+        edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)

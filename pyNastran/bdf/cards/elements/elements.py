@@ -62,6 +62,13 @@ class CFAST(Element):
                        self.Gs(), self.Ga(), self.Gb(), self.xs, self.ys, self.zs]
         return list_fields
 
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
+
     def Gs(self):
         if isinstance(self.gs, integer_types):
             return self.gs
@@ -169,7 +176,15 @@ class CGAP(Element):
     def Eid(self):
         return self.eid
 
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
+
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -267,7 +282,11 @@ class CRAC2D(CrackElement):
     def Eid(self):
         return self.eid
 
+    def get_edge_ids(self):
+        return []
+
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
@@ -320,20 +339,19 @@ class CRAC3D(CrackElement):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-
         assert isinstance(eid, int)
         assert isinstance(pid, int)
 
+    def get_edge_ids(self):
+        return []
+
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.node_ids

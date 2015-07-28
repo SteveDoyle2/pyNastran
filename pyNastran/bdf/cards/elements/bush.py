@@ -38,8 +38,7 @@ class BushElement(Element):
         """
         Return the edge IDs
         """
-        node_ids = self.node_ids
-        return [tuple(sorted(node_ids))]
+        return [tuple(sorted(self.node_ids))]
 
 class CBUSH(BushElement):
     type = 'CBUSH'
@@ -124,12 +123,12 @@ class CBUSH(BushElement):
         return self.node_ids
 
     @property
+    def nodes(self):
+        return [self.ga, self.gb]
+
+    @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -259,6 +258,10 @@ class CBUSH1D(BushElement):
             return None
         return self.gb.nid
 
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
+
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
@@ -332,6 +335,10 @@ class CBUSH2D(BushElement):
         if isinstance(self.gb, integer_types):
             return self.gb
         return self.gb.nid
+
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')

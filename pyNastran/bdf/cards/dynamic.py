@@ -38,7 +38,7 @@ class DELAY(BaseCard):
         self.node = integer(card, 1, 'node')
         self.components = integer(card, 1, 'components')
         assert self.components in [0, 1, 2, 3, 4, 5, 6], self.components
-        self.delay = float_or_blank(card, 3, 'delay')
+        self.delay = double_or_blank(card, 3, 'delay')
 
     def cross_reference(self, model):
         msg = ', which is required by DELAY sid=%s' % self.sid
