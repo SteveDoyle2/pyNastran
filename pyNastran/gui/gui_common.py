@@ -73,6 +73,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._is_axes_shown = True
         self.nvalues = 9
         self.is_wireframe = False
+        self._legend_shown = False
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
@@ -900,12 +901,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'is_horizontal': False,
             'clicked_ok' : False,
         }
-        window = LegendPropertiesWindow(data, win_parent=self)
-        window.show()
-        window.exec_()
+        if not self._legend_shown:
+            self._legend_window = LegendPropertiesWindow(data, win_parent=self)
+            self._legend_window.show()
+            self._legend_shown = True
+            self._legend_window.exec_()
+        else:
+            self._legend_window.activateWindow()
 
         if data['clicked_ok']:
             self.apply_legend(data)
+            del self._legend_window
+            self._legend_shown = False
 
     def apply_legend(self, data):
         title = data['name']
