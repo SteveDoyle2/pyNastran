@@ -5,34 +5,34 @@ from six import iteritems
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-from numpy import zeros, array, searchsorted
+from numpy import zeros, array, searchsorted, arange
 
 #def pack_nodes(fmt, data):
     #return ''
 
 def pack_int_array(fmt, data):
-    return ' '.join([str(val) for val in data]) + '\n\n'
+    return ' '.join([str(val) for val in data]) + '\n'
+
+def pack_float_1d_array(fmt, data):
+    return ' '.join([str(val) for val in data.ravel()]) + '\n'
 
 def pack_float_3d_array(fmt, data):
     msg = ''
     for datai in data[0, :, :]:
         msgi = ''
         for dataii in datai:
-            #print(dataii)
             msgi += '%s ' % dataii
         msg += msgi[:-1] + '\n'
-    return msg + '\n\n'
+    return msg #+ '\n\n'
 
 def pack_float_2d_array(fmt, data):
     msg = ''
     for datai in data:
         msgi = ''
         for dataii in datai:
-            print(dataii)
             msgi += '%s ' % dataii
         msg += msgi[:-1] + '\n'
-    print(data.shape)
-    return msg + '\n'
+    return msg #+ '\n'
 
 #def pack(fmt, data):
 #    return ''
@@ -40,8 +40,9 @@ def pack_float_2d_array(fmt, data):
 def export_to_vtk(model):
     bdf_filename = model + '.bdf'
     op2_filename = model + '.op2'
-    vtk_filename = model + '.vtu'
+    vtk_filename = model + '.vtk'
     export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
+    print('finished exporting %s' % vtk_filename)
 
 def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
     with open(vtk_filename, 'w') as vtk_file:
@@ -92,7 +93,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
         op2.read_op2(op2_filename)
 
         out = bdf.get_card_ids_by_card_types()
-        print(out.keys())
+        #print('cards = [', ', '.join(sorted(out.keys())), ']')
         grids = sorted(out['GRID'])
         spoint = sorted(out['SPOINT'])
         epoint = sorted(out['EPOINT'])
@@ -178,7 +179,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
         for eid, elem in sorted(iteritems(bdf.elements)):
             etype = etype_map[elem.type]
             nids2 = searchsorted(nids, elem.node_ids)
-            print(elem.type)
+            #print(elem.type)
             #print(elem.node_ids, nids2)
             nnodesi = len(nids2)
             vtk_file.write('%i %s\n' % (nnodesi, str(nids2)[1:-1]))
@@ -192,20 +193,23 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
         #vtk_file.write('\n')
         vtk_file.write('CELL_TYPES %i\n' % nelements)
         vtk_file.write(pack_int_array(eid_fmt, cell_types))
+        vtk_file.write('\n')
 
-        vtk_file.write('NodeID %i float\n' % nnodes)
-        vtk_file.write(pack_int_array(nid_fmt, nids))
+        vtk_file.write('POINT_DATA %i\n' % nnodes)
+        if 0:
+            vtk_file.write('NodeID %i float\n' % nnodes)
+            vtk_file.write(pack_int_array(nid_fmt, nids))
 
-        fmt = b'%si' % nelements
-        if nelements:
-            vtk_file.write('ElementID %i float\n' % nelements)
-            vtk_file.write(pack_int_array(eid_fmt, eids))
-        if nproperties:
-            vtk_file.write('PropertyID %i float\n' % nproperties)
-            vtk_file.write(pack_int_array(eid_fmt, pids))
-        if nmaterials:
-            vtk_file.write('MaterialID %i float\n' % nmaterials)
-            vtk_file.write(pack_int_array(eid_fmt, mids))
+            fmt = b'%si' % nelements
+            if nelements:
+                vtk_file.write('ElementID %i float\n' % nelements)
+                vtk_file.write(pack_int_array(eid_fmt, eids))
+            if nproperties:
+                vtk_file.write('PropertyID %i float\n' % nproperties)
+                vtk_file.write(pack_int_array(eid_fmt, pids))
+            if nmaterials:
+                vtk_file.write('MaterialID %i float\n' % nmaterials)
+                vtk_file.write(pack_int_array(eid_fmt, mids))
 
         nodal_cases = [op2.eigenvectors, op2.displacements, op2.velocities, op2.accelerations]
         fmt = '%sf' % (nnodes * 6)
@@ -214,33 +218,55 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
             if not keys:
                 continue
             key0 = keys[0]
-            print(key0)
+            #print(key0)
             node_ids = cases[key0].node_gridtype[:, 0]
 
             if nnodes == len(node_ids):
                 # every node exists
-                i = None
+                i = arange(nnodes)
                 ni = nnodes
             else:
                 # node_ids is a subset of nids
                 i = searchsorted(nids, node_ids)
                 ni = len(i)
 
+            names = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
             for isubcase, case in sorted(iteritems(cases)):
                 if case.is_real:
-                    if i is None:
+                    #if i is None:
                         #data = case.data
-                        ni = nnodes
-                    else:
-                        data = zeros((nnodes, 6), dtype='float32')
+                        #ni = nnodes
+                    #else:
+                        #data = zeros((nnodes, 6), dtype='float32')
+                        #asdf
                         #data[:, i, :] = case.data
-
+                    data = case.data[:, i, :]
                     ntimes = case.data.shape[0]
                     case_type = case.__class__.__name__
                     for itime in range(ntimes):
-                        name = '%s_isubcase=%s_itime=%s' % (case_type, isubcase, itime)
-                        vtk_file.write('%s %i float\n' % (name, ni))
-                        vtk_file.write(pack_float_3d_array(fmt, case.data[itime, i, :]))
+                        if 0:
+                            for icol, name in enumerate(names):
+                                title = '%s_%s_isubcase=%s_itime=%s' % (case_type, name, isubcase, itime)
+                                vtk_file.write('SCALARS %s float\n' % title)
+                                vtk_file.write('LOOKUP_TABLE default\n')
+                                datai = data[itime, i, icol]
+                                vtk_file.write(pack_float_1d_array(fmt, data[itime, i, icol]))
+                        if 1:
+                            title = '%s_isubcase=%s_itime=%s' % (case_type, isubcase, itime)
+                            #FIELD RealDisplacementArray_FIELD_isubcase=1_itime=0 6
+                            #t1 1 72 float
+                            #0.00764469 0.00762899 ...
+                            vtk_file.write('FIELD %s 6\n' % title)
+                            for icol, name in enumerate(names):
+                                vtk_file.write('%s 1 %s float\n' % (name, ni))
+                                datai = case.data[itime, i, icol]
+                                vtk_file.write(pack_float_1d_array(fmt, data[itime, i, icol]))
+
+                            if 0:
+                                title = '%s_FIELD_isubcase=%s_itime=%s' % (case_type, isubcase, itime)
+                                vtk_file.write('FIELD %s 6 %i float\n' % (title, ni))
+                                vtk_file.write('LOOKUP_TABLE default\n')
+                                vtk_file.write(pack_float_2d_array(fmt, data[itime, i, :]))
 
         #CELLS 217 1039
 
