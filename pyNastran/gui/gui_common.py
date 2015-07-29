@@ -1822,6 +1822,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
             magnify_min = 5
             magnify = self.magnify if self.magnify > magnify_min else magnify_min
+
+            self._update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
 
             nam, ext = os.path.splitext(fname)
@@ -1846,6 +1848,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             writer.Write()
             #self.log_info("Saved screenshot: " + fname)
             self.log_command('on_take_screenshot(%r)' % fname)
+            self._update_text_size(magnify=1.0)
+
+    def _update_text_size(self, magnify=1.0):
+        text_size = 14 * magnify
+        #txtprop.SetFontSize(textSize)
+        #txtprop.SetColor(self.text_col)
+        #txt.SetDisplayPosition(*position)
+        #txt.VisibilityOff()
+
+        #txt.SetDisplayPosition(5, 5) # bottom left
+        #txt.SetDisplayPosition(5, 95)
+        #txt.SetPosition(0.1, 0.5)
+        for itext, text_actor in iteritems(self.textActors):
+            text_prop = text_actor.GetTextProperty()
+            text_prop.SetFontSize(text_size)
+        self.iText += 1
 
     def addGeometry(self):
         """

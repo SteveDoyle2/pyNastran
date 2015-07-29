@@ -11,7 +11,7 @@ PyQt4 unique (PySide is broken)
    - zoom/rotate/snap to axis
    - screenshot
    - auto-reload
-   - preliminary results sidebar
+   - results sidebar
 
  - auto-reload button.  Useful for:
     - modifying Panair file
@@ -71,7 +71,17 @@ PyQt4 unique (PySide is broken)
    - data is put in the same order as the cycleResults capability (Control+L)
    - does multiple static nastran subcases work?***
      - it should be put into a nested tree.  It's not.***
-     
+       - is this still true?
+
+
+----------------------------------------------------
+---Half Finished---
+ - Groups
+   - need to figure out how to show/hide elements from an actor
+ - Python console
+   - syntax highlighting
+   - font should be courier new or something similar
+   - button layout
 
 ----------------------------------------------------
 ---Format Specific---
@@ -80,7 +90,7 @@ Nastran
 =======
  - load geometry -> .bdf/nas/dat
    - shows CAERO panels
-   - change between sub-element and element using self.is_sub_panels and a script
+   - change between sub-element and element using dynamic menu
    - display additional coordinate system IDs
 
  - load results -> op2/f06
@@ -94,14 +104,12 @@ Nastran
  - ***rotate loads based on local coordinate system
    - displacement (e.g. force, displacement, velocity)
    - stress (y/z vs. hoop)
-     
+
  - ***multiple op2 files
  - ***show/hide elements based on picking
  - ***different nodal averaging methods (e.g.derive/avg, avg/derive)
  - ***interface loads
- - ***show/hide nodes/elements/CAERO based on element ID for:
-   - model 1
-   - model 2
+ - ***show/hide nodes/elements based on element ID for:
  - ***data label for CAERO cards
    - as a element numbr
    - as a color (e.g. element ID for the CAERO card)
@@ -173,6 +181,7 @@ Qt
 - results selector window doesn't update on cycling
 - loading a new geometry over a result doesn't overwrite the old name
 - legend cancel doesn't return to baseline state (should it?)
+- self.cycleResults('resultName') doesn't return correct result
 
 nastran
 =======
@@ -180,7 +189,7 @@ nastran
   - is this still true?
 - the Isat model seems to have something wrong with the Pid
   - is this still true?
-- what do elements with pid=0 correspond to?
+- elements with pid=0 corresponds to:
   - CONROD
   - CELAS2/4
   - buggy cards
