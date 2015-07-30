@@ -1,5 +1,3 @@
-*** not done
-
 ---DONE---
 
 PyQt4 unique (PySide is broken)
@@ -35,14 +33,14 @@ PyQt4 unique (PySide is broken)
    - max value
    - data format (%f, %e, %g, %i, %.4f)
    - red to blue; blue to red
-   - continuous to discrete (doesn't work)***
-   - doesn't save results***
+   - TODO: continuous to discrete (doesn't work)
+   - TODO: doesn't save results
    - can't move legend
      - horizontal/veterical
-     - can't explicitly place it***
-   - can't show/hide legend***
-   - Cancel button doesn't go to original settings if you click apply***
-     - should maybe remove the OK button and rename Cancel to Close***
+     - TODO: can't explicitly place it
+   - TODO: can't show/hide legend
+   - TODO: Cancel button doesn't go to original settings if you click apply
+     - TODO: should maybe remove the OK button and rename Cancel to Close
 
  - global axis
    - hide support
@@ -51,7 +49,7 @@ PyQt4 unique (PySide is broken)
  - minor features
    - default filename for pictures
    - pretty window title that tells you your "format - infile - outfile"
-     - outfile is incorrect listed if you load a new geometry***
+     - TODO: outfile is incorrect listed if you load a new geometry
 
  - zoom/rotate/snap buttons
  - command line
@@ -59,18 +57,20 @@ PyQt4 unique (PySide is broken)
    - python scripting
    - edges
    - nodal or centroidal
+      - TODO: remove option
 
  - picking
    - cell/node picking based on result type
    - kind of a hackish picking method
+   - no nodal/centroidal position picking (e.g. get (x, y, z), not just x or y or z)
 
  - both nodal/centroidal work regardless of self.is_centroidal/self.is_nodal
-   - cart3d only***
+   - TODO: cart3d only
 
  - results sidebar
    - data is put in the same order as the cycleResults capability (Control+L)
-   - does multiple static nastran subcases work?***
-     - it should be put into a nested tree.  It's not.***
+   - TODO: does multiple static nastran subcases work?
+     - TODO: it should be put into a nested tree.  It's not.
        - is this still true?
 
 
@@ -101,16 +101,16 @@ Nastran
      - rodStress, barStress, beamStress, plateStress, solidStress, compositePlateStress (centroidal only)
  - transient-style results (no complex data)
 
- - ***rotate loads based on local coordinate system
+ - TODO: rotate loads based on local coordinate system
    - displacement (e.g. force, displacement, velocity)
    - stress (y/z vs. hoop)
 
- - ***multiple op2 files
- - ***show/hide elements based on picking
- - ***different nodal averaging methods (e.g.derive/avg, avg/derive)
- - ***interface loads
- - ***show/hide nodes/elements based on element ID for:
- - ***data label for CAERO cards
+ - TODO: multiple op2 files
+ - TODO: show/hide elements based on picking
+ - TODO: different nodal averaging methods (e.g.derive/avg, avg/derive)
+ - TODO: interface loads
+ - TODO: show/hide nodes/elements based on element ID for:
+ - TODO: data label for CAERO cards
    - as a element numbr
    - as a color (e.g. element ID for the CAERO card)
 
@@ -122,7 +122,7 @@ Cart3d
 
  - results
    - nodal/centroidal -> Mach, Cp, rho, rhoU, rhoV, rhoW, rhoE, U, V, W, E
- - ***show/hide elements based on picking
+ - TODO: show/hide elements based on picking
 
 Panair
 ======
@@ -132,17 +132,17 @@ Panair
  - supports auto-reload of geometry
  - load results -> agps
    - nodal/centroidal - > Cp
- - ***show/hide panels based on menu/picking
+ - TODO: show/hide panels based on menu/picking
 
 LaWGS
 =====
  - load geometry -> wgs
- - ***Coordinate System
+ - TODO: Coordinate System
 
 Tetgen
 ======
  - load geometry -> smesh
- - ***Coordinate System
+ - TODO: Coordinate System
 
 STL
 ===
@@ -153,9 +153,9 @@ SHABP
 =====
  - geometry (mk5/geo/inp)
    - location, patch number, component, impact, shadow
- - ***full trailer parsing
- - ***results parsing
- - ***show/hide panels based on menu/picking
+ - TODO: full trailer parsing
+ - TODO: results parsing
+ - TODO: show/hide panels based on menu/picking
 
 Usm3d
 =====
@@ -169,7 +169,7 @@ Usm3d
    - model_%i.flo will be found on load_geometry; where %i is the biggest number
      - supports autoreload
    - specific results file can be loaded with load results
- - ***Coordinate System (???)
+ - TODO: Coordinate System (???)
 
 #-------------------------
 #BUGS

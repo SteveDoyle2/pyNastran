@@ -158,8 +158,10 @@ class GuiCommon(object):
 
         if issubdtype(case.dtype, numpy.integer):
             data_type = vtk.VTK_INT
+            self.aQuadMapper.InterpolateScalarsBeforeMappingOn()
         elif issubdtype(case.dtype, numpy.float):
             data_type = vtk.VTK_FLOAT
+            self.aQuadMapper.InterpolateScalarsBeforeMappingOff()
         else:
             raise NotImplementedError(case.dtype.type)
 
