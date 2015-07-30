@@ -13,7 +13,6 @@ import inspect
 import traceback
 from copy import deepcopy
 
-import vtk
 from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -31,6 +30,8 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.qt_files.camera import CameraWindow
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
+from pyNastran.gui.qt_files.application_log import ApplicationLogDockWidget
+
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -219,49 +220,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
         #=========== Logging widget ===================
         if self.html_logging:
-            self.log_dock = QtGui.QDockWidget("Application log", self)
-            self.log_dock.setObjectName("application_log")
-            self.log_widget = QtGui.QTextEdit()
-            self.log_widget.setReadOnly(True)
-
-            if 1:
-                vbox1 = QtGui.QVBoxLayout()
-                vbox2 = QtGui.QVBoxLayout()
-                hbox = QtGui.QHBoxLayout()
-
-                vbox1w = QtGui.QWidget()
-                vbox1w.setLayout(vbox1)
-
-                vbox2w = QtGui.QWidget()
-                vbox2w.setLayout(vbox2)
-
-                #hboxw = QtGui.QWidget()
-                #hboxw.setLayout(hbox)
-
-                splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-                splitter.addWidget(vbox1w)
-                splitter.addWidget(vbox2w)
-
-                self.enter_data = QtGui.QTextEdit()
-                self.execute_python_button = QtGui.QPushButton("Execute")
-                self.execute_and_clear_python_button = QtGui.QPushButton("Execute and Clear")
-                #vbox1.addWidget(QtGui.QLabel('Log'))
-                vbox1.addWidget(self.log_widget)
-                vbox2.addWidget(QtGui.QLabel('Python Console:'))
-                vbox2.addWidget(self.enter_data)
-                #vbox2.addWidget(self.execute_python_button)
-                #vbox2.addWidget(self.execute_and_clear_python_button)
-                hbox.addWidget(self.execute_python_button)
-                hbox.addWidget(self.execute_and_clear_python_button)
-                vbox2.addLayout(hbox)
-                self.connect(self.execute_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_python_button)
-                self.connect(self.execute_and_clear_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_and_clear_python_button)
-                #self.log_dock.setLayout(vbox)
-                #multiWidget = QtGui.QWidget()
-                #multiWidget.setLayout(vbox)
-                self.log_dock.setWidget(splitter)
-            else:
-                self.log_dock.setWidget(self.log_widget)
+            self.log_dock = ApplicationLogDockWidget(self, execute_python=True)
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
         #===============================================
 
@@ -270,17 +229,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # right sidebar
         self.res_dock.hide()
-
         self.build_vtk_frame()
 
-    def on_execute_and_clear_python_button(self):
-        self._on_execute_python_button(clear=True)
-
-    def on_execute_python_button(self):
-        self._on_execute_python_button(clear=False)
+    @property
+    def log_widget(self):
+        return self.log_dock.log_widget
 
     def _on_execute_python_button(self, clear=False):
-        txt = str(self.enter_data.toPlainText())
+        txt = str(self.log_dock.enter_data.toPlainText())
         self.log_command(txt)
         try:
             exec(txt)
@@ -295,8 +251,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_error(str(txt))
             return
         if clear:
-            self.enter_data.clear()
-
+            self.lock_dock.enter_data.clear()
 
     def load_batch_inputs(self, inputs):
         if not inputs['format']:
