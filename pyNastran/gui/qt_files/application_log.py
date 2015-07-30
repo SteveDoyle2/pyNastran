@@ -5,9 +5,9 @@ class ApplicationLogDockWidget(QtGui.QDockWidget):
     def __init__(self, parent, execute_python=True):
         self.parent = parent
         QtGui.QDockWidget.__init__(self, parent)
-        #execute_python = False
-        self.log_dock = QtGui.QDockWidget("Application log", parent)
-        self.log_dock.setObjectName("application_log")
+        execute_python = False
+        self.dock_widget = QtGui.QDockWidget("Application log", parent)
+        self.dock_widget.setObjectName("application_log")
         self.log_widget = QtGui.QTextEdit()
         self.log_widget.setReadOnly(True)
 
@@ -37,9 +37,9 @@ class ApplicationLogDockWidget(QtGui.QDockWidget):
             vbox2.addLayout(hbox)
             self.connect(self.execute_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_python_button)
             self.connect(self.execute_and_clear_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_and_clear_python_button)
-            self.log_dock.setWidget(splitter)
+            self.dock_widget.setWidget(splitter)
         else:
-            self.log_dock.setWidget(self.log_widget)
+            self.dock_widget.setWidget(self.log_widget)
 
     def on_execute_and_clear_python_button(self):
         self.parent._on_execute_python_button(clear=True)

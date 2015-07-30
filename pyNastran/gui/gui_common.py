@@ -124,7 +124,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.set_tools()
 
         # actor_slots
-        self.textActors = {}
+        self.text_actors = {}
         self.geometry_actors = {}
         self.alt_grids = {} #additional grids
 
@@ -232,6 +232,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.build_vtk_frame()
 
     @property
+    def dock_widget(self):
+        return self.log_dock.dock_widget
+
+    @property
     def log_widget(self):
         return self.log_dock.log_widget
 
@@ -318,7 +322,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
-                ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
+                ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
                 ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
                 ('creset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
@@ -390,7 +394,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'legend', 'axis',
         ]
         if self.html_logging:
-            self.actions['logwidget'] = self.log_dock.toggleViewAction()
+            self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
             self.actions['logwidget'].setStatusTip("Show/Hide application log")
             menu_view += ['', 'show_info', 'show_debug', 'show_gui', 'show_command']
             menu_window += ['logwidget']
@@ -416,9 +420,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # the dummy toolbar stores actions but doesn't get shown
         # in other words, it can set shortcuts
-        self._dummy_toolbar = self.addToolBar('Dummy toolbar')
-        self._dummy_toolbar.setObjectName('dummy_toolbar')
-        ## menubar
+        #self._dummy_toolbar = self.addToolBar('Dummy toolbar')
+        #self._dummy_toolbar.setObjectName('dummy_toolbar')
         self.menubar = self.menuBar()
 
         actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
@@ -646,7 +649,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def set_text_color(self, color):
         """Set the text color"""
         self.text_col = color
-        for text_actor in itervalues(self.textActors):
+        for text_actor in itervalues(self.text_actors):
             text_actor.GetTextProperty().SetColor(color)
         self.log_command('set_text_color(%s, %s, %s)' % color)
 
@@ -1095,31 +1098,31 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.rend.AddActor(self.edgeActor)
 
     def createText(self, position, label, textSize=18, movable=False):
-        txt = vtk.vtkTextActor()
-        txt.SetInput(label)
-        txtprop = txt.GetTextProperty()
-        #txtprop.SetFontFamilyToArial()
-        txtprop.SetFontSize(textSize)
-        txtprop.SetColor(self.text_col)
-        txt.SetDisplayPosition(*position)
+        text_actor = vtk.vtkTextActor()
+        text_actor.SetInput(label)
+        text_prop = text_actor.GetTextProperty()
+        #text_prop.SetFontFamilyToArial()
+        text_prop.SetFontSize(textSize)
+        text_prop.SetColor(self.text_col)
+        text_actor.SetDisplayPosition(*position)
 
-        txt.VisibilityOff()
+        text_actor.VisibilityOff()
 
         #txt.SetDisplayPosition(5, 5) # bottom left
         #txt.SetDisplayPosition(5, 95)
         #txt.SetPosition(0.1, 0.5)
 
         # assign actor to the renderer
-        self.rend.AddActor(txt)
-        self.textActors[self.iText] = txt
+        self.rend.AddActor(text_actor)
+        self.text_actors[self.iText] = text_actor
         self.iText += 1
 
     def TurnTextOff(self):
-        for text in itervalues(self.textActors):
+        for text in itervalues(self.text_actors):
             text.VisibilityOff()
 
     def TurnTextOn(self):
-        for text in itervalues(self.textActors):
+        for text in itervalues(self.text_actors):
             text.VisibilityOn()
 
     def build_lookup_table(self):
@@ -1244,7 +1247,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     has_results_list.append(False)
                 else:
                     has_results_list.append(True)
-
             wildcard = ';;'.join(wildcard_list)
 
             # get the filter index and filename
@@ -1347,9 +1349,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.menu_help.menuAction().setVisible(False)
         if hasattr(self, 'nastran_toolbar'):
             self.nastran_toolbar.setVisible(True)
+            self.actions['nastran'].setVisible(True)
         else:
             self.nastran_toolbar = self.addToolBar('Nastran Toolbar')
             self.nastran_toolbar.setObjectName('nastran_toolbar')
+            #self.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
+            self.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
+            self.actions['nastran'].setStatusTip("Show/Hide application toolbar")
         #self.file.menuAction().setVisible(False)
         #self.menu_help.
 
@@ -1368,7 +1374,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.menu_help.menuAction().setVisible(True)
         self.menu_help2.menuAction().setVisible(False)
         self.nastran_toolbar.setVisible(False)
-
+        self.actions['nastran'].setVisible(False)
 
     def _update_menu_bar_to_format(self, fmt, method):
         self.menu_bar_format = fmt
@@ -1396,7 +1402,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
             if hasattr(self, method_new):
                 self._update_menu_bar_to_format(self.format, method_new)
-
                     #self._update_menu_bar_to_format(self.format)
                     #actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
                     #menu_items = self._create_menu_items(actions)
@@ -1502,10 +1507,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.load_batch_inputs(inputs)
 
         shots = inputs['shots']
-
         if shots is None:
             shots = []
-
         if shots:
         #for shot in shots:
             self.on_take_screenshot(shots)
@@ -1720,18 +1723,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #cell_id = picker.GetCellId()
         ##ds = picker.GetDataSet()
         #select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
-
         #self.log_info("world_position = %s" % str(world_position))
         #self.log_info("cell_id = %s" % cell_id)
         #self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
-
-    def take_screenshot(self):
-        """ Take a screenshot of a current view and save as a file"""
-        self.on_take_screenshot(None)
-
-    def on_take_screenshot(self, fname):
+    def on_take_screenshot(self, fname=None):
         """ Take a screenshot of a current view and save as a file"""
         if fname is None:
             filt = QtCore.QString()
@@ -1807,15 +1804,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _update_text_size(self, magnify=1.0):
         text_size = 14 * magnify
-        #txtprop.SetFontSize(textSize)
-        #txtprop.SetColor(self.text_col)
-        #txt.SetDisplayPosition(*position)
-        #txt.VisibilityOff()
-
-        #txt.SetDisplayPosition(5, 5) # bottom left
-        #txt.SetDisplayPosition(5, 95)
-        #txt.SetPosition(0.1, 0.5)
-        for itext, text_actor in iteritems(self.textActors):
+        for itext, text_actor in iteritems(self.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
         self.iText += 1
@@ -1999,11 +1988,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_error('invalid camera code...%r' % code)
             return
         self._update_camera(camera)
-        #print(dir(camera))
-        #print(dir(self.vtk_interactor))
-        #print(dir(self.rend))
         self.rend.ResetCamera()
-        #self.vtk_interactor.ResetCamera()
         self.log_command('update_camera(%r)' % code)
 
     def _simulate_key_press(self, key):
@@ -2058,8 +2043,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         for key in self.caseKeys:
             t = (key[1], [])
             data.append(t)
-        #data = self.caseKeys
-        #print(data)
+
         self.res_widget.update_results(form)
 
         key = self.caseKeys[0]
@@ -2087,6 +2071,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 node_xyz[ipoint, :] = point
             xyz = node_xyz.mean(axis=0)
         elif cell_type in [10, 12, 13]: # CTETRA, CHEXA8, CPENTA6
+            # TODO: No idea how to get the center of the face
+            #       vs. a point on a face that's not exposed
             #faces = cell.GetFaces()
             #nfaces = cell.GetNumberOfFaces()
             #for iface in range(nfaces):
@@ -2098,10 +2084,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #self.log.error(msg)
             msg = 'cell_type=%s nnodes=%s' % (cell_type, nnodes)
             raise NotImplementedError(msg)
-        #print('')
-        #print(node_xyz)
-        #print(xyz)
-
         return result_name, result_values, xyz
 
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
@@ -2211,8 +2193,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             t = (key[1], i, [])
             data.append(t)
             i += 1
-        #data = self.caseKeys
-        #print(data)
         self.res_widget.update_results(data)
         method = 'centroid' if self.is_centroidal else 'nodal'
 
@@ -2225,7 +2205,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         Wipe all labels and regenerate the key slots based on the case keys.
         This is used when changing the model.
         """
-        #print('reset labels...')
         self._remove_labels()
 
         # new geometry
@@ -2237,13 +2216,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #(1, 'Region', 1, 'centroid', '%.0f')
         #]
         for case_key in self.caseKeys:
-            # TODO: this probably isn't always right...
-            #result_name = case_key[2] #  ElementID
             result_name = self.get_result_name(case_key)
-
             self.label_actors[result_name] = []
             self.label_ids[result_name] = set([])
-
 
     def _remove_labels(self):
         """

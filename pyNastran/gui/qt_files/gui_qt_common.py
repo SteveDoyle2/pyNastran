@@ -25,19 +25,19 @@ class GuiCommon(object):
         self.vtk_version = [int(i) for i in vtk.VTK_VERSION.split('.')[:1]]
         print('vtk_version = %s' % (self.vtk_version))
 
-    def nCells(self):
-        try:
-            cell_data = self.grid.GetCellData()
-            return cell_data.GetNumberOfCells()
-        except AttributeError:
-            return 0
+    #def nCells(self):
+        #try:
+            #cell_data = self.grid.GetCellData()
+            #return cell_data.GetNumberOfCells()
+        #except AttributeError:
+            #return 0
 
-    def nPoints(self):
-        try:
-            point_data = self.grid.GetPointData()
-            return point_data.GetNumberOfPoints()
-        except AttributeError:
-            return 0
+    #def nPoints(self):
+        #try:
+            #point_data = self.grid.GetPointData()
+            #return point_data.GetNumberOfPoints()
+        #except AttributeError:
+            #return 0
 
     def update_axes_length(self, dim_max):
         """
@@ -50,15 +50,15 @@ class GuiCommon(object):
                 axes.SetTotalLength(dim_max, dim_max, dim_max)
 
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
-        self.textActors[0].SetInput('Max:  %g' % max_value)  # max
-        self.textActors[1].SetInput('Min:  %g' % min_value)  # min
-        self.textActors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
+        self.text_actors[0].SetInput('Max:  %g' % max_value)  # max
+        self.text_actors[1].SetInput('Min:  %g' % min_value)  # min
+        self.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
 
         if label:
-            self.textActors[3].SetInput('Label: %s' % label)  # info
-            self.textActors[3].VisibilityOn()
+            self.text_actors[3].SetInput('Label: %s' % label)  # info
+            self.text_actors[3].VisibilityOn()
         else:
-            self.textActors[3].VisibilityOff()
+            self.text_actors[3].VisibilityOff()
 
     def cycleResults(self, result_name=None):
         if self.nCases <= 1:
