@@ -999,10 +999,39 @@ class CAERO1(BaseCard, CAERO1Deprecated):
                 msg = 'Either NCHORD or LCHORD must 0'
                 raise ValueError(msg)
 
+            self._init_ids()
+
             assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
+
+    def _init_ids(self):
+        """
+        Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
+
+        Parameters
+        -----------
+        self : CAERO1 obj
+            The CAERO1 object.
+
+        """
+        if self.nchord == 0:
+            x = self.lchord.Di
+            nchord = len(x) - 1
+        else:
+            nchord = self.nchord
+
+        if self.nspan == 0:
+            y = self.lspan.Di
+            nspan = len(y) - 1
+        else:
+            nspan = self.nspan
+
+        self.box_ids = zeros((nchord, nspan), dtype='int32')
+        for ichord in range(nchord):
+            for ispan in range(nspan):
+                self.box_ids[ichord,ispan] = self.eid + ichord + ispan * nchord
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
@@ -1045,7 +1074,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
-    def get_npanel_points_elements(self):
+    def get_npanel_points_elements(self, box_ids=None):
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
