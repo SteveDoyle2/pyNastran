@@ -1345,42 +1345,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.update_menu_bar()
         self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
 
-    def _create_nastran_tools_and_menu_items(self):
-        tools = [
-            ('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
-            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
-        ]
-        self.menu_help2 = self.menubar.addMenu('&HelpMenuNew')
-        self.menu_help.menuAction().setVisible(False)
-        if hasattr(self, 'nastran_toolbar'):
-            self.nastran_toolbar.setVisible(True)
-            self.actions['nastran'].setVisible(True)
-        else:
-            self.nastran_toolbar = self.addToolBar('Nastran Toolbar')
-            self.nastran_toolbar.setObjectName('nastran_toolbar')
-            #self.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
-            self.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
-            self.actions['nastran'].setStatusTip("Show/Hide application toolbar")
-        #self.file.menuAction().setVisible(False)
-        #self.menu_help.
-
-        #self.actions['about'].Disable()
-
-        menu_items = [
-            (self.menu_help2, ('about_nastran',)),
-            (self.nastran_toolbar, ('caero', 'caero_sub'))
-
-            #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
-            #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
-        ]
-        return tools, menu_items
-
-    def _cleanup_nastran_tools_and_menu_items(self):
-        self.menu_help.menuAction().setVisible(True)
-        self.menu_help2.menuAction().setVisible(False)
-        self.nastran_toolbar.setVisible(False)
-        self.actions['nastran'].setVisible(False)
-
     def _update_menu_bar_to_format(self, fmt, method):
         self.menu_bar_format = fmt
         tools, menu_items = getattr(self, method)()
@@ -1412,7 +1376,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     #menu_items = self._create_menu_items(actions)
                     #menu_items = self._create_menu_items()
                     #self._populate_menu(menu_items)
-
 
     def on_load_results(self, out_filename=None):
         """
