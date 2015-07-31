@@ -66,6 +66,7 @@ from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AE
                                       AESURF, AESURFS, AERO, AEROS, CSSCHD,
                                       CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                       PAERO1, PAERO2, PAERO3, PAERO5, # PAERO4
+                                      MONPNT1,
                                       FLFACT, FLUTTER, GUST, MKAERO1,
                                       MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
                                       SPLINE5, TRIM)
@@ -309,6 +310,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # 'CAERO5',
             'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
             # 'PAERO4', 'PAERO5',
+            'MONPNT1',                                   ## monitor_points
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'TRIM',  ## trims
@@ -714,6 +716,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.caeros = {}
         #: stores PAEROx
         self.paeros = {}
+        # stores MONPNT1
+        self.monitor_points = {}
         #: stores AERO
         self.aero = {}
         #: stores AEROS
@@ -881,6 +885,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'aestats' : ['AESTAT'],
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',], # 'CAERO5',
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO5'], # 'PAERO4',
+            'monitor_points' : ['MONPNT1'],
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
@@ -1482,15 +1487,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             print(print_card_8(card_obj).rstrip())
 
         # function that gets by name the initialized object (from global scope)
-        try:
+        if 1:
+            try:
+                _get_cls = lambda name: globals()[name](card_obj, comment=comment)
+            except Exception as e:
+                # if we'r in here, the card wasn't imported
+                if not e.args:
+                    e.args = ('',)
+                e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
+                raise
+            _cls = lambda name: globals()[name]
+        else:
+            _cls = globals()[card_name]
             _get_cls = lambda name: globals()[name](card_obj, comment=comment)
-        except Exception as e:
-            # if we'r in here, the card wasn't imported
-            if not e.args:
-                e.args = ('',)
-            e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
-            raise
-        _cls = lambda name: globals()[name]
 
         try:
             # cards that have their own method add_CARDNAME to add them
@@ -1574,6 +1583,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'add_SPLINE' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'],
                 'add_CAERO' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
                 'add_PAERO' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
+                'add_MONPNT' : ['MONPNT1'],
                 'add_MKAERO' : ['MKAERO1', 'MKAERO2'],
                 'add_FREQ' : ['FREQ', 'FREQ1', 'FREQ2'],
                 'add_ASET' : ['ASET', 'ASET1'],
@@ -1777,12 +1787,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         except (SyntaxError, AssertionError, KeyError, ValueError) as e:
             # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
             #tpl/cc451.bdf
+            raise
 
             # NameErrors should be caught
             self._iparse_errors += 1
             var = traceback.format_exception_only(type(e), e)
             self._stored_parse_errors.append((card, var))
-            #raise
             if self._iparse_errors > self._nparse_errors:
                 self.pop_parse_errors()
                 #print(str(e))
@@ -1976,6 +1986,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         if ' ' in card_name or len(card_name) == 0:
             msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
                   % (card_name, lines[0], self.active_filename)
+            print(msg)
             raise CardParseSyntaxError(msg)
         return card_name.upper()
 

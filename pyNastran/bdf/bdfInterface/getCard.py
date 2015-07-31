@@ -86,7 +86,11 @@ class GetMethods(GetMethodsDeprecated):
                 continue
 
             #print('card_type=%r' % card_type)
-            key = rslot_map[card_type]
+            try:
+                key = rslot_map[card_type]
+            except:
+                self.log.error("card_type=%r' hasn't been added to self._slot_to_type_map...check for typos")
+                raise
             slot = getattr(self, key)
             ids = self._type_to_id_map[card_type]
             cards = []

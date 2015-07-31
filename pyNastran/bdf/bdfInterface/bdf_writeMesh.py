@@ -81,6 +81,68 @@ class WriteMesh(object):
         self.log.debug("***writing %s" % fname)
         return out_filename
 
+    def write_caero_model(self, caero_bdf_filename='caero.bdf'):
+        bdf_file = open(caero_bdf_filename, 'w')
+        bdf_file.write('CEND\n')
+        bdf_file.write('BEGIN BULK\n')
+        bdf_file.write('$ punch=True\n')
+        i = 1
+
+        mid = 1
+        bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
+        for aesurf_id, aesurf in iteritems(self.aesurfs):
+            cid = aesurf.cid1
+            bdf_file.write('PSHELL,%s,%s,0.1\n' % (aesurf_id, aesurf_id))
+            #print(cid)
+            #ax, ay, az = cid.i
+            #bx, by, bz = cid.j
+            #cx, cy, cz = cid.k
+            #bdf_file.write('CORD2R,%s,,%s,%s,%s,%s,%s,%s\n' % (cid, ax, ay, az, bx, by, bz))
+            #bdf_file.write(',%s,%s,%s\n' % (cx, cy, cz))
+            #print(cid)
+            bdf_file.write(str(cid))
+            #aesurf.elements
+        for eid, caero in sorted(iteritems(self.caeros)):
+            assert eid != 1, 'CAERO eid=1 is reserved for non-flaps'
+            scaero = str(caero).rstrip().split('\n')
+            bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+            points, elements = caero.panel_points_elements()
+            npoints = points.shape[0]
+            nelements = elements.shape[0]
+            for ipoint, point in enumerate(points):
+                x, y, z = point
+                bdf_file.write('GRID,%s,,%s,%s,%s\n' % (i + ipoint, x, y, z))
+
+            pid = eid
+            mid = eid
+            if 0:
+                bdf_file.write('PSHELL,%s,%s,0.1\n' % (pid, mid))
+                bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
+            else:
+                bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
+                bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % 1)
+
+            j = 0
+            for elem in elements + i:
+                p1, p2, p3, p4 = elem
+                eid2 = j + eid
+                pidi = None
+                for aesurf_id, aesurf in iteritems(self.aesurfs):
+                    aelist_id = aesurf.AELIST_id1()
+                    aelist = self.aelists[aelist_id]
+                    if eid2 in aelist.elements:
+                        pidi = aesurf_id
+                        break
+                if pidi is None:
+                    #pidi = pid
+                    pidi = 1
+                bdf_file.write('CQUAD4,%s,%s,%s,%s,%s,%s\n' % (j + eid, pidi, p1, p2, p3, p4))
+                j += 1
+            i += npoints
+            #break
+            #j += nelements
+        bdf_file.write('ENDDATA\n')
+
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
                   interspersed=True, enddata=None):
@@ -102,6 +164,7 @@ class WriteMesh(object):
         :param enddata:   Flag to enable/disable writing ENDDATA
                           (default=None -> depends on input BDF)
         """
+        #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
         if encoding is None:
@@ -268,7 +331,7 @@ class WriteMesh(object):
     def _write_aero(self, outfile, size=8, is_double=False):
         """Writes the aero cards"""
         if(self.aero or self.aeros or self.gusts or self.caeros
-           or self.paeros or self.trims):
+           or self.paeros or self.trims or self.monitor_points):
             msg = ['$AERO\n']
             for (unused_id, caero) in sorted(iteritems(self.caeros)):
                 msg.append(caero.write_card(size, is_double))
@@ -278,6 +341,8 @@ class WriteMesh(object):
                 msg.append(spline.write_card(size, is_double))
             for (unused_id, trim) in sorted(iteritems(self.trims)):
                 msg.append(trim.write_card(size, is_double))
+            for (unused_id, monitor_point) in sorted(iteritems(self.monitor_points)):
+                msg.append(monitor_point.write_card(size, is_double))
 
             for (unused_id, aero) in sorted(iteritems(self.aero)):
                 msg.append(aero.write_card(size, is_double))

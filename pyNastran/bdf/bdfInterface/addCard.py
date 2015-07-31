@@ -540,6 +540,13 @@ class AddMethods(object):
         self.paeros[key] = paero
         self._type_to_id_map[paero.type].append(key)
 
+    def add_MONPNT(self, monitor_point):
+        key = monitor_point.name
+        assert key not in self.monitor_points, '\nmonitor_point=\n|%s| oldMNTPNT=\n|%s|' % (
+            monitor_point, self.monitor_points[key])
+        self.monitor_points[key] = monitor_point
+        self._type_to_id_map[monitor_point.type].append(key)
+
     def add_SPLINE(self, spline):
         assert spline.eid not in self.splines
         assert spline.eid > 0
