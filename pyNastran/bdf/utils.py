@@ -51,6 +51,29 @@ class CardParseSyntaxError(SyntaxError):
     pass
 
 
+def _to_fields_mntpnt1(card_lines, card_name):
+    print(card_lines)
+    assert len(card_lines) == 2, card_lines
+    line1, line2 = card_lines
+
+    base = line1[:24]
+    comment = line1[24:]  # len=56 max
+    assert ',' not in base, base
+    assert '\t' not in base, base
+
+    assert ',' not in line2, card_lines
+    assert '\t' not in line2, card_lines
+    assert '*' not in line2, card_lines
+    fields = [
+        line1[0:8],
+        line1[8:16], line1[16:24], line1[24:32], line1[32:40], line1[40:48],
+        line1[48:56], line1[56:64], line1[64:72],
+
+        line2[8:16], line2[16:24], line2[24:32], line2[32:40], line2[40:48],
+        line2[48:56], line2[56:64], line2[64:72],
+    ]
+    return fields
+
 def to_fields(card_lines, card_name):
     """
     Converts a series of lines in a card into string versions of the field.
@@ -65,13 +88,17 @@ def to_fields(card_lines, card_name):
 
     .. code-block:: python
 
-      >>> card_lines = []'GRID,1,,1.0,2.0,3.0']
+      >>> card_lines = ['GRID,1,,1.0,2.0,3.0']
       >>> card_name = 'GRID'
       >>> fields = to_fields(lines, card_name)
       >>> fields
       ['GRID', '1', '', '1.0', '2.0', '3.0']
     """
     fields = []
+
+    if card_name == 'MONPNT1':
+        return _to_fields_mntpnt1(card_lines, card_name)
+
     # first line
     line = card_lines.pop(0)
     if '=' in line:
@@ -107,10 +134,6 @@ def to_fields(card_lines, card_name):
         assert len(fields) == 9, fields
 
     for j, line in enumerate(card_lines): # continuation lines
-        #for i, field in enumerate(fields):
-        #    if field.strip() == '+':
-        #        raise RuntimeError('j=%s field[%s] is a +' % (j,i))
-
         if '=' in line and card_name != 'EIGRL':
             msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
             raise CardParseSyntaxError(msg)

@@ -156,7 +156,15 @@ def compare_card_content(fem1, fem2):
     for key in fem1.sets:
         card1 = fem1.sets[key]
         card2 = fem2.sets[key]
-        assert card1 == card2, card1.symmetric_difference(card2)
+
+        if card1 != card2 and str(card1) != str(card2):
+            # and card1.symmetric_difference(card2):
+            # TODO: SET1s don't all handle comments...
+            msg = 'SETx cards are not the same\n'
+            msg += 'card1:\n%s\n' % str(card1)
+            msg += 'card2:\n%s\n' % str(card2)
+            msg += 'diff = %s' % str(card1.symmetric_difference(card2))
+            raise AssertionError(msg)
         #assert_fields(card1, card2)
 
     dict_groups = [

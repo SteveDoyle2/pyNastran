@@ -566,7 +566,7 @@ class SET1(Set):
             skin = ['SKIN']
 
         # checked in NX 2014 / MSC 2005.1
-        return print_card_8(['SET1', self.sid] + skin + self.get_IDs())
+        return self.comment + print_card_8(['SET1', self.sid] + skin + self.get_IDs())
 
         # I thought this worked in the new MSC Nastran...
         # Doesn't work in NX 2014 / MSC 2005.1 (multiple duplicate sids).
