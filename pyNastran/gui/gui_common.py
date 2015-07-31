@@ -126,6 +126,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.textActors = {}
         self.geometry_actors = {}
         self.alt_grids = {} #additional grids
+        self.geometry_actor_colors = {} # default actor colors
+        #geom = Geom(grid, color, linethickness, etc.)
+        #self.geom_actor_things = {
+        #'name' : Geom(),
+        #}
 
         self.magnify = 1
         self.iText = 0
@@ -1981,7 +1986,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.geometry_actors[name] = alt_geometry_actor
 
         #geometryActor.AddPosition(2, 0, 2)
-        alt_geometry_actor.GetProperty().SetDiffuseColor(1, 1, 0)  # yellow - rgb
+        try:
+            color = self.geometry_actor_colors[name]
+        except KeyError:
+            color = (1., 1., 1.)
+        alt_geometry_actor.GetProperty().SetDiffuseColor(*color)
         alt_geometry_actor.GetProperty().SetLineWidth(5)
 
         self.rend.AddActor(alt_geometry_actor)
