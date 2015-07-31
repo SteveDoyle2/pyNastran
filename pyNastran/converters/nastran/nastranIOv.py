@@ -97,6 +97,42 @@ class NastranIO(object):
             'Nastran OP2 (*.op2)', self.load_nastran_results)
         return data
 
+    def _cleanup_nastran_tools_and_menu_items(self):
+        #self.menu_help.menuAction().setVisible(True)
+        #self.menu_help2.menuAction().setVisible(False)
+        self.nastran_toolbar.setVisible(False)
+        self.actions['nastran'].setVisible(False)
+
+    def _create_nastran_tools_and_menu_items(self):
+        tools = [
+            #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
+            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
+        ]
+        #self.menu_help2 = self.menubar.addMenu('&HelpMenuNew')
+        #self.menu_help.menuAction().setVisible(False)
+        if hasattr(self, 'nastran_toolbar'):
+            self.nastran_toolbar.setVisible(True)
+            self.actions['nastran'].setVisible(True)
+        else:
+            self.nastran_toolbar = self.addToolBar('Nastran Toolbar')
+            self.nastran_toolbar.setObjectName('nastran_toolbar')
+            #self.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
+            self.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
+            self.actions['nastran'].setStatusTip("Show/Hide application toolbar")
+        #self.file.menuAction().setVisible(False)
+        #self.menu_help.
+
+        #self.actions['about'].Disable()
+
+        menu_items = [
+            #(self.menu_help2, ('about_nastran',)),
+            (self.nastran_toolbar, ('caero', 'caero_sub'))
+            #(self.menu_window, tuple(menu_window)),
+            #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
+            #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
+        ]
+        return tools, menu_items
+
     def show_caero_mesh(self, is_shown=None):
         """
         :param is_shown: should the mesh be shown/hidden
@@ -265,23 +301,27 @@ class NastranIO(object):
 
         box_id_to_caero_element_map = {}
         num_prev = 0
-        caero_points = empty((0,3))
-        for eid, caero in sorted(iteritems(model.caeros)):
-            if caero.type == 'CAERO1':
-                pointsi, elementsi = caero.panel_points_elements()
-                caero_points = vstack((caero_points, pointsi))
-                for i, box_id in enumerate(caero.box_ids.flat):
-                    box_id_to_caero_element_map[box_id] = elementsi[i,:] + num_prev
-                num_prev += pointsi.shape[0]
+        if model.caeros:
+            caero_points = []
+            for eid, caero in sorted(iteritems(model.caeros)):
+                if caero.type == 'CAERO1':
+                    pointsi, elementsi = caero.panel_points_elements()
+                    caero_points.append(pointsi)
+                    for i, box_id in enumerate(caero.box_ids.flat):
+                        box_id_to_caero_element_map[box_id] = elementsi[i,:] + num_prev
+                    num_prev += pointsi.shape[0]
+            caero_points = array(caero_points, dtype='float32')
+        else:
+            caero_points = empty((0,3))
 
         # check for any control surfcaes
         has_control_surface = False
-        if 'AESURF' in model.card_count.keys():
+        if model.aesurfs:
             cs_box_ids = []
             has_control_surface = True
             ncaeros_cs = 0
             ncaero_cs_points = 0
-            if 'caero_cs' not in self.alt_grids.keys():
+            if 'caero_cs' not in self.alt_grids:
                 self.create_alternate_vtk_grid('caero_cs')
             for aid, aesurf in iteritems(model.aesurfs):
                 aelist = aesurf.alid1
@@ -497,6 +537,7 @@ class NastranIO(object):
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(ncaero_sub_points)
 
+        eType = vtkQuad().GetCellType()
         for eid, element in sorted(iteritems(model.caeros)):
             if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                isinstance(element, CAERO4) or isinstance(element, CAERO5)):
@@ -505,13 +546,12 @@ class NastranIO(object):
                     points.InsertPoint(j + ipoint, *pointii)
 
                 elem = vtkQuad()
-                eType = elem.GetCellType()
-                for elementsi in elementsi:
+                for elementi in elementsi:
                     elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, j + elementsi[0])
-                    elem.GetPointIds().SetId(1, j + elementsi[1])
-                    elem.GetPointIds().SetId(2, j + elementsi[2])
-                    elem.GetPointIds().SetId(3, j + elementsi[3])
+                    elem.GetPointIds().SetId(0, j + elementi[0])
+                    elem.GetPointIds().SetId(1, j + elementi[1])
+                    elem.GetPointIds().SetId(2, j + elementi[2])
+                    elem.GetPointIds().SetId(3, j + elementi[3])
                     self.alt_grids['caero_sub'].InsertNextCell(eType, elem.GetPointIds())
                 j += ipoint + 1
             else:
@@ -530,12 +570,11 @@ class NastranIO(object):
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(ncaero_sub_points)
 
+        eType = vtkQuad().GetCellType()
         for ibox, box_id in enumerate(cs_box_ids):
             pointsi = caero_points[box_id_to_caero_element_map[box_id]]
             for ipoint, point in enumerate(pointsi):
                 points.InsertPoint(j + ipoint, *point)
-            elem = vtkQuad()
-            eType = elem.GetCellType()
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)
             elem.GetPointIds().SetId(1, j + 1)
@@ -543,7 +582,6 @@ class NastranIO(object):
             elem.GetPointIds().SetId(3, j + 3)
             self.alt_grids['caero_cs'].InsertNextCell(eType, elem.GetPointIds())
             j += ipoint + 1
-
         self.alt_grids['caero_cs'].SetPoints(points)
         return j
 
@@ -901,7 +939,6 @@ class NastranIO(object):
         #self.grid.GetCellData().SetScalars(self.gridResult)
 
 
-
         #print('a', self.geometry_actors['caero'].GetVisibility())
         #print('b', self.geometry_actors['caero_sub'].GetVisibility())
 
@@ -1084,7 +1121,6 @@ class NastranIO(object):
             sucaseIDs = model.caseControlDeck.get_subcase_list()
         except AttributeError:
             return icase
-
 
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
