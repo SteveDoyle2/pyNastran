@@ -81,10 +81,6 @@ class NastranIO(object):
         #self.is_nodal = None
         self.iSubcaseNameMap = None
 
-        self.geometry_actor_colors['caero'] = (1, 1, 0)
-        self.geometry_actor_colors['caero_sub'] = (1, 1, 0)
-        self.geometry_actor_colors['caero_cs'] = (0.98, 0.4, 0.93)
-
     def get_nastran_wildcard_geometry_results_functions(self):
         if is_geom:
             geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas; *.op2; *.pch)'
@@ -431,11 +427,20 @@ class NastranIO(object):
                     if None in node_ids:
                         nsprings += 1
 
+        # set colors if they haven't been set
+        if 'caero' in self.geometry_properties and self.geometry_properties['caero'].color is None:
+            self.geometry_properties['caero'].color = (1., 1., 0.)
+        if 'caero_sub' in self.geometry_properties and self.geometry_properties['caero_sub'].color is None:
+            self.geometry_properties['caero_sub'].color = (1., 1., 0.)
+        if 'caero_cs' in self.geometry_properties and self.geometry_properties['caero_cs'].color is None:
+            self.geometry_properties['caero_cs'].color = (0.98, 0.4, 0.93)
+
         # fill caero grids
         self.set_caero_grid(ncaeros_points, model)
         self.set_caero_subpanel_grid(ncaero_sub_points, model)
         if has_control_surface:
             self.set_caero_control_surface_grid(cs_box_ids, box_id_to_caero_element_map, caero_points)
+
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
 
@@ -467,6 +472,7 @@ class NastranIO(object):
             self.geometry_actors['caero_sub'].Update()
         if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
                 self.geometry_actors['caero_cs'].Update()
+
 
         points2.SetNumberOfPoints(nCONM2 + nsprings)
 
@@ -1705,7 +1711,6 @@ class NastranIO(object):
             table = getattr(model, table_type)
             if isubcase in table:
                 is_data = True
-                #print('table_type=%s' % table_type)
                 case = table[isubcase]
                 is_real = case.is_real()
                 if case.nonlinear_factor is not None:

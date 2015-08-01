@@ -31,7 +31,8 @@ from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.qt_files.camera import CameraWindow
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.gui.qt_files.application_log import ApplicationLogDockWidget
-
+from pyNastran.gui.qt_files.manage_actors import EditGroupProperties
+from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -74,7 +75,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._is_axes_shown = True
         self.nvalues = 9
         self.is_wireframe = False
+        #-------------
+        # window variables
         self._legend_shown = False
+        self._edit_group_properties_shown = False
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
@@ -127,11 +131,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.text_actors = {}
         self.geometry_actors = {}
         self.alt_grids = {} #additional grids
-        self.geometry_actor_colors = {} # default actor colors
-        #geom = Geom(grid, color, linethickness, etc.)
-        #self.geom_actor_things = {
-        #'name' : Geom(),
+
+        #geom = Geom(color, line_thickness, etc.)
+        #self.geometry_properties = {
+        #    'name' : Geom(),
         #}
+        self.geometry_properties = {}
 
         self.magnify = 1
         self.iText = 0
@@ -226,7 +231,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #=========== Logging widget ===================
         if self.html_logging:
             self.log_dock = ApplicationLogDockWidget(self, execute_python=True)
-            self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
+            #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
         #===============================================
 
         self._create_vtk_objects()
@@ -308,6 +313,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
+                ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.set_actor_properties),
 
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
                 ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
@@ -410,7 +416,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
-            (self.toolbar, ('flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
+            (self.toolbar, ('geo_properties', 'flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
@@ -780,6 +786,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def create_alternate_vtk_grid(self, name):
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
+        self.geometry_properties[name] = AltGeometry(self, name, color=None, line_width=5, opacity=1.0)
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -839,149 +846,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     #def _script_helper(self, python_file=False):
         #if python_file in [None, False]:
             #self.on_run_script(python_file)
-
-
-    def view_camera(self):
-        camera = self.rend.GetActiveCamera()
-        position = camera.GetPosition()
-        clip_range = camera.GetClippingRange()
-        focal_point = camera.GetFocalPoint()
-
-        data = {'cameras' : self.cameras}
-        window = CameraWindow(data, win_parent=self)
-        window.show()
-        window.exec_()
-
-        if data['clicked_ok']:
-            self.cameras = deepcopy(data['cameras'])
-            #self._apply_camera(data)
-        #self.log_info('position = %s' % str(position))
-        #self.log_info('clip_range = %s' % str(clip_range))
-        #self.log_info('focal_point = %s' % str(focal_point))
-
-    #def _apply_camera(self, data):
-        #name = data['name']
-        #self.cameras = deepcopy(data['cameras'])
-        #self.on_set_camera(name)
-
-    def on_set_camera(self, name):
-        camera_data = self.cameras[name]
-        #position, clip_range, focal_point, view_up, distance = camera_data
-        self.on_set_camera_data(camera_data)
-
-    def on_set_camera_data(self, camera_data):
-        #position, clip_range, focal_point, view_up, distance = camera_data
-        position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
-
-        camera = self.rend.GetActiveCamera()
-        camera.SetPosition(position)
-        camera.SetFocalPoint(focal_point)
-        camera.SetViewAngle(view_angle)
-        camera.SetViewUp(view_up)
-        camera.SetClippingRange(clip_range)
-
-        camera.SetParallelScale(parallel_scale)
-        #parallel_proj
-
-        camera.SetDistance(distance)
-
-        camera.Modified()
-        self.vtk_interactor.Render()
-        self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
-                         % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
-
-
-    def set_legend(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Name  |  String  |
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        |  Max   |  Float   |
-        +--------+----------+
-        | Format | pyString |
-        +--------+----------+
-        """
-        if not hasattr(self, 'caseKeys'):
-            self.log_error('No model has been loaded.')
-            return
-        key = self.caseKeys[self.iCase]
-        case = self.resultCases[key]
-        if len(key) == 5:
-            (subcase_id, result_type, vector_size, location, data_format) = key
-        elif len(key) == 6:
-            (subcase_id, i, result_type, vector_size, location, data_format) = key
-        else:
-            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
-
-        data = {
-            'name' : result_type,
-            'min' : case.min(),
-            'max' : case.max(),
-            'format' : data_format,
-            'is_blue_to_red' : True,
-            'is_discrete': True,
-            'is_horizontal': False,
-            'clicked_ok' : False,
-        }
-        if not self._legend_shown:
-            self._legend_window = LegendPropertiesWindow(data, win_parent=self)
-            self._legend_window.show()
-            self._legend_shown = True
-            self._legend_window.exec_()
-        else:
-            self._legend_window.activateWindow()
-
-        if data['clicked_ok']:
-            self.apply_legend(data)
-            del self._legend_window
-            self._legend_shown = False
-
-    def apply_legend(self, data):
-        title = data['name']
-        min_value = data['min']
-        max_value = data['max']
-        data_format = data['format']
-        is_blue_to_red = data['is_blue_to_red']
-        is_discrete = data['is_discrete']
-        is_horizontal = data['is_horizontal']
-        self.on_update_legend(Title=title, min_value=min_value, max_value=max_value,
-                              data_format=data_format,
-                              is_blue_to_red=is_blue_to_red,
-                              is_discrete=is_discrete, is_horizontal=is_horizontal)
-
-    def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
-                         data_format='%.0f',
-                         is_blue_to_red=True, is_discrete=True, is_horizontal=True):
-
-        key = self.caseKeys[self.iCase]
-        case = self.resultCases[key]
-        if len(key) == 5:
-            (subcase_id, result_type, vector_size, location, _data_format) = key
-        elif len(key) == 6:
-            (subcase_id, i, result_type, vector_size, location, _data_format) = key
-        else:
-            (subcase_id, i, result_type, vector_size, location, _data_format, label2) = key
-
-        subtitle, label = self.get_subtitle_label(subcase_id)
-        name = (vector_size, subcase_id, result_type, label, min_value, max_value)
-
-        norm_value = float(max_value - min_value)
-        #if name not in self._loaded_names:
-        grid_result = self.set_grid_values(name, case, vector_size,
-                                           min_value, max_value, norm_value,
-                                           is_blue_to_red=is_blue_to_red)
-        self.update_scalar_bar(Title, min_value, max_value, norm_value,
-                               data_format, is_blue_to_red=is_blue_to_red,
-                               is_horizontal=is_horizontal)
-        self.final_grid_update(name, grid_result, key, subtitle, label)
-        self.is_horizontal_scalar_bar = is_horizontal
-        self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
-                         '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
-                         % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
 
     def on_run_script(self, python_file=False):
         print('python_file =', python_file)
@@ -1335,7 +1199,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
         #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
         self.infile_name = infile_name
-
         self.out_filename = None
         #if self.out_filename is not None:
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
@@ -1698,7 +1561,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def on_take_screenshot(self, fname=None):
         """ Take a screenshot of a current view and save as a file"""
-        if fname is None:
+        if fname is None or fname is False:
             filt = QtCore.QString()
             default_filename = ''
 
@@ -1711,9 +1574,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 if self.infile_name is not None:
                     base, ext = os.path.splitext(os.path.basename(self.infile_name))
                     default_filename = self.infile_name
+                    default_filename =  base + '.png'
             else:
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
-                default_filename = title + '_' + base
+                default_filename = title + '_' + base + '.png'
 
             fname = str(QtGui.QFileDialog.getSaveFileName(self, (
                 'Choose a filename and type'), default_filename, (
@@ -1825,7 +1689,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.glyph_transform_filter.SetTransform(self.glyph_transform)
 
             self.glyph = vtk.vtkGlyph3D()
-            self.glyph.setInput(xxx)
+            #self.glyph.setInput(xxx)
             self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
 
             self.glyph.SetVectorModeToUseVector()
@@ -1893,12 +1757,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.geometry_actors[name] = alt_geometry_actor
 
         #geometryActor.AddPosition(2, 0, 2)
+        line_width = 5
         try:
-            color = self.geometry_actor_colors[name]
+            geom = self.geometry_properties[name]
+            color = geom.color
         except KeyError:
             color = (1., 1., 1.)
+            geom = AltGeometry(self, name, color=color, line_width=line_width,
+                               opacity=1.0)
+            self.geometry_properties[name] = geom
+
+        line_width = geom.line_width
         alt_geometry_actor.GetProperty().SetDiffuseColor(*color)
-        alt_geometry_actor.GetProperty().SetLineWidth(5)
+        alt_geometry_actor.GetProperty().SetLineWidth(line_width)
 
         self.rend.AddActor(alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
@@ -2275,3 +2146,226 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value,
                                data_format, is_blue_to_red, is_horizontal)
+
+    #---------------------------------------------------------------------------------------
+    # CAMERA MENU
+    def view_camera(self):
+        camera = self.rend.GetActiveCamera()
+        position = camera.GetPosition()
+        clip_range = camera.GetClippingRange()
+        focal_point = camera.GetFocalPoint()
+
+        data = {'cameras' : self.cameras}
+        window = CameraWindow(data, win_parent=self)
+        window.show()
+        window.exec_()
+
+        if data['clicked_ok']:
+            self.cameras = deepcopy(data['cameras'])
+            #self._apply_camera(data)
+        #self.log_info('position = %s' % str(position))
+        #self.log_info('clip_range = %s' % str(clip_range))
+        #self.log_info('focal_point = %s' % str(focal_point))
+
+    #def _apply_camera(self, data):
+        #name = data['name']
+        #self.cameras = deepcopy(data['cameras'])
+        #self.on_set_camera(name)
+
+    def on_set_camera(self, name):
+        camera_data = self.cameras[name]
+        #position, clip_range, focal_point, view_up, distance = camera_data
+        self.on_set_camera_data(camera_data)
+
+    def on_set_camera_data(self, camera_data):
+        #position, clip_range, focal_point, view_up, distance = camera_data
+        position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
+
+        camera = self.rend.GetActiveCamera()
+        camera.SetPosition(position)
+        camera.SetFocalPoint(focal_point)
+        camera.SetViewAngle(view_angle)
+        camera.SetViewUp(view_up)
+        camera.SetClippingRange(clip_range)
+
+        camera.SetParallelScale(parallel_scale)
+        #parallel_proj
+
+        camera.SetDistance(distance)
+
+        camera.Modified()
+        self.vtk_interactor.Render()
+        self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
+                         % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
+
+    #---------------------------------------------------------------------------------------
+    # LEGEND MENU
+    def set_legend(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Name  |  String  |
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        |  Max   |  Float   |
+        +--------+----------+
+        | Format | pyString |
+        +--------+----------+
+        """
+        if not hasattr(self, 'caseKeys'):
+            self.log_error('No model has been loaded.')
+            return
+        key = self.caseKeys[self.iCase]
+        case = self.resultCases[key]
+        if len(key) == 5:
+            (subcase_id, result_type, vector_size, location, data_format) = key
+        elif len(key) == 6:
+            (subcase_id, i, result_type, vector_size, location, data_format) = key
+        else:
+            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+
+        data = {
+            'name' : result_type,
+            'min' : case.min(),
+            'max' : case.max(),
+            'format' : data_format,
+            'is_blue_to_red' : True,
+            'is_discrete': True,
+            'is_horizontal': False,
+            'clicked_ok' : False,
+        }
+        if not self._legend_shown:
+            self._legend_window = LegendPropertiesWindow(data, win_parent=self)
+            self._legend_window.show()
+            self._legend_shown = True
+            self._legend_window.exec_()
+        else:
+            self._legend_window.activateWindow()
+
+        if data['clicked_ok']:
+            self.apply_legend(data)
+            del self._legend_window
+            self._legend_shown = False
+
+    def apply_legend(self, data):
+        title = data['name']
+        min_value = data['min']
+        max_value = data['max']
+        data_format = data['format']
+        is_blue_to_red = data['is_blue_to_red']
+        is_discrete = data['is_discrete']
+        is_horizontal = data['is_horizontal']
+        self.on_update_legend(Title=title, min_value=min_value, max_value=max_value,
+                              data_format=data_format,
+                              is_blue_to_red=is_blue_to_red,
+                              is_discrete=is_discrete, is_horizontal=is_horizontal)
+
+    def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
+                         data_format='%.0f',
+                         is_blue_to_red=True, is_discrete=True, is_horizontal=True):
+
+        key = self.caseKeys[self.iCase]
+        case = self.resultCases[key]
+        if len(key) == 5:
+            (subcase_id, result_type, vector_size, location, _data_format) = key
+        elif len(key) == 6:
+            (subcase_id, i, result_type, vector_size, location, _data_format) = key
+        else:
+            (subcase_id, i, result_type, vector_size, location, _data_format, label2) = key
+
+        subtitle, label = self.get_subtitle_label(subcase_id)
+        name = (vector_size, subcase_id, result_type, label, min_value, max_value)
+
+        norm_value = float(max_value - min_value)
+        #if name not in self._loaded_names:
+        grid_result = self.set_grid_values(name, case, vector_size,
+                                           min_value, max_value, norm_value,
+                                           is_blue_to_red=is_blue_to_red)
+        self.update_scalar_bar(Title, min_value, max_value, norm_value,
+                               data_format, is_blue_to_red=is_blue_to_red,
+                               is_horizontal=is_horizontal)
+        self.final_grid_update(name, grid_result, key, subtitle, label)
+        self.is_horizontal_scalar_bar = is_horizontal
+        self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
+                         '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
+                         % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
+
+    #---------------------------------------------------------------------------------------
+    # EDIT ACTOR PROPERTIES
+    def set_actor_properties(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Name  |  String  |
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        |  Max   |  Float   |
+        +--------+----------+
+        | Format | pyString |
+        +--------+----------+
+        """
+        if not hasattr(self, 'caseKeys'):
+            self.log_error('No model has been loaded.')
+            return
+        #key = self.caseKeys[self.iCase]
+        #case = self.resultCases[key]
+        #if len(key) == 5:
+            #(subcase_id, result_type, vector_size, location, data_format) = key
+        #elif len(key) == 6:
+            #(subcase_id, i, result_type, vector_size, location, data_format) = key
+        #else:
+            #(subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+
+        data = deepcopy(self.geometry_properties)
+        if not self._edit_group_properties_shown:
+            self._edit_group_properties = EditGroupProperties(data, win_parent=self)
+            self._edit_group_properties.show()
+            self._edit_group_properties_shown = True
+            self._edit_group_properties.exec_()
+        else:
+            self._edit_group_properties.activateWindow()
+
+        if data['clicked_ok']:
+            self._update_geometry_properties(data)
+            del self._edit_group_properties
+            self._edit_group_properties_shown = False
+
+    def _update_geometry_properties(self, out_data):
+        for name, group in iteritems(out_data):
+            if name == 'clicked_ok':
+                continue
+            changed = False
+            actor = self.geometry_actors[name]
+            #mapper = actor.GetMapper()
+            prop = actor.GetProperty()
+
+            color1 = prop.GetDiffuseColor()
+            color2 = group.color_float
+
+            line_width1 = prop.GetLineWidth()
+            line_width2 = group.line_width
+            line_width2 = max(1, line_width2)
+
+            opacity1 = prop.GetOpacity()
+            opacity2 = group.opacity
+            opacity2 = max(0.1, opacity2)
+
+            if color1 != color2:
+                prop.SetDiffuseColor(color2)
+                changed = True
+            if line_width1 != line_width2:
+                prop.SetLineWidth(line_width2)
+                changed = True
+            if opacity1 != opacity2:
+                prop.SetOpacity(opacity2)
+                changed = True
+            if changed:
+                print('color =', color2)
+                print('line_width2 =', line_width2)
+                print('opacity =', opacity2, '\n')
+                prop.Modified()
+        self.vtk_interactor.Render()
