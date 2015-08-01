@@ -27,12 +27,14 @@ from pyNastran.utils import print_bad_path
 
 from pyNastran.gui.ex_tree import Sidebar
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
-from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
-from pyNastran.gui.qt_files.camera import CameraWindow
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-from pyNastran.gui.qt_files.application_log import ApplicationLogDockWidget
-from pyNastran.gui.qt_files.manage_actors import EditGroupProperties
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+
+from pyNastran.gui.menus.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.menus.camera import CameraWindow
+from pyNastran.gui.menus.application_log import ApplicationLogDockWidget
+from pyNastran.gui.menus.manage_actors import EditGroupProperties
+
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
