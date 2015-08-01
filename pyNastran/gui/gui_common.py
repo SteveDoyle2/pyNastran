@@ -25,11 +25,11 @@ from pyNastran.bdf.cards.baseCard import deprecated
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path
 
-from pyNastran.gui.ex_tree import Sidebar
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
+from pyNastran.gui.menus.ex_tree import Sidebar
 from pyNastran.gui.menus.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import ApplicationLogDockWidget

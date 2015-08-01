@@ -1,23 +1,23 @@
 import sys
 from copy import deepcopy
 from PyQt4 import QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+#from PyQt4.QtGui import *
 
 # kills the program when you hit Cntl+C from the command line
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-class QTreeView2(QTreeView):
+class QTreeView2(QtGui.QTreeView):
     def __init__(self, data):
         self.old_rows = []
         self.data = data
         self.single = False
-        QTreeView.__init__(self)
+        QtGui.QTreeView.__init__(self)
 
     def mousePressEvent(self, position):
-        QTreeView.mousePressEvent(self, position)
+        QtGui.QTreeView.mousePressEvent(self, position)
         indexes = self.selectedIndexes()
 
         # trace the tree to find the selected item
@@ -69,7 +69,7 @@ class QTreeView2(QTreeView):
 #        stress
 #        load
 
-class Sidebar(QWidget):
+class Sidebar(QtGui.QWidget):
     """
     +--------------+
     | Case/Results |
@@ -156,7 +156,7 @@ class Sidebar(QWidget):
 
     """
     def __init__(self, parent, debug=False):
-        QWidget.__init__(self)
+        QtGui.QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
 
@@ -196,7 +196,7 @@ class Sidebar(QWidget):
         self.setup_layout()
 
     def setup_layout(self):
-        layout = QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.addWidget(self.result_case_window)
         layout.addWidget(self.result_data_window)
         #layout.addWidget(self.pulldown)
@@ -258,23 +258,23 @@ class Sidebar(QWidget):
         self.parent._set_case(result_name, i, explicit=True)
 
 
-class ResultsWindow(QWidget):
+class ResultsWindow(QtGui.QWidget):
     def __init__(self, name, data):
-        QWidget.__init__(self)
+        QtGui.QWidget.__init__(self)
         self.name = name
         self.data = data
 
         self.treeView = QTreeView2(self.data)
-        self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.treeView.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
 
-        self.model = QStandardItemModel()
+        self.model = QtGui.QStandardItemModel()
         is_single = self.addItems(self.model, data)
         self.treeView.setModel(self.model)
         self.treeView.set_single(is_single)
 
         self.model.setHorizontalHeaderLabels([self.tr(self.name)])
 
-        layout = QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.addWidget(self.treeView)
         self.setLayout(layout)
 
@@ -298,7 +298,7 @@ class ResultsWindow(QWidget):
         try:
             for text, i, children in elements:
                 #print('text=%s' % text)
-                item = QStandardItem(text)
+                item = QtGui.QStandardItem(text)
                 parent.appendRow(item)
 
                 # TODO: count_check and ???
@@ -331,7 +331,7 @@ class ResultsWindow(QWidget):
         #    self.update_data(data)
 
 def main():
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     window = Sidebar(app, debug=True)
     window.show()
     sys.exit(app.exec_())
