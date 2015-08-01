@@ -39,7 +39,7 @@ def set_blank_if_default(value, default):
 
     .. note:: this method is used by almost every card when printing
     """
-    if isnan(value):
+    if isinstance(value, (float, float32)) and isnan(value):
         return None
     return None if is_same(value, default) else value
 

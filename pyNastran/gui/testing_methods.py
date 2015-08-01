@@ -76,10 +76,10 @@ def add_dummy_gui_functions(test, debug=True):
         'caero' : Grid(),
         'caero_sub' : Grid(),
     }
-    test.geometry_actor_colors = {
-        'main' : None,
-        'caero' : None,
-        'caero_sub' : None,
+    test.geometry_properties = {
+        #'main' : None,
+        #'caero' : None,
+        #'caero_sub' : None,
     }
     test.create_alternate_vtk_grid = create_alternate_vtk_grid
     test._add_alt_actors = _add_alt_actors
