@@ -7,7 +7,7 @@ from six import integer_types
 from six.moves import range
 
 import sys
-from numpy import float32
+from numpy import float32, isnan
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -63,7 +63,9 @@ def print_float_16(value):
     using the highest precision possbile.
     .. seealso:: print_float_8
     """
-    if value == 0.0:
+    if isnan(value):
+        return '                '
+    elif value == 0.0:
         return '%16s' % '0.'
     elif value > 0.:  # positive, not perfect...
         if value < 5e-16:
@@ -175,7 +177,12 @@ def print_float_16(value):
             field = "%16.1f" % value   #   -100,000,000,000 > x >  -1,000,000,000,000
         else:
             field = "%16.1f" % value
-            if field.index('.') < 16:
+            try:
+                ifield = field.index('.')
+            except ValueError:
+                print('field =', field)
+                raise
+            if ifield < 16:
                 field = '%15s.' % (int(round(value, 0)))
                 #assert '.' != field[0], field
             else:
