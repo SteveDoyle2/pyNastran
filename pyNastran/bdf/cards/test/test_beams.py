@@ -380,6 +380,32 @@ class TestBeams(unittest.TestCase):
         lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
+    def test_pbeam_11(self):
+        model = BDF()
+        lines = [
+            #'PBEAM         1       1    1.e8    1.e8    1.e8              10.      1.',
+            #'             NO      1.    3.e5    3.e8    3.e8              10.      1.',
+            'PBEAM          1       1    1.+8    1.+8    1.+8             10.      1.',
+            '              NO      1. 300000.    3.+8    3.+8             10.      1.',
+        ]
+        model.add_card(lines, 'PBEAM', is_list=False)
+        lines_expected = [
+            'PBEAM          1       1    1.+8    1.+8    1.+8             10.      1.',
+            '+',
+            '              NO      1. 300000.    3.+8    3.+8             10.      1.',
+        ]
+        prop = model.properties[1]
+        #print(prop.raw_fields())
+        lines_actual = prop.write_card().split('\n')
+        msgA = ''
+        for line_expected, line_actual in zip(lines_expected, lines_actual):
+            #assert line_expected == line_actual, line_actual
+            actual = str(line_actual)
+            expected = str(line_expected)
+            msg = msgA + '\nactual   = %r\n' % actual
+            msg += 'expected = %r' % expected
+            self.assertEqual(actual, expected, msg)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

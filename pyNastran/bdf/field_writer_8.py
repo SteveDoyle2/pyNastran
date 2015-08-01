@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types
 from six.moves import range
 import sys
-from numpy import float32
+from numpy import float32, isnan
 
 
 def set_string8_blank_if_default(value, default):
@@ -39,6 +39,8 @@ def set_blank_if_default(value, default):
 
     .. note:: this method is used by almost every card when printing
     """
+    if isnan(value):
+        return None
     return None if is_same(value, default) else value
 
 
@@ -88,8 +90,9 @@ def print_float_8(value):
     Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
     """
-    value = float(value)
-    if value == 0.0:
+    if isnan(value):
+        return '        '
+    elif value == 0.0:
         return '%8s' % '0.'
     elif value > 0.:  # positive, not perfect...
         if value < 5e-8:
