@@ -2330,13 +2330,30 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self._edit_group_properties.activateWindow()
 
         if data['clicked_ok']:
-            self._update_geometry_properties(data)
+            self.on_update_geometry_properties(data)
+            self._save_geometry_properties(data)
+            del self._edit_group_properties
+            self._edit_group_properties_shown = False
+        elif data['clicked_cancel']:
+            self.on_update_geometry_properties(self.geometry_properties)
             del self._edit_group_properties
             self._edit_group_properties_shown = False
 
-    def _update_geometry_properties(self, out_data):
+    def _save_geometry_properties(self, out_data):
         for name, group in iteritems(out_data):
-            if name == 'clicked_ok':
+            if name in ['clicked_ok', 'clicked_cancel']:
+                continue
+
+            color2 = group.color_float
+            geom_prop = self.geometry_properties[name]
+            geom_prop.color = group.color
+            geom_prop.line_width = group.line_width
+            geom_prop.opacity = group.opacity
+
+    def on_update_geometry_properties(self, out_data):
+        lines = []
+        for name, group in iteritems(out_data):
+            if name in ['clicked_ok', 'clicked_cancel']:
                 continue
             changed = False
             actor = self.geometry_actors[name]
@@ -2364,8 +2381,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 prop.SetOpacity(opacity2)
                 changed = True
             if changed:
-                print('color =', color2)
-                print('line_width2 =', line_width2)
-                print('opacity =', opacity2, '\n')
+                lines.append('    %r : AltGeometry(color=(%s, %s, %s), line_width=%s, opacity=%s),\n' % (
+                    name, color2[0], color2[1], color2[2], line_width2, opacity2))
                 prop.Modified()
         self.vtk_interactor.Render()
+        if lines:
+            msg = 'out_data = {\n'
+            msg += ''.join(lines)
+            msg += '}\n'
+            msg += 'self.on_update_geometry_properties(out_data)'
+            self.log_command(msg)

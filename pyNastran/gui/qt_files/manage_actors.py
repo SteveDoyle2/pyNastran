@@ -313,6 +313,7 @@ class EditGroupProperties(QtGui.QDialog):
 
     def on_validate(self):
         self.out_data['clicked_ok'] = True
+        self.out_data['clicked_cancel'] = False
 
         old_obj = self.out_data[self.active_key]
         old_obj.line_width = self.line_width_edit.value()
@@ -328,7 +329,7 @@ class EditGroupProperties(QtGui.QDialog):
     def on_apply(self):
         passed = self.on_validate()
         if passed:
-            self.win_parent._update_geometry_properties(self.out_data)
+            self.win_parent.on_update_geometry_properties(self.out_data)
         return passed
 
     def on_ok(self):
@@ -338,6 +339,8 @@ class EditGroupProperties(QtGui.QDialog):
             #self.destroy()
 
     def on_cancel(self):
+        self.out_data['clicked_ok'] = False
+        self.out_data['clicked_cancel'] = True
         self.close()
 
 
