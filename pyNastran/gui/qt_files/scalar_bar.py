@@ -80,7 +80,8 @@ class ScalarBar(object):
 
 
     def update(self, title, min_value, max_value, norm_value,
-               data_format, is_blue_to_red=True, is_horizontal=True):
+               data_format, is_blue_to_red=True, is_horizontal=True,
+               is_shown=True):
         self.color_function.RemoveAllPoints()
 
         if is_blue_to_red:
@@ -144,6 +145,11 @@ class ScalarBar(object):
 
         self.scalar_bar.SetNumberOfLabels(nvalues)
         self.scalar_bar.SetMaximumNumberOfColors(nvalues)
+        #is_shown = False
+        #if is_shown:
+            #self.scalar_bar.VisibilityOn()
+        #else:
+            #self.scalar_bar.VisibilityOff()
         self.scalar_bar.Modified()
 
 def _is_int_result(data_format):

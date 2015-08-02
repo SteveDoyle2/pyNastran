@@ -67,6 +67,7 @@ from six import iteritems, itervalues
 from collections import defaultdict
 import warnings
 import traceback
+from numpy import zeros, argsort, arange, array_equal
 
 class CrossReferenceError(RuntimeError):
     pass
@@ -216,18 +217,33 @@ class XrefMesh(object):
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.cross_reference(self)
 
+        if 0:  # only support CAERO1
+            ncaeros = len(self.caeros)
+            if ncaeros > 1:
+                # we don't need to check the ncaeros=1 case
+                i = 0
+                min_maxs = zeros((ncaeros, 2), dtype='int32')
+                for eid, caero in sorted(iteritems(self.caeros)):
+                    min_maxs[i, :] = caero.min_max_eid
+                    i += 1
+                isort = argsort(min_maxs.ravel())
+                expected = arange(ncaeros * 2, dtype='int32')
+                if not array_equal(isort, expected):
+                    msg = 'CAERO element ids are inconsistent\n'
+                    msg += 'isort = %s' % str(isort)
+                    raise RuntimeError(msg)
 
-            #'AERO',  ## aero
-            #'AEROS',  ## aeros
-            #'GUST',  ## gusts
-            #'FLUTTER',   ## flutters
+            #'AERO',     ## aero
+            #'AEROS',    ## aeros
+            #'GUST',     ## gusts
+            #'FLUTTER',  ## flutters
             #'FLFACT',   ## flfacts
             #'MKAERO1', 'MKAERO2',  ## mkaeros
             #'AECOMP',   ## aecomps
             #'AEFACT',   ## aefacts
             #'AELINK',   ## aelinks
             #'AELIST',   ## aelists
-            #'AEPARAM',   ## aeparams
+            #'AEPARAM',  ## aeparams
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
 

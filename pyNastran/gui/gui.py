@@ -96,6 +96,9 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
     banded filter
     http://www.igstk.org/Wiki/VTK/Examples/Cxx/VisualizationAlgorithms/BandedPolyDataContourFilter
+
+    speeding up vtk cell loading in unstructured grids
+    http://vtk.1045678.n5.nabble.com/Speed-up-cell-allocation-td5733208.html#a5733214
     """
     def __init__(self, inputs):
         html_logging = True

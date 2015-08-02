@@ -243,6 +243,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.res_dock.hide()
         self.build_vtk_frame()
 
+        #compassRepresentation = vtk.vtkCompassRepresentation()
+        #compassWidget = vtk.vtkCompassWidget()
+        #compassWidget.SetInteractor(self.iren)
+        #compassWidget.SetRepresentation(compassRepresentation)
+        #compassWidget.EnabledOn()
+
     @property
     def dock_widget(self):
         return self.log_dock.dock_widget
@@ -786,9 +792,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # axes
         self.create_global_axes()
 
-    def create_alternate_vtk_grid(self, name):
+    def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0):
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
-        self.geometry_properties[name] = AltGeometry(self, name, color=None, line_width=5, opacity=1.0)
+        self.geometry_properties[name] = AltGeometry(self, name, color=color,
+                                                     line_width=line_width, opacity=opacity)
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -1741,7 +1748,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.rend.RemoveActor(actor)
             del actor
 
-    def _add_alt_geometry(self, grid, name):
+    def _add_alt_geometry(self, grid, name, color=None, line_width=5, opacity=1.0):
+        """
+        NOTE: color, line_width, opacity are ignored if name already exists
+        """
+        if color is None:
+            color = (1., 1., 1.)
+
         quadMapper = vtk.vtkDataSetMapper()
         if name in self.geometry_actors:
             alt_geometry_actor = self.geometry_actors[name]
@@ -1759,14 +1772,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.geometry_actors[name] = alt_geometry_actor
 
         #geometryActor.AddPosition(2, 0, 2)
-        line_width = 5
         try:
             geom = self.geometry_properties[name]
             color = geom.color
         except KeyError:
-            color = (1., 1., 1.)
             geom = AltGeometry(self, name, color=color, line_width=line_width,
-                               opacity=1.0)
+                               opacity=opacity)
             self.geometry_properties[name] = geom
 
         line_width = geom.line_width
@@ -1858,6 +1869,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #self.update_camera(key)
 
     def _finish_results_io2(self, form, cases):
+        self.on_update_geometry_properties(self.geometry_properties)
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
 
@@ -2137,7 +2149,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command('show_labels(%s' % names)
 
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
-                        data_format, is_blue_to_red=True, is_horizontal=True):
+                        data_format, is_blue_to_red=True, is_horizontal=True, is_shown=True):
         """
             :param title:       the scalar bar title
             :param min_value:   the blue value
@@ -2147,7 +2159,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             """
         print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value,
-                               data_format, is_blue_to_red, is_horizontal)
+                               data_format, is_blue_to_red, is_horizontal,
+                               is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
     # CAMERA MENU
@@ -2236,6 +2249,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'is_blue_to_red' : True,
             'is_discrete': True,
             'is_horizontal': False,
+            'is_shown' : True,
             'clicked_ok' : False,
         }
         if not self._legend_shown:
@@ -2259,14 +2273,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         is_blue_to_red = data['is_blue_to_red']
         is_discrete = data['is_discrete']
         is_horizontal = data['is_horizontal']
+        is_shown = data['is_shown']
         self.on_update_legend(Title=title, min_value=min_value, max_value=max_value,
                               data_format=data_format,
                               is_blue_to_red=is_blue_to_red,
-                              is_discrete=is_discrete, is_horizontal=is_horizontal)
+                              is_discrete=is_discrete, is_horizontal=is_horizontal,
+                              is_shown=is_shown)
 
     def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
                          data_format='%.0f',
-                         is_blue_to_red=True, is_discrete=True, is_horizontal=True):
+                         is_blue_to_red=True, is_discrete=True, is_horizontal=True,
+                         is_shown=True):
 
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
@@ -2287,7 +2304,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                            is_blue_to_red=is_blue_to_red)
         self.update_scalar_bar(Title, min_value, max_value, norm_value,
                                data_format, is_blue_to_red=is_blue_to_red,
-                               is_horizontal=is_horizontal)
+                               is_horizontal=is_horizontal, is_shown=is_shown)
         self.final_grid_update(name, grid_result, key, subtitle, label)
         self.is_horizontal_scalar_bar = is_horizontal
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'

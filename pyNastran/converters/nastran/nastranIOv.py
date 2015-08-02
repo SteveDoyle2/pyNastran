@@ -233,10 +233,12 @@ class NastranIO(object):
             self.grid2.Reset()
 
             # create alt grids
+            yellow = (1., 1., 0.)
+            pink = (0.98, 0.4, 0.93)
             if 'caero' not in self.alt_grids.keys():
-                self.create_alternate_vtk_grid('caero')
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0)
             if 'caero_sub' not in self.alt_grids.keys():
-                self.create_alternate_vtk_grid('caero_sub')
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0)
             #print('alt_grids', self.alt_grids.keys())
 
             #self.gridResult = vtk.vtkFloatArray()
@@ -306,7 +308,7 @@ class NastranIO(object):
                     for i, box_id in enumerate(caero.box_ids.flat):
                         box_id_to_caero_element_map[box_id] = elementsi[i,:] + num_prev
                     num_prev += pointsi.shape[0]
-            caero_points = array(caero_points, dtype='float32')
+            caero_points = vstack(caero_points)
         else:
             caero_points = empty((0,3))
 
@@ -318,11 +320,16 @@ class NastranIO(object):
             ncaeros_cs = 0
             ncaero_cs_points = 0
             if 'caero_cs' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_cs')
+                self.create_alternate_vtk_grid('caero_cs', color=pink, line_width=5, opacity=1.0)
             for aid, aesurf in iteritems(model.aesurfs):
                 aelist = aesurf.alid1
                 ncaeros_cs += len(aelist.elements)
                 cs_box_ids.extend(aelist.elements)
+
+                if aesurf.alid2 is not None:
+                    aelist = aesurf.alid2
+                    ncaeros_cs += len(aelist.elements)
+                    cs_box_ids.extend(aelist.elements)
 
         self.nNodes = nnodes
         self.nElements = nelements  # approximate...
@@ -428,12 +435,13 @@ class NastranIO(object):
                         nsprings += 1
 
         # set colors if they haven't been set
-        if 'caero' in self.geometry_properties and self.geometry_properties['caero'].color is None:
-            self.geometry_properties['caero'].color = (1., 1., 0.)
-        if 'caero_sub' in self.geometry_properties and self.geometry_properties['caero_sub'].color is None:
-            self.geometry_properties['caero_sub'].color = (1., 1., 0.)
-        if 'caero_cs' in self.geometry_properties and self.geometry_properties['caero_cs'].color is None:
-            self.geometry_properties['caero_cs'].color = (0.98, 0.4, 0.93)
+        if 0:
+            if 'caero' in self.geometry_properties and self.geometry_properties['caero'].color is None:
+                self.geometry_properties['caero'].color = (1., 1., 0.)
+            if 'caero_sub' in self.geometry_properties and self.geometry_properties['caero_sub'].color is None:
+                self.geometry_properties['caero_sub'].color = (1., 1., 0.)
+            if 'caero_cs' in self.geometry_properties and self.geometry_properties['caero_cs'].color is None:
+                self.geometry_properties['caero_cs'].color = (0.98, 0.4, 0.93)
 
         # fill caero grids
         self.set_caero_grid(ncaeros_points, model)
@@ -567,8 +575,17 @@ class NastranIO(object):
 
     def set_caero_control_surface_grid(self, cs_box_ids, box_id_to_caero_element_map, caero_points, j=0):
         points_list = []
+        missing_boxes = []
         for ibox, box_id in enumerate(cs_box_ids):
-            points_list.append(caero_points[box_id_to_caero_element_map[box_id],:])
+            try:
+                ipoints = box_id_to_caero_element_map[box_id]
+            except KeyError:
+                missing_boxes.append(box_id)
+                continue
+            points_list.append(caero_points[ipoints, :])
+        if missing_boxes:
+            msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
+            self.log_error(msg)
 
         points_list = array(points_list)
         ncaero_sub_points = len(unique(points_list.ravel()))
@@ -578,7 +595,11 @@ class NastranIO(object):
 
         eType = vtkQuad().GetCellType()
         for ibox, box_id in enumerate(cs_box_ids):
-            pointsi = caero_points[box_id_to_caero_element_map[box_id]]
+            try:
+                elementi = box_id_to_caero_element_map[box_id]
+            except KeyError:
+                continue
+            pointsi = caero_points[elementi]
             for ipoint, point in enumerate(pointsi):
                 points.InsertPoint(j + ipoint, *point)
             elem = vtkQuad()

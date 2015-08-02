@@ -14,6 +14,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_is_blue_to_red = data['is_blue_to_red']
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
+        self._default_is_shown = data['is_shown']
 
         self.out_data = data
 
@@ -66,6 +67,12 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.checkbox_vertical = QtGui.QCheckBox("Vertical")
         self.checkbox_horizontal.setChecked(self._default_is_horizontal)
         self.checkbox_vertical.setChecked(not self._default_is_horizontal)
+
+        # on / off
+        self.checkbox_show = QtGui.QCheckBox("Show")
+        self.checkbox_hide = QtGui.QCheckBox("Hide")
+        self.checkbox_show.setChecked(self._default_is_shown)
+        self.checkbox_show.setChecked(not self._default_is_shown)
 
         #checkbox3.setChecked(False)
 
@@ -255,6 +262,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
             self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
             self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()
+            self.out_data['is_shown'] = self.checkbox_show.isChecked()
             self.out_data['clicked_ok'] = True
 
             #print("name = %r" % self.name_edit.text())
@@ -300,6 +308,7 @@ def main():
         'is_blue_to_red': True,
         'is_discrete' : False,
         'is_horizontal' : False,
+        'is_shown' : True,
     }
     main_window = LegendPropertiesWindow(d)
     main_window.show()

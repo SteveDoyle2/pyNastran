@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0302,C0111
+# pylint: disable=R0902,R0904,R0914,C0302,C0111
 """
 All aero cards are defined in this file.  This includes:
 
@@ -26,7 +26,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from six.moves import zip, range
 from itertools import count
-from numpy import array, pi, linspace, zeros, arange, repeat, dot, cos, arcsin
+from numpy import array, pi, linspace, zeros, arange, repeat, cos, arcsin
 from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
@@ -1011,27 +1011,15 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
 
         Parameters
-        -----------
+        ----------
         self : CAERO1 obj
             The CAERO1 object.
-
         """
-        if self.nchord == 0:
-            x = self.lchord.Di
-            nchord = len(x) - 1
-        else:
-            nchord = self.nchord
-
-        if self.nspan == 0:
-            y = self.lspan.Di
-            nspan = len(y) - 1
-        else:
-            nspan = self.nspan
-
+        nchord, nspan = self.shape
         self.box_ids = zeros((nchord, nspan), dtype='int32')
         for ichord in range(nchord):
             for ispan in range(nspan):
-                self.box_ids[ichord,ispan] = self.eid + ichord + ispan * nchord
+                self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
@@ -1047,9 +1035,12 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         """
         Cross links the card
 
-        :param self:   the CAERO1 object pointer
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        self : CAERO1 obj
+            The CAERO1 object.
+        model : BDF obj
+            The BDF object.
         """
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
@@ -1061,12 +1052,24 @@ class CAERO1(BaseCard, CAERO1Deprecated):
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan = model.AEFact(self.lspan, msg)
 
+    @property
+    def min_max_eid(self):
+        nchord, nspan = self.shape
+        return [self.eid, self.eid + nchord * nspan]
+
     def get_points(self):
         """
         Get the 4 corner points for the CAERO card
 
-        :param self: the CAERO object
-        :returns p1234: list for 4 points; a point is a (3,) ndarray
+        Parameters
+        ----------
+        self : CAERO1 obj
+            The CAERO1 object.
+
+        Returns
+        -------
+        p1234 : (3, 4) list
+             List of 4 corner points in the global frame
         """
         p1 = self.cp.transform_node_to_global(self.p1)
         p4 = self.cp.transform_node_to_global(self.p4)
@@ -1074,21 +1077,8 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
-    def get_npanel_points_elements(self, box_ids=None):
-        """
-        Gets the number of sub-points and sub-elements for the CAERO card
-
-        :param self: the CAERO object
-
-        :param npoints: the number of nodes for the CAERO
-        :param nelements: the number of elements for the CAERO
-        """
-        msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
-                                                                   self.eid,
-                                                                   self.nchord,
-                                                                   self.nspan,
-                                                                   self.lchord,
-                                                                   self.lspan)
+    @property
+    def shape(self):
         if self.nchord == 0:
             x = self.lchord.Di
             nchord = len(x) - 1
@@ -1100,27 +1090,49 @@ class CAERO1(BaseCard, CAERO1Deprecated):
             nspan = len(y) - 1
         else:
             nspan = self.nspan
-        assert nchord >= 1, msg
-        assert nspan >= 1, msg
+        if nchord < 1 or nspan < 1:
+            msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
+                self.type, self.eid, self.nchord, self.nspan,
+                self.lchord, self.lspan)
+            raise RuntimeError(msg)
+        return nchord, nspan
 
+    def get_npanel_points_elements(self, box_ids=None):
+        """
+        Gets the number of sub-points and sub-elements for the CAERO card
+
+        Parameters
+        ----------
+        self : CAERO1 obj
+            The CAERO1 object.
+
+        Returns
+        -------
+        npoints : int
+            The number of nodes for the CAERO
+        nelmements : int
+            The number of elements for the CAERO
+        """
+        nchord, nspan = self.shape
         nelements = nchord * nspan
         npoints = (nchord + 1) * (nspan + 1)
         return npoints, nelements
 
-    def panel_points_elements(self):
+    @property
+    def xy(self):
         """
-        Gets the sub-points and sub-elements for the CAERO card
+        Parameters
+        ----------
+        self : CAERO1 obj
+            The CAERO1 object.
 
-        :param points: an (nnodes,3) ndarray of floats
-        :param elements: an (nelements,4) ndarray of integers
+        Returns
+        -------
+        x : (nchord,) ndarray
+            The percentage x location in the chord-wise direction of each panel
+        y : (nspan,) ndarray
+            The percentage y location in the span-wise direction of each panel
         """
-        p1, p2, p3, p4 = self.get_points()
-        msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
-                                                                   self.eid,
-                                                                   self.nchord,
-                                                                   self.nspan,
-                                                                   self.lchord,
-                                                                   self.lspan)
         if self.nchord == 0:
             x = self.lchord.Di
             nchord = len(x) - 1
@@ -1135,8 +1147,22 @@ class CAERO1(BaseCard, CAERO1Deprecated):
             nspan = self.nspan
             y = linspace(0., 1., nspan + 1)
 
-        assert nchord >= 1, msg
-        assert nspan >= 1, msg
+        if nchord < 1 or nspan < 1:
+            msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
+                self.type, self.eid, self.nchord, self.nspan,
+                self.lchord, self.lspan)
+            raise RuntimeError(msg)
+        return x, y
+
+    def panel_points_elements(self):
+        """
+        Gets the sub-points and sub-elements for the CAERO card
+
+        :param points: an (nnodes,3) ndarray of floats
+        :param elements: an (nelements,4) ndarray of integers
+        """
+        p1, p2, p3, p4 = self.get_points()
+        x, y = self.xy
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
 
     def set_points(self, points):
@@ -2833,9 +2859,11 @@ class SPLINE2(Spline):
         :param model:  the BDF object
         :type model:   BDF()
         """
-        msg = ' which is required by SPLINE2 sid=%s' % self.eid
-        self.caero = model.CAero(self.caero, msg=msg)
-        self.setg = model.Set(self.setg, msg=msg)
+        msg = ' which is required by SPLINE2 eid=%s' % self.eid
+        self.cid = model.Coord(self.Cid(), msg=msg)
+        self.caero = model.CAero(self.CAero(), msg=msg)
+        self.setg = model.Set(self.Set(), msg=msg)
+        self.setg.cross_reference(model, 'Node')
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -2851,30 +2879,6 @@ class SPLINE2(Spline):
         if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
-
-    def CAero(self):
-        if isinstance(self.caero, integer_types):
-            return self.caero
-        return self.caero.eid
-
-    def Set(self):
-        if isinstance(self.setg, integer_types):
-            return self.setg
-        return self.setg.sid
-
-    def cross_reference(self, model):
-        """
-        Cross links the card
-
-        :param self:   the SPLINE2 object pointer
-        :param model:  the BDF object
-        :type model:   BDF()
-        """
-        msg = ' which is required by SPLINE2 eid=%s' % self.eid
-        self.cid = model.Coord(self.Cid(), msg=msg)
-        self.caero = model.CAero(self.CAero(), msg=msg)
-        self.setg = model.Set(self.Set(), msg=msg)
-        self.setg.cross_reference(model, 'Node')
 
     def raw_fields(self):
         """
@@ -2906,66 +2910,66 @@ class SPLINE2(Spline):
 
 
 class SPLINE3(Spline):
-        type = 'SPLINE3'
-        _field_map = {
-            1: 'eid', 2:'caero', 3:'box_id', 5:'g1', 6:'c1',
-            7: 'a1', 8:'usage',
-        }
+    type = 'SPLINE3'
+    _field_map = {
+        1: 'eid', 2:'caero', 3:'box_id', 5:'g1', 6:'c1',
+        7: 'a1', 8:'usage',
+    }
 
-        def __init__(self, card=None, data=None, comment=''):
-            Spline.__init__(self, card, data)
-            if comment:
-                self._comment = comment
-            if card:
-                self.eid = integer(card, 1, 'eid')
-                self.caero = integer(card, 2, 'caero')
-                self.box_idt = integer(card, 3, 'box_id')
-                self.components = integer(card, 4, 'comp')
-                assert self.components in [1, 2, 3, 4, 5, 6], self.components
-                self.g1 = integer(card, 5, 'G1')
-                self.c1 = integer(card, 5, 'C1')
-                self.a1 = double(card, 5, 'A1')
-                assert self.c1 in [0, 1, 2, 3, 4, 5, 6], self.components
-                self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
-                assert self.usage in ['FORCE', 'DISP', 'BOTH'], self.usage
+    def __init__(self, card=None, data=None, comment=''):
+        Spline.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            self.eid = integer(card, 1, 'eid')
+            self.caero = integer(card, 2, 'caero')
+            self.box_idt = integer(card, 3, 'box_id')
+            self.components = integer(card, 4, 'comp')
+            assert self.components in [1, 2, 3, 4, 5, 6], self.components
+            self.g1 = integer(card, 5, 'G1')
+            self.c1 = integer(card, 5, 'C1')
+            self.a1 = double(card, 5, 'A1')
+            assert self.c1 in [0, 1, 2, 3, 4, 5, 6], self.components
+            self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
+            assert self.usage in ['FORCE', 'DISP', 'BOTH'], self.usage
 
-                nfields = len(card) - 1
-                nrows = nfields // 8
-                if nfields % 8:
-                    nrows += 1
+            nfields = len(card) - 1
+            nrows = nfields // 8
+            if nfields % 8:
+                nrows += 1
 
-                i = 1
-                self.Gi = []
-                self.ci = []
-                self.ai = []
-                for irow in range(1, nrows):
-                    j = 1 + nrows * 8
+            i = 1
+            self.Gi = []
+            self.ci = []
+            self.ai = []
+            for irow in range(1, nrows):
+                j = 1 + nrows * 8
+                gi = integer(card, j, 'Gi_' % i)
+                ci = integer(card, j + 1, 'Ci_' % i)
+                ai = double(card, j + 2, 'Ai_' % i)
+                self.Gi.append(gi)
+                self.ci.append(ci)
+                self.ai.append(ai)
+                if card[j + 3] or card[j + 4] or card[j + 5]:
+                    i += 1
                     gi = integer(card, j, 'Gi_' % i)
                     ci = integer(card, j + 1, 'Ci_' % i)
                     ai = double(card, j + 2, 'Ai_' % i)
                     self.Gi.append(gi)
                     self.ci.append(ci)
                     self.ai.append(ai)
-                    if card[j + 3] or card[j + 4] or card[j + 5]:
-                        i += 1
-                        gi = integer(card, j, 'Gi_' % i)
-                        ci = integer(card, j + 1, 'Ci_' % i)
-                        ai = double(card, j + 2, 'Ai_' % i)
-                        self.Gi.append(gi)
-                        self.ci.append(ci)
-                        self.ai.append(ai)
-                    i += 1
-            else:
-                raise NotImplementedError()
+                i += 1
+        else:
+            raise NotImplementedError()
 
-        def cross_reference(self, model):
-            pass
+    def cross_reference(self, model):
+        pass
 
-        def raw_fields(self):
-            list_fields = ['SPLINE3', self.eid, self.caero, self.box_id, self.g1, self.c1, self.a1, self.usage]
-            for g, c, a in zip(self.Gi, self.ci, self.ai):
-                list_fields += [g, c, a, None]
-            return list_fields
+    def raw_fields(self):
+        list_fields = ['SPLINE3', self.eid, self.caero, self.box_id, self.g1, self.c1, self.a1, self.usage]
+        for g, c, a in zip(self.Gi, self.ci, self.ai):
+            list_fields += [g, c, a, None]
+        return list_fields
 
 
 class SPLINE4(Spline):
