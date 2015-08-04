@@ -16,13 +16,20 @@ class GetMethods(GetMethodsDeprecated):
     def get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
                                    stop_on_missing_card=False):
         """
-        :param card_types: the list of keys to consider (list of strings; string)
-        :param reset_type_to_slot_map:
+        Parameters
+        ----------
+        card_types : List[str]
+            the list of keys to consider (list of strings; string)
+        reset_type_to_slot_map : bool
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
-        :param stop_on_missing_card:
+        stop_on_missing_card : bool
             crashes if you request a card and it doesn't exist
-        :retval out: the key=card_type, value=the ID of the card object
+
+        Returns
+        -------
+        out_dict: dict[str]=List[ids]
+            the key=card_type, value=the ID of the card object
         """
         if card_types is None:
             card_types = list(self.cards_to_read)
@@ -52,13 +59,20 @@ class GetMethods(GetMethodsDeprecated):
     def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
                                 stop_on_missing_card=False):
         """
-        :param card_types: the list of keys to consider
-        :param reset_type_to_slot_map:
+        Parameters
+        ----------
+        card_types : List[str]
+            the list of keys to consider
+        reset_type_to_slot_map : bool
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
-        :param stop_on_missing_card:
+        stop_on_missing_card : bool
             crashes if you request a card and it doesn't exist
-        :retval out: the key=card_type, value=the card object
+
+        Returns
+        -------
+        out_dict : dict[str] = List[BDFCard()]
+            the key=card_type, value=the card object
         """
         if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
             raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
@@ -176,10 +190,19 @@ class GetMethods(GetMethodsDeprecated):
         """
         Get the node IDs associated with a list of element IDs
 
-        :param self: the BDF object
-        :param eids: list of element ID
-        :param msg:  a additional message to print out if an element is not found
-        :returns node_ids: set of node IDs
+        Parameters
+        ----------
+        self : BDF()
+            The BDF object
+        eids : List[int]
+            list of element ID
+        msg : str
+            An additional message to print out if an element is not found
+
+        Returns
+        -------
+        node_ids : Set[int]
+            set of node IDs
 
         For example
 
@@ -226,9 +249,17 @@ class GetMethods(GetMethodsDeprecated):
         """
         Gets all the element IDs with a specific property ID.
 
-        :param self: the BDF object
-        :param pids: list of property ID
-        :returns element_ids: as a list
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        pids : List[int]
+            list of property ID
+
+        Returns
+        -------
+        element_ids : List[int]
+            the element ids
 
         For example, we want to get all the element ids with ``pids=[1, 2, 3]``
 
@@ -237,7 +268,7 @@ class GetMethods(GetMethodsDeprecated):
           model = BDF()
           model.read_bdf(bdf_filename)
           pids = [1, 2, 3]
-          eids_list = model.get_element_ids_with_pids(pids, mode='list')
+          eids_list = model.get_element_ids_list_with_pids(pids)
         """
         assert isinstance(pids, list), pids
         eids2 = []
@@ -251,9 +282,17 @@ class GetMethods(GetMethodsDeprecated):
         """
         Gets all the element IDs with a specific property ID.
 
-        :param self: the BDF object
-        :param pids: list of property ID
-        :returns element_ids: as a dictionary of lists by property
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        pids : List[int]
+            list of property ID
+
+        Returns
+        -------
+        element_ids : dict[int] = List[int]
+            as a dictionary of lists by property
 
         For example, we want all the elements with ``pids=[4, 5, 6]``,
         but we want them in separate groups
@@ -358,7 +397,10 @@ class GetMethods(GetMethodsDeprecated):
         """
         Returns a dictionary that maps a material ID to a list of properties
 
-        :returns mid_to_pids_map: the mapping
+        Returns
+        -------
+        mid_to_pids_map : dict[int] = int
+            the mapping
 
         .. code-block:: python
 
@@ -785,23 +827,28 @@ class GetMethods(GetMethodsDeprecated):
            You could probably explicitly code these queries faster, but
            this method has a lot of flexibility with very little user code.
 
-        :param self:
+        Parameters
+        ----------
+        self : BDF()
             the BDF object
-        :param xdict:
+        xdict : dict
             the BDF attribute that should be querried
             (e.g. self.elements)
-        :param xkeys:
+        xkeys : List[int]
             the list of object keys that should be stepped through
             associated with xdict
             (e.g. eids=[1, 2, 3])
-        :param ykeys:
+        ykeys : List[str]
             the list of response keys that should be stepped through
             (e.g. ['pid', 'mid', 'mid'])
-        :param stop_on_failure:
+        stop_on_failure : bool
             Should an error be raised if there is an invalid key?
             For example, get all material used by elements, but don't crash
             on CONRODs.
-        :returns results:
+
+        Returns
+        -------
+        results : Set[BDFCard]
             The set of all values used
 
         .. code-block:: python
@@ -898,30 +945,19 @@ def _getattr(out_set, xi, xkeys, nlevels_left=0, stop_on_failure=True):
     Recursive method to help get_x_associated_with_y get the value of xkeys
     for the given variable xi
 
-    :param out_set:
+    Parameters
+    ----------
+    out_set : Set
         the SET of all outputs that will be filled and implicitly returned
-    :type out_set:
-        SET
 
-    :param xi:
+    xi : BaseCard()
         the current variable being iterated over
-    :type xi:
-        BDF BaseCard
-
-    :param xkeys:
+    xkeys : List[str]
         the variables left to iterate over
-    :type xkeys:
-        LIST of STRINGS
-
-    :param nlevels_left:
+    nlevels_left : int > 0
         the number of levels still to iterate over
-    :type nlevels_left:
-        INT >= 0
-
-    :param stop_on_failure:
+    stop_on_failure : bool
         should the code crash if a certain xkey cannot be found
-    :type stop_on_failure:
-        bool
     """
     try:
         y = getattr(xi, xkeys[0])

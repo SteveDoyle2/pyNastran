@@ -47,6 +47,15 @@ class AECOMP(BaseCard):
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     |        | LIST7 |  -etc.-  |       |       |       |       |       |       |
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+
+    Attributes
+    ----------
+    name : str
+        The name.
+    list_type : str
+        {'SET1', 'AELIST', 'CAEROx'}
+    lists : list[int]
+        lis of values of AECOMP lists
     """
     type = 'AECOMP'
 
@@ -882,6 +891,38 @@ class CAERO1(BaseCard, CAERO1Deprecated):
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     |        |  X1 | Y1  | Z1 | X12   | X4     | Y4     | Z4     | X43  |
     +--------+-----+-----+----+-------+--------+--------+--------+------+
+
+    Attributes
+    ----------
+    sid : int
+       element id
+    pid : int, PAERO1
+       int : PAERO1 ID
+       PAERO1 : PAERO1 object (xref)
+
+    cp : int, CORDx
+       int : coordinate system
+       CORDx : Coordinate object (xref)
+    nspan : int
+       int > 0 : N spanwise boxes distributed evenly
+       int = 0 : use lchord
+    nchord : int
+       int > 0 : N chordwise boxes distributed evenly
+       int = 0 : use lchord
+    lspan : int, AEFACT
+       int > 0 : AEFACT reference for non-uniform nspan
+       int = 0 : use nspan
+       AEFACT : AEFACT object  (xref)
+    lchord : int, AEFACT
+       int > 0 : AEFACT reference for non-uniform nchord
+       int = 0 : use nchord
+       AEFACT : AEFACT object  (xref)
+    igid : int
+       Group number
+    p1 : (1, 3) ndarray float
+       xyz location of point 1 (leading edge; inboard)
+    p4 : (1, 3) ndarray float
+       xyz location of point 4 (leading edge; outboard)
     """
     type = 'CAERO1'
     _field_map = {
@@ -968,10 +1009,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
             self.nspan = integer_or_blank(card, 4, 'nspan', 0)
             self.nchord = integer_or_blank(card, 5, 'nchord', 0)
 
-            #if self.nspan==0:
             self.lspan = integer_or_blank(card, 6, 'lspan', 0)
-
-            #if self.nchord==0:
             self.lchord = integer_or_blank(card, 7, 'lchord', 0)
 
             self.igid = integer(card, 8, 'igid')

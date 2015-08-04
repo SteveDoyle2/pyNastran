@@ -6,23 +6,24 @@ import os
 from itertools import count
 from math import ceil
 
-from numpy import array, unique, where, arange, hstack, vstack, searchsorted, unique, log10, array_equal
+from numpy import (array, unique, where, arange, hstack, searchsorted,
+                   unique)
 from numpy.linalg import norm
 import scipy
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.cards.baseCard import expand_thru
+#from pyNastran.bdf.cards.baseCard import expand_thru
 from pyNastran.utils import object_attributes
 
 
 if PY2:
     import re
     _name_re = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*$")
-    def isidentifier(s, dotted=False):
-        return bool(_name_re.match(s))
+    def isidentifier(string, dotted=False):
+        return bool(_name_re.match(string))
 else:
-    def isidentifier(s, dotted=False):
-        return s.isidentifier()
+    def isidentifier(string, dotted=False):
+        return string.isidentifier()
 
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
@@ -65,21 +66,36 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
-    :param bdf_filename: a bdf_filename (string) or a BDF model (BDF)
+    Parameters
+    ----------
+    bdf_filename : str/BDF
+        a bdf_filename (string) or a BDF model (BDF)
         that is fully valid (see xref)
-    :param bdf_filename_out: a bdf_filename to write
-    :param tol:              the spherical tolerance (float)
-    :param renumber_nodes:   should the nodes be renumbered (default=False; not supported)
-    :param neq_max:          the number of "close" points (default=4)
-    :param xref:             does the model need to be cross_referenced
-                             (default=True; only applies to model option)
-    :param nodes_set:        the list/array of nodes to consider (not supported)
-    :param crash_on_collapse: stop if nodes have been collapsed
-                              (default=False;
-                               False: blindly move on
-                               True: rereads the BDF which catches doubled nodes (temporary);
-                                     in the future collapse=True won't need to double read;
-                                     an alternative is to do Patran's method of avoiding collapse)
+    bdf_filename_out : str
+        a bdf_filename to write
+    tol : float
+        the spherical tolerance
+    renumber_nodes :bool
+        should the nodes be renumbered (default=False; not supported)
+    neq_max : int
+        the number of "close" points (default=4)
+    xref bool: bool
+        does the model need to be cross_referenced
+        (default=True; only applies to model option)
+    nodes_set : List[int], (n, ) ndarray
+        the list/array of nodes to consider (not supported)
+    crash_on_collapse : bool
+        stop if nodes have been collapsed
+           False: blindly move on
+           True: rereads the BDF which catches doubled nodes (temporary);
+                 in the future collapse=True won't need to double read;
+                 an alternative is to do Patran's method of avoiding collapse)
+            default=False
+
+    Returns
+    -------
+    model : BDF()
+        The BDF model corresponding to bdf_filename_out
 
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
@@ -213,19 +229,19 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         node2 = model.nodes[nid2]
 
         # TODO: doesn't use get position...
-        R = norm(node1.xyz - node2.xyz)
+        distance = norm(node1.xyz - node2.xyz)
 
         #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
-        if R > tol:
-            #print('  *n1=%-4s xyz=%s\n  *n2=%-4s xyz=%s\n  *R=%s\n' % (
+        if distance > tol:
+            #print('  *n1=%-4s xyz=%s\n  *n2=%-4s xyz=%s\n  *distance=%s\n' % (
             #    nid1, list_print(node1.xyz),
             #    nid2, list_print(node2.xyz),
-            #    R))
+            #    distance))
             continue
-        #print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  R=%s\n' % (
+        #print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
         #    nid1, list_print(node1.xyz),
         #    nid2, list_print(node2.xyz),
-        #    R))
+        #    distance))
 
         node2.nid = node1.nid
         node2.xyz = node1.xyz
@@ -253,6 +269,13 @@ def cut_model(model, axis='-y'):
     of symmetry with the axis of symmetry being y, and typically
     save the +y elements.
 
+    Parameters
+    ----------
+    model : BDF()
+        the BDF object.
+    axis : {'-x', '-y', '-z'}
+        What direction should be removed?
+
     Considers
     =========
       - nodes
@@ -275,14 +298,14 @@ def cut_model(model, axis='-y'):
 
     remove_nids = []
     for nid, node in iteritems(model.nodes):
-        c = node.Position()
-        if c[iaxis] < 0.0:
+        xyz = node.Position()
+        if xyz[iaxis] < 0.0:
             remove_nids.append(nid)
 
     remove_eids = []
     for eid, element in iteritems(model.elements):
-        c = element.Centroid()
-        if c[iaxis] <= 0.0:
+        centroid = element.Centroid()
+        if centroid[iaxis] <= 0.0:
             remove_eids.append(eid)
 
     #print('remove_nids =', remove_nids)
@@ -330,17 +353,22 @@ def _write_nodes(self, outfile, size, is_double):
         outfile.write(''.join(msg))
 
 
-def _roundup(x, n=100):
-    return int(ceil(x / float(n))) * n
+def _roundup(value, n=100):
+    return int(ceil(value / float(n))) * n
 
 
-def bdf_merge(bdf_filenames, bdf_filenames_out=None, renumber=True):
+def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
     """
     Merges multiple BDF into one file
 
-    :param bdf_filenames: list of bdf filenames
-    :param bdf_filenames_out: the output bdf filename
-    :param renumber: should the bdf be renumbered (default=True)
+    Parameters
+    ----------
+    bdf_filenames : List[str]
+        list of bdf filenames
+    bdf_filename_out : str / None
+        the output bdf filename (default=None; None -> no writing)
+    renumber : bool
+        should the bdf be renumbered (default=True)
 
     Supports
     --------
@@ -383,7 +411,7 @@ def bdf_merge(bdf_filenames, bdf_filenames_out=None, renumber=True):
     print('primary=%s' % bdf_filename0)
 
     data_members = [
-        'coords', 'nodes', 'elements', 'masses', 'properties',  'properties_mass',
+        'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
         'materials',
     ]
     for bdf_filename in bdf_filenames[1:]:
@@ -443,8 +471,12 @@ def bdf_merge(bdf_filenames, bdf_filenames_out=None, renumber=True):
             'pid' : 1,
             'mid' : 1,
         }
-        bdf_renumber(model, bdf_filenames_out, starting_id_dict=starting_id_dict)
-
+        bdf_renumber(model, bdf_filename_out, starting_id_dict=starting_id_dict)
+    elif bdf_filename_out:
+        model.write_bdf(out_filename=bdf_filename_out, encoding=None, size=8,
+                        is_double=False,
+                        interspersed=True,
+                        enddata=None)
     return model
 
 
@@ -453,11 +485,17 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     """
     Renumbers a BDF
 
-    :param bdf_filename: a bdf_filename (string; supported) or a BDF model (BDF)
+    Parameters
+    ----------
+    bdf_filename : str
+        a bdf_filename (string; supported) or a BDF model (BDF)
         that has been cross referenced and is fully valid (a equivalenced deck is not valid)
-    :param bdf_filename_out: a bdf_filename to write
-    :param size:       the field size to write (default=8; 8 or 16)
-    :param is_double:  the field precision to write (default=True)
+    bdf_filename_out : str
+        a bdf_filename to write
+    size : int
+        the field size to write (default=8; 8 or 16)
+    is_double : bool
+        the field precision to write (default=True)
 
     ..todo :: bdf_model option for bdf_filename hasn't been tested
     ..warning :: spoints might be problematic...check
@@ -616,9 +654,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     nnodes = len(spoints_nids)
 
     i = 1
-    j = 1
+    #j = 1
     #print(spoints_nids)
-    k = 0
+    #k = 0
 
     i = nid
     #banned_nodes = spoints
@@ -1043,8 +1081,8 @@ def _update_case_control(model, mapper):
                             #print('gset', gset)
                             #print('lset', lset)
                             if gset != lset:
-                                asdf
-                                subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                                raise NotImplementedError('gset=%s lset=%s' % (str(gset), str(lset)))
+                                #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
                             else:
                                 global_subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
                             #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
@@ -1053,7 +1091,7 @@ def _update_case_control(model, mapper):
                         else:
                             global_subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
                     else:
-                        pass
+                        #pass
                         #print('key=%s seti2=%s' % (key, seti2))
                         print('key=%r options=%r param_type=%r value=%r' % (key, options, param_type, value))
                         raise RuntimeError(key)
@@ -1118,9 +1156,9 @@ def eq2():
         'MAT1           1      3.              .3',
     ]
     bdf_filename = 'nonunique2.bdf'
-    f = open(bdf_filename, 'wb')
-    f.write('\n'.join(lines))
-    f.close()
+    bdf_file = open(bdf_filename, 'wb')
+    bdf_file.write('\n'.join(lines))
+    bdf_file.close()
     bdf_equivalence_nodes('nonunique2.bdf', 'unique2.bdf', 0.01)
 
 def eq1():
@@ -1141,9 +1179,9 @@ def eq1():
 
     bdf_filename = 'nonunique.bdf'
 
-    f = open(bdf_filename, 'wb')
-    f.write(msg)
-    f.close()
+    bdf_file = open(bdf_filename, 'wb')
+    bdf_file.write(msg)
+    bdf_file.close()
 
     bdf_filename_out = 'unique.bdf'
     tol = 0.2
@@ -1155,14 +1193,19 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     Extracts the unique patches of a model based on a list of starting
     element ids and surface curvature.
 
-    :param bdf_filename: the bdf_filename
-    :param starting_eids:  a list of starting element ids
-    :param theta_tols:     a list of tolerances for each element id
+    Parameters
+    ----------
+    bdf_filename : str
+        the bdf_filename
+    starting_eids : List[int]
+        a list of starting element ids
+    theta_tols : List[float]
+        a list of tolerances for each element id
         (e.g. the nose has a different tolerance than the base)
 
     .. warning :: only supports CTRIA3 & CQUAD4
     """
-    from numpy import zeros, searchsorted, float32, arccos, dot, degrees, radians
+    from numpy import zeros, float32, arccos, dot, degrees
     from collections import defaultdict
 
     if isinstance(theta_tols, float) or isinstance(theta_tols, float32):

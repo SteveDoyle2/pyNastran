@@ -86,7 +86,7 @@ class XrefMesh(object):
         self._stop_on_xref_error = True
         self._stored_xref_errors = []
 
-    def cross_reference(self, xref=True,
+    def _safe_cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,
                         xref_properties=True,
@@ -96,18 +96,63 @@ class XrefMesh(object):
                         xref_constraints=True,
                         xref_aero=True,
                         xref_sets=True):
+        if xref_elements:
+            self._safe_cross_reference_elements()
+
+    def _safe_cross_reference_elements(self):
+        """
+        Links the elements to nodes, properties (and materials depending on
+        the card).
+        """
+        for elem in itervalues(self.elements):
+            try:
+                elem.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((elem, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+                    #msg = "Couldn't cross reference Element.\n%s" % str(elem)
+                    #self.log.error(msg)
+                    #raise
+        for elem in itervalues(self.rigidElements):
+            elem.safe_cross_reference(self)
+
+    def cross_reference(self, xref=True,
+                        xref_elements=True,
+                        xref_nodes_with_elements=True,
+                        xref_properties=True,
+                        xref_masses=True,
+                        xref_materials=True,
+                        xref_loads=True,
+                        xref_constraints=True,
+                        xref_aero=True,
+                        xref_sets=True,
+                        xref_optimization=True):
         """
         Links up all the cards to the cards they reference
 
-        :param xref:             cross references the model (default=True)
-        :param xref_element:     set cross referencing of elements (default=True)
-        :param xref_properties:  set cross referencing of properties (default=True)
-        :param xref_masses       set cross referencing of CMASS/PMASS (default=True)
-        :param xref_materials:   set cross referencing of materials (default=True)
-        :param xref_loads:       set cross referencing of loads (default=True)
-        :param xref_constraints: set cross referencing of constraints (default=True)
-        :param xref_aero:        set cross referencing of CAERO/SPLINEs (default=True)
-        :param xref_sets:        set cross referencing of SETx (default=True)
+        Parameters
+        ----------
+        xref : bool
+           cross references the model (default=True)
+        xref_element : bool
+           set cross referencing of elements (default=True)
+        xref_properties : bool
+           set cross referencing of properties (default=True)
+        xref_masses : bool
+           set cross referencing of CMASS/PMASS (default=True)
+        xref_materials : bool
+           set cross referencing of materials (default=True)
+        xref_loads : bool
+            set cross referencing of loads (default=True)
+        xref_constraints : bool
+            set cross referencing of constraints (default=True)
+        xref_aero : bool
+            set cross referencing of CAERO/SPLINEs (default=True)
+        xref_sets : bool
+            set cross referencing of SETx (default=True)
 
         To only cross-reference nodes:
 
@@ -123,8 +168,6 @@ class XrefMesh(object):
         .. warning:: be careful if you call this method
         """
         if xref:
-            xref_optimization = True
-
             self.log.debug("Cross Referencing...")
             self._cross_reference_nodes()
             self._cross_reference_coordinates()
@@ -154,7 +197,8 @@ class XrefMesh(object):
 
     def _cross_reference_constraints(self):
         """
-        Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC cards.
+        Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
+        SUPORT1, SESUPORT cards.
         """
         for spcadd in itervalues(self.spcadds):
             self.spcObject.Add(spcadd)
@@ -184,6 +228,8 @@ class XrefMesh(object):
     def _cross_reference_coordinates(self):
         """
         Links up all the coordinate cards to other coordinate cards and nodes
+         - CORD1R, CORD1C, CORD1S
+         - CORD2R, CORD2C, CORD2S
         """
         # CORD2x: links the rid to coordinate systems
         # CORD1x: links g1,g2,g3 to grid points
@@ -196,6 +242,7 @@ class XrefMesh(object):
     def _cross_reference_aero(self):
         """
         Links up all the aero cards
+          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
         for caero in itervalues(self.caeros):
             caero.cross_reference(self)
