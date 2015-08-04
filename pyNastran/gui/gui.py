@@ -102,7 +102,11 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     """
     def __init__(self, inputs):
         html_logging = True
-        GuiCommon2.__init__(self, html_logging, inputs)
+        fmt_order = [
+            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', # results
+            'lawgs', 'tetgen', 'stl', 'fast', #'plot3d',  # no results
+        ]
+        GuiCommon2.__init__(self, fmt_order, html_logging, inputs)
 
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
@@ -116,10 +120,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         ADB_IO.__init__(self)
         FastIO.__init__(self)
 
-        fmt_order = [
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', # results
-            'lawgs', 'tetgen', 'stl', 'fast', #'plot3d',  # no results
-        ]
         self.build_fmts(fmt_order, stop_on_failure=False)
 
         logo = os.path.join(icon_path, 'logo.png')

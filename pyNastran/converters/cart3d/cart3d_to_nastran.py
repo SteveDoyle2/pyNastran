@@ -9,10 +9,20 @@ def cart3d_to_nastran(cart3d_filename, log=None, debug=False):
     """
     Converts a Cart3D file to Nastran format and returns a BDF() object.
 
-    :param cart3d_filename: path to the input Cart3D file
-    :param log:             a logger object (or None)
-    :param debug:           True/False (used if log is not defined)
-    :retval bdf_model:      BDF() model object
+    Parameters
+    ----------
+    cart3d_filename : str
+        path to the input Cart3D file
+    log : log / None
+        log : a logger object
+        None : a log will be defined
+    debug : bool
+        True/False (used if log is not defined)
+
+    Returns
+    -------
+    bdf_model : BDF
+        BDF() model object
     """
     from pyNastran.bdf.bdf import BDF
     cart3d = Cart3DReader(log=log, debug=debug)
@@ -50,10 +60,17 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     """
     Converts a Cart3D file to Nastran format.
 
-    :param cart3d_filename: path to the input Cart3D file
-    :param bdf_filename:    path to the output BDF file
-    :param log:             a logger object (or None)
-    :param debug:           True/False (used if log is not defined)
+    Parameters
+    ----------
+    cart3d_filename : str
+        path to the input Cart3D file
+    bdf_filename : str
+        path to the output BDF file
+    log : log / None
+        log : a logger object
+        None : a log will be defined
+    debug : bool
+        True/False (used if log is not defined)
     """
     cart3d = Cart3DReader(log=log, debug=debug)
     (nodes, elements, regions, loads) = cart3d.read_cart3d(cart3d_filename)

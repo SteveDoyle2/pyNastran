@@ -22,9 +22,7 @@ class BDFCard(object):
             self.nfields = None
 
     def pop(self):
-        """
-        Pops the last value off
-        """
+        """card.pop()"""
         self.nfields -= 1
         return self.card.pop()
 
@@ -52,8 +50,15 @@ class BDFCard(object):
         """
         Prints the card as a list
 
-        :param self:  the object pointer
-        :returns msg: the string representation of the card
+        Parameters
+        ----------
+        self : BDFCard()
+            the object pointer
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
         """
         return str(self.card)
 
@@ -61,8 +66,15 @@ class BDFCard(object):
         """
         Gets how many fields are on the card
 
-        :param self:      the object pointer
-        :returns nfields: the number of fields on the card
+        Parameters
+        ----------
+        self : BDFCard()
+            the object pointer
+
+        Returns
+        -------
+        nfields : int
+            the number of fields on the card
         """
         self.deprecated('self.nFields()', 'self.nfields', '0.8')
         return self.nfields
@@ -75,16 +87,23 @@ class BDFCard(object):
         """
         Gets multiple fields on the card
 
-        :param self:     the object pointer
-        :param i:        the ith field on the card (following list notation)
-        :type i:         integer >= 0
-        :param j:        the jth field on the card (None means till the end
-                         of the card)
-        :type j:         integer or None (default=end of card)
-        :param defaults: the default value for the field (as a list)
-                         len(defaults)=i-j-1
+        Parameters
+        ----------
+        self : BDFCard()
+            the object pointer
+        i : int > 0
+            the ith field on the card (following list notation)
+        j : int / None
+            int : the jth field on the card
+            None : last field on the card
+        defaults : List[int/float/str]
+            the default value for the field (as a list)
+            len(defaults)=i-j-1
 
-        :returns value: the values on the ith-jth fields
+        Returns
+        -------
+        value : int/float/str
+            the values on the ith-jth fields
         """
         if defaults is None:
             defaults = []
@@ -108,12 +127,19 @@ class BDFCard(object):
         """
         Gets the ith field on the card
 
-        :param self:    the object pointer
-        :param i:       the ith field on the card (following list notation)
-        :type i:        integer
-        :param default: the default value for the field
+        Parameters
+        ----------
+        self : BDFCard()
+            the object pointer
+        i : int
+            the ith field on the card (following list notation)
+        default : int/float/str/None
+            the default value for the field
 
-        :returns value: the value on the ith field
+        Returns
+        -------
+        value : int/float/str/None
+            the value on the ith field
         """
         if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]

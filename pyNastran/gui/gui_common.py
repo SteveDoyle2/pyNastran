@@ -61,7 +61,7 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
 
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
-    def __init__(self, html_logging, inputs):
+    def __init__(self, fmt_order, html_logging, inputs):
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self)
 
@@ -100,6 +100,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # file
         self.menu_bar_format = None
         self.format = None
+        self.fmts = fmt_order
         self.infile_name = None
         self.out_filename = None
         self.dirname = ''
@@ -323,9 +324,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.set_actor_properties),
 
-                ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
-                ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
-
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
                 ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
@@ -357,6 +355,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
                 ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
+            ]
+        if 'nastran' in self.fmts:
+            tools += [
+                ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
+                ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
             ]
         self.tools = tools
         self.checkables = checkables
