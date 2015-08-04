@@ -20,15 +20,26 @@ if PY2:
     import re
     _name_re = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*$")
     def isidentifier(string, dotted=False):
+        """Is the string a valid Python variable name?"""
         return bool(_name_re.match(string))
 else:
     def isidentifier(string, dotted=False):
+        """Is the string a valid Python variable name?"""
         return string.isidentifier()
 
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     """
     Removes nodes from a model that are not referenced.
+
+    Parameters
+    ----------
+    bdf_filename : str
+        the path to the bdf input file
+    bdf_filename_out : str
+        the path to the bdf output file
+    renumber : bool
+        should the model be renumbered
 
     .. warning only considers elements
     .. renumber=False is not supported
@@ -68,21 +79,21 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     Parameters
     ----------
-    bdf_filename : str/BDF
-        a bdf_filename (string) or a BDF model (BDF)
-        that is fully valid (see xref)
+    bdf_filename : str / BDF
+        str : bdf file path
+        BDF : a BDF model that is fully valid (see xref)
     bdf_filename_out : str
         a bdf_filename to write
     tol : float
         the spherical tolerance
-    renumber_nodes :bool
-        should the nodes be renumbered (default=False; not supported)
+    renumber_nodes : bool
+        should the nodes be renumbered (default=False)
     neq_max : int
         the number of "close" points (default=4)
     xref bool: bool
         does the model need to be cross_referenced
         (default=True; only applies to model option)
-    nodes_set : List[int], (n, ) ndarray
+    nodes_set : List[int] / (n, ) ndarray
         the list/array of nodes to consider (not supported)
     crash_on_collapse : bool
         stop if nodes have been collapsed
@@ -354,6 +365,25 @@ def _write_nodes(self, outfile, size, is_double):
 
 
 def _roundup(value, n=100):
+    """
+    Rounds up to the next N.
+
+    Parameters
+    ----------
+    value : int
+        the value to round up
+    n : int
+        the increment to round by
+
+    .. python
+
+      >>> 100 = _roundup(10)
+      >>> 200 = _roundup(105)
+      >>> 300 = _roundup(200)
+
+    .. note :: this function is used to ensure that renumbering is more
+               obvious when testing
+    """
     return int(ceil(value / float(n))) * n
 
 
@@ -606,8 +636,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         assert isinstance(key, str), key
         assert key in starting_id_dict_default, 'key=%s is invalid' % (key)
         assert isidentifier(key), 'key=%s is invalid' % key
-        assert isinstance(value, integer_types), 'value=%s must be an integer; type(value)' % (value, type(value))
+        assert isinstance(value, integer_types), 'value=%s must be an integer; type(value)=%s' % (value, type(value))
         call = '%s = %s' % (key, value)
+
+        # this exec is safe because we checked the identifier
         exec(call)
 
 
@@ -954,6 +986,16 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
 
 def _update_case_control(model, mapper):
+    """
+    Updates the case control deck; helper method for ``bdf_renumber``.
+
+    Parameters
+    ----------
+    model : BDF()
+        the BDF object
+    mapper : dict[str] = List[int]
+        Defines the possible case control header values for each entry (e.g. `LOAD`)
+    """
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
     nodal_quantities = [
         'DISPLACEMENT', 'VELOCITY', 'ACCELERATION', 'SPCFORCES', 'MPCFORCES',
@@ -1102,90 +1144,13 @@ def _update_case_control(model, mapper):
                 elif key == '':
                     pass
                 else:
-                    print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
-                    raise RuntimeError(key)
+                    msg = 'key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value)
+                    raise RuntimeError(msg)
 
             else:
                 raise RuntimeError(key)
-
                     #if value ==
         #print()
-
-
-def eq2():
-    lines = [
-        '$pyNastran: version=msc',
-        '$pyNastran: punch=True',
-        '$pyNastran: encoding=ascii',
-        '$NODES',
-        '$ Nodes to merge:',
-        '$ 5987 10478',
-        '$   GRID        5987           35.46     -6.      0.',
-        '$   GRID       10478           35.46     -6.      0.',
-        '$ 5971 10479',
-        '$   GRID        5971           34.92     -6.      0.',
-        '$   GRID       10479           34.92     -6.      0.',
-        '$ 6003 10477',
-        '$   GRID        6003             36.     -6.      0.',
-        '$   GRID       10477             36.     -6.      0.',
-        'GRID        5971           34.92     -6.      0.',
-        'GRID        5972           34.92-5.73333      0.',
-        'GRID        5973           34.92-5.46667      0.',
-        'GRID        5987           35.46     -6.      0.',
-        'GRID        5988           35.46-5.73333      0.',
-        'GRID        5989           35.46-5.46667      0.',
-        'GRID        6003             36.     -6.      0.',
-        'GRID        6004             36.-5.73333      0.',
-        'GRID        6005             36.-5.46667      0.',
-        'GRID       10476             36.     -6.    -1.5',
-        'GRID       10477             36.     -6.      0.',
-        'GRID       10478           35.46     -6.      0.',
-        'GRID       10479           34.92     -6.      0.',
-        'GRID       10561           34.92     -6.    -.54',
-        '$ELEMENTS_WITH_PROPERTIES',
-        'PSHELL         1       1      .1',
-        'CQUAD4      5471       1    5971    5987    5988    5972',
-        'CQUAD4      5472       1    5972    5988    5989    5973',
-        'CQUAD4      5486       1    5987    6003    6004    5988',
-        'CQUAD4      5487       1    5988    6004    6005    5989',
-        'PSHELL        11       1      .1',
-        'CTRIA3      9429      11   10561   10476   10478',
-        'CTRIA3      9439      11   10478   10479   10561',
-        'CTRIA3      9466      11   10476   10477   10478',
-        '$MATERIALS',
-        'MAT1           1      3.              .3',
-    ]
-    bdf_filename = 'nonunique2.bdf'
-    bdf_file = open(bdf_filename, 'wb')
-    bdf_file.write('\n'.join(lines))
-    bdf_file.close()
-    bdf_equivalence_nodes('nonunique2.bdf', 'unique2.bdf', 0.01)
-
-def eq1():
-    msg = 'CEND\n'
-    msg += 'BEGIN BULK\n'
-    msg += 'GRID,1,,0.,0.,0.\n'
-    msg += 'GRID,2,,0.,0.,0.5\n'
-    msg += 'GRID,3,,0.,0.,0.51\n'
-    msg += 'GRID,10,,0.,0.,1.\n'
-    msg += 'GRID,11,,0.,0.,1.\n'
-    msg += 'CTRIA3,1,1,1,2,11\n'
-    msg += 'CTRIA3,2,1,1,2,11\n'
-    msg += 'CTRIA3,3,1,2,3,11\n'
-    msg += 'CTRIA3,4,1,1,2,10\n'
-    msg += 'PSHELL,1,1,0.1\n'
-    msg += 'MAT1,1,3.0,, 0.3\n'
-    msg += 'ENDDATA'
-
-    bdf_filename = 'nonunique.bdf'
-
-    bdf_file = open(bdf_filename, 'wb')
-    bdf_file.write(msg)
-    bdf_file.close()
-
-    bdf_filename_out = 'unique.bdf'
-    tol = 0.2
-    bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 
 
 def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
@@ -1202,6 +1167,13 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     theta_tols : List[float]
         a list of tolerances for each element id
         (e.g. the nose has a different tolerance than the base)
+
+    Returns
+    -------
+    model : BDF()
+        the BDF object
+    groups : List[Set[int]]
+        the list of element ids in each group
 
     .. warning :: only supports CTRIA3 & CQUAD4
     """
@@ -1302,8 +1274,3 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
             check.remove(eid)
         groups.append(group)
     return model, groups
-
-
-if __name__ == '__main__':
-    eq1()
-    eq2()

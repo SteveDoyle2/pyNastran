@@ -84,6 +84,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
+        self.is_edges_black = self.is_edges
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
@@ -322,6 +323,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
+                ('edges_black', 'Color Edges', '', None, 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.set_actor_properties),
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
@@ -413,7 +415,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'scshot', '', 'wireframe', 'surface', 'creset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
-            'legend', 'axis',
+            'legend', 'axis', 'edges_black',
         ]
         if self.html_logging:
             self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
@@ -955,6 +957,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.refresh()
         self.log_command('on_flip_edges()')
 
+    def on_set_edge_visibility(self):
+        #self.edgeActor.SetVisibility(self.is_edges_black)
+        self.is_edges_black = not self.is_edges_black
+        if self.is_edges_black:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOn()
+        else:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOff()
+        self.edgeActor.Modified()
+        prop.Modified()
+        self.vtk_interactor.Render()
+
     def get_edges(self):
         """
         .. todo:: For some reason, the edge color is set to the parent
@@ -1424,6 +1439,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
                             self.log_error(msg)
                         return
+
+                    self.log_info("%s = %s" % (result_name, result_value))
                 else:
                     if self.pick_state == 'nodal':
                         result_name, result_value, node_id, xyz = self.get_result_by_xyz_cell_id(world_position, cell_id)
@@ -1440,13 +1457,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
                             self.log_error(msg)
                         return
+                    msg = "%s = %s" % (result_name, result_value)
+                    if self.result_name in ['Node_ID']:
+                        msg += '; xyz=(%s, %s, %s)' % tuple(xyz)
+                    self.log_info(msg)
 
                 #print('key=%s exists=%s' % (duplicate_key, duplicate_key in self.label_ids[result_name]))
                 if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
                     return
                 self.label_ids[result_name].add(duplicate_key)
-                self.log_info("%s = %s" % (result_name, result_value))
-
 
                 #x, y, z = world_position
                 x, y, z = xyz
@@ -2190,12 +2209,29 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.cameras = deepcopy(data['cameras'])
         #self.on_set_camera(name)
 
-    def on_set_camera(self, name):
+    def on_set_camera(self, name, show_log=True):
         camera_data = self.cameras[name]
         #position, clip_range, focal_point, view_up, distance = camera_data
-        self.on_set_camera_data(camera_data)
+        self.on_set_camera_data(camera_data, show_log=show_log)
 
-    def on_set_camera_data(self, camera_data):
+    def get_camera_data(self):
+        camera = self.rend.GetActiveCamera()
+        position = camera.GetPosition()
+        focal_point = camera.GetFocalPoint()
+        view_angle = camera.GetViewAngle()
+        view_up = camera.GetViewUp()
+        clip_range = camera.GetClippingRange()  # TODO: do I need this???
+
+        parallel_scale = camera.GetParallelScale()  # TODO: do I need this???
+        #parallel_proj = GetParralelProjection()
+        parallel_proj = 32.
+        distance = camera.GetDistance()
+
+        # clip_range, view_up, distance
+        camera_data = [position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance]
+        return camera_data
+
+    def set_camera_data(self, camera_data, show_log=True):
         #position, clip_range, focal_point, view_up, distance = camera_data
         position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
 
@@ -2213,8 +2249,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         camera.Modified()
         self.vtk_interactor.Render()
-        self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
-                         % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
+        if show_log:
+            self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
+                             % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
 
     #---------------------------------------------------------------------------------------
     # LEGEND MENU

@@ -11,6 +11,7 @@ from pyNastran.bdf.test.unit.test_mass import *
 from pyNastran.bdf.test.unit.test_assign_type import *
 from pyNastran.bdf.test.unit.test_read_write import *
 from pyNastran.bdf.test.unit.test_sum_loads import *
+from pyNastran.bdf.test.unit.test_dev_utils import *
 
 
 if __name__ == "__main__":  # pragma: no cover
