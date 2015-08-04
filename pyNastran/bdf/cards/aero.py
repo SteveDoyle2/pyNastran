@@ -1054,6 +1054,19 @@ class CAERO1(BaseCard, CAERO1Deprecated):
 
     @property
     def min_max_eid(self):
+        """
+        Gets the min and max element ids of the CAERO card
+
+        Parameters
+        ----------
+        self : CAERO1 obj
+            The CAERO1 object.
+
+        Returns
+        -------
+        min_max_eid : (2, ) list
+            The [min_eid, max_eid]
+        """
         nchord, nspan = self.shape
         return [self.eid, self.eid + nchord * nspan]
 
@@ -1068,7 +1081,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
 
         Returns
         -------
-        p1234 : (3, 4) list
+        p1234 : (4, 3) list
              List of 4 corner points in the global frame
         """
         p1 = self.cp.transform_node_to_global(self.p1)
@@ -1158,8 +1171,17 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         """
         Gets the sub-points and sub-elements for the CAERO card
 
-        :param points: an (nnodes,3) ndarray of floats
-        :param elements: an (nelements,4) ndarray of integers
+        Parameters
+        ----------
+        self : CAERO1 obj
+            The CAERO1 object.
+
+        Returns
+        -------
+        points : (nnodes,3) ndarray of floats
+            the array of points
+        elements : (nelements,4) ndarray of integers
+            the array of point ids
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
@@ -1177,12 +1199,15 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the CAERO1 object pointer
-        :returns fields:
+        Parameters
+        ----------
+        self : CAERO 1 obj
+            the CAERO1 object pointer.
+
+        Returns
+        -------
+        fields : list
           the fields that define the card
-        :type fields:
-          LIST
         """
         lchord = self.get_LChord()
         lspan = self.get_LSpan()
@@ -1205,12 +1230,15 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the CAERO1 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO1 obj
+            The CAERO1 object.
+
+        Returns
+        -------
+        fields : LIST
+            The fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
         nspan = set_blank_if_default(self.nspan, 0)
@@ -1242,11 +1270,17 @@ class CAERO2(BaseCard, CAERO2Deprecated):
         """
         Gets complicated parameters on the CAERO2 card
 
-        :param self:  the CAERO2 object pointer
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        self : CAERO2 obj
+            The CAERO2 object.
+        n : int
+            The field number to update
+
+        Returns
+        -------
+        value : int, float, None
+            The value for the appropriate field
         """
         if n == 9:
             return self.p1[0]
@@ -1261,11 +1295,14 @@ class CAERO2(BaseCard, CAERO2Deprecated):
         """
         Updates complicated parameters on the CAERO2 card
 
-        :param self:  the CAERO2 object pointer
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        self : CAERO2 obj
+            The CAERO2 object.
+        n : int
+            The field number to update
+        value : int, float, None
+            The value for the appropriate field
         """
         if n == 9:
             self.p1[0] = value
@@ -1361,9 +1398,12 @@ class CAERO2(BaseCard, CAERO2Deprecated):
         """
         Cross links the card
 
-        :param self:   the CAERO2 object pointer
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        self : CAERO2 obj
+            The CAERO2 object.
+        model : BDF obj
+            The BDF object.
         """
         msg = ' which is required by CAERO2 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
@@ -1387,12 +1427,15 @@ class CAERO2(BaseCard, CAERO2Deprecated):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the CAERO2 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO2 obj
+            The CAERO2 object.
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
         """
         list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
                         self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
@@ -1403,12 +1446,15 @@ class CAERO2(BaseCard, CAERO2Deprecated):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the CAERO2 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO2 obj
+            The CAERO2 object.
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
@@ -1454,9 +1500,12 @@ class CAERO3(BaseCard):
         """
         Cross links the card
 
-        :param self:   the CAERO3 object pointer
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        self : CAERO3 obj
+            The CAERO3 object.
+        model : BDF obj
+            The BDF object.
         """
         msg = ' which is required by CAERO3 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
@@ -1479,12 +1528,15 @@ class CAERO3(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the CAERO3 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO3 obj
+            The CAERO3 object.
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
         """
         list_fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
                         self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
@@ -1495,12 +1547,15 @@ class CAERO3(BaseCard):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the CAERO3 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO2 obj
+            The CAERO2 object.
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO3', self.eid, self.Pid(), cp, self.list_w,
@@ -1554,9 +1609,12 @@ class CAERO4(BaseCard):
         """
         Cross links the card
 
-        :param self:   the CAERO4 object pointer
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        self : CAERO4 obj
+            The CAERO4 object.
+        model : BDF obj
+            The BDF object.
         """
         msg = ' which is required by CAERO4 eid=%s' % self.eid
         #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
@@ -1576,12 +1634,15 @@ class CAERO4(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the CAERO4 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO4 obj
+            The CAERO4 object.
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
         """
         list_fields = (['CAERO4', self.eid, self.Pid(), self.Cp(), self.nspan,
                         self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
@@ -1592,12 +1653,15 @@ class CAERO4(BaseCard):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the CAERO4 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO4 obj
+            The CAERO4 object.
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO4', self.eid, self.Pid(), cp, self.nspan,
@@ -1652,9 +1716,12 @@ class CAERO5(BaseCard):
         """
         Cross links the card
 
-        :param self:   the CAERO3 object pointer
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        self : CAERO5 obj
+            The CAERO5 object.
+        model : BDF obj
+            The BDF object.
         """
         msg = ' which is required by CAERO5 eid=%s' % self.eid
         #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO5 (not added)
@@ -1760,12 +1827,15 @@ class CAERO5(BaseCard):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the CAERO4 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : CAERO5 obj
+            The CAERO5 object.
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
         """
         nspan = self.nspan
         lspan = self.LSpan()
@@ -1835,7 +1905,7 @@ class PAERO5(BaseCard):  ## TODO: not integrated
         +--------+-------+--------+--------+---------+-------+-------+-------+
         | PAERO5 | 7001  |   1    |  702   |    1    | 701   |   1   |  700  |
         +--------+-------+--------+--------+---------+-------+-------+-------+
-                 |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |       |       |
+        |        |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |       |       |
         +--------+-------+--------+--------+---------+-------+-------+-------+
         """
         if card:
