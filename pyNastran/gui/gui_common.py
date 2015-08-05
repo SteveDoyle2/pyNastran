@@ -821,13 +821,35 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.setCentralWidget(self.vtk_frame)
 
         #=============================================================
+        # +-----+-----+
+        # |     |     |
+        # |  A  |  B  |
+        # |     |     |
+        # +-----+-----+
+        # xmin, xmax, ymin, ymax
+        nframes = 1
+        #nframes = 2
+        if nframes == 2:
+            # xmin, ymin, xmax, ymax
+            frame1 = [0., 0., 0.5, 1.0]
+            frame2 = [0.5, 0., 1., 1.0]
+            #frames = [frame1, frame2]
+            self.rend.SetViewport(*frame1)
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
+
+        if nframes == 2:
+            rend = vtk.vtkRenderer()
+            rend.SetViewport(*frame2)
+            self.vtk_interactor.GetRenderWindow().AddRenderer(rend)
+
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
 
         #for cid, axes in iteritems(self.axes):
             #self.rend.AddActor(axes)
         self.addGeometry()
+        if nframes == 2:
+            rend.AddActor(self.geom_actor)
 
         # initialize geometry_actors
         self.geometry_actors = {
