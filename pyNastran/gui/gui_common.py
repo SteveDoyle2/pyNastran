@@ -762,8 +762,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def create_global_axes(self):
         self.transform = {}
         self.axes = {}
-        #self.create_coordinate_system(origin=None, matrix_3x3=None, Type='Rtp')
         self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz')
+
+    def create_corner_axis(self):
+        axes = vtk.vtkAxesActor()
+        self.corner_axis = vtk.vtkOrientationMarkerWidget()
+        self.corner_axis.SetOrientationMarker(axes)
+        self.corner_axis.SetInteractor(self.vtk_interactor)
+        self.corner_axis.SetEnabled(1)
+        self.corner_axis.InteractiveOff()
 
     def on_show_hide_axes(self):
         """
@@ -1378,7 +1385,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.init_cell_picker()
 
         self.restoreState(settings.value("mainWindowState").toByteArray())
-
+        self.create_corner_axis()
         #-------------
         # loading
         self.show()
