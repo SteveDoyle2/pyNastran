@@ -76,6 +76,9 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
 
+    warp vector might finally work
+    http://vtk.1045678.n5.nabble.com/How-to-get-grid-result-from-vtkWarpVector-td5727100.html
+
     glyphs
     http://www.itk.org/Wiki/VTK/Examples/Python/Visualization/ElevationBandsWithGlyphs
 
@@ -199,6 +202,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         latest CFD results time step, which is really handy when you're running
         a job.
         """
+        camera = self.get_camera_data()
         Title = self.Title
         if self.format == 'usm3d':
             self.step_results_usm3d()
@@ -217,6 +221,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 self.cycleResults(Title)
             else:
                 break
+        self.set_camera_data(camera, show_log=False)
 
     def closeEvent(self, event):
         """
