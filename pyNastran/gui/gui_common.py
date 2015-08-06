@@ -1433,7 +1433,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                         method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
                             methodi = getattr(self, method)
-                            methodi(world_position, cell_id)
+                            return_flag, value = methodi(world_position, cell_id)
+                            if return_flag is True:
+                                return
                         else:
                             msg = "pick_state is set to 'nodal', but the result is 'centroidal'\n"
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
@@ -1451,7 +1453,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                         method = 'get_nodal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
                             methodi = getattr(self, method)
-                            methodi(world_position, cell_id)
+                            return_flag, value = methodi(world_position, cell_id)
+                            if return_flag is True:
+                                return
                         else:
                             msg = "pick_state is set to 'centroidal', but the result is 'nodal'\n"
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
