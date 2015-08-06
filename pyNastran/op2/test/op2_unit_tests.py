@@ -247,6 +247,11 @@ class TestOP2(Tester):
         ])
         BTA = dot(B.T, A)
         ATB = dot(A.T, B)
+        ATB_expected = array([
+            [35., 18.],
+            [18., 100.]
+        ], dtype='float32')
+        BTA_expected = ATB_expected
 
         expecteds = [A, ATB, B, BTA, mydof]
         matrix_names = sorted(matrices.keys())
