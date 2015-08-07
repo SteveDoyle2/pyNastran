@@ -1091,7 +1091,11 @@ class NastranIO(object):
                 load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
             except KeyError:
                 continue
-            loadCase = model.loads[load_case_id]
+            try:
+                loadCase = model.loads[load_case_id]
+            except KeyError:
+                self.log.warning('LOAD=%s not found' % load_case_id)
+                continue
 
             # account for scale factors
             loads2 = []
