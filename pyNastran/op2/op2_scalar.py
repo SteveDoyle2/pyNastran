@@ -642,7 +642,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         if self.read_mode != 2:
             op2_filename = self._validate_op2_filename(op2_filename)
-            self.log.debug('op2_filename = %r' % op2_filename)
+            self.log.info('op2_filename = %r' % op2_filename)
             if not is_binary_file(op2_filename):
                 if os.path.getsize(op2_filename) == 0:
                     raise IOError('op2_filename=%r is empty.' % op2_filename)

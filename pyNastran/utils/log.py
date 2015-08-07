@@ -1,19 +1,39 @@
+from __future__ import print_function
 import sys
 import platform
 import os
+
+if sys.stdout.isatty():
+    # You're running in a real terminal
+    try:
+        from colorama import init as colorinit, Fore, Style
+        colorinit(autoreset=True)
+        is_terminal = True
+    except ImportError:
+        is_terminal = False
+else:
+    # You're being piped or redirected
+    is_terminal = False
+is_terminal = False
+
 
 def make_log(display=False):
     """
     Creates 'pyNastran.log' file with information about working environment,
     such as Python version, platform, architecture, etc. Useful for debugging.
 
-    :param display: do not only create file but also print log information
+    Parameters
+    ----------
+    display : bool
+        do not only create file but also print log information
     """
     smsg = [('sys.version', sys.version), ('sys.version_info', sys.version_info)]
-    pmsg = ['machine', 'platform', 'processor', 'architecture', 'python_branch',
-           'python_revision', 'win32_ver', 'version', 'uname', 'system',
-           'python_build', 'python_compiler', 'python_implementation', 'system',
-           'mac_ver', 'linux_distribution', 'libc_ver']
+    pmsg = [
+        'machine', 'platform', 'processor', 'architecture', 'python_branch',
+        'python_revision', 'win32_ver', 'version', 'uname', 'system',
+        'python_build', 'python_compiler', 'python_implementation', 'system',
+        'mac_ver', 'linux_distribution', 'libc_ver'
+    ]
 
     fmt = '%-{0}s = %s\n'.format(max(map(len, pmsg + [j[0] for j in smsg])))
     msg = ''.join([fmt % (i, str(j).replace('\n', '; ')) for (i, j) in smsg])
@@ -35,26 +55,47 @@ class SimpleLogger(object):
       know how to repoint the log file if the program is called a second
       time.  Poor logging can result in:\n
         1) double logging to a single file\n
-        2) all longging going to one file\n
+        2) all logging going to one file\n
       This is really only an issue when calling logging multiple times,
       such as in an optimization loop or testing.
     """
     def stderr_logging(self, typ, msg):
         """
         Default logging function. Takes a text and outputs to stderr.
-        :param typ: messeage type
-        :param msg: message to be displayed
+
+        Parameters
+        ----------
+        typ : str
+            messeage type
+        msg : str
+            message to be displayed
 
         Message will have format 'typ: msg'
         """
         name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
-        sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
+        if not is_terminal or not typ:
+            sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
+        else:
+            if typ == 'INFO':
+                '\033[ 1 m; 34 m'
+                sys.stdout.write((Fore.GREEN + name + msg).encode(self.encoding))  # bright blue
+            elif typ == 'DEBUG':
+                sys.stdout.write((Fore.YELLOW + name + msg).encode(self.encoding))
+            elif typ == 'WARNING':
+                sys.stdout.write((Fore.ORANGE + name + msg).encode(self.encoding))
+            else: # error / other
+                sys.stdout.write((Fore.RED + name + msg).encode(self.encoding))
         sys.stdout.flush()
 
     def __init__(self, level='debug', encoding='utf-8', log_func=None):
         """
-        :param level: level of logging: 'info' or 'debug'
-        :param log_func:
+        Parameters
+        ----------
+        level : str
+            level of logging: 'info' or 'debug'
+        encoding : str
+            the unicode encoding method
+        log_func : log
           funtion that will be used to print log. It should take one argument:
           string that is produces by a logger. Default: print messages to
           stderr using @see stderr_logging function.
@@ -69,40 +110,59 @@ class SimpleLogger(object):
 
     def properties(self):
         """Return tuple: line number and filename"""
-        _fr =  sys._getframe(3)  # jump to get out of the logger code
+        _fr = sys._getframe(3)  # jump to get out of the logger code
         return (_fr.f_lineno, os.path.basename(_fr.f_globals['__file__']))
 
     def debug(self, msg):
         """
         Log DEBUG message
-        :param msg: message to be logged
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
         """
         if self.level != 'debug':
             return
         lines = str(msg).split('\n')
         self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n'
-                                                   for line in lines[1:]]))
+                                                    for line in lines[1:]]))
 
     def msg_typ(self, typ, msg):
         """
         Log message of a given type
-        :param typ: type of a message (e.g. INFO)
-        :param msg: message to be logged
+
+        Parameters
+        ----------
+        typ : str
+            type of a message (e.g. INFO)
+        msg : str
+            message to be logged
         """
         n, fn = self.properties()
         self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
 
-    def simple_msg(self,msg, typ = None):
+    def simple_msg(self, msg, typ=None):
         """
         Log message directly without any altering.
-        :param msg: message to be looged without any alteration.
+
+        Parameters
+        ----------
+        msg : str
+            message to be looged without any alteration.
+        typ : str
+            type of a message (e.g. INFO)
         """
         self.log_func(typ, msg)
 
     def info(self, msg):
         """
         Log INFO message
-        :param msg: message to be logged
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
         """
         if self.level not in ('debug', 'info'):
             return
@@ -111,28 +171,44 @@ class SimpleLogger(object):
     def warning(self, msg):
         """
         Log WARNING message
-        :param msg: message to be logged
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
         """
         self.msg_typ('WARNING', msg)
 
     def error(self, msg):
         """
         Log ERROR message
-        :param msg: message to be logged
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
         """
         self.msg_typ('ERROR', msg)
 
     def exception(self, msg):
         """
         Log EXCEPTION message
-        :param msg: message to be logged
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
         """
         self.msg_typ('ERROR', msg)
 
     def critical(self, msg):
         """
         Log CRITICAL message
-        :param msg: message to be logged
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
         """
         self.msg_typ('CRITICAL', msg)
 
@@ -140,24 +216,39 @@ class SimpleLogger(object):
 def get_logger(log=None, level='debug', encoding='utf-8'):
     """
     This function is useful as it will instantiate a simpleLogger object if log=None.
-    :param log:   a logger object or None
-    :param level: level of logging: 'info' or 'debug'
+
+    Parameters
+    ----------
+
+    log: log / None
+         a logger object or None
+    level : str
+        level of logging: 'info' or 'debug'
     """
     return SimpleLogger(level, encoding=encoding) if log is None else log
 
 
 def get_logger2(log=None, debug=True):
     """
-    This function is useful as it will instantiate a SimpleLogger object if log=None.
+    This function is useful as it will instantiate a SimpleLogger object
+    if log=None.
 
-    :param log:   a python logging module object;
-                  if log is set, debug is ignored and uses the
-                  settings the logging object has
-    :param debug: used to set the logger if no logger is passed in
-                  True:  logs debug/info/error messages
-                  False: logs info/error messages
-                  None:  logs error messages
-    :returns log: log or a SimpleLogger
+    Parameters
+    ----------
+    log : log / None
+        a python logging module object;
+        if log is set, debug is ignored and uses the
+        settings the logging object has
+    debug : bool / None
+       used to set the logger if no logger is passed in
+           True:  logs debug/info/error messages
+           False: logs info/error messages
+           None:  logs error messages
+
+    Returns
+    -------
+    log : log / SimpleLogger
+        logging
     """
     if log is not None:
         pass
