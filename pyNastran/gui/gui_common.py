@@ -1491,7 +1491,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                             self.log_error(msg)
                         return
                     msg = "%s = %s" % (result_name, result_value)
-                    if self.result_name in ['Node_ID']:
+                    if self.result_name in ['Node_ID', 'Node ID', 'NodeID']:
                         msg += '; xyz=(%s, %s, %s)' % tuple(xyz)
                     self.log_info(msg)
 
