@@ -252,7 +252,14 @@ class OEF(OP2Common):
             msg = 'invalid analysis_code...analysis_code=%s' % str(self.analysis_code)
             raise RuntimeError(msg)
 
-        self.element_name = self.element_mapper[self.element_type]
+
+        try:
+            self.element_name = self.element_mapper[self.element_type]
+        except KeyError:
+            self.log.error(self.code_information())
+            raise
+
+        #self.element_name = self.element_mapper[self.element_type]
         self.data_code['element_name'] = self.element_name
 
         if self.debug:
@@ -317,7 +324,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [33, 53, 64, 74, 75,  # CQUAD4, CTRIAX6, CQUAD8, CTRIA3, CTRIA6
@@ -364,7 +371,7 @@ class OEF(OP2Common):
                     data_in = [eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP
             # 107-CHBDYE
@@ -390,7 +397,7 @@ class OEF(OP2Common):
                     #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [110]:
@@ -410,7 +417,7 @@ class OEF(OP2Common):
                     #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [145, 146, 147]:  # VUHEXA,VUPENTA,VUTETRA
@@ -425,7 +432,7 @@ class OEF(OP2Common):
             elif self.element_type == 145:  # VUHEXA
                 nnodes = 8
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
             numwide_real = 2 + 7 * nnodes
@@ -452,7 +459,7 @@ class OEF(OP2Common):
                     #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(nnodes, dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
@@ -493,7 +500,7 @@ class OEF(OP2Common):
                     #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(nnodes, dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [191]:  # VUBEAM
@@ -661,7 +668,7 @@ class OEF(OP2Common):
                     n += ntotal
 
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [2]:  # cbeam
@@ -765,7 +772,7 @@ class OEF(OP2Common):
                             #print "%s cOld   " % (self.get_element_type(self.element_type)), data_in
                             self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
             #print self.beamForces
 
@@ -864,7 +871,8 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                msg = self.element_type
+                #msg = 'OEF: element_name=%s element_type=%s' % (self.element_name, self.element_type)
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [24]:  # CVISC
@@ -916,7 +924,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
             #print self.viscForces
 
@@ -996,7 +1004,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
             #print self.barForces
 
@@ -1028,7 +1036,7 @@ class OEF(OP2Common):
                     n += 32
                 #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [33, 74]: # centroidal shells
@@ -1120,7 +1128,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [64, 70, 75, 82, 144]: # bilinear shells
@@ -1145,7 +1153,7 @@ class OEF(OP2Common):
                 result_name = 'cquad4_force'
                 slot = self.cquad4_force
             else:
-                msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
             slot_vector = slot
             result_vector_name = result_name
@@ -1294,7 +1302,7 @@ class OEF(OP2Common):
                         #print "***%s    " % (self.get_element_type(self.element_type)),data_in
                         self.obj.add(eid, dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [95, 96, 97, 98]: # composites
@@ -1343,7 +1351,7 @@ class OEF(OP2Common):
                     #eid_old = eid
                     #n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [39, 67, 68]: # solids
@@ -1357,7 +1365,7 @@ class OEF(OP2Common):
                 #self.create_transient_object(self.solidForces, RealCSolidForce)
                 pass
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [53]:  # ctriax6
@@ -1369,7 +1377,7 @@ class OEF(OP2Common):
                 pass
                 #self.create_transient_object(self.ctriax_force, RealCTriaxForce)  # undefined
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [4]:  # cshear
@@ -1459,7 +1467,7 @@ class OEF(OP2Common):
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [35]:  # con
@@ -1487,7 +1495,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
 
@@ -1517,7 +1525,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [69]:  # cbend
             # 69-CBEND
@@ -1602,7 +1610,7 @@ class OEF(OP2Common):
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [76, 77, 78]:
@@ -1622,7 +1630,7 @@ class OEF(OP2Common):
                 result_name = 'ctetra_pressure_force'
                 slot = self.ctetra_pressure_force
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
             self._results._found_result(result_name)
@@ -1683,7 +1691,7 @@ class OEF(OP2Common):
                     #print "%s" % (self.get_element_type(self.element_type)) ,data_in
                     self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [100]:  #  bars
@@ -1712,7 +1720,7 @@ class OEF(OP2Common):
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [102]:  # cbush
             # 102-CBUSH
@@ -1772,7 +1780,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [145, 146, 147]:
@@ -1892,7 +1900,7 @@ class OEF(OP2Common):
                     #print "force %s" %(self.get_element_type(self.element_type)),data_in
                     self.obj.add(nnodes, dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
 
@@ -1998,7 +2006,7 @@ class OEF(OP2Common):
                     #print "force %s" %(self.get_element_type(self.element_type)),data_in
                     self.obj.add(nnodes, dt, data_in)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [233, 235]:
@@ -2008,7 +2016,7 @@ class OEF(OP2Common):
                 return len(data)
             return len(data)
         else:
-            msg = 'OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+            msg = self.code_information()
             return self._not_implemented_or_skip(data, msg)
 
         assert self.thermal == 0, self.thermal

@@ -215,7 +215,7 @@ class OES(OP2Common):
         if self.is_sort1():
             n = self._read_oes1_4_sort1(data)
         else:
-            msg = 'sort2 Type=%s num=%s' % (self.element_name, self.element_type)
+            msg = self.code_information()
             n = self._not_implemented_or_skip(data, msg)
         return n
 
@@ -303,7 +303,7 @@ class OES(OP2Common):
                 elif self.element_type == 10:  # CONROD
                     result_vector_name = 'conrod_stress'
                 else:
-                    msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                    msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
             else:
                 obj_real = RealRodStrain
@@ -320,7 +320,7 @@ class OES(OP2Common):
                 elif self.element_type == 10:  # CONROD
                     result_vector_name = 'conrod_strain'
                 else:
-                    msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                    msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
 
             result_name = result_vector_name
@@ -395,7 +395,7 @@ class OES(OP2Common):
                     #assert eid > 0, eid
                     #n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 2: # CBEAM
@@ -503,7 +503,7 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, out)
                 return len(data)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 4: # CSHEAR
@@ -581,7 +581,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid_sort1(dt, eid, (etmax, etavg))
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [11, 12, 13, 14]:  # springs
@@ -664,7 +664,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid_sort1(dt, eid, axial)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 34: # CBAR
@@ -769,7 +769,7 @@ class OES(OP2Common):
                                          s1a, s2a, s3a, s4a, axial,
                                          s1b, s2b, s3b, s4b)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [39, 67, 68]: # solid stress
@@ -953,7 +953,7 @@ class OES(OP2Common):
                         self.obj.add_node_sort1(dt, eid, grid, inode,
                                                 ex, ey, ez, etxy, etyz, etzx)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         #=========================
@@ -1085,7 +1085,7 @@ class OES(OP2Common):
                         self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                         self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [74]:  # TRIA3
@@ -1189,7 +1189,7 @@ class OES(OP2Common):
                     self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
@@ -1420,7 +1420,7 @@ class OES(OP2Common):
                         self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                         self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [88, 90]: # nonlinear shells
@@ -1498,7 +1498,7 @@ class OES(OP2Common):
                         eid, fd2, sx2, sy2, undef3, txy2, es2, eps2, ecs2, ex2, ey2, undef4, etxy2))
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [95, 96, 97, 98]: # composite shell
@@ -1599,7 +1599,7 @@ class OES(OP2Common):
                     n += 44
                 self.eid_old = eid_old
             elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 nelements = len(data) // ntotal
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
@@ -1636,7 +1636,7 @@ class OES(OP2Common):
                     n += ntotal
                 raise NotImplementedError('this is a really weird case...')
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         #=========================
@@ -1678,7 +1678,7 @@ class OES(OP2Common):
                         self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                         n += 32  # 4*8
             elif self.format_code in [2, 3] and self.num_wide == 37: # imag
-                msg = 'num_wide=%s' % self.num_wide
+                #msg = 'num_wide=%s' % self.num_wide
                 #return self._not_implemented_or_skip(data, msg)
 
                 #if self.isStress():
@@ -1735,7 +1735,7 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, loc, rs, azs, As, ss)
                         n += 36  # 4*8
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [102]: # bush
             # 102-CBUSH
@@ -1804,7 +1804,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [40]:  # bush
@@ -1869,7 +1869,7 @@ class OES(OP2Common):
                         ae = complex(aer, aei)
                     self.obj.add_new_eid(self.element_type, dt, eid, fe, ue, ao, ae)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
 
@@ -1927,7 +1927,7 @@ class OES(OP2Common):
                     self.obj.add(self.element_type, dt, indata)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [224, 225]: # nonlinear spring
@@ -1969,7 +1969,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(self.element_name, dt, eid, force, stress)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [35]:
@@ -2011,7 +2011,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
             return len(data)
@@ -2096,10 +2096,10 @@ class OES(OP2Common):
                     n += 204
 
             elif self.format_code == 1 and self.num_wide == numwide_random:  # random
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [85, 91, 93]:
@@ -2173,7 +2173,7 @@ class OES(OP2Common):
                          sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
                          ex, ey, ez, exy, eyz, exz) = out
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [100]:  # bars

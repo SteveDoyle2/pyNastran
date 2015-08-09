@@ -139,7 +139,7 @@ class ComplexPlateArray(OES_Object):
 
             if self.element_type == 144: # CQUAD4 bilinear
                 self._write_f06_quad4_bilinear_transient(f, itime, 4, is_mag_phase, 'CEN/4')
-            elif self.get_element_type == 33:  # CQUAD4 linear
+            elif self.element_type == 33:  # CQUAD4 linear
                 self._write_f06_tri3_transient(f, itime, 4, is_mag_phase, 'CEN/4')
             elif self.element_type == 74: # CTRIA3
                 self._write_f06_tri3_transient(f, itime, 3, is_mag_phase, 'CEN/3')
@@ -882,7 +882,7 @@ class ComplexPlateStrain(StrainObject):
                     f.write(''.join(msg))
                     msg = ['']
                     page_num += 1
-        elif self.get_element_type == 33:  # CQUAD4 linear
+        elif self.element_type == 33:  # CQUAD4 linear
             for dt in dts:
                 header[1] = ' %s = %10.4E\n' % (name, dt)
                 msg += header + msg_pack
@@ -938,6 +938,15 @@ class ComplexPlateStrain(StrainObject):
                 msg = ['']
                 page_num += 1
         else:
+    #FREQUENCY =  1.800000E+01
+        #C O M P L E X     S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+            #(MAGNITUDE/PHASE)
+
+    #ELEMENT       FIBER                                     -  STRAINS IN ELEMENT  COORDINATE SYSTEM -
+        #ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY
+#0   51001   -2.380000E-03      2.471426E-08 /   4.2486           2.662035E-08 / 183.7563           5.579315E-07 /   3.6197
+    #2.380000E-03      1.048796E-07 /   3.7203           1.379607E-08 / 183.9262           5.700372E-07 /   3.6174
+
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         return page_num - 1
 

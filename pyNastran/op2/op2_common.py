@@ -11,12 +11,7 @@ from pyNastran.utils import object_attributes
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.op2.op2Codes import Op2Codes
 
-
-class SortCodeError(RuntimeError):
-    pass
-
-class DeviceCodeError(SyntaxError):
-    pass
+from pyNastran.op2.errors import SortCodeError, DeviceCodeError
 
 
 class OP2Common(Op2Codes, F06Writer):
@@ -272,7 +267,7 @@ class OP2Common(Op2Codes, F06Writer):
             else:
                 #n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
                 #n = len(data)
-                msg = 'SORT2!'
+                msg = self.code_information()
                 n = self._not_implemented_or_skip(data, msg)
         elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
@@ -285,7 +280,7 @@ class OP2Common(Op2Codes, F06Writer):
             if self.is_sort1():
                 n = self._read_complex_table_sort1(data, result_name, node_elem)
             else:
-                msg = 'SORT2!'
+                msg = self.code_information()
                 #n = self._read_complex_table_sort2(data, result_name, node_elem)
                 n = self._not_implemented_or_skip(data, msg)
         else:

@@ -2,12 +2,15 @@ from __future__ import print_function
 from six.moves import range
 import sys
 from struct import unpack
-import copy
+from pyNastran.op2.errors import FortranMarkerError
 
 class FortranFormat(object):
     def __init__(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.n = 0
         self.f = None
@@ -123,23 +126,39 @@ class FortranFormat(object):
         These are used to indicate position in the file as well as
         the number of bytes to read.
 
-        :param self:    the OP2 object pointer
-        :param markers: markers to get; markers = [-10, 1]
+        Parameters
+        ----------
+
+        self : OP2
+            the OP2 object pointer
+        markers : List[int]
+            markers to get; markers = [-10, 1]
         """
         for i, marker in enumerate(markers):
             data = self.read_block()
             imarker, = unpack(b'i', data)
-            assert marker == imarker, 'marker=%r imarker=%r; markers=%s i=%s' % (marker, imarker, markers, i)
+            if marker != imarker:
+                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (marker, imarker, markers, i, self.table_name)
+                raise FortranMarkerError(msg)
             self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
     def get_nmarkers(self, n, rewind=True, macro_rewind=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
-        :param self:    the OP2 object pointer
-        :param n:        number of markers to get
-        :param rewind:   should the file be returned to the starting point
-        :retval markers: list of [1, 2, 3, ...] markers
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        n : int
+            number of markers to get
+        rewind : bool
+            should the file be returned to the starting point
+
+        Returns
+        -------
+        markers : List[int]
+            list of [1, 2, 3, ...] markers
         """
         ni = self.n
         markers = []
@@ -160,7 +179,10 @@ class FortranFormat(object):
 
     def _skip_subtables(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
@@ -182,7 +204,11 @@ class FortranFormat(object):
     def passer(self, data):
         """
         dummy function used for unsupported tables
-        :param self:    the OP2 object pointer
+
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         pass
 
@@ -194,7 +220,10 @@ class FortranFormat(object):
 
     def _read_subtables(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         # this parameters is used for numpy streaming
         self._data_factor = 1
@@ -279,6 +308,15 @@ class FortranFormat(object):
         # 0 - non-vectorized
         # 1 - 1st pass to size the array (vectorized)
         # 2 - 2nd pass to read the data  (vectorized)
+
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        table4_parser : function
+            the parser function for table 4
+        record_len : int
+            the length of the record block
         """
         datai = b''
         n = 0
@@ -497,7 +535,9 @@ class FortranFormat(object):
         if self.debug and debug:
             nrecord = len(record)
             self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
-        assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
+        if(markers0[0]*4) != len(record):
+            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (markers0[0]*4, len(record), self.table_name)
+            raise FortranMarkerError(msg)
         yield record
         self.istream += 1
 
@@ -531,7 +571,9 @@ class FortranFormat(object):
         if self.debug and debug:
             nrecord = len(record)
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
-        assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
+        if markers0[0]*4 != len(record):
+            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (markers0[0]*4, len(record), self.table_name)
+            raise FortranMarkerError(msg)
 
         markers1 = self.get_nmarkers(1, rewind=True)
 

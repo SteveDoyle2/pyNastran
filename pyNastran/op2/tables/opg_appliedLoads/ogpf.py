@@ -61,7 +61,8 @@ class OGPF(OP2Common):
                     #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
                     n += ntotal
             else:
-                raise NotImplementedError('num_wide = %s' % (self.num_wide))
+                msg = self.code_information()
+                return self._not_implemented_or_skip(data, msg)
 
             #complex_obj = complexGridPointForcesObject
 
@@ -73,5 +74,6 @@ class OGPF(OP2Common):
             #complex_obj = None
             #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
-            raise NotImplementedError(self.thermal)
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, msg)
         return n

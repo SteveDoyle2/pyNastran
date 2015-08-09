@@ -14,7 +14,7 @@ from scipy.sparse import coo_matrix
 
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.op2_common import SortCodeError, DeviceCodeError
+from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 #============================
@@ -141,7 +141,7 @@ RESULT_TABLES = [
 
     # buggy
     b'IBULK',
-    b'FRL',
+    #b'FRL',  # frequency response list
     b'TOL',
     b'DSCM2', # normalized design sensitivity coeff. matrix
 
@@ -482,6 +482,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'PERF': [self._table_passer, self._table_passer],
             b'VIEWTB': [self._table_passer, self._table_passer],   # view elements
 
+            #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
+
             #==================================
             b'OUGATO2': [self._table_passer, self._table_passer],
             b'OUGCRM2': [self._table_passer, self._table_passer],
@@ -762,6 +764,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         :param table_name: the first table's name
         """
         table_names = []
+        MATRIX_TABLES = [] # b'KELM',  b'MEFF'
         while table_name is not None:
             table_names.append(table_name)
 
@@ -778,22 +781,28 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             else:
                 if table_name in GEOM_TABLES:
                     self._read_geom_table()  # DIT (agard)
-                elif table_name in [b'GPL', ]:
+                elif table_name == b'GPL':
                     self._read_gpl()
-                elif table_name in [b'MEFF', ]:
+                elif table_name == b'MEFF':
                     self._read_meff()
-                elif table_name in [b'INTMOD', ]:
+                elif table_name == b'INTMOD':
                     self._read_intmod()
-                #elif table_name in [b'HISADD', ]:
+                #elif table_name == b'HISADD':
                     #self._read_hisadd()
+                elif table_name == b'FRL':  # frequency response list
+                    self._skip_table(self.table_name)
+                elif table_name == b'EXTDB':
+                    self._read_extdb()
+                elif table_name in [b'BHH', b'KHH']:
+                    self._read_bhh()
 
-                elif table_name in [b'OMM2', ]:
+                elif table_name == b'OMM2':
                     self._read_omm2()
-                elif table_name in [b'DIT']:  # tables
+                elif table_name == b'DIT':  # tables
                     self._read_dit()
-                elif table_name in [b'KELM']:
+                elif table_name == b'KELM':
                     self._read_kelm()
-                elif table_name in [b'PCOMPTS']: # blade
+                elif table_name == b'PCOMPTS': # blade
                     self._read_pcompts()
                 elif table_name == b'FOL':
                     self._read_fol()
@@ -802,6 +811,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 elif table_name in RESULT_TABLES:
                     self._read_results_table()
                 elif table_name.strip() in self.additional_matrices:
+                    self._read_matrix()
+                elif table_name in MATRIX_TABLES:
                     self._read_matrix()
                 else:
                     msg = 'geom/results split: %r\n\n' % table_name
@@ -1345,9 +1356,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             n -= 1
             markers = self.get_nmarkers(1, rewind=True)
 
-    def _read_meff(self):
+    def _read_extdb(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
@@ -1363,23 +1377,105 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 
-        for n in [-3, -4, -5, -6, -7, -8, ]:
+        #markers = self.get_nmarkers(3, rewind=False)
+        #print('markers =', markers)
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-5, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-6, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-7, 1, 0, 0])
+    #self.read_markers([-1])
+
+        #data = self._read_record()
+
+        #markers = self.get_nmarkers(3, rewind=False)
+        #print('markers =', markers)
+
+        #self.show_ndata(100)
+        #import sys
+        #sys.exit()
+
+    def _read_bhh(self):
+        """
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        """
+        self.table_name = self.read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+
+        n = -3
+        markers = self.get_nmarkers(3, rewind=True)
+        nmin = -1000
+        while nmin < n:
+        #for n in [-3, -4, -5, -6, -7, -8, -9, -10, -11]:
+            markers = self.get_nmarkers(3, rewind=False)
+            if markers[-1] == 0:
+                break
+            if markers[-1] != 1:
+                msg = 'expected marker=1; marker=%s; table_name=%r' % (markers[-1], self.table_name)
+                raise FortranMarkerError(msg)
+            #self.read_markers([n, 1, 1])
+            markers = self.get_nmarkers(1, rewind=False)
+            #print('markers =', markers)
+            nbytes = markers[0]*4 + 12
+            data = self.f.read(nbytes)
+            self.n += nbytes
+            n -= 1
+        assert n > nmin, 'infinite loop in BHH/KHH reader'
+        self.read_markers([0])
+
+    def _read_meff(self):
+        """
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        """
+        self.table_name = self.read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+
+        for n in [-3, -4, -5, -6, -7, -8]:
             self.read_markers([n, 1, 1])
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
             nbytes = markers[0]*4 + 12
             data = self.f.read(nbytes)
             self.n += nbytes
-
         n = -9
         self.read_markers([n, 1, 0, 0])
-        #data = self._read_record()
-
-        #self.table_name = self.read_table_name(rewind=False)
-        #self.log.info('table_name2 = %r' % self.table_name)
-
-        #self.show(50)
-        #raise NotImplementedError(self.table_name)
 
     def _read_intmod(self):
         """reads the INTMOD table"""
@@ -1513,7 +1609,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             subtable_name, = unpack(b'8s', data)
         else:
             strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % len(data)
+            msg = 'Unhandled table length error\n'
+            msg += 'table_name = %s\n' % self.table_name
+            msg += 'len(data) = %i\n' % len(data)
             msg += 'strings  = %r\n' % strings
             msg += 'ints     = %r\n' % str(ints)
             msg += 'floats   = %r' % str(floats)
@@ -1521,6 +1619,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.subtable_name = subtable_name.rstrip()
         self._read_subtables()
+
+    def _read_frl(self):
+        #self.log.debug("table_name = %r" % self.table_name)
+        #self.table_name = self.read_table_name(rewind=False)
+        #self.read_markers([-1])
+        #data = self._read_record()
+
+        #self.read_markers([-2, 1, 0])
+        #data = self._read_record()
+        self._skip_table(self.table_name)
+
 
     def _read_sdf(self):
         """
