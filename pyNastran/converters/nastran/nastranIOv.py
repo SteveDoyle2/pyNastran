@@ -230,15 +230,18 @@ class NastranIO(object):
         else:
             self.TurnTextOff()
             self.grid.Reset()
-            self.grid2.Reset()
+            #self.grid2.Reset()
 
             # create alt grids
             yellow = (1., 1., 0.)
             pink = (0.98, 0.4, 0.93)
+            orange = (227/255., 112/255., 11/255.)
             if 'caero' not in self.alt_grids.keys():
                 self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0)
             if 'caero_sub' not in self.alt_grids.keys():
                 self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0)
+            if 'conm' not in self.alt_grids.keys():
+                self.create_alternate_vtk_grid('conm', color=orange, line_width=3, opacity=1.0)
             #print('alt_grids', self.alt_grids.keys())
 
             #self.gridResult = vtk.vtkFloatArray()
@@ -348,11 +351,11 @@ class NastranIO(object):
 
         # Allocate grids
         self.grid.Allocate(self.nElements, 1000)
-        self.grid2.Allocate(nCONM2, 1000)
         self.alt_grids['caero'].Allocate(ncaeros, 1000)
         self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
         if has_control_surface:
             self.alt_grids['caero_cs'].Allocate(ncaeros_cs, 1000)
+        self.alt_grids['conm'].Allocate(nCONM2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -418,10 +421,7 @@ class NastranIO(object):
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
-
         j = 0
-        points2 = vtk.vtkPoints()
-
         nsprings = 0
         if 0:
             for eid, element in sorted(iteritems(model.elements)):
@@ -448,6 +448,7 @@ class NastranIO(object):
         self.set_caero_subpanel_grid(ncaero_sub_points, model)
         if has_control_surface:
             self.set_caero_control_surface_grid(cs_box_ids, box_id_to_caero_element_map, caero_points)
+        self.set_conm_grid(nCONM2, dim_max, model)
 
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
@@ -470,6 +471,8 @@ class NastranIO(object):
             else:
                 self.geometry_actors['caero_cs'].VisibilityOn()
 
+        self.geometry_actors['conm'].VisibilityOn()
+
         self.geometry_actors['caero'].Modified()
         self.geometry_actors['caero_sub'].Modified()
         if has_control_surface:
@@ -481,37 +484,10 @@ class NastranIO(object):
         if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
                 self.geometry_actors['caero_cs'].Update()
 
-
-        points2.SetNumberOfPoints(nCONM2 + nsprings)
-
-        sphere_size = self._get_sphere_size(dim_max)
-        for eid, element in sorted(iteritems(model.masses)):
-            if isinstance(element, CONM2):
-                #del self.eidMap[eid]
-
-                #print("element", element)
-                #print("element.nid", element.nid)
-                #print('nodeIDs', model.nodes.keys())
-                xyz = element.nid.Position()
-                c = element.Centroid()
-                d = norm(xyz-c)
-                elem = vtk.vtkVertex()
-                #elem = vtk.vtkSphere()
-
-                if d == 0.:
-                    d = sphere_size
-                #elem.SetRadius(d)
-                #elem.SetCenter(points.GetPoint(self.nidMap[nid]))
-                #print(str(element))
-
-                points2.InsertPoint(j, *c)
-                elem.GetPointIds().SetId(0, j)
-                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                j += 1
-            else:
-                self.log_info("skipping %s" % element.type)
+        self.geometry_actors['conm'].Modified()
+        #self.geometry_actors['conm'].Update()
         #print('j = ', j)
-        self.mapElements(points, points2, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+        self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
     def set_caero_grid(self, ncaeros_points, model, j=0):
         """
@@ -612,10 +588,36 @@ class NastranIO(object):
         self.alt_grids['caero_cs'].SetPoints(points)
         return j
 
+    def set_conm_grid(self, nCONM2, dim_max, model, j=0):
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nCONM2)
+
+        sphere_size = self._get_sphere_size(dim_max)
+        for eid, element in sorted(iteritems(model.masses)):
+            if isinstance(element, CONM2):
+                xyz = element.nid.Position()
+                c = element.Centroid()
+                #d = norm(xyz - c)
+                points.InsertPoint(j, *c)
+
+                elem = vtk.vtkVertex()
+                #elem = vtk.vtkSphere()
+
+                #if d == 0.:
+                    #d = sphere_size
+                #elem.SetRadius(sphere_size)
+                #elem.SetCenter(points.GetPoint(j))
+                elem.GetPointIds().SetId(0, j)
+                self.alt_grids['conm'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                j += 1
+            else:
+                self.log_info("skipping %s" % element.type)
+        self.alt_grids['conm'].SetPoints(points)
+
     def _get_sphere_size(self, dim_max):
         return 0.05 * dim_max
 
-    def mapElements(self, points, points2, nidMap, model, j, dim_max,
+    def mapElements(self, points, nidMap, model, j, dim_max,
                     plot=True, xref_loads=True):
         sphere_size = self._get_sphere_size(dim_max)
         #self.eidMap = {}
@@ -959,7 +961,7 @@ class NastranIO(object):
         pids = pids[:nelements]
         #print('len(pids) = ', len(pids))
         self.grid.SetPoints(points)
-        self.grid2.SetPoints(points2)
+        #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         #print(dir(self.grid)) #.SetNumberOfComponents(0)
         #self.grid.GetCellData().SetNumberOfTuples(1);
