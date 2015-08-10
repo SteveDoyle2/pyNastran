@@ -361,7 +361,51 @@ class PBEAM(IntegratedLineProperty):
                         raise ValueError(msg)
 
             ifield += 16
-            assert len(card) <= ifield, 'len(card)=%s is too long; max=%s' % (len(card), ifield)
+            if len(card) > ifield:
+                msg = 'len(card)=%s is too long; max=%s\n' % (len(card), ifield)
+                msg += 'You probably have a empty line after the YESA/NO line.\n'
+                msg += 'The next line must have K1.\n'
+                msg += 'pid = %s\n' % self.pid
+                msg += 'mid = %s\n' % self.mid
+                msg += 's0 = %s\n' % self.so
+                msg += 'xxb = %s\n' % self.xxb
+
+                msg += 'A = %s\n' % self.A
+                msg += 'i1 = %s\n' % self.i1
+                msg += 'i2 = %s\n' % self.i2
+                msg += 'i12 = %s\n' % self.i12
+                msg += 'j = %s\n' % self.j
+                msg += 'nsm = %s\n\n' % self.nsm
+
+                msg += 'c1 = %s\n' % self.c1
+                msg += 'c2 = %s\n' % self.c2
+                msg += 'd1 = %s\n' % self.d1
+                msg += 'd2 = %s\n' % self.d2
+                msg += 'e1 = %s\n' % self.e1
+                msg += 'e2 = %s\n' % self.e2
+                msg += 'f1 = %s\n' % self.f1
+                msg += 'f2 = %s\n\n' % self.f2
+
+                msg += 'k1 = %s\n' % self.k1
+                msg += 'k2 = %s\n' % self.k2
+                msg += 's1 = %s\n' % self.s1
+                msg += 's2 = %s\n' % self.s2
+                msg += 'nsia = %s\n' % self.nsia
+                msg += 'nsib = %s\n\n' % self.nsib
+
+                msg += 'cwa = %s\n' % self.cwa
+                msg += 'cwb = %s\n' % self.cwb
+                msg += 'm1a = %s\n' % self.m1a
+                msg += 'm2a = %s\n' % self.m2a
+                msg += 'mb1 = %s\n' % self.m1b
+                msg += 'm2b = %s\n' % self.m2b
+                msg += 'n1a = %s\n' % self.n1a
+                msg += 'n2a = %s\n' % self.n2a
+                msg += 'n1b = %s\n' % self.n1b
+                msg += 'n2b = %s\n' % self.n2b
+
+
+                raise RuntimeError(msg)
         else:
             raise NotImplementedError(data)
 
