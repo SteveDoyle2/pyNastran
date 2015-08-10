@@ -9,6 +9,7 @@ DMIIN DMI,DMINDX/A,B,MYDOF,,,,,,,/ $
 MPYAD A,B,/ATB/1///$
 MPYAD B,A,/BTA/1///$
 OUTPUT2 A,B,ATB,BTA,MYDOF//0/15$
+MATPRN A,B,ATB,BTA,MYDOF/$
 CEND
 $
 BEGIN BULK
@@ -17,11 +18,11 @@ $DMI 	NAME	0	 FORM 	TIN 	TOUT 	M 	N
 $
 DMI	A	0	2	1	1		4	2
 DMI	A	1 	1 	1. 	3. 	5.
-DMI	A	2 	2 	6. 	4 	8.   
+DMI	A	2 	2 	6. 	4 	8.
 $
 DMI	B	0	2	1	1		4	2
 DMI	B	1 	1 	1. 	3. 	5.
-DMI	B	2 	2 	6. 	4 	8.   
+DMI	B	2 	2 	6. 	4 	8.
 $
 DMI     MYDOF   0       2       1       1               36      1
 DMI     MYDOF   1       1       -1.0    1.0     1.0     -1.0    1.0     +

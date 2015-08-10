@@ -136,28 +136,15 @@ class CameraWindow(QtGui.QDialog):
         camera_data = self.cameras[name]
         if self.win_parent is None:
             return
-        self.win_parent.on_set_camera_data(camera_data)
+        self.win_parent.set_camera_data(camera_data)
 
     def save_camera(self, name):
         self.names.append(name)
         if self.win_parent is None:
             self.cameras[name] = None
             return
-        camera = self.win_parent.rend.GetActiveCamera()
-        position = camera.GetPosition()
-        focal_point = camera.GetFocalPoint()
-        view_angle = camera.GetViewAngle()
-        view_up = camera.GetViewUp()
-        clip_range = camera.GetClippingRange()  # TODO: do I need this???
 
-        parallel_scale = camera.GetParallelScale()  # TODO: do I need this???
-        #parallel_proj = GetParralelProjection()
-        parallel_proj = 32.
-
-        distance = camera.GetDistance()
-
-        # clip_range, view_up, distance
-        self.cameras[name] = [position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance]
+        self.cameras[name] = self.win_parent.get_camera_data()
 
     #@property
     #def camera(self):

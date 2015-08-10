@@ -169,6 +169,10 @@ class LOAD(LoadCombination):
         return msg, loadIDs, loadTypes
 
     def getReducedLoads(self):
+        self.deprecated('self.getReducedLoads()', 'self.get_reduced_loads()', '0.8')
+        return self.get_reduced_loads()
+
+    def get_reduced_loads(self):
         """
         Get all load objects in a simplified form, which means all
         scale factors are already applied and only base objects

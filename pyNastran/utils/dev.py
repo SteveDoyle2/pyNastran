@@ -27,8 +27,14 @@ def list_print(lst, float_fmt='%-4.2f'):
     Prints a list, numpy array, or numpy matrix in an abbreviated format.
     Supported element types: None, string, numbers. Useful for debugging.
 
-    :param lst: list, numpy array or numpy matrix
-    :returns: the clean string representation of the object
+    Parameters
+    ----------
+    lst : list / numpy array / numpy matrix
+
+    Returns
+    -------
+    msg : str
+        the clean string representation of the object
     """
     def _print(val):
         if val is None or isinstance(val, string_types):

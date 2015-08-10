@@ -61,7 +61,7 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
 
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
-    def __init__(self, html_logging, inputs):
+    def __init__(self, fmt_order, html_logging, inputs):
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self)
 
@@ -84,6 +84,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
+        self.is_edges_black = self.is_edges
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
@@ -100,6 +101,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # file
         self.menu_bar_format = None
         self.format = None
+        self.fmts = fmt_order
         self.infile_name = None
         self.out_filename = None
         self.dirname = ''
@@ -321,10 +323,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
+                ('edges_black', 'Color Edges', '', None, 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.set_actor_properties),
-
-                ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
-                ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
@@ -357,6 +357,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
                 ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
+            ]
+        if 'nastran' in self.fmts:
+            tools += [
+                ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
+                ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
             ]
         self.tools = tools
         self.checkables = checkables
@@ -410,7 +415,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'scshot', '', 'wireframe', 'surface', 'creset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
-            'legend', 'axis',
+            'legend', 'axis', 'edges_black',
         ]
         if self.html_logging:
             self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
@@ -757,8 +762,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def create_global_axes(self):
         self.transform = {}
         self.axes = {}
-        #self.create_coordinate_system(origin=None, matrix_3x3=None, Type='Rtp')
         self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz')
+
+    def create_corner_axis(self):
+        axes = vtk.vtkAxesActor()
+        self.corner_axis = vtk.vtkOrientationMarkerWidget()
+        self.corner_axis.SetOrientationMarker(axes)
+        self.corner_axis.SetInteractor(self.vtk_interactor)
+        self.corner_axis.SetEnabled(1)
+        self.corner_axis.InteractiveOff()
 
     def on_show_hide_axes(self):
         """
@@ -818,13 +830,35 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.setCentralWidget(self.vtk_frame)
 
         #=============================================================
+        # +-----+-----+
+        # |     |     |
+        # |  A  |  B  |
+        # |     |     |
+        # +-----+-----+
+        # xmin, xmax, ymin, ymax
+        nframes = 1
+        #nframes = 2
+        if nframes == 2:
+            # xmin, ymin, xmax, ymax
+            frame1 = [0., 0., 0.5, 1.0]
+            frame2 = [0.5, 0., 1., 1.0]
+            #frames = [frame1, frame2]
+            self.rend.SetViewport(*frame1)
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
+
+        if nframes == 2:
+            rend = vtk.vtkRenderer()
+            rend.SetViewport(*frame2)
+            self.vtk_interactor.GetRenderWindow().AddRenderer(rend)
+
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
 
         #for cid, axes in iteritems(self.axes):
             #self.rend.AddActor(axes)
         self.addGeometry()
+        if nframes == 2:
+            rend.AddActor(self.geom_actor)
 
         # initialize geometry_actors
         self.geometry_actors = {
@@ -951,6 +985,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._update_camera()
         #self.refresh()
         self.log_command('on_flip_edges()')
+
+    def on_set_edge_visibility(self):
+        #self.edgeActor.SetVisibility(self.is_edges_black)
+        self.is_edges_black = not self.is_edges_black
+        if self.is_edges_black:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOn()
+        else:
+            prop = self.edgeActor.GetProperty()
+            prop.EdgeVisibilityOff()
+        self.edgeActor.Modified()
+        prop.Modified()
+        self.vtk_interactor.Render()
 
     def get_edges(self):
         """
@@ -1338,7 +1385,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.init_cell_picker()
 
         self.restoreState(settings.value("mainWindowState").toByteArray())
-
+        self.create_corner_axis()
         #-------------
         # loading
         self.show()
@@ -1415,12 +1462,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                         method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
                             methodi = getattr(self, method)
-                            methodi(world_position, cell_id)
+                            return_flag, value = methodi(world_position, cell_id)
+                            if return_flag is True:
+                                return
                         else:
                             msg = "pick_state is set to 'nodal', but the result is 'centroidal'\n"
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
                             self.log_error(msg)
                         return
+
+                    self.log_info("%s = %s" % (result_name, result_value))
                 else:
                     if self.pick_state == 'nodal':
                         result_name, result_value, node_id, xyz = self.get_result_by_xyz_cell_id(world_position, cell_id)
@@ -1431,19 +1482,23 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                         method = 'get_nodal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
                             methodi = getattr(self, method)
-                            methodi(world_position, cell_id)
+                            return_flag, value = methodi(world_position, cell_id)
+                            if return_flag is True:
+                                return
                         else:
                             msg = "pick_state is set to 'centroidal', but the result is 'nodal'\n"
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
                             self.log_error(msg)
                         return
+                    msg = "%s = %s" % (result_name, result_value)
+                    if self.result_name in ['Node_ID', 'Node ID', 'NodeID']:
+                        msg += '; xyz=(%s, %s, %s)' % tuple(xyz)
+                    self.log_info(msg)
 
                 #print('key=%s exists=%s' % (duplicate_key, duplicate_key in self.label_ids[result_name]))
                 if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
                     return
                 self.label_ids[result_name].add(duplicate_key)
-                self.log_info("%s = %s" % (result_name, result_value))
-
 
                 #x, y, z = world_position
                 x, y, z = xyz
@@ -2187,12 +2242,29 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.cameras = deepcopy(data['cameras'])
         #self.on_set_camera(name)
 
-    def on_set_camera(self, name):
+    def on_set_camera(self, name, show_log=True):
         camera_data = self.cameras[name]
         #position, clip_range, focal_point, view_up, distance = camera_data
-        self.on_set_camera_data(camera_data)
+        self.on_set_camera_data(camera_data, show_log=show_log)
 
-    def on_set_camera_data(self, camera_data):
+    def get_camera_data(self):
+        camera = self.rend.GetActiveCamera()
+        position = camera.GetPosition()
+        focal_point = camera.GetFocalPoint()
+        view_angle = camera.GetViewAngle()
+        view_up = camera.GetViewUp()
+        clip_range = camera.GetClippingRange()  # TODO: do I need this???
+
+        parallel_scale = camera.GetParallelScale()  # TODO: do I need this???
+        #parallel_proj = GetParralelProjection()
+        parallel_proj = 32.
+        distance = camera.GetDistance()
+
+        # clip_range, view_up, distance
+        camera_data = [position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance]
+        return camera_data
+
+    def set_camera_data(self, camera_data, show_log=True):
         #position, clip_range, focal_point, view_up, distance = camera_data
         position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
 
@@ -2210,8 +2282,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         camera.Modified()
         self.vtk_interactor.Render()
-        self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
-                         % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
+        if show_log:
+            self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
+                             % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
 
     #---------------------------------------------------------------------------------------
     # LEGEND MENU

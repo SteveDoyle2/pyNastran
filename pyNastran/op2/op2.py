@@ -120,7 +120,7 @@ class OP2(OP2_Scalar):
         assert self.ask in [True, False], self.ask
         self.is_vectorized = vectorized
         if self.is_vectorized:
-            self.log.info('-------- reading op2 with read_mode=1 --------')
+            self.log.debug('-------- reading op2 with read_mode=1 --------')
             self.read_mode = 1
             self._close_op2 = False
 
@@ -132,7 +132,7 @@ class OP2(OP2_Scalar):
             # TODO: clear out objects the user doesn't want
             self.read_mode = 2
             self._close_op2 = True
-            self.log.info('-------- reading op2 with read_mode=2 --------')
+            self.log.debug('-------- reading op2 with read_mode=2 --------')
             OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
         else:
             self.read_mode = 0
@@ -166,7 +166,7 @@ class OP2(OP2_Scalar):
         """
         if not combine:
             return
-        self.log.info('compress_results')
+        self.log.debug('compress_results')
         result_types = self.get_table_types()
 
         for result_type in result_types:

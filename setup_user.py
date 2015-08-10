@@ -62,14 +62,18 @@ setup(name='pyNastran',
           #'cython',
       ],#{'': ['license.txt']}
       #package_data={'': ['*.png']},
-      data_files=[(icon_path, icon_files2)],
-
+      #data_files=[(icon_path, icon_files2)],
+      package_data = {
+        # If any package contains *.png files, include them:
+        '': ['*.png'],
+        #'mypkg': ['data/*.dat'],
+      },
       entry_points = {
         'console_scripts': [
                             'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
                             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
                             'test_op2  = pyNastran.op2.test.test_op2:main',
-                            'test_op4  = pyNastran.op2.test.test_op4:main',
+                            'test_op4  = pyNastran.op4.test.test_op4:main',
                             'test_f06  = pyNastran.f06.test.test_f06:main',
 
                             'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',

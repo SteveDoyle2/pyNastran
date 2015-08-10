@@ -23,14 +23,14 @@ from six.moves import zip, range
 
 import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty
-from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32
+from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross
 from numpy.linalg import norm
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
-                 vtkPyramid, vtkQuadraticPyramid)
+                 vtkPyramid) #vtkQuadraticPyramid
 
 #from pyNastran import is_release
 from pyNastran.bdf.bdf import (BDF,
@@ -309,11 +309,11 @@ class NastranIO(object):
                     pointsi, elementsi = caero.panel_points_elements()
                     caero_points.append(pointsi)
                     for i, box_id in enumerate(caero.box_ids.flat):
-                        box_id_to_caero_element_map[box_id] = elementsi[i,:] + num_prev
+                        box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
             caero_points = vstack(caero_points)
         else:
-            caero_points = empty((0,3))
+            caero_points = empty((0, 3))
 
         # check for any control surfcaes
         has_control_surface = False
@@ -433,15 +433,6 @@ class NastranIO(object):
                     node_ids = element.node_ids
                     if None in node_ids:
                         nsprings += 1
-
-        # set colors if they haven't been set
-        if 0:
-            if 'caero' in self.geometry_properties and self.geometry_properties['caero'].color is None:
-                self.geometry_properties['caero'].color = (1., 1., 0.)
-            if 'caero_sub' in self.geometry_properties and self.geometry_properties['caero_sub'].color is None:
-                self.geometry_properties['caero_sub'].color = (1., 1., 0.)
-            if 'caero_cs' in self.geometry_properties and self.geometry_properties['caero_cs'].color is None:
-                self.geometry_properties['caero_cs'].color = (0.98, 0.4, 0.93)
 
         # fill caero grids
         self.set_caero_grid(ncaeros_points, model)
@@ -1036,8 +1027,8 @@ class NastranIO(object):
             form0.append(('Property_ID', icase, []))
             icase += 1
 
-        icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
-        #self._plot_applied_loads(model, cases, icase)
+        #icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
+        #icase = self._plot_applied_loads(model, cases, form0, icase)
 
         if 0:
             nxs = []
@@ -1093,7 +1084,11 @@ class NastranIO(object):
                 load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
             except KeyError:
                 continue
-            loadCase = model.loads[load_case_id]
+            try:
+                loadCase = model.loads[load_case_id]
+            except KeyError:
+                self.log.warning('LOAD=%s not found' % load_case_id)
+                continue
 
             # account for scale factors
             loads2 = []
@@ -1113,8 +1108,8 @@ class NastranIO(object):
             iload = 0
             # loop thru scaled loads and plot the pressure
             for load, scale in zip(loads2, scale_factors2):
-                if iload % 1000 == 0:
-                    print('iload=%s' % iload)
+                if iload % 5000 == 0:
+                    print('NastranIOv iload=%s' % iload)
                 if load.type == 'PLOAD4':
                     elem = load.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
@@ -1132,76 +1127,158 @@ class NastranIO(object):
                         #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                         #r = centroid - p
                 iload += 1
-            print('iload=%s' % iload)
             # if there is no applied pressure, don't make a plot
             if abs(pressures).max():
                 case_name = 'Pressure Case=%i' % subcase_id
-                print(case_name)
+                # print('iload=%s' % iload)
+                # print(case_name)
                 # subcase_id, resultType, vector_size, location, dataFormat
                 cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
                 form0.append((case_name, icase, []))
                 icase += 1
         return icase
 
-    def _plot_applied_loads(self, model, cases, icase):
-        if not self.is_nodal:
-            return
+    def _plot_applied_loads(self, model, cases, form0, icase):
+        # if not self.is_nodal:
+            # return
         try:
-            sucaseIDs = model.caseControlDeck.get_subcase_list()
+            sucase_ids = model.caseControlDeck.get_subcase_list()
         except AttributeError:
             return icase
 
-        for subcase_id in sucaseIDs:
+        for subcase_id in sucase_ids:
             if subcase_id == 0:
                 continue
-            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
-            loadCase = model.loads[load_case_id]
 
-            # account for scale factors
-            loads2 = []
-            scale_factors2 = []
-            for load in loadCase:
-                if isinstance(load, LOAD):
-                    scale_factors, loads = load.getReducedLoads()
-                    scale_factors2 += scale_factors
-                    loads2 += loads
-                else:
-                    scale_factors2.append(1.)
-                    loads2.append(load)
+            try:
+                load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
+            except KeyError:
+                continue
+            try:
+                loadCase = model.loads[load_case_id]
+            except KeyError:
+                self.log.warning('LOAD=%s not found' % load_case_id)
+                continue
 
             #eids = sorted(model.elements.keys())
             nids = sorted(model.nodes.keys())
-            loads = zeros((self.nNodes, 3), dtype='float32')
+            p0 = array([0., 0., 0.], dtype='float32')
+            pressures, forces = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
 
-            # loop thru scaled loads and plot the pressure
-            for load, scale in zip(loads2, scale_factors2):
-                if load.type == 'FORCE':
-                    scale2 = load.mag * scale  # does this need a magnitude?
-                    nid = load.node
-                    loads[nids.index(nid)] += load.xyz * scale2
-                elif load.type == 'PLOAD4':  # centrodial, skipping
-                    continue  ## TODO: should be removed
-                    #elem = load.eid
-                    #if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
-                        #eid = elem.eid
-                        #node_ids = elem.node_ids
-                        #k = load.pressures[0] * scale / 3.
-                        ## TODO: doesn't consider load.eids for distributed pressures???
-                        #for nid in node_ids[3:]:
-                            #pressures[eids.index(nid)] += k
-                    #if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                        #eid = elem.eid
-                        #node_ids = elem.node_ids
-                        #k = load.pressures[0] * scale / 4.
-                        ## TODO: doesn't consider load.eids for distributed pressures???
-                        #for nid in node_ids[4:]:
-                            #pressures[eids.index(nid)] += k
-            if loads[:, 0].min() != loads[:, 0].max():
-                cases[(subcase_id, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 0]
-            if loads[:, 1].min() != loads[:, 1].max():
-                cases[(subcase_id, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 1]
-            if loads[:, 2].min() != loads[:, 2].max():
-                cases[(subcase_id, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 2]
+            if abs(pressures).max():
+                case_name = 'Pressure Case=%i' % subcase_id
+                # print('iload=%s' % iload)
+                # print(case_name)
+                # subcase_id, resultType, vector_size, location, dataFormat
+                cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
+                form0.append((case_name, icase, []))
+                icase += 1
+
+            if abs(forces.max() - forces.min()) > 0.0:
+                print('plot applied loads loadcase =', load_case_id)
+                # if forces[:, 0].min() != forces[:, 0].max():
+                cases[(subcase_id, icase, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 0]
+                # if forces[:, 1].min() != forces[:, 1].max():
+                cases[(subcase_id, icase+1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
+                # if forces[:, 2].min() != forces[:, 2].max():
+                cases[(subcase_id, icase+1, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
+
+                form = []
+                form0.append(('Load Case=%i' % subcase_id, None, form))
+                form.append(('Total Load FX', icase, []))
+                form.append(('Total Load FY', icase + 1, []))
+                form.append(('Total Load FZ', icase + 2, []))
+                icase += 2
+        return icase
+
+    def _get_forces_moments_array(self, model, p0, load_case_id, include_grav=False):
+        nids = sorted(model.nodes.keys())
+        nnodes = len(nids)
+
+
+        loadCase = model.loads[load_case_id]
+
+        # account for scale factors
+        loads2 = []
+        scale_factors2 = []
+        for load in loadCase:
+            if isinstance(load, LOAD):
+                scale_factors, loads = load.getReducedLoads()
+                scale_factors2 += scale_factors
+                loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+
+        eids = sorted(model.elements.keys())
+        pressures = zeros(len(model.elements), dtype='float32')
+
+        forces = zeros((nnodes, 3), dtype='float32')
+        # loop thru scaled loads and plot the pressure
+        for load, scale in zip(loads2, scale_factors2):
+            if load.type == 'FORCE':
+                scale2 = load.mag * scale  # does this need a magnitude?
+                nid = load.node
+                forces[nids.index(nid)] += load.xyz * scale2
+
+            elif load.type == 'PLOAD2':
+                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                for eid in load.eids:
+                    elem = self.elements[eid]
+                    if elem.type in ['CTRIA3',
+                                     'CQUAD4', 'CSHEAR']:
+                        node_ids = elem.node_ids
+                        nnodes = len(node_ids)
+                        n = elem.Normal()
+                        area = elem.Area()
+                        f = pressure * n * area / nnodes
+                        # r = elem.Centroid() - p0
+                        # m = cross(r, f)
+                        for nid in node_ids:
+                            forces[nids.index(nid)] += f
+                        forces += f
+                        # F += f
+                        # M += m
+                    else:
+                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (load_case_id, elem.type, load.type))
+
+            elif load.type == 'PLOAD4':
+                continue  ## TODO: should be removed
+                # elem = load.eid
+                # A = elem.get_area()
+                if 0:
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                        eid = elem.eid
+                        node_ids = elem.node_ids
+                        k = load.pressures[0] * scale / 3.
+                        # TODO: doesn't consider load.eids for distributed pressures???
+                        for nid in node_ids[3:]:
+                            pressures[eids.index(nid)] += k
+                    elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        eid = elem.eid
+                        node_ids = elem.node_ids
+                        k = load.pressures[0] * scale / 4.
+                        # TODO: doesn't consider load.eids for distributed pressures???
+                        for nid in node_ids[4:]:
+                            pressures[eids.index(nid)] += k
+
+                else:
+                    # single element per PLOAD
+                    #eid = elem.eid
+                    #pressures[eids.index(eid)] = p
+
+                    p = load.pressures[0] * scale
+
+                    # multiple elements
+                    for el in load.eids:
+                        # pressures[eids.index(el.eid)] += p
+                        A = el.get_area()
+                        F = p * A * scale
+                        for nid in el.node_ids:
+                            forces[nids.index(nid)] += F
+                #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+
+        return pressures, forces
 
     def load_nastran_results(self, op2_filename, dirname):
         """

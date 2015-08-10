@@ -140,14 +140,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Initializes the BDF object
 
-        :param self:  the BDF object
-        :param debug: used to set the logger if no logger is passed in
-                      True:  logs debug/info/error messages
-                      False: logs info/error messages
-                      None:  logs error messages
-        :param log:   a python logging module object;
-                      if log is set, debug is ignored and uses the
-                      settings the logging object has
+        Parameters
+        ----------
+        self :  BDF()
+            the BDF object
+        debug : bool/None
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
         """
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
@@ -991,15 +995,22 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         Catch parsing errors and store them up to print them out all at once
         (not all errors are caught).
 
-        :param self:                  the BDF object
-        :param nparse_errors:         how many parse errors should be stored
-                                      (default=0; all=None; no storage=0)
-        :param stop_on_parsing_error: should an error be raised if there
-                                      are parsing errors (default=True)
-        :param nxref_errors:          how many cross-reference errors
-                                      should be stored (default=0; all=None; no storage=0)
-        :param stop_on_xref_error:    should an error be raised if there
-                                      are cross-reference errors (default=True)
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        nparse_errors : int
+            how many parse errors should be stored
+            (default=0; all=None; no storage=0)
+        stop_on_parsing_error : bool
+            should an error be raised if there
+            are parsing errors (default=True)
+        nxref_errors : int
+            how many cross-reference errors
+            should be stored (default=0; all=None; no storage=0)
+        stop_on_xref_error : bool
+            should an error be raised if there
+            are cross-reference errors (default=True)
         """
         self._nparse_errors = nparse_errors
         self._nxref_errors = nxref_errors
@@ -1011,11 +1022,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Read method for the bdf files
 
-        :param self:         the BDF object
-        :param bdf_filename: the input bdf (default=None; popup a dialog)
-        :param xref:  should the bdf be cross referenced (default=True)
-        :param punch: indicates whether the file is a punch file (default=False)
-        :param encoding:  the unicode encoding (default=None; system default)
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        bdf_filename : str / None
+            the input bdf (default=None; popup a dialog)
+        xref :  bool
+            should the bdf be cross referenced (default=True)
+        punch : bool
+            indicates whether the file is a punch file (default=False)
+        encoding : str
+            the unicode encoding (default=None; system default)
 
         .. code-block:: python
 
@@ -1299,10 +1317,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Updates the overall solution type (e.g. 101,200,600)
 
-        :param self:      the object pointer
-        :param sol:       the solution type (101,103, etc)
-        :param method:    the solution method (only for SOL=600)
-        :param isol_line: the line to put the SOL/method on
+        Parameters
+        ----------
+        self : BDF
+            the object pointer
+        sol : int
+            the solution type (101,103, etc)
+        method : str
+            the solution method (only for SOL=600)
+        isol_line : int
+            the line to put the SOL/method on
         """
         self.iSolLine = isol_line
         # the integer of the solution type (e.g. SOL 101)
@@ -1331,8 +1355,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
 
-        :param self:         the BDF object
-        :param dict_of_vars: dictionary of 7 character variable names to map.
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        dict_of_vars : dict[str] = int/float/str
+            dictionary of 7 character variable names to map.
 
         .. code-block:: python
 
@@ -1368,8 +1396,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         If the card is rejected, it's added to self.reject_count
 
-        :param self: the BDF object
-        :param card_name: the card_name -> 'GRID'
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        card_name : str
+            the card_name -> 'GRID'
         """
         if card_name.startswith('='):
             return False
@@ -1386,10 +1418,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         Converts card_lines into a card.
         Considers dynamic syntax and removes empty fields
 
-        :param self:        the BDF object
-        :param card_lines:  list of strings that represent the card's lines
-        :returns fields:    the parsed card's fields
-        :returns card_name: the card's name
+        Parameters
+        ----------
+        self:        the BDF object
+        card_lines:  list of strings that represent the card's lines
+
+        Returns
+        -------
+        fields : list[str]
+            the parsed card's fields
+        card_name : str
+            the card's name
 
         .. code-block:: python
 
@@ -1439,21 +1478,32 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Adds a card object to the BDF object.
 
-        :param self:       the BDF object
-        :param card_lines: the list of the card fields
-        :param card_name: the card_name -> 'GRID'
-        :param comment:   an optional the comment for the card
-        :param is_list:   changes card_lines from a list of lines to
-                          a list of fields
-        :returns card_object: the card object representation of card
+        Parameters
+        ----------
+        self : BDF
+            the BDF object
+        card_lines: list[str]
+            the list of the card fields
+        card_name : str
+            the card_name -> 'GRID'
+        comment : str
+            an optional the comment for the card
+        is_list : bool, optional
+            False : input is a list of card fields -> ['GRID', 1, 2, 3.0, 4.0, 5.0]
+            True :  input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
+
+        Returns
+        -------
+        card_object : BDFCard()
+            the card object representation of card
 
         .. code-block:: python
 
           >>> model = BDF()
 
-          # is_list is a somewhat misleading name; is it a list of card_lines?
+          # is_list is a somewhat misleading name; is it a list of card_lines
           # where a card_line is an unparsed string
-          >>> card_lines =['GRID,1,2']
+          >>> card_lines = ['GRID,1,2']
           >>> comment = 'this is a comment'
           >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
 
@@ -1805,7 +1855,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Print statistics for the BDF
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+
+        Returns
+        -------
+        return_type : str, optional
+            the output type ('list', 'string')
+                'list' : list of strings
+                'string' : single, joined string
+
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
         """
@@ -1976,9 +2037,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Returns the name of the card defined by the provided lines
 
-        :param self:  the BDF object
-        :param lines: the lines of the card
-        :returns card_name: the name of the card
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        lines : list[str]
+            the lines of the card
+
+        Returns
+        -------
+        card_name : str
+            the name of the card
         """
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:
@@ -2018,12 +2087,22 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Opens the bdf and extracts the lines
 
-        :param bdf_filename: the main bdf_filename
-        :param punch: is this a punch file (default=False; no executive/case control decks)
+        Parameters
+        ----------
 
-        :retval executive_control_lines:  the executive control deck as a list of strings
-        :retval case_control_lines:  the case control deck as a list of strings
-        :retval bulk_data_lines:  the bulk data deck as a list of strings
+        bdf_filename : str
+            the main bdf_filename
+        punch : bool, optional
+            is this a punch file (default=False; no executive/case control decks)
+
+        Returns
+        -------
+        executive_control_lines : list[str]
+            the executive control deck as a list of strings
+        case_control_lines : list[str]
+            the case control deck as a list of strings
+        bulk_data_lines : list[str]
+            the bulk data deck as a list of strings
         """
         #: the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = os.path.dirname(os.path.abspath(bdf_filename))
@@ -2105,9 +2184,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
 
-        :param self:      the BDF object
-        :param card_name: the card_name -> 'GRID'
-        :param n:         the amount to increment by (default=1)
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        card_name : str
+            the card_name -> 'GRID'
+        n : int, optional
+            the amount to increment by (default=1)
 
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.card_count['GRID']
@@ -2191,9 +2275,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Applies the dynamic syntax for %varName
 
-        :param self: the BDF object
-        :param key:  the uppercased key
-        :returns value: the dynamic value defined by dict_of_vars
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        key : str
+            the uppercased key
+
+        Returns
+        -------
+        value : int/float/str
+            the dynamic value defined by dict_of_vars
         .. seealso:: :func: `set_dynamic_syntax`
         """
         key = key[1:].strip()
@@ -2219,6 +2311,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
     def _parse_primary_file_header(self, bdf_filename):
         """
         Extract encoding, nastran_format, and punch from the primary BDF.
+
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        bdf_filename : str
+            the input filename
 
         ..code-block :: python
             $ pyNastran: version=NX
@@ -2312,7 +2411,15 @@ def _clean_comment(comment):
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
 
-    :param comment: the comment to possibly remove
+    Parameters
+    ----------
+    comment : str
+        the comment to possibly remove
+
+    Returns
+    -------
+    updated_comment : str
+        the comment
     """
     if comment == '':
         pass

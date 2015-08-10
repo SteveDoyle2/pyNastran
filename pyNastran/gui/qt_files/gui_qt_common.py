@@ -263,7 +263,8 @@ class GuiCommon(object):
                 elif vector_size == 3:
                     self.log_info("node plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
                                   % (vector_size, subcase_id, result_type, subtitle, label))
-                    point_data.AddVector(grid_result)
+                    #point_data.AddVector(grid_result) # old
+                    point_data.AddArray(grid_result)
                 else:
                     raise RuntimeError(vector_size)
             else:
