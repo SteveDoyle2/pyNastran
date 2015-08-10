@@ -191,10 +191,11 @@ class Cart3dIO(object):
             # TODO: clear free edges
             pass
 
-        self._add_alt_actors(self.alt_grids)
-        self.geometry_actors['free_edges'].Modified()
-        if hasattr(self.geometry_actors['free_edges'], 'Update'):
-            self.geometry_actors['free_edges'].Update()
+        if 'free_edges' in self.alt_grids:
+            self._add_alt_actors(self.alt_grids)
+            self.geometry_actors['free_edges'].Modified()
+            if hasattr(self.geometry_actors['free_edges'], 'Update'):
+                self.geometry_actors['free_edges'].Update()
 
 
     def clear_cart3d(self):
