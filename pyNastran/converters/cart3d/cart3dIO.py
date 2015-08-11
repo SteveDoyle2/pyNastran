@@ -19,10 +19,13 @@ class Cart3dIO(object):
                 'Cart3d (*.triq)', self.load_cart3d_results)
         return data
 
-    def removeOldGeometry(self, fileName):
+    def removeOldGeometry(self, filename):
+        self._remove_old_cart3d_geometry(filename)
+
+    def _remove_old_cart3d_geometry(self, filename):
         self.eidMap = {}
         self.nidMap = {}
-        if fileName is None:
+        if filename is None:
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
@@ -56,7 +59,7 @@ class Cart3dIO(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.removeOldGeometry(cart3d_filename)
+        skipReading = self._remove_old_cart3d_geometry(cart3d_filename)
         if skipReading:
             return
 
@@ -129,6 +132,9 @@ class Cart3dIO(object):
             #self.grid2.Update()
         print("updated grid")
 
+        self._create_cart3d_free_edegs(model, nodes, elements)
+
+
         # loadCart3dResults - regions/loads
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
@@ -146,6 +152,51 @@ class Cart3dIO(object):
 
         form, cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
         self._finish_results_io2(form, cases)
+
+    def _create_cart3d_free_edegs(self, model, nodes, elements):
+        free_edges = model.get_free_edges(elements)
+        nfree_edges = len(free_edges)
+        if nfree_edges:
+            # yellow = (1., 1., 0.)
+            pink = (0.98, 0.4, 0.93)
+            npoints = 2 * nfree_edges
+            if 'free_edges' not in self.alt_grids:
+                self.create_alternate_vtk_grid('free_edges', color=pink, line_width=3, opacity=1.0)
+
+            j = 0
+            points = vtk.vtkPoints()
+            points.SetNumberOfPoints(npoints)
+
+            self.alt_grids['free_edges'].Allocate(nfree_edges, 1000)
+
+            elem = vtk.vtkLine()
+            # elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+            # elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+
+            eType = vtk.vtkLine().GetCellType()
+            for free_edge in free_edges:
+                # (p1, p2) = free_edge
+                for ipoint, node_id in enumerate(free_edge):
+                    point = nodes[node_id, :]
+                    points.InsertPoint(j + ipoint, *point)
+
+                elem = vtk.vtkLine()
+                elem.GetPointIds().SetId(0, j)
+                elem.GetPointIds().SetId(1, j + 1)
+                self.alt_grids['free_edges'].InsertNextCell(eType, elem.GetPointIds())
+                j += 2
+            self.alt_grids['free_edges'].SetPoints(points)
+
+        else:
+            # TODO: clear free edges
+            pass
+
+        if 'free_edges' in self.alt_grids:
+            self._add_alt_actors(self.alt_grids)
+            self.geometry_actors['free_edges'].Modified()
+            if hasattr(self.geometry_actors['free_edges'], 'Update'):
+                self.geometry_actors['free_edges'].Update()
+
 
     def clear_cart3d(self):
         pass
@@ -170,22 +221,22 @@ class Cart3dIO(object):
 
         results_form = []
         geometry_form = [
-            ('Region', 0, []),
+            ('NodeID', 0, []),
             ('ElementID', 1, []),
-            ('NodeID', 2, []),
+            ('Region', 2, []),
         ]
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes+1)
 
         if new:
-            cases_new[0] = (ID, regions, 'Region', 'centroid', '%i')
+            cases_new[0] = (ID, nids, 'NodeID', 'node', '%i')
             cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i')
-            cases_new[2] = (ID, nids, 'NodeID', 'node', '%i')
+            cases_new[2] = (ID, regions, 'Region', 'centroid', '%i')
         else:
-            cases[(ID, 0, 'Region', 1, 'centroid', '%i')] = regions
+            cases[(ID, 0, 'NodeID', 1, 'node', '%i')] = nids
             cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
-            cases[(ID, 2, 'NodeID', 1, 'node', '%i')] = nids
+            cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
 
         i = 3
 

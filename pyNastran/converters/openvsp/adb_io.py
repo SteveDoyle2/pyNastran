@@ -21,7 +21,7 @@ class ADB_IO(object):
                )
         return data
 
-    def _removeOldGeometry(self, fileName):
+    def _remove_old_adb_geometry(self, fileName):
         self.eidMap = {}
         self.nidMap = {}
         if fileName is None:
@@ -58,7 +58,7 @@ class ADB_IO(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.removeOldGeometry(adb_filename)
+        skipReading = self._remove_old_adb_geometry(adb_filename)
         if skipReading:
             return
 
