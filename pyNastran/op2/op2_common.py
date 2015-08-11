@@ -11,7 +11,7 @@ from pyNastran.utils import object_attributes
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.op2.op2Codes import Op2Codes
 
-from pyNastran.op2.errors import SortCodeError, DeviceCodeError
+from pyNastran.op2.errors import SortCodeError, DeviceCodeError, MultipleSolutionNotImplementedError
 
 
 class OP2Common(Op2Codes, F06Writer):
@@ -85,7 +85,7 @@ class OP2Common(Op2Codes, F06Writer):
                            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
         datai = data[4*(field_num-1) : 4*(field_num)]
         assert len(datai) == 4, len(datai)
-        value, = unpack(Type, datai)
+        value, = unpack(self._endian + Type, datai)
         if fixDeviceCode:
             value = (value - self.device_code) // 10
         if self.debug:
@@ -119,7 +119,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
-        Title, subtitle, label = unpack(b'128s128s128s', data[200:])
+        Title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
 
         self.Title = Title.strip()
 
@@ -330,11 +330,9 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.obj is not None
 
         obj = self.obj
-        format1 = '2i6f' # 8
-
         nnodes = len(data) // ntotal
         assert nnodes > 0, nnodes
-        s = Struct(format1)
+        s = Struct(self._endian + b'2i6f')
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -364,11 +362,9 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.obj is not None
 
         obj = self.obj
-        format1 = '2i6f' # 8
-
         nnodes = len(data) // ntotal
         assert nnodes > 0, nnodes
-        s = Struct(format1)
+        s = Struct(self._endian + b'2i6f')
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -398,14 +394,12 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.obj is not None
 
         obj = self.obj
-        format1 = self._analysis_code_fmt + 'i6f'
-
         nnodes = len(data) // ntotal
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
         flag = 'freq/dt/mode'
-        s = Struct(format1)
+        s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
         assert eid > 0, self.code_information()
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
@@ -425,7 +419,6 @@ class OP2Common(Op2Codes, F06Writer):
         assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
 
-        format1 = '2i12f'
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
@@ -433,7 +426,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         obj = self.obj
         nnodes = len(data) // ntotal
-        s = Struct(format1)
+        s = Struct(self._endian + b'2i12f')
 
         assert self.obj is not None
         assert nnodes > 0
@@ -487,13 +480,12 @@ class OP2Common(Op2Codes, F06Writer):
         flag = 'freq/dt/mode'
         node_id = self.nonlinear_factor
 
-        format1 = self._analysis_code_fmt + 'i12f'
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
         ntotal = 56  # 14 * 4
         nnodes = len(data) // ntotal
-        s = Struct(format1)
+        s = Struct(self._endian + self._analysis_code_fmt + 'i12f')
 
         assert self.obj is not None
         assert nnodes > 0
@@ -559,6 +551,13 @@ class OP2Common(Op2Codes, F06Writer):
         if hasattr(self, 'isubcase'):
             if self.code in storage_obj:
                 self.obj = storage_obj[code]
+                if self.nonlinear_factor is not None:
+                    if self.obj.nonlinear_factor is None:
+                        msg = 'The object is flipping from a static (e.g. preload)\n'
+                        msg += 'result to a transient/frequency based results\n'
+                        msg += '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor)
+                        msg += '%s' % str(self.obj)
+                        raise MultipleSolutionNotImplementedError(msg)
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
                 class_obj.is_cid = is_cid
@@ -579,13 +578,15 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _not_implemented_or_skip(self, data, msg=''):
         if is_release:
-            self.log.warning(msg)
+            if msg != self._last_comment:
+                self.log.warning(msg)
+                self._last_comment = msg
             return len(data)
         else:
             raise NotImplementedError('table_name=%s table_code=%s %s\n%s' % (self.table_name, self.table_code, msg, self.code_information()))
 
     def parse_approach_code(self, data):
-        (approach_code, tCode, int3, isubcase) = unpack(b'4i', data[:16])
+        (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4i', data[:16])
         self.approach_code = approach_code
         self.tCode = tCode
         self.int3 = int3

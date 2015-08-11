@@ -72,7 +72,7 @@ class MPT(object):
         """
         #print "reading CREEP"
         nmaterials = (len(data) - n) // 64
-        s = Struct(b'i2f4ifi7f')
+        s = Struct(self._endian + b'i2f4ifi7f')
         for i in range(nmaterials):
             edata = data[n:n+64]
             out = s.unpack(edata)
@@ -89,7 +89,7 @@ class MPT(object):
         """
         #print "reading MAT1"
         ntotal = 48  # 12*4
-        s = Struct(b'i10fi')
+        s = Struct(self._endian + b'i10fi')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             eData = data[n:n+48]
@@ -106,7 +106,7 @@ class MPT(object):
         """
         #print "reading MAT2"
         ntotal = 68  # 17*4
-        s = Struct(b'i15fi')
+        s = Struct(self._endian + b'i15fi')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             edata = data[n:n+68]
@@ -129,7 +129,7 @@ class MPT(object):
         MAT3(1403,14,122) - record 4
         """
         #print "reading MAT3"
-        s = Struct(b'i8fi5fi')
+        s = Struct(self._endian + b'i8fi5fi')
         nmaterials = (len(data) - n) // 64
         for i in range(nmaterials):
             out = s.unpack(data[n:n+64])
@@ -147,7 +147,7 @@ class MPT(object):
         MAT4(2103,21,234) - record 5
         """
         #print "reading MAT4"
-        s = Struct(b'i10f')
+        s = Struct(self._endian + b'i10f')
         nmaterials = (len(data) - n) // 40
         for i in range(nmaterials):
             out = s.unpack(data[n:n+44])
@@ -162,7 +162,7 @@ class MPT(object):
         MAT5(2203,22,235) - record 6
         """
         #print "reading MAT5"
-        s = Struct(b'i9f')
+        s = Struct(self._endian + b'i9f')
         nmaterials = (len(data) - n) // 40
         for i in range(nmaterials):
             out = s.unpack(data[n:n+40])
@@ -177,7 +177,7 @@ class MPT(object):
         MAT8(2503,25,288) - record 7
         """
         #print "reading MAT8"
-        s = Struct(b'i18f')
+        s = Struct(self._endian + b'i18f')
         nmaterials = (len(data) - n) // 76
         for i in range(nmaterials):
             out = s.unpack(data[n:n+76])
@@ -194,7 +194,7 @@ class MPT(object):
         .. todo:: buggy
         """
         #print "reading MAT9"
-        s = Struct(b'22i9f4i')
+        s = Struct(self._endian + b'22i9f4i')
         nmaterials = (len(data) - n) // 140
         for i in range(nmaterials):
             out = s.unpack(data[n:n+140])
@@ -215,7 +215,7 @@ class MPT(object):
         """
         #print "reading MAT10"
         ntotal = 44  # 5*4
-        s = Struct(b'i4f')
+        s = Struct(self._endian + b'i4f')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             edata = data[n:n+20]
@@ -231,8 +231,8 @@ class MPT(object):
         """MATHP(4506,45,374) - Record 11"""
         #print "reading MATHP"
         nmaterials = 0
-        s1 = Struct(b'i7f3i23fi')
-        s2 = Struct(b'8i')
+        s1 = Struct(self._endian + b'i7f3i23fi')
+        s2 = Struct(self._endian + b'8i')
         n2 = n
         while n2 < n:
             eData = data[n:n+140]
@@ -263,7 +263,7 @@ class MPT(object):
         """
         #print "reading MATS1"
         ntotal = 44  # 11*4
-        s = Struct(b'3ifiiff3i')
+        s = Struct(self._endian + b'3ifiiff3i')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             edata = data[n:n+44]
@@ -312,7 +312,7 @@ class MPT(object):
         """
         #print "reading RADM"
         return
-        s = Struct(b'i', )
+        s = Struct(self._endian + b'i', )
         while len(data) >= 4:  # 1*4
             eData = data[:4]
             data = data[4:]
@@ -345,7 +345,7 @@ class MPT(object):
         """
         #print "reading NLPARM"
         ntotal = 76  # 19*4
-        s = Struct(b'iif5i3f3iffiff')
+        s = Struct(self._endian + b'iif5i3f3iffiff')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             edata = data[n:n+76]
@@ -367,7 +367,7 @@ class MPT(object):
         """
         #print("reading TSTEPNL")
         ntotal = 88  # 19*4
-        s = Struct(b'iif5i3f3if3i4f')
+        s = Struct(self._endian + b'iif5i3f3if3i4f')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             edata = data[n:n+88]

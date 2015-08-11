@@ -2,22 +2,6 @@ from six import iteritems
 from struct import pack, Struct
 
 
-#def pack(fascii, msg, fmt, data):
-    #s = Struct(fascii, fmt)
-    #return s.pack(msg, data)
-
-#class Struct(object):
-    #def __init__(self, fascii, fmt):
-        #self.fascii = fascii
-        #self.s = sStruct(fmt)
-
-    #def pack(self, msg, data):
-        #self.fascii.write('%s = %s\n' % (msg, data))
-        #if isinstance(data, list):
-            #return self.s.pack(*data)
-        #return self.s.pack(data)
-
-
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 
 

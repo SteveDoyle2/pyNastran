@@ -128,8 +128,7 @@ class OGS(OP2Common):
 
     def _readOGS1_table26_numWide11(self, data):  # surface stresses
         #dt = self.nonlinear_factor
-        format1 = b'2i4s8f'
-        s = Struct(format1)
+        s = Struct(b'2i4s8f')
 
         n = 0
         nelements = len(data) // 44  # 11*4
@@ -157,8 +156,7 @@ class OGS(OP2Common):
         return n
 
     def _readOGS1_table27_numWide9(self, data):  # surface stresses
-        format1 = b'2i7f'
-        s = Struct(format1)
+        s = Struct(self._endian + b'2i7f')
 
         n = 0
         nelements = len(data) // 36  # 9*4

@@ -8,3 +8,6 @@ class SortCodeError(RuntimeError):
 
 class DeviceCodeError(SyntaxError):
     pass
+
+class MultipleSolutionNotImplementedError(NotImplementedError):
+    pass

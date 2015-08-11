@@ -202,7 +202,7 @@ class RealTableArray(TableArray):  # displacement style table
         fascii.write('%s header 3c = %s\n' % (self.table_name, data))
         f.write(pack(fmt, *data))
 
-    def write_op2(self, f, fascii, itable, date, is_mag_phase=False):
+    def write_op2(self, f, fascii, itable, date, is_mag_phase=False, endian='>'):
         import inspect
         assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
 
@@ -216,16 +216,16 @@ class RealTableArray(TableArray):  # displacement style table
             itable = -3
 
         if isinstance(self.nonlinear_factor, float):
-            op2_format = '%sif' % (7 * self.ntimes)
+            op2_format = endian + b'%sif' % (7 * self.ntimes)
             raise NotImplementedError()
         else:
-            op2_format = '2i6f' * self.ntimes
+            op2_format = endian + b'2i6f' * self.ntimes
         s = Struct(op2_format)
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        #format_table4_1 = Struct(b'15i')
-        #format_table4_2 = Struct(b'3i')
+        #format_table4_1 = Struct(self._endian + b'15i')
+        #format_table4_2 = Struct(self._endian + b'3i')
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -253,7 +253,7 @@ class RealTableArray(TableArray):  # displacement style table
                       4, 0, 4,
                       4, ntotal, 4,
                       4*ntotal]
-            f.write(pack('%ii' % len(header), *header))
+            f.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
             fascii.write('r4 [4, %s, 4]\n' % (itable-1))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
@@ -272,14 +272,14 @@ class RealTableArray(TableArray):  # displacement style table
 
             itable -= 2
             header = [4 * ntotal,]
-            f.write(pack('i', *header))
+            f.write(pack(b'i', *header))
             fascii.write('footer = %s' % header)
         header = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4,
         ]
-        f.write(pack('%ii' % len(header), *header))
+        f.write(pack(b'%ii' % len(header), *header))
         return itable
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words=True):
@@ -335,6 +335,12 @@ class RealTableArray(TableArray):  # displacement style table
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype == 'G':
+                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                elif sgridtype == 'S':
+                    f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
+                elif sgridtype == 'H':
+                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                elif sgridtype == 'L':
                     f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(sgridtype)
@@ -596,6 +602,12 @@ class RealTableObject(ScalarObject):  # displacement style table
             elif grid_type == 'S':
                 msg.append('%14i %6s     %s\n'
                            % (node_id, grid_type, dx.rstrip()))
+            elif grid_type == 'H':
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                           % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+            elif grid_type == 'L':
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                           % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
             else:
                 raise NotImplementedError(grid_type)
         msg.append(page_stamp % page_num)
@@ -630,6 +642,8 @@ class RealTableObject(ScalarObject):  # displacement style table
                     msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz))
                 elif grid_type == 'S':
                     msg.append('%14i %6s     %s\n' % (node_id, grid_type, dx))
+                elif grid_type == 'L':
+                    msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(grid_type)
 
