@@ -1300,7 +1300,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _on_load_nodal_elemental_results(self, Type, out_filename=None):
         """
-        Loads a results file.  Must have called on_load_geometry first.
+        Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
         out_filename : str / None
             the path to the results file
@@ -1313,7 +1313,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         if out_filename in [None, False]:
             title = 'Select a %s Results File for %s' % (Type, self.format)
-            wildcard = 'Space Separated Text (*.txt; *.dat); CSV (*.csv)'
+            wildcard = 'Delimited Text (*.txt; *.dat; *.csv)'
             wildcard_index, out_filename = self._create_load_file_dialog(wildcard, title)
 
         if out_filename == '':
@@ -1337,6 +1337,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
             self.set_window_title(msg)
             self.out_filename = out_filename
+
         if Type == 'Nodal':
             self.log_command("_on_load_nodal_elemental_results(%r)" % out_filename)
         elif Type == 'Elemental':
@@ -1350,7 +1351,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         file_obj = open(out_filename, 'r')
         header_line = file_obj.readline().strip()
         assert header_line.startswith('#'), 'headerline=%r' % header_line
-        header_line = header_line.lstrip('#').strip()
+        header_line = header_line.lstrip('# \t').strip()
         ext = os.path.splitext(out_filename)[1].lower()
 
         if ext in ['.dat', '.txt']:
@@ -1387,6 +1388,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         islot = self.caseKeys[0][0]
         for icol in range(ncols):
             datai = A[:, icol]
+            print(datai.dtype)
             header = headers[icol].strip()
             key = (islot, icase, header, 1, Type2, '%.3f')
             self.caseKeys.append(key)

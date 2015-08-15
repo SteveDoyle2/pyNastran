@@ -121,7 +121,14 @@ class ScalarBar(object):
             #self.aQuadMapper.Update()
 
         #self.scalar_bar.SetLookupTable(self.color_function)
-        self.scalar_bar.SetTitle(title)
+        nchars = len(title)
+        if nchars > 10:
+            padding = ''
+        else:
+            nspaces = (10 - nchars) // 2 + nchars % 2
+            padding = nspaces * ' '
+
+        self.scalar_bar.SetTitle('%s%s%s' % (padding, title, padding))
 
         nvalues = 11
         data_format_display = data_format
