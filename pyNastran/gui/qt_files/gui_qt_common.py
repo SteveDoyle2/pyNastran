@@ -80,8 +80,6 @@ class GuiCommon(object):
     def cycleResults_explicit(self, result_name=None, explicit=True):
         #if explicit:
             #self.log_command('cycleResults(result_name=%r)' % result_name)
-        print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
-
         found_cases = self.incrementCycle(result_name)
         if found_cases:
             result_type = self._set_case(result_name, self.iCase, explicit=explicit, cycle=True)

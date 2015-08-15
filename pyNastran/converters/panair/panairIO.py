@@ -17,7 +17,8 @@ class PanairIO(object):
     def get_panair_wildcard_geometry_results_functions(self):
         data = ('Panair',
                 'Panair (*.inp)', self.load_panair_geometry,
-                'Panair (*.agps);;Panair (*.out)',  self.load_panair_results)
+                #'Panair (*.agps);;Panair (*.out)',  self.load_panair_results)
+                'Panair (*agps)', self.load_panair_results)
         return data
 
     def load_panair_geometry(self, panairFileName, dirname, plot=True):
@@ -111,14 +112,14 @@ class PanairIO(object):
 
         #print "nElements = ",nElements
         loads = []
-        form, cases = self.fillPanairGeometryCase(cases, ID, nodes, elements, regions, loads)
+        form, cases = self._fill_panair_geometry_case(cases, ID, nodes, elements, regions, loads)
         self._finish_results_io2(form, cases)
         #self._finish_results_io(cases)
 
     def clear_panair(self):
         del self.elements
 
-    def fillPanairGeometryCase(self, cases, ID, nodes, elements, regions, loads):
+    def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions, loads):
         self.elements = elements
         nnids = nodes.shape[0]
         neids = elements.shape[0]
@@ -189,11 +190,11 @@ class PanairIO(object):
 
         return form, cases
 
-    def load_panair_results(self, panairFileName, dirname):
+    def load_panair_results(self, panair_filename, dirname):
         cases = self.result_cases
-        if os.path.basename(panairFileName) == 'agps':
+        if os.path.basename(panair_filename) == 'agps':
             model = AGPS(log=self.log, debug=self.debug)
-            model.read_agps(panairFileName)
+            model.read_agps(panair_filename)
         else:
             raise RuntimeError('only files named "agps" files are supported')
 

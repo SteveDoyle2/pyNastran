@@ -88,9 +88,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
-        if self.is_centroidal == self.is_nodal:
-            msg = "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
-            raise RuntimeError(msg)
 
         #self.format = ''
         debug = inputs['debug']
@@ -154,6 +151,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.is_horizontal_scalar_bar = False
         self.scalar_bar = ScalarBar(self.is_horizontal_scalar_bar)
 
+        self.result_cases = {}
+
 
     #def dragEnterEvent(self, e):
         #print(e)
@@ -177,6 +176,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     #def get_color_function(self):
         #return self.scalar_bar.color_function
+
+    @property
+    def resultCases(self):
+        return self.result_cases
+
+    @resultCases.setter
+    def resultCases(self, value):
+        assert isinstance(value, dict), type(value)
+        self.result_cases = value
 
     def set_window_title(self, msg):
         #msg2 = "%s - "  % self.base_window_title
@@ -1345,6 +1353,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             raise NotImplementedError(Type)
 
+    @property
+    def form(self):
+        return self.res_widget.get_form()
+
     def _load_csv(self, Type, out_filename):
         out_filename_short = os.path.basename(out_filename)
 
@@ -1383,7 +1395,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise NotImplementedError(Type)
 
         formi = []
-        form = self.res_widget.get_form()
+        form = self.form
         icase = len(self.caseKeys)
         islot = self.caseKeys[0][0]
         for icol in range(ncols):

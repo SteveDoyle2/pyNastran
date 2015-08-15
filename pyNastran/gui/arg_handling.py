@@ -71,7 +71,6 @@ def run_arg_parse():
 
     #print("is_nodal=%s is_centroidal=%s" % (is_nodal, is_centroidal))
     #print("shots", shots)
-    #writeBDF = args.writeBDF
     if shots:
         #shots = shots[1]
         #print("shots2 = %r" % shots, type(shots))

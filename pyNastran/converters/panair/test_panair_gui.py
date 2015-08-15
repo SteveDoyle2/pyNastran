@@ -5,7 +5,7 @@ from pyNastran.converters.panair.panairIO import PanairIO
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'panair','M100')
+model_path = os.path.join(pkg_path, 'converters', 'panair', 'M100')
 
 import unittest
 
@@ -13,8 +13,8 @@ class PanairGUI(unittest.TestCase):
 
     def test_m100_geometry(self):
         geometry_filename = os.path.join(model_path, 'M100.inp')
-        agps_filename = os.path.join(model_path, 'agps')
-        out_filename = os.path.join(model_path, 'panair.out')
+        #agps_filename = os.path.join(model_path, 'agps')
+        #out_filename = os.path.join(model_path, 'panair.out')
         dirname = None
 
         test = PanairIO()
