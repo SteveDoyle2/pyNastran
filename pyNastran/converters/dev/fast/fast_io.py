@@ -33,7 +33,6 @@ class FastIO(object):
         self._fill_fast_results(cases, model)
 
     def load_fast_geometry(self, fgrid_filename, dirname, plot=True):
-        #print("load_usm3d_geometry...")
         skipReading = self.removeOldGeometry(fgrid_filename)
         if skipReading:
             return
@@ -49,8 +48,6 @@ class FastIO(object):
             raise RuntimeError('unsupported extension.  Use "cogsg" or "front".')
 
         read_loads = True
-        if self.is_centroidal:
-            read_loads = False
         model.read_fgrid(fgrid_filename, dimension_flag)
 
         dimension_flag = 3
@@ -100,7 +97,6 @@ class FastIO(object):
             nid += 1
 
         if dimension_flag == 2:
-            print('tris!')
             for (n0, n1, n2) in tris:
                 elem = vtkTriangle()
                 #node_ids = elements[eid, :]
@@ -110,7 +106,6 @@ class FastIO(object):
                 self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         elif dimension_flag == 3:
             if ntets:
-                print('tets!')
                 for (n0, n1, n2, n3) in tets:
                     elem = vtkTetra()
                     elem.GetPointIds().SetId(0, n0)
@@ -125,7 +120,6 @@ class FastIO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            print("updated grid")
 
         # regions/loads
         self.TurnTextOn()
@@ -136,7 +130,7 @@ class FastIO(object):
         self._fill_fast_results(cases, model, results=False)
         self._finish_results_io(cases)
 
-    def clear_usm3d(self):
+    def clear_fast(self):
         pass
 
     def _fill_fast_results(self, cases, model, results=False):
@@ -183,7 +177,7 @@ class FastIO(object):
 
             #==============================
             ID = 2
-            if self.is_nodal and len(loads):
+            if len(loads):
                 for key, load in iteritems(loads):
                     cases[(ID, key, 1, 'node', '%.3f')] = load
                 self.scalarBar.VisibilityOn()

@@ -77,8 +77,6 @@ class NastranIO(object):
         self.nNodes = None
         self.nElements = None
         self.modelType = None
-        #self.is_centroidal = None
-        #self.is_nodal = None
         self.iSubcaseNameMap = None
 
     def get_nastran_wildcard_geometry_results_functions(self):
@@ -1119,8 +1117,6 @@ class NastranIO(object):
         """
         pressure act normal to the face (as opposed to anti-normal)
         """
-        #if not self.is_centroidal:
-            #return icase
         assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
         try:
             sucaseIDs = model.caseControlDeck.get_subcase_list()
@@ -1589,7 +1585,6 @@ class NastranIO(object):
         self.node_ids = None
 
     def fill_stress(self, cases, model, subcase_id, formi, icase):
-        #if self.is_centroidal:
         icase = self._fill_stress_centroidal(cases, model, subcase_id, formi, icase)
         #elif self.is_nodal:
             #icase = self._fill_stress_nodal(cases, model, subcase_id, formi, icase)
