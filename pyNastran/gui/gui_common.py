@@ -17,7 +17,7 @@ from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import eye, array, zeros
+from numpy import eye, array, zeros, loadtxt
 from numpy.linalg import norm
 
 import pyNastran
@@ -309,6 +309,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
                 ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
                 ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
+                ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),  ## @todo no picture...
+                ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),  ## @todo no picture...
 
                 ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
                 ('label_col', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
@@ -424,7 +426,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             menu_window += ['logwidget']
 
         menu_items = [
-            (self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
+            (self.menu_file, ('load_geometry', 'load_results', 'load_csv_nodal', 'load_csv_elemental', 'script', '', 'exit')),
             (self.menu_view, tuple(menu_view)),
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
@@ -1296,11 +1298,122 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     #menu_items = self._create_menu_items()
                     #self._populate_menu(menu_items)
 
+    def _on_load_nodal_elemental_results(self, Type, out_filename=None):
+        """
+        Loads a results file.  Must have called on_load_geometry first.
+
+        out_filename : str / None
+            the path to the results file
+        """
+        geometry_format = self.format
+        if self.format is None:
+            msg = 'on_load_results failed:  You need to load a file first...'
+            self.log_error(msg)
+            raise RuntimeError(msg)
+
+        if out_filename in [None, False]:
+            title = 'Select a %s Results File for %s' % (Type, self.format)
+            wildcard = 'Space Separated Text (*.txt; *.dat); CSV (*.csv)'
+            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, title)
+
+        if out_filename == '':
+            return
+        if not os.path.exists(out_filename):
+            msg = 'result file=%r does not exist' % out_filename
+            self.log_error(msg)
+            return
+            #raise IOError(msg)
+        # self.last_dir = os.path.split(out_filename)[0]
+        try:
+            self._load_csv(Type, out_filename)
+        except Exception as e:
+            msg = traceback.format_exc()
+            self.log_error(msg)
+            #return
+            raise
+
+        if 0:
+            self.out_filename = out_filename
+            msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
+            self.set_window_title(msg)
+            self.out_filename = out_filename
+        if Type == 'Nodal':
+            self.log_command("_on_load_nodal_elemental_results(%r)" % out_filename)
+        elif Type == 'Elemental':
+            self.log_command("on_load_elemental_results(%r)" % out_filename)
+        else:
+            raise NotImplementedError(Type)
+
+    def _load_csv(self, Type, out_filename):
+        out_filename_short = os.path.basename(out_filename)
+
+        file_obj = open(out_filename, 'r')
+        header_line = file_obj.readline().strip()
+        assert header_line.startswith('#'), 'headerline=%r' % header_line
+        header_line = header_line.lstrip('#').strip()
+        ext = os.path.splitext(out_filename)[1].lower()
+
+        if ext in ['.dat', '.txt']:
+            headers = header_line.split(' ')
+            A = loadtxt(file_obj)
+        elif ext in ['.csv']:
+            headers = header_line.split(',')
+            A = loadtxt(file_obj, delimiter=',')
+        else:
+            raise NotImplementedError('extension=%r' % ext)
+        file_obj.close()
+
+        if len(A.shape) == 1:
+            A = A.reshape(A.shape[0], 1)
+        nrows, ncols = A.shape
+        if ncols != len(headers):
+            msg = 'Error loading csv/txt file\n'
+            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n'
+            msg += 'headers = %s' % headers
+            raise SyntaxError(msg)
+
+        if Type == 'Nodal':
+            assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
+            Type2 = 'node'
+        elif Type == 'Elemental':
+            assert nrows == self.nElements, 'nrows=%s nelements=%s' % (nrows, self.nElements)
+            Type2 = 'centroid'
+        else:
+            raise NotImplementedError(Type)
+
+        formi = []
+        form = self.res_widget.get_form()
+        icase = len(self.caseKeys)
+        islot = self.caseKeys[0][0]
+        for icol in range(ncols):
+            datai = A[:, icol]
+            header = headers[icol].strip()
+            key = (islot, icase, header, 1, Type2, '%.3f')
+            self.caseKeys.append(key)
+            self.resultCases[key] = datai
+            formi.append((header, icase, []))
+
+            self.label_actors[header] = []
+            self.label_ids[header] = set([])
+            icase += 1
+        form.append((out_filename_short, None, formi))
+
+        self.nCases += ncols
+        #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
+        self.res_widget.update_results(form)
+
+    def on_load_nodal_results(self, out_filename=None):
+        self._on_load_nodal_elemental_results('Nodal', out_filename)
+
+    def on_load_elemental_results(self, out_filename=None):
+        self._on_load_nodal_elemental_results('Elemental', out_filename)
+
     def on_load_results(self, out_filename=None):
         """
         Loads a results file.  Must have called on_load_geometry first.
 
-        :param out_filename: the path to the results file
+        out_filename : str / None
+            the path to the results file
         """
         geometry_format = self.format
         if self.format is None:

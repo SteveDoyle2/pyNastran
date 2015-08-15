@@ -210,6 +210,9 @@ class Sidebar(QtGui.QWidget):
         self.result_data_window.data[0] = (method, datai[1], datai[2])
         self.result_data_window.update_data(self.result_data_window.data)
 
+    def get_form(self):
+        return self.result_case_window.data
+
     def update_results(self, data):
         self.result_case_window.update_data(data)
         self.apply_button.setEnabled(True)
@@ -280,6 +283,7 @@ class ResultsWindow(QtGui.QWidget):
 
     def update_data(self, data):
         self.clear_data()
+        self.data = data
         self.addItems(self.model, data)
         self.treeView.data = data
         #layout = QVBoxLayout()
