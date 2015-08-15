@@ -16,9 +16,6 @@ class LawgsGUI(unittest.TestCase):
         dirname = None
 
         test = LaWGS_IO()
-        test.is_nodal = True
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         #test.load_nastran_geometry(geometry_filename, None)
@@ -29,9 +26,6 @@ class LawgsGUI(unittest.TestCase):
         dirname = None
 
         test = LaWGS_IO()
-        test.is_nodal = True
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
         test.load_lawgs_geometry(geometry_filename, dirname)
 

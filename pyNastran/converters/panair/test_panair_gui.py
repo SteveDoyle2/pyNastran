@@ -18,9 +18,6 @@ class PanairGUI(unittest.TestCase):
         dirname = None
 
         test = PanairIO()
-        test.is_nodal = True
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         #test.load_nastran_geometry(geometry_filename, None)
@@ -33,9 +30,6 @@ class PanairGUI(unittest.TestCase):
         dirname = None
 
         test = PanairIO()
-        test.is_nodal = True
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_panair_geometry(geometry_filename, dirname)

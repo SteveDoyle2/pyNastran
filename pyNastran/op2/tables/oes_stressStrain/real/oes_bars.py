@@ -5,7 +5,7 @@ from six import iteritems
 from itertools import count
 from numpy import zeros, searchsorted, ravel
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
 class RealBarArray(OES_Object):
@@ -163,7 +163,7 @@ class RealBarArray(OES_Object):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = self._get_msgs()
-        (ntimes, ntotal, four) = self.data.shape
+        (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element_node
         #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):
@@ -188,7 +188,7 @@ class RealBarArray(OES_Object):
 
             smaxb = self.data[itime, :, 12]
             sminb = self.data[itime, :, 13]
-            MSc   = self.data[itime, :, 14]
+            MSc = self.data[itime, :, 14]
 
             # loop over all the elements
             for (i, eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,

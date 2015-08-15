@@ -234,26 +234,3 @@ class PanairIO(object):
         self.result_cases[key] = Cp_array2
 
         self._finish_results_io2(form, cases)
-
-def main():
-    def removeOldGeometry(self):
-        pass
-    def cycleResults(self):
-        pass
-
-    test = PanairIO()
-    test.is_nodal = True
-    test.is_centroidal = False
-    test.removeOldGeometry = removeOldGeometry
-    test.cycleResults = cycleResults
-
-    #test.load_panair_geometry('SWB.INP','')
-    test.load_panair_geometry('models/NAC6.INP', '')
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
-
-
-#if __name__=='__main__':
-#    lawgs = LaWGS('tmx1242.wgs')
-#    lawgs.run()

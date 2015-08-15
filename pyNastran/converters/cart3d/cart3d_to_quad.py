@@ -97,8 +97,8 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
     .. note:: modifies elements
     """
     elements -= 1
-    #npoints, three = points.shape
-    nelements, three = elements.shape
+    #npoints = points.shape[0]
+    nelements = elements.shape[0]
 
     #print points
     #print elements

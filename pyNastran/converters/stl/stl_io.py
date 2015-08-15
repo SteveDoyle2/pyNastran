@@ -63,8 +63,8 @@ class STL_IO(object):
         normals = model.get_normals(elements)
         areas = model.get_area(elements)
         #nnormals = model.get_normals_at_nodes(elements)
-        self.nNodes, three = nodes.shape
-        self.nElements, three = elements.shape
+        self.nNodes = nodes.shape[0]
+        self.nElements = elements.shape[0]
 
         print("nNodes = %s" % self.nNodes)
         print("nElements = %s" % self.nElements)
