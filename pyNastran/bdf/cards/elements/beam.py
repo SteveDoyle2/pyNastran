@@ -198,7 +198,7 @@ class CBEAM(CBAR):
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.g0:
-            self.g0_vector = model.nodes[self.g0].Position() - self.ga.Position()
+            self.g0_vector = model.nodes[self.g0].get_position() - self.ga.get_position()
         else:
             self.g0_vector = self.x
 

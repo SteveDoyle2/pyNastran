@@ -25,7 +25,6 @@ from numpy import array, cross, zeros, dot
 from numpy.linalg import norm
 
 
-from pyNastran.bdf.deprecated import BDFMethodsDeprecated
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
 
 
@@ -40,7 +39,7 @@ def _mass_properties_mass_mp_func(element):
     return mass, cg
 
 
-class BDFMethods(BDFMethodsDeprecated):
+class BDFMethods(object):
     def __init__(self):
         pass
 
@@ -317,8 +316,8 @@ class BDFMethods(BDFMethodsDeprecated):
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=%r b/c it doesnt exist' % cid)
         for nid, node in sorted(iteritems(self.nodes)):
-            p = node.PositionWRT(self, cid)
-            node.UpdatePosition(self, p, cid)
+            p = node.get_position_wrt(self, cid)
+            node.set_position(self, p, cid)
 
     def unresolve_grids(self, model_old):
         """
@@ -409,7 +408,7 @@ class BDFMethods(BDFMethodsDeprecated):
         if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if isinstance(p0, integer_types):
-            p = self.nodes[p0].Position()
+            p = self.nodes[p0].get_position()
         else:
             p = array(p0)
 
@@ -422,7 +421,7 @@ class BDFMethods(BDFMethodsDeprecated):
         loads2 = []
         for load in load_case:
             if isinstance(load, LOAD):
-                scale_factors, loads = load.getReducedLoads()
+                scale_factors, loads = load.get_reduced_loads()
                 scale_factors2 += scale_factors
                 loads2 += loads
             else:
@@ -434,7 +433,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
         xyz = {}
         for nid, node in iteritems(self.nodes):
-            xyz[nid] = node.Position()
+            xyz[nid] = node.get_position()
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
@@ -771,7 +770,7 @@ class BDFMethods(BDFMethodsDeprecated):
         if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if isinstance(p0, integer_types):
-            p = self.model.nodes[p0].Position()
+            p = self.model.nodes[p0].get_position()
         else:
             p = array(p0)
 
@@ -784,7 +783,7 @@ class BDFMethods(BDFMethodsDeprecated):
         loads2 = []
         for load in load_case:
             if isinstance(load, LOAD):
-                scale_factors, loads = load.getReducedLoads()
+                scale_factors, loads = load.get_reduced_loads()
                 scale_factors2 += scale_factors
                 loads2 += loads
             else:
@@ -796,7 +795,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
         xyz = {}
         for nid, node in iteritems(self.nodes):
-            xyz[nid] = node.Position()
+            xyz[nid] = node.get_position()
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
@@ -1047,3 +1046,41 @@ class BDFMethods(BDFMethodsDeprecated):
         for Type in unsupported_types:
             self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
         return (F, M)
+
+    def MassProperties(self):
+        """
+        .. seealso:: mass_properties
+        """
+        self.deprecated('MassProperties()', 'mass_properties()', '0.7')
+        return self.mass_properties()
+
+    def Mass(self):
+        """
+        .. seealso:: mass
+        """
+        self.deprecated('Mass()', 'mass_properties()[0]', '0.7')
+        mass, cg, I = self.mass_properties()
+        return mass
+
+    def mass(self, element_ids=None, sym_axis=None):
+        """Calculates mass in the global coordinate system"""
+        self.deprecated('mass()', 'mass_properties()[0]', '0.7')
+        mass, cg, I = self.mass_properties(element_ids=element_ids,
+                                           reference_point=None,
+                                           sym_axis=sym_axis,
+                                           num_cpus=1)
+        return mass
+
+    def resolveGrids(self, cid=0):
+        """
+        .. seealso:: resolve_grids
+        """
+        self.deprecated('resolveGrids(cid)', 'resolve_grids(cid)', '0.7')
+        return self.resolve_grids(cid)
+
+    def unresolveGrids(self, fem_old):
+        """
+        .. seealso:: unresolve_grids
+        """
+        self.deprecated('unresolveGrids(fem_old)', 'unresolve_grids(fem_old)', '0.7')
+        return self.unresolve_grids(fem_old)

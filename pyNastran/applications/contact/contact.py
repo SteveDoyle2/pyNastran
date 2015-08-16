@@ -106,7 +106,7 @@ def update_nodes_cid(model, nids_group, cid):
             print("cp =" % node.Cp())
             xyz = node.PositionWRT(model, cid=cid)
             node.UpdatePosition(model, xyz, cid)
-        nodes[i, :] = node.Position()
+        nodes[i, :] = node.get_position()
     return nodes
 
 def get_max_eid(model):

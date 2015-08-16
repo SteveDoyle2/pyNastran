@@ -414,7 +414,7 @@ class NastranIO(object):
             i = 0
             #fraction = 1. / nnodes  # so you can color the nodes by ID
             for (nid, node) in sorted(iteritems(model.nodes)):
-                point = node.Position()
+                point = node.get_position()
                 points.InsertPoint(i, *point)
                 #self.gridResult.InsertNextValue(i * fraction)
 
@@ -429,7 +429,7 @@ class NastranIO(object):
 
         # add the nodes
         node0 = get_key0(model.nodes)
-        position0 = model.nodes[node0].Position()
+        position0 = model.nodes[node0].get_position()
         xmin = position0[0]
         xmax = position0[0]
 
@@ -443,14 +443,14 @@ class NastranIO(object):
             n = len(model.nodes)
             xyz_cid0 = zeros((n, 3), dtype='float64')
             for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-                xyz = node.Position()
+                xyz = node.get_position()
                 xyz_cid0[i, :] = xyz
             self.xyz_cid0 = xyz_cid0
 
         self._create_nastran_coords(model)
 
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-            point = node.Position()
+            point = node.get_position()
             xmin = min(xmin, point[0])
             xmax = max(xmax, point[0])
 
@@ -534,7 +534,7 @@ class NastranIO(object):
                 #print("element", element)
                 #print("element.nid", element.nid)
                 #print('nodeIDs', model.nodes.keys())
-                xyz = element.nid.Position()
+                xyz = element.nid.get_position()
                 c = element.Centroid()
                 d = norm(xyz-c)
                 elem = vtk.vtkVertex()
@@ -963,7 +963,7 @@ class NastranIO(object):
                     elem.SetRadius(sphere_size)
                 else:
                     # 2 points
-                    #d = norm(element.nodes[0].Position() - element.nodes[1].Position())
+                    #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                     self.eid_to_nid_map[eid] = nodeIDs
                     elem = vtk.vtkLine()
                     try:
@@ -1142,7 +1142,7 @@ class NastranIO(object):
             scale_factors2 = []
             for load in loadCase:
                 if isinstance(load, LOAD):
-                    scale_factors, loads = load.getReducedLoads()
+                    scale_factors, loads = load.get_reduced_loads()
                     scale_factors2 += scale_factors
                     loads2 += loads
                 else:
@@ -1250,7 +1250,7 @@ class NastranIO(object):
         scale_factors2 = []
         for load in loadCase:
             if isinstance(load, LOAD):
-                scale_factors, loads = load.getReducedLoads()
+                scale_factors, loads = load.get_reduced_loads()
                 scale_factors2 += scale_factors
                 loads2 += loads
             else:

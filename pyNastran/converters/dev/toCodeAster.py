@@ -151,7 +151,7 @@ class CodeAsterConverter(BDF):
         form = '    %s%-' + str(self.max_nid_len) + 's %8s %8s %8s\n'
 
         for nid, node in sorted(iteritems(self.nodes)):
-            p = node.Position()
+            p = node.get_position()
             mail += form % (grid_word, nid, p[0], p[1], p[2])
         mail += 'FINSF\n\n'
         mail += self.breaker()

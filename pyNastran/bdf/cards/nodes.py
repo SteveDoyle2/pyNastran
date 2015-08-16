@@ -26,8 +26,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import array
 from six import integer_types
 
-from pyNastran.bdf.deprecated import GridDeprecated, PointDeprecated, SPOINTsDeprecated
-
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
@@ -798,7 +796,7 @@ class GRIDB(Node):
         return self.comment + print_card_16(card)
 
 
-class GRID(Node, GridDeprecated):
+class GRID(Node):
     """
     +------+-----+----+----+----+----+----+----+------+
     |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
@@ -911,6 +909,18 @@ class GRID(Node, GridDeprecated):
         assert self.cd >= -1, 'cd=%s' % (self.cd)
         assert self.seid >= 0, 'seid=%s' % (self.seid)
 
+    def Position(self, debug=False):
+        self.deprecated('Position()', 'get_position()', '0.8')
+        return self.get_position(debug)
+
+    def PositionWRT(self, model, cid, debug=False):
+        self.deprecated('PositionWRT(self, model, cid)', 'get_position_wrt(model, cid)', '0.8')
+        return self.get_position_wrt(model, cid, debug=debug)
+
+    def UpdatePosition(self, model, xyz, cid=0):
+        self.deprecated('UpdatePosition(self, model, xyz, cid', 'set_position(self, model, xyz, cid=cid)', '0.8')
+        return self.set_position(model, xyz, cid=cid)
+
     def Nid(self):
         """
         Gets the GRID ID
@@ -990,7 +1000,7 @@ class GRID(Node, GridDeprecated):
         assert isinstance(ps, str), 'ps=%r' % ps
         assert isinstance(seid, int), 'seid=%r' % seid
         if xref:
-            pos_xyz = self.Position()
+            pos_xyz = self.get_position()
 
     def get_ndof(self):
         """
@@ -1185,7 +1195,7 @@ class GRID(Node, GridDeprecated):
         return self.comment + msg.rstrip() + '\n'
 
 
-class POINT(Node, PointDeprecated):
+class POINT(Node):
     """
     +-------+-----+----+----+----+----+----+----+-----+
     |   1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9  |
@@ -1291,6 +1301,18 @@ class POINT(Node, PointDeprecated):
 
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
+
+    def Position(self, debug=False):
+        self.deprecated('Position()', 'get_position()', '0.8')
+        return self.get_position(debug)
+
+    def PositionWRT(self, model, cid, debug=False):
+        self.deprecated('Position()', 'get_position()', '0.8')
+        return self.get_position_wrt(model, cid, debug)
+
+    def UpdatePosition(self, model, xyz, cid=0):
+        self.deprecated('UpdatePosition(self, model, xyz, cid)', 'set_position(model, xyz, cid)', '0.8')
+        return self.set_position(model, xyz, cid=cid)
 
     def set_position(self, model, xyz, cid=0):
         """

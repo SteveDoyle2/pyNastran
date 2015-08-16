@@ -203,7 +203,7 @@ class Hypersonic(BDF):
         #o = o[i]
         #positions = {}
         #for nid, node in iteritems(self.nodes):
-            #positions[nid] = node.Position()
+            #positions[nid] = node.get_position()
 
         #upids = unique(pids)
         print('looking for hyper cases=%s' % sorted(self.hyper.keys()))
