@@ -702,11 +702,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             self.read_markers([7])
             data = self.read_block()
-            self.binary_debug.write(data + '\n')
+            assert data == b'NASTRAN FORT TAPE ID CODE - ', '%r' % data
+            self.binary_debug.write('%r\n' % data)
+
             data = self._read_record()
+            self.binary_debug.write('%r\n' % data)
             version = data.strip()
             if version.startswith(b'NX'):
                 self.set_as_nx()
+                self.set_table_type()
+            elif version.startswith(b'MODEP'):
+                # TODO: why is this separate?
+                # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
+                self.set_as_nx()
+                self.set_table_type()
+            elif version.startswith('AEROFREQ'):
+                # TODO: why is this separate?
+                # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+                self.set_as_msc()
                 self.set_table_type()
             elif version == b'XXXXXXXX':
                 self.set_as_msc()
