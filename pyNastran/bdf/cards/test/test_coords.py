@@ -459,7 +459,8 @@ class TestCoords(unittest.TestCase):
         coord.beta_n(2)
         coord.beta_n(3)
         coord.beta_n(6)
-        self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
+        with self.assertRaises(NotImplementedError):
+            self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
     def getNodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)

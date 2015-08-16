@@ -74,7 +74,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
 
     if ver_tuple > dep_ver_tuple:
         # fail
-        raise RuntimeError(msg)
+        raise NotImplementedError(msg)
     else:
         warnings.warn(msg, DeprecationWarning)
 

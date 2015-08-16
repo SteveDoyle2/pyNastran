@@ -214,14 +214,14 @@ class CHEXA8(SolidElement):
         """
         Averages the centroids at the two faces
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         A1, c1 = area_centroid(n1, n2, n3, n4)
         A2, c2 = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
         return c
 
     def Volume(self):
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         (A1, c1) = area_centroid(n1, n2, n3, n4)
         (A2, c2) = area_centroid(n5, n6, n7, n8)
         V = (A1 + A2) / 2. * norm(c1 - c2)
@@ -396,7 +396,7 @@ class CHEXA20(SolidElement):
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
-         n16, n17, n18, n19, n20) = self.nodePositions()
+         n16, n17, n18, n19, n20) = self.get_node_positions()
         (A1, c1) = area_centroid(n1, n2, n3, n4)
         (A2, c2) = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
@@ -409,7 +409,7 @@ class CHEXA20(SolidElement):
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
-         n16, n17, n18, n19, n20) = self.nodePositions()
+         n16, n17, n18, n19, n20) = self.get_node_positions()
         (A1, c1) = area_centroid(n1, n2, n3, n4)
         (A2, c2) = area_centroid(n5, n6, n7, n8)
         V = (A1 + A2) / 2. * norm(c1 - c2)
@@ -643,14 +643,14 @@ class CPENTA6(SolidElement):
                 assert isinstance(c[i], float)
 
     def Centroid(self):
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
         c = (c1 + c2) / 2.
         return c
 
     def Volume(self):
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         A1 = Area(n3 - n1, n2 - n1)
         A2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
@@ -790,7 +790,7 @@ class CPENTA15(SolidElement):
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
-         n11, n12, n13, n14, n15) = self.nodePositions()
+         n11, n12, n13, n14, n15) = self.get_node_positions()
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
         c = (c1 - c2) / 2.
@@ -802,7 +802,7 @@ class CPENTA15(SolidElement):
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
-         n11, n12, n13, n14, n15) = self.nodePositions()
+         n11, n12, n13, n14, n15) = self.get_node_positions()
         A1 = Area(n3 - n1, n2 - n1)
         A2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
@@ -908,7 +908,7 @@ class CPYRAM5(SolidElement):
         """
         .. seealso:: CPYRAM5.Centroid
         """
-        (n1, n2, n3, n4, n5) = self.nodePositions()
+        (n1, n2, n3, n4, n5) = self.get_node_positions()
         A1, c1 = area_centroid(n1, n2, n3, n4)
         c = (c1 + n5) / 2.
         return c
@@ -917,7 +917,7 @@ class CPYRAM5(SolidElement):
         """
         .. seealso:: CPYRAM5.Volume
         """
-        (n1, n2, n3, n4, n5) = self.nodePositions()
+        (n1, n2, n3, n4, n5) = self.get_node_positions()
         A1, c1 = area_centroid(n1, n2, n3, n4)
         V = A1 / 3. * norm(c1 - n5)
         return abs(V)
@@ -1038,7 +1038,7 @@ class CPYRAM13(SolidElement):
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
-         n11, n12, n13) = self.nodePositions()
+         n11, n12, n13) = self.get_node_positions()
         A1, c1 = area_centroid(n1, n2, n3, n4)
         c = (c1 + n5) / 2.
         return c
@@ -1049,7 +1049,7 @@ class CPYRAM13(SolidElement):
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
-         n11, n12, n13) = self.nodePositions()
+         n11, n12, n13) = self.get_node_positions()
         A1, c1 = area_centroid(n1, n2, n3, n4)
         V = A1 / 2. * norm(c1 - n5)
         return abs(V)
@@ -1146,11 +1146,11 @@ class CTETRA4(SolidElement):
         ]
 
     def Volume(self):
-        (n1, n2, n3, n4) = self.nodePositions()
+        (n1, n2, n3, n4) = self.get_node_positions()
         return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
-        (n1, n2, n3, n4) = self.nodePositions()
+        (n1, n2, n3, n4) = self.get_node_positions()
         return (n1 + n2 + n3 + n4) / 4.
 
     def getFaceNodes(self, nid_opposite, nid=None):
@@ -1303,7 +1303,7 @@ class CTETRA10(SolidElement):
 
         .. seealso:: CTETRA4.Volume
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.get_node_positions()
         return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
@@ -1312,7 +1312,7 @@ class CTETRA10(SolidElement):
 
         .. seealso:: CTETRA4.Centroid
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.get_node_positions()
         return (n1 + n2 + n3 + n4) / 4.
 
     def getFaceNodes(self, nidOpposite, nid=None):
