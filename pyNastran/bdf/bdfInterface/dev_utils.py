@@ -94,7 +94,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         does the model need to be cross_referenced
         (default=True; only applies to model option)
     nodes_set : List[int] / (n, ) ndarray
-        the list/array of nodes to consider (not supported)
+        the list/array of nodes to consider (not supported with renumber_nodes=True)
     crash_on_collapse : bool
         stop if nodes have been collapsed
            False: blindly move on
@@ -112,6 +112,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     .. warning:: xref not fully implemented (assumes cid=0)
     """
     assert isinstance(tol, float), tol
+    if node_set is not None:
+        if renumber_nodes:
+            raise NotImplementedError('node_set is not None & renumber_nodes=True')
+
     if isinstance(bdf_filename, string_types):
         xref = True
         model = BDF()
@@ -134,45 +138,42 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     inode = 0
     nid_map = {}
-    if renumber_nodes:
-        for nid, node in sorted(iteritems(model.nodes)):
-            node.nid = inode + 1
-            nid_map[inode] = nid
-            inode += 1
-        nnodes = len(model.nodes)
-        nids = arange(1, inode + 1, dtype='int32')
-        assert nids[-1] == nnodes
+    if node_set is not None:
+        import numpy as np
+        all_nids = array(model.nodes.keys(), dtype='int32')
+        nids = np.intersect1d(all_nids, node_set, assume_unique=True)  # the new values
+
+        if renumber_nodes:
+            raise NotImplementedError('node_set is not None & renumber_nodes=True')
+        else:
+            for nid in all_nids:
+                nid_map[inode] = nid
+                inode += 1
+        #nids = array([node.nid for nid, node in sorted(iteritems(model.nodes)) if nid in node_set], dtype='int32')
 
     else:
-        for nid, node in sorted(iteritems(model.nodes)):
-            nid_map[inode] = nid
-            inode += 1
-        nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
-    #model.write_bdf('A_' + bdf_filename_out)
-
-    #nids_used = set([])
-    #for element in itervalues(model.elements):
-    #    nids_used.update(element.node_ids)
-    #nids_used = array(list(nids_used), dtype='int32')
-    #nids_used.sort()
-    #nids = nids_used
-
-    nnodes = len(nids)
-    i = arange(nnodes, dtype='int32')
-    #nids2 = vstack([i, nids]).T
+        if renumber_nodes:
+            for nid, node in sorted(iteritems(model.nodes)):
+                node.nid = inode + 1
+                nid_map[inode] = nid
+                inode += 1
+            nnodes = len(model.nodes)
+            nids = arange(1, inode + 1, dtype='int32')
+            assert nids[-1] == nnodes
+        else:
+            for nid, node in sorted(iteritems(model.nodes)):
+                nid_map[inode] = nid
+                inode += 1
+            nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
+        all_nids = nids
 
     if needs_get_position:
-        nodes_xyz = array([node.get_position()
-                           for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
+        nodes_xyz = array([model.nodes[nid].get_position()
+                           for nid in nids], dtype='float32')
     else:
-        nodes_xyz = array([node.xyz
-                           for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
+        nodes_xyz = array([model.nodes[nid].xyz
+                           for nid in nids], dtype='float32')
 
-    if 0:
-        i = 0
-        for nid, xyz in zip(nids, nodes_xyz):
-            #print('%i %-5s %s' % (i, nid, list_print(xyz)))
-            i += 1
 
     # there is some set of points that are used on the elements that
     # will be considered.
@@ -201,7 +202,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     nids_new = unique(list(nids_new))
     assert isinstance(nids_new[0], integer_types), type(nids_new[0])
 
-    missing_nids = list(set(nids_new) - set(nids))
+    missing_nids = list(set(nids_new) - set(all_nids))
     if missing_nids:
         missing_nids.sort()
         msg = 'There are missing nodes...\n'
@@ -222,6 +223,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
 
+    nnodes = len(nids)
+
     # get the ids of the duplicate nodes
     slots = where(ieq[:, :] < nnodes)
     irows, icols = slots
@@ -232,7 +235,6 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         inid2 = ieq[irow, icol]
         nid1 = nids[irow]
         nid2 = nids[inid2]
-
         #if nid1 == nid2:
             #continue
 
@@ -1194,7 +1196,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     shell_eids = hstack([out[card_type] for card_type in card_types])
     shell_eids.sort()
 
-    set_shell_eids = set(shell_eids)
+    # set_shell_eids = set(shell_eids)
     neids = len(shell_eids)
     assert neids > 0, neids
     normals = zeros((neids, 3), dtype='float32')
@@ -1215,13 +1217,13 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
             for eid_a in eids:
                 for eid_b in eids:
                     eid_to_eid_map[eid_a].add(eid_b)
-    else:
-        for edge, eids in iteritems(edge_to_eid_map):
-            for eid_a in eids:
-                for eid_b in eids:
-                    if eid_a < eid_b:
-                        eid_to_eid_map[eid_a].add(eid_b)
-                        eid_to_eid_map[eid_b].add(eid_a)
+    # else:
+        # for edge, eids in iteritems(edge_to_eid_map):
+            # for eid_a in eids:
+                # for eid_b in eids:
+                    # if eid_a < eid_b:
+                        # eid_to_eid_map[eid_a].add(eid_b)
+                        # eid_to_eid_map[eid_b].add(eid_a)
 
     #print('\neid_to_eid_map:')
     #for eid, eids in iteritems(eid_to_eid_map):
