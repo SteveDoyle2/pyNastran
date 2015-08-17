@@ -444,6 +444,13 @@ class NastranIO(object):
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
 
+        # fix grid point size
+        if 'conm' in self.geometry_actors:
+            actor = self.geometry_actors['conm']
+            prop = actor.GetProperty()
+            prop.SetRepresentationToPoints()
+            prop.SetPointSize(4)
+
         # set initial caero visibility
         if self.show_caero_actor:
             if self.show_caero_sub_panels:
@@ -591,22 +598,23 @@ class NastranIO(object):
                 #d = norm(xyz - c)
                 points.InsertPoint(j, *c)
 
-                elem = vtk.vtkVertex()
-                #elem = vtk.vtkSphere()
+                if 1:
+                    elem = vtk.vtkVertex()
+                    elem.GetPointIds().SetId(0, j)
+                else:
+                    elem = vtk.vtkSphere()
+                    elem.SetRadius(sphere_size)
+                    elem.SetCenter(points.GetPoint(j))
 
-                #if d == 0.:
-                    #d = sphere_size
-                #elem.SetRadius(sphere_size)
-                #elem.SetCenter(points.GetPoint(j))
-                elem.GetPointIds().SetId(0, j)
                 self.alt_grids['conm'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
             else:
                 self.log_info("skipping %s" % element.type)
         self.alt_grids['conm'].SetPoints(points)
+        #self.alt_grids['conm'].Set
 
     def _get_sphere_size(self, dim_max):
-        return 0.05 * dim_max
+        return 0.01 * dim_max
 
     def mapElements(self, points, nidMap, model, j, dim_max,
                     plot=True, xref_loads=True):
