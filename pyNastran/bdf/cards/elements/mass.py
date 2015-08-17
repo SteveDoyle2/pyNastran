@@ -131,10 +131,10 @@ class CMASS1(PointMassElement):
         p1 = array([0., 0., 0.])
         p2 = array([0., 0., 0.])
         if self.g1 is not None:
-            p1 = self.g1.Position()
+            p1 = self.g1.get_position()
             f += 1.
         if self.g2 is not None:
-            p2 = self.g2.Position()
+            p2 = self.g2.get_position()
             f += 1.
         c = (p1 + p2) / f
         return c
@@ -250,10 +250,10 @@ class CMASS2(PointMassElement):
         p1 = array([0., 0., 0.])
         p2 = array([0., 0., 0.])
         if self.g1 is not None:
-            p1 = self.g1.Position()
+            p1 = self.g1.get_position()
             f += 1.
         if self.g2 is not None:
-            p2 = self.g2.Position()
+            p2 = self.g2.get_position()
             f += 1.
         c = (p1 + p2) / f
         return c
@@ -782,7 +782,7 @@ class CONM2(PointMassElement):
         cid = self.Cid()
         if cid == 0:
             # no transform needed
-            X2 = self.nid.Position() + self.X
+            X2 = self.nid.get_position() + self.X
         elif cid == -1:
             # case X1, X2, X3 are the coordinates, not offsets, of the center of gravity of
             # the mass in the basic coordinate system.
@@ -807,7 +807,7 @@ class CONM2(PointMassElement):
             dx = x - self.cid.origin
 
             # the actual position of the CONM2
-            X2 = self.nid.Position() + dx
+            X2 = self.nid.get_position() + dx
         return X2
 
     def cross_reference(self, model):

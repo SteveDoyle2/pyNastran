@@ -69,9 +69,7 @@ def run_arg_parse():
     if '--rotation' in data:
         rotation = data['--rotation']
 
-    #print("is_nodal=%s is_centroidal=%s" % (is_nodal, is_centroidal))
     #print("shots", shots)
-    #writeBDF = args.writeBDF
     if shots:
         #shots = shots[1]
         #print("shots2 = %r" % shots, type(shots))

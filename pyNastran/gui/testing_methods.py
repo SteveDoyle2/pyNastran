@@ -48,6 +48,8 @@ def add_dummy_gui_functions(test, debug=True):
         pass
     def passer():
         pass
+    def passer1(a):
+        pass
     def passer2(a, b):
         pass
     def create_alternate_vtk_grid(name):
@@ -63,10 +65,15 @@ def add_dummy_gui_functions(test, debug=True):
         if debug:
             print('ERROR:  ', msg)
 
+
+    test.form = []
+    test.result_cases = {}
+    test._finish_results_io = passer1
     test._finish_results_io2 = passer2
     test.geometry_actors = {
         'main' : GeometryActor(),
     }
+    test.debug = True
     test.grid = Grid()
     test.grid2 = Grid()
     test.scalarBar = ScalarBar()

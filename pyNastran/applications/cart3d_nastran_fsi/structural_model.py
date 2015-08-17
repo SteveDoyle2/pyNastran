@@ -51,7 +51,7 @@ class StructuralModel(Model):
 
     def Node(self, nid):
         node = self.fem.Node(nid)
-        return node.Position()
+        return node.get_position()
 
     def Element(self, eid):
         return self.fem.Element(eid)
@@ -66,7 +66,7 @@ class StructuralModel(Model):
         e = self.fem.Element(eid)
         nodes = []
         for n in e.nodes:
-            nodes.append(n.Position())
+            nodes.append(n.get_position())
         return nodes
 
     def Centroid(self, eid):

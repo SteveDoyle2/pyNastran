@@ -15,7 +15,6 @@ import pyNastran
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
-from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
 
 
 if PY2:
@@ -74,9 +73,37 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
 
     if ver_tuple > dep_ver_tuple:
         # fail
-        raise RuntimeError(msg)
+        raise NotImplementedError(msg)
     else:
         warnings.warn(msg, DeprecationWarning)
+
+
+class BaseCardDeprecated(object):
+    """
+    Deprecated in:
+      - version 0.7
+    Removed in:
+      - version 0.8
+    """
+    def rawFields(self):
+        self.deprecated('rawFields()', 'raw_fields()', '0.7')
+        return self.raw_fields()
+
+    def reprFields(self):
+        self.deprecated('reprFields()', 'repr_fields()', '0.7')
+        return self.repr_fields()
+
+    def reprCard(self):
+        self.deprecated('reprCard()', 'print_repr_card(size, is_double)', '0.7')
+        return self.print_repr_card()
+
+    def repr_card(self):
+        self.deprecated('repr_card()', 'print_repr_card(size, is_double)', '0.7')
+        return self.print_repr_card()
+
+    def printRawFields(self, size=8):
+        self.deprecated('printRawFields(size)', 'print_raw_card(size, is_double)', '0.7')
+        return self.print_raw_card(size=size)
 
 
 class BaseCard(BaseCardDeprecated):
@@ -285,7 +312,7 @@ class Material(BaseCard):
         return self.mid
 
 
-class Element(BaseCard, ElementDeprecated):
+class Element(BaseCard):
     """defines the Element class"""
     pid = 0  # CONM2, rigid
 
@@ -295,12 +322,23 @@ class Element(BaseCard, ElementDeprecated):
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 
+    def nodePositions(self, nodes=None):
+        self.deprecated('nodePositions(nodes)', 'get_node_positions(nodes)', '0.8')
+        return self.get_node_positions(nodes=nodes)
+
     def Pid(self):
         """
-        returns the property ID of an element
-        :param self:  the Element pointer
-        :returns pid: the Property ID
-        :type pid:    int
+        Gets the Property ID of an element
+
+        Parameters
+        ----------
+        self : Element()
+            the Element pointer
+
+        Returns
+        -------
+        pid : int
+            the Property ID
         """
         if isinstance(self.pid, integer_types):
             return self.pid
@@ -317,7 +355,7 @@ class Element(BaseCard, ElementDeprecated):
         positions.fill(nan)
         for i, node in enumerate(nodes):
             if node is not None:
-                positions[i, :] = node.Position()
+                positions[i, :] = node.get_position()
         return positions
 
     def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
@@ -335,7 +373,7 @@ class Element(BaseCard, ElementDeprecated):
 
             unique_nodes = unique(nids2)
             if len(nids2) != len(unique_nodes):
-                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, self.__class__.__name__, nids2)
+                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids2)
                 raise IndexError(msg)
         else:
             unique_nodes = unique(nids)

@@ -294,7 +294,7 @@ class NastranMesh(BDF):
         i = 0
         nodes = []
         for nid, node in sorted(iteritems(self.nodes)):
-            position = node.Position()
+            position = node.get_position()
             nodeLocations[nid] = position
             nodes.append(position)
             nodeIs[i] = nid

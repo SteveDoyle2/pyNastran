@@ -215,7 +215,7 @@ class OES(OP2Common):
         if self.is_sort1():
             n = self._read_oes1_4_sort1(data)
         else:
-            msg = 'sort2 Type=%s num=%s' % (self.element_name, self.element_type)
+            msg = self.code_information()
             n = self._not_implemented_or_skip(data, msg)
         return n
 
@@ -303,7 +303,7 @@ class OES(OP2Common):
                 elif self.element_type == 10:  # CONROD
                     result_vector_name = 'conrod_stress'
                 else:
-                    msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                    msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
             else:
                 obj_real = RealRodStrain
@@ -320,7 +320,7 @@ class OES(OP2Common):
                 elif self.element_type == 10:  # CONROD
                     result_vector_name = 'conrod_strain'
                 else:
-                    msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                    msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
 
             result_name = result_vector_name
@@ -347,7 +347,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(b'i4f')
+                s = Struct(self._endian + b'i4f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -368,7 +368,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b'i4f')
+                s = Struct(self._endian + b'i4f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     (eid_device, axialReal, axial_imag, torsion_real, torsionImag) = s.unpack(edata)
@@ -386,7 +386,7 @@ class OES(OP2Common):
                     n += ntotal
             #elif self.format_code in [2, 3] and self.num_wide == 8:  # is this imag ???
                 #ntotal = 32
-                #s = Struct(b'i')
+                #s = Struct(self._endian + b'i')
                 #nelements = len(data) // ntotal
                 #for i in range(nelements):
                     #edata = data[n:n + 4]
@@ -395,7 +395,7 @@ class OES(OP2Common):
                     #assert eid > 0, eid
                     #n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 2: # CBEAM
@@ -434,13 +434,13 @@ class OES(OP2Common):
                     self._data_factor = 11
                     return nelements * self.num_wide * 4
 
-                s = Struct(b'i')
+                s = Struct(self._endian + b'i')
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
                 n2 = 40
-                s1 = Struct(b'ii9f')
-                s2 = Struct(b'i9f')
+                s1 = Struct(self._endian + b'ii9f')
+                s2 = Struct(self._endian + b'i9f')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+n1]
@@ -472,14 +472,14 @@ class OES(OP2Common):
                     #self.create_transient_object(self.beamStrain, RealBeamStrain)
 
                 nelements = len(data) // ntotal
-                s = Struct(b'i')
+                s = Struct(self._endian + b'i')
 
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
                 n2 = 40
-                s1 = Struct(b'ii9f')
-                s2 = Struct(b'i9f')
+                s1 = Struct(self._endian + b'ii9f')
+                s2 = Struct(self._endian + b'i9f')
 
                 nelements = len(data) // ntotal
                 for i in range(nelements):
@@ -503,7 +503,7 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, out)
                 return len(data)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 4: # CSHEAR
@@ -541,7 +541,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b'i3f')
+                s = Struct(self._endian + b'i3f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=5
@@ -563,7 +563,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b'i4f')
+                s = Struct(self._endian + b'i4f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=5
@@ -581,7 +581,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid_sort1(dt, eid, (etmax, etavg))
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [11, 12, 13, 14]:  # springs
@@ -629,7 +629,7 @@ class OES(OP2Common):
 
                 ntotal = 8 # 2 * 4
                 nelements = len(data) // ntotal
-                s = Struct(b'if')
+                s = Struct(self._endian + b'if')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -646,7 +646,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, ComplexCelasStrain)
 
                 ntotal = 12
-                s = Struct(b'i2f')
+                s = Struct(self._endian + b'i2f')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -664,7 +664,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid_sort1(dt, eid, axial)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 34: # CBAR
@@ -705,7 +705,7 @@ class OES(OP2Common):
                     self.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(b'i15f')
+                s = Struct(self._endian + b'i15f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -729,7 +729,7 @@ class OES(OP2Common):
                 else:
                     self.create_transient_object(slot, ComplexBarStrain)
 
-                s = Struct(b'i18f')
+                s = Struct(self._endian + b'i18f')
                 ntotal = 76
                 nelements = len(data) // ntotal
                 for i in range(nelements):
@@ -769,7 +769,7 @@ class OES(OP2Common):
                                          s1a, s2a, s3a, s4a, axial,
                                          s1b, s2b, s3b, s4b)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [39, 67, 68]: # solid stress
@@ -844,8 +844,8 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                struct1 = Struct(b'ii4si')
-                struct2 = Struct(b'i20f')
+                struct1 = Struct(self._endian + b'ii4si')
+                struct2 = Struct(self._endian + b'i20f')
                 if self.debug4():
                     msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
                         self.element_name, self.element_type, nelements, nnodes_expected)
@@ -909,8 +909,8 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s1 = Struct(b'2i4si')
-                s2 = Struct(b'i12f')
+                s1 = Struct(self._endian + b'2i4si')
+                s2 = Struct(self._endian + b'i12f')
                 for i in range(nelements):
                     edata = data[n:n+16]
                     n += 16
@@ -953,7 +953,7 @@ class OES(OP2Common):
                         self.obj.add_node_sort1(dt, eid, grid, inode,
                                                 ex, ey, ez, etxy, etyz, etzx)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         #=========================
@@ -994,7 +994,7 @@ class OES(OP2Common):
                     self._data_factor = 2
                     return nelements * ntotal
 
-                s = Struct(b'i16f')
+                s = Struct(self._endian + b'i16f')
                 cen = 0 # CEN/4
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -1021,8 +1021,8 @@ class OES(OP2Common):
                     self.create_transient_object(slot, ComplexPlateStress)
                 else:
                     self.create_transient_object(slot, ComplexPlateStrain)
-                s1 = Struct(b'i14f')
-                s2 = Struct(b'i14f')
+                s1 = Struct(self._endian + b'i14f')
+                s2 = Struct(self._endian + b'i14f')
                 nnodes = 0  # centroid + 4 corner points
 
                 ntotal = 4 * (15 * (nnodes + 1))
@@ -1085,7 +1085,7 @@ class OES(OP2Common):
                         self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                         self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [74]:  # TRIA3
@@ -1122,7 +1122,7 @@ class OES(OP2Common):
                     self._data_factor = 2
                     return nelements * ntotal
 
-                s = Struct(b'i16f')
+                s = Struct(self._endian + b'i16f')
                 if self.debug4():
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -1158,7 +1158,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b'i14f')
+                s = Struct(self._endian + b'i14f')
                 cen = 0 # CEN/3
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1189,7 +1189,7 @@ class OES(OP2Common):
                     self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
@@ -1356,8 +1356,8 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * ntotal
 
-                s1 = Struct(b'ii')  # 2
-                s2 = Struct(b'i14f') # 15
+                s1 = Struct(self._endian + b'ii')  # 2
+                s2 = Struct(self._endian + b'i14f') # 15
                 for i in range(nelements):
                     (eid_device, _) = s1.unpack(data[n:n+8])
                     n += 8
@@ -1420,7 +1420,7 @@ class OES(OP2Common):
                         self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                         self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [88, 90]: # nonlinear shells
@@ -1453,7 +1453,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, NonlinearQuad)
 
                 ntotal = 52  # 4*13
-                s = Struct(b'i12f')  # 1+12=13
+                s = Struct(self._endian + b'i12f')  # 1+12=13
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1479,7 +1479,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, NonlinearQuad)
 
                 ntotal = 100  # 4*25
-                s = Struct(b'i24f') # 1+24=25
+                s = Struct(self._endian + b'i24f') # 1+24=25
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1498,7 +1498,7 @@ class OES(OP2Common):
                         eid, fd2, sx2, sy2, undef3, txy2, es2, eps2, ecs2, ex2, ey2, undef4, etxy2))
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [95, 96, 97, 98]: # composite shell
@@ -1569,7 +1569,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b'ii9f')
+                s = Struct(self._endian + b'ii9f')
                 if self.debug4():
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -1599,7 +1599,7 @@ class OES(OP2Common):
                     n += 44
                 self.eid_old = eid_old
             elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 nelements = len(data) // ntotal
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
@@ -1614,9 +1614,9 @@ class OES(OP2Common):
                 #    'i8si4f4s', not 'i8si3fi4s'
                 ntotal = 36
                 nelements = len(data) // ntotal
-                s = Struct(b'i')
-                s2 = Struct(b'8si3fi4s')
-                s3 = Struct(b'8si4f4s')
+                s = Struct(self._endian + b'i')
+                s2 = Struct(self._endian + b'8si3fi4s')
+                s3 = Struct(self._endian + b'8si4f4s')
                 for i in range(nelements):
                     #out = s.unpack(data[n:n + ntotal])
                     eid_device, = s.unpack(data[n:n+4])
@@ -1636,7 +1636,7 @@ class OES(OP2Common):
                     n += ntotal
                 raise NotImplementedError('this is a really weird case...')
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         #=========================
@@ -1658,8 +1658,8 @@ class OES(OP2Common):
                 ntotal = 132  # (1+8*4)*4 = 33*4 = 132
                 nelements = len(data) // ntotal
 
-                s1 = Struct(b'2i7f')  # 36
-                s2 = Struct(b'i7f')
+                s1 = Struct(self._endian + b'2i7f')  # 36
+                s2 = Struct(self._endian + b'i7f')
                 for i in range(nelements):
                     out = s1.unpack(data[n:n + 36])
                     (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
@@ -1678,7 +1678,7 @@ class OES(OP2Common):
                         self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                         n += 32  # 4*8
             elif self.format_code in [2, 3] and self.num_wide == 37: # imag
-                msg = 'num_wide=%s' % self.num_wide
+                #msg = 'num_wide=%s' % self.num_wide
                 #return self._not_implemented_or_skip(data, msg)
 
                 #if self.isStress():
@@ -1687,8 +1687,8 @@ class OES(OP2Common):
                 #else:
                     #self.create_transient_object(self.ctriax_strain, ComplexTriaxStrain)  # undefined
                     #raise NotImplementedError('ComplexTriaxStrain')
-                s1 = Struct(b'ii8f')
-                s2 = Struct(b'i8f')
+                s1 = Struct(self._endian + b'ii8f')
+                s2 = Struct(self._endian + b'i8f')
 
                 num_wide = 1 + 4 * 9
                 ntotal = num_wide * 4
@@ -1735,7 +1735,7 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, loc, rs, azs, As, ss)
                         n += 36  # 4*8
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [102]: # bush
             # 102-CBUSH
@@ -1755,7 +1755,7 @@ class OES(OP2Common):
                 ntotal = 28  # 4*7
 
                 nelements = len(data) // ntotal
-                s = Struct(b'i6f')
+                s = Struct(self._endian + b'i6f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
@@ -1775,7 +1775,7 @@ class OES(OP2Common):
                 ntotal = 52  # 4*13
 
                 nelements = len(data) // ntotal
-                s = Struct(b'i12f')
+                s = Struct(self._endian + b'i12f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
@@ -1804,7 +1804,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [40]:  # bush
@@ -1825,7 +1825,7 @@ class OES(OP2Common):
                     raise NotImplementedError('cbush1d_stress_strain; numwide=8')
 
                 ntotal = 32  # 4*8
-                s = Struct(b'i6fi')
+                s = Struct(self._endian + b'i6fi')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1846,7 +1846,7 @@ class OES(OP2Common):
                     raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 
                 ntotal = 36  # 4*9
-                s = Struct(b'i8f')
+                s = Struct(self._endian + b'i8f')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -1869,7 +1869,7 @@ class OES(OP2Common):
                         ae = complex(aer, aei)
                     self.obj.add_new_eid(self.element_type, dt, eid, fe, ue, ao, ae)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
 
@@ -1911,7 +1911,7 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == 7:  # real
                 self.create_transient_object(slot, NonlinearRod)
-                s = Struct(b'i6f')  # 1+6=7
+                s = Struct(self._endian + b'i6f')  # 1+6=7
                 ntotal = 28  #  7*4 = 28
                 nelements = len(data) // ntotal
                 for i in range(nelements):
@@ -1927,7 +1927,7 @@ class OES(OP2Common):
                     self.obj.add(self.element_type, dt, indata)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [224, 225]: # nonlinear spring
@@ -1958,7 +1958,7 @@ class OES(OP2Common):
                 assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
                 ntotal = 12  # 4*3
                 nelements = len(data) // ntotal
-                s = Struct(b'i2f')
+                s = Struct(self._endian + b'i2f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)  # num_wide=3
@@ -1969,7 +1969,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(self.element_name, dt, eid, force, stress)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [35]:
@@ -1998,7 +1998,7 @@ class OES(OP2Common):
                     #self.create_transient_object(self.nonlinear_cgap_strain, NonlinearGapStrain)  # undefined
                     raise NotImplementedError('NonlinearGapStrain')
                 ntotal = 44  # 4*11
-                s = Struct(b'i8f4s4s')
+                s = Struct(self._endian + b'i8f4s4s')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -2011,7 +2011,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
                     n += ntotal
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
             return len(data)
@@ -2062,7 +2062,7 @@ class OES(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
 
-                s = Struct(b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
+                s = Struct(self._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
                 for i in range(nelements):  # num_wide=51
                     edata = data[n:n + 204]
                     out = s.unpack(edata)
@@ -2096,10 +2096,10 @@ class OES(OP2Common):
                     n += 204
 
             elif self.format_code == 1 and self.num_wide == numwide_random:  # random
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [85, 91, 93]:
@@ -2148,8 +2148,8 @@ class OES(OP2Common):
                     #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
 
                 n = 0
-                s1 = Struct(b'i4s')
-                s2 = Struct(b'i15f')
+                s1 = Struct(self._endian + b'i4s')
+                s2 = Struct(self._endian + b'i15f')
                 nelements = len(data) // ntotal
                 for i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
                     edata = data[n:n+8]
@@ -2173,7 +2173,7 @@ class OES(OP2Common):
                          sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
                          ex, ey, ez, exy, eyz, exz) = out
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [100]:  # bars
@@ -2214,8 +2214,8 @@ class OES(OP2Common):
             numwideC = 2 + 13 * nnodes  # 54
             if self.num_wide == numwideA:
                 ntotal = numwideA * 4
-                s1 = Struct(b'ii')
-                s2 = Struct(b'i11f')
+                s1 = Struct(self._endian + b'ii')
+                s2 = Struct(self._endian + b'i11f')
                 nelements = len(data) // ntotal  # 2+16*9 = 146 -> 146*4 = 584
                 for i in range(nelements):
                     edata = data[n:n+8]
@@ -2258,8 +2258,8 @@ class OES(OP2Common):
                 self._results._found_result(result_name)
                 n = 0
                 ntotal = 120  # 36+28*3
-                s1 = Struct(b'i4si6f')  # 1 + 4+1+6 = 12
-                s2 = Struct(b'i6f')
+                s1 = Struct(self._endian + b'i4si6f')  # 1 + 4+1+6 = 12
+                s2 = Struct(self._endian + b'i6f')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+36]  # 4*9
@@ -2318,8 +2318,8 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real???
                 ntotal = numwide_real * 4
-                s2 = Struct(b'3i4s2i')
-                s3 = Struct(b'i16f')
+                s2 = Struct(self._endian + b'3i4s2i')
+                s3 = Struct(self._endian + b'i16f')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     (eid_device, parent, coord, icord, theta, itype) = s2.unpack(data[n:n+24])
@@ -2424,7 +2424,7 @@ class OES(OP2Common):
         ntotal = 36  # 4*9
 
         n = 0
-        s = Struct(b'i8si3fi4s')
+        s = Struct(self._endian + b'i8si3fi4s')
         nelements = len(data) // ntotal
         for i in range(nelements):
             eData = data[n:n + ntotal]

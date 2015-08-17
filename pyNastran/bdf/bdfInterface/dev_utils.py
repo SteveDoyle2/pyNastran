@@ -309,7 +309,7 @@ def cut_model(model, axis='-y'):
 
     remove_nids = []
     for nid, node in iteritems(model.nodes):
-        xyz = node.Position()
+        xyz = node.get_position()
         if xyz[iaxis] < 0.0:
             remove_nids.append(nid)
 

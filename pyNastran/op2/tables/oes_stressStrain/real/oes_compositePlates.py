@@ -486,48 +486,68 @@ class RealCompositePlateStress(StressObject):
         return headers
 
     def _is_cquad4(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return True
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97:
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return False
-        elif etype in ['QUAD8LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return False
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return False
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def _is_ctria3(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return False
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97:
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return True
-        elif etype in ['QUAD8LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return False
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return False
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def _is_cquad8(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return False
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97:
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return False
-        elif etype in ['QUAD8LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return True
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return False
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def _is_ctria6(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:  # 33, 144,
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return False
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97: # 74,
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return False
-        elif etype in ['QUAD8LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return False
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return True
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -884,48 +904,68 @@ class RealCompositePlateStrain(StrainObject):
         return page_num
 
     def _is_cquad4(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return True
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97:
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return False
-        elif etype in ['QUAD8LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return False
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return False
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def _is_ctria3(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return False
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97:
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return True
-        elif etype in ['QUAD8LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return False
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return False
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def _is_cquad8(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return False
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97:
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
             return False
-        elif etype in ['QUAD8LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return True
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return False
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def _is_ctria6(self, etype):
-        if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
+        if self.element_type == 95:
+        #if etype in ['CQUAD4', 'QUAD4LC', 'QUAD4LC-composite']:
             return False
-        elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 97:
             return False
-        elif etype in ['QUAD8LC-composite']:
+        #elif etype in ['CTRIA3', 'TRIA3LC', 'TRIA3LC-composite']:
+        elif self.element_type == 96:
+        #elif etype in ['QUAD8LC-composite']:
             return False
-        elif etype in ['TRIA6LC-composite']:
+        elif self.element_type == 98:
+        #elif etype in ['TRIA6LC-composite']:
             return True
-        raise NotImplementedError(etype)
+        msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
+        raise NotImplementedError(msg)
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.is_von_mises():

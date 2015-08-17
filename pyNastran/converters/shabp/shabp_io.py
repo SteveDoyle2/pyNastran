@@ -1,7 +1,6 @@
 from six import iteritems
-import os
-from numpy import zeros, array, cross, dot, ravel, amax, amin
-from numpy.linalg import det, norm
+from numpy import zeros, array, cross, amax, amin
+from numpy.linalg import norm
 
 import vtk
 from vtk import vtkQuad
@@ -27,8 +26,8 @@ class ShabpIO(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.removeOldGeometry(shabpFilename)
-        if skipReading:
+        skip_reading = self.removeOldGeometry(shabpFilename)
+        if skip_reading:
             return
 
         self.model = SHABP(log=self.log, debug=self.debug)
@@ -97,7 +96,6 @@ class ShabpIO(object):
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
             self.grid2.Update()
-            #print("updated grid")
 
         #return
 
@@ -111,103 +109,109 @@ class ShabpIO(object):
         ID = 1
 
         self.log.debug("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
-        cases = self.fillShabpGeometryCase(cases, ID, nodes, elements, patches, components, impact, shadow)
-        self._finish_results_io(cases)
+        form, cases = self._fill_shabp_geometry_case(cases, ID, nodes, elements, patches, components, impact, shadow)
+        self._finish_results_io2(form, cases)
 
     def clear_shabp(self):
         del self.elements
         del self.model
 
-    def fillShabpGeometryCase(self, cases, ID, nodes, elements, patches, components, impact, shadow):
-        assert self.is_centroidal != self.is_nodal
-
+    def _fill_shabp_geometry_case(self, cases, ID, nodes, elements, patches, components, impact, shadow):
         self.elements = elements
-        if self.is_centroidal:
-            cases[(ID, 'Component', 1, 'centroid', '%i')] = components
-            cases[(ID, 'PatchID', 1, 'centroid', '%i')] = patches
-            cases[(ID, 'Impact', 1, 'centroid', '%i')] = impact
-            cases[(ID, 'Shadow', 1, 'centroid', '%i')] = shadow
 
-            XYZc = zeros((len(elements),3), dtype='float32')
-            #Normal = zeros((len(elements),3), dtype='float32')
-            area = zeros(len(elements), dtype='float32')
+        icase = 0
+        location_form = [
+            ('centroidX', icase + 5, []),
+            ('centroidY', icase + 6, []),
+            ('centroidZ', icase + 7, []),
 
-            for i,element in enumerate(elements):
-                p1, p2, p3, p4 = element
-                P1 = array(nodes[p1])
-                P2 = array(nodes[p2])
-                P3 = array(nodes[p3])
-                P4 = array(nodes[p4])
-                a = P3 - P1
-                b = P4 - P2
-                n = cross(a, b)
-                nnorm = norm(n)
-                #normal = n / nnorm
-                A = 0.5 * nnorm
+            ('nodeX', icase + 8, []),
+            ('nodeY', icase + 9, []),
+            ('nodeZ', icase + 10, []),
+        ]
 
-                XYZc[i,:] = (P1 + P2 + P3 + P4) / 4.0
-                #Normal[i, :] = normal
-                area[i] = A
-            cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = XYZc[:,0]
-            cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = XYZc[:,1]
-            cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = XYZc[:,2]
+        geometry_form = [
+            ('Component', icase, []),
+            ('PatchID', icase + 1, []),
+            ('Impact', icase + 2, []),
+            ('Shadow', icase + 3, []),
+            ('Area', icase + 4, []),
+            ('Location', None, location_form),
+        ]
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+        cases[(ID, icase, 'Component', 1, 'centroid', '%i')] = components
+        cases[(ID, icase + 1, 'PatchID', 1, 'centroid', '%i')] = patches
+        cases[(ID, icase + 2, 'Impact', 1, 'centroid', '%i')] = impact
+        cases[(ID, icase + 3, 'Shadow', 1, 'centroid', '%i')] = shadow
 
-            #cases[(ID, 'normal_x', 1, 'centroid', '%.2f')] = Normal[:,0]
-            #cases[(ID, 'normal_y', 1, 'centroid', '%.2f')] = Normal[:,1]
-            #cases[(ID, 'normal_z', 1, 'centroid', '%.2f')] = Normal[:,2]
-            cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
-        elif self.is_nodal:
-            Xn = zeros(len(nodes), dtype='float32')
-            Yn = zeros(len(nodes), dtype='float32')
-            Zn = zeros(len(nodes), dtype='float32')
-            for i, node in enumerate(nodes):
-                Xn[i] = node[0]
-                Yn[i] = node[1]
-                Zn[i] = node[2]
-            cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
-            cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
-            cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
-        return cases
+        XYZc = zeros((len(elements), 3), dtype='float32')
+        #Normal = zeros((len(elements),3), dtype='float32')
+        area = zeros(len(elements), dtype='float32')
+
+        for i, element in enumerate(elements):
+            p1, p2, p3, p4 = element
+            P1 = array(nodes[p1])
+            P2 = array(nodes[p2])
+            P3 = array(nodes[p3])
+            P4 = array(nodes[p4])
+            a = P3 - P1
+            b = P4 - P2
+            n = cross(a, b)
+            nnorm = norm(n)
+            #normal = n / nnorm
+            A = 0.5 * nnorm
+
+            XYZc[i, :] = (P1 + P2 + P3 + P4) / 4.0
+            #Normal[i, :] = normal
+            area[i] = A
+        cases[(ID, icase + 4, 'Area', 1, 'centroid', '%.2f')] = area
+        cases[(ID, icase + 5, 'centroidX', 1, 'centroid', '%.2f')] = XYZc[:, 0]
+        cases[(ID, icase + 6, 'centroidY', 1, 'centroid', '%.2f')] = XYZc[:, 1]
+        cases[(ID, icase + 7, 'centroidZ', 1, 'centroid', '%.2f')] = XYZc[:, 2]
+
+        #cases[(ID, 'normalX', 1, 'centroid', '%.2f')] = Normal[:,0]
+        #cases[(ID, 'normalY', 1, 'centroid', '%.2f')] = Normal[:,1]
+        #cases[(ID, 'normalZ', 1, 'centroid', '%.2f')] = Normal[:,2]
+
+        Xn = zeros(len(nodes), dtype='float32')
+        Yn = zeros(len(nodes), dtype='float32')
+        Zn = zeros(len(nodes), dtype='float32')
+        for i, node in enumerate(nodes):
+            Xn[i] = node[0]
+            Yn[i] = node[1]
+            Zn[i] = node[2]
+        cases[(ID, icase + 8, 'nodeX', 1, 'node', '%.2f')] = Xn
+        cases[(ID, icase + 9, 'nodeY', 1, 'node', '%.2f')] = Yn
+        cases[(ID, icase + 10, 'nodeZ', 1, 'node', '%.2f')] = Zn
+        return form, cases
 
     def load_shabp_results(self, shabp_filename, dirname):
         Cpd, deltad = self.model.read_shabp_out(shabp_filename)
 
-        if self.is_centroidal:
-            self.resultCases = {}
-            for case_id, Cp in sorted(iteritems(Cpd)):
-                Cp = Cpd[case_id]
-                #delta = deltad[case_id]
+        cases = self.result_cases
+        icase = len(cases)
+        mach_results = []
+        form = self.form
+        form.append(('Results', None, mach_results))
+        #self.resultCases = {}
+        mach_forms = {}
+        for case_id, Cp in sorted(iteritems(Cpd)):
+            Cp = Cpd[case_id]
+            #delta = deltad[case_id]
 
-                mach, alpha, beta = self.model.shabp_cases[case_id]
-                #name = 'Mach=%g Alpha=%g' % (mach, alpha)
-                name = 'Mach=%g Alpha=%g' % (mach, alpha)
-                self.resultCases[(name, 'Cp', 1, 'centroid', '%.3f')] = Cp
-                #self.resultCases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
-        elif self.is_nodal:
-            #key = (1, 'Cp', 1, 'node', '%.3f')
-            #self.resultCases[key] = Cp_array
-            pass
-        self._finish_results_io(self.resultCases)
+            mach, alpha, beta = self.model.shabp_cases[case_id]
+            #name = 'Mach=%g Alpha=%g' % (mach, alpha)
+            name = 'Mach=%g Alpha=%g' % (mach, alpha)
+            cases[(name, icase, 'Cp', 1, 'centroid', '%.3f')] = Cp
+            cp_form = [
+                ('Cp', icase, [])
+            ]
+            mach_forms[mach].append(('Cp', None, cp_form))
+            #self.resultCases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
 
-def main():
-    def removeOldGeometry(self):
-        pass
-    def cycleResults(self):
-        pass
+        for mach, mach_form in sorted(iteritems(mach_forms)):
+            mach_results.append(mach_form)
+        self._finish_results_io2(form, cases)
 
-    test = ShabpIO()
-    test.is_nodal = True
-    test.is_centroidal = False
-    test.removeOldGeometry = removeOldGeometry
-    test.cycleResults = cycleResults
-
-    #test.load_shabp_geometry('SWB.INP','')
-    test.load_shabp_geometry('models/NAC6.INP', '')
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
-
-
-#if __name__=='__main__':
-#    lawgs = LaWGS('tmx1242.wgs')
-#    lawgs.run()

@@ -29,7 +29,7 @@ class ONR(OP2Common):
         ## total energy of all elements in isubcase/mode
         self.eTotal = self.parse_approach_code(data)
 
-        element_name, = unpack(b'8s', data[24:32])
+        element_name, = unpack(self._endian + b'8s', data[24:32])
         #print("element_name = %s" %(element_name))
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
@@ -147,7 +147,7 @@ class ONR(OP2Common):
 
         if self.num_wide == 4:
             self.create_transient_object(self.strain_energy, RealStrainEnergy)
-            s = Struct(b'i3f')
+            s = Struct(self._endian + b'i3f')
 
             ntotal = 16
             nnodes = len(data) // ntotal
@@ -166,7 +166,7 @@ class ONR(OP2Common):
         elif self.num_wide == 5:
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
             ntotal = 20
-            s = Struct(b'8s3f')
+            s = Struct(self._endian + b'8s3f')
             nnodes = len(data) // ntotal
             for i in range(nnodes):
                 edata = data[n:n+20]
@@ -184,7 +184,7 @@ class ONR(OP2Common):
         elif self.num_wide == 6:  ## TODO: figure this out...
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
-            s = Struct(b'i8s3f')
+            s = Struct(self._endian + b'i8s3f')
             nnodes = len(data) // ntotal
             for i in range(nnodes):
                 edata = data[n:n+24]

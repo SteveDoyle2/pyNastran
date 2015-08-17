@@ -14,7 +14,7 @@ def to_cart3d(bdf_filename, cart3d_filename):
     i = 1
     for node_id, node in sorted(iteritems(model.nodes)):
         node_id_shift[node_id] = i
-        x, y, z = node.Position()
+        x, y, z = node.get_position()
         f.write('%s %s %s\n' % (x, y, z))
         i += 1
     mids = ''

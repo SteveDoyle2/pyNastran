@@ -41,13 +41,13 @@ class TetgenIO(object):
         tris = model.tri
         tets = model.tet
 
-        self.nNodes, three = nodes.shape
+        self.nNodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if dimension_flag == 2:
-            ntris, three = tris.shape
+            ntris = tris.shape[0]
         elif dimension_flag == 3:
-            ntets, four = tets.shape
+            ntets = tets.shape[0]
         else:
             raise RuntimeError()
         self.nElements = ntris + ntets
@@ -78,7 +78,7 @@ class TetgenIO(object):
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
 
         nid = 0
         print("nnodes=%s" % nnodes)
@@ -111,7 +111,6 @@ class TetgenIO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            print("updated grid")
 
         # loadSTLResults - regions/loads
         self.TurnTextOn()

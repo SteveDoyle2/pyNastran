@@ -313,8 +313,8 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
         for nid in model.nodes:
             a = array([30., 40., 50.])
-            b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
+            b = model.Node(nid).get_position()
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
 
     def test_cord2_rcs_02(self):
         """
@@ -471,7 +471,7 @@ class TestCoords(unittest.TestCase):
         for i, grid in enumerate(grids_expected):
             nid, cid, x, y, z = grid
             node = model.Node(nid)
-            pos = node.Position()
+            pos = node.get_position()
             n = array([x, y, z])
 
             msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)

@@ -163,7 +163,7 @@ class NastranIO(NastranIO_xref):
             i = 0
             fraction = 1. / nNodes  # so you can color the nodes by ID
             for (nid, node) in sorted(iteritems(model.nodes)):
-                point = node.Position()
+                point = node.get_position()
                 points.InsertPoint(i, *point)
                 #self.gridResult.InsertNextValue(i * fraction)
 
@@ -259,7 +259,7 @@ class NastranIO(NastranIO_xref):
                     #print("element", element)
                     #print("element.nid", element.nid)
                     #print('nodeIDs', model.nodes.keys())
-                    xyz = element.nid.Position()
+                    xyz = element.nid.get_position()
                     c = element.Centroid()
                     d = norm(xyz-c)
                     elem = vtk.vtkVertex()
@@ -734,7 +734,7 @@ class NastranIO(NastranIO_xref):
                         #elem.SetRadius(d)
                     else:
                         # 2 points
-                        #d = norm(element.nodes[0].Position() - element.nodes[1].Position())
+                        #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                         self.eid_to_nid_map[eid] = nodeIDs
                         elem = vtk.vtkLine()
                         try:
@@ -887,7 +887,7 @@ class NastranIO(NastranIO_xref):
             scale_factors2 = []
             for load in loadCase:
                 if isinstance(load, LOAD):
-                    scale_factors, loads = load.getReducedLoads()
+                    scale_factors, loads = load.get_reduced_loads()
                     scale_factors2 += scale_factors
                     loads2 += loads
                 else:
@@ -936,7 +936,7 @@ class NastranIO(NastranIO_xref):
             scale_factors2 = []
             for load in loadCase:
                 if isinstance(load, LOAD):
-                    scale_factors, loads = load.getReducedLoads()
+                    scale_factors, loads = load.get_reduced_loads()
                     scale_factors2 += scale_factors
                     loads2 += loads
                 else:

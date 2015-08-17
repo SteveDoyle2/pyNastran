@@ -310,8 +310,8 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
         for nid in model.nodes:
             a = array([30., 40., 50.])
-            b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
+            b = model.Node(nid).get_position()
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
 
     def test_cord2_rcs_02(self):
         """
@@ -354,8 +354,8 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
         for nid in model.nodes:
             a = array([30., 40., 50.])
-            b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
+            b = model.Node(nid).get_position()
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
 
     def test_cord2_rcs_03(self):
         """
@@ -398,8 +398,8 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
         for nid in model.nodes:
             a = array([30., 40., 50.])
-            b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
+            b = model.Node(nid).get_position()
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
@@ -445,7 +445,7 @@ class TestCoords(unittest.TestCase):
 
         g = model.Node(20143)
         #print(g.Position(debug=False))
-        xyz = g.Position()
+        xyz = g.get_position()
 
         # by running it through Patran...
         #GRID     20143          1.1067  .207647 -.068531
@@ -459,7 +459,8 @@ class TestCoords(unittest.TestCase):
         coord.beta_n(2)
         coord.beta_n(3)
         coord.beta_n(6)
-        self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
+        with self.assertRaises(NotImplementedError):
+            self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
     def getNodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
@@ -478,7 +479,7 @@ class TestCoords(unittest.TestCase):
         for (i, grid) in enumerate(grids_expected):
             (nid, cid, x, y, z) = grid
             node = model.Node(nid)
-            pos = node.Position()
+            pos = node.get_position()
             n = array([x, y, z])
 
             msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)

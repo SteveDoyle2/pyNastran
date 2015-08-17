@@ -8,7 +8,6 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get
 class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.axialForce = {}
         self.torque = {}
 
@@ -42,8 +41,6 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
 
     def add(self, dt, data):
         [eid, axialForce, torque] = data
-
-        #self.eType[eid] = eType
         self.axialForce[eid] = axialForce
         self.torque[eid] = torque
 
@@ -51,8 +48,6 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         [eid, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -60,8 +55,6 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         [dt, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -69,7 +62,6 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
 class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.bendingMoment = {}
         self.shear = {}
         self.axial = {}
@@ -113,7 +105,6 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
     def add_new_element(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         #print "CBEAM addnew",data
-        #self.eType[eid] = eType
         self.bendingMoment[eid] = {sd: [bm1, bm2]}
         self.shear[eid] = {sd: [ts1, ts2]}
         self.axial[eid] = {sd: af}
@@ -123,8 +114,6 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
     def add(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         #print "CBEAM add   ",data
-
-        #self.eType[eid] = eType
         self.bendingMoment[eid][sd] = [bm1, bm2]
         self.shear[eid][sd] = [ts1, ts2]
         self.axial[eid][sd] = af
@@ -133,7 +122,6 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
 
     def addNewElementSort1(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-
         self._fillNewObject(
             dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
@@ -153,8 +141,6 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
     def _fillObject(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         #if dt not in self.axial:
             #self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.bendingMoment[dt][eid][sd] = [bm1, bm2]
         self.shear[dt][eid][sd] = [ts1, ts2]
         self.axial[dt][eid][sd] = af
@@ -164,7 +150,6 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
     def _fillNewObject(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         if dt not in self.axial:
             self.add_new_transient(dt)
-        #self.eType[eid] = eType
         self.bendingMoment[dt][eid] = {sd: [bm1, bm2]}
         self.shear[dt][eid] = {sd: [ts1, ts2]}
         self.axial[dt][eid] = {sd: af}
@@ -175,7 +160,6 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
 class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force41 = {}
         self.force14 = {}
         self.force21 = {}
@@ -274,7 +258,6 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
                     kf1, s12, kf2, s23, kf3, s34, kf4, s41):
         if dt not in self.force41:
             self.add_new_transient(dt)
-        #self.eType[eid] = eType
         self.force41[dt][eid] = f41
         self.force14[dt][eid] = f14
         self.force21[dt][eid] = f21
@@ -296,7 +279,6 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
 class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force = {}
 
         self.dt = dt
@@ -328,24 +310,18 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
 
     def add(self, dt, data):
         [eid, force] = data
-
-        #self.eType[eid] = eType
         self.force[eid] = force
 
     def add_sort1(self, dt, data):
         [eid, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def addSort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
@@ -413,7 +389,6 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
 class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force = {}
 
         self.dt = dt
@@ -445,31 +420,24 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
 
     def add(self, dt, data):
         [eid, force] = data
-
-        #self.eType[eid] = eType
         self.force[eid] = force
 
     def add_sort1(self, dt, data):
         [eid, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def addSort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
 
 class ComplexViscForce(ScalarObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.axialForce = {}
         self.torque = {}
 
@@ -503,8 +471,6 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
 
     def add(self, dt, data):
         [eid, axialForce, torque] = data
-
-        #self.eType[eid] = eType
         self.axialForce[eid] = axialForce
         self.torque[eid] = torque
 
@@ -512,8 +478,6 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
         [eid, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -521,8 +485,6 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
         [dt, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -530,7 +492,6 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
 class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.mx = {}
         self.my = {}
         self.mxy = {}
@@ -575,7 +536,6 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.ty[dt] = {}
 
     def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        #self.eType[eid] = eType
         self.mx[eid] = mx
         self.my[eid] = my
         self.mxy[eid] = mxy
@@ -588,8 +548,6 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.mx[dt][eid] = mx
         self.my[dt][eid] = my
         self.mxy[dt][eid] = mxy
@@ -602,8 +560,6 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def add_sort2(self, eid, dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.mx[dt][eid] = mx
         self.my[dt][eid] = my
         self.mxy[dt][eid] = mxy
@@ -613,11 +569,89 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
 
+    def _get_plate_msg(self, is_mag_phase=True):
+        loads = ['    ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -\n'
+                 '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n',]
+        if is_mag_phase:
+            mag_real = ['                                                         (MAGNITUDE/PHASE)\n \n']
+        else:
+            mag_real = ['                                                          (REAL/IMAGINARY)\n', ' \n']
+
+        cquad4_bilinear = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
+        cquad4_linear = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
+        ctria3 = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']  # good
+        cquad8 = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
+        cquadr = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
+        ctria6 = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
+        ctriar = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
+
+        is_bilinear = False
+        if self.element_type == 144: # CQUAD4
+            msg = cquad4_linear + mag_real + loads
+        elif self.element_type == 33: # CQUAD4
+            msg = cquad4_bilinear + mag_real + loads
+        elif self.element_type == 64:  #CQUAD8
+            msg = cquad8 + mag_real + loads
+        elif self.element_type == 82:  # CQUADR
+            msg = cquadr + mag_real + loads
+        elif self.element_type == 74: # CTRIA3
+            msg = ctria3 + mag_real + loads
+        elif self.element_type == 75:  # CTRIA6
+            msg = ctria6 + mag_real + loads
+        elif self.element_type == 70:  # CTRIAR
+            msg = ctriar + mag_real + loads
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        return msg
+
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        msg_pack = self._get_plate_msg(is_mag_phase)
+        dts = list(self.mx.keys())
+        dts.sort()
+        ntimes = len(dts)
+        dt0 = dts[0]
+        eids = sorted(self.mx[dt0])
+
+        name = self.data_code['name']
+        for dt in dts:
+            header[1] = ' %s = %10.4E\n' % (name, dt)
+            #print(header)
+            #print(msg_pack)
+            msg = header + msg_pack
+            f.write(''.join(msg))
+            for eid in eids:
+                mx = self.mx[dt][eid]
+                my = self.my[dt][eid]
+                mxy = self.mxy[dt][eid]
+
+                bmx = self.bmx[dt][eid]
+                bmy = self.bmy[dt][eid]
+                bmxy = self.bmxy[dt][eid]
+
+                tx = self.tx[dt][eid]
+                ty = self.ty[dt][eid]
+
+                ([mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                  mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_all_zeros) = writeImagFloats13E([mx, my, mxy, bmx, bmy, bmxy, tx, ty], is_mag_phase)
+
+                """
+                    ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
+                      ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+                0       564       1.543439E+03  7.311177E+02  1.322702E+02    1.080178E+00  1.699104E+00  2.618547E-01    3.877034E+01  4.518554E+00
+                                  358.3129      358.0245      177.5593        177.5292      178.2112        0.0907        358.1465      179.4567
+                """
+                #                fx     fy     fxy     mx     my     mxy    qx      qy
+                msg = '0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (eid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr)
+                msg += '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % ('', mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi)
+                f.write(msg)
+            msg = page_stamp % page_num
+            f.write(msg)
+            page_num += 1
+        return page_num -1
 
 class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.term = {}
         self.ngrids = {}
         self.mx = {}
@@ -666,10 +700,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.ty[dt] = {}
 
     def add_new_element(self, eid, dt, data):
-        #print "eid = ",eid
         [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-
-        #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = nid
 
@@ -684,8 +715,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
     def add(self, eid, dt, data):
         [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-
-        #self.eType[eid] = eType
         #print "mx = ",self.mx,mx
         self.mx[eid].append(mx)
         self.my[eid].append(my)
@@ -700,8 +729,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = nid
         self.mx[dt][eid] = [mx]
@@ -717,8 +744,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.mx[dt][eid].append(mx)
         self.my[dt][eid].append(my)
         self.mxy[dt][eid].append(mxy)
@@ -732,8 +757,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = nid
 
@@ -750,8 +773,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         if dt not in self.mx:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.mx[dt][eid].append(mx)
         self.my[dt][eid].append(my)
         self.mxy[dt][eid].append(mxy)
@@ -781,7 +802,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.bendingMomentA = {}
         self.bendingMomentB = {}
         self.shear = {}
@@ -845,8 +865,6 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
         [dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
         if dt not in self.axial:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.bendingMomentA[dt][eid] = [bm1a, bm2a]
         self.bendingMomentB[dt][eid] = [bm1b, bm2b]
         self.shear[dt][eid] = [ts1, ts2]
@@ -907,7 +925,6 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
 class ComplexBendForce(ScalarObject):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.nodeIDs = {}
         self.bendingMoment1 = {}
         self.bendingMoment2 = {}
@@ -952,8 +969,6 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
     def add(self, dt, data):
         [eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
          nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
-
-        #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA, nidB]
         self.bendingMoment1[eid] = [bm1A, bm1B]
         self.bendingMoment2[eid] = [bm2A, bm2B]
@@ -981,8 +996,6 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
         nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB):
         if dt not in self.axial:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA, nidB]
         self.bendingMoment1[dt][eid] = [bm1A, bm1B]
         self.bendingMoment2[dt][eid] = [bm2A, bm2B]
@@ -995,7 +1008,6 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
 class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.acceleration = {}
         self.velocity = {}
         self.pressure = {}
@@ -1031,8 +1043,6 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
 
     def add(self, dt, data):
         [eid, eName, ax, ay, az, vx, vy, vz, pressure] = data
-
-        #self.eType[eid] = eType
         self.acceleration[eid] = [ax, ay, az]
         self.velocity[eid] = [vx, vy, vz]
         self.pressure[eid] = pressure
@@ -1041,8 +1051,6 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
         [eid, eName, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.acceleration[dt][eid] = [ax, ay, az]
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
@@ -1051,8 +1059,6 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
         [dt, eName, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.acceleration[dt][eid] = [ax, ay, az]
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
@@ -1061,7 +1067,6 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
 class ComplexCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.force = {}
         self.moment = {}
 
@@ -1095,8 +1100,6 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
 
     def add(self, dt, data):
         [eid, fx, fy, fz, mx, my, mz] = data
-
-        #self.eType[eid] = eType
         self.force[eid] = [fx, fy, fz]
         self.moment[eid] = [mx, my, mz]
 
@@ -1104,8 +1107,6 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
         [eid, fx, fy, fz, mx, my, mz] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
 
@@ -1113,8 +1114,6 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
         [dt, fx, fy, fz, mx, my, mz] = data
         if dt not in self.force:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
 
@@ -1122,7 +1121,6 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
 class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.parent = {}
         self.coord = {}
         self.icord = {}
@@ -1166,12 +1164,11 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
         self.bendingY[dt] = {}
         self.bendingZ[dt] = {}
 
-    def add(self, nNodes, dt, data):
+    def add(self, nnodes, dt, data):
         [eid, parent, coord, icord, forces] = data
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
-        #self.eType[eid]    = eType
 
         self.forceX[eid] = {}
         self.shearY[eid] = {}
@@ -1190,14 +1187,13 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingY[eid][nid] = bendingY
             self.bendingZ[eid][nid] = bendingZ
 
-    def add_sort1(self, nNodes, dt, data):
+    def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
-        #self.eType[eid]    = eType
 
         self.forceX[dt][eid] = {}
         self.shearY[dt][eid] = {}
@@ -1216,14 +1212,13 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def addSort2(self, nNodes, eid, data):
+    def addSort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
-        #self.eType[eid]    = eType
 
         self.forceX[dt][eid] = {}
         self.shearY[dt][eid] = {}
@@ -1245,7 +1240,6 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
 class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.parent = {}
         self.coord = {}
         self.icord = {}
@@ -1294,13 +1288,12 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         self.shearYZ[dt] = {}
         self.shearXZ[dt] = {}
 
-    def add(self, nNodes, dt, data):
+    def add(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
-        #self.eType[eid]    = eType
 
         self.membraneX[eid] = {}
         self.membraneY[eid] = {}
@@ -1323,11 +1316,11 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.shearYZ[eid][nid] = shearYZ
             self.shearXZ[eid][nid] = shearXZ
 
-    def add_sort1(self, nNodes, dt, data):
+    def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 
-    def addSort2(self, nNodes, eid, data):
+    def addSort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 
@@ -1338,7 +1331,6 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
-        #self.eType[eid]    = eType
 
         self.membraneX[dt][eid] = {}
         self.membraneY[dt][eid] = {}

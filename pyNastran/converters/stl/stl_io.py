@@ -60,16 +60,11 @@ class STL_IO(object):
         nodes = model.nodes
         elements = model.elements
 
-        if self.is_centroidal:
-            normals = model.get_normals(elements)
-            areas = model.get_area(elements)
-        elif self.is_nodal:
-            normals = None
-            areas = None
-            #normals = model.get_normals_at_nodes(elements)
-
-        self.nNodes, three = nodes.shape
-        self.nElements, three = elements.shape
+        normals = model.get_normals(elements)
+        areas = model.get_area(elements)
+        #nnormals = model.get_normals_at_nodes(elements)
+        self.nNodes = nodes.shape[0]
+        self.nElements = elements.shape[0]
 
         print("nNodes = %s" % self.nNodes)
         print("nElements = %s" % self.nElements)
@@ -138,28 +133,33 @@ class STL_IO(object):
         self.iSubcaseNameMap = {}
         ID = 1
 
-        cases = self._fill_stl_case(cases, ID, elements, nodes, normals, areas)
-        self._finish_results_io(cases)
+        form, cases = self._fill_stl_case(cases, ID, elements, nodes, normals, areas)
+        self._finish_results_io2(form, cases)
 
     def _fill_stl_case(self, cases, ID, elements, nodes, normals, areas):
         self.iSubcaseNameMap[ID] = ('STL', '')
-        #print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
-        assert self.is_centroidal != self.is_nodal
 
-        if self.is_centroidal:
-            nelements, three = elements.shape
-            #cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
-            cases[(ID, 'ElementID', 1, 'centroid', '%i')] = arange(1, nelements+1)
-            cases[(ID, 'NormalX', 1, 'centroid', '%.3f')] = normals[:, 0]
-            cases[(ID, 'NormalY', 1, 'centroid', '%.3f')] = normals[:, 1]
-            cases[(ID, 'NormalZ', 1, 'centroid', '%.3f')] = normals[:, 2]
-            cases[(ID, 'Area', 1, 'centroid', '%.4e')] = areas
+        nelements = elements.shape[0]
+        nnodes = nodes.shape[0]
+        icase = 0
+        #cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
+        cases[(ID, icase, 'ElementID', 1, 'centroid', '%i')] = arange(1, nelements + 1, dtype='int32')
+        cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i')] = arange(1, nnodes+1, dtype='int32')
+        cases[(ID, icase + 2, 'Area', 1, 'centroid', '%.4e')] = areas
+        cases[(ID, icase + 3, 'NormalX', 1, 'centroid', '%.3f')] = normals[:, 0]
+        cases[(ID, icase + 4, 'NormalY', 1, 'centroid', '%.3f')] = normals[:, 1]
+        cases[(ID, icase + 5, 'NormalZ', 1, 'centroid', '%.3f')] = normals[:, 2]
 
-        elif self.is_nodal:
-            nnodes, three = nodes.shape
-            #cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
-            cases[(ID, 'NodeID', 1, 'node', '%i')] = arange(1, nnodes+1)
-            #cases[(ID, 'NormalX', 1, 'node', '%.3f')] = normals[:, 0]
-            #cases[(ID, 'NormalY', 1, 'node', '%.3f')] = normals[:, 1]
-            #cases[(ID, 'NormalZ', 1, 'node', '%.3f')] = normals[:, 2]
-        return cases
+        #cases[(ID, 'NormalX', 1, 'node', '%.3f')] = normals[:, 0]
+        #cases[(ID, 'NormalY', 1, 'node', '%.3f')] = normals[:, 1]
+        #cases[(ID, 'NormalZ', 1, 'node', '%.3f')] = normals[:, 2]
+
+        form = [
+            ('ElementID', icase, []),
+            ('NodeID', icase + 1, []),
+            ('Area', icase + 2, []),
+            ('NormalX', icase + 3, []),
+            ('NormalY', icase + 4, []),
+            ('NormalZ', icase + 5, []),
+        ]
+        return form, cases

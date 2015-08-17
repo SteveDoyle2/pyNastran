@@ -134,70 +134,64 @@ class Plot3d_io(object):
         self.iCase = 0 if self.nCases == 0 else -1
         self.cycleResults()  # start at nCase=0
 
-    def fillPanairGeometryCase(self, cases, ID, nodes, elements, regions, loads):
+    def fill_plot3d_geometry_case(self, cases, ID, nodes, elements, regions, loads):
         #print "regions**** = ",regions
         #nNodes = self.nNodes
         #nElements = self.nElements
 
-        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
-        assert self.is_centroidal!= self.is_nodal
-
         #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                                       #'rhoU', 'rhoV', 'rhoW', 'rhoE']
-        #if self.is_centroidal:
         #nelements, three = elements.shape
         #print regions
         cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
 
         from numpy import zeros, array, cross, dot
         from numpy.linalg import det, norm
+
         # centroidal
-        if self.is_centroidal:
-            Xc = zeros(len(elements), 'float64')
-            Yc = zeros(len(elements), 'float64')
-            Zc = zeros(len(elements), 'float64')
-            area = zeros(len(elements), 'float64')
-            for i,element in enumerate(elements):
-                p1, p2, p3, p4 = element
-                P1 = array(nodes[p1])
-                P2 = array(nodes[p2])
-                P3 = array(nodes[p3])
-                P4 = array(nodes[p4])
-                a = P3 - P1
-                b = P4 - P2
-                A = 0.5 * norm(cross(a, b))
-                #assert -1 > 0, 'A =%s' % str(A)
-                x, y, z = (P1 + P2 + P3 + P4) / 4.0
-                Xc[i] = x
-                Yc[i] = y
-                Zc[i] = z
-                area[i] = A
-            cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = Xc
-            cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = Yc
-            cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
-            cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
-        elif self.is_nodal:
-            # nodal
-            Xn = zeros(len(nodes), 'float64')
-            Yn = zeros(len(nodes), 'float64')
-            Zn = zeros(len(nodes), 'float64')
-            for i, node in enumerate(nodes):
-                Xn[i] = node[0]
-                Yn[i] = node[1]
-                Zn[i] = node[2]
-            cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
-            cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
-            cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
+        Xc = zeros(len(elements), 'float64')
+        Yc = zeros(len(elements), 'float64')
+        Zc = zeros(len(elements), 'float64')
+        area = zeros(len(elements), 'float64')
 
+        Xn = zeros(len(nodes), 'float64')
+        Yn = zeros(len(nodes), 'float64')
+        Zn = zeros(len(nodes), 'float64')
 
-        #elif self.is_nodal:
-            #pass
-            #print("load.keys() = ", loads.keys())
-            #break
-            #for key in result_names:
-                #if key in loads:
-                    #nodal_data = loads[key]
-                    #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
+        for i,element in enumerate(elements):
+            p1, p2, p3, p4 = element
+            P1 = array(nodes[p1])
+            P2 = array(nodes[p2])
+            P3 = array(nodes[p3])
+            P4 = array(nodes[p4])
+            a = P3 - P1
+            b = P4 - P2
+            A = 0.5 * norm(cross(a, b))
+            x, y, z = (P1 + P2 + P3 + P4) / 4.0
+            Xc[i] = x
+            Yc[i] = y
+            Zc[i] = z
+            area[i] = A
+        for i, node in enumerate(nodes):
+            Xn[i] = node[0]
+            Yn[i] = node[1]
+            Zn[i] = node[2]
+
+        cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
+        cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
+        cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
+
+        cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = Xc
+        cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = Yc
+        cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
+
+        cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
+
+        #print("load.keys() = ", loads.keys())
+        #for key in result_names:
+            #if key in loads:
+                #nodal_data = loads[key]
+                #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
     def load_panair_results(self, panairFileName, dirname):

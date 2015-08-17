@@ -77,8 +77,6 @@ class NastranIO(object):
         self.nNodes = None
         self.nElements = None
         self.modelType = None
-        #self.is_centroidal = None
-        #self.is_nodal = None
         self.iSubcaseNameMap = None
 
     def get_nastran_wildcard_geometry_results_functions(self):
@@ -209,16 +207,9 @@ class NastranIO(object):
             else:
                 print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 
-    def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
-        self.eidMap = {}
-        self.nidMap = {}
-        #print('bdf_filename=%r' % bdf_filename)
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
-
-        #skipReading = self.removeOldGeometry(bdf_filename)
-        #if skipReading:
-            #return
+    def _remove_old_nastran_geometry(self, bdf_filename):
+        # skip_reading = self.removeOldGeometry(bdf_filename)
+        skip_reading = False
         if bdf_filename is None or bdf_filename is '':
             #self.grid = vtk.vtkUnstructuredGrid()
             #self.gridResult = vtk.vtkFloatArray()
@@ -226,7 +217,8 @@ class NastranIO(object):
             #self.vectorResult = vtk.vtkFloatArray()
             #self.grid2 = vtk.vtkUnstructuredGrid()
             #self.scalarBar.VisibilityOff()
-            return
+            skip_reading = True
+            return skip_reading
         else:
             self.TurnTextOff()
             self.grid.Reset()
@@ -234,11 +226,48 @@ class NastranIO(object):
 
             # create alt grids
             yellow = (1., 1., 0.)
-            pink = (0.98, 0.4, 0.93)
-            orange = (227/255., 112/255., 11/255.)
-            if 'caero' not in self.alt_grids.keys():
+            # pink = (0.98, 0.4, 0.93)
+            if 'caero' not in self.alt_grids:
                 self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0)
-            if 'caero_sub' not in self.alt_grids.keys():
+            if 'caero_sub' not in self.alt_grids:
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0)
+            #print('alt_grids', self.alt_grids.keys())
+
+            #self.gridResult = vtk.vtkFloatArray()
+            #self.gridResult.Reset()
+            #self.gridResult.Modified()
+            #self.eidMap = {}
+            #self.nidMap = {}
+
+            self.resultCases = {}
+            self.nCases = 0
+        for i in ('caseKeys', 'iCase', 'iSubcaseNameMap'):
+            if hasattr(self, i):  # TODO: is this correct???
+                del i
+        return skip_reading
+
+    def _remove_old_geometry2(self, filename, alt_grids):
+        skip_reading = False
+        if filename is None or filename is '':
+            #self.grid = vtk.vtkUnstructuredGrid()
+            #self.gridResult = vtk.vtkFloatArray()
+            #self.emptyResult = vtk.vtkFloatArray()
+            #self.vectorResult = vtk.vtkFloatArray()
+            #self.grid2 = vtk.vtkUnstructuredGrid()
+            #self.scalarBar.VisibilityOff()
+            skip_reading = True
+            return skip_reading
+        else:
+            self.TurnTextOff()
+            self.grid.Reset()
+            self.grid2.Reset()
+
+            # create alt grids
+            yellow = (1., 1., 0.)
+            pink = (0.98, 0.4, 0.93)
+            if 'caero' not in self.alt_grids:
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0)
+            if 'caero_sub' not in self.alt_grids:
                 self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0)
             if 'conm' not in self.alt_grids.keys():
                 self.create_alternate_vtk_grid('conm', color=orange, line_width=3, opacity=1.0)
@@ -255,8 +284,29 @@ class NastranIO(object):
         for i in ('caseKeys', 'iCase', 'iSubcaseNameMap'):
             if hasattr(self, i):  # TODO: is this correct???
                 del i
+        return skip_reading
 
-            #print(dir(self))
+    def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
+        self.eidMap = {}
+        self.nidMap = {}
+        #print('bdf_filename=%r' % bdf_filename)
+        #key = self.caseKeys[self.iCase]
+        #case = self.resultCases[key]
+
+        skip_reading = self._remove_old_nastran_geometry(bdf_filename)
+        pink = (0.98, 0.4, 0.93)
+        # if 0:
+            # yellow = (1., 1., 0.)
+            # line_width = 3
+            # opacity = 1
+            # alt_grids = [
+                # ['caero', yellow, line_width, opacity],
+                # ['caero_sub', yellow, line_width, opacity],
+            # ]
+            # skip_reading = self._remove_old_geometry2(bdf_filename, alt_grids=alt_grids)
+        if skip_reading:
+            return
+
         if plot:
             self.scalarBar.VisibilityOff()
             self.scalarBar.Modified()
@@ -366,7 +416,7 @@ class NastranIO(object):
             i = 0
             #fraction = 1. / nnodes  # so you can color the nodes by ID
             for (nid, node) in sorted(iteritems(model.nodes)):
-                point = node.Position()
+                point = node.get_position()
                 points.InsertPoint(i, *point)
                 #self.gridResult.InsertNextValue(i * fraction)
 
@@ -381,7 +431,7 @@ class NastranIO(object):
 
         # add the nodes
         node0 = get_key0(model.nodes)
-        position0 = model.nodes[node0].Position()
+        position0 = model.nodes[node0].get_position()
         xmin = position0[0]
         xmax = position0[0]
 
@@ -395,14 +445,14 @@ class NastranIO(object):
             n = len(model.nodes)
             xyz_cid0 = zeros((n, 3), dtype='float64')
             for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-                xyz = node.Position()
+                xyz = node.get_position()
                 xyz_cid0[i, :] = xyz
             self.xyz_cid0 = xyz_cid0
 
         self._create_nastran_coords(model)
 
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-            point = node.Position()
+            point = node.get_position()
             xmin = min(xmin, point[0])
             xmax = max(xmax, point[0])
 
@@ -922,7 +972,7 @@ class NastranIO(object):
                     elem.SetRadius(sphere_size)
                 else:
                     # 2 points
-                    #d = norm(element.nodes[0].Position() - element.nodes[1].Position())
+                    #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                     self.eid_to_nid_map[eid] = nodeIDs
                     elem = vtk.vtkLine()
                     try:
@@ -1076,8 +1126,6 @@ class NastranIO(object):
         """
         pressure act normal to the face (as opposed to anti-normal)
         """
-        #if not self.is_centroidal:
-            #return icase
         assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
         try:
             sucaseIDs = model.caseControlDeck.get_subcase_list()
@@ -1103,7 +1151,7 @@ class NastranIO(object):
             scale_factors2 = []
             for load in loadCase:
                 if isinstance(load, LOAD):
-                    scale_factors, loads = load.getReducedLoads()
+                    scale_factors, loads = load.get_reduced_loads()
                     scale_factors2 += scale_factors
                     loads2 += loads
                 else:
@@ -1211,7 +1259,7 @@ class NastranIO(object):
         scale_factors2 = []
         for load in loadCase:
             if isinstance(load, LOAD):
-                scale_factors, loads = load.getReducedLoads()
+                scale_factors, loads = load.get_reduced_loads()
                 scale_factors2 += scale_factors
                 loads2 += loads
             else:
@@ -1546,7 +1594,6 @@ class NastranIO(object):
         self.node_ids = None
 
     def fill_stress(self, cases, model, subcase_id, formi, icase):
-        #if self.is_centroidal:
         icase = self._fill_stress_centroidal(cases, model, subcase_id, formi, icase)
         #elif self.is_nodal:
             #icase = self._fill_stress_nodal(cases, model, subcase_id, formi, icase)

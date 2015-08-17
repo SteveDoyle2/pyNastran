@@ -160,7 +160,7 @@ class Usm3dReader(object):
 
         loads = {}
         if read_loads and os.path.exists(flo_filename):
-            npoints, three = nodes.shape
+            npoints = nodes.shape[0]
             try:
                 node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
             except:

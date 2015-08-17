@@ -912,7 +912,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename, xref=True)
         >>> g1 = bdf.Node(1)
-        >>> print(g1.Position())
+        >>> print(g1.get_position())
         [10.0, 12.0, 42.0]
         >>> bdf.write_bdf(bdf_filename2)
         >>> print(bdf.card_stats())

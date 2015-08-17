@@ -26,7 +26,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
 
     i = 0
     for node_id, node in sorted(iteritems(bdf.nodes)):
-        elements[i, :] = node.Position()
+        elements[i, :] = node.get_position()
     for element_id, element in sorted(iteritems(bdf.elements)):
         if element.type == 'CTRIA3':
             elements[i, :] = element.node_ids
@@ -60,7 +60,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
     i = 1
     for node_id, node in sorted(iteritems(model.nodes)):
         node_id_shift[node_id] = i
-        x, y, z = node.Position()
+        x, y, z = node.get_position()
         f.write('%s %s %s\n' % (x, y, z))
         i += 1
     mids = ''

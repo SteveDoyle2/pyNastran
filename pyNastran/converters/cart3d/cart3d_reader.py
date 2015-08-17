@@ -232,7 +232,7 @@ class Cart3DReader(object):
         regions2 = regions[ielements_save]
 
         # renumbers mesh
-        nelements2, three = elements2.shape
+        nelements2 = elements2.shape[0]
         assert 0 < nelements2 < nelements, 'nelements=%s nelements2=%s'  % (nelements, nelements2)
 
         remap_nodes = False
@@ -254,6 +254,23 @@ class Cart3DReader(object):
 
         self.log.info('---finished make_half_model---')
         return (nodes2, elements2, regions2, loads2)
+
+    def get_free_edges(self, elements):
+        edge_to_eid_map = defaultdict(list)
+        for i, element in enumerate(elements):
+            edge1 = tuple(sorted([element[0], element[1]]))
+            edge2 = tuple(sorted([element[1], element[2]]))
+            edge3 = tuple(sorted([element[2], element[0]]))
+            edge_to_eid_map[edge1].append(i)
+            edge_to_eid_map[edge2].append(i)
+            edge_to_eid_map[edge3].append(i)
+
+        free_edges = []
+        for edge, eids in sorted(iteritems(edge_to_eid_map)):
+            if len(eids) != 2:
+                free_edges.append(edge)
+                # print(edge)
+        return free_edges
 
     def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False, float_fmt='%6.7f'):
         assert len(points) > 0, 'len(points)=%s' % len(points)

@@ -53,7 +53,7 @@ def Grid(object):
 
         positions = {}
         for nid, node in self.bdf.nodes:
-            positions[nid] = node.Position()
+            positions[nid] = node.get_position()
 
         # size the array
         xyz = array( (nx, ny, 3), 'float32')

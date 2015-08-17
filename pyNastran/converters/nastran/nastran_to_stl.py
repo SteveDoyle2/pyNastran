@@ -15,7 +15,7 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
     i = 0
     nodeid_to_i_map = {}
     for node_id, node in sorted(iteritems(model.nodes)):
-        xyz = node.Position()
+        xyz = node.get_position()
         nodes[i, :] = xyz
         nodeid_to_i_map[node_id] = i
         i += 1

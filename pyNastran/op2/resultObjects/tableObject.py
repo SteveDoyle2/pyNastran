@@ -3,7 +3,7 @@ from six import string_types, iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, sqrt, abs, angle  # dot,
+from numpy import array, zeros, sqrt, abs, angle, float32, ndarray  # dot,
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
@@ -202,7 +202,7 @@ class RealTableArray(TableArray):  # displacement style table
         fascii.write('%s header 3c = %s\n' % (self.table_name, data))
         f.write(pack(fmt, *data))
 
-    def write_op2(self, f, fascii, itable, date, is_mag_phase=False):
+    def write_op2(self, f, fascii, itable, date, is_mag_phase=False, endian='>'):
         import inspect
         assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
 
@@ -216,16 +216,16 @@ class RealTableArray(TableArray):  # displacement style table
             itable = -3
 
         if isinstance(self.nonlinear_factor, float):
-            op2_format = '%sif' % (7 * self.ntimes)
+            op2_format = endian + b'%sif' % (7 * self.ntimes)
             raise NotImplementedError()
         else:
-            op2_format = '2i6f' * self.ntimes
+            op2_format = endian + b'2i6f' * self.ntimes
         s = Struct(op2_format)
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        #format_table4_1 = Struct(b'15i')
-        #format_table4_2 = Struct(b'3i')
+        #format_table4_1 = Struct(self._endian + b'15i')
+        #format_table4_2 = Struct(self._endian + b'3i')
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -253,7 +253,7 @@ class RealTableArray(TableArray):  # displacement style table
                       4, 0, 4,
                       4, ntotal, 4,
                       4*ntotal]
-            f.write(pack('%ii' % len(header), *header))
+            f.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
             fascii.write('r4 [4, %s, 4]\n' % (itable-1))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
@@ -272,14 +272,14 @@ class RealTableArray(TableArray):  # displacement style table
 
             itable -= 2
             header = [4 * ntotal,]
-            f.write(pack('i', *header))
+            f.write(pack(b'i', *header))
             fascii.write('footer = %s' % header)
         header = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4,
         ]
-        f.write(pack('%ii' % len(header), *header))
+        f.write(pack(b'%ii' % len(header), *header))
         return itable
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words=True):
@@ -324,7 +324,7 @@ class RealTableArray(TableArray):  # displacement style table
             r2 = self.data[itime, :, 4]
             r3 = self.data[itime, :, 5]
 
-            if isinstance(dt, float):
+            if isinstance(dt, (float, float32)):
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
@@ -334,7 +334,16 @@ class RealTableArray(TableArray):  # displacement style table
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                if sgridtype == 'G':
+                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                elif sgridtype == 'S':
+                    f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
+                elif sgridtype == 'H':
+                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                elif sgridtype == 'L':
+                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                else:
+                    raise NotImplementedError(sgridtype)
 
             f.write(page_stamp % page_num)
             page_num += 1
@@ -388,16 +397,16 @@ class ComplexTableArray(TableArray):  # displacement style table
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 #if not is_all_zeros:
-                if sgridtype == 'S':
-                    f.write('0 %12i %6s     %-s\n'
-                            '  %12s %6s     %-s\n' % (
-                                node_id, sgridtype, dxr,
-                                '', '', dxi))
-                else:
+                if sgridtype == 'G':
                     f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
                             '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
                                 node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                            '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                elif sgridtype == 'S':
+                    f.write('0 %12i %6s     %-s\n'
+                            '  %12s %6s     %-s\n' % (node_id, sgridtype, dxr, '', '', dxi))
+                else:
+                    raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -515,7 +524,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.rotations[node_id] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        msg = "node_id=%8i v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
+        msg = "node_id=%-8i v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
         msg += "                 v4=%s v5=%s v6=%s" % (v4, v5, v6)
         #print(msg)
         if dt not in self.translations:
@@ -587,12 +596,20 @@ class RealTableObject(ScalarObject):  # displacement style table
             (vals2, is_all_zeros) = writeFloats13E(vals)
             #if not is_all_zeros:
             (dx, dy, dz, rx, ry, rz) = vals2
-            if grid_type == 'S':
+            if grid_type == 'G':
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                           % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+            elif grid_type == 'S':
                 msg.append('%14i %6s     %s\n'
                            % (node_id, grid_type, dx.rstrip()))
-            else:
+            elif grid_type == 'H':
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                           % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+            elif grid_type == 'L':
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                           % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+            else:
+                raise NotImplementedError(grid_type)
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -601,13 +618,16 @@ class RealTableObject(ScalarObject):  # displacement style table
         msg = []
         #assert f is not None # remove
         for dt, translations in sorted(iteritems(self.translations)):
-            if isinstance(dt, float):  # fix
+            if isinstance(dt, (float, float32)):  # fix
                 #header[1] = ' %s = %10.4E float %s\n' % (self.data_code['name'], dt, self.analysis_code)
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 #header[1] = ' %s = %10i integer %s\n' % (self.data_code['name'], dt, self.analysis_code)
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             msg += header + words
+            #if isinstance(translations, ndarray):
+                # caused by duplicate table -> preload static solution before transient
+                #F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_motion50t.op2
             for node_id, translation in sorted(iteritems(translations)):
                 rotation = self.rotations[dt][node_id]
                 grid_type = self.gridTypes[node_id]
@@ -618,10 +638,14 @@ class RealTableObject(ScalarObject):  # displacement style table
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 #if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                if grid_type == 'S':
-                    msg.append('%14i %6s     %s\n' % (node_id, grid_type, dx))
-                else:
+                if grid_type == 'G':
                     msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz))
+                elif grid_type == 'S':
+                    msg.append('%14i %6s     %s\n' % (node_id, grid_type, dx))
+                elif grid_type == 'L':
+                    msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz))
+                else:
+                    raise NotImplementedError(grid_type)
 
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
@@ -794,10 +818,10 @@ class ComplexTableObject(ScalarObject):
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s" %(dt, node_id, v1, v2, v3)
-        #print msg
+        #print(msg)
         if dt not in self.translations:
             self.add_new_transient(dt)
-        #print msg
+        #print(msg)
         if isinstance(node_id, float):
             msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
             msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
@@ -854,11 +878,16 @@ class ComplexTableObject(ScalarObject):
             (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-            f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                    '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                      % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
-                                    '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-
+            if grid_type == 'G':
+                f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                        '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                          % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
+                                        '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+            elif grid_type == 'S':
+                f.write('0 %12i %6s     %-13s\n'
+                        '  %12s %6s     %-13s\n' % (node_id, grid_type, dxr, '', '', dxi))
+            else:
+                raise NotImplementedError(grid_type)
         f.write(page_stamp % page_num)
         msg = ['']
         return page_num
@@ -891,9 +920,14 @@ class ComplexTableObject(ScalarObject):
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
                     dzi, rxi, ryi, rzi] = vals2
                 #if not is_all_zeros:
-                msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
-                msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
-
+                if grid_type == 'G':
+                    msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
+                    msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                elif grid_type == 'S':
+                    msg.append('0 %12i %6s     %s\n' % (node_id, grid_type, dxr))
+                    msg.append('  %12s %6s     %s\n' % ('', '', dxi))
+                else:
+                    raise NotImplementedError(grid_type)
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
