@@ -373,7 +373,7 @@ class Element(BaseCard):
 
             unique_nodes = unique(nids2)
             if len(nids2) != len(unique_nodes):
-                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, self.__class__.__name__, nids2)
+                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids2)
                 raise IndexError(msg)
         else:
             unique_nodes = unique(nids)
