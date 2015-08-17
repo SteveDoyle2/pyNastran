@@ -195,7 +195,7 @@ class LOAD(LoadCombination):
                     loads.append(load)
                     scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):
-                    load_data = load.getReducedLoads()
+                    load_data = load.get_reduced_loads()
                     (reduced_scale_factors, reduced_loads) = load_data
 
                     loads += reduced_loads
@@ -205,7 +205,7 @@ class LOAD(LoadCombination):
                     loads.append(load)
                     scale_factors.append(scale)
                 else:
-                    msg = ('%s isnt supported in getReducedLoads method'
+                    msg = ('%s isnt supported in get_reduced_loads method'
                            % load.__class__.__name__)
                     raise NotImplementedError(msg)
 
@@ -224,7 +224,7 @@ class LOAD(LoadCombination):
         #print("self.loadIDs = ",self.loadIDs)
 
         typesFound = set()
-        (scale_factors, loads) = self.getReducedLoads()
+        (scale_factors, loads) = self.get_reduced_loads()
 
         for (scale_factor, load) in zip(scale_factors, loads):
             #print("*load = ",load)
@@ -596,12 +596,16 @@ class Force(Load):
         return self.xyz * self.mag
 
     def getReducedLoads(self):
+        self.deprecated('getReducedLoads()', 'get_reduced_loads', '0.8')
+        return self.get_reduced_loads()
+
+    def get_reduced_loads(self):
         scale_factors = [1.]
         loads = self.F()
         return(scale_factors, loads)
 
     def organizeLoads(self, model):
-        (scale_factors, forceLoads) = self.getReducedLoads()
+        (scale_factors, forceLoads) = self.get_reduced_loads()
 
         typesFound = [self.type]
         momentLoads = {}
@@ -651,12 +655,16 @@ class Moment(Load):
         return [self]
 
     def getReducedLoads(self):
+        self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
+        self.get_reduced_loads()
+
+    def get_reduced_loads(self):
         scale_factors = [1.]
         loads = {self.node: self.M()}
         return(scale_factors, loads)
 
     def organizeLoads(self, model):
-        (scale_factors, momentLoads) = self.getReducedLoads()
+        (scale_factors, momentLoads) = self.get_reduced_loads()
 
         typesFound = [self.type]
         forceLoads = {}
@@ -779,7 +787,7 @@ class FORCE1(Force):
         self.node = model.Node(self.node, msg=msg)
         self.g1 = model.Node(self.g1, msg=msg)
         self.g2 = model.Node(self.g2, msg=msg)
-        self.xyz = self.g2.Position() - self.g1.Position()
+        self.xyz = self.g2.get_position() - self.g1.get_position()
         self.normalize()
 
     def G1(self):
@@ -859,22 +867,22 @@ class FORCE2(Force):
         self.g3 = model.Node(self.g3, msg=msg)
         self.g4 = model.Node(self.g4, msg=msg)
 
-        v12 = self.g2.Position() - self.g1.Position()
-        v34 = self.g4.Position() - self.g3.Position()
+        v12 = self.g2.get_position() - self.g1.get_position()
+        v34 = self.g4.get_position() - self.g3.get_position()
         try:
             v12 /= norm(v12)
         except FloatingPointError:
             msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
-            msg += 'g1.Position()=%s\n' % self.g1.Position()
-            msg += 'g2.Position()=%s' % self.g2.Position()
+            msg += 'g1.get_position()=%s\n' % self.g1.get_position()
+            msg += 'g2.get_position()=%s' % self.g2.get_position()
             raise FloatingPointError(msg)
 
         try:
             v34 /= norm(v34)
         except FloatingPointError:
             msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
-            msg += 'g3.Position()=%s\n' % self.g3.Position()
-            msg += 'g4.Position()=%s' % self.g4.Position()
+            msg += 'g3.get_position()=%s\n' % self.g3.get_position()
+            msg += 'g4.get_position()=%s' % self.g4.get_position()
             raise FloatingPointError(msg)
         self.xyz = cross(v12, v34)
         self.normalize()
@@ -1034,7 +1042,7 @@ class MOMENT1(Moment):
         self.node = model.Node(self.node, msg=msg)
         self.g1 = model.Node(self.g1, msg=msg)
         self.g2 = model.Node(self.g2, msg=msg)
-        self.xyz = self.g2.Position() - self.g1.Position()
+        self.xyz = self.g2.get_position() - self.g1.get_position()
         self.normalize()
 
     def get_node_id(self):
@@ -1119,8 +1127,8 @@ class MOMENT2(Moment):
         self.g3 = model.Node(self.g3, msg=msg)
         self.g4 = model.Node(self.g4, msg=msg)
 
-        v12 = self.g2.Position() - self.g1.Position()
-        v34 = self.g4.Position() - self.g3.Position()
+        v12 = self.g2.get_position() - self.g1.get_position()
+        v34 = self.g4.get_position() - self.g3.get_position()
         v12 = v12 / norm(v12)
         v34 = v34 / norm(v34)
         self.xyz = cross(v12, v34)
@@ -1209,7 +1217,7 @@ class GMLOAD(Load):
         #self.node = model.Node(self.node, msg=msg)
         #self.g1 = model.Node(self.g1, msg=msg)
         #self.g2 = model.Node(self.g2, msg=msg)
-        #self.xyz = self.g2.Position() - self.g1.Position()
+        #self.xyz = self.g2.get_position() - self.g1.get_position()
         #self.normalize()
 
     #def G1(self):
@@ -1351,12 +1359,12 @@ class PLOAD1(Load):
         self.eid = model.Element(self.eid, msg=msg)
 
     def transformLoad(self):
-        p1 = self.eid.ga.Position()
-        p2 = self.eid.gb.Position()
+        p1 = self.eid.ga.get_position()
+        p2 = self.eid.gb.get_position()
 
         g0 = self.eid.g0_vector
         #if not isinstance(g0, ndarray):
-        #    g0 = g0.Position()
+        #    g0 = g0.get_position()
 
         x = p2 - p1
         y = p1 - g0
@@ -1371,6 +1379,10 @@ class PLOAD1(Load):
         #return (g2)
 
     def getReducedLoads(self):
+        self.deprecated('getReducedLoads()', 'get_reduced_loads', '0.8')
+        return self.get_reduced_loads()
+
+    def get_reduced_loads(self):
         """
         Get all load objects in a simplified form, which means all
         scale factors are already applied and only base objects
@@ -1394,7 +1406,7 @@ class PLOAD1(Load):
         gravityLoads = []
 
         typesFound = set()
-        (scale_factors, loads) = self.getReducedLoads()
+        (scale_factors, loads) = self.get_reduced_loads()
 
         for scale_factor, load in zip(scale_factors, loads):
             out = load.transformLoad()
@@ -1409,8 +1421,8 @@ class PLOAD1(Load):
                 eType = element.type
 
                 if load_type in ['FX', 'FY', 'FZ']:
-                    p1 = element.ga.Position()
-                    p2 = element.gb.Position()
+                    p1 = element.ga.get_position()
+                    p2 = element.gb.get_position()
                     r = p2 - p1
 
                 if load_type == 'FX':

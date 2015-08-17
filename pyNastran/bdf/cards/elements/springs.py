@@ -31,7 +31,7 @@ class SpringElement(Element):
         return self.eid
 
     def Centroid(self):
-        p = (self.nodes[1].Position() - self.nodes[0].Position()) / 2.
+        p = (self.nodes[1].get_position() - self.nodes[0].get_position()) / 2.
         return p
 
     def Mass(self):

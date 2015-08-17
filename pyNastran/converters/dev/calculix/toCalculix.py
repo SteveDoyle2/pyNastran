@@ -138,7 +138,7 @@ class CalculixConverter(BDF):
         form = '%-' + str(self.maxNIDlen) + 's %8s,%8s,%8s\n'
 
         for nid, node in sorted(iteritems(self.nodes)):
-            p = node.Position()
+            p = node.get_position()
             dat = form % (nid, p[0], p[1], p[2])
             f.write(dat)
         dat = '\n\n'
@@ -293,7 +293,7 @@ class CalculixConverter(BDF):
         if p0 is None:
             p = array([0., 0., 0.], dtype='float32')
         if isinstance(p0, int):
-            p = self.model.nodes[p0].Position()
+            p = self.model.nodes[p0].get_position()
         else:
             p = array(p0)
 
@@ -306,7 +306,7 @@ class CalculixConverter(BDF):
         loads2 = []
         for load in loadCase:
             if isinstance(load, LOAD):
-                scale_factors, loads = load.getReducedLoads()
+                scale_factors, loads = load.get_reduced_loads()
                 scale_factors2 += scale_factors
                 loads2 += loads
             else:
@@ -325,7 +325,7 @@ class CalculixConverter(BDF):
         nid_to_i_map = {}
         for nid, node in iteritems(self.nodes):
             nid_to_i_map[nid] = i
-            xyz[nid] = node.Position()
+            xyz[nid] = node.get_position()
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):

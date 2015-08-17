@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six import iteritems
 import os
-from numpy import zeros, array, cross, dot, ravel, amax, amin
+from numpy import zeros, array, cross, dot, ravel, amax, amin, arange
 from numpy.linalg import det, norm
 
 import vtk
@@ -17,7 +17,8 @@ class PanairIO(object):
     def get_panair_wildcard_geometry_results_functions(self):
         data = ('Panair',
                 'Panair (*.inp)', self.load_panair_geometry,
-                'Panair (*.agps);;Panair (*.out)',  self.load_panair_results)
+                #'Panair (*.agps);;Panair (*.out)',  self.load_panair_results)
+                'Panair (*agps)', self.load_panair_results)
         return data
 
     def load_panair_geometry(self, panairFileName, dirname, plot=True):
@@ -111,58 +112,89 @@ class PanairIO(object):
 
         #print "nElements = ",nElements
         loads = []
-        cases = self.fillPanairGeometryCase(cases, ID, nodes, elements, regions, loads)
-        self._finish_results_io(cases)
+        form, cases = self._fill_panair_geometry_case(cases, ID, nodes, elements, regions, loads)
+        self._finish_results_io2(form, cases)
+        #self._finish_results_io(cases)
 
     def clear_panair(self):
         del self.elements
 
-    def fillPanairGeometryCase(self, cases, ID, nodes, elements, regions, loads):
-        assert self.is_centroidal != self.is_nodal
-
+    def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions, loads):
         self.elements = elements
-        cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
-        if self.is_centroidal:
-            Xc = zeros(len(elements), dtype='float32')
-            Yc = zeros(len(elements), dtype='float32')
-            Zc = zeros(len(elements), dtype='float32')
-            area = zeros(len(elements), dtype='float32')
+        nnids = nodes.shape[0]
+        neids = elements.shape[0]
+        nids = arange(0., nnids, dtype='int32') + 1
+        eids = arange(0., neids, dtype='int32') + 1
 
-            for i, element in enumerate(elements):
-                p1, p2, p3, p4 = element
-                P1 = array(nodes[p1])
-                P2 = array(nodes[p2])
-                P3 = array(nodes[p3])
-                P4 = array(nodes[p4])
-                a = P3 - P1
-                b = P4 - P2
-                A = 0.5 * norm(cross(a, b))
-                x, y, z = (P1 + P2 + P3 + P4) / 4.0
-                Xc[i] = x
-                Yc[i] = y
-                Zc[i] = z
-                area[i] = A
-            cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = Xc
-            cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = Yc
-            cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
-            cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
-        elif self.is_nodal:
-            Xn = zeros(len(nodes), dtype='float32')
-            Yn = zeros(len(nodes), dtype='float32')
-            Zn = zeros(len(nodes), dtype='float32')
-            for i, node in enumerate(nodes):
-                Xn[i] = node[0]
-                Yn[i] = node[1]
-                Zn[i] = node[2]
-            cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
-            cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
-            cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
-        return cases
+        icase = 0
+        location_form = [
+            ('centroid_x', icase + 4, []),
+            ('centroid_y', icase + 5, []),
+            ('centroid_z', icase + 6, []),
 
-    def load_panair_results(self, panairFileName, dirname):
-        if os.path.basename(panairFileName) == 'agps':
+            ('node_x', icase + 7, []),
+            ('node_y', icase + 8, []),
+            ('node_z', icase + 9, []),
+        ]
+
+        geometry_form = [
+            ('Patch', icase, []),
+            ('ElementID', icase + 1, []),
+            ('NodeID', icase + 2, []),
+            ('Area', icase + 3, []),
+            ('Location', None, location_form),
+        ]
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+
+        # centroidal
+        Xc = zeros(len(elements), dtype='float32')
+        Yc = zeros(len(elements), dtype='float32')
+        Zc = zeros(len(elements), dtype='float32')
+        area = zeros(len(elements), dtype='float32')
+        for i, element in enumerate(elements):
+            p1, p2, p3, p4 = element
+            P1 = array(nodes[p1])
+            P2 = array(nodes[p2])
+            P3 = array(nodes[p3])
+            P4 = array(nodes[p4])
+            a = P3 - P1
+            b = P4 - P2
+            A = 0.5 * norm(cross(a, b))
+            x, y, z = (P1 + P2 + P3 + P4) / 4.0
+            Xc[i] = x
+            Yc[i] = y
+            Zc[i] = z
+            area[i] = A
+
+        cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
+        cases[(ID, icase + 1, 'ElementID', 1, 'centroid', '%i')] = eids
+        cases[(ID, icase + 2, 'NodeID', 1, 'node', '%i')] = nids
+        cases[(ID, icase + 3, 'Area', 1, 'centroid', '%i')] = area
+        cases[(ID, icase + 4, 'centroid_x', 1, 'centroid', '%.2f')] = Xc
+        cases[(ID, icase + 5, 'centroid_y', 1, 'centroid', '%.2f')] = Yc
+        cases[(ID, icase + 6, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
+
+        # nodal
+        Xn = zeros(len(nodes), dtype='float32')
+        Yn = zeros(len(nodes), dtype='float32')
+        Zn = zeros(len(nodes), dtype='float32')
+        for i, node in enumerate(nodes):
+            Xn[i] = node[0]
+            Yn[i] = node[1]
+            Zn[i] = node[2]
+        cases[(ID, icase + 7, 'node_x', 1, 'node', '%.2f')] = Xn
+        cases[(ID, icase + 8, 'node_y', 1, 'node', '%.2f')] = Yn
+        cases[(ID, icase + 9, 'node_z', 1, 'node', '%.2f')] = Zn
+
+        return form, cases
+
+    def load_panair_results(self, panair_filename, dirname):
+        cases = self.result_cases
+        if os.path.basename(panair_filename) == 'agps':
             model = AGPS(log=self.log, debug=self.debug)
-            model.read_agps(panairFileName)
+            model.read_agps(panair_filename)
         else:
             raise RuntimeError('only files named "agps" files are supported')
 
@@ -180,44 +212,25 @@ class PanairIO(object):
                 pass
             imin += nCp
 
-        if self.is_centroidal:
-            Cp_array2 = (Cp_array[self.elements[:, 0]] +
-                         Cp_array[self.elements[:, 1]] +
-                         Cp_array[self.elements[:, 2]] +
-                         Cp_array[self.elements[:, 3]]) / 4.
-            key = (1, 'Cp', 1, 'centroid', '%.3f')
-            self.resultCases[key] = Cp_array2
+        Cp_array2 = (Cp_array[self.elements[:, 0]] +
+                     Cp_array[self.elements[:, 1]] +
+                     Cp_array[self.elements[:, 2]] +
+                     Cp_array[self.elements[:, 3]]) / 4.
 
-        elif self.is_nodal:
-            key = (1, 'Cp', 1, 'node', '%.3f')
-            self.resultCases[key] = Cp_array
+        #key = (1, 'Cp', 1, 'centroid', '%.3f')
+        #self.result_cases[key] = Cp_array2
+        icase = len(self.result_cases)
 
-        #self.resultCases = cases
-        self.caseKeys = sorted(self.resultCases.keys())
-        self.iCase = -1
-        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-        #self.nCases = 1
-        self.cycleResults()  # start at nCase=0
+        form = self.form
+        results_form = [
+            ('Cp', icase, []),
+            ('Cp_centroidal', icase + 1, [],),
+        ]
+        form.append(('Results', None, results_form))
+        key = (1, icase, 'Cp', 1, 'node', '%.3f')
+        self.result_cases[key] = Cp_array
 
-def main():
-    def removeOldGeometry(self):
-        pass
-    def cycleResults(self):
-        pass
+        key = (1, icase + 1, 'Cp_centroidal', 1, 'centroid', '%.3f')
+        self.result_cases[key] = Cp_array2
 
-    test = PanairIO()
-    test.is_nodal = True
-    test.is_centroidal = False
-    test.removeOldGeometry = removeOldGeometry
-    test.cycleResults = cycleResults
-
-    #test.load_panair_geometry('SWB.INP','')
-    test.load_panair_geometry('models/NAC6.INP', '')
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
-
-
-#if __name__=='__main__':
-#    lawgs = LaWGS('tmx1242.wgs')
-#    lawgs.run()
+        self._finish_results_io2(form, cases)

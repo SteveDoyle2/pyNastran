@@ -678,8 +678,8 @@ def compare_params(fem1, fem2):
 
 def print_points(fem1, fem2):
     for nid, node in sorted(iteritems(fem1.nodes)):
-        print("%s   xyz=%s  n1=%s  n2=%s" % (nid, node.xyz, node.Position(True),
-                                             fem2.Node(nid).Position()))
+        print("%s   xyz=%s  n1=%s  n2=%s" % (nid, node.xyz, node.get_position(True),
+                                             fem2.Node(nid).get_position()))
         break
     coord = fem1.Coord(5)
     print(coord)

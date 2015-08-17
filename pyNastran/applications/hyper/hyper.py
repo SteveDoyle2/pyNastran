@@ -80,7 +80,7 @@ class Hypersonic(BDF):
 
         positions = {}
         for nid, node in iteritems(self.nodes):
-            positions[nid] = node.Position()
+            positions[nid] = node.get_position()
 
         for eid, element in iteritems(self.elements):
             pid = element.Pid()

@@ -23,7 +23,7 @@ For example, with cross referencing...
   CORD2S, 3, 1, 0., 0., 0., 0., 0., 1.,
           1., 0., 0.
   # get the position in the global frame
-  >>> node.Position()
+  >>> node.get_position()
   [4., 5., 6.]
 
   # get the position with respect to another frame

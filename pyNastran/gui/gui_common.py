@@ -88,9 +88,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
-        if self.is_centroidal == self.is_nodal:
-            msg = "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
-            raise RuntimeError(msg)
 
         #self.format = ''
         debug = inputs['debug']
@@ -154,6 +151,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.is_horizontal_scalar_bar = False
         self.scalar_bar = ScalarBar(self.is_horizontal_scalar_bar)
 
+        self.result_cases = {}
 
     #def dragEnterEvent(self, e):
         #print(e)
@@ -177,6 +175,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     #def get_color_function(self):
         #return self.scalar_bar.color_function
+
+    @property
+    def resultCases(self):
+        return self.result_cases
+
+    @resultCases.setter
+    def resultCases(self, value):
+        assert isinstance(value, dict), type(value)
+        self.result_cases = value
 
     def set_window_title(self, msg):
         #msg2 = "%s - "  % self.base_window_title
@@ -1300,7 +1307,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _on_load_nodal_elemental_results(self, Type, out_filename=None):
         """
-        Loads a results file.  Must have called on_load_geometry first.
+        Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
         out_filename : str / None
             the path to the results file
@@ -1313,7 +1320,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         if out_filename in [None, False]:
             title = 'Select a %s Results File for %s' % (Type, self.format)
-            wildcard = 'Space Separated Text (*.txt; *.dat); CSV (*.csv)'
+            wildcard = 'Delimited Text (*.txt; *.dat; *.csv)'
             wildcard_index, out_filename = self._create_load_file_dialog(wildcard, title)
 
         if out_filename == '':
@@ -1337,12 +1344,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
             self.set_window_title(msg)
             self.out_filename = out_filename
+
         if Type == 'Nodal':
             self.log_command("_on_load_nodal_elemental_results(%r)" % out_filename)
         elif Type == 'Elemental':
             self.log_command("on_load_elemental_results(%r)" % out_filename)
         else:
             raise NotImplementedError(Type)
+
+    @property
+    def form(self):
+        return self.res_widget.get_form()
 
     def _load_csv(self, Type, out_filename):
         out_filename_short = os.path.basename(out_filename)
@@ -1367,7 +1379,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             else:
                 raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
             raise SyntaxError(msg)
-        header_line = header_line.lstrip('#').strip()
+        header_line = header_line.lstrip('# \t').strip()
 
         if ext in ['.dat', '.txt']:
             headers = header_line.split(' ')
@@ -1398,7 +1410,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise NotImplementedError(Type)
 
         formi = []
-        form = self.res_widget.get_form()
+        form = self.form
         icase = len(self.caseKeys)
         islot = self.caseKeys[0][0]
         for icol in range(ncols):

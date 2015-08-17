@@ -230,21 +230,28 @@ class LaWGS(object):
                 self.panels[key] = panel
 
     def getPointsElements(self):
+        points, elements, regions = self.get_points_elements_regions()
+        return points, elements
+
+    def get_points_elements_regions(self):
         points = []
         elements = []
+        regions = []
         pointI = 0
+        iregion = 0
         for (name, panel) in sorted(iteritems(self.panels)):
             (pointsI, pointi) = panel.get_points()
             (elementsI, n) = panel.get_elements(pointI)
-            #print "elementsI = ",elementsI
             points += pointsI
             elements += elementsI
             pointI += pointi
+            regions += [iregion] * n
+            iregion += 1
             #print "name=%s len(AllElements)=%s len(allPoints)=%s" %(name,len(elements),len(points))
 
         #for point in points:
             #print point
-        return points, elements
+        return points, elements, regions
 
     def write_as_plot3d(self, p3dname):
         f = open(p3dname, 'wb')

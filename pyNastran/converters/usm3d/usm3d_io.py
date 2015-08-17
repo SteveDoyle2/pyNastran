@@ -101,8 +101,6 @@ class Usm3dIO(object):
             raise RuntimeError('unsupported extension.  Use "cogsg" or "front".')
 
         read_loads = True
-        if self.is_centroidal:
-            read_loads = False
         nodes, tris_tets, tris, bcs, mapbc, loads, flo_filename = model.read_usm3d(base_filename, dimension_flag, read_loads=read_loads)
         del tris_tets
         nodes = model.nodes
@@ -196,7 +194,6 @@ class Usm3dIO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            print("updated grid")
 
         # regions/loads
         self.TurnTextOn()
@@ -229,7 +226,7 @@ class Usm3dIO(object):
         self.scalarBar.VisibilityOff()
 
         ID = 1
-        if bcs is not None and self.is_centroidal:
+        if bcs is not None:
             cases[(ID, 'Region', 1, 'centroid', '%i')] = bcs
 
             mapbc_print = defaultdict(list)
@@ -249,9 +246,8 @@ class Usm3dIO(object):
                 self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
             self.scalarBar.VisibilityOn()
 
-        #==============================
         ID = 2
-        if self.is_nodal and len(loads):
+        if len(loads):
             for key, load in iteritems(loads):
                 cases[(ID, key, 1, 'node', '%.3f')] = load
             self.scalarBar.VisibilityOn()

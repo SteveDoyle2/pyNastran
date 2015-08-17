@@ -39,7 +39,7 @@ class Cart3dIO(object):
             #self.gridResult.Reset()
             #self.gridResult.Modified()
 
-            self.resultCases = {}
+            self.result_cases = {}
             self.nCases = 0
             try:
                 del self.caseKeys
@@ -207,9 +207,6 @@ class Cart3dIO(object):
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
     def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model):
-        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
-        assert self.is_centroidal != self.is_nodal
-
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                         'rhoU', 'rhoV', 'rhoW', 'rhoE']
         nelements = elements.shape[0]

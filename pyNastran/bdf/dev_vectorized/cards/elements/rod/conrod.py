@@ -18,8 +18,8 @@ def _Lambda(v1, debug=True):
     """
     #R = self.Rmatrix(model,is3D)
 
-    #p1 = model.Node(n1).Position()
-    #p2 = model.Node(n2).Position()
+    #p1 = model.Node(n1).get_position()
+    #p2 = model.Node(n2).get_position()
     #v1 = p2 - p1
     if debug:
         print("v1=%s" % v1)

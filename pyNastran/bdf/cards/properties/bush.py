@@ -300,7 +300,7 @@ class PBUSH1D(BushingProperty):
 
         self.vars.append('DAMPER')
 
-    def _read_gener(self, card, iStart):
+    def _read_gener(self, card, istart):
         self.generIDT = integer(card, istart + 2, 'generIDT')
         self.generIDC = integer_or_blank(card, istart + 3,
                                          'generIDC', self.generIDT)

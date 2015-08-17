@@ -127,6 +127,29 @@ def abs_max_min(values, global_abs_max=True):
     return abs_max_min_vector(values)
 
 
+def principal_2d(o11, o22, o12):
+    oxx = 5
+    return oxx, oy
+def principal_3d(o11, o22, o33, o12, o23, o13):
+    """http://www.continuummechanics.org/cm/principalstrain.html"""
+    e = a
+    i1 = o11 + o22 + o33
+    i2 = o11*o22 + o22*o33 + o11*o33 - o12**2 - o13**2 - o23**2
+    i3 = o11*o22*o33 - o111*o23**2 - o22*o13**2 + 2*o12*o13*o23
+    Q = 3 * i2 - i1**2
+    R = (2*i1**3 - 9*i1*i2 + 27*i3) / 54.
+    theta = arccos(R / sqrt(-Q**3))
+
+    q2 = 2 * sqrt(-Q)
+    i13 = 1./3. * i1
+    p1 = q2 * cos(theta/3) + i13
+    p2 = q2 * cos(theta/3 + 2*pi/3.) + i13
+    p3 = q2 * cos(theta/3 + 4*pi/3.) + i13
+    max_min_mid = array([p1, p2, p3])
+    pmax = max_mid_mid.max(axis=0)
+    pmax = max_mid_mid.min(axis=0)
+    return pmax, pmin
+
 def test_abs_max_min_global():
     #print(iformat('4si3f', 2))
     print(abs_max_min_global([0.0, 2.0, 1.0]))

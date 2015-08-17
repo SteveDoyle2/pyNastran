@@ -49,7 +49,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
         :param self: the CROD/CONROD/CTUBE element
         """
-        L = norm(self.nodes[1].Position() - self.nodes[0].Position())
+        L = norm(self.nodes[1].get_position() - self.nodes[0].get_position())
         return L
 
     def Mass(self):
@@ -118,7 +118,7 @@ class CROD(RodElement):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Centroid(self):
-        return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
+        return (self.nodes[0].get_position() + self.nodes[1].get_position()) / 2.
 
     def Eid(self):
         return self.eid
@@ -275,7 +275,7 @@ class CTUBE(RodElement):
         return self.pid.J()
 
     def Centroid(self):
-        return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
+        return (self.nodes[0].get_position() + self.nodes[1].get_position()) / 2.
 
     def raw_fields(self):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.node_ids
@@ -353,7 +353,7 @@ class CONROD(RodElement):
                 assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Centroid(self):
-        return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
+        return (self.nodes[0].get_position() + self.nodes[1].get_position()) / 2.
 
     def Mid(self):
         if isinstance(self.mid, integer_types):

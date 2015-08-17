@@ -16,9 +16,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -29,9 +26,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -42,9 +36,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_comp_bar.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -55,9 +46,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -68,9 +56,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(model_path, 'contact', 'contact.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -81,9 +66,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(model_path, 'fsi', 'fsi.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -95,9 +77,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -115,9 +94,6 @@ class NastranGUI(unittest.TestCase):
         op2_filename = os.path.join(dirname, 'beam_modes_m2.op2')
 
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
-
         add_dummy_gui_functions(test)
 
         test.load_nastran_geometry(bdf_filename, None)
@@ -134,9 +110,6 @@ def test_bottle():
     Tests Nastran GUI loading
     """
     test = NastranIO()
-    test.is_nodal = False
-    test.is_centroidal = True
-
     add_dummy_gui_functions(test)
 
     #test.load_panair_geometry('SWB.INP','')

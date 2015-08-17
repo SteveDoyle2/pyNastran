@@ -26,6 +26,8 @@ PyQt4 unique (PySide is broken)
    - tetgen input
    - S/HABP input
    - Panair output
+   - OpenVSP adb input/output
+   - csv/txt elemental/nodal results for all formats
 
  - legend menu to edit properties for:
    - title
@@ -65,7 +67,6 @@ PyQt4 unique (PySide is broken)
    - no nodal/centroidal position picking (e.g. get (x, y, z), not just x or y or z)
 
  - both nodal/centroidal work regardless of self.is_centroidal/self.is_nodal
-   - TODO: cart3d only
 
  - results sidebar
    - data is put in the same order as the cycleResults capability (Control+L)

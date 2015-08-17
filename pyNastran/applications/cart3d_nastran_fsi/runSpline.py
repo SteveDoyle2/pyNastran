@@ -84,7 +84,7 @@ def remove_duplicate_nodes(nodeList, mesh):
     log.info("nodeListA = %s" % nodeList)
     nodeDict = {}
     for iNode in nodeList:
-        x, y, z = mesh.Node(iNode).Position()
+        x, y, z = mesh.Node(iNode).get_position()
         nodeDict[(x, y)] = iNode
     nodeList = nodeDict.values()
     nodeList.sort()
@@ -154,7 +154,7 @@ def getXK_Matrix(Cws, nodeList, mesh, aPoints):
         j = 3
         for jNode in nodeList:
             sNode = mesh.Node(jNode)
-            (xs, ys, zs) = sNode.Position()
+            (xs, ys, zs) = sNode.get_position()
 
             Rij2 = (xa-xs)**2. + (ya-ys)**2  # Rij^2
             if Rij2 == 0.:
@@ -206,7 +206,7 @@ def getCmatrix(nodeList, mesh):
     for iNode in nodeList:
         nodeI = mesh.Node(iNode)
         #i = iNode+3
-        (xi, yi, zi) = nodeI.Position()
+        (xi, yi, zi) = nodeI.get_position()
         #x,y,z = p
 
         C[0, i] = 1.
@@ -221,7 +221,7 @@ def getCmatrix(nodeList, mesh):
         for jNode in nodeList:
             #j = 3+jNode
             nodeJ = mesh.Node(jNode)
-            xj, yj, zj = nodeJ.Position()
+            xj, yj, zj = nodeJ.get_position()
             if i == j:
                 C[i, j] = 0.
             else:

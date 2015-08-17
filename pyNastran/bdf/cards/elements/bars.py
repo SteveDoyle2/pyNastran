@@ -133,7 +133,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
         :param self: the object pointer
         """
-        L = norm(self.nodes[1].Position() - self.nodes[0].Position())
+        L = norm(self.nodes[1].get_position() - self.nodes[0].get_position())
         return L
 
     def get_edge_ids(self):
@@ -336,7 +336,7 @@ class CBAR(LineElement):
 
     def Length(self):
         # TODO: consider w1a and w1b in the length formulation
-        L = norm(self.gb.Position() - self.ga.Position())
+        L = norm(self.gb.get_position() - self.ga.get_position())
         assert isinstance(L, float)
         return L
 
@@ -356,7 +356,7 @@ class CBAR(LineElement):
         return self.pid.I2()
 
     def Centroid(self):
-        return (self.ga.Position() + self.gb.Position()) / 2.
+        return (self.ga.get_position() + self.gb.get_position()) / 2.
 
     def initX_G0(self, card):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
@@ -380,7 +380,7 @@ class CBAR(LineElement):
 
     def cross_reference(self, model):
         #if self.g0:
-        #    self.x = nodes[self.g0].Position() - nodes[self.ga].Position()
+        #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
@@ -522,7 +522,7 @@ class CBEAM3(CBAR):
         """
         .. math:: L = g_b - g_a
         """
-        L = norm(self.gb.Position() - self.ga.Position())
+        L = norm(self.gb.get_position() - self.ga.get_position())
         return L
 
     def raw_fields(self):

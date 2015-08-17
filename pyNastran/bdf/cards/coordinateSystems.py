@@ -18,7 +18,6 @@ from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from numpy import array, cross, dot, transpose, zeros, vstack, ndarray
 from numpy.linalg import norm
 
-from pyNastran.bdf.deprecated import CoordDeprecated
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 #from pyNastran.utils.dev import list_print
@@ -46,7 +45,7 @@ def normalize(v):
     return v / normV
 
 
-class Coord(BaseCard, CoordDeprecated):
+class Coord(BaseCard):
     type = 'COORD'
 
     def __init__(self, card, data, comment):
@@ -380,6 +379,60 @@ class Coord(BaseCard, CoordDeprecated):
         for i in range(n):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
+
+    def T(self):
+        r"""
+        Gets the 6 x 6 transformation
+
+        .. math:: [\lambda] = [B_{ij}]
+
+        .. math::
+          [T] =
+          \left[
+            \begin{array}{cc}
+            \lambda  & 0 \\
+            0  & \lambda \\
+            \end{array}
+          \right]
+        """
+        self.deprecated('T()', 'beta_n(2)', '0.7')
+        return self.beta_n(2)
+
+    def transformToGlobal(self, p, debug=False):
+        """
+        Transforms a node from the local frame to the global frame
+
+        :param p: the xyz point in the local frame
+        :param debug: debug flag (default=False; unused)
+
+        :retval p2: the xyz point in the global frame
+        :retval matrix: the transformation matrix
+        """
+        self.deprecated('(p2,M)=cid.transformToGlobal(p)', 'p2=cid.transform_node_to_global(p); M=cid.beta()', '0.7')
+        if self.cid == 0:
+            return p, array([[1., 0., 0.],
+                             [0., 1., 0.],
+                             [0., 0., 1.]], dtype='float64')
+
+        p2 = self.transform_node_to_global(p)
+        matrix = self.beta()
+        return p2, matrix
+
+    def transformVectorToGlobal(self, p):
+        self.deprecated('transformVectorToGlobal(p)', 'transform_vector_to_global(p)', '0.7')
+        return self.transform_vector_to_global(p)
+
+    def transformNodeToGlobal(self, p):
+        self.deprecated('transformNodeToGlobal(p)', 'transform_node_to_global(p)', '0.7')
+        return self.transform_node_to_global(p)
+
+    def transformToLocal(self, p, beta, debug=False):
+        self.deprecated('transformToLocal(p)', 'transform_node_to_local(p)', '0.7')
+        return self.transform_node_to_local(p, debug)
+
+    def transform_to_local(self, p, beta, debug=False):
+        self.deprecated('transform_to_local(p)', 'transform_node_to_local(p)', '0.7')
+        return self.transform_node_to_local(p, debug)
 
     def repr_fields(self):
         return self.raw_fields()

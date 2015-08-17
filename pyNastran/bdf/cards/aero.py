@@ -29,7 +29,6 @@ from itertools import count
 from numpy import array, pi, linspace, zeros, arange, repeat, cos, arcsin
 from numpy.linalg import norm
 
-from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
@@ -598,11 +597,35 @@ class AESURFS(BaseCard):  # not integrated
         return self.comment + print_card_8(card)
 
 
-class Aero(BaseCard, AeroDeprecated):
+class Aero(BaseCard):
     """Base class for AERO and AEROS cards."""
     def __init__(self, card, data):
         self.symXY = None
         self.symXZ = None
+
+    def IsSymmetricalXY(self):
+        self.deprecated('IsSymmetricalXY()', 'is_symmetric_xy()', '0.7')
+        return self.is_symmetric_xy()
+
+    def IsSymmetricalXZ(self):
+        self.deprecated('IsSymmetricalXZ()', 'is_symmetric_xz()', '0.7')
+        return self.is_symmetric_xz()
+
+    def IsAntiSymmetricalXY(self):
+        self.deprecated('IsAntiSymmetricalXY()', 'is_anti_symmetric_xy()', '0.7')
+        return self.is_anti_symmetric_xy()
+
+    def IsAntiSymmetricalXZ(self):
+        self.deprecated('IsAntiSymmetricalXZ()', 'is_anti_symmetric_xz()', '0.7')
+        return self.is_anti_symmetric_xz()
+
+    def EnableGroundEffect(self):
+        self.deprecated('EnableGroundEffect()', 'set_ground_effect(True)', '0.7')
+        self.set_ground_effect(True)
+
+    def DisableGroundEffect(self):
+        self.deprecated('DisableGroundEffect()', 'set_ground_effect(False)', '0.7')
+        self.set_ground_effect(False)
 
     def is_symmetric_xy(self):
         if self.symXY == 1:
@@ -878,7 +901,7 @@ class CSSCHD(Aero):
         return self.comment + print_card_8(card)
 
 
-class CAERO1(BaseCard, CAERO1Deprecated):
+class CAERO1(BaseCard):
     """
     Defines an aerodynamic macro element (panel) in terms of two leading edge
     locations and side chords. This is used for Doublet-Lattice theory for
@@ -1058,6 +1081,14 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         for ichord in range(nchord):
             for ispan in range(nspan):
                 self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+
+    def Points(self):
+        self.deprecated('Points()', 'get_points()', '0.7')
+        return self.get_points()
+
+    def SetPoints(self, points):
+        self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
+        return self.set_points(points)
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
@@ -1293,7 +1324,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         return self.comment + print_card_8(card)
 
 
-class CAERO2(BaseCard, CAERO2Deprecated):
+class CAERO2(BaseCard):
     """
     Aerodynamic Body Connection
     Defines aerodynamic slender body and interference elements for
@@ -1416,6 +1447,14 @@ class CAERO2(BaseCard, CAERO2Deprecated):
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
+
+    def Points(self):
+        self.deprecated('Points()', 'get_points()', '0.7')
+        return self.get_points()
+
+    def SetPoints(self, points):
+        self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
+        return self.set_points(points)
 
     def Cp(self):
         if isinstance(self.cp, integer_types):

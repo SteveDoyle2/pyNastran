@@ -14,14 +14,14 @@ def main():
     m2 = TetgenReader()
     base = 'tetgen_test_flipped.1'
     m2.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=2)
-    ntris, four = m2.tris.shape
+    ntris = m2.tris.shape[0]
     #boundary_nodes = unique(m2.tris)
     #nboundary_nodes, = boundary_nodes.shape
-    nboundary_nodes, three = m2.nodes.shape
+    nboundary_nodes = m2.nodes.shape[0]
     assert isinstance(nboundary_nodes, int), nboundary_nodes
 
-    ntets, four = m.tets.shape
-    nnodes, three = m.nodes.shape
+    ntets = m.tets.shape[0]
+    nnodes = m.nodes[0]
     m.header = {
         'inew': -1,
         'nElements' : ntets,

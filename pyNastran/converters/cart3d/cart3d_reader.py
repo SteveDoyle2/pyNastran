@@ -232,7 +232,7 @@ class Cart3DReader(object):
         regions2 = regions[ielements_save]
 
         # renumbers mesh
-        nelements2, three = elements2.shape
+        nelements2 = elements2.shape[0]
         assert 0 < nelements2 < nelements, 'nelements=%s nelements2=%s'  % (nelements, nelements2)
 
         remap_nodes = False

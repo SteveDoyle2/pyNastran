@@ -638,7 +638,7 @@ class Solver(F06, OP2):
             g0 = model.params["GRDPNT"]
             reference_point = None
             if g0 in model.nodes:
-                reference_point = model.nodes[g0].Position()
+                reference_point = model.nodes[g0].get_position()
             #(mass, cg, I) = model.mass_properties(reference_point, sym_axis=None, num_cpus=1)
             #mass *= wtmass
             #I *= wtmass

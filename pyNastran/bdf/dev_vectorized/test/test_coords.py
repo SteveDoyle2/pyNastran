@@ -372,8 +372,8 @@ class TestCoords(unittest.TestCase):
         model.build()
         for nid in model.nodes:
             a = array([30., 40., 50.])
-            b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
+            b = model.Node(nid).get_position()
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
 
     def test_cord2_rcs_02(self):
         """
@@ -423,8 +423,8 @@ class TestCoords(unittest.TestCase):
         model.build()
         for nid in model.nodes:
             a = array([30., 40., 50.])
-            b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
+            b = model.Node(nid).get_position()
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
 
     def test_cord2_rcs_03(self):
         """
@@ -475,8 +475,8 @@ class TestCoords(unittest.TestCase):
         model.build()
         for nid in model.nodes:
             a = array([30., 40., 50.])
-            b = model.Node(nid).Position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).Position()), str(a - b))
+            b = model.Node(nid).get_position()
+            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
@@ -551,7 +551,7 @@ class TestCoords(unittest.TestCase):
         model.build()
 
         g = model.grid.slice_by_node_id(20143)
-        #xyz = g.Position()
+        #xyz = g.get_position()
         xyz = model.coords.get_global_position_by_node_id(20143, g.cp[0])[0]
 
         # by running it through Patran...

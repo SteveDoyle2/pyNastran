@@ -168,7 +168,7 @@ class CGAP(Element):
         self.gb = model.Node(self.Gb(), msg=msg)
         if self.g0:
             self.g0 = model.Node(self.g0, msg=msg)
-            self.x = self.g0.Position()
+            self.x = self.g0.get_position()
         self.pid = model.Property(self.Pid(), msg=msg)
         if self.cid:
             self.cid = model.Coord(self.Cid(), msg=msg)
