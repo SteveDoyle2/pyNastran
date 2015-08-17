@@ -1347,11 +1347,27 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _load_csv(self, Type, out_filename):
         out_filename_short = os.path.basename(out_filename)
 
+        ext = os.path.splitext(out_filename)[1].lower()
+        if ext not in ['.csv', '.dat', '.txt']:
+            raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
+
         file_obj = open(out_filename, 'r')
         header_line = file_obj.readline().strip()
-        assert header_line.startswith('#'), 'headerline=%r' % header_line
+        if not header_line.startswith('#'):
+            msg = 'Expected file of the form:\n'
+            if ext in ['.dat', '.txt']:
+                msg += '# var1 var2\n'
+                msg += '1 2\n'
+                msg += '3 4\n'
+            elif ext in ['.csv']:
+                # csv
+                msg += '# var1, var2\n'
+                msg += '1, 2\n'
+                msg += '3, 4\n'
+            else:
+                raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
+            raise SyntaxError(msg)
         header_line = header_line.lstrip('#').strip()
-        ext = os.path.splitext(out_filename)[1].lower()
 
         if ext in ['.dat', '.txt']:
             headers = header_line.split(' ')
@@ -1360,7 +1376,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             headers = header_line.split(',')
             A = loadtxt(file_obj, delimiter=',')
         else:
-            raise NotImplementedError('extension=%r' % ext)
+            raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
         file_obj.close()
 
         if len(A.shape) == 1:
