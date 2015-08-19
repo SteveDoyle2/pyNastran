@@ -1154,6 +1154,24 @@ def _update_case_control(model, mapper):
                     #if value ==
         #print()
 
+def get_free_edges(bdf_filename, eids=None):
+    """
+    assumes no solids/bars
+    """
+    if isinstance(bdf_filename, string_types):
+        model = BDF()
+        model.read_bdf(bdf_filename)
+    else:
+        model = bdf_filename
+
+    free_edges = []
+    out = model._get_maps(eids, map_names=None)
+    (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
+    for edge, eids in iteritems(edge_to_eid_map):
+        if len(eids) == 2:
+            continue
+        free_edges.append(edge)
+    return free_edges
 
 def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     """
