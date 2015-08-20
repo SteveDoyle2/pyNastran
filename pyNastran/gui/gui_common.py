@@ -85,8 +85,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # inputs dict
         self.is_edges = inputs['is_edges']
         self.is_edges_black = self.is_edges
-        self.is_nodal = inputs['is_nodal']
-        self.is_centroidal = inputs['is_centroidal']
+        # self.is_nodal = inputs['is_nodal']
+        # self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
 
         #self.format = ''
@@ -142,7 +142,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.magnify = 1
         self.iText = 0
 
-        self.pick_state = 'centroidal' if self.is_centroidal else 'nodal'
+        self.pick_state = 'node/centroid' # if self.is_centroidal else 'nodal'
         self.label_actors = {}
         self.label_ids = {}
         self.cameras = {}
@@ -383,14 +383,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.tools += tools
 
     def on_flip_picker(self):
-        if self.pick_state == 'centroidal':
-            self.pick_state = 'nodal'
+        return
+        # if self.pick_state == 'centroidal':
+            # self.pick_state = 'nodal'
 
-        elif self.pick_state == 'nodal':
-            self.pick_state = 'centroidal'
-        else:
-            raise RuntimeError(self.pick_state)
-        self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
+        # elif self.pick_state == 'nodal':
+            # self.pick_state = 'centroidal'
+        # else:
+            # raise RuntimeError(self.pick_state)
+        # self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
 
     def _create_menu_items(self, actions=None):
         if actions is None:
@@ -1578,23 +1579,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 icase = self.iCase
                 key = self.caseKeys[icase]
                 location = self.get_case_location(key)
+
                 if location == 'centroid':
-                    if self.pick_state == 'centroidal':
+                    if self.pick_state == 'node/centroid':
                         duplicate_key = cell_id
-
-                        if 0:
-                            # We use vtkExtractUnstructuredGrid because we are interested in
-                            # looking at just a few cells. We use cell clipping via cell id to
-                            # extract the portion of the grid we are interested in.
-                            extractGrid = vtk.vtkExtractUnstructuredGrid()
-                            extractGrid.SetInputConnection(connect2.GetOutputPort())
-                            extractGrid.CellClippingOn()
-                            extractGrid.SetCellMinimum(0)
-                            extractGrid.SetCellMaximum(23)
-
-                            parison = vtk.vtkGeometryFilter()
-                            parison.SetInputConnection(extractGrid.GetOutputPort())
-
                         result_name, result_value, xyz = self.get_result_by_cell_id(cell_id, world_position)
                         assert result_name in self.label_actors, result_name
                     else:
@@ -1611,10 +1599,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                             msg += '  cannot find: self.%s(xyz, cell_id)' % method
                             self.log_error(msg)
                         return
-
                     self.log_info("%s = %s" % (result_name, result_value))
-                else:
-                    if self.pick_state == 'nodal':
+                elif location == 'node':
+                    if self.pick_state == 'node/centroid':
                         result_name, result_value, node_id, xyz = self.get_result_by_xyz_cell_id(world_position, cell_id)
                         assert result_name in self.label_actors, result_name
                         assert not isinstance(xyz, int), xyz
@@ -1635,6 +1622,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     if self.result_name in ['Node_ID', 'Node ID', 'NodeID']:
                         msg += '; xyz=(%s, %s, %s)' % tuple(xyz)
                     self.log_info(msg)
+                else:
+                    raise RuntimeError('invalid pick location=%r' % location)
 
                 #print('key=%s exists=%s' % (duplicate_key, duplicate_key in self.label_ids[result_name]))
                 if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
@@ -2247,9 +2236,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             data.append(t)
             i += 1
         self.res_widget.update_results(data)
-        method = 'centroid' if self.is_centroidal else 'nodal'
+        # method = 'centroid' if self.is_centroidal else 'nodal'
 
-        data2 = [(method, None, [])]
+        data2 = [('node/centroid', None, [])]
         self.res_widget.update_methods(data2)
 
 
