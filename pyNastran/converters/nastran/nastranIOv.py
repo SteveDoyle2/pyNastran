@@ -295,6 +295,7 @@ class NastranIO(object):
 
         skip_reading = self._remove_old_nastran_geometry(bdf_filename)
         pink = (0.98, 0.4, 0.93)
+        orange = (219/255., 168/255., 13/255.)
         # if 0:
             # yellow = (1., 1., 0.)
             # line_width = 3
@@ -398,6 +399,8 @@ class NastranIO(object):
         else:
             nCONM2 = 0
         #self.gridResult.SetNumberOfComponents(self.nElements)
+        if nCONM2 > 0:
+            self.create_alternate_vtk_grid('conm', color=orange, line_width=5, opacity=1.)
 
         # Allocate grids
         self.grid.Allocate(self.nElements, 1000)
@@ -405,7 +408,8 @@ class NastranIO(object):
         self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
         if has_control_surface:
             self.alt_grids['caero_cs'].Allocate(ncaeros_cs, 1000)
-        self.alt_grids['conm'].Allocate(nCONM2, 1000)
+        if nCONM2 > 0:
+            self.alt_grids['conm'].Allocate(nCONM2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -484,12 +488,13 @@ class NastranIO(object):
                     if None in node_ids:
                         nsprings += 1
 
-        # fill caero grids
+        # fill grids
         self.set_caero_grid(ncaeros_points, model)
         self.set_caero_subpanel_grid(ncaero_sub_points, model)
         if has_control_surface:
             self.set_caero_control_surface_grid(cs_box_ids, box_id_to_caero_element_map, caero_points)
-        self.set_conm_grid(nCONM2, dim_max, model)
+        if nCONM2 > 0:
+            self.set_conm_grid(nCONM2, dim_max, model)
 
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
@@ -518,8 +523,8 @@ class NastranIO(object):
                 self.geometry_actors['caero_cs'].VisibilityOn()
             else:
                 self.geometry_actors['caero_cs'].VisibilityOn()
-
-        self.geometry_actors['conm'].VisibilityOn()
+        if 'conm' in self.geometry_actors:
+            self.geometry_actors['conm'].VisibilityOn()
 
         self.geometry_actors['caero'].Modified()
         self.geometry_actors['caero_sub'].Modified()
@@ -532,7 +537,8 @@ class NastranIO(object):
         if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
                 self.geometry_actors['caero_cs'].Update()
 
-        self.geometry_actors['conm'].Modified()
+        if 'conm' in self.geometry_actors:
+            self.geometry_actors['conm'].Modified()
         #self.geometry_actors['conm'].Update()
         #print('j = ', j)
         self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
@@ -549,7 +555,7 @@ class NastranIO(object):
         for eid, element in sorted(iteritems(model.caeros)):
             if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                isinstance(element, CAERO4) or isinstance(element, CAERO5)):
-                cpoints = element.Points()
+                cpoints = element.get_points()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, j)
                 elem.GetPointIds().SetId(1, j + 1)

@@ -291,9 +291,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         form = inputs['format'].lower()
         input_filename = inputs['input']
         results_filename = inputs['output']
+        geom_script = inputs['geomscript']
         plot = True
         if results_filename:
             plot = False
+
+        if geom_script is not None:
+            self.on_run_script(geom_script)
 
         is_failed = self.on_load_geometry(input_filename, form, plot=plot)
         if is_failed:
@@ -1207,8 +1211,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
             self.grid.Reset()
             self.grid.Modified()
-            self.grid2.Reset()
-            self.grid2.Modified()
+
             # reset alt grids
             names = self.alt_grids.keys()
             for name in names:
@@ -1750,7 +1753,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
-    def on_take_screenshot(self, fname=None):
+    def on_take_screenshot(self, fname=None, magnification=None):
         """ Take a screenshot of a current view and save as a file"""
         if fname is None or fname is False:
             filt = QtCore.QString()
@@ -1795,8 +1798,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             else:
                 render_large.SetInput(self.rend)
 
-            magnify_min = 5
-            magnify = self.magnify if self.magnify > magnify_min else magnify_min
+            if magnification is None:
+                magnify_min = 5
+                magnify = self.magnify if self.magnify > magnify_min else magnify_min
+            else:
+                magnify = magnification
 
             self._update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
