@@ -27,8 +27,8 @@ class PanairIO(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.removeOldGeometry(panairFileName)
-        if skipReading:
+        skip_reading = self.removeOldGeometry(panairFileName)
+        if skip_reading:
             return
 
         model = PanairGrid(log=self.log, debug=self.debug)
@@ -76,7 +76,6 @@ class PanairIO(object):
         assert len(elements) > 0
         for eid, element in enumerate(elements):
             (p1, p2, p3, p4) = element
-            #print "element = ",element
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, p1)
             elem.GetPointIds().SetId(1, p2)
@@ -84,7 +83,6 @@ class PanairIO(object):
             elem.GetPointIds().SetId(3, p4)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        #print("eid = ", eid)
         self.grid.SetPoints(points)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         #print dir(self.grid) #.SetNumberOfComponents(0)
@@ -94,9 +92,7 @@ class PanairIO(object):
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
 
-        #return
-
-        # loadCart3dResults - regions/loads
+        # loadPanairResults - regions/loads
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
