@@ -71,7 +71,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO,
-                 TetgenIO, Usm3dIO, Plot3d_io, ADB_IO, FastIO):
+                 TetgenIO, Usm3dIO, TecplotIO, Plot3d_io, ADB_IO, FastIO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -106,7 +106,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     def __init__(self, inputs):
         html_logging = True
         fmt_order = [
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', # results
+            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', 'tecplot', # results
             'lawgs', 'tetgen', 'stl', 'fast', #'plot3d',  # no results
         ]
         GuiCommon2.__init__(self, fmt_order, html_logging, inputs)
@@ -118,6 +118,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         LaWGS_IO.__init__(self)
         STL_IO.__init__(self)
         TetgenIO.__init__(self)
+        TecplotIO.__init__(self)
         Usm3dIO.__init__(self)
         Plot3d_io.__init__(self)
         ADB_IO.__init__(self)

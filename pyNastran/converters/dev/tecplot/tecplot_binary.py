@@ -1,9 +1,38 @@
 from __future__ import print_function
 from struct import unpack
-from numpy import allclose, array
+from numpy import allclose, array, vstack, hstack, where, unique
 import os
 from pyNastran.op2.fortran_format import FortranFormat
 
+def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None):
+    print('merging...')
+    assert isinstance(tecplot_filenames, (list, tuple)), type(tecplot_filenames)
+    assert len(tecplot_filenames) > 1, tecplot_filenames
+
+    xyz = []
+    elements = []
+    results = []
+    nnodes = 0
+    nelements = 0
+
+    model = TecplotReader()
+    for tecplot_filename in tecplot_filenames:
+        print('reading %s' % tecplot_filename)
+        model.read_tecplot(tecplot_filename)
+        xyz.append(model.xyz)
+        elements.append(model.elements + nnodes)
+        results.append(model.results)
+        nnodes += model.nnodes
+        nelements += model.nelements
+
+    #model.nnodes = nnodes
+    #model.nelements = nelements
+    model.xyz = vstack(xyz)
+    model.elements = vstack(elements)
+    model.results = vstack(results)
+    if tecplot_filename_out is not None:
+        model.write_tecplot(tecplot_filename_out)
+    return model
 
 class TecplotReader(FortranFormat):
     """
@@ -22,6 +51,14 @@ class TecplotReader(FortranFormat):
     #def show_data(self, data, types='', endian=''):
         #pass
 
+    @property
+    def nnodes(self):
+        return self.xyz.shape[0]
+
+    @property
+    def nelements(self):
+        return self.elements.shape[0]
+
     def read_tecplot(self, tecplot_filename, nnodes=None, nelements=None):
         self.tecplot_filename = tecplot_filename
 
@@ -34,55 +71,31 @@ class TecplotReader(FortranFormat):
         word, = unpack(b'8s', data)
         #print('word = ', word)
 
-        if 1:
-            values = []
-            for ii in range(100):
-                datai = self.f.read(4)
-                val, = unpack(b'i', datai)
-                self.n += 4
-                values.append(val)
-                if val == 9999:
-                    break
-            assert ii < 100, ii
-            print(values)
+        values = []
+        for ii in range(100):
+            datai = self.f.read(4)
+            val, = unpack(b'i', datai)
+            self.n += 4
+            values.append(val)
+            if val == 9999:
+                break
+        assert ii < 100, ii
+        #print(values)
 
-            n = 3 * 4
-            data = self.f.read(n)
-            self.n += n
+        n = 3 * 4
+        data = self.f.read(n)
+        self.n += n
 
-            n = 1 * 4
-            data = self.f.read(n)
-            self.n += n
-            zone_type, = unpack(b'i', data)
-            #self.show(100, endian='<')
-
-        else:
-            ni = 75
-            n = ni * 4
-            data1 = self.f.read(n)
-            self.n += n
-            self.show_data(data1, types='if', endian='<')
-
-            ni = 1
-            n = ni * 4
-            data2 = self.f.read(n)
-            vali, = unpack(b'i', data2)
-            self.n += n
-            if not vali == -1:
-                self.show_data(data1, types='i', endian='<') # 'if'
-                #self.show_data(data2, types='if', endian='<')
-            print('----------')
-
-            n = 1 * 4
-            data = self.f.read(n)
-            self.n += n
-            zone_type, = unpack(b'i', data)
-            #self.show_data(data, types='if', endian='<')
+        n = 1 * 4
+        data = self.f.read(n)
+        self.n += n
+        zone_type, = unpack(b'i', data)
+        #self.show(100, endian='<')
 
         n = 11 * 4
         data = self.f.read(n)
         self.n += n
-        self.show_data(data, types='if', endian='<')
+        self.show_data(data, types='i', endian='<') # 'if'?
         #assert self.n == 360, self.n
         #print('----------')
 
@@ -98,8 +111,8 @@ class TecplotReader(FortranFormat):
             nelements = nelements2
         assert nnodes == nnodes2
         assert nelements == nelements2
-        assert nnodes2 < 10000, nnodes
-        assert nelements2 < 10000, nelements
+        #assert nnodes2 < 10000, nnodes
+        #assert nelements2 < 10000, nelements
 
         n = 35 * 4
         data = self.f.read(n)
@@ -169,17 +182,13 @@ class TecplotReader(FortranFormat):
         node_ids = unpack(b'%ii' % nvals, self.f.read(n))
         self.n += n
 
-        elements = array(node_ids).reshape(nelements, ni) + 1
+        elements = array(node_ids).reshape(nelements, ni)
         #print(elements)
 
         #self.show_data(data, types='ifs', endian='<')
         #print(vals)
 
         #self.show(100, endian='<')
-        #1.259632707E-01  0.1259632707
-
-        self.nnodes = nnodes
-        self.nelements = nelements
         self.elements = elements
         tecplot_file.close()
 
@@ -231,10 +240,77 @@ class TecplotReader(FortranFormat):
 
         # elements
         efmt = ' %i %i %i %i %i %i %i %i\n'
-        elements = self.elements
+        elements = self.elements + 1
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
         tecplot_file.close()
+
+    def extract_y_slice(self, y0, tol=0.01, slice_filename=None):
+        """
+        doesn't work...
+        """
+        print('slicing...')
+        y = self.xyz[:, 1]
+        nodes = self.xyz
+        assert tol > 0.0, tol
+        elements = self.elements
+        results = self.results
+
+        iy = where((y0 - tol <= y) & (y <= y0 + tol))[0]
+
+        print(y[iy])
+        print(nodes[iy, 1].min(), nodes[iy, 1].max())
+        #iy = where(y <= y0 + tol)[0]
+        assert len(iy) > 0, iy
+        #inode = iy + 1
+
+
+        # find all elements that have iy within tolerance
+        #slots = where(elements == iy)
+        #slots = where(element for element in elements
+                      #if any(iy in element))
+        #slots = where(iy == elements.ravel())[0]
+        ielements = unique([ie for ie, elem in enumerate(elements)
+                            for i in range(8)
+                            if i in elem])
+        #print(slots)
+        #asdf
+        #ri, ci = slots
+        #ri = unique(hstack([where(element == iy)[0] for element in elements]))
+        #ri = [ie for ie, element in enumerate(elements)
+              #if [n for n in element
+                  #if n in iy]]
+        #ri = [where(element == iy)[0] for element in elements if where(element == iy)[0]]
+        #print(ri)
+        #ielements = unique(ri)
+        print(ielements)
+        assert len(ielements) > 0, ielements
+
+        # find nodes
+        elements2 = elements[ielements, :]
+        inodes = unique(elements2)
+        assert len(inodes) > 0, inodes
+
+        # renumber the nodes
+        nidmap = {}
+        for inode, nid in enumerate(inodes):
+            nidmap[nid] = inode
+        elements3 = array(
+            [[nidmap[nid] for nid in element]
+             for element in elements2],
+            dtype='int32')
+
+        print(inodes)
+        nodes2 = nodes[inodes, :]
+        results2 = results[inodes, :]
+        model = TecplotReader()
+        model.xyz = nodes2
+        model.results = results2
+        model.elements = elements3
+
+        if slice_filename:
+            model.write_tecplot(slice_filename)
+        return model
 
 def main():
     plt = TecplotReader()
@@ -371,20 +447,29 @@ def main():
         'n=4247, e=7154',
         'n=4065, e=8125',
     ]
+    fnames = [os.path.join('time20000', fname) for fname in fnames]
+    tecplot_filename_out = None
+    #tecplot_filename_out = 'tecplot_joined.plt'
+    model = merge_tecplot_files(fnames, tecplot_filename_out)
+
+    y0 = 0.0
+    model.extract_y_slice(y0, tol=0.01, slice_filename='slice.plt')
+
+    return
     for iprocessor, fname in enumerate(fnames):
         nnodes, nelements = datai[iprocessor].split(',')
         nnodes = int(nnodes.split('=')[1])
         nelements = int(nelements.split('=')[1])
 
         ip = iprocessor + 1
-        tecplot_filename = os.path.join('time20000', 'model_final_meters_part%i_tec_volume_timestep20000.plt' % ip)
+        tecplot_filename = 'model_final_meters_part%i_tec_volume_timestep20000.plt' % ip
         print(tecplot_filename)
         try:
             plt.read_tecplot(tecplot_filename, nnodes=nnodes, nelements=nelements)
             plt.write_tecplot('processor%i.plt' % ip)
         except:
             raise
-        break
+        #break
 
 if __name__ == '__main__':
     main()

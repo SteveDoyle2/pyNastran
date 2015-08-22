@@ -1,12 +1,14 @@
 from __future__ import print_function
 from six import iteritems
 from six.moves import range
+
+import os
 from numpy import arange, mean, amax, amin
 
 import vtk
 from vtk import vtkHexahedron
 
-from pyNastran.converters.dev.tecplot.tecplot_binary import TecplotReader
+from pyNastran.converters.dev.tecplot.tecplot_binary import TecplotReader, merge_tecplot_files
 
 
 class TecplotIO(object):
@@ -30,10 +32,16 @@ class TecplotIO(object):
         if skip_reading:
             return
 
-        model = TecplotReader(log=self.log, debug=False)
+        if 0:
+            fnames = os.listdir('time20000')
+            fnames = [os.path.join('time20000', fname) for fname in fnames]
+            model = merge_tecplot_files(fnames, tecplot_filename_out=None)
+        else:
+            model = TecplotReader(log=self.log, debug=False)
+            model.read_tecplot(tecplot_filename)
+
         self.modelType = 'tecplot'
         #self.modelType = model.modelType
-        model.read_tecplot(tecplot_filename)
         self.nNodes = model.nnodes
         self.nElements = model.nelements
 
@@ -67,7 +75,7 @@ class TecplotIO(object):
         elements -= 1
         for eid in range(nelements):
             elem = vtkHexahedron()
-            node_ids = elements[eid, :]
+            node_ids = elements[eid, :] + 1
             epoints = elem.GetPointIds()
             epoints.SetId(0, node_ids[0])
             epoints.SetId(1, node_ids[1])
@@ -134,7 +142,6 @@ class TecplotIO(object):
             ('ElementID', 1, []),
             #('Region', 2, []),
         ]
-        i = 2
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
@@ -149,7 +156,7 @@ class TecplotIO(object):
             #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
 
         if is_results:
-            i = 3
+            i = 2
             for iresult, result_name in enumerate(result_names):
                 nodal_data = model.results[:, iresult]
                 if new:
