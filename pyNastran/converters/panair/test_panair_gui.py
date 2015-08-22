@@ -1,6 +1,6 @@
 import os
 
-from pyNastran.gui.testing_methods import add_dummy_gui_functions
+from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.panair.panairIO import PanairIO
 import pyNastran
 
@@ -9,7 +9,13 @@ model_path = os.path.join(pkg_path, 'converters', 'panair', 'M100')
 
 import unittest
 
-class PanairGUI(unittest.TestCase):
+class PanairGUI(PanairIO, GUIMethods):
+    def __init__(self):
+        GUIMethods.__init__(self)
+        PanairIO.__init__(self)
+
+
+class TestPanairGUI(unittest.TestCase):
 
     def test_m100_geometry(self):
         geometry_filename = os.path.join(model_path, 'M100.inp')
@@ -17,9 +23,7 @@ class PanairGUI(unittest.TestCase):
         #out_filename = os.path.join(model_path, 'panair.out')
         dirname = None
 
-        test = PanairIO()
-        add_dummy_gui_functions(test)
-
+        test = PanairGUI()
         #test.load_nastran_geometry(geometry_filename, None)
         test.load_panair_geometry(geometry_filename, dirname)
 
@@ -29,9 +33,7 @@ class PanairGUI(unittest.TestCase):
         out_filename = os.path.join(model_path, 'panair.out')
         dirname = None
 
-        test = PanairIO()
-        add_dummy_gui_functions(test)
-
+        test = PanairGUI()
         test.load_panair_geometry(geometry_filename, dirname)
         test.load_panair_results(agps_filename, dirname)
 

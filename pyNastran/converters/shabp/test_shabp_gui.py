@@ -1,6 +1,6 @@
 import os
 
-from pyNastran.gui.testing_methods import add_dummy_gui_functions
+from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.shabp.shabp_io import ShabpIO
 import pyNastran
 
@@ -9,7 +9,13 @@ model_path = os.path.join(pkg_path, 'converters', 'shabp')
 
 import unittest
 
-class ShabpGUI(unittest.TestCase):
+class ShabpGUI(ShabpIO, GUIMethods):
+    def __init__(self):
+        GUIMethods.__init__(self)
+        ShabpIO.__init__(self)
+
+
+class TestShabpGUI(unittest.TestCase):
 
     def test_shabp_geometry(self):
         return
@@ -18,8 +24,7 @@ class ShabpGUI(unittest.TestCase):
         #out_filename = os.path.join(model_path, 'panair.out')
         dirname = None
 
-        test = ShabpIO()
-        add_dummy_gui_functions(test)
+        test = ShabpGUI()
 
 
         test.load_shabp_geometry('models/NAC6.INP', '')
@@ -33,8 +38,7 @@ class ShabpGUI(unittest.TestCase):
         #out_filename = os.path.join(model_path, 'panair.out')
         #dirname = None
 
-        #test = ShabpIO()
-        #add_dummy_gui_functions(test)
+        #test = ShabpGUI()
 
         #test.load_panair_geometry(geometry_filename, dirname)
         #test.load_panair_results(agps_filename, dirname)

@@ -1,6 +1,6 @@
 import os
 
-from pyNastran.gui.testing_methods import add_dummy_gui_functions
+from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
 import pyNastran
 
@@ -9,15 +9,19 @@ model_path = os.path.join(pkg_path, 'converters', 'LaWGS')
 
 import unittest
 
-class LawgsGUI(unittest.TestCase):
+class LaWGS_GUI(LaWGS_IO, GUIMethods):
+    def __init__(self):
+        GUIMethods.__init__(self)
+        LaWGS_IO.__init__(self)
+
+
+class TestLawgsGUI(unittest.TestCase):
 
     def test_tmx_geometry(self):
         geometry_filename = os.path.join(model_path, 'tmx1242.wgs')
         dirname = None
 
-        test = LaWGS_IO()
-        add_dummy_gui_functions(test)
-
+        test = LaWGS_GUI()
         #test.load_nastran_geometry(geometry_filename, None)
         test.load_lawgs_geometry(geometry_filename, dirname)
 
@@ -25,8 +29,7 @@ class LawgsGUI(unittest.TestCase):
         geometry_filename = os.path.join(model_path, 'tnd6480.wgs')
         dirname = None
 
-        test = LaWGS_IO()
-        add_dummy_gui_functions(test)
+        test = LaWGS_GUI()
         test.load_lawgs_geometry(geometry_filename, dirname)
 
 

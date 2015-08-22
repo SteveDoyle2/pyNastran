@@ -2,7 +2,21 @@ from __future__ import print_function
 from six import iteritems
 from pyNastran.utils.log import get_logger
 
+
+class GeometryProperty(object):
+    def __init__(self):
+        pass
+    def SetRepresentationToPoints(self):
+        pass
+    def SetPointSize(self, size):
+        assert isinstance(size, int), type(size)
+
+
 class GeometryActor(object):
+    def __init__(self):
+        self._prop = GeometryProperty()
+    def GetProperty(self):
+        return self._prop
     def VisibilityOn(self):
         pass
     def VisibilityOff(self):
@@ -35,70 +49,70 @@ class ScalarBar(object):
         pass
 
 
-def add_dummy_gui_functions(test, debug=True):
-    def removeOldGeometry(self):
-        pass
+class GUIMethods(object):
+    def __init__(self):
+        self.debug = True
+        self.form = []
+        self.result_cases = {}
+        self._finish_results_io = self.passer1
+        self._finish_results_io2 = self.passer2
+        self.geometry_actors = {
+            'main' : GeometryActor(),
+        }
+        self.debug = True
+        self.grid = Grid()
+        self.scalarBar = ScalarBar()
+        self.alt_geometry_actor = ScalarBar()
+        self.alt_grids = {
+            'main' : self.grid,
+            'caero' : Grid(),
+            'caero_sub' : Grid(),
+        }
+        self.geometry_properties = {
+            #'main' : None,
+            #'caero' : None,
+            #'caero_sub' : None,
+        }
+        #self._add_alt_actors = _add_alt_actors
+
+        self.log = get_logger(log=None, level='debug')
+
+    def removeOldGeometry(self, filename):
+        skip_reading = False
+        return skip_reading
     def cycleResults(self):
         pass
-    def TurnTextOn():
+    def TurnTextOn(self):
         pass
-    def TurnTextOff():
+    def TurnTextOff(self):
         pass
-    def update_axes_length(value):
+    def update_axes_length(self, value):
         pass
-    def passer():
+    def passer(self):
         pass
-    def passer1(a):
+    def passer1(self, a):
         pass
-    def passer2(a, b):
+    def passer2(self, a, b):
         pass
-    def create_alternate_vtk_grid(name):
-        pass
-    def _add_alt_actors(alt_grids):
+    def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None):
+        self.alt_grids[name] = Grid()
+    def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):
-            test.geometry_actors[name] = GeometryActor()
-    def log_info(msg):
-        if debug:
+            self.geometry_actors[name] = GeometryActor()
+    def log_info(self, msg):
+        if self.debug:
             print('INFO:  ', msg)
 
-    def log_error(msg):
-        if debug:
+    def log_error(self, msg):
+        if self.debug:
             print('ERROR:  ', msg)
 
-
-    test.form = []
-    test.result_cases = {}
-    test._finish_results_io = passer1
-    test._finish_results_io2 = passer2
-    test.geometry_actors = {
-        'main' : GeometryActor(),
-    }
-    test.debug = True
-    test.grid = Grid()
-    test.grid2 = Grid()
-    test.scalarBar = ScalarBar()
-    test.alt_geometry_actor = ScalarBar()
-    test.alt_grids = {
-        'main' : test.grid,
-        'caero' : Grid(),
-        'caero_sub' : Grid(),
-    }
-    test.geometry_properties = {
-        #'main' : None,
-        #'caero' : None,
-        #'caero_sub' : None,
-    }
-    test.create_alternate_vtk_grid = create_alternate_vtk_grid
-    test._add_alt_actors = _add_alt_actors
-
-    test.log = get_logger(log=None, level='debug')
-    test.log_error = log_error
+    #test.log_error = log_error
     #test.log_info = print
-    test.log_info = log_info
-    test.removeOldGeometry = removeOldGeometry
-    test.cycleResults = cycleResults
-    test.TurnTextOn = TurnTextOn
-    test.TurnTextOff = TurnTextOff
-    test.update_axes_length = update_axes_length
-    test.cycleResults_explicit = passer
+    #test.log_info = log_info
+    #test.cycleResults = cycleResults
+    #test.TurnTextOn = TurnTextOn
+    #test.TurnTextOff = TurnTextOff
+    #test.update_axes_length = update_axes_length
+    #test.cycleResults_explicit = passer
 
