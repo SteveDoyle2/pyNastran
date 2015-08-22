@@ -51,7 +51,7 @@ class ScalarBar(object):
 
 class GUIMethods(object):
     def __init__(self):
-        self.debug = True
+        self.debug = False
         self.form = []
         self.result_cases = {}
         self._finish_results_io = self.passer1
@@ -59,7 +59,6 @@ class GUIMethods(object):
         self.geometry_actors = {
             'main' : GeometryActor(),
         }
-        self.debug = True
         self.grid = Grid()
         self.scalarBar = ScalarBar()
         self.alt_geometry_actor = ScalarBar()
@@ -75,7 +74,8 @@ class GUIMethods(object):
         }
         #self._add_alt_actors = _add_alt_actors
 
-        self.log = get_logger(log=None, level='debug')
+        level = 'debug' if self.debug else 'info'
+        self.log = get_logger(log=None, level=level)
 
     def removeOldGeometry(self, filename):
         skip_reading = False
