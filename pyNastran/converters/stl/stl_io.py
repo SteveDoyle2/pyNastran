@@ -30,7 +30,6 @@ class STL_IO(object):
         else:
             self.TurnTextOff()
             self.grid.Reset()
-            self.grid2.Reset()
 
             self.resultCases = {}
             self.nCases = 0
@@ -71,7 +70,6 @@ class STL_IO(object):
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)

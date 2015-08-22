@@ -33,9 +33,6 @@ class Cart3dIO(object):
         else:
             self.TurnTextOff()
             self.grid.Reset()
-            self.grid2.Reset()
-            #print(dir(self.grid2))
-            #self.grid2.VisibilityOff()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
 
@@ -75,7 +72,6 @@ class Cart3dIO(object):
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -120,17 +116,13 @@ class Cart3dIO(object):
             self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
 
         self.grid.SetPoints(points)
-        #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         #print(dir(self.grid) #.SetNumberOfComponents(0))
         #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
-        #self.grid2.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            #self.grid2.Update()
-        print("updated grid")
 
         self._create_cart3d_free_edegs(model, nodes, elements)
 

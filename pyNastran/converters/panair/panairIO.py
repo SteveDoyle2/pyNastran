@@ -47,7 +47,6 @@ class PanairIO(object):
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -87,17 +86,13 @@ class PanairIO(object):
 
         #print("eid = ", eid)
         self.grid.SetPoints(points)
-        #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         #print dir(self.grid) #.SetNumberOfComponents(0)
         #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
-        self.grid2.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            self.grid2.Update()
-            print("updated grid")
 
         #return
 
