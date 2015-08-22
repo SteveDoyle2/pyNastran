@@ -1,0 +1,391 @@
+from __future__ import print_function
+from struct import unpack
+from numpy import allclose, array
+import os
+from pyNastran.op2.fortran_format import FortranFormat
+
+
+class TecplotReader(FortranFormat):
+    """
+    Parses a hexa binary Tecplot 360 file.
+    Writes an ASCII Tecplot 10 file (no transient support).
+    """
+    def __init__(self, log=None, debug=False):
+        FortranFormat.__init__(self)
+        self.endian = b'<'
+        self.log = log
+        self.debug = False
+
+    #def show(self, n, types='', endian=''):
+        #pass
+
+    #def show_data(self, data, types='', endian=''):
+        #pass
+
+    def read_tecplot(self, tecplot_filename, nnodes=None, nelements=None):
+        self.tecplot_filename = tecplot_filename
+
+        tecplot_file = open(tecplot_filename, 'rb')
+        self.f = tecplot_file
+        self.n = 0
+
+        data = self.f.read(8)
+        self.n += 8
+        word, = unpack(b'8s', data)
+        #print('word = ', word)
+
+        if 1:
+            values = []
+            for ii in range(100):
+                datai = self.f.read(4)
+                val, = unpack(b'i', datai)
+                self.n += 4
+                values.append(val)
+                if val == 9999:
+                    break
+            assert ii < 100, ii
+            print(values)
+
+            n = 3 * 4
+            data = self.f.read(n)
+            self.n += n
+
+            n = 1 * 4
+            data = self.f.read(n)
+            self.n += n
+            zone_type, = unpack(b'i', data)
+            #self.show(100, endian='<')
+
+        else:
+            ni = 75
+            n = ni * 4
+            data1 = self.f.read(n)
+            self.n += n
+            self.show_data(data1, types='if', endian='<')
+
+            ni = 1
+            n = ni * 4
+            data2 = self.f.read(n)
+            vali, = unpack(b'i', data2)
+            self.n += n
+            if not vali == -1:
+                self.show_data(data1, types='i', endian='<') # 'if'
+                #self.show_data(data2, types='if', endian='<')
+            print('----------')
+
+            n = 1 * 4
+            data = self.f.read(n)
+            self.n += n
+            zone_type, = unpack(b'i', data)
+            #self.show_data(data, types='if', endian='<')
+
+        n = 11 * 4
+        data = self.f.read(n)
+        self.n += n
+        self.show_data(data, types='if', endian='<')
+        #assert self.n == 360, self.n
+        #print('----------')
+
+        n = 2 * 4
+        data = self.f.read(n)
+        self.n += n
+        nnodes2, nelements2 = unpack('2i', data)
+        if nnodes and nelements:
+            print('nnodes=%s nelements=%s' % (nnodes, nelements))
+            print('nnodes2=%s nelements2=%s' % (nnodes2, nelements2))
+        else:
+            nnodes = nnodes2
+            nelements = nelements2
+        assert nnodes == nnodes2
+        assert nelements == nelements2
+        assert nnodes2 < 10000, nnodes
+        assert nelements2 < 10000, nelements
+
+        n = 35 * 4
+        data = self.f.read(n)
+        self.n += n
+        #self.show_data(data, types='ifs', endian='<')
+        #print('----------')
+
+        n = 30 * 4
+        data = self.f.read(n)
+        self.n += n
+
+        #self.show_data(data, types='ifs', endian='<')
+        assert zone_type in [5], zone_type
+
+        # p.98
+        # zone_title
+        # zone_type
+        #   0=ORDERED, 1=FELINESEG, 2=FETRIANGLE,
+        #   3=FEQUADRILATERAL, 4=FETETRAHEDRON, 5=FEBRICK
+        # i_max_or_num_points
+        # j_max_or_num_elements
+        # k_max
+        # i_cell_max
+        # j_cell_max
+        # k_cell_max
+        # solution_time
+        # strand_id
+        # parent_zone
+        # is_block (0=POINT, 1=BLOCK)
+        # num_face_connections
+        # face_neighbor_mode
+        # passive_var_list
+        # value_location (0=cell-centered; 1=node-centered)
+        # share_var_from_zone
+        # share_connectivity_from_zone
+
+        # http://www.hgs.k12.va.us/tecplot/documentation/tp_data_format_guide.pdf
+
+
+        #print('----------')
+        # the variables: [x, y, z]
+        nvars = 3
+        #nnodes = 3807
+        ni = nnodes * nvars
+        n = ni * 4
+        data = self.f.read(n)
+        self.n += n
+        xyzvals = unpack(b'%sf' % ni, data)
+        xyz = array(xyzvals, dtype='float32').reshape(3, nnodes).T
+
+        # the variables: [rho, u, v, w, p]
+        nvars = 5
+        dunno = 0    # what's with this...
+        ni = nnodes * nvars + dunno
+        n = ni * 4
+        data = self.f.read(n)
+        self.n += n
+        resvals = unpack(b'%sf' % ni, data)
+        results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
+
+        #
+        # 7443 elements
+        ni = 8 # 8 nodes/elements
+        #nelements = 7443
+        nvals = ni * nelements
+        n = nvals * 4
+        node_ids = unpack(b'%ii' % nvals, self.f.read(n))
+        self.n += n
+
+        elements = array(node_ids).reshape(nelements, ni) + 1
+        #print(elements)
+
+        #self.show_data(data, types='ifs', endian='<')
+        #print(vals)
+
+        #self.show(100, endian='<')
+        #1.259632707E-01  0.1259632707
+
+        self.nnodes = nnodes
+        self.nelements = nelements
+        self.elements = elements
+        tecplot_file.close()
+
+        self.xyz = xyz
+        self.results = results
+
+    def write_tecplot(self, tecplot_filename):
+        tecplot_file = open(tecplot_filename, 'w')
+        msg = 'TITLE     = "tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file"\n'
+        msg += 'VARIABLES = "x"\n'
+        msg += '"y"\n'
+        msg += '"z"\n'
+        msg += '"rho"\n'
+        msg += '"u"\n'
+        msg += '"v"\n'
+        msg += '"w"\n'
+        msg += '"p"\n'
+        msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
+        msg += ' n=%i, e=%i, ZONETYPE=FEBrick\n' % (self.nnodes, self.nelements)
+        msg += ' DATAPACKING=BLOCK\n'
+        tecplot_file.write(msg)
+        #nvalues_per_line = 5
+
+        # xyz
+        for ivar in range(3):
+            #tecplot_file.write('# ivar=%i\n' % ivar)
+            #print('xyz.shape =', self.xyz.shape)
+            vals = self.xyz[:, ivar].ravel()
+            msg = ''
+            for ival, val in enumerate(vals):
+                msg += ' %15.9E' % val
+                if (ival + 1) % 5 == 0:
+                    tecplot_file.write(msg)
+                    msg = '\n'
+            tecplot_file.write(msg.rstrip() + '\n')
+
+        # results
+        for ivar in range(5):
+            #tecplot_file.write('# ivar=%i\n' % ivar)
+            #print('xyz.shape =', self.xyz.shape)
+            vals = self.results[:, ivar].ravel()
+            msg = ''
+            for ival, val in enumerate(vals):
+                msg += ' %15.9E' % val
+                if (ival + 1) % 5 == 0:
+                    tecplot_file.write(msg)
+                    msg = '\n'
+            tecplot_file.write(msg.rstrip() + '\n')
+
+        # elements
+        efmt = ' %i %i %i %i %i %i %i %i\n'
+        elements = self.elements
+        for element in elements:
+            tecplot_file.write(efmt % tuple(element))
+        tecplot_file.close()
+
+def main():
+    plt = TecplotReader()
+    fnames = os.listdir('time20000')
+
+
+    datai = [
+        'n=3807, e=7443',
+        'n=3633, e=7106',
+        'n=3847, e=7332',
+        'n=3873, e=6947',
+        'n=4594, e=8131',
+        'n=4341, e=7160',
+        'n=4116, e=8061',
+        'n=4441, e=8105',
+        'n=4141, e=8126',
+        'n=4085, e=8053',
+        'n=4047, e=8215',
+        'n=4143, e=8123',
+        'n=4242, e=7758',
+        'n=3830, e=7535',
+        'n=3847, e=7936',
+        'n=3981, e=7807',
+        'n=3688, e=7415',
+        'n=4222, e=8073',
+        'n=4164, e=7327',
+        'n=3845, e=8354',
+        'n=4037, e=6786',
+        'n=3941, e=8942',
+        'n=4069, e=7345',
+        'n=4443, e=8001',
+        'n=3895, e=7459',
+        'n=4145, e=7754',
+        'n=4224, e=8152',
+        'n=4172, e=7878',
+        'n=4138, e=8864',
+        'n=3801, e=7431',
+        'n=3984, e=6992',
+        'n=4195, e=7967',
+        'n=4132, e=7992',
+        'n=4259, e=7396',
+        'n=4118, e=7520',
+        'n=4176, e=7933',
+        'n=4047, e=8098',
+        'n=4064, e=8540',
+        'n=4144, e=8402',
+        'n=4144, e=7979',
+        'n=3991, e=6984',
+        'n=4080, e=8465',
+        'n=3900, e=7981',
+        'n=3709, e=8838',
+        'n=4693, e=8055',
+        'n=4022, e=7240',
+        'n=4028, e=8227',
+        'n=3780, e=7551',
+        'n=3993, e=8671',
+        'n=4241, e=7277',
+        'n=4084, e=6495',
+        'n=4103, e=8165',
+        'n=4496, e=5967',
+        'n=3548, e=8561',
+        'n=4143, e=7749',
+        'n=4136, e=8358',
+        'n=4096, e=7319',
+        'n=4209, e=8036',
+        'n=3885, e=7814',
+        'n=3800, e=8232',
+        'n=3841, e=7837',
+        'n=3874, e=7571',
+        'n=3887, e=8079',
+        'n=3980, e=7834',
+        'n=3763, e=7039',
+        'n=4287, e=7130',
+        'n=4110, e=8336',
+        'n=3958, e=7195',
+        'n=4730, e=7628',
+        'n=4087, e=8149',
+        'n=4045, e=8561',
+        'n=3960, e=7320',
+        'n=3901, e=8286',
+        'n=4065, e=7013',
+        'n=4160, e=7906',
+        'n=3628, e=7140',
+        'n=4256, e=8168',
+        'n=3972, e=8296',
+        'n=3661, e=7879',
+        'n=3922, e=8093',
+        'n=3972, e=6997',
+        'n=3884, e=7603',
+        'n=3609, e=6856',
+        'n=4168, e=7147',
+        'n=4206, e=8232',
+        'n=4631, e=8222',
+        'n=3970, e=7569',
+        'n=3998, e=7617',
+        'n=3855, e=7971',
+        'n=4092, e=7486',
+        'n=4407, e=7847',
+        'n=3976, e=7627',
+        'n=3911, e=8483',
+        'n=4144, e=7919',
+        'n=4033, e=8129',
+        'n=3976, e=7495',
+        'n=3912, e=7739',
+        'n=4278, e=8522',
+        'n=4703, e=8186',
+        'n=4230, e=7811',
+        'n=3971, e=7699',
+        'n=4081, e=8242',
+        'n=4045, e=7524',
+        'n=4532, e=5728',
+        'n=4299, e=8560',
+        'n=3885, e=7531',
+        'n=4452, e=8405',
+        'n=4090, e=7661',
+        'n=3937, e=7739',
+        'n=4336, e=7612',
+        'n=4101, e=7461',
+        'n=3980, e=8632',
+        'n=4523, e=7761',
+        'n=4237, e=8463',
+        'n=4013, e=7856',
+        'n=4219, e=8013',
+        'n=4248, e=8328',
+        'n=4529, e=8757',
+        'n=4109, e=7496',
+        'n=3969, e=8026',
+        'n=4093, e=8506',
+        'n=3635, e=7965',
+        'n=4347, e=8123',
+        'n=4703, e=7752',
+        'n=3867, e=8124',
+        'n=3930, e=7919',
+        'n=4247, e=7154',
+        'n=4065, e=8125',
+    ]
+    for iprocessor, fname in enumerate(fnames):
+        nnodes, nelements = datai[iprocessor].split(',')
+        nnodes = int(nnodes.split('=')[1])
+        nelements = int(nelements.split('=')[1])
+
+        ip = iprocessor + 1
+        tecplot_filename = os.path.join('time20000', 'model_final_meters_part%i_tec_volume_timestep20000.plt' % ip)
+        print(tecplot_filename)
+        try:
+            plt.read_tecplot(tecplot_filename, nnodes=nnodes, nelements=nelements)
+            plt.write_tecplot('processor%i.plt' % ip)
+        except:
+            raise
+        break
+
+if __name__ == '__main__':
+    main()
+
