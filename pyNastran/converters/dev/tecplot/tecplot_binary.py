@@ -61,7 +61,7 @@ class TecplotReader(FortranFormat):
 
     def read_tecplot(self, tecplot_filename, nnodes=None, nelements=None):
         self.tecplot_filename = tecplot_filename
-
+        assert os.path.exists(tecplot_filename), tecplot_filename
         tecplot_file = open(tecplot_filename, 'rb')
         self.f = tecplot_file
         self.n = 0
@@ -197,15 +197,17 @@ class TecplotReader(FortranFormat):
 
     def write_tecplot(self, tecplot_filename):
         tecplot_file = open(tecplot_filename, 'w')
+        is_results = bool(len(model.results))
         msg = 'TITLE     = "tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file"\n'
         msg += 'VARIABLES = "x"\n'
         msg += '"y"\n'
         msg += '"z"\n'
-        msg += '"rho"\n'
-        msg += '"u"\n'
-        msg += '"v"\n'
-        msg += '"w"\n'
-        msg += '"p"\n'
+        if is_results:
+            msg += '"rho"\n'
+            msg += '"u"\n'
+            msg += '"v"\n'
+            msg += '"w"\n'
+            msg += '"p"\n'
         msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
         msg += ' n=%i, e=%i, ZONETYPE=FEBrick\n' % (self.nnodes, self.nelements)
         msg += ' DATAPACKING=BLOCK\n'
@@ -272,7 +274,7 @@ class TecplotReader(FortranFormat):
         #slots = where(iy == elements.ravel())[0]
         ielements = unique([ie for ie, elem in enumerate(elements)
                             for i in range(8)
-                            if i in elem])
+                            if i in iy])
         #print(slots)
         #asdf
         #ri, ci = slots
@@ -314,7 +316,7 @@ class TecplotReader(FortranFormat):
 
 def main():
     plt = TecplotReader()
-    fnames = os.listdir('time20000')
+    fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
 
 
     datai = [
@@ -447,13 +449,13 @@ def main():
         'n=4247, e=7154',
         'n=4065, e=8125',
     ]
-    fnames = [os.path.join('time20000', fname) for fname in fnames]
+    fnames = [os.path.join(r'Z:\Temporary_Transfers\steve\output\time20000', fname) for fname in fnames]
     tecplot_filename_out = None
     #tecplot_filename_out = 'tecplot_joined.plt'
     model = merge_tecplot_files(fnames, tecplot_filename_out)
 
     y0 = 0.0
-    model.extract_y_slice(y0, tol=0.01, slice_filename='slice.plt')
+    model.extract_y_slice(y0, tol=0.014, slice_filename='slice.plt')
 
     return
     for iprocessor, fname in enumerate(fnames):
