@@ -1,10 +1,15 @@
 from __future__ import print_function
-from struct import unpack
-from numpy import allclose, array, vstack, hstack, where, unique
-import os
-from pyNastran.op2.fortran_format import FortranFormat
+from six import iteritems
 
-def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None):
+import os
+from struct import unpack
+from collections import defaultdict
+
+from numpy import array, vstack, hstack, where, unique, savetxt
+from pyNastran.op2.fortran_format import FortranFormat
+from pyNastran.utils.log import get_logger
+
+def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
     print('merging...')
     assert isinstance(tecplot_filenames, (list, tuple)), type(tecplot_filenames)
     assert len(tecplot_filenames) > 1, tecplot_filenames
@@ -13,9 +18,8 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None):
     elements = []
     results = []
     nnodes = 0
-    nelements = 0
 
-    model = TecplotReader()
+    model = TecplotReader(log=log)
     for tecplot_filename in tecplot_filenames:
         print('reading %s' % tecplot_filename)
         model.read_tecplot(tecplot_filename)
@@ -23,10 +27,7 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None):
         elements.append(model.elements + nnodes)
         results.append(model.results)
         nnodes += model.nnodes
-        nelements += model.nelements
 
-    #model.nnodes = nnodes
-    #model.nelements = nelements
     model.xyz = vstack(xyz)
     model.elements = vstack(elements)
     model.results = vstack(results)
@@ -42,8 +43,12 @@ class TecplotReader(FortranFormat):
     def __init__(self, log=None, debug=False):
         FortranFormat.__init__(self)
         self.endian = b'<'
-        self.log = log
-        self.debug = False
+        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.debug = debug
+        self.xyz = array([], dtype='float32')
+        self.elements = array([], dtype='int32')
+        self.results = array([], dtype='float32')
+        self.tecplot_filename = ''
 
     #def show(self, n, types='', endian=''):
         #pass
@@ -72,6 +77,7 @@ class TecplotReader(FortranFormat):
         #print('word = ', word)
 
         values = []
+        ii = 0
         for ii in range(100):
             datai = self.f.read(4)
             val, = unpack(b'i', datai)
@@ -82,26 +88,26 @@ class TecplotReader(FortranFormat):
         assert ii < 100, ii
         #print(values)
 
-        n = 3 * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = 3 * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
 
-        n = 1 * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = 1 * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
         zone_type, = unpack(b'i', data)
         #self.show(100, endian='<')
 
-        n = 11 * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = 11 * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
         self.show_data(data, types='i', endian='<') # 'if'?
         #assert self.n == 360, self.n
         #print('----------')
 
-        n = 2 * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = 2 * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
         nnodes2, nelements2 = unpack('2i', data)
         if nnodes and nelements:
             print('nnodes=%s nelements=%s' % (nnodes, nelements))
@@ -114,15 +120,15 @@ class TecplotReader(FortranFormat):
         #assert nnodes2 < 10000, nnodes
         #assert nelements2 < 10000, nelements
 
-        n = 35 * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = 35 * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
         #self.show_data(data, types='ifs', endian='<')
         #print('----------')
 
-        n = 30 * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = 30 * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
 
         #self.show_data(data, types='ifs', endian='<')
         assert zone_type in [5], zone_type
@@ -157,9 +163,9 @@ class TecplotReader(FortranFormat):
         nvars = 3
         #nnodes = 3807
         ni = nnodes * nvars
-        n = ni * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = ni * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
         xyzvals = unpack(b'%sf' % ni, data)
         xyz = array(xyzvals, dtype='float32').reshape(3, nnodes).T
 
@@ -167,22 +173,22 @@ class TecplotReader(FortranFormat):
         nvars = 5
         dunno = 0    # what's with this...
         ni = nnodes * nvars + dunno
-        n = ni * 4
-        data = self.f.read(n)
-        self.n += n
+        nbytes = ni * 4
+        data = self.f.read(nbytes)
+        self.n += nbytes
         resvals = unpack(b'%sf' % ni, data)
         results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
 
         #
         # 7443 elements
-        ni = 8 # 8 nodes/elements
+        nnodes_per_element = 8 # 8 nodes/elements
         #nelements = 7443
-        nvals = ni * nelements
-        n = nvals * 4
-        node_ids = unpack(b'%ii' % nvals, self.f.read(n))
-        self.n += n
+        nvals = nnodes_per_element * nelements
+        nbytes = nvals * 4
+        node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
+        self.n += nbytes
 
-        elements = array(node_ids).reshape(nelements, ni)
+        elements = array(node_ids).reshape(nelements, nnodes_per_element)
         #print(elements)
 
         #self.show_data(data, types='ifs', endian='<')
@@ -197,8 +203,8 @@ class TecplotReader(FortranFormat):
 
     def write_tecplot(self, tecplot_filename):
         tecplot_file = open(tecplot_filename, 'w')
-        is_results = bool(len(model.results))
-        msg = 'TITLE     = "tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file | tecplot geometry and solution file"\n'
+        is_results = bool(len(self.results))
+        msg = 'TITLE     = "tecplot geometry and solution file"\n'
         msg += 'VARIABLES = "x"\n'
         msg += '"y"\n'
         msg += '"z"\n'
@@ -209,43 +215,90 @@ class TecplotReader(FortranFormat):
             msg += '"w"\n'
             msg += '"p"\n'
         msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
-        msg += ' n=%i, e=%i, ZONETYPE=FEBrick\n' % (self.nnodes, self.nelements)
-        msg += ' DATAPACKING=BLOCK\n'
+
+        #is_points = not is_results
+        is_points = False
+        nnodes = self.nnodes
+        if is_points:
+            msg += ' n=%i, e=%i, ZONETYPE=FEBrick, DATAPACKING=POINT\n' % (nnodes, self.nelements)
+        else:
+            msg += ' n=%i, e=%i, ZONETYPE=FEBrick, DATAPACKING=BLOCK\n' % (nnodes, self.nelements)
         tecplot_file.write(msg)
-        #nvalues_per_line = 5
 
         # xyz
-        for ivar in range(3):
-            #tecplot_file.write('# ivar=%i\n' % ivar)
-            #print('xyz.shape =', self.xyz.shape)
-            vals = self.xyz[:, ivar].ravel()
-            msg = ''
-            for ival, val in enumerate(vals):
-                msg += ' %15.9E' % val
-                if (ival + 1) % 5 == 0:
-                    tecplot_file.write(msg)
-                    msg = '\n'
-            tecplot_file.write(msg.rstrip() + '\n')
+        if is_points:
+            if self.results:
+                data = hstack([self.xyz, self.results])
+                nresults = self.results.shape[1]
+                fmt = ' %15.9E' * nresults# + '\n'
+            else:
+                data = self.xyz
+                fmt = ' %15.9E %15.9E %15.9E'
+            #vals = self.xyz[:, ivar].ravel()
+            # for vals in enumerate(data):
+                # tecplot_file.write(fmt % tuple(vals))
+            savetxt(tecplot_file, data, fmt=fmt)
+        else:
+            #nvalues_per_line = 5
+            for ivar in range(3):
+                #tecplot_file.write('# ivar=%i\n' % ivar)
+                #print('xyz.shape =', self.xyz.shape)
+                vals = self.xyz[:, ivar].ravel()
+                msg = ''
+                for ival, val in enumerate(vals):
+                    msg += ' %15.9E' % val
+                    if (ival + 1) % 5 == 0:
+                        tecplot_file.write(msg)
+                        msg = '\n'
+                tecplot_file.write(msg.rstrip() + '\n')
 
-        # results
-        for ivar in range(5):
-            #tecplot_file.write('# ivar=%i\n' % ivar)
-            #print('xyz.shape =', self.xyz.shape)
-            vals = self.results[:, ivar].ravel()
-            msg = ''
-            for ival, val in enumerate(vals):
-                msg += ' %15.9E' % val
-                if (ival + 1) % 5 == 0:
-                    tecplot_file.write(msg)
-                    msg = '\n'
-            tecplot_file.write(msg.rstrip() + '\n')
+            if is_results:
+                for ivar in range(5):
+                    #tecplot_file.write('# ivar=%i\n' % ivar)
+                    #print('xyz.shape =', self.xyz.shape)
+                    vals = self.results[:, ivar].ravel()
+                    msg = ''
+                    for ival, val in enumerate(vals):
+                        msg += ' %15.9E' % val
+                        if (ival + 1) % 5 == 0:
+                            tecplot_file.write(msg)
+                            msg = '\n'
+                    tecplot_file.write(msg.rstrip() + '\n')
 
         # elements
         efmt = ' %i %i %i %i %i %i %i %i\n'
         elements = self.elements + 1
+        print('inode_min =', elements.min())
+        print('inode_max =', elements.max())
+        assert elements.min() == 1, elements.min()
+        assert elements.max() == nnodes, elements.max()
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
         tecplot_file.close()
+
+    def get_free_faces(self):
+        self.log.info('start get_free_faces')
+        sort_face_to_element_map = defaultdict(list)
+        sort_face_to_face = {}
+        for ie, element in enumerate(self.elements):
+            btm = [element[0], element[1], element[2], element[3]]
+            top = [element[4], element[5], element[6], element[7]]
+            left = [element[0], element[3], element[7], element[4]]
+            right = [element[1], element[2], element[6], element[5]]
+            front = [element[0], element[1], element[5], element[4]]
+            back = [element[3], element[2], element[6], element[7]]
+            for face in [btm, top, left, right, front, back]:
+                if len(unique(face)) >= 3:
+                    sort_face = tuple(sorted(face))
+                    sort_face_to_element_map[sort_face].append(ie)
+                    sort_face_to_face[sort_face] = face
+
+        free_faces = []
+        for sort_face, eids in iteritems(sort_face_to_element_map):
+            if len(eids) == 1:
+                free_faces.append(sort_face_to_face[sort_face])
+        self.log.info('finished get_free_faces')
+        return free_faces
 
     def extract_y_slice(self, y0, tol=0.01, slice_filename=None):
         """
@@ -449,7 +502,8 @@ def main():
         'n=4247, e=7154',
         'n=4065, e=8125',
     ]
-    fnames = [os.path.join(r'Z:\Temporary_Transfers\steve\output\time20000', fname) for fname in fnames]
+    fnames = [os.path.join(r'Z:\Temporary_Transfers\steve\output\time20000', fname)
+              for fname in fnames]
     tecplot_filename_out = None
     #tecplot_filename_out = 'tecplot_joined.plt'
     model = merge_tecplot_files(fnames, tecplot_filename_out)

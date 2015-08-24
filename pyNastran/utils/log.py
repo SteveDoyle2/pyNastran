@@ -228,7 +228,7 @@ def get_logger(log=None, level='debug', encoding='utf-8'):
     return SimpleLogger(level, encoding=encoding) if log is None else log
 
 
-def get_logger2(log=None, debug=True):
+def get_logger2(log=None, debug=True, encoding='utf-8'):
     """
     This function is useful as it will instantiate a SimpleLogger object
     if log=None.
@@ -253,17 +253,17 @@ def get_logger2(log=None, debug=True):
     if log is not None:
         pass
     elif debug is None:
-        log = SimpleLogger('warning', encoding='utf-8')
+        log = SimpleLogger('warning', encoding=encoding)
     else:
         level = 'debug' if debug else 'info'
-        log = SimpleLogger(level, encoding='utf-8')
+        log = SimpleLogger(level, encoding=encoding)
     return log
 
 if __name__ == '__main__':  # pragma: no cover
     # how to use a simple logger
     for nam in ['debug', 'info']:
         print('--- %s logger ---' % nam)
-        test_log = SimpleLogger(nam, encoding='utf-8')
+        test_log = SimpleLogger(nam, encoding=encoding)
         test_log.debug('debug message')
         test_log.warning('warning')
         test_log.error('errors')

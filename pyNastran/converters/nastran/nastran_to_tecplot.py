@@ -3,7 +3,7 @@ from numpy import zeros, array
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.dev.tecplot.tecplot_binary import TecplotReader
 
-def nastran_to_tecplot_filename(bdf_filename, stl_filename, log=None):
+def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
     model = BDF(log=log)
     model.read_bdf(bdf_filename)
     #log.info('card_count = %s' % model.card_count)
@@ -34,7 +34,7 @@ def nastran_to_tecplot_filename(bdf_filename, stl_filename, log=None):
                 nodeid_to_i_map[n5], nodeid_to_i_map[n6])
             elements.append([i1, i2, i3, i4,
                              i5, i6, i6, i6])
-        elif element.type in ['CPENTA']:
+        elif element.type in ['CYPRAM']:
             n1, n2, n3, n4, n5 = element.node_ids
             i1, i2, i3, i4, i5 = (
                 nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4]
@@ -42,7 +42,7 @@ def nastran_to_tecplot_filename(bdf_filename, stl_filename, log=None):
             elements.append([i1, i2, i3, i4,
                              i5, i5, i5, i5])
         elif element.type in ['CHEXA']:
-            n1, n2, n3, n4 = element.node_ids
+            n1, n2, n3, n4, n5, n6, n7, n8 = element.node_ids
             i1, i2, i3, i4, i5, i6, i7, i8 = (
                 nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4]
                 nodeid_to_i_map[n5], nodeid_to_i_map[n6], nodeid_to_i_map[n7], nodeid_to_i_map[n8])
