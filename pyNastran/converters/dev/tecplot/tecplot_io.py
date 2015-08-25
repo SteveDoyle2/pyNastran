@@ -32,7 +32,7 @@ class TecplotIO(object):
         if skip_reading:
             return
 
-        if 1:
+        if 0:
             fnames = os.listdir('time20000')
             fnames = [os.path.join('time20000', fname) for fname in fnames]
             model = merge_tecplot_files(fnames, tecplot_filename_out=None, log=self.log)

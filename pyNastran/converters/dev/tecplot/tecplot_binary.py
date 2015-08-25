@@ -4,10 +4,14 @@ from six import iteritems
 import os
 from struct import unpack
 from collections import defaultdict
+rom collections import defaultdict
 
-from numpy import array, vstack, hstack, where, unique, savetxt
-from pyNastran.op2.fortran_format import FortranFormat
+from numpy import array, vstack, hstack, where, unique, savetxt, zeros
+
+from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
+from pyNastran.op2.fortran_format import FortranFormat
+
 
 def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
     print('merging...')
@@ -35,9 +39,10 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
         model.write_tecplot(tecplot_filename_out)
     return model
 
+
 class TecplotReader(FortranFormat):
     """
-    Parses a hexa binary Tecplot 360 file.
+    Parses a hexa binary/ASCII Tecplot 360 file.
     Writes an ASCII Tecplot 10 file (no transient support).
     """
     def __init__(self, log=None, debug=False):
@@ -49,6 +54,142 @@ class TecplotReader(FortranFormat):
         self.elements = array([], dtype='int32')
         self.results = array([], dtype='float32')
         self.tecplot_filename = ''
+        self.variables = []
+
+    def read_tecplot(self, tecplot_filename, is_binary=False):
+        if is_binary_file(tecplot_filename):
+            return self.read_tecplot_binary(tecplot_filename)
+        return self.read_tecplot_ascii(tecplot_filename)
+
+    def read_tecplot_ascii(self, tecplot_filename, nnodes=None, nelements=None):
+        self.tecplot_filename = tecplot_filename
+        assert os.path.exists(tecplot_filename), tecplot_filename
+        tecplot_file = open(tecplot_filename, 'r')
+        f = tecplot_file
+
+        vars_found = []
+        i = 0
+        header_lines = []
+        while i < 1000:
+            #TITLE     = "tecplot geometry and solution file"
+            #VARIABLES = "x"
+            #"y"
+            #"z"
+            #"rho"
+            #"u"
+            #"v"
+            #"w"
+            #"p"
+            #ZONE T="\"processor 1\""
+            # n=522437, e=1000503, ZONETYPE=FEBrick
+            # DATAPACKING=BLOCK
+            #self.n = 0
+            line = f.readline()
+            if 'TITLE' in line:
+                vars_found.append('TITLE')
+            if 'VARIABLES' in line:
+                vars_found.append('VARIABLES')
+            if 'ZONE T' in line:
+                vars_found.append('ZONE T')
+            if 'ZONETYPE' in line:
+                vars_found.append('ZONETYPE')
+            if 'DATAPACKING' in line:
+                vars_found.append('DATAPACKING')
+            header_lines.append(line.rstrip())
+            if len(vars_found) == 5:
+                break
+            i += 1
+
+        headers_dict = {}
+        header = ', '.join(header_lines)
+        headers = header.split(',')
+        nheaders = len(headers) - 1
+        for iheader, header in enumerate(headers):
+            print('iheader=%s header=%r' % (iheader, header))
+            if '=' in header:
+                sline = header.strip().split('=', 1)
+                parse = False
+                print('iheader=%s nheaders=%s' % (iheader, nheaders))
+                if iheader == nheaders:
+                    parse = True
+                elif '=' in headers[iheader + 1]:
+                    parse = True
+            else:
+                sline += [header.strip()]
+                parse = False
+                if iheader == nheaders:
+                    parse = True
+                elif '=' in headers[iheader + 1]:
+                    parse = True
+            if parse:
+                print('  parsing')
+                key = sline[0].strip().upper()
+                value = [val.strip() for val in sline[1:]]
+                if len(value) == 1:
+                    value = value[0].strip()
+                headers_dict[key] = value
+                print('  ', value)
+                #value = value.strip()
+                assert key in ['TITLE', 'VARIABLES',  'ZONE T',  'ZONETYPE',  'DATAPACKING', 'N', 'E'], key
+                parse = False
+        print(headers_dict)
+        zone_type = headers_dict['ZONETYPE'].upper() # FEBrick
+        data_packing = headers_dict['DATAPACKING'].upper() # block
+        variables = headers_dict['VARIABLES']
+        nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
+
+        nnodes = int(headers_dict['N'])
+        nelements = int(headers_dict['E'])
+        #print('nnodes=%s nelements=%s' % (nnodes, nelements))
+        xyz = zeros((nnodes, 3), dtype='float32')
+        results = zeros((nnodes, nresults), dtype='float32')
+        if zone_type == 'FEBRICK':
+            elements = zeros((nelements, 8), dtype='float32')
+        else:
+            raise NotImplementedError(zone_type)
+
+        if data_packing == 'POINT':
+            for inode in range(nnodes):
+                sline = f.readline.strip().split()
+                xyz[inode, :] = sline[:3]
+                results[inode, 3:] = sline[3:]
+        elif data_packing == 'BLOCK':
+            for ires in range(3 + nresults):
+                result = []
+                i = 0
+                nresult = 0
+                nnodes_max = nnodes + 1
+                while i < nnodes_max:
+                    sline = f.readline().strip().split()
+                    result += sline
+                    nresult += len(sline)
+                    if nresult >= nnodes:
+                        break
+                    i += 1
+                assert i < nnodes_max, 'nresult=%s' % nresult
+                if ires in [0, 1, 2]:
+                    print('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
+                    xyz[:, ires] = result
+                else:
+                    results[:, ires - 3] = result
+        else:
+            raise NotImplementedError(data_packing)
+        i = 0
+        while i < nelements:
+            sline = f.readline().strip().split()
+            try:
+                elements[i, :] = sline
+            except IndexError:
+                raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
+            i += 1
+        f.close()
+
+        self.elements = array(elements, dtype='int32') - 1
+        tecplot_file.close()
+
+        self.xyz = array(xyz, dtype='float32')
+        self.results = array(results, dtype='float32')
+        self.variables = [variable[1:-1] for variable in variables]
 
     #def show(self, n, types='', endian=''):
         #pass
@@ -64,7 +205,7 @@ class TecplotReader(FortranFormat):
     def nelements(self):
         return self.elements.shape[0]
 
-    def read_tecplot(self, tecplot_filename, nnodes=None, nelements=None):
+    def read_tecplot_binary(self, tecplot_filename, nnodes=None, nelements=None):
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
         tecplot_file = open(tecplot_filename, 'rb')
@@ -367,6 +508,8 @@ class TecplotReader(FortranFormat):
             model.write_tecplot(slice_filename)
         return model
 
+
+
 def main():
     plt = TecplotReader()
     fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
@@ -527,6 +670,21 @@ def main():
             raise
         #break
 
+def main2():
+    plt = TecplotReader()
+    #fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
+    #fnames = [os.path.join(r'Z:\Temporary_Transfers\steve\output\time20000', fname)
+    #          for fname in fnames]
+    fnames = ['slice.plt']
+    tecplot_filename_out = None
+    #tecplot_filename_out = 'tecplot_joined.plt'
+    #model = merge_tecplot_files(fnames, tecplot_filename_out)
+
+    for iprocessor, tecplot_filename in enumerate(fnames):
+        plt.read_tecplot(tecplot_filename)
+        plt.write_tecplot('processor.plt')
+
+
 if __name__ == '__main__':
-    main()
+    main2()
 
