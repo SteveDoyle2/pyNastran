@@ -81,7 +81,7 @@ try:
     from pyNastran.converters.dev.tecplot.tecplot_io import TecplotIO
     is_tecplot = True
 except ImportError:
-    #raise
+    raise
     class TecplotIO(object):
         def __init__(self):
             pass
