@@ -1,5 +1,6 @@
 # coding: utf-8
-# pylint: disable=W0212,W0633,W0611,W0201,C0301,R0915,R0912
+# pylint: disable=W0212,W0633,W0201,C0301,R0915,R0912
+  #W0611,
 """
 Main BDF class.  Defines:
   - BDF
@@ -21,11 +22,10 @@ from pyNastran.bdf.utils import _parse_pynastran_header
 from pyNastran.utils import object_attributes, print_bad_path
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck,
-                                 clean_empty_lines, CardParseSyntaxError)
+                                 CardParseSyntaxError)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
-from pyNastran.utils.dev import list_print
 from pyNastran.utils.log import get_logger2
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
@@ -1290,28 +1290,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             card_count[old_card_name] += 1
         return cards, card_count
 
-    #def write_test(self):
-        #f = open('test.bdf', 'wb')
-        #for line in executive_control_lines:
-            #f.write(line)
-        #for line in case_control_lines:
-            #f.write(line)
-        #for card_name, card in sorted(cards.iteritems()):
-            ##print('---%r---' % card_name)
-            #if card_name == 'ENDDATA':
-                #continue
-            #for cardi in card:
-                #f.write('$-------------------------\n')
-                #if cardi[0]:
-                    #f.write(cardi[0])
-                #f.write('\n'.join(cardi[1]))
-                #f.write('\n')
-        #if 'ENDDATA' in cards:
-            #for cardi in cards['ENDDATA']:
-                #if cardi[0]:
-                    #f.write(cardi[0])
-                #f.write('\n'.join(cardi[1]))
-                #f.write('\n')
 
     def update_solution(self, sol, method, isol_line):
         """
@@ -1475,6 +1453,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return card_obj, card
 
     def _make_card_parser(self):
+        """creates the card parser variables that are used by _add_card_new"""
         self._card_parser = {
             'GRID' : (GRID, self.add_node),
 
@@ -1505,7 +1484,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'CQUAD' : (CQUAD, self.add_element),
             'CQUAD4' : (CQUAD4, self.add_element),
             'CQUAD8' : (CQUAD8, self.add_element),
-            'CQUADX' : (CQUADX, self.add_element),
             'CQUADX' : (CQUADX, self.add_element),
             'CQUADR' : (CQUADR, self.add_element),
             'CTRIA3' : (CTRIA3, self.add_element),
@@ -1539,6 +1517,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PBEAM' : (PBEAM, self.add_property),
             'PBEAML' : (PBEAML, self.add_property),
             'PBCOMP' : (PBCOMP, self.add_property),
+
+            'CBEAM3' : (CBEAM3, self.add_element),
+            #'PBEAM3' : (PBEAM3, self.add_property),
 
             'CBEND' : (CBEND, self.add_element),
             #'PBEND' : (PBEND, self.add_property),
@@ -1788,8 +1769,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'BCTPARA' : (BCTPARA, self.add_BCTPARA),
             'BSURF' : (BSURF, self.add_BSURF),
             'BSURFS' : (BSURFS, self.add_BSURFS),
-            'EIGP' : (EIGP, self.add_cmethod),
-            'EIGP' : (EIGP, self.add_cmethod),
 
             'CONM1' : (CONM1, self.add_mass),
             'CONM2' : (CONM2, self.add_mass),
@@ -1826,22 +1805,25 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         }
 
     def _prepare_PELAS(self, card_obj, comment=''):
+        """adds a PELAS"""
         class_instance = PELAS(card_obj, nPELAS=0, comment=comment)
-        self.add_property(class_instance, comment=comment)
+        self.add_property(class_instance)
         if card_obj.field(5):
             class_instance = PELAS(card_obj, nPELAS=1, comment=comment)
             self.add_property(class_instance)
 
     def _prepare_PVISC(self, card_obj, comment=''):
+        """adds a PVISC"""
         class_instance = PVISC(card_obj, nPVISC=0, comment=comment)
-        self.add_property(class_instance, comment=comment)
+        self.add_property(class_instance)
         if card_obj.field(5):
             class_instance = PVISC(card_obj, nPVISC=1, comment=comment)
             self.add_property(class_instance)
 
     def _prepare_PDAMP(self, card_obj, comment=''):
+        """adds a PDAMP"""
         class_instance = PDAMP(card_obj, nPDAMP=0, comment=comment)
-        self.add_property(class_instance, comment=comment)
+        self.add_property(class_instance)
         if card_obj.field(5):
             class_instance = PDAMP(card_obj, nPDAMP=1, comment=comment)
             self.add_property(class_instance)
@@ -1850,6 +1832,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self.add_property(class_instance)
 
     def _prepare_PMASS(self, card_obj, comment=''):
+        """adds a PMASS"""
         card_instance = PMASS(card_obj, nOffset=0, comment=comment)
         self.add_property_mass(card_instance)
         for (i, j) in enumerate([3, 5, 7]):
@@ -1858,54 +1841,63 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 self.add_property_mass(card_instance)
 
     def _prepare_DAREA(self, card_obj, comment=''):
+        """adds a DAREA"""
         class_instance = DAREA(card_obj, comment=comment)
-        self.add_DAREA(class_instance, comment=comment)
+        self.add_DAREA(class_instance)
         if card_obj.field(5):
             class_instance = DAREA(card_obj, nOffset=1, comment=comment)
             self.add_DAREA(class_instance)
 
     def _prepare_CORD1R(self, card_obj, comment=''):
+        """adds a CORD1R"""
         class_instance = CORD1R(card_obj, comment=comment)
-        self.add_coord(class_instance, comment=comment)
+        self.add_coord(class_instance)
         if card_obj.field(5):
             class_instance = CORD1R(card_obj, nCoord=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_CORD1C(self, card_obj, comment=''):
+        """adds a CORD1C"""
         class_instance = CORD1C(card_obj, comment=comment)
-        self.add_coord(class_instance, comment=comment)
+        self.add_coord(class_instance)
         if card_obj.field(5):
             class_instance = CORD1C(card_obj, nCoord=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_CORD1S(self, card_obj, comment=''):
+        """adds a CORD1S"""
         class_instance = CORD1S(card_obj, comment=comment)
-        self.add_coord(class_instance, comment=comment)
+        self.add_coord(class_instance)
         if card_obj.field(5):
             class_instance = CORD1S(card_obj, nCoord=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_CTETRA(self, card_obj, comment=''):
+        """adds a CTETRA"""
         card_class = CTETRA4 if card_obj.nfields == 7 else CTETRA10
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
     def _prepare_CPYRAM(self, card_obj, comment=''):
+        """adds a CPYRAM"""
         card_class = CPYRAM5 if card_obj.nfields == 8 else CPYRAM13
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
     def _prepare_CPENTA(self, card_obj, comment=''):
+        """adds a CPENTA"""
         card_class = CPENTA6 if card_obj.nfields == 9 else CPENTA15
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
     def _prepare_CHEXA(self, card_obj, comment=''):
+        """adds a CHEXA"""
         card_class = CHEXA8 if card_obj.nfields == 11 else CHEXA20
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
     def _add_card_new(self, card_lines, card_name, comment='', is_list=True):
+        """Clearer and slightly faster version of add_card that hasn't been tested/finished"""
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
 
@@ -2557,6 +2549,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return card_name.upper()
 
     def _show_bad_file(self, bdf_filename):
+        """
+        Prints the 10 lines before the UnicodeDecodeError occurred.
+
+        Paramters
+        ---------
+        bdf_filename : str
+            the filename to print the lines of
+        """
         lines = []
         print('ENCODING - show_bad_file=%r' % self._encoding)
         with codec_open(bdf_filename, 'rU', encoding=self._encoding) as bdf_file:
@@ -2700,6 +2700,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self.card_count[card_name] = n
 
     def _open_file(self, bdf_filename, basename=False):
+        """
+        Opens a new bdf_filename with the proper encoding and include directory
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the filename to open
+        basename : bool (default=False)
+            should the basename of bdf_filename be appended to the include directory
+        """
         if basename:
             bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
         else:
