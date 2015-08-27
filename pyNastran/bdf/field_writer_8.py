@@ -193,6 +193,21 @@ def print_field(value):
     """helper method for writing cards"""
     return print_field_8(value)
 
+def print_float_or_int_8(value):
+    """
+    Prints a 8-character width field
+
+    :param value:   the value to print
+    :returns field: an 8-character string
+    """
+    if isinstance(value, (float, float32)):
+        field = print_float_8(value)
+    elif isinstance(value, integer_types):
+        field = "%8s" % value
+    else:
+        msg = 'Invalid Type:  value=%r type=%s' % (value, type(value))
+        raise TypeError(msg)
+
 def print_field_8(value):
     """
     Prints a 8-character width field
@@ -202,7 +217,7 @@ def print_field_8(value):
     """
     if isinstance(value, integer_types):
         field = "%8s" % value
-    elif isinstance(value, float) or isinstance(value, float32):
+    elif isinstance(value, (float, float32)):
         field = print_float_8(value)
     elif value is None:
         field = "        "

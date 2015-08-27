@@ -1,6 +1,7 @@
 from __future__ import print_function
 from six import iteritems
 from pyNastran.utils.log import get_logger
+from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
 
 class GeometryProperty(object):
@@ -64,8 +65,6 @@ class GUIMethods(object):
         self.alt_geometry_actor = ScalarBar()
         self.alt_grids = {
             'main' : self.grid,
-            'caero' : Grid(),
-            'caero_sub' : Grid(),
         }
         self.geometry_properties = {
             #'main' : None,
@@ -96,9 +95,14 @@ class GUIMethods(object):
         pass
     def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None):
         self.alt_grids[name] = Grid()
+        geom = AltGeometry(self, name, color=color, line_width=line_width,
+                           opacity=opacity)
+        self.geometry_properties[name] = geom
+
     def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = GeometryActor()
+
     def log_info(self, msg):
         if self.debug:
             print('INFO:  ', msg)

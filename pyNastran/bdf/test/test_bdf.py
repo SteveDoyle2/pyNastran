@@ -176,7 +176,7 @@ def memory_usage_psutil():
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
-            reject=False, nastran='', post=-1, dynamic_vars=None):
+            reject=False, stop=False, nastran='', post=-1, dynamic_vars=None):
     """
     Runs a single BDF
 
@@ -253,6 +253,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         nastran = ''
         #try:
         outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
+        if stop:
+            return fem1, None, None
         fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
         diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
         test_get_cards_by_card_types(fem2)
@@ -692,10 +694,12 @@ def main():
     """
     from docopt import docopt
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-d] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-l] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-p] [-r] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-p] [-r] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-x] [-p] [-s] [-f] BDF_FILENAME\n" #
+
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
     msg += '  test_bdf -v | --version\n'
@@ -718,6 +722,8 @@ def main():
     msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
     msg += '  -L, --loads    sums the forces/moments on the model for the different subcases (default=False)\n'
     msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
+    msg += '  -f, --profile  Profiles the code (default=False)\n'
+    msg += '  -s, --stop     Stop after first read/write (default=False)\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
@@ -746,19 +752,59 @@ def main():
     else:
         size = 8
 
-    run_bdf(
-        '.',
-        data['BDF_FILENAME'],
-        debug=not(data['--quiet']),
-        xref=not(data['--xref']),
-        # xref_safe=data['--xref_safe'],
-        check=not(data['--check']),
-        punch=data['--punch'],
-        reject=data['--reject'],
-        size=size,
-        is_double=is_double,
-        sum_load=data['--loads'],
-    )
+    if data['--profile']:
+        #import cProfile
+        import pstats
+        import hotshot, hotshot.stats
+
+        prof = hotshot.Profile('bdf.profile')
+        prof.runcall(
+            run_bdf,
+                '.',
+                data['BDF_FILENAME'],
+                debug=not(data['--quiet']),
+                xref=not(data['--xref']),
+                # xref_safe=data['--xref_safe'],
+                check=not(data['--check']),
+                punch=data['--punch'],
+                reject=data['--reject'],
+                size=size,
+                is_double=is_double,
+                sum_load=data['--loads'],
+                stop=data['--stop'],
+            )
+        prof.close()
+
+        stats = hotshot.stats.load("bdf.profile")
+        stats.strip_dirs()
+        stats.sort_stats('time', 'calls')
+        stats.print_stats(40)
+        #retval = prof.runcall(self.method_actual, *args, **kwargs)
+        #print(prof.dump_stats(datafn))
+        #cProfile.runctx(
+            #code,
+               #None, # globs
+               #None,
+               #'junk.stats',
+               #1) # sort
+
+        #p = pstats.Stats('restats')
+        #p.strip_dirs().sort_stats(-1).print_stats()
+    else:
+        run_bdf(
+            '.',
+            data['BDF_FILENAME'],
+            debug=not(data['--quiet']),
+            xref=not(data['--xref']),
+            # xref_safe=data['--xref_safe'],
+            check=not(data['--check']),
+            punch=data['--punch'],
+            reject=data['--reject'],
+            size=size,
+            is_double=is_double,
+            sum_load=data['--loads'],
+            stop=data[--stop],
+        )
     print("total time:  %.2f sec" % (time.time() - t0))
 
 

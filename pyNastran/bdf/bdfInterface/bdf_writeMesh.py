@@ -194,6 +194,64 @@ class WriteMesh(object):
             outfile.write('ENDDATA\n')
         outfile.close()
 
+    def write_bdf_symmetric(self, out_filename=None, encoding=None,
+                  size=8, is_double=False,
+                  enddata=None, plane='xz'):
+        """
+        Writes the BDF.
+
+        :param self:         the BDF object
+        :param out_filename: the name to call the output bdf
+                             (default=None; pops a dialog)
+        :param encoding:     the unicode encoding (latin1, and utf8 are generally good options)
+                             default=None -> system specified encoding
+        :param size:      the field size (8 is recommended)
+        :param is_double: small field (False) or large field (True); default=False
+        :param interspersed: Writes a bdf with properties & elements
+              interspersed like how Patran writes the bdf.  This takes
+              slightly longer than if interspersed=False, but makes it
+              much easier to compare to a Patran-formatted bdf and is
+              more clear. (default=True)
+        :param enddata:   Flag to enable/disable writing ENDDATA
+                          (default=None -> depends on input BDF)
+
+        Parameters
+        ----------
+        plane : str; {'xy', 'yz', 'xz'}; default='xz'
+            the plane to mirror about
+        """
+        interspersed = False
+        #self.write_caero_model()
+        out_filename = self._output_helper(out_filename,
+                                           interspersed, size, is_double)
+        if encoding is None:
+            encoding = sys.getdefaultencoding()
+        else:
+            encoding = self._encoding
+        #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
+
+        if PY2:
+            outfile = open(out_filename, 'wb', encoding=encoding)
+        else:
+            outfile = open(out_filename, 'w', encoding=encoding)
+        self._write_header(outfile, encoding)
+        self._write_params(outfile, size, is_double)
+        self._write_nodes_symmetric(outfile, size, is_double, plane=plane)
+
+        if interspersed:
+            raise RuntimeError(interspersed)
+            #self._write_elements_properties(outfile, size, is_double)
+        else:
+            self._write_elements_symmetric(outfile, size, is_double)
+            self._write_properties(outfile, size, is_double)
+        self._write_materials(outfile, size, is_double)
+
+        self._write_masses(outfile, size, is_double)
+        self._write_common(outfile, size, is_double)
+        if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
+            outfile.write('ENDDATA\n')
+        outfile.close()
+
     def _write_header(self, outfile, encoding):
         """
         Writes the executive and case control decks.
@@ -267,6 +325,33 @@ class WriteMesh(object):
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
                         raise
+
+    def _write_elements_symmetric(self, outfile, size=8, is_double=False):
+        """
+        Writes the elements in a sorted order
+
+        :param self: the BDF object
+        """
+        nid_offset = max(self.nodes.keys())
+        eid_offset = max(self.elements.keys())
+        if self.elements:
+            outfile.write('$ELEMENTS\n')
+            if self.is_long_ids:
+                for (eid, element) in sorted(iteritems(self.elements)):
+                    nodes = element.node_ids
+                    outfile.write(element.write_card_16(is_double))
+                    element.eid += eid_offset
+                    nodes = [node_id + nid_offset for node_id in nodes]
+                    element.nodes = nodes
+                    outfile.write(element.write_card_16(is_double))
+            else:
+                for (eid, element) in sorted(iteritems(self.elements)):
+                    nodes = element.node_ids
+                    outfile.write(element.write_card(size, is_double))
+                    nodes = [node_id + nid_offset for node_id in nodes]
+                    element.eid += eid_offset
+                    element.nodes = nodes
+                    outfile.write(element.write_card(size, is_double))
 
     def _write_elements_properties(self, outfile, size=8, is_double=False):
         """
@@ -697,6 +782,69 @@ class WriteMesh(object):
                 #else:
                     #msg.append('$ Missing NodeID=%s' % key)
         #outfile.write(''.join(msg))
+
+    def _write_nodes_symmetric(self, outfile, size=8, is_double=False, plane='xz'):
+        """
+        Writes the NODE-type cards
+
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+
+        .. warning :: doesn't consider coordinate systems;
+                      it could, but you'd need 20 new coordinate systems
+        .. warning :: doesn't mirror SPOINTs, EPOINTs
+        """
+        if self.spoints:
+            msg = []
+            msg.append('$SPOINTS\n')
+            msg.append(self.spoints.write_card(size, is_double))
+            outfile.write(''.join(msg))
+        if self.epoints:
+            msg = []
+            msg.append('$EPOINTS\n')
+            msg.append(self.epoints.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
+        plane = plane.strip().lower()
+        if plane == 'xz':
+            iy = 4
+        elif plane == 'xy':
+            iy = 5
+        elif plane == 'yz':
+            iy = 3
+        else:
+            raise NotImplementedError(plane)
+        if self.nodes:
+            msg = []
+            msg.append('$NODES\n')
+            if self.gridSet:
+                msg.append(self.gridSet.print_card(size))
+
+            nid_offset = max(self.nodes.keys())
+            if self.is_long_ids:
+                print_card_long = print_card_double if is_double else print_card_16
+                for (unused_nid, node) in sorted(iteritems(self.nodes)):
+                    repr_fields = node.repr_fields()
+                    msg.append(print_card_long(repr_fields))
+                    repr_fields = node.repr_fields()
+                    # grid, nid, cp, x, y, z
+                    repr_fields[1] += nid_offset
+                    repr_fields[iy] *= -1.0
+                    msg.append(print_card_long(repr_fields))
+            else:
+                for (unused_nid, node) in sorted(iteritems(self.nodes)):
+                    repr_fields = node.repr_fields()
+                    msg.append(print_card_8(repr_fields))
+                    repr_fields = node.repr_fields()
+                    # grid, nid, cp, x, y, z
+                    repr_fields[1] += nid_offset
+                    repr_fields[iy] *= -1.0
+                    msg.append(print_card_8(repr_fields))
+            outfile.write(''.join(msg))
+        #if 0:  # not finished
+            #self._write_nodes_associated(outfile, size, is_double)
 
     def _write_optimization(self, outfile, size=8, is_double=False):
         """Writes the optimization cards sorted by ID"""

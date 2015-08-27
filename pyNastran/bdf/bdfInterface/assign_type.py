@@ -113,9 +113,9 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -182,14 +182,14 @@ def integer(card, ifield, fieldname):
     :param ifield:    field number
     :param fieldname: name of field
     """
-    assert isinstance(card, BDFCard), 'type=%s card=%s' % (type(card), card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
-    try:
-        svalue = card.field(ifield)
-    except IndexError:
-        msg = '%s (field #%s) on card must be an integer, but doesnt exist.' % (fieldname, ifield)
-        raise SyntaxError(msg)
+    #assert isinstance(card, BDFCard), 'type=%s card=%s' % (type(card), card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
+    #try:
+    svalue = card.field(ifield)
+    #except IndexError:
+        #msg = '%s (field #%s) on card must be an integer, but doesnt exist.' % (fieldname, ifield)
+        #raise SyntaxError(msg)
 
     if isinstance(svalue, (float, float32)):
         dtype = _get_dtype(svalue)
@@ -210,9 +210,9 @@ def integer_or_blank(card, ifield, fieldname, default=None):
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -249,14 +249,14 @@ def double(card, ifield, fieldname):
     :param ifield:    field number
     :param fieldname: name of field
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
-    try:
-        svalue = card.field(ifield)
-    except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be a float, but doesnt exist..\n'
-                          'card=%s' % (fieldname, ifield, card))
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
+    #try:
+    svalue = card.field(ifield)
+    #except IndexError:
+        #raise SyntaxError('%s (field #%s) on card must be a float, but doesnt exist..\n'
+                          #'card=%s' % (fieldname, ifield, card))
 
     if isinstance(svalue, (float, float32)):
         return svalue
@@ -311,14 +311,22 @@ def double(card, ifield, fieldname):
 
 def double_or_blank(card, ifield, fieldname, default=None):
     """
-    :param card:      BDF card as a list
-    :param ifield:    field number
-    :param fieldname: name of field
-    :param default:   the default value for the field (default=None)
+    Gets a double/blank value
+
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+    default : double, None
+        the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -350,9 +358,9 @@ def double_or_string(card, ifield, fieldname):
     :param ifield:    field number
     :param fieldname: name of field
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -396,9 +404,9 @@ def double_string_or_blank(card, ifield, fieldname, default=None):
     :returns value:   a double, string, or default value
     :raises SyntaxError: if there is an invalid type
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -441,9 +449,9 @@ def integer_or_double(card, ifield, fieldname):
     :returns value:   the value with the proper type
     :raises SyntaxError: if there's an invalid type
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -486,15 +494,15 @@ def integer_double_or_blank(card, ifield, fieldname, default=None):
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
     #    return default
 
-    if isinstance(svalue, int) or isinstance(svalue, (float, float32)):
+    if isinstance(svalue, integer_types) or isinstance(svalue, (float, float32)):
         return svalue
     elif svalue is None:
         return default
@@ -519,9 +527,9 @@ def integer_or_string(card, ifield, fieldname):
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, integer_types), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -571,9 +579,9 @@ def integer_string_or_blank(card, ifield, fieldname, default=None):
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, integer_types), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
     svalue = card.field(ifield)
     #except IndexError:
@@ -629,17 +637,17 @@ def integer_double_or_string(card, ifield, fieldname):
     :param ifield:    field number
     :param fieldname: name of field
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
-    try:
-        svalue = card.field(ifield)
-    except IndexError:
-        msg = ('%s (field #%s) on card must be an integer, float, or string, but doesnt exist.\n'
-               'card=%s' % (fieldname, ifield, card))
-        raise SyntaxError(msg)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, integer_types), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
+    #try:
+    svalue = card.field(ifield)
+    #except IndexError:
+        #msg = ('%s (field #%s) on card must be an integer, float, or string, but doesnt exist.\n'
+               #'card=%s' % (fieldname, ifield, card))
+        #raise SyntaxError(msg)
 
-    if isinstance(svalue, int) or isinstance(svalue, (float, float32)):
+    if isinstance(svalue, integer_types) or isinstance(svalue, (float, float32)):
         return svalue
 
     svalue = str(svalue.strip())
@@ -671,9 +679,9 @@ def string(card, ifield, fieldname):
     :param ifield:    field number
     :param fieldname: name of field
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, integer_types), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     svalue = card.field(ifield)
     if isinstance(svalue, string_types):
         svalue = svalue.strip()
@@ -704,9 +712,9 @@ def string_or_blank(card, ifield, fieldname, default=None):
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, integer_types), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     svalue = card.field(ifield)
     if svalue is None:
         return default

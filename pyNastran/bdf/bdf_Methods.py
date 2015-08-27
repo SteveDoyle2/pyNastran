@@ -49,19 +49,31 @@ class BDFMethods(object):
         Caclulates mass properties in the global system about the
         reference point.
 
-        :param self: the BDF object
-        :param element_ids: an array of element ids
-        :param reference_point: an array that defines the origin of the frame.
+        Parameters
+        ---------------
+        self : BDF
+            The BDF object.
+        element_ids : ndarray, optional
+            An array of element ids.
+        reference_point : ndarray, optional
+            An array that defines the origin of the frame.
             default = <0,0,0>.
-        :param sym_axis: the axis to which the model is symmetric.
-                         If AERO cards are used, this can be left blank
-                         allowed_values = 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
-        :param scale: the WTMASS scaling value
-                      default=None -> PARAM, WTMASS is used
-                      float > 0.0
-        :returns mass: the mass of the model
-        :returns cg: the cg of the model as an array.
-        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+        sym_axis : str, optional
+            The axis to which the model is symmetric. If AERO cards are used, this can be left blank
+            allowed_values = 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+        scale : float, optional
+            The WTMASS scaling value.
+            default=None -> PARAM, WTMASS is used
+            float > 0.0
+
+        Returns
+        ----------
+        mass : float
+            The mass of the model.
+        cg : ndarray
+            The cg of the model as an array.
+        I : ndarray
+            Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
         I = mass * centroid * centroid
 
