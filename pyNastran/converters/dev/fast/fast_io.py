@@ -153,9 +153,13 @@ class FastIO(object):
     def _fill_fast_case(self, cases, model, results=False):
         self.scalarBar.VisibilityOff()
 
-        if 0:
+        icase = 0
+        geometry_form = [
+            ('ElementID', icase, [])
+        ]
+        if results:
             ID = 1
-            if bcs is not None and self.is_centroidal:
+            if bcs is not None:
                 cases[(ID, 'Region', 1, 'centroid', '%i')] = bcs
 
                 mapbc_print = defaultdict(list)

@@ -336,7 +336,11 @@ class GuiCommon(object):
                 #self.incrementCycle()
             found_cases = True
         else:
-            result_type = 'centroidal' if location == 'centroid' else 'nodal'
+            # key = self.caseKeys[self.iCase]
+            # location = self.get_case_location(key)
+            location = 'N/A'
+            #result_type = 'centroidal' if location == 'centroid' else 'nodal'
+            result_type = '???'
             self.log_error("No Results found.  Many results are not supported in the GUI.\nTry using %s results."
                            % result_type)
             self.scalarBar.SetVisibility(False)
