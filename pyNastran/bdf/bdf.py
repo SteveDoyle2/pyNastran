@@ -1474,6 +1474,89 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             card_obj = BDFCard(card)
         return card_obj, card
 
+    def _make_card_parser(self):
+        self._card_parser = {
+            #'GRID' : (GRID, self.add_grid),
+            'FORCE' : (FORCE, self.add_load),
+            'MOMENT' : (MOEMNT, self.add_load),
+            'CQUAD4' : (CQUAD4, self.add_element),
+            'CTRIA3' : (CTRIA3, self.add_element),
+            #'CROD' : (None, self.add_crod), # calls self.add_element
+        }
+        self.card_parser_b = {
+            'CROD' : self.add_crod, # calls self.add_element once or twice
+        }
+
+    def _add_card_new(self, card_lines, card_name, comment='', is_list=True):
+        card_name = card_name.upper()
+        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
+
+        if self._auto_reject:
+            self.reject_cards.append(card)
+            print('rejecting processed auto=rejected %s' % card)
+            return card_obj
+
+        if card_name == 'ECHOON':
+            self.echo = True
+            return
+        elif card_name == 'ECHOOFF':
+            self.echo = False
+            return
+
+        if self.echo:
+            print(print_card_8(card_obj).rstrip())
+
+        # function that gets by name the initialized object (from global scope)
+        failed = True
+        try:
+            card_class, add_card_function = self.card_parser[card_name]
+            failed = False
+        except KeyError:
+            try:
+                add_card_function = self.card_parser_b[card_name]
+            except KeyError:
+                #: .. warning:: cards with = signs in them
+                #:              are not announced when they are rejected
+                #if '=' not in card[0]:
+                #    self.log.info('rejecting processed equal signed card %s' % card)
+                #self.reject_cards.append(card)
+                msg = 'card_name=%r not in card_parser_b'  % (card_name)
+                raise KeyError(msg)
+
+            try:
+                add_card_function(card_obj, comment=comment)
+            except (SyntaxError, AssertionError, KeyError, ValueError) as e:
+                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                 #tpl/cc451.bdf
+                 #raise
+                 # NameErrors should be caught
+                 self._iparse_errors += 1
+                 var = traceback.format_exception_only(type(e), e)
+                 self._stored_parse_errors.append((card, var))
+                 if self._iparse_errors > self._nparse_errors:
+                     self.pop_parse_errors()
+
+        else:
+            assert failed == False, failed
+            # KeyError won't trigger this
+
+            try:
+                class_instance = card_class(card_obj, comment=comment)
+                add_card_function(class_instance)
+            except (SyntaxError, AssertionError, ValueError) as e:
+                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                #tpl/cc451.bdf
+                #raise
+                # NameErrors should be caught
+                self._iparse_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_parse_errors.append((card, var))
+                if self._iparse_errors > self._nparse_errors:
+                    self.pop_parse_errors()
+
+        return card_obj
+
+
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
