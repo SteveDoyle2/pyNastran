@@ -69,6 +69,7 @@ class NastranIO(object):
         self.save_data = False
         self.show_caero_actor = True  # show the caero mesh
         self.show_control_surfaces = True
+        self.show_conm = True
 
         self.element_ids = None
         self.node_ids = None
@@ -120,7 +121,7 @@ class NastranIO(object):
 
         menu_items = [
             #(self.menu_help2, ('about_nastran',)),
-            (self.nastran_toolbar, ('caero', 'caero_sub'))
+            (self.nastran_toolbar, ('caero', 'caero_sub', 'conm'))
             #(self.menu_window, tuple(menu_window)),
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
@@ -178,6 +179,18 @@ class NastranIO(object):
             else:
                 self.geometry_actors['caero'].VisibilityOn()
                 self.geometry_actors['caero_sub'].VisibilityOff()
+        self.vtk_interactor.Render()
+
+    def toggle_conms(self):
+        """
+        Toggle the visibility of the CONMS
+        """
+        self.show_conm = not self.show_conm
+        if 'conm' in self.geometry_actors:
+            if self.show_conm:
+                self.geometry_actors['conm'].VisibilityOn()
+            else:
+                self.geometry_actors['conm'].VisibilityOff()
         self.vtk_interactor.Render()
 
     def _create_coord(self, cid, coord, Type):
@@ -499,8 +512,13 @@ class NastranIO(object):
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
 
-        # fix grid point size
+        # set default representation
+        if 'caero_cs' in self.geometry_actors:
+            self.geometry_properties['caero_cs'].representation = 'surface'
+            self.geometry_properties['caero_cs'].opacity = 0.5
+
         if 'conm' in self.geometry_actors:
+            self.geometry_properties['conm'].representation = 'point'
             actor = self.geometry_actors['conm']
             prop = actor.GetProperty()
             prop.SetRepresentationToPoints()
@@ -631,6 +649,8 @@ class NastranIO(object):
                 continue
             pointsi = caero_points[elementi]
             for ipoint, point in enumerate(pointsi):
+                # shift z to remove z-fighting with caero in surface representation
+                point[2] += 0.001
                 points.InsertPoint(j + ipoint, *point)
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)

@@ -9,6 +9,7 @@ def run_arg_parse():
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
     msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '                  [-u POINTS_FNAME...]\n'
     msg += '                  [-q] [-e] [-n | -c]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
@@ -26,6 +27,7 @@ def run_arg_parse():
     msg += "  -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)\n"
     msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
     msg += "  -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified (default=1)\n"
+    msg += "  -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)\n"
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
     #if mode != 'qt':
@@ -33,6 +35,7 @@ def run_arg_parse():
     msg += "  -n, --nodalResults          plots nodal results (default)\n"
     msg += "  -c, --centroidalResults     plots centroidal results\n"
     msg += "  -v, --version               show program's version number and exit\n"
+
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
@@ -69,13 +72,15 @@ def run_arg_parse():
     if '--rotation' in data:
         rotation = data['--rotation']
 
+    user_points = data['--user_points']
+
     #print("shots", shots)
     if shots:
         #shots = shots[1]
         #print("shots2 = %r" % shots, type(shots))
         shots = shots.split(';')[0]
     return (edges, is_nodal, is_centroidal, format, input, output, shots,
-            magnify, rotation, geom_script, post_script, debug)
+            magnify, rotation, geom_script, post_script, debug, user_points)
 
 
 def get_inputs():
@@ -98,7 +103,7 @@ def get_inputs():
     else:
         if len(sys.argv) > 1:
             (is_edges, is_nodal, is_centroidal, format, input, output, shots, magnify,
-             rotation, geom_script, post_script, debug) = run_arg_parse()
+             rotation, geom_script, post_script, debug, user_points) = run_arg_parse()
 
     if format is not None and is_centroidal == is_nodal:
         if format.lower() == 'nastran':
@@ -127,5 +132,6 @@ def get_inputs():
         'debug' : debug,
         'geomscript' : geom_script,
         'postscript' : post_script,
+        'user_points' : user_points
     }
     return inputs
