@@ -1159,8 +1159,8 @@ class GRID(Node):
         cps = set_string8_blank_if_default(cp, 0)
         if [cd, self.ps, self.seid] == [0, '', 0]:
             # default
-            msg = '%-8s%8i%8s%s%s%s%s\n' % (
-                'GRID', self.nid, cp,
+            msg = '%-8s%8i%8s%s%s%s\n' % (
+                'GRID', self.nid, cps,
                 print_float_8(xyz[0]),
                 print_float_8(xyz[1]),
                 print_float_8(xyz[2]))

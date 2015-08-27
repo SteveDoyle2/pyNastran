@@ -34,6 +34,7 @@ from pyNastran.gui.menus.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import ApplicationLogDockWidget
 from pyNastran.gui.menus.manage_actors import EditGroupProperties
+from pyNastran.gui.menus.multidialog import MultiFileDialog
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -1086,6 +1087,21 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
             self, Title, self.last_dir, qt_wildcard)
         return str(wildcard_level), str(fname)
+
+    def _create_load_file_dialog2(self, qt_wildcard, Title):
+        # getOpenFileName return QString and we want Python string
+        #Title = 'Load a Tecplot Geometry/Results File'
+        last_dir = ''
+        #qt_wildcard = ['Tecplot Hex Binary (*.tec; *.dat)']
+        dialog = MultiFileDialog()
+        dialog.setWindowTitle(Title)
+        dialog.setDirectory(self.last_dir)
+        dialog.setFilters(qt_wildcard.split(';;'))
+        if dialog.exec_() == QtGui.QDialog.Accepted:
+            outfiles = dialog.selectedFiles()
+            wildcard_level = dialog.selectedFilter()
+            return str(wildcard_level), str(fname)
+        return None, None
 
     def start_logging(self):
         if self.html_logging:
