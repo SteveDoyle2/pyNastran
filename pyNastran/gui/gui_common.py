@@ -153,6 +153,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.result_cases = {}
 
+        self.num_user_points = 0
+
     #def dragEnterEvent(self, e):
         #print(e)
         #print('drag event')
@@ -375,6 +377,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             tools += [
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
                 ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
+                ('conm', 'Toggle CONMs', '', None, 'Show/Hide CONMs', self.toggle_conms),
             ]
         self.tools = tools
         self.checkables = checkables
@@ -940,8 +943,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if self.is_wireframe:
             self.log_command('on_surface()')
             for name, actor in iteritems(self.geometry_actors):
-                prop = actor.GetProperty()
-                prop.SetRepresentationToSurface()
+                #if name != 'main':
+                    #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
+                if name == 'main' or self.geometry_properties[name].representation == 'main':
+                    prop = actor.GetProperty()
+                    prop.SetRepresentationToSurface()
             self.is_wireframe = False
             self.vtk_interactor.Render()
 
@@ -949,8 +955,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not self.is_wireframe:
             self.log_command('on_wireframe()')
             for name, actor in iteritems(self.geometry_actors):
-                prop = actor.GetProperty()
-                prop.SetRepresentationToWireframe()
+                #if name != 'main':
+                    #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
+                if name == 'main' or self.geometry_properties[name].representation == 'main':
+                    prop = actor.GetProperty()
+                    prop.SetRepresentationToWireframe()
                 #prop.SetRepresentationToPoints()
                 #prop.GetPointSize()
                 #prop.SetPointSize(5.0)
@@ -1546,6 +1555,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.on_take_screenshot(shots)
             sys.exit('took screenshot %r' % shots)
 
+        if inputs['user_points'] is not None:
+            initial_colors = [(1.0, 0.145098039216, 1.0),
+                              (0.0823529411765, 0.0823529411765, 1.0),
+                              (0.0901960784314, 1.0, 0.941176470588),
+                              (0.501960784314, 1.0, 0.0941176470588),
+                              (1.0, 1.0, 0.117647058824),
+                              (1.0, 0.662745098039, 0.113725490196)]
+            for fname in inputs['user_points']:
+                name = os.path.basename(fname).rsplit('.',1)[0]
+                self.add_user_points(fname, name, color=initial_colors[self.num_user_points % len(initial_colors)])
+                self.num_user_points += 1
+
 
     def create_cell_picker(self):
         # cell picker
@@ -1966,6 +1987,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         try:
             geom = self.geometry_properties[name]
             color = geom.color
+            opacity = geom.opacity
         except KeyError:
             geom = AltGeometry(self, name, color=color, line_width=line_width,
                                opacity=opacity)
@@ -1973,6 +1995,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         line_width = geom.line_width
         alt_geometry_actor.GetProperty().SetDiffuseColor(*color)
+        alt_geometry_actor.GetProperty().SetOpacity(opacity)
         alt_geometry_actor.GetProperty().SetLineWidth(line_width)
 
         self.rend.AddActor(alt_geometry_actor)
@@ -2619,3 +2642,42 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             msg += '}\n'
             msg += 'self.on_update_geometry_properties(out_data)'
             self.log_command(msg)
+
+    def add_user_points(self, points_filename, name, color=None):
+        if name in self.geometry_actors:
+            msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
+            raise ValueError(msg)
+
+        if color is None:
+            color = (0., 1., .1)
+
+        # create grid
+        self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0)
+
+        # read input file
+        user_points = loadtxt(points_filename, delimiter=',')
+        npoints = user_points.shape[0]
+
+        # allocate grid
+        self.alt_grids[name].Allocate(npoints, 1000)
+
+        # set points
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(npoints)
+
+        for i, point in enumerate(user_points):
+            points.InsertPoint(i, *point)
+            elem = vtk.vtkVertex()
+            elem.GetPointIds().SetId(0, i)
+            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        self.alt_grids[name].SetPoints(points)
+
+        # create actor/mapper
+        self._add_alt_geometry(self.alt_grids[name], name)
+
+        # set representation to points
+        self.geometry_properties[name].representation = 'point'
+        actor = self.geometry_actors[name]
+        prop = actor.GetProperty()
+        prop.SetRepresentationToPoints()
+        prop.SetPointSize(4)

@@ -36,9 +36,20 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 def _triangle_area_centroid_normal(nodes):
     """
-    Returns area,centroid,unitNormal
 
-    :param nodes: list of three triangle vertices
+    Parameters
+    -------------
+    nodes : list
+        List of three triangle vertices.
+
+    Returns
+    --------
+    area : float
+        Area of triangle.
+    centroid : ndarray
+        Centroid of triangle.
+    unit_normal : ndarray
+        Unit normal of triangles.
 
     ::
 
@@ -53,7 +64,13 @@ def _triangle_area_centroid_normal(nodes):
     (n0, n1, n2) = nodes
     vector = cross(n0 - n1, n0 - n2)
     length = norm(vector)
-    normal = vector / length
+    try:
+        normal = vector / length
+    except FloatingPointError as e:
+        msg = e.strerror
+        msg += '\nvector: %s ; length: %s' % (vector, length)
+        raise RuntimeError(msg)
+
     if not allclose(norm(normal), 1.):
         msg = ('function _triangle_area_centroid_normal, check...\n'
                'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
@@ -325,6 +342,8 @@ class CTRIA3(TriShell):
 
     def flipNormal(self):
         """
+        Flips normal of element.
+
         ::
 
                1           1
@@ -507,6 +526,8 @@ class CTRIA6(TriShell):
 
     def flipNormal(self):
         r"""
+        Flips normal of element.
+
         ::
 
                1                1

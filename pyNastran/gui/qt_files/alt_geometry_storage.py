@@ -2,7 +2,7 @@ from copy import deepcopy
 
 class AltGeometry(object):
 
-    def __init__(self, parent, name, color=None, line_width=1, opacity=0.0):
+    def __init__(self, parent, name, color=None, line_width=1, opacity=0.0, representation=None):
         if line_width is None:
             line_width = 1
         if opacity is None:
@@ -15,6 +15,12 @@ class AltGeometry(object):
             self.color = color
         self.line_width = line_width
         self._opacity = opacity
+
+        assert(representation in [None, 'main', 'wire', 'point', 'surface'], representation)
+        if representation is None:
+            self._representation = 'main'
+        else:
+            self.representation = representation
 
     def __deepcopy__(self, memo):
         keys = ['name', '_color', 'line_width', '_opacity']
@@ -83,3 +89,18 @@ class AltGeometry(object):
         self.color = color
         assert len(color) == 3
         #self.mode = 'rgb'
+
+    @property
+    def representation(self):
+        """
+        * main - change with main mesh
+        * wire - always wireframe
+        * point - always points
+        * surface - always surface
+        """
+        return self._representation
+
+    @representation.setter
+    def representation(self, representation):
+        assert representation in ['main', 'wire', 'point', 'surface']
+        self._representation = representation
