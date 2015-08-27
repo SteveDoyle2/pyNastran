@@ -1153,16 +1153,28 @@ class GRID(Node):
         Writes a GRID card in 8-field format
         """
         xyz = self.xyz
-        cp = set_string8_blank_if_default(self.Cp(), 0)
-        cd = set_string8_blank_if_default(self.Cd(), 0)
-        seid = set_string8_blank_if_default(self.SEid(), 0)
-        msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % (
-            'GRID', self.nid, cp,
-            print_float_8(xyz[0]),
-            print_float_8(xyz[1]),
-            print_float_8(xyz[2]),
-            cd, self.ps, seid)
-        return self.comment + msg.rstrip() + '\n'
+        cp = self.Cp()
+        cd = self.Cd()
+
+        cps = set_string8_blank_if_default(cp, 0)
+        if [cd, self.ps, self.seid] == [0, '', 0]:
+            # default
+            msg = '%-8s%8i%8s%s%s%s%s\n' % (
+                'GRID', self.nid, cp,
+                print_float_8(xyz[0]),
+                print_float_8(xyz[1]),
+                print_float_8(xyz[2]))
+            return self.comment + msg
+        else:
+            cds = set_string8_blank_if_default(cd, 0)
+            seid = set_string8_blank_if_default(self.SEid(), 0)
+            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % (
+                'GRID', self.nid, cps,
+                print_float_8(xyz[0]),
+                print_float_8(xyz[1]),
+                print_float_8(xyz[2]),
+                cds, self.ps, seid)
+            return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         """

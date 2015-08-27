@@ -30,7 +30,7 @@ from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
+from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8, print_float_or_int_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
@@ -1382,23 +1382,30 @@ class CQUAD4(QuadShell):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        zOffset = set_blank_if_default(self.zOffset, 0.0)
-        TFlag = set_blank_if_default(self.TFlag, 0)
-        thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
-
-        T1 = set_blank_if_default(self.T1, 1.0)
-        T2 = set_blank_if_default(self.T2, 1.0)
-        T3 = set_blank_if_default(self.T3, 1.0)
-        T4 = set_blank_if_default(self.T3, 1.0)
-
         nodes = self.node_ids
-        row2_data = [thetaMcid, zOffset,
-                     TFlag, T1, T2, T3, T4]
-        row2 = [print_field_8(field) for field in row2_data]
-        data = [self.eid, self.Pid()] + nodes + row2
-        msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
-               '                %8s%8s%8s%8s%8s\n' % tuple(data))
-        return self.comment + msg.rstrip() + '\n'
+
+        row2_data = [self.thetaMcid, self.zOffset,
+                     self.TFlag, self.T1, self.T2, self.T3, self.T4]
+        if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
+            data = [self.eid, self.Pid()] + nodes
+            msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
+            return self.comment + msg
+        else:
+            row2_data = [thetaMcid, zOffset,
+                         TFlag, T1, T2, T3, T4]
+            thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
+            zOffset = set_blank_if_default(self.zOffset, 0.0)
+            TFlag = set_blank_if_default(self.TFlag, 0)
+            T1 = set_blank_if_default(self.T1, 1.0)
+            T2 = set_blank_if_default(self.T2, 1.0)
+            T3 = set_blank_if_default(self.T3, 1.0)
+            T4 = set_blank_if_default(self.T4, 1.0)
+
+            row2 = [print_field_8(field) for field in row2_data]
+            data = [self.eid, self.Pid()] + nodes + row2
+            msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+                   '                %8s%8s%8s%8s%8s\n' % tuple(data))
+            return self.comment + msg.rstrip() + '\n'
 
     #def write_card(self, size=8, is_double=False):
         #card = wipe_empty_fields(self.repr_fields())
