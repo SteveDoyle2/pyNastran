@@ -1506,9 +1506,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PSOLID' : (PSOLID, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
 
-            # CROD - added later
-            'CONROD' : (CONROD, self.add_element),
-
             'CBAR' : (CBAR, self.add_element),
             'PBAR' : (PBAR, self.add_property),
             'PBARL' : (PBARL, self.add_property),
@@ -1543,6 +1540,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # CDAMP4 added later because the documentation is wrong
             'CDAMP5' : (CDAMP5, self.add_damper),
             'PDAMP5' : (PDAMP5, self.add_property),
+
+            'CONROD' : (CONROD, self.add_element),
 
             'CROD' : (CROD, self.add_element),
             'PROD' : (PROD, self.add_property),
@@ -1664,9 +1663,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #'GMSPC' : (GMSPC, self.add_constraint_SPC),
 
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
-
-            #'add_CAERO' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
-            #'add_PAERO' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
 
             'CAERO1' : (CAERO1, self.add_CAERO),
             'CAERO2' : (CAERO2, self.add_CAERO),

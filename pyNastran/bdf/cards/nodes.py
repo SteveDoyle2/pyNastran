@@ -1174,7 +1174,7 @@ class GRID(Node):
                 print_float_8(xyz[1]),
                 print_float_8(xyz[2]),
                 cds, self.ps, seid)
-            return self.comment + msg.rstrip() + '\n'
+            return self.comment + msg
 
     def write_card_16(self, is_double=False):
         """

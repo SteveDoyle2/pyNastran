@@ -751,13 +751,18 @@ def main():
         size = 16
     else:
         size = 8
-
+    print(data)
     if data['--profile']:
         #import cProfile
         import pstats
-        import hotshot, hotshot.stats
 
-        prof = hotshot.Profile('bdf.profile')
+        cp = True
+        if cp:
+            import cProfile
+            prof = cProfile.Profile()
+        else:
+            import hotshot, hotshot.stats
+            prof = hotshot.Profile('bdf.profile')
         prof.runcall(
             run_bdf,
                 '.',
@@ -773,12 +778,22 @@ def main():
                 sum_load=data['--loads'],
                 stop=data['--stop'],
             )
-        prof.close()
+        if cp:
+            prof.dump_stats('bdf.profile')
+        else:
+            prof.close()
 
-        stats = hotshot.stats.load("bdf.profile")
-        stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(40)
+        if cp:
+            stats = pstats.Stats("bdf.profile")
+            stats.sort_stats('tottime')  # time in function
+            #stats.sort_stats('cumtime')  # time in function & subfunctions
+            stats.print_stats(40)
+        else:
+            stats = hotshot.stats.load("bdf.profile")
+            stats.strip_dirs()
+            #stats.sort_stats('time', 'calls')
+            stats.sort_stats('tottime')  # time in function
+            stats.print_stats(40)
         #retval = prof.runcall(self.method_actual, *args, **kwargs)
         #print(prof.dump_stats(datafn))
         #cProfile.runctx(
@@ -803,7 +818,7 @@ def main():
             size=size,
             is_double=is_double,
             sum_load=data['--loads'],
-            stop=data[--stop],
+            stop=data['--stop'],
         )
     print("total time:  %.2f sec" % (time.time() - t0))
 
