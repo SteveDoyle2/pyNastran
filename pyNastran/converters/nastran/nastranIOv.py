@@ -24,6 +24,8 @@ from six.moves import zip, range
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import os
+from collections import defaultdict
+
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross
 from numpy.linalg import norm
@@ -478,6 +480,8 @@ class NastranIO(object):
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         j = 0
+        nid_to_pid_map, cases, form = self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+
         if 0:
             nsprings = 0
             if 0:
@@ -500,7 +504,7 @@ class NastranIO(object):
 
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
-        self.set_spc_grid(dim_max, model)
+        self.set_spc_grid(dim_max, model, nid_to_pid_map)
 
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
@@ -561,8 +565,9 @@ class NastranIO(object):
             if name in self.geometry_actors:
                 self.geometry_actors[name].Modified()
 
-        #print('j = ', j)
-        self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+        if plot:
+            self.log.info(cases.keys())
+            self._finish_results_io2([form], cases)
 
     def set_caero_grid(self, ncaeros_points, model, j=0):
         """
@@ -692,7 +697,7 @@ class NastranIO(object):
         self.alt_grids['conm'].SetPoints(points)
         #self.alt_grids['conm'].Set
 
-    def set_spc_grid(self, dim_max, model):
+    def set_spc_grid(self, dim_max, model, nid_to_pid_map):
         nids = []
 
         case_control = model.case_control_deck
@@ -706,10 +711,11 @@ class NastranIO(object):
                     nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
                     nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
                     if nspcs + nspc1s:
-                        self._fill_spc(spc_id, nspcs, nspc1s, dim_max, model)
+                        self._fill_spc(spc_id, nspcs, nspc1s, dim_max, model, nid_to_pid_map)
 
-            if 'SUPORT1' in subcase.params:
-                print('suport in subcase %s' % subcase_id)
+
+            if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
+                # print('suport in subcase %s' % subcase_id)
                 suport_id, options = subcase.get_parameter('SUPORT1')
                 if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
                     if suport_id:
@@ -722,10 +728,10 @@ class NastranIO(object):
         Parameters
         -----------
         exclude_spcadd : bool
-            you can exclude SPCADD if you just want a
-            list of all the SPCs in the model.  For example, apply all the
-            SPCs when there is no SPC=N in the case control deck, but you
-            don't need to apply SPCADD=N twice.
+            you can exclude SPCADD if you just want a list of all the
+            SPCs in the model.  For example, apply all the SPCs when
+            there is no SPC=N in the case control deck, but you don't
+            need to apply SPCADD=N twice.
         """
         try:
             spcs = model.spcs[spc_id]
@@ -745,20 +751,79 @@ class NastranIO(object):
                     nidsi = self.get_SPCx_node_ids(model, new_spc_id)
                     nids += nidsi
             else:
-                self.log.warning('fill_spc doesnt supprt %r' % card.type)
+                self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
                 continue
             node_ids += nids
         return node_ids
 
-    def _fill_spc(self, spc_id, nspcs, nspc1s, dim_max, model):
+    def get_SPCx_node_ids_c1(self, model, spc_id, exclude_spcadd=False):
+        """
+        Get the SPC/SPCADD/SPC1/SPCAX IDs.
+
+        Parameters
+        -----------
+        exclude_spcadd : bool
+            you can exclude SPCADD if you just want a list of all the
+            SPCs in the model.  For example, apply all the SPCs when
+            there is no SPC=N in the case control deck, but you don't
+            need to apply SPCADD=N twice.
+        """
+        try:
+            spcs = model.spcs[spc_id]
+        except:
+            model.log.warning('spc_id=%s not found' % spc_id)
+            return []
+
+        node_ids_c1 = defaultdict(str)
+        for card in sorted(spcs):
+            if card.type == 'SPC':
+                for nid, c1 in zip(card.gids, card.constraints):
+                    node_ids_c1[nid] += c1
+            elif card.type == 'SPC1':
+                nids = card.node_ids
+                c1 = card.constraints
+                for nid in nids:
+                    node_ids_c1[nid] += c1
+            elif card.type == 'SPCADD':
+                nids = []
+                for new_spc_id in card.sets:
+                    nids_c1i = self.get_SPCx_node_ids_c1(model, new_spc_id)
+                    for nid, c1 in iteritems(nids_c1i):
+                        node_ids_c1[nid] += c1
+            else:
+                self.log.warning('get_SPCx_node_ids_c1 doesnt supprt %r' % card.type)
+                continue
+        return node_ids_c1
+
+    def _fill_spc(self, spc_id, nspcs, nspc1s, dim_max, model, nid_to_pid_map):
         purple = (1.0, 1., 0.)
         self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.)
 
-        node_ids = self.get_SPCx_node_ids(model, spc_id, exclude_spcadd=False)
-        node_ids = unique(node_ids)
-        self._add_nastran_nodes_to_grid('spc', node_ids, model)
+        # node_ids = self.get_SPCx_node_ids(model, spc_id, exclude_spcadd=False)
+        node_ids_c1 = self.get_SPCx_node_ids_c1(model, spc_id, exclude_spcadd=False)
 
-    def _add_nastran_nodes_to_grid(self, name, node_ids, model):
+        node_ids = []
+        for nid, c1 in iteritems(node_ids_c1):
+            if nid_to_pid_map is not None:
+                plot_node = False
+                pids = nid_to_pid_map[nid]
+                for pid in pids:
+                    if pid == 0:
+                        continue
+                    prop = model.properties[pid]
+                    if prop.type not in ['PSOLID', 'PLSOLID']:
+                        plot_node = True
+                if not plot_node:
+                    # don't include 456 constraints if they're ONLY on solid elemetns
+                    # if we had any bar/plate/etc. elements that use this node, we'll plot the node
+                    if not('1' in c1 or '2' in c1 or '3' in c1):
+                        continue
+            node_ids.append(nid)
+
+        node_ids = unique(node_ids)
+        self._add_nastran_nodes_to_grid('spc', node_ids, model, nid_to_pid_map)
+
+    def _add_nastran_nodes_to_grid(self, name, node_ids, model, nid_to_pid_map=None):
         nnodes = len(node_ids)
         if nnodes == 0:
             return
@@ -767,7 +832,11 @@ class NastranIO(object):
 
         j = 0
         for nid in sorted(node_ids):
-            i = self.nidMap[nid]
+            try:
+                i = self.nidMap[nid]
+            except KeyError:
+                model.log.warning('nid=%s does not exist' % nid)
+                continue
 
             # point = self.grid.GetPoint(i)
             # points.InsertPoint(j, *point)
@@ -830,6 +899,8 @@ class NastranIO(object):
         pids_dict = {}
         nelements = len(model.elements)
         pids = zeros(nelements, 'int32')
+
+        nid_to_pid_map = defaultdict(list)
         for (eid, element) in sorted(iteritems(model.elements)):
             self.eidMap[eid] = i
             pid = 0
@@ -838,6 +909,10 @@ class NastranIO(object):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
+
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
@@ -846,6 +921,9 @@ class NastranIO(object):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:3]
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
                 if None not in nodeIDs:
                     elem = vtkQuadraticTriangle()
                     elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
@@ -861,6 +939,10 @@ class NastranIO(object):
                 # midside nodes are required, nodes out of order
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
+
                 if None not in nodeIDs:
                     elem = vtkQuadraticTriangle()
                     elem.GetPointIds().SetId(3, nidMap[nodeIDs[1]])
@@ -888,6 +970,9 @@ class NastranIO(object):
                   isinstance(element, CQUADR)):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -898,6 +983,9 @@ class NastranIO(object):
             elif isinstance(element, CQUAD8):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 if None not in nodeIDs:
                     elem = vtkQuadraticQuad()
@@ -916,6 +1004,8 @@ class NastranIO(object):
                 elem = vtkTetra()
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
@@ -925,6 +1015,9 @@ class NastranIO(object):
             elif isinstance(element, CTETRA10):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 if None not in nodeIDs:
                     elem = vtkQuadraticTetra()
@@ -945,6 +1038,8 @@ class NastranIO(object):
                 elem = vtkWedge()
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:6]
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
@@ -958,6 +1053,9 @@ class NastranIO(object):
             elif isinstance(element, CPENTA15):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:6]
                 if None not in nodeIDs:
                     elem = vtkQuadraticWedge()
@@ -982,6 +1080,8 @@ class NastranIO(object):
             elif isinstance(element, CHEXA8):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:8]
                 elem = vtkHexahedron()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -996,6 +1096,9 @@ class NastranIO(object):
             elif isinstance(element, CHEXA20):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
                 if None not in nodeIDs:
                     elem = vtkQuadraticHexahedron()
                     elem.GetPointIds().SetId(8, nidMap[nodeIDs[8]])
@@ -1027,6 +1130,8 @@ class NastranIO(object):
             elif isinstance(element, CPYRAM5):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
+                for nid in nodeIDs:
+                    nid_to_pid_map[nid].append(pid)
                 self.eid_to_nid_map[eid] = nodeIDs[:5]
                 elem = vtkPyramid()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -1078,6 +1183,10 @@ class NastranIO(object):
                     # CELAS2, CELAS4?
                     pid = 0
                 nodeIDs = element.node_ids
+                for nid in nodeIDs:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
+
                 if nodeIDs[0] is None and  nodeIDs[0] is None: # CELAS2
                     print('removing CELASx eid=%i -> no node %i' % (eid, nodeIDs[0]))
                     del self.eidMap[eid]
@@ -1251,9 +1360,7 @@ class NastranIO(object):
             form0.append(('Normalz', icase, []))
             icase += 1
 
-        if plot:
-            self.log.info(cases.keys())
-            self._finish_results_io2([form], cases)
+        return nid_to_pid_map, cases, form
 
     def _plot_pressures(self, model, cases, form0, icase, xref_loads):
         """
