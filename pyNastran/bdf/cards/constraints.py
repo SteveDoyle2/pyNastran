@@ -23,7 +23,7 @@ from itertools import count
 import warnings
 
 from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids, expand_thru
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, components, components_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
@@ -436,7 +436,7 @@ class SPC(Constraint):
             else:
                 self.gids = [
                     integer(card, 2, 'G1'),
-                    integer(card, 5, 'G2'),
+                    integer_or_blank(card, 5, 'G2'),
                 ]
                 # :0 if scalar point 1-6 if grid
                 self.constraints = [components_or_blank(card, 3, 'C1', 0),

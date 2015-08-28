@@ -4,7 +4,6 @@ from six import iteritems
 import os
 from struct import unpack
 from collections import defaultdict
-rom collections import defaultdict
 
 from numpy import array, vstack, hstack, where, unique, savetxt, zeros
 

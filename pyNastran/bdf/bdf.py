@@ -1017,6 +1017,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._stop_on_parsing_error = stop_on_parsing_error
         self._stop_on_xref_error = stop_on_xref_error
 
+    @property
+    def caseControlDeck(self):
+        return self.case_control_deck
+
+    @caseControlDeck.setter
+    def caseControlDeck(self, value):
+        self.case_control_deck = value
+
     def read_bdf(self, bdf_filename=None,
                  xref=True, punch=False, encoding=None):
         """
@@ -1447,7 +1455,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 card = wipe_empty_fields([interpret_value(field, fields)
                                           if field is not None
                                           else None for field in fields])
-            else:  # leave everything as strings
+                                          #else '' for field in fields])  # has_none; remove previous
+                has_nones = False
                 card = wipe_empty_fields(fields)
             card_obj = BDFCard(card)
         return card_obj, card

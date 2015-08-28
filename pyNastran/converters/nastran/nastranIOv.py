@@ -1,3 +1,5 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 """
 Defines the GUI IO file for Nastran.
 """
@@ -259,7 +261,7 @@ class NastranIO(object):
                 del i
         return skip_reading
 
-    def _remove_old_geometry2(self, filename, alt_grids):
+    def _remove_old_geometry_old(self, filename, alt_grids):
         skip_reading = False
         if filename is None or filename is '':
             #self.grid = vtk.vtkUnstructuredGrid()
@@ -273,7 +275,6 @@ class NastranIO(object):
         else:
             self.TurnTextOff()
             self.grid.Reset()
-            self.grid2.Reset()
 
             # create alt grids
             yellow = (1., 1., 0.)
@@ -282,8 +283,9 @@ class NastranIO(object):
                 self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0)
             if 'caero_sub' not in self.alt_grids:
                 self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0)
-            if 'conm' not in self.alt_grids.keys():
+            if 'conm' not in self.alt_grids:
                 self.create_alternate_vtk_grid('conm', color=orange, line_width=3, opacity=1.0)
+
             #print('alt_grids', self.alt_grids.keys())
 
             #self.gridResult = vtk.vtkFloatArray()
@@ -417,10 +419,12 @@ class NastranIO(object):
 
         # Allocate grids
         self.grid.Allocate(self.nElements, 1000)
-        self.alt_grids['caero'].Allocate(ncaeros, 1000)
-        self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
-        if has_control_surface:
-            self.alt_grids['caero_cs'].Allocate(ncaeros_cs, 1000)
+        if 'caero' in self.alt_grids:
+            self.alt_grids['caero'].Allocate(ncaeros, 1000)
+            self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
+            if has_control_surface:
+                self.alt_grids['caero_cs'].Allocate(ncaeros_cs, 1000)
+
         if nCONM2 > 0:
             self.alt_grids['conm'].Allocate(nCONM2, 1000)
 
@@ -429,22 +433,7 @@ class NastranIO(object):
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            i = 0
-            #fraction = 1. / nnodes  # so you can color the nodes by ID
-            for (nid, node) in sorted(iteritems(model.nodes)):
-                point = node.get_position()
-                points.InsertPoint(i, *point)
-                #self.gridResult.InsertNextValue(i * fraction)
 
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(),
-                #                              elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
-
-                self.nidMap[nid] = i
-                i += 1
 
         # add the nodes
         node0 = get_key0(model.nodes)
@@ -489,25 +478,29 @@ class NastranIO(object):
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         j = 0
-        nsprings = 0
         if 0:
-            for eid, element in sorted(iteritems(model.elements)):
-                if(isinstance(element, LineElement) or
-                   isinstance(element, SpringElement) or
-                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
-                    node_ids = element.node_ids
-                    if None in node_ids:
-                        nsprings += 1
+            nsprings = 0
+            if 0:
+                for eid, element in sorted(iteritems(model.elements)):
+                    if(isinstance(element, LineElement) or
+                       isinstance(element, SpringElement) or
+                       element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                                        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                        node_ids = element.node_ids
+                        if None in node_ids:
+                            nsprings += 1
 
         # fill grids
-        self.set_caero_grid(ncaeros_points, model)
-        self.set_caero_subpanel_grid(ncaero_sub_points, model)
-        if has_control_surface:
-            self.set_caero_control_surface_grid(cs_box_ids, box_id_to_caero_element_map, caero_points)
+        if 'caero' in self.alt_grids:
+            self.set_caero_grid(ncaeros_points, model)
+            self.set_caero_subpanel_grid(ncaero_sub_points, model)
+            if has_control_surface:
+                self.set_caero_control_surface_grid(cs_box_ids, box_id_to_caero_element_map, caero_points)
+
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
+        self.set_spc_grid(dim_max, model)
 
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
@@ -517,47 +510,57 @@ class NastranIO(object):
             self.geometry_properties['caero_cs'].representation = 'surface'
             self.geometry_properties['caero_cs'].opacity = 0.5
 
-        if 'conm' in self.geometry_actors:
-            self.geometry_properties['conm'].representation = 'point'
-            actor = self.geometry_actors['conm']
-            prop = actor.GetProperty()
-            prop.SetRepresentationToPoints()
-            prop.SetPointSize(4)
+        for (name, size) in [('conm', 4), ('spc', 4), ('suport', 4)]:
+            if size == 0:
+                continue
+            if name in self.geometry_actors:
+                self.geometry_properties[name].representation = 'point'
+                actor = self.geometry_actors[name]
+                prop = actor.GetProperty()
+                prop.SetRepresentationToPoints()
+                prop.SetPointSize(size)
 
         # set initial caero visibility
-        if self.show_caero_actor:
-            if self.show_caero_sub_panels:
+        if 'caero' in self.alt_grids:
+            if self.show_caero_actor:
+                if self.show_caero_sub_panels:
+                    self.geometry_actors['caero'].VisibilityOff()
+                    self.geometry_actors['caero_sub'].VisibilityOn()
+                else:
+                    self.geometry_actors['caero'].VisibilityOn()
+                    self.geometry_actors['caero_sub'].VisibilityOff()
+            else:
                 self.geometry_actors['caero'].VisibilityOff()
-                self.geometry_actors['caero_sub'].VisibilityOn()
-            else:
-                self.geometry_actors['caero'].VisibilityOn()
                 self.geometry_actors['caero_sub'].VisibilityOff()
-        else:
-            self.geometry_actors['caero'].VisibilityOff()
-            self.geometry_actors['caero_sub'].VisibilityOff()
 
-        if has_control_surface:
-            if self.show_control_surfaces:
-                self.geometry_actors['caero_cs'].VisibilityOn()
+            if has_control_surface:
+                if self.show_control_surfaces:
+                    self.geometry_actors['caero_cs'].VisibilityOn()
+                else:
+                    self.geometry_actors['caero_cs'].VisibilityOn()
+
+            self.geometry_actors['caero'].Modified()
+            self.geometry_actors['caero_sub'].Modified()
+            if has_control_surface:
+                self.geometry_actors['caero_cs'].Modified()
+            if hasattr(self.geometry_actors['caero'], 'Update'):
+                self.geometry_actors['caero'].Update()
+            if hasattr(self.geometry_actors['caero_sub'], 'Update'):
+                self.geometry_actors['caero_sub'].Update()
+            if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
+                    self.geometry_actors['caero_cs'].Update()
+
+        if 'conm' in self.geometry_actors:
+            if nCONM2 > 0:
+                self.geometry_actors['conm'].VisibilityOn()
             else:
-                self.geometry_actors['caero_cs'].VisibilityOn()
-        if 'conm' in self.geometry_actors:
-            self.geometry_actors['conm'].VisibilityOn()
-
-        self.geometry_actors['caero'].Modified()
-        self.geometry_actors['caero_sub'].Modified()
-        if has_control_surface:
-            self.geometry_actors['caero_cs'].Modified()
-        if hasattr(self.geometry_actors['caero'], 'Update'):
-            self.geometry_actors['caero'].Update()
-        if hasattr(self.geometry_actors['caero_sub'], 'Update'):
-            self.geometry_actors['caero_sub'].Update()
-        if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
-                self.geometry_actors['caero_cs'].Update()
-
-        if 'conm' in self.geometry_actors:
+                self.geometry_actors['conm'].VisibilityOff()
             self.geometry_actors['conm'].Modified()
-        #self.geometry_actors['conm'].Update()
+
+        for name in ['suport', 'spc', 'mpc']:
+            if name in self.geometry_actors:
+                self.geometry_actors[name].Modified()
+
         #print('j = ', j)
         self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
@@ -689,6 +692,123 @@ class NastranIO(object):
         self.alt_grids['conm'].SetPoints(points)
         #self.alt_grids['conm'].Set
 
+    def set_spc_grid(self, dim_max, model):
+        nids = []
+
+        case_control = model.case_control_deck
+        keys = case_control.subcases.keys()
+        keys.sort()
+        keys = keys[1:]
+        if not keys:
+            asfd
+            return
+
+        subcase_id = keys[0]
+        print('subcase_id=%s' % subcase_id)
+
+        subcase = case_control.subcases[subcase_id]
+        if 'SPC' in subcase and 0:
+            spc_id = subcase.get_parameter('SPC')
+            if spc_id is not None:
+                nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
+                nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
+                if nspcs + nspc1s:
+                    return self._fill_spc(spc_id, nspcs, nspc1s, dim_max, model)
+
+        print(subcase.params.keys())
+        if 'SUPORT1' in subcase.params:
+            print('suport in subcase %s' % subcase_id)
+            suport_id, options = subcase.get_parameter('SUPORT1')
+            if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
+                if suport_id:
+                    self._fill_suport(suport_id, dim_max, model)
+
+
+    def _fill_spc(self, spc_id, nspcs, nspc1s, dim_max, model):
+        return
+        red = (1.0, 0., 0.)
+        self.create_alternate_vtk_grid('spc', color=red, line_width=5, opacity=1.)
+
+        node_ids = []
+        spcs = model.get_spc(spc_id)
+        #for card in sorted(model.constraints):
+        for card in sorted(spcs):
+            if card.type == 'SPC':
+                nids = SPC.node_ids
+            elif card.type == 'SPC1':
+                nids = SPC.node_ids
+            else:
+                self.log_warning('fill_spc doesnt supprt %r' % card.type)
+
+        node_ids.append(nids)
+        node_ids = unique(node_ids)
+        nnodes = len(node_ids)
+
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nnodes)
+
+        j = 0
+        for nid in sorted(node_ids):
+            i = self.nidMap[nid]
+            point = self.grid.GetPoint(i)
+            points.InsertPoint(j, *point)
+
+            if 1:
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, j)
+            else:
+                elem = vtk.vtkSphere()
+                sphere_size = self._get_sphere_size(dim_max)
+                elem.SetRadius(sphere_size)
+                elem.SetCenter(points.GetPoint(j))
+
+            self.alt_grids['spc'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            j += 1
+        self.alt_grids['spc'].SetPoints(points)
+
+    def _fill_suport(self, suport_id, dim_max, model):
+        #pink = (0.98, 0.4, 0.93)
+        red = (1.0, 0., 0.)
+        self.create_alternate_vtk_grid('suport', color=red, line_width=5, opacity=1.)
+
+        node_ids = []
+
+        # list
+        #for suport in model.suport:
+            #node_ids += suport.IDs
+
+        # dict
+        suport1 = model.suport1[suport_id]
+        node_ids += suport1.IDs
+
+        node_ids = unique(node_ids)
+        nnodes = len(node_ids)
+
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nnodes)
+
+        j = 0
+        for nid in sorted(node_ids):
+            #i = self.nidMap[nid]
+            #point = self.grid.GetPoint(i)
+            node = model.nodes[nid]
+            point = node.get_position()
+            self.log_info('adding SUPORT1; p=%s' % str(point))
+            points.InsertPoint(j, *point)
+
+            if 1:
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, j)
+            else:
+                elem = vtk.vtkSphere()
+                sphere_size = self._get_sphere_size(dim_max)
+                elem.SetRadius(sphere_size)
+                elem.SetCenter(points.GetPoint(j))
+
+            self.alt_grids['suport'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            j += 1
+        self.alt_grids['suport'].SetPoints(points)
+
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
 
@@ -722,8 +842,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIA6):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
@@ -738,8 +857,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIAX6):
                 # midside nodes are required, nodes out of order
                 nodeIDs = element.node_ids
@@ -765,8 +883,7 @@ class NastranIO(object):
                 #elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 #elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 #elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             elif (isinstance(element, CQUAD4) or isinstance(element, CSHEAR) or
                   isinstance(element, CQUADR)):
@@ -778,8 +895,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CQUAD8):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
@@ -796,8 +912,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTETRA4):
                 elem = vtkTetra()
                 nodeIDs = element.node_ids
@@ -807,8 +922,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTETRA10):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
@@ -827,8 +941,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
                 nodeIDs = element.node_ids
@@ -866,8 +979,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
                 elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
                 elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CHEXA8):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
@@ -881,8 +993,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
                 elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
                 elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CHEXA20):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
@@ -912,9 +1023,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
                 elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
                 elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
-
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             elif isinstance(element, CPYRAM5):
                 nodeIDs = element.node_ids
@@ -926,8 +1035,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
                 elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CPYRAM13):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
@@ -953,8 +1061,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
                 elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
             elif (isinstance(element, LineElement) or
                   isinstance(element, SpringElement) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
@@ -1087,8 +1195,8 @@ class NastranIO(object):
             nids = zeros(self.nNodes, dtype='int32')
             for (nid, nid2) in iteritems(self.nidMap):
                 nids[nid2] = nid
-            cases[(0, icase, 'Node_ID', 1, 'node', '%i')] = nids
-            form0.append(('Node_ID', icase, []))
+            cases[(0, icase, 'NodeID', 1, 'node', '%i')] = nids
+            form0.append(('NodeID', icase, []))
             icase += 1
             self.node_ids = nids
             nidsSet = True
@@ -1099,16 +1207,16 @@ class NastranIO(object):
             eids = zeros(nelements, dtype='int32')
             for (eid, eid2) in iteritems(self.eidMap):
                 eids[eid2] = eid
-            cases[(0, icase, 'Element_ID', 1, 'centroid', '%i')] = eids
-            form0.append(('Element_ID', icase, []))
+            cases[(0, icase, 'ElementID', 1, 'centroid', '%i')] = eids
+            form0.append(('ElementID', icase, []))
             icase += 1
             self.element_ids = eids
             eidsSet = True
 
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
-            cases[(0, icase, 'Property_ID', 1, 'centroid', '%i')] = pids
-            form0.append(('Property_ID', icase, []))
+            cases[(0, icase, 'PropertyID', 1, 'centroid', '%i')] = pids
+            form0.append(('PropertyID', icase, []))
             icase += 1
 
         #icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
@@ -1132,16 +1240,16 @@ class NastranIO(object):
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
             # subcase_id, resultType, vector_size, location, dataFormat
-            cases[(0, icase, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
-            form0.append(('Normal_x', icase, []))
+            cases[(0, icase, 'Normalx', 1, 'centroid', '%.1f')] = nxs
+            form0.append(('Normalx', icase, []))
             icase += 1
 
-            cases[(0, icase, 'Normal_y', 1, 'centroid', '%.1f')] = nys
-            form0.append(('Normal_y', icase, []))
+            cases[(0, icase, 'Normaly', 1, 'centroid', '%.1f')] = nys
+            form0.append(('Normaly', icase, []))
             icase += 1
 
-            cases[(0, icase, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
-            form0.append(('Normal_z', icase, []))
+            cases[(0, icase, 'Normalz', 1, 'centroid', '%.1f')] = nzs
+            form0.append(('Normalz', icase, []))
             icase += 1
 
         if plot:
