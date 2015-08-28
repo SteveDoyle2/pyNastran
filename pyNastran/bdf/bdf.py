@@ -1457,6 +1457,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                           else None for field in fields])
                                           #else '' for field in fields])  # has_none; remove previous
                 has_nones = False
+            else:
                 card = wipe_empty_fields(fields)
             card_obj = BDFCard(card)
         return card_obj, card

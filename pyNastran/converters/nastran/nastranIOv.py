@@ -696,61 +696,85 @@ class NastranIO(object):
         nids = []
 
         case_control = model.case_control_deck
-        keys = case_control.subcases.keys()
-        keys.sort()
-        keys = keys[1:]
-        if not keys:
-            asfd
-            return
+        for subcase_id, subcase in sorted(iteritems(case_control.subcases)):
+            #print('subcase_id=%s' % subcase_id)
+            #print(subcase.params.keys())
 
-        subcase_id = keys[0]
-        print('subcase_id=%s' % subcase_id)
+            if 'SPC' in subcase:
+                spc_id, options = subcase.get_parameter('SPC')
+                if spc_id is not None:
+                    nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
+                    nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
+                    if nspcs + nspc1s:
+                        self._fill_spc(spc_id, nspcs, nspc1s, dim_max, model)
 
-        subcase = case_control.subcases[subcase_id]
-        if 'SPC' in subcase and 0:
-            spc_id = subcase.get_parameter('SPC')
-            if spc_id is not None:
-                nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
-                nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
-                if nspcs + nspc1s:
-                    return self._fill_spc(spc_id, nspcs, nspc1s, dim_max, model)
+            if 'SUPORT1' in subcase.params:
+                print('suport in subcase %s' % subcase_id)
+                suport_id, options = subcase.get_parameter('SUPORT1')
+                if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
+                    if suport_id:
+                        self._fill_suport(suport_id, dim_max, model)
 
-        print(subcase.params.keys())
-        if 'SUPORT1' in subcase.params:
-            print('suport in subcase %s' % subcase_id)
-            suport_id, options = subcase.get_parameter('SUPORT1')
-            if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
-                if suport_id:
-                    self._fill_suport(suport_id, dim_max, model)
+    def get_SPCx_node_ids(self, model, spc_id, exclude_spcadd=False):
+        """
+        Get the SPC/SPCADD/SPC1/SPCAX IDs.
 
-
-    def _fill_spc(self, spc_id, nspcs, nspc1s, dim_max, model):
-        return
-        red = (1.0, 0., 0.)
-        self.create_alternate_vtk_grid('spc', color=red, line_width=5, opacity=1.)
+        Parameters
+        -----------
+        exclude_spcadd : bool
+            you can exclude SPCADD if you just want a
+            list of all the SPCs in the model.  For example, apply all the
+            SPCs when there is no SPC=N in the case control deck, but you
+            don't need to apply SPCADD=N twice.
+        """
+        try:
+            spcs = model.spcs[spc_id]
+        except:
+            model.log.warning('spc_id=%s not found' % spc_id)
+            return []
 
         node_ids = []
-        spcs = model.get_spc(spc_id)
-        #for card in sorted(model.constraints):
         for card in sorted(spcs):
             if card.type == 'SPC':
-                nids = SPC.node_ids
+                nids = card.node_ids
             elif card.type == 'SPC1':
-                nids = SPC.node_ids
+                nids = card.node_ids
+            elif card.type == 'SPCADD':
+                nids = []
+                for new_spc_id in card.sets:
+                    nidsi = self.get_SPCx_node_ids(model, new_spc_id)
+                    nids += nidsi
             else:
-                self.log_warning('fill_spc doesnt supprt %r' % card.type)
+                self.log.warning('fill_spc doesnt supprt %r' % card.type)
+                continue
+            node_ids += nids
+        return node_ids
 
-        node_ids.append(nids)
+    def _fill_spc(self, spc_id, nspcs, nspc1s, dim_max, model):
+        purple = (1.0, 1., 0.)
+        self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.)
+
+        node_ids = self.get_SPCx_node_ids(model, spc_id, exclude_spcadd=False)
         node_ids = unique(node_ids)
-        nnodes = len(node_ids)
+        self._add_nastran_nodes_to_grid('spc', node_ids, model)
 
+    def _add_nastran_nodes_to_grid(self, name, node_ids, model):
+        nnodes = len(node_ids)
+        if nnodes == 0:
+            return
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
         j = 0
         for nid in sorted(node_ids):
             i = self.nidMap[nid]
-            point = self.grid.GetPoint(i)
+
+            # point = self.grid.GetPoint(i)
+            # points.InsertPoint(j, *point)
+
+            node = model.nodes[nid]
+            point = node.get_position()
+            self.log_info('adding SUPORT1; p=%s' % str(point))
             points.InsertPoint(j, *point)
 
             if 1:
@@ -762,9 +786,9 @@ class NastranIO(object):
                 elem.SetRadius(sphere_size)
                 elem.SetCenter(points.GetPoint(j))
 
-            self.alt_grids['spc'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 1
-        self.alt_grids['spc'].SetPoints(points)
+        self.alt_grids[name].SetPoints(points)
 
     def _fill_suport(self, suport_id, dim_max, model):
         #pink = (0.98, 0.4, 0.93)
@@ -782,32 +806,7 @@ class NastranIO(object):
         node_ids += suport1.IDs
 
         node_ids = unique(node_ids)
-        nnodes = len(node_ids)
-
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(nnodes)
-
-        j = 0
-        for nid in sorted(node_ids):
-            #i = self.nidMap[nid]
-            #point = self.grid.GetPoint(i)
-            node = model.nodes[nid]
-            point = node.get_position()
-            self.log_info('adding SUPORT1; p=%s' % str(point))
-            points.InsertPoint(j, *point)
-
-            if 1:
-                elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, j)
-            else:
-                elem = vtk.vtkSphere()
-                sphere_size = self._get_sphere_size(dim_max)
-                elem.SetRadius(sphere_size)
-                elem.SetCenter(points.GetPoint(j))
-
-            self.alt_grids['suport'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            j += 1
-        self.alt_grids['suport'].SetPoints(points)
+        self._add_nastran_nodes_to_grid('suport', node_ids, model)
 
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
