@@ -822,10 +822,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # axes
         self.create_global_axes()
 
-    def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0):
+    def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
+                                  representation=None):
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         self.geometry_properties[name] = AltGeometry(self, name, color=color,
-                                                     line_width=line_width, opacity=opacity)
+                                                     line_width=line_width, opacity=opacity,
+                                                     point_size=point_size, representation=representation)
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -1946,7 +1948,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.geom_actor.SetMapper(self.aQuadMapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
+        #self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
         self.rend.AddActor(self.geom_actor)
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
@@ -1976,13 +1978,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.rend.RemoveActor(actor)
             del actor
 
-    def _add_alt_geometry(self, grid, name, color=None, line_width=5, opacity=1.0):
+    def _add_alt_geometry(self, grid, name, color=None, line_width=None, opacity=None, representation=None):
         """
         NOTE: color, line_width, opacity are ignored if name already exists
         """
-        if color is None:
-            color = (1., 1., 1.)
-
         quadMapper = vtk.vtkDataSetMapper()
         if name in self.geometry_actors:
             alt_geometry_actor = self.geometry_actors[name]
@@ -2000,19 +1999,31 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.geometry_actors[name] = alt_geometry_actor
 
         #geometryActor.AddPosition(2, 0, 2)
-        try:
+        if name in self.geometry_properties:
             geom = self.geometry_properties[name]
-            color = geom.color
-            opacity = geom.opacity
-        except KeyError:
+        else:
             geom = AltGeometry(self, name, color=color, line_width=line_width,
-                               opacity=opacity)
+                               opacity=opacity, representation=representation)
             self.geometry_properties[name] = geom
 
+        color = geom.color_float
+        opacity = geom.opacity
+        point_size = geom.point_size
+        representation = geom.representation
         line_width = geom.line_width
-        alt_geometry_actor.GetProperty().SetDiffuseColor(*color)
-        alt_geometry_actor.GetProperty().SetOpacity(opacity)
-        alt_geometry_actor.GetProperty().SetLineWidth(line_width)
+        #print('color_2014[%s] = %s' % (name, str(color)))
+        assert isinstance(color[0], float), color
+        assert color[0] <= 1.0, color
+
+        prop = alt_geometry_actor.GetProperty()
+        prop.SetDiffuseColor(color)
+        prop.SetOpacity(opacity)
+        if representation == 'point':
+            prop.SetRepresentationToPoints()
+            prop.SetPointSize(point_size)
+        elif representation == 'surface':
+            prop.SetRepresentationToSurface()
+            prop.SetLineWidth(line_width)
 
         self.rend.AddActor(alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
@@ -2596,6 +2607,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._edit_group_properties.activateWindow()
 
+        if  'clicked_ok' not in data:
+            self._edit_group_properties.activateWindow()
+
         if data['clicked_ok']:
             self.on_update_geometry_properties(data)
             self._save_geometry_properties(data)
@@ -2616,6 +2630,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             geom_prop.color = group.color
             geom_prop.line_width = group.line_width
             geom_prop.opacity = group.opacity
+            geom_prop.point_size = group.point_size
 
     def on_update_geometry_properties(self, out_data):
         lines = []
@@ -2628,7 +2643,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             prop = actor.GetProperty()
 
             color1 = prop.GetDiffuseColor()
+            assert color1[1] <= 1.0, color1
             color2 = group.color_float
+            #print('line2646 - name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
+            #color2 = group.color
 
             line_width1 = prop.GetLineWidth()
             line_width2 = group.line_width
@@ -2638,7 +2656,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             opacity2 = group.opacity
             opacity2 = max(0.1, opacity2)
 
+            point_size1 = prop.GetPointSize()
+            point_size2 = group.point_size
+            point_size2 = max(1, point_size2)
+
             if color1 != color2:
+                #print('color_2662[%s] = %s' % (name, str(color1)))
+                assert isinstance(color1[0], float), color1
                 prop.SetDiffuseColor(color2)
                 changed = True
             if line_width1 != line_width2:
@@ -2647,9 +2671,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if opacity1 != opacity2:
                 prop.SetOpacity(opacity2)
                 changed = True
+            if point_size1 != point_size2:
+                prop.SetPointSize(point_size2)
+                changed = True
             if changed:
-                lines.append('    %r : AltGeometry(color=(%s, %s, %s), line_width=%s, opacity=%s),\n' % (
-                    name, color2[0], color2[1], color2[2], line_width2, opacity2))
+                lines.append('    %r : AltGeometry(color=(%s, %s, %s), line_width=%s, opacity=%s, point_size=%s),\n' % (
+                    name, color2[0], color2[1], color2[2], line_width2, opacity2, point_size2))
                 prop.Modified()
         self.vtk_interactor.Render()
         if lines:
@@ -2668,7 +2695,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             color = (0., 1., .1)
 
         # create grid
-        self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0)
+        self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0, point_size=1)
 
         # read input file
         user_points = loadtxt(points_filename, delimiter=',')

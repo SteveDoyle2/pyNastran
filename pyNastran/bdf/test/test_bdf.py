@@ -254,6 +254,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #try:
         outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
         if stop:
+            print('***stopping')
             return fem1, None, None
         fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
         diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
@@ -751,7 +752,8 @@ def main():
         size = 16
     else:
         size = 8
-    print(data)
+
+    #print(data)
     if data['--profile']:
         #import cProfile
         import pstats
@@ -787,6 +789,7 @@ def main():
             stats = pstats.Stats("bdf.profile")
             stats.sort_stats('tottime')  # time in function
             #stats.sort_stats('cumtime')  # time in function & subfunctions
+            stats.strip_dirs()
             stats.print_stats(40)
         else:
             stats = hotshot.stats.load("bdf.profile")

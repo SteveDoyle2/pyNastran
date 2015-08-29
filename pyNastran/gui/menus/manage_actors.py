@@ -83,6 +83,7 @@ class EditGroupProperties(QtGui.QDialog):
         |  Active_Name    main    |
         |  Color          box     |
         |  Line_Width     2       |
+        |  Point_Size     2       |
         |  Opacity        0.5     |
         |                         |
         |    Apply   OK   Cancel  |
@@ -112,6 +113,7 @@ class EditGroupProperties(QtGui.QDialog):
         actor_obj = data[self.active_key]
         name = actor_obj.name
         line_width = actor_obj.line_width
+        point_size = actor_obj.point_size
         opacity = actor_obj.opacity
         color = actor_obj.color
 
@@ -133,7 +135,7 @@ class EditGroupProperties(QtGui.QDialog):
         color = self.out_data[self.active_key].color
         qcolor = QtGui.QColor()
         qcolor.setRgb(*color)
-        print('color =%s' % str(color))
+        #print('color =%s' % str(color))
         palette = QtGui.QPalette(self.color_edit.palette()) # make a copy of the palette
         #palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, \
                          #qcolor)
@@ -159,6 +161,12 @@ class EditGroupProperties(QtGui.QDialog):
         self.line_width_edit.setSingleStep(1)
         self.line_width_edit.setValue(line_width)
 
+        self.point_size = QtGui.QLabel("Point Size:")
+        self.point_size_edit = QtGui.QSpinBox(self)
+        self.point_size_edit.setRange(1, 10)
+        self.point_size_edit.setSingleStep(1)
+        self.point_size_edit.setValue(point_size)
+
         # closing
         self.apply_button = QtGui.QPushButton("Apply")
         #if self._default_is_apply:
@@ -173,6 +181,7 @@ class EditGroupProperties(QtGui.QDialog):
     def update_active_key(self, index):
         old_obj = self.out_data[self.active_key]
         old_obj.line_width = self.line_width_edit.value()
+        old_obj.point_size = self.point_size_edit.value()
         old_obj.opacity = self.opacity_edit.value()
 
         name = str(index.data().toString())
@@ -182,12 +191,14 @@ class EditGroupProperties(QtGui.QDialog):
         self.name_edit.setText(name)
         obj = self.out_data[name]
         line_width = obj.line_width
+        point_size = obj.point_size
         opacity = obj.opacity
         self.color_edit.setStyleSheet("QPushButton {"
                                       "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                       #"border:1px solid rgb(255, 170, 255); "
                                       "}")
         self.line_width_edit.setValue(line_width)
+        self.point_size_edit.setValue(point_size)
         self.opacity_edit.setValue(opacity)
 
     #def on_name_select(self):
@@ -219,6 +230,10 @@ class EditGroupProperties(QtGui.QDialog):
         grid.addWidget(self.line_width_edit, irow, 1)
         irow += 1
 
+        grid.addWidget(self.point_size, irow, 0)
+        grid.addWidget(self.point_size_edit, irow, 1)
+        irow += 1
+
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addLayout(grid)
@@ -230,6 +245,7 @@ class EditGroupProperties(QtGui.QDialog):
     def set_connections(self):
         self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
         self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
+        self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_point_size)
         self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
         #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
 
@@ -257,6 +273,11 @@ class EditGroupProperties(QtGui.QDialog):
         name = self.active_key
         line_width = self.line_width_edit.value()
         self.out_data[name].line_width = line_width
+
+    def on_point_size(self):
+        name = self.active_key
+        point_size = self.point_size_edit.value()
+        self.out_data[name].point_size = point_size
 
     def on_opacity(self):
         name = self.active_key
@@ -317,6 +338,7 @@ class EditGroupProperties(QtGui.QDialog):
 
         old_obj = self.out_data[self.active_key]
         old_obj.line_width = self.line_width_edit.value()
+        old_obj.point_size = self.point_size_edit.value()
         old_obj.opacity = self.opacity_edit.value()
         return True
         #name_value, flag0 = self.check_name(self.name_edit)

@@ -245,9 +245,9 @@ class NastranIO(object):
             yellow = (1., 1., 0.)
             # pink = (0.98, 0.4, 0.93)
             if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0)
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='surface')
             if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0)
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='surface')
             #print('alt_grids', self.alt_grids.keys())
 
             #self.gridResult = vtk.vtkFloatArray()
@@ -282,11 +282,11 @@ class NastranIO(object):
             yellow = (1., 1., 0.)
             pink = (0.98, 0.4, 0.93)
             if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0)
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='surface')
             if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0)
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='surface')
             if 'conm' not in self.alt_grids:
-                self.create_alternate_vtk_grid('conm', color=orange, line_width=3, opacity=1.0)
+                self.create_alternate_vtk_grid('conm', color=orange, line_width=3, opacity=1.0, point_size=4, representation='point')
 
             #print('alt_grids', self.alt_grids.keys())
 
@@ -391,7 +391,7 @@ class NastranIO(object):
             ncaeros_cs = 0
             ncaero_cs_points = 0
             if 'caero_cs' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_cs', color=pink, line_width=5, opacity=1.0)
+                self.create_alternate_vtk_grid('caero_cs', color=pink, line_width=5, opacity=1.0, representation='surface')
             for aid, aesurf in iteritems(model.aesurfs):
                 aelist = aesurf.alid1
                 ncaeros_cs += len(aelist.elements)
@@ -417,7 +417,7 @@ class NastranIO(object):
             nCONM2 = 0
         #self.gridResult.SetNumberOfComponents(self.nElements)
         if nCONM2 > 0:
-            self.create_alternate_vtk_grid('conm', color=orange, line_width=5, opacity=1.)
+            self.create_alternate_vtk_grid('conm', color=orange, line_width=5, opacity=1., point_size=4, representation='point')
 
         # Allocate grids
         self.grid.Allocate(self.nElements, 1000)
@@ -511,18 +511,16 @@ class NastranIO(object):
 
         # set default representation
         if 'caero_cs' in self.geometry_actors:
-            self.geometry_properties['caero_cs'].representation = 'surface'
             self.geometry_properties['caero_cs'].opacity = 0.5
 
-        for (name, size) in [('conm', 4), ('spc', 4), ('suport', 4)]:
-            if size == 0:
-                continue
-            if name in self.geometry_actors:
-                self.geometry_properties[name].representation = 'point'
-                actor = self.geometry_actors[name]
-                prop = actor.GetProperty()
-                prop.SetRepresentationToPoints()
-                prop.SetPointSize(size)
+        #for (name, size) in [('conm', 4), ('spc', 4), ('suport', 4)]:
+            #if size == 0:
+                #continue
+            #if name in self.geometry_actors:
+                #actor = self.geometry_actors[name]
+                #prop = actor.GetProperty()
+                #prop.SetRepresentationToPoints()
+                #prop.SetPointSize(size)
 
         # set initial caero visibility
         if 'caero' in self.alt_grids:
@@ -698,8 +696,6 @@ class NastranIO(object):
         #self.alt_grids['conm'].Set
 
     def set_spc_grid(self, dim_max, model, nid_to_pid_map):
-        nids = []
-
         case_control = model.case_control_deck
         for subcase_id, subcase in sorted(iteritems(case_control.subcases)):
             #print('subcase_id=%s' % subcase_id)
@@ -796,8 +792,8 @@ class NastranIO(object):
         return node_ids_c1
 
     def _fill_spc(self, spc_id, nspcs, nspc1s, dim_max, model, nid_to_pid_map):
-        purple = (1.0, 1., 0.)
-        self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.)
+        purple = (1., 0., 1.)
+        self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1., point_size=5, representation='point')
 
         # node_ids = self.get_SPCx_node_ids(model, spc_id, exclude_spcadd=False)
         node_ids_c1 = self.get_SPCx_node_ids_c1(model, spc_id, exclude_spcadd=False)
@@ -862,7 +858,7 @@ class NastranIO(object):
     def _fill_suport(self, suport_id, dim_max, model):
         #pink = (0.98, 0.4, 0.93)
         red = (1.0, 0., 0.)
-        self.create_alternate_vtk_grid('suport', color=red, line_width=5, opacity=1.)
+        self.create_alternate_vtk_grid('suport', color=red, line_width=5, opacity=1., point_size=4, representation='point')
 
         node_ids = []
 
