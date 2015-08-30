@@ -635,7 +635,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 starting_id_dict[key] = value
 
     for key, value in sorted(iteritems(starting_id_dict)):
-        assert isinstance(key, str), key
+        assert isinstance(key, string_types), key
         assert key in starting_id_dict_default, 'key=%s is invalid' % (key)
         assert isidentifier(key), 'key=%s is invalid' % key
         assert isinstance(value, integer_types), 'value=%s must be an integer; type(value)=%s' % (value, type(value))

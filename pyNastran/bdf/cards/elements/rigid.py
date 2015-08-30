@@ -202,7 +202,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'
 
-        #assert isinstance(card[-1], str), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
+        #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')
         if isinstance(alpha_last, float):
             self.alpha = alpha_last

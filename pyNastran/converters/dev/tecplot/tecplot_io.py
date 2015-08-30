@@ -59,17 +59,18 @@ class TecplotIO(object):
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.update_axes_length(dim_max)
-
         for i in range(nnodes):
             #print('i=%s' % i, list(nodes[i, :]))
             points.InsertPoint(i, nodes[i, :])
 
-        elements = model.elements
-        print(model.elements)
-        if elements.shape[1] == 4:
+        #elements = model.elements
+        quads = model.quad_elements
+        hexas = model.hexa_elements
+        if quads.shape[1] > 0:
+            elements = quads
             is_surface = True
 
-            for face in elements:
+            for iface, face in enumerate(quads):
                 elem = vtkQuad()
                 #print('face', face)
                 epoints = elem.GetPointIds()
@@ -80,7 +81,8 @@ class TecplotIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
                 #break
 
-        elif elements.shape[1] == 8:
+        elif hexas.shape[1] == 8:
+            elements = hexas
             is_surface = True
             # is_surface = False
             is_volume = not is_surface

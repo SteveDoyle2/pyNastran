@@ -253,19 +253,19 @@ class SPCD(Load):
         if card:
             self.sid = integer(card, 1, 'sid')
             if card.field(5) is None:
-                    self.gids = [integer(card, 2, 'G1'),]
-                    self.constraints = [components_or_blank(card, 3, 'C1', 0)]
-                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+                self.gids = [integer(card, 2, 'G1'),]
+                self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
             else:
-                    self.gids = [
-                        integer(card, 2, 'G1'),
-                        integer(card, 5, 'G2'),
-                    ]
-                    # :0 if scalar point 1-6 if grid
-                    self.constraints = [components_or_blank(card, 3, 'C1', 0),
-                                        components_or_blank(card, 6, 'C2', 0)]
-                    self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                                     double_or_blank(card, 7, 'D2', 0.0)]
+                self.gids = [
+                    integer(card, 2, 'G1'),
+                    integer(card, 5, 'G2'),
+                ]
+                # :0 if scalar point 1-6 if grid
+                self.constraints = [components_or_blank(card, 3, 'C1', 0),
+                                    components_or_blank(card, 6, 'C2', 0)]
+                self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                                 double_or_blank(card, 7, 'D2', 0.0)]
         else:
             self.sid = data[0]
             self.gids = [data[1]]

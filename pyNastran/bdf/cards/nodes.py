@@ -24,7 +24,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array
-from six import integer_types
+from six import integer_types, string_types
 
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
@@ -615,7 +615,7 @@ class GRDSET(Node):
         ps = self.Ps()
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
-        assert isinstance(ps, str), 'ps=%r' % ps
+        assert isinstance(ps, string_types), 'ps=%r' % ps
         assert isinstance(seid, int), 'seid=%r' % seid
 
     def raw_fields(self):
@@ -997,7 +997,7 @@ class GRID(Node):
         assert isinstance(nid, int), 'nid=%r' % nid
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
-        assert isinstance(ps, str), 'ps=%r' % ps
+        assert isinstance(ps, string_types), 'ps=%r' % ps
         assert isinstance(seid, int), 'seid=%r' % seid
         if xref:
             pos_xyz = self.get_position()
