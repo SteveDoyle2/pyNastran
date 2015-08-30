@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 from __future__ import print_function
+from six import string_types
 from six.moves import range
 
 from math import sqrt
@@ -159,7 +160,7 @@ def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
         return '[]'
 
     def _print(a):
-        if isinstance(a, str):
+        if isinstance(a, string_types):
             return a
         for i, j in ((float, float_fmt), (float32, float_fmt),
                      (float64, float_fmt), (int, '%3i')):

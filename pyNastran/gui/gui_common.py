@@ -1707,7 +1707,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.node_picker.AddObserver("EndPickEvent", on_node_picker)
 
     def _create_annotation(self, text, result_name, x, y, z):
-        assert isinstance(result_name, str), result_name
+        assert isinstance(result_name, string_types), 'result_name=%r type=%s' % (result_name, type(result_name))
         # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
         if 1:
             source = vtk.vtkVectorText()

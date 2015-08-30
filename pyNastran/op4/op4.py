@@ -107,7 +107,7 @@ class OP4(object):
         if not os.path.exists(op4_filename):
             raise IOError('cannot find op4_filename=%r' % op4_filename)
 
-        if isinstance(matrix_names, str):
+        if isinstance(matrix_names, string_types):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
@@ -1180,7 +1180,7 @@ class OP4(object):
 
         .. note:: form defaults to 2, but 1 can be easily determined.  Any others must be specified.
         """
-        assert isinstance(name, str), name
+        assert isinstance(name, string_types), name
         assert isinstance(form, int), form
 
     def _write_sparse_matrix_ascii(self, f, name, A, form=2, is_big_mat=False, precision='default'):
@@ -1188,7 +1188,7 @@ class OP4(object):
         .. todo:: Does this work for complex matrices?
         """
         msg = ''
-        assert isinstance(name, str), 'name=%s' % name
+        assert isinstance(name, string_types), 'name=%s' % name
         #A = A.tolil() # list-of-lists sparse matrix
         #print dir(A)
         (Type, NWV) = self._get_type_nwv(A.data[0], precision)

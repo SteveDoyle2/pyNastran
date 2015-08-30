@@ -117,21 +117,21 @@ class PARAM(BaseCard):
         if self.key == 'ACOUT':
             if value1 is None:
                 value1 = 'PEAK'
-            if not isinstance(value1, str):
+            if not isinstance(value1, string_types):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ACOWEAK':
             if value1 is None:
                 value1 = 'NO'
-            if not isinstance(value1, str):
+            if not isinstance(value1, string_types):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ACSYM':
             if value1 is None:
                 value1 = 'YES'
-            if not isinstance(value1, str):
+            if not isinstance(value1, string_types):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
@@ -148,7 +148,7 @@ class PARAM(BaseCard):
         elif self.key == 'ADSTAT':
             if value1 is None:
                 value1 = 'YES'
-            if not isinstance(value1, str):
+            if not isinstance(value1, string_types):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
@@ -178,7 +178,7 @@ class PARAM(BaseCard):
 
         else:
             if not (isinstance(value1, int) or isinstance(value1, float) or
-                    isinstance(value1, str)):
+                    isinstance(value1, string_types)):
                 msg = 'key=%s value1=%r must be an integer, float, or string.' % (self.key, value1)
                 raise TypeError(msg)
 

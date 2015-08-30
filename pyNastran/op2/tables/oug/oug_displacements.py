@@ -1,4 +1,4 @@
-from six import iteritems
+from six import iteritems, string_types
 from struct import pack, Struct
 
 
@@ -12,7 +12,7 @@ def make_pack_form(data):
     Form = ''
     old = None
     for d in data:
-        if isinstance(d, str):
+        if isinstance(d, string_types):
             n = len(d)
             f = 's'
         elif isinstance(d, int):

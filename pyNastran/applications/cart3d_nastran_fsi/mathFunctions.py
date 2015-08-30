@@ -1,4 +1,5 @@
 from __future__ import print_function
+fom six import string_types
 from numpy import array, cross, allclose
 from numpy.linalg import norm, solve
 
@@ -40,7 +41,7 @@ def ListPrint(listA):
 
     msg = '['
     for a in listA:
-        if isinstance(a, str):
+        if isinstance(a, string_types):
             msg += ' %s,' % (a)
         elif isinstance(a, float):
             msg += ' %-4.2f,' % (a)
@@ -50,7 +51,7 @@ def ListPrint(listA):
             try:
                 msg += ' %g,' % (a)
             except TypeError:
-                print("a = |%s|" % (a))
+                print("a = %r" % (a))
                 raise
 
     msg = msg[:-1]

@@ -55,57 +55,73 @@ class TecplotIO(object):
         assert nodes is not None
         nnodes = nodes.shape[0]
 
-        nid = 0
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.update_axes_length(dim_max)
 
         for i in range(nnodes):
-            points.InsertPoint(nid, nodes[i, :])
-            nid += 1
+            #print('i=%s' % i, list(nodes[i, :]))
+            points.InsertPoint(i, nodes[i, :])
 
-        is_surface = True
-        # is_surface = False
-        is_volume = not is_surface
-        if is_surface:
-            self.nElements = model.nelements
-            free_faces = array(model.get_free_faces(), dtype='int32')# + 1
-            nfaces = len(free_faces)
-            elements = free_faces
-            self.grid.Allocate(nfaces, 1000)
+        elements = model.elements
+        print(model.elements)
+        if elements.shape[1] == 4:
+            is_surface = True
 
-            for face in free_faces:
+            for face in elements:
                 elem = vtkQuad()
+                #print('face', face)
                 epoints = elem.GetPointIds()
                 epoints.SetId(0, face[0])
                 epoints.SetId(1, face[1])
                 epoints.SetId(2, face[2])
                 epoints.SetId(3, face[3])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                #break
 
-        elif is_volume:
-            self.nElements = model.nelements
-            elements = model.elements
-            self.grid.Allocate(self.nElements, 1000)
+        elif elements.shape[1] == 8:
+            is_surface = True
+            # is_surface = False
+            is_volume = not is_surface
 
-            nelements = elements.shape[0]
-            # elements -= 1
-            for eid in range(nelements):
-                elem = vtkHexahedron()
-                node_ids = elements[eid, :]
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, node_ids[0])
-                epoints.SetId(1, node_ids[1])
-                epoints.SetId(2, node_ids[2])
-                epoints.SetId(3, node_ids[3])
-                epoints.SetId(4, node_ids[4])
-                epoints.SetId(5, node_ids[5])
-                epoints.SetId(6, node_ids[6])
-                epoints.SetId(7, node_ids[7])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-        else:
-            raise NotImplementedError()
+            if is_surface:
+                self.nElements = model.nelements
+                free_faces = array(model.get_free_faces(), dtype='int32')# + 1
+                nfaces = len(free_faces)
+                elements = free_faces
+                self.grid.Allocate(nfaces, 1000)
+
+                for face in free_faces:
+                    elem = vtkQuad()
+                    epoints = elem.GetPointIds()
+                    epoints.SetId(0, face[0])
+                    epoints.SetId(1, face[1])
+                    epoints.SetId(2, face[2])
+                    epoints.SetId(3, face[3])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+
+            elif is_volume:
+                self.nElements = model.nelements
+                self.grid.Allocate(self.nElements, 1000)
+
+                nelements = elements.shape[0]
+                # elements -= 1
+                for eid in range(nelements):
+                    elem = vtkHexahedron()
+                    node_ids = elements[eid, :]
+                    epoints = elem.GetPointIds()
+                    epoints.SetId(0, node_ids[0])
+                    epoints.SetId(1, node_ids[1])
+                    epoints.SetId(2, node_ids[2])
+                    epoints.SetId(3, node_ids[3])
+                    epoints.SetId(4, node_ids[4])
+                    epoints.SetId(5, node_ids[5])
+                    epoints.SetId(6, node_ids[6])
+                    epoints.SetId(7, node_ids[7])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            else:
+                raise NotImplementedError()
 
         self.grid.SetPoints(points)
         #self.grid.GetPointData().SetScalars(self.gridResult)
@@ -147,9 +163,11 @@ class TecplotIO(object):
 
     def _fill_tecplot_case(self, cases, ID, nodes, elements, model, is_surface):
         #'x', 'y', 'z',
-        result_names = ['rho', 'U', 'V', 'W', 'p']
+        #result_names = ['rho', 'U', 'V', 'W', 'p']
+        result_names = model.variables[3:]
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
+
 
         cases_new = []
         new = False
@@ -182,10 +200,16 @@ class TecplotIO(object):
             cases[(ID, 1, element_id, 1, 'centroid', '%i')] = eids
             #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
 
-        if is_results and len(model.results):
+        results = model.results
+        if is_results and len(results):
             i = 2
             for iresult, result_name in enumerate(result_names):
-                nodal_data = model.results[:, iresult]
+                if results.shape[1] == 1:
+                    nodal_data = results
+                    assert len(result_names) == 1, result_names
+                else:
+                    nodal_data = results[:, iresult]
+
                 if new:
                     cases_new[i] = (result, i, result_name, 1, 'node', '%.3f')
                 else:

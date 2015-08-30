@@ -86,9 +86,9 @@ def write_class(name, obj, nspaces=0, nbase=0):
 
 def write_object_attributes(attr, obj, nspaces, nbase=0, isClass=False):
     msg = ''
-    if isinstance(obj, int) or isinstance(obj, float) or obj is None:
+    if isinstance(obj, (int, float)) or obj is None:
         msg += '%s' % (str(obj))
-    elif isinstance(obj, str):
+    elif isinstance(obj, string_types):
         msg += "'%s'" % obj
     elif isinstance(obj, unicode):
         msg += "u'%s'" % obj
@@ -150,7 +150,7 @@ def write_array(a, nspaces=0):
             #print "ai = ",ai
             if isinstance(ai, int) or isinstance(ai, float):
                 msg += '%s, ' % ai
-            elif isinstance(ai, str):
+            elif isinstance(ai, string_types):
                 msg += "'%s'," % ai
             else:
                 objectType = type(ai)
@@ -160,7 +160,7 @@ def write_array(a, nspaces=0):
         if len(a) > 0:
             if isinstance(a[-1], int) or isinstance(a[-1], float):
                 msg += "%s], dtype='%s')" % (a[-1], dtype)
-            elif isinstance(a[-1], str):
+            elif isinstance(a[-1], string_types):
                 msg += "'%s'], dtype='%s')" % (a[-1], dtype)
             else:
                 objectType = type(ai)

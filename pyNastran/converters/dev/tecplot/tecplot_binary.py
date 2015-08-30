@@ -69,7 +69,7 @@ class TecplotReader(FortranFormat):
         vars_found = []
         i = 0
         header_lines = []
-        while i < 1000:
+        while i < 30:
             #TITLE     = "tecplot geometry and solution file"
             #VARIABLES = "x"
             #"y"
@@ -83,7 +83,9 @@ class TecplotReader(FortranFormat):
             # n=522437, e=1000503, ZONETYPE=FEBrick
             # DATAPACKING=BLOCK
             #self.n = 0
-            line = f.readline()
+            line = f.readline().strip()
+            if line[0].isdigit():
+                break
             if 'TITLE' in line:
                 vars_found.append('TITLE')
             if 'VARIABLES' in line:
@@ -95,8 +97,8 @@ class TecplotReader(FortranFormat):
             if 'DATAPACKING' in line:
                 vars_found.append('DATAPACKING')
             header_lines.append(line.rstrip())
-            if len(vars_found) == 5:
-                break
+            #if len(vars_found) == 5:
+                #break
             i += 1
 
         headers_dict = {}
@@ -104,11 +106,11 @@ class TecplotReader(FortranFormat):
         headers = header.split(',')
         nheaders = len(headers) - 1
         for iheader, header in enumerate(headers):
-            print('iheader=%s header=%r' % (iheader, header))
+            #print('iheader=%s header=%r' % (iheader, header))
             if '=' in header:
                 sline = header.strip().split('=', 1)
                 parse = False
-                print('iheader=%s nheaders=%s' % (iheader, nheaders))
+                #print('iheader=%s nheaders=%s' % (iheader, nheaders))
                 if iheader == nheaders:
                     parse = True
                 elif '=' in headers[iheader + 1]:
@@ -121,19 +123,28 @@ class TecplotReader(FortranFormat):
                 elif '=' in headers[iheader + 1]:
                     parse = True
             if parse:
-                print('  parsing')
+                #print('  parsing')
                 key = sline[0].strip().upper()
                 value = [val.strip() for val in sline[1:]]
                 if len(value) == 1:
                     value = value[0].strip()
                 headers_dict[key] = value
-                print('  ', value)
+                #print('  ', value)
                 #value = value.strip()
-                assert key in ['TITLE', 'VARIABLES',  'ZONE T',  'ZONETYPE',  'DATAPACKING', 'N', 'E'], key
+                assert key in ['TITLE', 'VARIABLES',  'ZONE T',  'ZONETYPE',  'DATAPACKING',
+                               'N', 'E', 'F', 'DT'], key
                 parse = False
-        print(headers_dict)
-        zone_type = headers_dict['ZONETYPE'].upper() # FEBrick
-        data_packing = headers_dict['DATAPACKING'].upper() # block
+        #print(headers_dict.keys())
+
+        if 'ZONETYPE' in headers_dict:
+            zone_type = headers_dict['ZONETYPE'].upper() # FEBrick
+            data_packing = headers_dict['DATAPACKING'].upper() # block
+        elif 'F' in headers_dict:
+            zone_type = headers_dict['F'].upper() # FEPoint
+            assert zone_type == 'FEPOINT', zone_type
+            print('zone_type = %r' % zone_type[0])
+        else:
+            raise NotImplementedError('headers=%s' % str(headers_dict.keys()))
         variables = headers_dict['VARIABLES']
         nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
 
@@ -143,52 +154,87 @@ class TecplotReader(FortranFormat):
         xyz = zeros((nnodes, 3), dtype='float32')
         results = zeros((nnodes, nresults), dtype='float32')
         if zone_type == 'FEBRICK':
-            elements = zeros((nelements, 8), dtype='float32')
+            # hex
+            #print('hex...')
+            elements = zeros((nelements, 8), dtype='int32')
+        elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
+            # quads
+            #print('quad...')
+            elements = zeros((nelements, 4), dtype='int32')
+        else:
+            #if isinstance(zone_type, list):
+                #raise NotImplementedError(zone_type[0])
+            raise NotImplementedError(zone_type)
+
+        if zone_type == 'FEBRICK':
+            if data_packing == 'POINT':
+                for inode in range(nnodes):
+                    xyz[inode, :] = sline[:3]
+                    results[inode, 3:] = sline[3:]
+                    sline = f.readline().strip().split()
+            elif data_packing == 'BLOCK':
+                for ires in range(3 + nresults):
+                    result = []
+                    i = 0
+                    nresult = 0
+                    nnodes_max = nnodes + 1
+                    while i < nnodes_max:
+                        result += sline
+                        nresult += len(sline)
+                        if nresult >= nnodes:
+                            break
+                        sline = f.readline().strip().split()
+                        i += 1
+                    assert i < nnodes_max, 'nresult=%s' % nresult
+                    if ires in [0, 1, 2]:
+                        print('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
+                        xyz[:, ires] = result
+                    else:
+                        results[:, ires - 3] = result
+            else:
+                raise NotImplementedError(data_packing)
+        elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
+            sline = line.strip().split()
+            for inode in range(nnodes):
+                #print('inode ', inode, sline)
+                xyz[inode, :] = sline[:3]
+                #assert abs(xyz[inode, 1]) > 5.0, 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
+                results[inode, :] = sline[3:]
+                sline = f.readline().strip().split()
         else:
             raise NotImplementedError(zone_type)
 
-        if data_packing == 'POINT':
-            for inode in range(nnodes):
-                sline = f.readline.strip().split()
-                xyz[inode, :] = sline[:3]
-                results[inode, 3:] = sline[3:]
-        elif data_packing == 'BLOCK':
-            for ires in range(3 + nresults):
-                result = []
-                i = 0
-                nresult = 0
-                nnodes_max = nnodes + 1
-                while i < nnodes_max:
-                    sline = f.readline().strip().split()
-                    result += sline
-                    nresult += len(sline)
-                    if nresult >= nnodes:
-                        break
-                    i += 1
-                assert i < nnodes_max, 'nresult=%s' % nresult
-                if ires in [0, 1, 2]:
-                    print('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
-                    xyz[:, ires] = result
-                else:
-                    results[:, ires - 3] = result
-        else:
-            raise NotImplementedError(data_packing)
         i = 0
-        while i < nelements:
-            sline = f.readline().strip().split()
+        print(elements.shape)
+        print('xyz[0 , :]', xyz[0, :])
+        print('xyz[-1, :]', xyz[-1, :])
+        #print(sline)
+        assert '.' not in sline[0], sline
+
+        i = 0
+        for i in range(nelements):
             try:
                 elements[i, :] = sline
             except IndexError:
                 raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
-            i += 1
+            except ValueError:
+                raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
+            sline = f.readline().strip().split()
+        print('elements[0, :]', elements[0, :])
+        print('elements[-1, :]', elements[-1, :])
+        print('elements.max()', elements.max())
+        #print(f.readline())
+        print(sline)
         f.close()
 
-        self.elements = array(elements, dtype='int32') - 1
+        self.elements = elements - 1
+        print(self.elements)
         tecplot_file.close()
 
-        self.xyz = array(xyz, dtype='float32')
-        self.results = array(results, dtype='float32')
-        self.variables = [variable[1:-1] for variable in variables]
+        self.xyz = xyz
+        self.results = results
+        self.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
+        print('self.variables', self.variables)
 
     #def show(self, n, types='', endian=''):
         #pass

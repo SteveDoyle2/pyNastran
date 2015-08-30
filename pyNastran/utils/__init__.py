@@ -127,7 +127,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
                 msg += "%s %s " % (str(name), equals)
             else:
                 msg += "'%s' %s " % (name, equals)
-    elif isinstance(name, str):
+    elif isinstance(name, string_types):
         if isClass:
             key = '%s' % name
         else:
