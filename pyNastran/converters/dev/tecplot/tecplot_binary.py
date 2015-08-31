@@ -73,6 +73,9 @@ class TecplotReader(FortranFormat):
 
             quads_list = []
             hexas_list = []
+            tris_list = []
+            tets_list = []
+
             xyz_list = []
             results_list = []
 
@@ -96,7 +99,7 @@ class TecplotReader(FortranFormat):
                     # n=522437, e=1000503, ZONETYPE=FEBrick
                     # DATAPACKING=BLOCK
                     #self.n = 0
-                    if len(line) == 0:
+                    if len(line) == 0 or line[0] == '#':
                         line = f.readline().strip()
                         i += 1
                         continue
@@ -108,6 +111,8 @@ class TecplotReader(FortranFormat):
                         vars_found.append('VARIABLES')
                     if 'ZONE T' in line:
                         vars_found.append('ZONE T')
+                    #if 'ZONE N' in line:
+                        #vars_found.append('N')
                     if 'ZONETYPE' in line:
                         vars_found.append('ZONETYPE')
                     if 'DATAPACKING' in line:
@@ -118,7 +123,7 @@ class TecplotReader(FortranFormat):
                     i += 1
                     line = f.readline().strip()
 
-                print(header_lines)
+                #print(header_lines)
                 headers_dict = {}
                 if len(header_lines) == 0:
                     break
@@ -146,6 +151,8 @@ class TecplotReader(FortranFormat):
                     if parse:
                         #print('  parsing')
                         key = sline[0].strip().upper()
+                        if key.startswith('ZONE '):
+                            key = key[5:].strip()
                         value = [val.strip() for val in sline[1:]]
                         if len(value) == 1:
                             value = value[0].strip()
@@ -154,7 +161,7 @@ class TecplotReader(FortranFormat):
                         #print('  ', value)
                         #value = value.strip()
                         assert key in ['TITLE', 'VARIABLES', 'ZONE T', 'ZONETYPE', 'DATAPACKING',
-                                       'N', 'E', 'F', 'DT'], key
+                                       'N', 'E', 'F', 'DT'], 'key=%r' % (key)
                         parse = False
                 #print(headers_dict.keys())
 
@@ -171,31 +178,48 @@ class TecplotReader(FortranFormat):
                     raise NotImplementedError('headers=%s' % str(headers_dict.keys()))
                 if iblock == 0:
                     variables = headers_dict['VARIABLES']
+                    self.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
+                    print('self.variables =', self.variables)
                     nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
+                    print('nvariables =', nresults)
 
+                print(headers_dict)
                 nnodesi = int(headers_dict['N'])
                 nelementsi = int(headers_dict['E'])
-                #print('nnodes=%s nelements=%s' % (nnodes, nelements))
+                #print('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
                 xyz = zeros((nnodesi, 3), dtype='float32')
                 results = zeros((nnodesi, nresults), dtype='float32')
                 if zone_type == 'FEBRICK':
                     # hex
-                    #print('hex...')
                     elements = zeros((nelementsi, 8), dtype='int32')
-                elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
-                    # quads
+                elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETETRAHEDRON'):
+                    # quads / tets
                     elements = zeros((nelementsi, 4), dtype='int32')
+                elif zone_type == 'FETRIANGLE':
+                    # tris
+                    elements = zeros((nelementsi, 3), dtype='int32')
                 else:
                     #if isinstance(zone_type, list):
                         #raise NotImplementedError(zone_type[0])
                     raise NotImplementedError(zone_type)
 
-                if zone_type == 'FEBRICK':
+                sline = line.strip().split()
+                if zone_type in ('FEBRICK', 'FETETRAHEDRON'):
                     if data_packing == 'POINT':
                         for inode in range(nnodesi):
-                            xyz[inode, :] = sline[:3]
-                            results[inode, 3:] = sline[3:]
-                            sline = f.readline().strip().split()
+                            try:
+                                xyz[inode, :] = sline[:3]
+                                results[inode, :] = sline[3:]
+                            except ValueError:
+                                msg = 'i=%s line=%r\n' % (inode, line)
+                                msg += 'sline = %s' % str(sline)
+                                print(msg)
+                                raise
+
+                            line = f.readline().strip()
+                            while len(line) == 0 or line[0] == '#':
+                                line = f.readline().strip()
+                            sline = line.split()
                     elif data_packing == 'BLOCK':
                         for ires in range(3 + nresults):
                             result = []
@@ -207,7 +231,10 @@ class TecplotReader(FortranFormat):
                                 nresult += len(sline)
                                 if nresult >= nnodesi:
                                     break
-                                sline = f.readline().strip().split()
+                                line = f.readline().strip()
+                                while line[0] == '#':
+                                    line = f.readline().strip()
+                                sline = line.split()
                                 i += 1
                             assert i < nnodes_max, 'nresult=%s' % nresult
                             if ires in [0, 1, 2]:
@@ -217,14 +244,17 @@ class TecplotReader(FortranFormat):
                                 results[:, ires - 3] = result
                     else:
                         raise NotImplementedError(data_packing)
-                elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
+                elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
                     sline = line.strip().split()
                     for inode in range(nnodesi):
                         #print('inode ', inode, sline)
                         xyz[inode, :] = sline[:3]
                         #assert abs(xyz[inode, 1]) > 5.0, 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
                         results[inode, :] = sline[3:]
-                        sline = f.readline().strip().split()
+                        line = f.readline().strip()
+                        while line[0] == '#':
+                            line = f.readline().strip()
+                        sline = line.split()
                 else:
                     raise NotImplementedError(zone_type)
 
@@ -249,8 +279,12 @@ class TecplotReader(FortranFormat):
 
                 if zone_type == 'FEBRICK':
                     hexas_list.append(elements + nnodes)
+                elif zone_type in ('FETETRAHEDRON'):
+                    tets_list.append(elements + nnodes)
                 elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
                     quads_list.append(elements + nnodes)
+                elif zone_type in ('FETRIANGLE'):
+                    tri_list.append(elements + nnodes)
                 else:
                     raise NotImplementedError(zone_type)
                 xyz_list.append(xyz)
@@ -268,8 +302,12 @@ class TecplotReader(FortranFormat):
         print('stacking elements')
         if len(hexas_list):
             self.hexa_elements = vstack(hexas_list)
+        if len(tets_list):
+            self.tet_elements = vstack(tets_list)
         if len(quads_list):
             self.quad_elements = vstack(quads_list)
+        if len(tris_list):
+            self.tri_elements = vstack(tris_list)
 
         print('stacking nodes')
         if len(xyz_list) == 1:
@@ -286,8 +324,6 @@ class TecplotReader(FortranFormat):
 
         self.xyz = xyz
         self.results = results
-        self.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
-        print('self.variables', self.variables)
 
     #def show(self, n, types='', endian=''):
         #pass
@@ -301,7 +337,8 @@ class TecplotReader(FortranFormat):
 
     @property
     def nelements(self):
-        return self.hexa_elements.shape[0] + self.quad_elements.shape[0] + self.tri_elements.shape[0]
+        return (self.hexa_elements.shape[0] + self.tet_elements.shape[0] +
+                self.quad_elements.shape[0] + self.tri_elements.shape[0])
 
     def read_tecplot_binary(self, tecplot_filename, nnodes=None, nelements=None):
         self.tecplot_filename = tecplot_filename
