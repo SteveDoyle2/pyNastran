@@ -343,7 +343,7 @@ class TestBeams(unittest.TestCase):
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(RuntimeError):
             model.add_card(lines, 'PBEAM', is_list=False)
 
         # correct - skipped 2nd line
