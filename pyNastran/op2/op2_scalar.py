@@ -694,6 +694,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #except:
                 #raise FatalError("The OP2 is empty.")
             #raise
+        if self.read_mode == 0:
+            self.binary_debug.write('read_mode = %s (not vectorized)\n' % self.read_mode)
+        elif self.read_mode == 1:
+            self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % self.read_mode)
+        elif self.read_mode == 2:
+            self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % self.read_mode)
+
         if markers == [3,]:  # PARAM, POST, -1
             self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
             self.post = -1
