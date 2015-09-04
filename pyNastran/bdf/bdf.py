@@ -654,6 +654,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.dmijs = {}
         self.dmijis = {}
         self.dmiks = {}
+        self._dmig_temp = defaultdict(list)
         self.dequations = {}
 
         # ----------------------------------------------------------------
@@ -1103,6 +1104,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
             self._parse_cards(cards, card_count)
+            self.fill_dmigs()
             self.pop_parse_errors()
             self.cross_reference(xref=xref)
             self._xref = xref
@@ -1110,6 +1112,31 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             raise
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
         self.pop_xref_errors()
+
+    def fill_dmigs(self):
+        for name, card_comments in iteritems(self._dmig_temp):
+            card0, comment0 = card_comments[0]
+            card_name = card0[0]
+            card_name = card_name.rstrip(' *').upper()
+
+            if card_name == 'DMIG':
+                # if field2 == 'UACCEL':  # special DMIG card
+                card = self.dmigs[name]
+            elif card_name == 'DMI':
+                card = self.dmis[name]
+            elif card_name == 'DMIJ':
+                card = self.dmijs[name]
+            elif card_name == 'DMIJI':
+                card = self.dmijis[name]
+            elif card_name == 'DMIK':
+                card = self.dmiks[name]
+            else:
+                raise NotImplementedError(card_name)
+
+            for (card_obj, comment) in card_comments:
+                card._add_column(card_obj, comment=comment)
+
+        self._dmig_temp = defaultdict(list)
 
     def pop_parse_errors(self):
         if self._stop_on_parsing_error:
@@ -2246,19 +2273,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             elif card_name == 'DMIG':  # not done...
                 field2 = integer_or_string(card_obj, 2, 'flag')
-                if field2 == 'UACCEL':  # special DMIG card
-                    self.reject_cards.append(card)
-                elif field2 == 0:
+                name = string(card_obj, 1, 'name')
+                # print('card=%s field2=%r' % (card_obj, field2))
+                if field2 == 0:
                     self.add_DMIG(DMIG(card_obj, comment=comment))
+                # elif field2 == 'UACCEL':  # special DMIG card
+                    # self.reject_cards(card)
                 else:
-                    name = string(card_obj, 1, 'name')
-                    try:
-                        dmig = self.dmigs[name]
-                    except KeyError:
-                        msg = 'cannot find DMIG name=%r in names=%s' \
-                            % (name, self.dmigs.keys())
-                        raise KeyError(msg)
-                    dmig._add_column(card_obj, comment=comment)
+                    self._dmig_temp[name].append((card_obj, comment))
 
             elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
                 field2 = integer(card_obj, 2, 'flag')
@@ -2266,7 +2288,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 else:
                     name = string(card_obj, 1, 'name')
-                    getattr(self, card_name.lower() + 's')[name]._add_column(card_obj)
+                    self._dmig_temp[name].append((card_obj, comment))
+
             # dynamic
             elif card_name == 'DAREA':
                 self.add_DAREA(DAREA(card_obj, comment=comment))
@@ -2748,37 +2771,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 for cardi in card:
                     self._increase_card_count(card_name)
                     self.rejects.append([cardi[0]] + cardi[1])
-            elif card_name == 'DMIG':
-                # the DMIG cards need special handling because there is no
-                # guarantee that the header card comes first
-                dmig_cards = []
-
-                # read the header cards and save the other cards
-                for comment, card_lines in card:
-                    card_obj, card_fields = self.create_card_object(card_lines, card_name, is_list=False)
-                    field2 = integer_or_string(card_obj, 2, 'flag')
-                    if field2 == 0:
-                        self.add_DMIG(DMIG(card_obj, comment=comment))
-                    else:
-                        dmig_cards.append([comment, card_obj])
-
-                # load the matrix entries
-                for comment, card_obj in dmig_cards:
-                    field2 = integer_or_string(card_obj, 2, 'flag')
-                    if field2 == 'UACCEL':  # special DMIG card
-                        self.reject_cards.append(card)
-                    #elif field2 == 0:
-                        #self.add_DMIG(DMIG(card_obj, comment=comment))
-                    else:
-                        name = string(card_obj, 1, 'name')
-                        try:
-                            dmig = self.dmigs[name]
-                        except KeyError:
-                            msg = 'cannot find DMIG name=%r in names=%s' \
-                                % (name, self.dmigs.keys())
-                            raise KeyError(msg)
-                        dmig._add_column(card_obj, comment=comment)
-
             else:
                 if 0:
                     self._make_card_parser()

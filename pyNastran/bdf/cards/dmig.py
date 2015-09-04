@@ -17,7 +17,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, string, blank, components, interpret_value)
+    double, string, interpret_value)
 
 
 def ssq(*listA):
@@ -125,7 +125,8 @@ class NastranMatrix(BaseCard):
 
             #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
             self.ifo = integer(card, 3, 'ifo')
-            #: 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
+            #: 1-Real, Single Precision; 2=Real,Double Precision;
+            #  3=Complex, Single; 4=Complex, Double
             self.tin = integer(card, 4, 'tin')
             #: 0-Set by cell precision
             self.tout = integer_or_blank(card, 5, 'tout', 0)
@@ -164,28 +165,38 @@ class NastranMatrix(BaseCard):
         comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
         return comm
 
+    def _add_column_uaccel(self, card=None, data=None, comment=''):
+        raise NotImplementedError('UACCEL')
+
     def _add_column(self, card=None, data=None, comment=''):
         if comment:
             if hasattr(self, '_comment'):
                 self._comment += comment
             else:
                 self._comment = comment
+
+        name = string(card, 1, 'name')
+        if name == 'UACCEL':
+            return  self._add_column_uaccel(card=None, data=None)
+
         Gj = integer(card, 2, 'Gj')
-        Cj = integer(card, 3, 'Cj')
+        # Cj = integer(card, 3, 'Cj')
+        Cj = integer_or_blank(card, 3, 'Cj', 0)
         #Cj = components(card, 3, 'Cj')
-        #assert isinstance(Cj, int), 'type(Cj)=%s not int; Cj=%s' % (type(Cj), Cj)
+        assert 0 <= Cj <= 6, 'C%i must be between [0, 6]; Cj=%s' % (0, Cj)
 
         nfields = len(card)
-        #print("nfields =", nfields)
-        #print("card[5:] =", card[5:])
-        #print("(nfields - 5) % 4 =", (nfields - 5) % 4)
+        # print("nfields = %i" % nfields)
+        # print("card[5:] =", card[5:])
+        # print("(nfields - 5) %% 4 = %i" % ((nfields - 5) % 4))
 
         nloops = (nfields - 5) // 4
-        if (nfields - 5) % 4 == 3:
+        if (nfields - 5) % 4 in [2, 3]:  # real/complex
             nloops += 1
         #assert nfields <= 8,'nfields=%s' % nfields
+        # print("nloops = %i" % nloops)
+        assert nloops > 0, 'nloops=%s' % nloops
 
-        #print("nloops   = ",nloops)
         for i in range(nloops):
             self.GCj.append((Gj, Cj))
 
@@ -194,34 +205,39 @@ class NastranMatrix(BaseCard):
                 for i in range(nloops):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
-                    Ci = integer(card, n + 1, 'Ci')
+                    # Ci = integer(card, n + 1, 'Ci')
+                    Ci = integer_or_blank(card, n + 1, 'Ci', 0)
                     #Ci = components(card, n + 1, 'Ci')
-                    #assert isinstance(Cj, int), 'type(Ci)=%s not int; Ci=%s' % (type(Ci), Ci)
+                    assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                     self.GCi.append((Gi, Ci))
                     magi = double(card, n + 2, 'ai')
                     phasei = double(card, n + 3, 'bi')
-                    reali = magi*cos(radians(phasei))
-                    complexi = magi*sin(radians(phasei))
+                    reali = magi * cos(radians(phasei))
+                    complexi = magi * sin(radians(phasei))
                     self.Real.append(reali)
                     self.Complex.append(complexi)
             else:
                 for i in range(nloops):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
-                    Ci = integer(card, n + 1, 'Ci')
+                    # Ci = integer(card, n + 1, 'Ci')
+                    Ci = integer_or_blank(card, n + 1, 'Ci', 0)
                     #Ci = components(card, n + 1, 'Ci')
-                    #assert isinstance(Cj, int), 'type(Ci)=%s not int; Ci=%s' % (type(Ci), Ci)
+                    assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                     self.GCi.append((Gi, Ci))
                     reali = double(card, n + 2, 'real')
                     complexi = double(card, n + 3, 'complex')
                     self.Real.append(reali)
                     self.Complex.append(complexi)
         else:
+            # real
             for i in range(nloops):
                 n = 5 + 4 * i
                 Gi = integer(card, n, 'Gi')
-                Ci = integer(card, n + 1, 'Ci')
+                # Ci = integer(card, n + 1, 'Ci')
+                Ci = integer_or_blank(card, n + 1, 'Ci', 0)
                 #Ci = components(card, n + 1, 'Ci')
+                assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                 reali = double(card, n + 2, 'real')
                 self.GCi.append((Gi, Ci))
                 self.Real.append(reali)
@@ -236,16 +252,27 @@ class NastranMatrix(BaseCard):
         """
         Builds the Matrix
 
-        :param self:     the object pointer
-        :param is_sparse: should the matrix be returned as a sparse matrix (default=True).
-                          Slower for dense matrices.
-        :param apply_symmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
-                               Supported as there are symmetric matrix routines.
+        Parameters
+        ----------
+        self : NastranMatrix
+            the object pointer
+        is_sparse : bool; default=False
+            should the matrix be returned as a sparse matrix.
+            Slower for dense matrices.
+        apply_symmetry : bool; default=True
+            If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+            Supported as there are symmetric matrix routines.
 
-        :returns M:    the matrix
-        :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
-        :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
-        .. warning:: isSparse WILL fail
+        Returns
+        -------
+        M : numpy.ndarray or scipy.coomatrix
+            the matrix
+        rows : dict[int] = [int, int]
+            dictionary of keys=rowID, values=(Grid,Component) for the matrix
+        cols: dict[int] = [int, int]
+            dictionary of keys=columnID, values=(Grid,Component) for the matrix
+
+        .. warning:: is_sparse=True WILL fail
         """
         return get_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
@@ -253,19 +280,19 @@ class NastranMatrix(BaseCard):
         self.name = new_name
 
     def isComplex(self):
-        # deprecated
+        self.deprecated('isComplex()', 'is_complex()', '0.8')
         return self.is_complex()
 
     def isReal(self):
-        # deprecated
+        self.deprecated('isReal()', 'is_real()', '0.8')
         return self.is_real()
 
     def isPolar(self):
-        # deprecated
+        self.deprecated('isPolar()', 'is_polar()', '0.8')
         return self.is_polar()
 
     def getMatrix(self, isSparse=False, applySymmetry=True):
-        # deprecated
+        self.deprecated('getMatrix()', 'get_matrix()', '0.8')
         return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
 
     def is_real(self):
@@ -276,7 +303,9 @@ class NastranMatrix(BaseCard):
             return False
         elif self.tin in [3, 4]: # complex
             return True
-        raise ValueError('Matrix %r must have a value of TIN = [1, 2, 3, 4].\nTIN defines the type (real, complex) of the matrix.  TIN=%r.' % (self.name, self.tin))
+        msg = ('Matrix %r must have a value of TIN = [1, 2, 3, 4].\n'
+               'TIN defines the type (real, complex) of the matrix.  TIN=%r.' % (self.name, self.tin))
+        raise ValueError(msg)
 
     def is_polar(self):
         """
@@ -302,6 +331,18 @@ class NastranMatrix(BaseCard):
         raise ValueError(msg)
 
     def getDType(self, type_flag):
+        self.deprecated('getDType()', 'get_dtype()', '0.8')
+        return self._get_dtype(type_flag)
+
+    @property
+    def tin_dtype(self):
+        return self._get_dtype(self.tin)
+
+    @property
+    def tout_dtype(self):
+        return self._get_dtype(self.tout)
+
+    def _get_dtype(self, type_flag):
         if type_flag == 1:
             dtype = 'float32'
         elif type_flag == 2:
@@ -321,6 +362,32 @@ class NastranMatrix(BaseCard):
 
     def __repr__(self):
         return self.write_card(size=8, is_double=False)
+
+    def fill_in_default_C(self, model):
+        for i, (Gi, Ci) in enumerate(self.GCi):
+            if Ci is None:
+                node = model.nodes[Gi]
+                if node.type == 'GRID':
+                    msg = 'Ci on DMIG card must be 1, 2, 3, 4, 5, or 6; Node=%i (GRID); Ci=%s' % (Gi, Ci)
+                    raise RuntimeError(msg)
+                elif node.type in ['SPOINT', 'EPOINT']:
+                    Ci = 0
+                else:
+                    raise NotImplementedError(node)
+                self.GCi[i] = [Gi, Ci]
+
+        for i, (Gj, Cj) in enumerate(self.GCj):
+            if Cj is None:
+                node = model.nodes[Gj]
+                if node.type == 'GRID':
+                    msg = 'Cj on DMIG card must be 1, 2, 3, 4, 5, or 6; Node=%i (GRID); Cj=%s' % (Gj, Cj)
+                    raise RuntimeError(msg)
+                elif node.type in ['SPOINT', 'EPOINT']:
+                    Cj = 0
+                else:
+                    raise NotImplementedError(node)
+                self.GCj[i] = [Gj, Cj]
+        return
 
     def write_card(self, size=8, is_double=False):
         """
@@ -430,12 +497,12 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
         nrows = max(GCi) + 1
         ncols = max(GCj) + 1
 
-        #dtype = self.getDType(self.tin)
+        dtype = self._get_dtype(self.tin)
         # TODO: no check for symmetry
         # TODO: no check for dtype
         if self.is_complex():
             complexs = array(self.Complex, dtype='float32')
-            data = array([real, complexs]).astype(complex)
+            data = array([reals, complexs]).astype(complex)
         else:
             data = reals
 
@@ -678,8 +745,8 @@ class DMI(NastranMatrix):
                 #else:
                       #raise NotImplementedError()
 
-    def rename(self, newName):
-        self.name = newName
+    def rename(self, new_name):
+        self.name = new_name
 
     def is_real(self):
         return not self.is_complex()
@@ -708,11 +775,8 @@ class DMI(NastranMatrix):
                        self.tout, None, self.nRows, self.nCols]
         if size == 8:
             msg += print_card_8(list_fields)
-        #elif is_double:
-            #msg += print_card_double(list_fields)
         else:
             msg += print_card_16(list_fields)
-        #msg += self.print_card(list_fields,size=16,isD=False)
 
         if self.is_complex():
             for (gci, gcj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
