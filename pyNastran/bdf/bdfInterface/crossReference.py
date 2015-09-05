@@ -119,6 +119,54 @@ class XrefMesh(object):
         for elem in itervalues(self.rigidElements):
             elem.safe_cross_reference(self)
 
+    def uncross_reference(self):
+        self._uncross_reference_nodes()
+        self._uncross_reference_coords()
+        self._uncross_reference_elements()
+        self._uncross_reference_properties()
+        self._uncross_reference_materials()
+        self._uncross_reference_aero()
+        self._uncross_reference_constraints()
+
+    def _uncross_reference_nodes(self):
+        for node in itervalues(self.nodes):
+            node.uncross_reference()
+
+    def _uncross_reference_coords(self):
+        for cid, coord in iteritems(self.coords):
+            if cid == 0:
+                continue
+            coord.uncross_reference()
+
+    def _uncross_reference_elements(self):
+        for element in itervalues(self.elements):
+            element.uncross_reference()
+
+    def _uncross_reference_properties(self):
+        for prop in itervalues(self.properties):
+            prop.uncross_reference()
+
+    def _uncross_reference_materials(self):
+        for material in itervalues(self.materials):
+            material.uncross_reference()
+
+    def _uncross_reference_aero(self):
+        for caero in itervalues(self.caeros):
+            caero.uncross_reference()
+
+    def _uncross_reference_constraints(self):
+        """
+        Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
+        SUPORT1, SESUPORT cards.
+        """
+        self.spcacdds = {}
+        self.spcs = {}
+        self.mpcadds = {}
+        self.mpcs = {}
+        self.suport = []
+        self.suport1 = {}
+        self.se_suport = []
+
     def cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,

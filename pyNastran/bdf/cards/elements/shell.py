@@ -229,6 +229,10 @@ class TriShell(ShellElement):
         centroid = centroid_triangle(n0, n1, n2)
         return centroid
 
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.nodes = self.node_ids
+
 
 class CTRIA3(TriShell):
     type = 'CTRIA3'
@@ -1086,6 +1090,10 @@ class QuadShell(ShellElement):
             #print("T3 = %s" % T3)
             #print("T4 = %s\n" % T4)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3, T4)
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.nodes = self.node_ids
 
 
 class CSHEAR(QuadShell):

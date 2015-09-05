@@ -1095,6 +1095,10 @@ class GRID(Node):
         if self.cd != -1:
             self.cd = model.Coord(self.cd, msg=msg)
 
+    def uncross_reference(self):
+        self.cp = self.Cp()
+        self.cd = self.Cd()
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form

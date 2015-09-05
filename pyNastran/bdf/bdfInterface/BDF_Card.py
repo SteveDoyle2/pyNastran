@@ -12,14 +12,10 @@ class BDFCard(object):
     A BDFCard is a list that has a default value of None for fields out of
     range.
     """
-    def __init__(self, card=None, debug=False):
+    def __init__(self, card, debug=False):
         self.debug = debug
-        if card:
-            self.card = card #wipe_empty_fields(card)
-            self.nfields = len(self.card)
-        else:
-            self.card = None
-            self.nfields = None
+        self.card = card
+        self.nfields = len(self.card)
 
     def pop(self):
         """card.pop()"""
@@ -144,4 +140,6 @@ class BDFCard(object):
         if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]
         else:
+            if default == None:
+                return ''
             return default

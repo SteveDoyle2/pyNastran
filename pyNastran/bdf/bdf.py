@@ -426,6 +426,62 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
 
+    def save_object(self, obj_filename='model.obj'):
+        """
+        ..warning:: doesn't work right
+        """
+        #import cPickle as pickle
+        import pickle
+        del self.log
+        del self.spcObject
+        del self.mpcObject
+        self.case_control_lines = str(self.case_control_deck).split('\n')
+        del self.case_control_deck
+        self.uncross_reference()
+        f = open(obj_filename, "w")
+        pickle.dump(self, f)
+        f.close()
+
+    def load_object(self, obj_filename='model.obj'):
+        """
+        ..warning:: doesn't work right
+        """
+        #import cPickle as pickle
+        import pickle
+        #del self.log
+        #del self.spcObject
+        #del self.mpcObject
+        #lines = print(self.case_control_deck)
+        #self.case_control_lines = lines.split('\n')
+        #del self.case_control_deck
+        #self.uncross_reference()
+        #import types
+        f = open(obj_filename, "r")
+        obj = pickle.load(f)
+        f.close()
+
+        keys_to_skip = [
+            'case_control_deck', 'caseControlDeck',
+            'log', 'mpcObject', 'spcObject',
+            'node_ids', 'coord_ids', 'element_ids', 'property_ids',
+            'material_ids', 'caero_ids', 'is_long_ids',
+            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nmaterials', 'ncaeros',
+        ]
+        for key in object_attributes(self, mode="all"):
+            if key in keys_to_skip:
+                continue
+            if key.startswith('__') and key.endswith('__'):
+                continue
+
+            val = getattr(obj, key)
+            #print(key)
+            #if isinstance(val, types.FunctionType):
+                #continue
+            setattr(self, key, val)
+
+        self.log.debug('done loading!')
+
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader

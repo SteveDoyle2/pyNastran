@@ -138,6 +138,11 @@ class SolidElement(Element):
         ##assert msg1 == msg2, 'write_card != write_card\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         #return msg2
 
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
+
 class CHEXA8(SolidElement):
     """
     +-------+-----+-----+----+----+----+----+----+----+

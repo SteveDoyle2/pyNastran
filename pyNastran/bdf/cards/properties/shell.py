@@ -47,6 +47,11 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             msg = ' which is required by PLPCOMP/G pid=%s iply=%s' % (self.pid, iply)
             self.plies[iply][0] = model.Material(mid, msg)  # mid
 
+    def uncross_reference(self):
+        for iply in range(len(self.plies)):
+            mid = self.Mid(iply)
+            self.plies[iply][0] = mid
+
     def is_symmetrical(self):
         """
         Is the laminate symmetrical?
@@ -1120,6 +1125,12 @@ class PSHELL(ShellProperty):
             self.mid3 = model.Material(self.mid3, msg)
         if self.mid4:
             self.mid4 = model.Material(self.mid4, msg)
+
+    def uncross_reference(self):
+        self.mid1 = self.Mid1()
+        self.mid2 = self.Mid2()
+        self.mid3 = self.Mid3()
+        self.mid4 = self.Mid4()
 
     def _write_calculix(self, marker='markerDummyProp',
                         element_set='ELsetDummyProp'):

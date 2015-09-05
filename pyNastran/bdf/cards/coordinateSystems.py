@@ -885,6 +885,9 @@ class Cord2x(Coord):
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
             self.rid = model.Coord(self.rid, msg=msg)
 
+    def uncross_reference(self):
+        self.rid = self.Rid()
+
     def Rid(self):
         """Gets the reference coordinate system self.rid"""
         if isinstance(self.rid, integer_types):

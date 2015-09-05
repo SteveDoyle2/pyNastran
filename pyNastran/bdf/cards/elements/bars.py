@@ -125,6 +125,10 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         self.pid = model.Property(self.pid, msg=msg)
         #self.g0 = model.nodes[self.g0]
 
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def Length(self):
         r"""
         Gets the length, :math:`L`, of the element.

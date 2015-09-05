@@ -1581,8 +1581,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                               (1.0, 1.0, 0.117647058824),
                               (1.0, 0.662745098039, 0.113725490196)]
             for fname in inputs['user_points']:
-                name = os.path.basename(fname).rsplit('.',1)[0]
-                self.add_user_points(fname, name, color=initial_colors[self.num_user_points % len(initial_colors)])
+                name = os.path.basename(fname).rsplit('.', 1)[0]
+                color = initial_colors[self.num_user_points % len(initial_colors)]
+                self.add_user_points(fname, name, color=color)
                 self.num_user_points += 1
 
 
@@ -2113,6 +2114,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.on_update_geometry_properties(self.geometry_properties)
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
+        print("cases =", cases)
+        print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
             self.iCase = -1
@@ -2131,14 +2134,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.scalarBar.Modified()
 
         #data = [
-        #    ('A',[]),
-        #    ('B',[]),
-        #    ('C',[]),
+        #    ('A', []),
+        #    ('B', []),
+        #    ('C', []),
         #]
 
         #self.caseKeys= [(1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')]
         data = []
         for key in self.caseKeys:
+            print(key)
             t = (key[1], [])
             data.append(t)
 
@@ -2695,7 +2699,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             color = (0., 1., .1)
 
         # create grid
-        self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0, point_size=1)
+        self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
+                                       point_size=1, representation='point')
 
         # read input file
         user_points = loadtxt(points_filename, delimiter=',')

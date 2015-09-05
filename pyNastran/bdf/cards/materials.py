@@ -321,6 +321,16 @@ class MAT1(IsotropicMaterial):
         if self.mid in model.MATT1:
             self.matt1 = model.MATT1[self.mid]  # not using a method...
 
+    def Mats1(self):
+        return self.mats1
+
+    def Matt1(self):
+        return self.matt1
+
+    def uncross_reference(self):
+        self.mats1 = self.Mats1()
+        self.matt1 = self.Matt1()
+
     def raw_fields(self):
         list_fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
                        self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
@@ -966,6 +976,12 @@ class MAT8(OrthotropicMaterial):
         #msg = ' which is required by MATT8 mid=%s' % self.mid
         if self.mid in model.MATT8:
             self.matt8 = model.MATT8[self.mid]  # not using a method...
+
+    def Matt8(self):
+        return self.matt8
+
+    def uncross_reference(self):
+        self.matt8 = self.Matt8()
 
     def _verify(self, xref):
         """

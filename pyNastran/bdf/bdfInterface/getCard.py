@@ -132,7 +132,7 @@ class GetMethods(GetMethodsDeprecated):
     def get_node_ids_with_element(self, eid, msg=''):
         return self.get_node_ids_with_elements([eid], msg=msg)
 
-    def _get_maps(self, eids=None, map_names=None):
+    def _get_maps(self, eids=None, map_names=None, consider_0d=True, consider_1d=True, consider_2d=True, consider_3d=True):
         if map_names is None:
             map_names = []
         allowed_maps = [
@@ -160,8 +160,21 @@ class GetMethods(GetMethodsDeprecated):
         if eids is None:
             eids = iterkeys(self.elements)
 
+        types_to_consider = []
+        if consider_0d:
+           types_to_consider += []
+        if consider_1d:
+            types_to_consider += ['CROD', 'CONROD', 'CBAR', 'CBEAM', 'CBEAM3']
+        if consider_2d:
+            types_to_consider += ['CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
+                                  'CQUAD4', 'CQUAD', 'CQUAD8',' CQUADR', 'CQUADX', 'CQUADX8']
+        if consider_3d:
+            types_to_consider += ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA']
+
         for eid in eids:
             elem = self.elements[eid]
+            if elem.type not in types_to_consider:
+                continue
             node_ids = elem.node_ids
             edges = elem.get_edge_ids()
             eid_to_edge_map[eid] = edges

@@ -10,9 +10,18 @@ def is_binary_file(filename):
     """
     Return true if the given filename is binary.
 
+    Parameters
+    ----------
+    filename : str
+        the filename to test
+
+    Returns
+    -------
+    binary_flag : bool
+        True if filename is a binary file (contains null byte)
+        and False otherwise.
+
     :raises:  IOError if the file cannot be opened.
-    :returns: True if filename is a binary file (contains null byte)
-              and False otherwise.
 
     Based on the idea (.. seealso:: http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text)
     that file is binary if it contains null.
@@ -33,9 +42,16 @@ def print_bad_path(path):
     of the given path. Useful for debugging when the path to a given file
     is wrong.
 
-    :param path: path to check
-    :returns: string with informations whether access to parts of the path
-              is possible
+    Parameters
+    ----------
+    path : str
+        path to check
+
+    Returns
+    -------
+    msg : str
+        string with informations whether access to parts of the path
+        is possible
     """
     path = os.path.abspath(path)
     npath = os.path.dirname(path)
@@ -75,14 +91,22 @@ def object_methods(obj, mode = "public"):
     List the names of methods of a class as strings. Returns public methods
     as default.
 
-    :param obj:  the object for checking
-    :param mode: defines what kind of methods will be listed
-       * "public" - names that do not begin with underscore
-       * "private" - names that begin with single underscore
-       * "both" - private and public
-       * "all" - all methods that are defined for the object
-    :returns:  sorted list of the names of methods of a given type
-               or None if the mode is wrong
+    Parameters
+    ----------
+    obj : instance
+        the object for checking
+    mode : str
+        defines what kind of methods will be listed
+        * "public" - names that do not begin with underscore
+        * "private" - names that begin with single underscore
+        * "both" - private and public
+        * "all" - all methods that are defined for the object
+
+    Returns
+    -------
+    method : List[str]
+        sorted list of the names of methods of a given type
+        or None if the mode is wrong
     """
     return __object_attr(obj, mode, lambda x: isinstance(x, MethodType))
 
@@ -92,14 +116,22 @@ def object_attributes(obj, mode="public"):
     List the names of attributes of a class as strings. Returns public attributes
     as default.
 
-    :param obj:  the object for checking
-    :param mode: defines what kind of attributes will be listed
-       * "public" - names that do not begin with underscore
-       * "private" - names that begin with single underscore
-       * "both" - private and public
-       * "all" - all attributes that are defined for the object
-    :returns: sorted list of the names of attributes of a given type or None
-              if the mode is wrong
+    Parameters
+    ----------
+    obj : instance
+        the object for checking
+    mode : str
+        defines what kind of attributes will be listed
+        * "public" - names that do not begin with underscore
+        * "private" - names that begin with single underscore
+        * "both" - private and public
+        * "all" - all attributes that are defined for the object
+
+    Returns
+    -------
+    attribute_names : List[str]
+        sorted list of the names of attributes of a given type or None
+        if the mode is wrong
     """
     return __object_attr(obj, mode, lambda x: not isinstance(x, MethodType))
 

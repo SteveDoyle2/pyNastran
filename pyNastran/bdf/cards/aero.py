@@ -1264,6 +1264,13 @@ class CAERO1(BaseCard):
         self.x12 = self.p2[0] - self.p1[0]
         self.x43 = self.p4[0] - self.p3[0]
 
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        self.lchord = self.get_LChord()
+        self.lspan = self.get_LSpan()
+
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form

@@ -559,7 +559,7 @@ class NastranIO(object):
                 self.geometry_actors['conm'].VisibilityOff()
             self.geometry_actors['conm'].Modified()
 
-        for name in ['suport', 'spc', 'mpc']:
+        for name in ['suport', 'spc', 'mpc', 'mpc_dependent', 'mpc_independent']:
             if name in self.geometry_actors:
                 self.geometry_actors[name].Modified()
 
@@ -709,6 +709,12 @@ class NastranIO(object):
                     if nspcs + nspc1s:
                         self._fill_spc(spc_id, nspcs, nspc1s, dim_max, model, nid_to_pid_map)
 
+            if 'MPC' in subcase:
+                mpc_id, options = subcase.get_parameter('MPC')
+                if spc_id is not None:
+                    nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
+                    if nmpcs:
+                        self._fill_mpc(mpc_id, dim_max, model, nid_to_pid_map)
 
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
                 # print('suport in subcase %s' % subcase_id)
@@ -744,7 +750,7 @@ class NastranIO(object):
             elif card.type == 'SPCADD':
                 nids = []
                 for new_spc_id in card.sets:
-                    nidsi = self.get_SPCx_node_ids(model, new_spc_id)
+                    nidsi = self.get_SPCx_node_ids(model, new_spc_id, exclude_spcadd=False)
                     nids += nidsi
             else:
                 self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
@@ -783,7 +789,7 @@ class NastranIO(object):
             elif card.type == 'SPCADD':
                 nids = []
                 for new_spc_id in card.sets:
-                    nids_c1i = self.get_SPCx_node_ids_c1(model, new_spc_id)
+                    nids_c1i = self.get_SPCx_node_ids_c1(model, new_spc_id, exclude_spcadd=False)
                     for nid, c1 in iteritems(nids_c1i):
                         node_ids_c1[nid] += c1
             else:
@@ -819,6 +825,71 @@ class NastranIO(object):
         node_ids = unique(node_ids)
         self._add_nastran_nodes_to_grid('spc', node_ids, model, nid_to_pid_map)
 
+    def get_MPCx_node_ids_c1(self, model, mpc_id, exclude_mpcadd=False):
+        """
+        Get the MPC/MPCADD IDs.
+
+        Parameters
+        -----------
+        exclude_spcadd : bool
+            you can exclude MPCADD if you just want a list of all the
+            MPCs in the model.  For example, apply all the MPCs when
+            there is no MPC=N in the case control deck, but you don't
+            need to apply MPCADD=N twice.
+
+        I      I
+          \   /
+        I---D---I
+        """
+        try:
+            mpcs = model.mpcs[mpc_id]
+        except:
+            model.log.warning('mpc_id=%s not found' % mpc_id)
+            return []
+
+        # dependent, independent
+        lines = []
+        for card in sorted(mpcs):
+            if card.type == 'MPC':
+                nids = card.node_ids
+                nid0 = nids[0]
+                constraint0 = card.constraints[0]
+                enforced0 = card.enforced[0]
+                for nid, constraint, enforced in zip(nids[1:], card.constraints[1:], card.enforced[1:]):
+                    if enforced != 0.0:
+                        lines.append([nid0, nid])
+            elif card.type == 'MPCADD':
+                nids = []
+                for new_mpc_id in card.sets:
+                    linesi = self.get_MPCx_node_ids_c1(model, new_mpc_id, exclude_mpcadd=False)
+                    lines += linesi
+            else:
+                self.log.warning('get_MPCx_node_ids_c1 doesnt supprt %r' % card.type)
+                continue
+        return lines
+
+    def _fill_mpc(self, mpc_id, dim_max, model, nid_to_pid_map):
+        green = (0., 1., 0.)
+        dunno = (0.5, 1., 0.5)
+        self.create_alternate_vtk_grid('mpc_dependent', color=green, line_width=5, opacity=1., point_size=5, representation='point')
+        self.create_alternate_vtk_grid('mpc_independent', color=dunno, line_width=5, opacity=1., point_size=5, representation='point')
+        self.create_alternate_vtk_grid('mpc_lines', color=dunno, line_width=5, opacity=1., point_size=5, representation='wire')
+
+        lines = self.get_MPCx_node_ids_c1(model, mpc_id, exclude_mpcadd=False)
+        lines2 = []
+        for line in lines:
+            if line not in lines2:
+                lines2.append(line)
+        lines = array(lines2, dtype='int32')
+        dependent = (lines[:, 0])
+        independent = unique(lines[:, 1])
+
+        node_ids = unique(lines.ravel())
+
+        self._add_nastran_nodes_to_grid('mpc_dependent', dependent, model, nid_to_pid_map)
+        self._add_nastran_nodes_to_grid('mpc_independent', independent, model, nid_to_pid_map)
+        self._add_nastran_lines_to_grid('mpc_lines', lines, model, nid_to_pid_map)
+
     def _add_nastran_nodes_to_grid(self, name, node_ids, model, nid_to_pid_map=None):
         nnodes = len(node_ids)
         if nnodes == 0:
@@ -839,7 +910,7 @@ class NastranIO(object):
 
             node = model.nodes[nid]
             point = node.get_position()
-            self.log_info('adding SUPORT1; p=%s' % str(point))
+            #self.log_info('adding SUPORT1; p=%s' % str(point))
             points.InsertPoint(j, *point)
 
             if 1:
@@ -853,6 +924,45 @@ class NastranIO(object):
 
             self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 1
+        self.alt_grids[name].SetPoints(points)
+
+    def _add_nastran_lines_to_grid(self, name, lines, model, nid_to_pid_map=None):
+        nlines = lines.shape[0]
+        #nids = unique(lines)
+        #nnodes = len(nids)
+        nnodes = nlines * 2
+        if nnodes == 0:
+            return
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nnodes)
+
+        j = 0
+        for nid1, nid2 in lines:
+            try:
+                i1 = self.nidMap[nid1]
+            except KeyError:
+                model.log.warning('nid=%s does not exist' % nid1)
+                continue
+            try:
+                i2 = self.nidMap[nid2]
+            except KeyError:
+                model.log.warning('nid=%s does not exist' % nid2)
+                continue
+
+            node = model.nodes[nid1]
+            point = node.get_position()
+            points.InsertPoint(j, *point)
+
+            node = model.nodes[nid2]
+            point = node.get_position()
+            points.InsertPoint(j + 1, *point)
+
+            elem = vtk.vtkLine()
+            elem.GetPointIds().SetId(0, j)
+            elem.GetPointIds().SetId(1, j + 1)
+            print(nid1, nid2)
+            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            j += 2
         self.alt_grids[name].SetPoints(points)
 
     def _fill_suport(self, suport_id, dim_max, model):

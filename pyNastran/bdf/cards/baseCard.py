@@ -285,6 +285,9 @@ class Property(BaseCard):
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+
     def write_card_8(self):
         return self.write_card()
 
