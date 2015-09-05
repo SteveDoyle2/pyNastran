@@ -6,7 +6,89 @@ from numpy import arange, mean, amax, amin
 import vtk
 from vtk import vtkTriangle
 
+from pyNastran.gui.qt_files.result import Result
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+
+class Cart3dGeometry(Result):
+    def __init__(self, nodes, elements, regions, uname='Cart3dGeometry', labels=None):
+        self.uname = uname
+        self.n = 2
+        self.nodes = nodes # 0
+        self.elements = elements # 1
+        self.regions = regions # 2
+        self.labels = labels
+        self.data_formats = ['%i', '%i', '%i']
+        self.titles = ['NodeID', 'ElementID', 'Region']
+
+
+    def get_methods(self, i):
+        if i == 1:
+            return ['centroid']
+        return ['node']
+
+    def get_data(self, i, method):
+        print('method = %r' % method)
+        ii, name = i
+        if name == 'NodeID':
+            return self.nodes
+        elif name == 'ElementID':
+            return self.elements
+        elif name == 'Region':
+            return self.regions
+        raise NotImplementedError('i=%s' % str(i))
+
+    def __repr__(self):
+        msg = 'Cart3dGeometry\n'
+        msg += '    uname=%r\n' % self.uname
+        msg += '    n=%r' % self.n
+        return msg
+
+
+class Cart3dResult(Result):
+    def __init__(self, rho, rhoU, rhoV, rhoW, rhoE, uname='Cart3dResult', labels=None):
+        self.uname = uname
+        self.labels = labels
+        self.n = 5
+        #Result.__init__(self)
+        self.rho = rho # 0
+        self.rhoU = rhoU # 1
+        self.rhoV = rhoV # 2
+        self.rhoW = rhoW # 3
+        self.rhoE = rhoE # 4
+        self.data_formats = ['%.3g', '%.3g', '%.3g', '%.3g', '%.3g']
+        self.titles = ['rho', 'rhoU' 'rhoV', 'rhoW', 'rhoE']
+
+    def get_methods(self, i):
+        return ['node']
+
+    def get_data(self, i, method):
+        print('method = %r' % method)
+        ii, name = i
+        if name == 'rho':
+            return self.rho
+        elif name == 'rhoU':
+            return self.rhoU
+        elif name == 'rhoV':
+            return self.rhoV
+        elif name == 'rhoW':
+            return self.rhoW
+        elif name == 'rhoE':
+            return self.rhoE
+        raise NotImplementedError('i=%s' % i)
+
+    def __repr__(self):
+        msg = 'Cart3dResult\n'
+        msg += '  i | Title\n'
+        msg += '----+----------\n'
+        #msg += '  0 | NodeID\n'
+        #msg += '  1 | ElementID\n'
+        msg += '  0 | Rho\n'
+        msg += '  1 | RhoU\n'
+        msg += '  2 | RhoV\n'
+        msg += '  3 | RhoW\n'
+        msg += '  4 | RhoE\n'
+        msg += '----+----------\n'
+        return msg
 
 
 class Cart3dIO(object):
@@ -195,8 +277,31 @@ class Cart3dIO(object):
 
     def load_cart3d_results(self, cart3d_filename, dirname):
         model = Cart3DReader(log=self.log, debug=False)
-
         self.load_cart3d_geometry(cart3d_filename, dirname)
+
+    def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, loads, model):
+        print('_fill_cart3d_case2')
+        nelements = elements.shape[0]
+        nnodes = nodes.shape[0]
+
+        eids = arange(1, nelements + 1)
+        nids = arange(1, nnodes + 1)
+        cart3d_geo = Cart3dGeometry(nids, eids, regions, uname='Cart3dGeometry', labels=None)
+        cases = {
+            0 : (cart3d_geo, (0, 'NodeID')),
+            1 : (cart3d_geo, (0, 'ElementID')),
+            2 : (cart3d_geo, (0, 'Region')),
+        }
+        geometry_form = [
+            ('NodeID', 0, []),
+            ('ElementID', 1, []),
+            ('Region', 2, []),
+        ]
+
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+        return form, cases
 
     def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model):
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
@@ -216,7 +321,7 @@ class Cart3dIO(object):
         ]
 
         eids = arange(1, nelements + 1)
-        nids = arange(1, nnodes+1)
+        nids = arange(1, nnodes + 1)
 
         if new:
             cases_new[0] = (ID, nids, 'NodeID', 'node', '%i')

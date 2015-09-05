@@ -43,8 +43,9 @@ def find_ribs_and_spars(model, xyz_cid0, edge_to_eid_map, eid_to_edge_map):
         if len(patch_edges) == 0:
             break
 
-        # we'll start from an edge and move inwards by finding an element on
-        # the edge to start from.
+        # We'll start from an edge and move inwards by finding an element on
+        # the edge to start from.  We'll assume all edges from an element
+        # associated with a bounding edge are starting edges.
         #
         # Then we'll use a different edge from some an element with that edge
         # and check for a non-patch-edge edge.
@@ -65,22 +66,21 @@ def find_ribs_and_spars(model, xyz_cid0, edge_to_eid_map, eid_to_edge_map):
         patch_len = 1
         old_patch_len = 0
 
-        edges_to_check = set([edge0])
+        edges_to_check = set(eid_to_edge_map[eid0])
         i = 0
         while len(edges_to_check):
             print('len(edges_to_check) = %i' % len(edges_to_check))
             if len(edges_to_check) < 5:
                 print('  edges =', edges_to_check)
 
-            edges_to_check2 = deepcopy(edges_to_check)
+            edges_to_check_next = deepcopy(edges_to_check)
             for edge in edges_to_check:
                 print('  edge =', edge)
-                edges_to_check2.remove(edge)
+                edges_to_check_next.remove(edge)
                 if edge in patch_edges:
                     print('    continuing on patch edge')
                     continue
 
-                used_edges.add(edge)
                 eids_to_check = [eid for eid in edge_to_eid_map[edge]
                                  if eid not in used_eids]
                 print('  map = ', edge_to_eid_map[edge])
@@ -97,23 +97,26 @@ def find_ribs_and_spars(model, xyz_cid0, edge_to_eid_map, eid_to_edge_map):
                         if edgei in used_edges:
                             print('    edge=%s is used' % str(edgei))
                             continue
-                        if edgei not in patch_edges: # and edge not in used_edges:
-                            used_edges.add(edgei)
-                            #edges_to_check2.add(edgei)
-                            #edges_to_check2.remove(edge)
-                            eidsi = edge_to_eid_map[edgei]
-                            for eidii in eidsi:
-                                edges_to_check2.update(eid_to_edge_map[eidii])
-                            used_eids.update(eidsi)
-                            patch.update(eidsi)
-                            print('*    adding %s' % eidsi)
-                            patch_len += 1
-                        else:
-                            print('  edge else')
-            edges_to_check = edges_to_check2
+                        if edgei in patch_edges:
+                            print('    continuing on patch edge=%s' % str(edgei))
+                            continue
+                        used_edges.add(edgei)
+                        #edges_to_check_next.add(edgei)
+                        #edges_to_check_next.remove(edge)
+                        eidsi = edge_to_eid_map[edgei]
+                        for eidii in eidsi:
+                            edges_to_check_next.update(eid_to_edge_map[eidii])
+                        used_eids.update(eidsi)
+                        patch.update(eidsi)
+                        print('*    adding eids=%s' % eidsi)
+                        patch_len += 1
+                used_edges.add(edge)
+                print()
+
+            edges_to_check = edges_to_check_next
             i += 1
             if i == 1000:
-                asdf
+                raise RuntimeError('too many iterations')
             print('len(edges_to_check) = %s' % (len(edges_to_check)))
         if len(patch):
             print('patch=%s; len(patch)=%s' % (patch, len(patch)))
@@ -147,7 +150,7 @@ def main():
     savetxt('nodal_edges.txt', [xyz_cid0[nid] for nid in unique_nids], delimiter=',')
 
     eids_all = model.element_ids
-    pids_all = [0] * len(eids_all)
+    pids_all = [-10] * len(eids_all)
     npatches = len(patches)
 
     ipatch = 1
@@ -174,6 +177,10 @@ def main():
         f.write('%s\n' % pid)
     f.close()
 
+   # these should be the same if we did this right
+    counter = [1 for patch in patches
+               if len(patch) > 1]
+    print('npatches=%s npids=%s' % (npatches, sum(counter)))
 
 if __name__ == '__main__':
     main()
