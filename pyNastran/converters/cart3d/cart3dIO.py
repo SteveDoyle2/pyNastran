@@ -1,13 +1,17 @@
 from __future__ import print_function
 from six import iteritems
 from six.moves import range
-from numpy import arange, mean, amax, amin
+
+import os
+from numpy import arange, mean, amax, amin, vstack, zeros, unique, where
 
 import vtk
-from vtk import vtkTriangle
+from vtk import vtkTriangle, vtkHexahedron
 
 from pyNastran.gui.qt_files.result import Result
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.input_c3d_reader import InputC3dReader
+from pyNastran.converters.cart3d.input_cntl_reader import InputCntlReader
 
 class Cart3dGeometry(Result):
     def __init__(self, nodes, elements, regions, uname='Cart3dGeometry', labels=None):
@@ -111,7 +115,7 @@ class Cart3dIO(object):
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
-            skipReading = True
+            skip_reading = True
         else:
             self.TurnTextOff()
             self.grid.Reset()
@@ -129,10 +133,10 @@ class Cart3dIO(object):
                 pass
 
             #print(dir(self))
-            skipReading = False
+            skip_reading = False
         #self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
-        return skipReading
+        return skip_reading
 
     def load_cart3d_geometry(self, cart3d_filename, dirname, plot=True):
         #key = self.caseKeys[self.iCase]
@@ -224,8 +228,155 @@ class Cart3dIO(object):
         cases = {}
         ID = 1
 
-        form, cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
+        form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
+        self._create_box('input.c3d', ID, form, cases, icase, regions)
         self._finish_results_io2(form, cases)
+
+    def _create_box(self, input_c3d_filename, ID, form, cases, icase, regions):
+        stack = True
+        if os.path.exists('input.cntl'):
+            cntl = InputCntlReader()
+            cntl.read_input_cntl('input.cntl')
+            bcs = cntl.get_boundary_conditions()
+            bc_xmin, bc_xmax, bc_ymin, bc_ymax, bc_xmin, bc_xmax, surfbcs = bcs
+            stack = False
+
+            if surfbcs:
+                bc_form = [
+                    ('Rho', icase, []),
+                    ('xVelocity', icase + 1, []),
+                    ('yVelocity', icase + 2, []),
+                    ('zVelocity', icase + 3, []),
+                    ('Pressure', icase + 4, []),
+                ]
+                icase += 5
+                nelements = self.nElements
+                rho = zeros(nelements, dtype='float32')
+                xvel = zeros(nelements, dtype='float32')
+                yvel = zeros(nelements, dtype='float32')
+                zvel = zeros(nelements, dtype='float32')
+                pressure = zeros(nelements, dtype='float32')
+
+                uregions = set(unique(regions))
+                surf_bc_regions = set(surfbcs.keys())
+                invalid_regions = surf_bc_regions - uregions
+                if len(invalid_regions) != 0:
+                    assert len(invalid_regions) == 0, invalid_regions
+
+                for bc_id, bc_values in sorted(iteritems(surfbcs)):
+                    rhoi, xveli, yveli, zveli, pressi = bc_values
+                    i = where(regions == bc_id)[0]
+                    rho[i] = rhoi
+                    xvel[i] = xveli
+                    yvel[i] = yveli
+                    zvel[i] = zveli
+                    pressure[i] = pressi
+                cases[(ID, icase, 'Rho', 1, 'centroid', '%.3f')] = rho
+                cases[(ID, icase + 1, 'xVelocity', 1, 'centroid', '%.3f')] = xvel
+                cases[(ID, icase + 2, 'yVelocity', 1, 'centroid', '%.3f')] = yvel
+                cases[(ID, icase + 3, 'zVelocity', 1, 'centroid', '%.3f')] = zvel
+                cases[(ID, icase + 4, 'Pressure', 1, 'centroid', '%.3f')] = pressure
+                form.append(('Boundary Conditions', None, bc_form))
+
+
+        if os.path.exists(input_c3d_filename):
+            c3d = InputC3dReader()
+            nodes, elements = c3d.read_input_c3d(input_c3d_filename, stack=stack)
+
+            # Planes
+            # ----------
+            # xmin, xmax
+            # ymin, ymax
+            # zmin, zmax
+
+            if stack:
+                red = (1., 0., 0.)
+                color = red
+                self.set_quad_grid('box', nodes, elements, color, line_width=1, opacity=1.)
+            else:
+                red = (1., 0., 0.)
+                inflow_nodes = []
+                inflow_elements = []
+
+                green = (0., 1., 0.)
+                symmetry_nodes = []
+                symmetry_elements = []
+
+                colori = (1., 1., 0.)
+                outflow_nodes = []
+                outflow_elements = []
+
+                blue = (0., 0., 1.)
+                farfield_nodes = []
+                farfield_elements = []
+
+                ifarfield = 0
+                isymmetry = 0
+                iinflow = 0
+                ioutflow = 0
+
+                nfarfield_nodes = 0
+                nsymmetry_nodes = 0
+                ninflow_nodes = 0
+                noutflow_nodes = 0
+                for bc, nodesi, elementsi in zip(bcs, nodes, elements):
+                    # 0 = FAR FIELD
+                    # 1 = SYMMETRY
+                    # 2 = INFLOW  (specify all)
+                    # 3 = OUTFLOW (simple extrap)
+                    print('bc =', bc)
+                    nnodes = nodesi.shape[0]
+                    if bc == 0:
+                        farfield_nodes.append(nodesi)
+                        farfield_elements.append(elementsi + nfarfield_nodes)
+                        nfarfield_nodes += nnodes
+                        ifarfield += 1
+                    elif bc == 1:
+                        symmetry_nodes.append(nodesi)
+                        symmetry_elements.append(elementsi + nsymmetry_nodes)
+                        nsymmetry_nodes += nnodes
+                        isymmetry += 1
+                    elif bc == 2:
+                        inflow_nodes.append(nodesi)
+                        inflow_elements.append(elementsi + ninflow_nodes)
+                        ninflow_nodes += nnodes
+                        iinflow += 1
+                    elif bc == 3:
+                        outflow_nodes.append(nodesi)
+                        outflow_elements.append(elementsi + noutflow_nodes)
+                        noutflow_nodes += nnodes
+                        ioutflow += 1
+                    else:
+                        raise NotImplementedError(bc)
+
+                if ifarfield:
+                    color = blue
+                    nodes = vstack(farfield_nodes)
+                    elements = vstack(farfield_elements)
+                    self.set_quad_grid('farfield', nodes, elements, color, line_width=1, opacity=1.)
+
+                if isymmetry:
+                    color = green
+                    nodes = vstack(symmetry_nodes)
+                    elements = vstack(symmetry_elements)
+                    self.set_quad_grid('symmetry', nodes, elements, color, line_width=1, opacity=1.)
+
+                if iinflow:
+                    color = red
+                    nodes = vstack(inflow_nodes)
+                    elements = vstack(inflow_elements)
+                    self.set_quad_grid('inflow', nodes, elements, color, line_width=1, opacity=1.)
+
+                if ioutflow:
+                    color = colori
+                    nodes = vstack(outflow_nodes)
+                    elements = vstack(outflow_elements)
+                    self.set_quad_grid('outflow', nodes, elements, color, line_width=1, opacity=1.)
+
+                #i = 0
+                #for nodesi, elementsi in zip(nodes, elements):
+                    #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color, line_width=1, opacity=1.)
+                    #i += 1
 
     def _create_cart3d_free_edegs(self, model, nodes, elements):
         free_edges = model.get_free_edges(elements)
@@ -386,4 +537,4 @@ class Cart3dIO(object):
         ]
         if len(results_form):
             form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, i

@@ -1,4 +1,3 @@
-#pylint:  disable=C0103,C0111
 from __future__ import print_function
 from six import iteritems
 from six.moves import zip, range
@@ -8,7 +7,7 @@ from struct import Struct, pack, unpack
 from math import ceil
 from collections import defaultdict
 
-from numpy import zeros, where, savetxt, sqrt, abs, amax, amin
+from numpy import zeros, where, savetxt, sqrt, amax, amin
 from numpy import arange, vstack, unique, hstack, ravel, cross
 from numpy.linalg import norm
 
@@ -28,10 +27,16 @@ def comp2tri(self, in_filenames, out_filename,
     """
     Combines multiple Cart3d files (binary or ascii) into a single file.
 
-    :param in_filenames: list of filenames
-    :param out_filename: output filename
-    :param is_binary: is the output filename binary (default=False)
-    :param float_fmt: the format string to use for ascii writing (default='%6.7f')
+    Parameters
+    ----------
+    in_filenames : List[str]
+        list of filenames
+    out_filename : str
+        output filename
+    is_binary : bool; default=False
+        is the output filename binary
+    float_fmt : str; default='%6.7f'
+        the format string to use for ascii writing
 
     .. note:: assumes loads is None
     """
@@ -47,7 +52,7 @@ def comp2tri(self, in_filenames, out_filename,
         point, element, region, load = model.read_cart3d(infilename)
         np = point.shape[0]
         #ne = element.shape[0]
-        nr += len(unique(region))
+        nr = len(unique(region))
         element += npi - 1
         region += nri
 
@@ -77,18 +82,33 @@ class Cart3DReader(object):
         self.nElements = None
         self.infile = None
         self.infilename = None
+        self._endian = b''
+        self.n = 0
+
+        # updated later
+        self.nResults = 0
+        self.nElementsSkip = 0
+        self.nElementsRead = 0
         self.log = get_logger(log, 'debug' if debug else 'info')
 
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """
         Makes a full cart3d model about the given axis.
 
-        :param nodes:    the nodes;     (nnodes,    3) ndarray
-        :param elements: the elmements; (nelements, 3) ndarray
-        :param regions:  the regions;   (nelements)    ndarray
-        :param loads:    not supported; dictionary of (nnodes) ndarray
-        :param axis:     a string of "x", "y", "z", "-x", "-y", "-z"
-        :param tol:      the tolerance for the centerline points (default=0.000001)
+        Parameters
+        ----------
+        nodes : (nnodes, 3) ndarray
+            the nodes
+        elements : (nelements, 3) ndarray
+            the elmements
+        regions :  (nelements) ndarray
+            the regions
+        loads : dict[str] = (nnodes) ndarray
+            not supported
+        axis : str; {"x", "y", "z", "-x", "-y", "-z"}
+            a string of the axis
+        tol : float; default=0.000001
+            the tolerance for the centerline points
         """
         self.log.info('---starting make_mirror_model---')
         assert tol >= 0, 'tol=%r' % tol #  prevents hacks to the axis
@@ -175,7 +195,8 @@ class Cart3DReader(object):
         self.log.info("axis=%r ax=%s" % (axis, ax))
         return ax
 
-    def make_half_model(self, nodes, elements, regions, loads=None, axis='y', remap_nodes=True):
+    def make_half_model(self, nodes, elements, regions, loads=None, axis='y',
+                        remap_nodes=True):
         """
         Makes a half model from a full model
 
@@ -285,17 +306,17 @@ class Cart3DReader(object):
         self.log.info("---writing cart3d file...%r---" % outfilename)
         f = open(outfilename, 'wb')
 
-        int_fmt = self.write_header(f, points, elements, is_loads, is_binary)
-        self.write_points(f, points, is_binary, float_fmt)
-        self.write_elements(f, elements, is_binary, int_fmt)
-        self.write_regions(f, regions, is_binary)
+        int_fmt = self._write_header(f, points, elements, is_loads, is_binary)
+        self._write_points(f, points, is_binary, float_fmt)
+        self._write_elements(f, elements, is_binary, int_fmt)
+        self._write_regions(f, regions, is_binary)
 
         if is_loads:
             assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
-            self.write_loads(f, loads, is_binary, float_fmt)
+            self._write_loads(f, loads, is_binary, float_fmt)
         f.close()
 
-    def write_header(self, f, points, elements, is_loads, is_binary=False):
+    def _write_header(self, f, points, elements, is_loads, is_binary=False):
         npoints = points.shape[0]
         nelements = elements.shape[0]
 
@@ -318,7 +339,7 @@ class Cart3DReader(object):
         f.write(msg)
         return int_fmt
 
-    def write_points(self, f, points, is_binary, float_fmt='%6.6f'):
+    def _write_points(self, f, points, is_binary, float_fmt='%6.6f'):
         if is_binary:
             four = pack('>i', 4)
             f.write(four)
@@ -332,7 +353,7 @@ class Cart3DReader(object):
         else:
             savetxt(f, points, float_fmt)
 
-    def write_elements(self, f, elements, is_binary, int_fmt='%6i'):
+    def _write_elements(self, f, elements, is_binary, int_fmt='%6i'):
         min_e = elements.min()
         assert min_e == 1, 'min(elements)=%s' % min_e
         if is_binary:
@@ -347,7 +368,7 @@ class Cart3DReader(object):
         else:
             savetxt(f, elements, int_fmt)
 
-    def write_regions(self, f, regions, is_binary):
+    def _write_regions(self, f, regions, is_binary):
         if is_binary:
             four = pack('>i', 4)
             f.write(four)
@@ -361,7 +382,7 @@ class Cart3DReader(object):
         else:
             savetxt(f, regions, '%i')
 
-    def write_loads(self, f, loads, is_binary, float_fmt='%6.6f'):
+    def _write_loads(self, f, loads, is_binary, float_fmt='%6.6f'):
         if is_binary:
             raise NotImplementedError('is_binary=%s' % is_binary)
         else:
@@ -386,18 +407,18 @@ class Cart3DReader(object):
         self.infilename = infilename
         if is_binary_file(infilename):
             self.infile = open(infilename, 'rb')
-            (self.nPoints, self.nElements) = self.read_header_binary()
-            points = self.read_points_binary(self.nPoints)
-            elements = self.read_elements_binary(self.nElements)
-            regions = self.read_regions_binary(self.nElements)
+            (self.nPoints, self.nElements) = self._read_header_binary()
+            points = self._read_points_binary(self.nPoints)
+            elements = self._read_elements_binary(self.nElements)
+            regions = self._read_regions_binary(self.nElements)
             loads = {}
         else:
             self.infile = open(infilename, 'r')
-            self.read_header_ascii()
-            points = self.read_points_ascii()
-            elements = self.read_elements_ascii(bypass=False)
-            regions = self.read_regions_ascii(bypass=False)
-            loads = self.read_results_ascii(0, self.infile, result_names=result_names)
+            self._read_header_ascii()
+            points = self._read_points_ascii()
+            elements = self._read_elements_ascii(bypass=False)
+            regions = self._read_regions_ascii(bypass=False)
+            loads = self._read_results_ascii(0, self.infile, result_names=result_names)
 
         self.infile.close()
         self.log.debug("nPoints=%s nElements=%s" % (self.nPoints, self.nElements))
@@ -406,7 +427,7 @@ class Cart3DReader(object):
         assert self.nElements > 0, 'nElements=%s' % self.nElements
         return (points, elements, regions, loads)
 
-    def read_header_ascii(self):
+    def _read_header_ascii(self):
         line = self.infile.readline()
         sline = line.strip().split()
         if len(sline) == 2:
@@ -427,7 +448,7 @@ class Cart3DReader(object):
             self.nElementsRead = self.nElements
             self.nElementsSkip = 0
 
-    def read_points_ascii(self):
+    def _read_points_ascii(self):
         """
         A point is defined by x,y,z and the ID is the location in points.
         """
@@ -463,7 +484,7 @@ class Cart3DReader(object):
     def get_max(self, points, i):
         return amax(points[:, i])
 
-    def read_elements_ascii(self, bypass=False):
+    def _read_elements_ascii(self, bypass=False):
         """
         An element is defined by n1,n2,n3 and the ID is the location in elements.
         """
@@ -494,7 +515,7 @@ class Cart3DReader(object):
                 e += 1
         return elements
 
-    def read_regions_ascii(self, bypass=True):
+    def _read_regions_ascii(self, bypass=True):
         regions = zeros(self.nElementsRead, dtype='int32')
         if bypass:
             for i in range(self.nElements):
@@ -515,7 +536,7 @@ class Cart3DReader(object):
                 r += ndata
         return regions
 
-    def read_results_ascii(self, i, infile, result_names=None):
+    def _read_results_ascii(self, i, infile, result_names=None):
         """
         Reads the Cp results.
         Results are read on a nodal basis from the following table:
@@ -534,7 +555,9 @@ class Cart3DReader(object):
         # ???
         rho,rhoU,rhoV,rhoW,rhoE
 
-        :param result_names: the results to read; default=None -> All
+        Parameters
+        ----------
+        result_names : List[str]; default=None (All)
             result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
                             'Mach', 'U', 'V', 'W', 'E']
         """
@@ -625,7 +648,7 @@ class Cart3DReader(object):
         else:
             is_bad = False
 
-        loc = locals()
+        #loc = locals()
         loads = {}
         if 'Cp' in result_names:
             loads['Cp'] = Cp
@@ -670,32 +693,48 @@ class Cart3DReader(object):
         self.log.info('---finished read_results---')
         return loads
 
-    def read_header_binary(self):
+    def _read_header_binary(self):
         data = self.infile.read(4)
-        size, = unpack(b'>i', data)
+        size_little, = unpack(b'<i', data)
+        size_big, = unpack(b'>i', data)
+        if size_big in [12, 8]:
+            self._endian = b'>'
+            size = size_big
+        elif size_little in [8, 12]:
+            self._endian = b'<'
+            size = size_little
+        else:
+            self.rewind()
+            self.show(100)
+            raise RuntimeError('unknown endian')
 
+        self.n += 4
         data = self.infile.read(size)
+        self.n += size
+
         so4 = size // 4  # size over 4
         if so4 == 3:
-            (nPoints, nElements, nResults) = unpack(b'>iii', data)
+            (nPoints, nElements, nResults) = unpack(self._endian + b'iii', data)
             self.log.info("nPoints=%s nElements=%s nResults=%s" % (nPoints, nElements, nResults))
             self.cartType = 'grid'
         elif so4 == 2:
-            (nPoints, nElements) = unpack(b'>ii', data)
+            (nPoints, nElements) = unpack(self._endian + b'ii', data)
             self.log.info("nPoints=%s nElements=%s" % (nPoints, nElements))
             self.cartType = 'results'
         else:
-            raise RuntimeError('in the wrong spot...endian...')
+            self.rewind()
+            self.show(100)
+            raise RuntimeError('in the wrong spot...endian...size/4=%s' % so4)
         self.infile.read(8)  # end of first block, start of second block
 
         return (nPoints, nElements)
 
-    def read_points_binary(self, npoints):
+    def _read_points_binary(self, npoints):
         size = npoints * 12  # 12=3*4 all the points
 
         n = 0
         points = zeros(npoints * 3, dtype='float32')
-        s = Struct(b'>3000f') # 3000 floats; 1000 points
+        s = Struct(self._endian + b'3000f') # 3000 floats; 1000 points
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             data = self.infile.read(4 * 3000)
 
@@ -708,7 +747,7 @@ class Cart3DReader(object):
 
         if size > 0:
             data = self.infile.read(size)
-            Format = b'>%if' % (size // 4)
+            Format = self._endian + b'%if' % (size // 4)
 
             nodeXYZs = unpack(Format, data)
             points[n:] = nodeXYZs
@@ -718,7 +757,7 @@ class Cart3DReader(object):
         self.infile.read(8)  # end of second block, start of third block
         return points
 
-    def read_elements_binary(self, nelements):
+    def _read_elements_binary(self, nelements):
         self.nElementsRead = nelements
         self.nElementsSkip = 0
         size = nelements * 12  # 12=3*4 all the elements
@@ -726,7 +765,7 @@ class Cart3DReader(object):
         elements = zeros(self.nElements*3, dtype='int32')
 
         n = 0
-        s = Struct(b'>3000i')
+        s = Struct(self._endian + b'3000i')
         while size > 12000:  # 4k is 1000 elements
             data = self.infile.read(4 * 3000)
             nodes = s.unpack(data)
@@ -737,7 +776,7 @@ class Cart3DReader(object):
         assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            Format = b'>%ii' % (size // 4)
+            Format = self._endian + b'%ii' % (size // 4)
 
             nodes = unpack(Format, data)
             elements[n:] = nodes
@@ -746,9 +785,9 @@ class Cart3DReader(object):
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
         return elements2
 
-    def read_regions_binary(self, nelements):
+    def _read_regions_binary(self, nelements):
         size = nelements * 4  # 12=3*4 all the elements
-        s = Struct(b'>3000i')
+        s = Struct(self._endian + b'3000i')
 
         regions = zeros(self.nElementsRead, dtype='int32')
 
@@ -769,7 +808,7 @@ class Cart3DReader(object):
         assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            Format = b'>%ii' % (size // 4)
+            Format = self._endian + b'%ii' % (size // 4)
             try:
                 region_data = unpack(Format, data)
             except:
@@ -786,21 +825,31 @@ class Cart3DReader(object):
         self.infile.read(4)  # end of regions (fourth) block
         return regions
 
-    def read_results_binary(self, i, infile, result_names=None):
+    def _read_results_binary(self, i, infile, result_names=None):
         pass
 
     def get_normals(self, nodes, elements, shift_nodes=True):
         """
         Gets the centroidal normals
 
-        :param self:  The reader object
-        :param nodes:  the ndarray of nodes
-        :param elements: the ndarray of triangles
-        :param shift_nodes: boolean to shift element IDs such that the
-                            node IDs start at 0 instead of 1
-                            True : nodes start at 1
-                            False : nodes start at 0
-        :retval cnormals:  the ndarray of normalized centroidal normal vectors
+        Parameters
+        ----------
+        self:
+            the reader object
+        nodes : (n, 3) ndarray
+            the nodes
+        elements: (n, 3) ndarray
+            the triangles
+        shift_nodes : boolean; default=True
+            shifts element IDs such that the
+              - node IDs start at 0 instead of 1
+                  True : nodes start at 1
+                  False : nodes start at 0
+
+        Returns
+        -------
+        cnormals : (n, 3) ndarray
+            normalized centroidal normal vectors
         """
         if shift_nodes:
             p1 = nodes[elements[:, 0] - 1, :]
@@ -828,16 +877,26 @@ class Cart3DReader(object):
         """
         Gets the nodal normals
 
-        :param self:  The reader object
-        :param nodes:  the ndarray of nodes
-        :param elements: the ndarray of triangles
-        :param cnormals:  the ndarray of normalized centroidal normal vectors
-        :param shift_nodes: boolean to shift element IDs such that the
-                            node IDs start at 0 instead of 1
-                            True : nodes start at 1
-                            False : nodes start at 0
+        Parameters
+        ----------
+        self : Cart3DReader()
+            the reader object
+        nodes : (n, 3) ndarray
+            the nodes
+        elements : (n, 3) ndarray
+            the triangles
+        cnormals : (n, 3) ndarray
+            normalized centroidal normal vectors
+        shift_nodes : bool; default=True
+            shifts element IDs such that the node IDs start at 0
+            instead of 1
+              True : nodes start at 1
+              False : nodes start at 0
 
-        :retval nnormals:  the ndarray of normalized nodal normal vectors
+        Returns
+        -------
+        nnormals : (n, 3) ndarray
+            normalized nodal normal vectors
         """
         nnodes = nodes.shape[0]
         nid_to_eids = defaultdict(list)
@@ -867,6 +926,89 @@ class Cart3DReader(object):
         assert ni.min() > 0, ni
         nnormals /= ni[:, None]  # normal vector
         return nnormals
+
+    def rewind(self):
+        self.n = 0
+        self.infile.seek(self.n)
+
+    def show(self, n, types='ifs', endian=None):
+        """
+        Parameters
+        ----------
+        self : Cart3DReader
+            the object pointer
+        """
+        assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
+        nints = n // 4
+        data = self.infile.read(4 * n)
+        strings, ints, floats = self.show_data(data, types=types, endian=endian)
+        self.infile.seek(self.n)
+        return strings, ints, floats
+
+    def show_data(self, data, types='ifs', endian=None):
+        return self.write_data(sys.stdout, data, types=types, endian=endian)
+
+    def write_data(self, f, data, types='ifs', endian=None):
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        Parameters
+        ----------
+        self : Cart3DReader
+            the object pointer
+        """
+        n = len(data)
+        nints = n // 4
+        ndoubles = n // 8
+        strings = None
+        ints = None
+        floats = None
+        longs = None
+
+        if endian is None:
+            endian = self._endian
+
+        if 's' in types:
+            strings = unpack(b'%s%is' % (endian, n), data)
+            f.write("strings = %s\n" % str(strings))
+        if 'i' in types:
+            ints = unpack(b'%s%ii' % (endian, nints), data)
+            f.write("ints    = %s\n" % str(ints))
+        if 'f' in types:
+            floats = unpack(b'%s%if' % (endian, nints), data)
+            f.write("floats  = %s\n" % str(floats))
+
+        if 'l' in types:
+            longs = unpack(b'%s%il' % (endian, nints), data)
+            f.write("long  = %s\n" % str(longs))
+        if 'I' in types:
+            ints2 = unpack(b'%s%iI' % (endian, nints), data)
+            f.write("unsigned int = %s\n" % str(ints2))
+        if 'L' in types:
+            longs2 = unpack(b'%s%iL' % (endian, nints), data)
+            f.write("unsigned long = %s\n" % str(longs2))
+        if 'q' in types:
+            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("long long = %s\n" % str(longs))
+        return strings, ints, floats
+
+    def show_ndata(self, n, types='ifs'):
+        return self.write_ndata(sys.stdout, n, types=types)
+
+    def write_ndata(self, f, n, types='ifs'):
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        Parameters
+        ----------
+        self : Cart3DReader
+            the object pointer
+        """
+        nold = self.n
+        data = self.infile.read(n)
+        self.n = nold
+        self.infile.seek(self.n)
+        return self.write_data(f, data, types=types)
 
 def _get_list(sline):
     """Takes a list of strings and converts them to floats."""

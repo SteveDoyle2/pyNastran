@@ -2025,6 +2025,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         elif representation == 'surface':
             prop.SetRepresentationToSurface()
             prop.SetLineWidth(line_width)
+        elif representation == 'wire':
+            prop.SetRepresentationToWireframe()
+            prop.SetLineWidth(line_width)
 
         self.rend.AddActor(alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
@@ -2664,12 +2667,21 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             point_size2 = group.point_size
             point_size2 = max(1, point_size2)
 
+            #representation = group.representation
+            alt_prop = self.geometry_properties[name]
+            representation = alt_prop.representation
+            #is_visible1 = alt_prop.is_visible
+            is_visible1 = bool(actor.GetVisibility())
+            is_visible2 = group.is_visible
+            #print('is_visible1=%s is_visible2=%s'  % (is_visible1, is_visible2))
+
             if color1 != color2:
                 #print('color_2662[%s] = %s' % (name, str(color1)))
                 assert isinstance(color1[0], float), color1
                 prop.SetDiffuseColor(color2)
                 changed = True
             if line_width1 != line_width2:
+                line_width2 = max(1, line_width2)
                 prop.SetLineWidth(line_width2)
                 changed = True
             if opacity1 != opacity2:
@@ -2678,9 +2690,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if point_size1 != point_size2:
                 prop.SetPointSize(point_size2)
                 changed = True
+            if is_visible1 != is_visible2:
+                actor.SetVisibility(is_visible2)
+                alt_prop.is_visible = is_visible2
+                #prop.SetViPointSize(is_visible2)
+                actor.Modified()
+                changed = True
+
             if changed:
-                lines.append('    %r : AltGeometry(color=(%s, %s, %s), line_width=%s, opacity=%s, point_size=%s),\n' % (
-                    name, color2[0], color2[1], color2[2], line_width2, opacity2, point_size2))
+                lines.append('    %r : AltGeometry(color=(%s, %s, %s), line_width=%s, opacity=%s, point_size=%s, is_visible=%s),\n' % (
+                    name, color2[0], color2[1], color2[2], line_width2, opacity2, point_size2, is_visible2))
                 prop.Modified()
         self.vtk_interactor.Render()
         if lines:

@@ -69,6 +69,7 @@ class Model(QtCore.QAbstractTableModel):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
 
+
 class EditGroupProperties(QtGui.QDialog):
     def __init__(self, data, win_parent=None):
         """
@@ -85,6 +86,7 @@ class EditGroupProperties(QtGui.QDialog):
         |  Line_Width     2       |
         |  Point_Size     2       |
         |  Opacity        0.5     |
+        |  Show/Hide              |
         |                         |
         |    Apply   OK   Cancel  |
         +-------------------------+
@@ -116,6 +118,7 @@ class EditGroupProperties(QtGui.QDialog):
         point_size = actor_obj.point_size
         opacity = actor_obj.opacity
         color = actor_obj.color
+        show = actor_obj.is_visible
 
         table = self.table
         #headers = [QtCore.QString('Groups')]
@@ -157,7 +160,7 @@ class EditGroupProperties(QtGui.QDialog):
 
         self.line_width = QtGui.QLabel("Line Width:")
         self.line_width_edit = QtGui.QSpinBox(self)
-        self.line_width_edit.setRange(0, 10)
+        self.line_width_edit.setRange(1, 10)
         self.line_width_edit.setSingleStep(1)
         self.line_width_edit.setValue(line_width)
 
@@ -166,6 +169,12 @@ class EditGroupProperties(QtGui.QDialog):
         self.point_size_edit.setRange(1, 10)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
+
+        # show/hide
+        self.checkbox_show = QtGui.QCheckBox("Show")
+        self.checkbox_hide = QtGui.QCheckBox("Hide")
+        self.checkbox_show.setChecked(show)
+        self.checkbox_hide.setChecked(not show)
 
         # closing
         self.apply_button = QtGui.QPushButton("Apply")
@@ -234,9 +243,23 @@ class EditGroupProperties(QtGui.QDialog):
         grid.addWidget(self.point_size_edit, irow, 1)
         irow += 1
 
+        checkboxs = QtGui.QButtonGroup(self)
+        checkboxs.addButton(self.checkbox_show)
+        checkboxs.addButton(self.checkbox_hide)
+
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addLayout(grid)
+
+        if 0:
+            vbox.addWidget(self.checkbox_show)
+            vbox.addWidget(self.checkbox_hide)
+        else:
+            vbox1 = QtGui.QVBoxLayout()
+            vbox1.addWidget(self.checkbox_show)
+            vbox1.addWidget(self.checkbox_hide)
+            vbox.addLayout(vbox1)
+
         vbox.addStretch()
         #vbox.addWidget(self.check_apply)
         vbox.addLayout(ok_cancel_box)
@@ -245,8 +268,10 @@ class EditGroupProperties(QtGui.QDialog):
     def set_connections(self):
         self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
         self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
-        self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_point_size)
+        self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
         self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
+        self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
+        self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
         #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
 
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
@@ -268,6 +293,16 @@ class EditGroupProperties(QtGui.QDialog):
                                           "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
+
+    def on_show(self):
+        name = self.active_key
+        is_checked = self.checkbox_show.isChecked()
+        self.out_data[name].is_visible = is_checked
+
+    def on_hide(self):
+        name = self.active_key
+        is_checked = self.checkbox_hide.isChecked()
+        self.out_data[name].is_visible = not is_checked
 
     def on_line_width(self):
         name = self.active_key
@@ -340,6 +375,7 @@ class EditGroupProperties(QtGui.QDialog):
         old_obj.line_width = self.line_width_edit.value()
         old_obj.point_size = self.point_size_edit.value()
         old_obj.opacity = self.opacity_edit.value()
+        old_obj.is_visible = self.checkbox_show.isChecked()
         return True
         #name_value, flag0 = self.check_name(self.name_edit)
         #ox_value, flag1 = self.check_float(self.transparency_edit)

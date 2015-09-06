@@ -3,7 +3,7 @@ from copy import deepcopy
 class AltGeometry(object):
 
     def __init__(self, parent, name, color=None, line_width=1, opacity=0.0,
-                 point_size=1, representation='main'):
+                 point_size=1, representation='main', is_visible=True):
         """
         Parameters
         ----------
@@ -38,11 +38,14 @@ class AltGeometry(object):
         self.point_size = point_size
         self._opacity = opacity
 
+        assert isinstance(is_visible, bool), is_visible
+        self.is_visible = is_visible
+
         assert representation in ['main', 'wire', 'point', 'surface'], 'representation=%r' % representation
         self.representation = representation
 
     def __deepcopy__(self, memo):
-        keys = ['name', '_color', 'line_width', 'point_size', '_opacity']
+        keys = ['name', '_color', 'line_width', 'point_size', '_opacity', 'is_visible']
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
