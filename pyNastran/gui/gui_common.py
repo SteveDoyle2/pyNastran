@@ -2596,6 +2596,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not hasattr(self, 'caseKeys'):
             self.log_error('No model has been loaded.')
             return
+        if not len(self.geometry_properties):
+            self.log_error('No secondary geometries to edit.')
+            return
+
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
         #if len(key) == 5:

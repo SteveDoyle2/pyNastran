@@ -119,6 +119,7 @@ class EditGroupProperties(QtGui.QDialog):
         opacity = actor_obj.opacity
         color = actor_obj.color
         show = actor_obj.is_visible
+        self.representation = actor_obj.representation
 
         table = self.table
         #headers = [QtCore.QString('Groups')]
@@ -163,12 +164,18 @@ class EditGroupProperties(QtGui.QDialog):
         self.line_width_edit.setRange(1, 10)
         self.line_width_edit.setSingleStep(1)
         self.line_width_edit.setValue(line_width)
+        if self.representation in ['point', 'surface']:
+            self.line_width.setEnabled(False)
+            self.line_width_edit.setEnabled(False)
 
         self.point_size = QtGui.QLabel("Point Size:")
         self.point_size_edit = QtGui.QSpinBox(self)
         self.point_size_edit.setRange(1, 10)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
+        if self.representation in ['wire', 'surface']:
+            self.point_size.setEnabled(False)
+            self.point_size_edit.setEnabled(False)
 
         # show/hide
         self.checkbox_show = QtGui.QCheckBox("Show")
@@ -192,6 +199,7 @@ class EditGroupProperties(QtGui.QDialog):
         old_obj.line_width = self.line_width_edit.value()
         old_obj.point_size = self.point_size_edit.value()
         old_obj.opacity = self.opacity_edit.value()
+        old_obj.is_visible = self.checkbox_show.isChecked()
 
         name = str(index.data().toString())
         #i = self.keys.index(self.active_key)
@@ -202,13 +210,36 @@ class EditGroupProperties(QtGui.QDialog):
         line_width = obj.line_width
         point_size = obj.point_size
         opacity = obj.opacity
+        representation = obj.representation
+        is_visible = obj.is_visible
+
         self.color_edit.setStyleSheet("QPushButton {"
                                       "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                       #"border:1px solid rgb(255, 170, 255); "
                                       "}")
         self.line_width_edit.setValue(line_width)
         self.point_size_edit.setValue(point_size)
+        if self.representation != representation:
+            self.representation = representation
+
+            if self.representation == 'point':
+                self.point_size.setEnabled(True)
+                self.point_size_edit.setEnabled(True)
+            else:
+                self.point_size.setEnabled(False)
+                self.point_size_edit.setEnabled(False)
+
+            if self.representation == ['wire']:
+                self.line_width.setEnabled(True)
+                self.line_width_edit.setEnabled(True)
+            else:
+                self.line_width.setEnabled(False)
+                self.line_width_edit.setEnabled(False)
+            #if self.representation in ['wire', 'surface']:
+
         self.opacity_edit.setValue(opacity)
+        self.checkbox_show.setChecked(is_visible)
+        self.checkbox_hide.setChecked(not is_visible)
 
     #def on_name_select(self):
         #print('on_name_select')
@@ -426,10 +457,10 @@ def main():
     green = (0, 255, 0)
     purple = (255, 0, 255)
     d = {
-        'caero1' : AltGeometry(parent, 'caero', color=green, line_width=3, transparency=0.2),
-        'caero2' : AltGeometry(parent, 'caero', color=purple, line_width=4, transparency=0.3),
-        'caero' : AltGeometry(parent, 'caero', color=blue, line_width=2, transparency=0.1),
-        'main' : AltGeometry(parent, 'main', color=red, line_width=1, transparency=0.0),
+        'caero1' : AltGeometry(parent, 'caero', color=green, line_width=3, opacity=0.2),
+        'caero2' : AltGeometry(parent, 'caero', color=purple, line_width=4, opacity=0.3),
+        'caero' : AltGeometry(parent, 'caero', color=blue, line_width=2, opacity=0.1),
+        'main' : AltGeometry(parent, 'main', color=red, line_width=1, opacity=0.0),
     }
     main_window = EditGroupProperties(d, win_parent=None)
     main_window.show()

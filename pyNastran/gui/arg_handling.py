@@ -10,7 +10,7 @@ def run_arg_parse():
     msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '                  [-u POINTS_FNAME...]\n'
-    msg += '                  [-q] [-e] [-n | -c]\n'
+    msg += '                  [-q] [-e]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -32,8 +32,6 @@ def run_arg_parse():
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
     #if mode != 'qt':
     msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
-    msg += "  -n, --nodalResults          plots nodal results (default)\n"
-    msg += "  -c, --centroidalResults     plots centroidal results\n"
     msg += "  -v, --version               show program's version number and exit\n"
 
 
@@ -45,8 +43,6 @@ def run_arg_parse():
     input = data['--input']
     output = data['--output']
     debug = not(data['--quiet'])
-    is_nodal = data['--nodalResults']
-    is_centroidal = data['--centroidalResults']
 
     edges = False
     if '--edges' in data:
@@ -79,7 +75,7 @@ def run_arg_parse():
         #shots = shots[1]
         #print("shots2 = %r" % shots, type(shots))
         shots = shots.split(';')[0]
-    return (edges, is_nodal, is_centroidal, format, input, output, shots,
+    return (edges, format, input, output, shots,
             magnify, rotation, geom_script, post_script, debug, user_points)
 
 
@@ -90,8 +86,6 @@ def get_inputs():
     output = None
     debug = True
 
-    is_centroidal = True
-    is_nodal = not(is_centroidal)
     magnify = 1
     rotation = None
     shots = None
@@ -102,27 +96,11 @@ def get_inputs():
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (is_edges, is_nodal, is_centroidal, format, input, output, shots, magnify,
+            (is_edges, format, input, output, shots, magnify,
              rotation, geom_script, post_script, debug, user_points) = run_arg_parse()
 
-    if format is not None and is_centroidal == is_nodal:
-        if format.lower() == 'nastran':
-            is_nodal = False
-            is_centroidal = True
-        elif format.lower() == 'cart3d':
-            is_nodal = False
-            is_centroidal = True
-        elif format.lower() == 'panair':
-            is_nodal = False
-            is_centroidal = True
-    if is_centroidal == is_nodal:
-        is_nodal = not(is_centroidal)
-
-    print("is_centroidal = %s" % is_centroidal)
     inputs = {
         'is_edges' : is_edges,
-        'is_nodal' : is_nodal,
-        'is_centroidal' : is_centroidal,
         'format' : format,
         'input' : input,
         'output' : output,

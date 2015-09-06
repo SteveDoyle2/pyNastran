@@ -45,7 +45,8 @@ class AltGeometry(object):
         self.representation = representation
 
     def __deepcopy__(self, memo):
-        keys = ['name', '_color', 'line_width', 'point_size', '_opacity', 'is_visible']
+        keys = ['name', '_color', 'line_width', 'point_size', '_opacity',
+                '_representation', 'is_visible']
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result

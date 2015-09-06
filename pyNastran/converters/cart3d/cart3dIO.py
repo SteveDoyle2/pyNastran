@@ -142,8 +142,8 @@ class Cart3dIO(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self._remove_old_cart3d_geometry(cart3d_filename)
-        if skipReading:
+        skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
+        if skip_reading:
             return
 
         model = Cart3DReader(log=self.log, debug=False)
@@ -229,14 +229,17 @@ class Cart3dIO(object):
         ID = 1
 
         form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
-        self._create_box('input.c3d', ID, form, cases, icase, regions)
+        self._create_box(cart3d_filename, ID, form, cases, icase, regions)
         self._finish_results_io2(form, cases)
 
-    def _create_box(self, input_c3d_filename, ID, form, cases, icase, regions):
+    def _create_box(self, cart3d_filename, ID, form, cases, icase, regions):
         stack = True
-        if os.path.exists('input.cntl'):
+        dirname = os.path.dirname(os.path.abspath(cart3d_filename))
+        input_c3d_filename = os.path.join(dirname, 'input.c3d')
+        input_cntl_filename = os.path.join(dirname, 'input.cntl')
+        if os.path.exists(input_cntl_filename):
             cntl = InputCntlReader()
-            cntl.read_input_cntl('input.cntl')
+            cntl.read_input_cntl(input_cntl_filename)
             bcs = cntl.get_boundary_conditions()
             bc_xmin, bc_xmax, bc_ymin, bc_ymax, bc_xmin, bc_xmax, surfbcs = bcs
             stack = False

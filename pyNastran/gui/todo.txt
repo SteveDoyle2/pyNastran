@@ -21,13 +21,13 @@ PyQt4 unique (PySide is broken)
    - cart3d input/output
    - nastran input/output
    - lawgs input
-   - panair input
+   - panair input/output
    - usm3d volume (postgrid) and results (.flo)
    - tetgen input
    - S/HABP input
-   - Panair output
    - OpenVSP adb input/output
    - csv/txt elemental/nodal results for all formats
+   - csv point loading with -u for all formats (multiple files allowed)
 
  - legend menu to edit properties for:
    - title
@@ -43,6 +43,21 @@ PyQt4 unique (PySide is broken)
    - TODO: can't show/hide legend
    - TODO: Cancel button doesn't go to original settings if you click apply
      - TODO: should maybe remove the OK button and rename Cancel to Close
+
+ - secondary actors menu
+   - actor selection
+     - color
+     - point size
+     - line size
+     - show/hide
+   - selective editing based on representation
+
+ - focal point picking (e.g. clipping)
+   - "f" key
+   - zoom out far, press f to disable clipping
+   - zoom in to desired view distance and press f  to 
+     - cart3d can clip through bounding box to pick nodes/elements
+       that are obscured
 
  - global axis
    - hide support
@@ -69,10 +84,8 @@ PyQt4 unique (PySide is broken)
  - both nodal/centroidal work regardless of self.is_centroidal/self.is_nodal
 
  - results sidebar
-   - data is put in the same order as the cycleResults capability (Control+L)
+   - data is put in a nested tree and cycleResults works (Control+L)
    - TODO: does multiple static nastran subcases work?
-     - TODO: it should be put into a nested tree.  It's not.
-       - is this still true?
 
 
 ----------------------------------------------------
@@ -80,9 +93,9 @@ PyQt4 unique (PySide is broken)
  - Groups
    - need to figure out how to show/hide elements from an actor
  - Python console
-   - syntax highlighting
-   - font should be courier new or something similar
-   - button layout
+   - TODO: syntax highlighting
+   - TODO: font should be courier new or something similar
+   - TODO: button layout
 
 ----------------------------------------------------
 ---Format Specific---
@@ -114,15 +127,24 @@ Nastran
  - TODO: data label for CAERO cards
    - as a element numbr
    - as a color (e.g. element ID for the CAERO card)
+ - secondary actors
+   - wireframes/surfaces - CAEROx panels; CAEROx subpanels; CAEROx flaps
+   - points - SPC; MPC; SUPORT1; CONM2
 
 Cart3d
 ======
  - load geometry -> tri/triq
    - nodal -> eid
-   - centroidal -> nid
-
+   - centroidal -> nid, NormalX, NormalY, NormalZ
+ - Power BCs (requires input.cntl)
+   - centroidal -> Rho, XVelocity, YVelocity, ZVelocity, Pressure
  - results
-   - nodal/centroidal -> Mach, Cp, rho, rhoU, rhoV, rhoW, rhoE, U, V, W, E
+   - nodal -> Mach, Cp, rho, rhoU, rhoV, rhoW, rhoE, U, V, W, E
+   - NOTE: centroidal main results removed becase nodal & centroidal
+           are now supported, so there's no need to see results 
+ - secondary actors
+   - box with inflow/outflow/symmetry/farfield boundary condtions as colors
+
  - TODO: show/hide elements based on picking
 
 Panair
@@ -139,6 +161,27 @@ LaWGS
 =====
  - load geometry -> wgs
  - TODO: Coordinate System
+
+Tecplot
+=======
+ - load geometry -> dat/plt
+   - ASCII
+     - tri, quad, tetra, and hexa support
+     - multiblock support
+     - TODO: parsing of structured grids
+   - Binary
+     - hexas only
+     - Tecplot360 format ONLY
+     - little? endian only
+     - TODO: tri, quad, and tetra support
+     - TODO: multiblock support
+     - TODO: multifile loader
+       - currently need to hardcode the GUI to do a multiread
+     - TDOO: support for Tecplot 2010
+     - TODO: full parsing of binary data
+     - TODO: multiple endians
+     - TODO: parsing of structured grids
+ - Coordinate System
 
 Tetgen
 ======
