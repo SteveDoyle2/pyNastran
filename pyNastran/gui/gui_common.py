@@ -2117,8 +2117,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.on_update_geometry_properties(self.geometry_properties)
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        print("cases =", cases)
-        print("caseKeys =", self.caseKeys)
+        #print("cases =", cases)
+        #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
             self.iCase = -1

@@ -774,7 +774,7 @@ class NastranIO(object):
             spcs = model.spcs[spc_id]
         except:
             model.log.warning('spc_id=%s not found' % spc_id)
-            return []
+            return {}
 
         node_ids_c1 = defaultdict(str)
         for card in sorted(spcs):
@@ -960,7 +960,7 @@ class NastranIO(object):
             elem = vtk.vtkLine()
             elem.GetPointIds().SetId(0, j)
             elem.GetPointIds().SetId(1, j + 1)
-            print(nid1, nid2)
+            # print(nid1, nid2)
             self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 2
         self.alt_grids[name].SetPoints(points)
@@ -1472,8 +1472,8 @@ class NastranIO(object):
             form0.append(('PropertyID', icase, []))
             icase += 1
 
-        #icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
-        #icase = self._plot_applied_loads(model, cases, form0, icase)
+        icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
+        icase = self._plot_applied_loads(model, cases, form0, icase)
 
         if 0:
             nxs = []
@@ -1585,6 +1585,7 @@ class NastranIO(object):
         try:
             sucase_ids = model.caseControlDeck.get_subcase_list()
         except AttributeError:
+            print('no subcases....')
             return icase
 
         for subcase_id in sucase_ids:
@@ -1594,6 +1595,7 @@ class NastranIO(object):
             try:
                 load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
             except KeyError:
+                print('no load for isubcase=%s' % subcase_id)
                 continue
             try:
                 loadCase = model.loads[load_case_id]
