@@ -1,3 +1,7 @@
+"""
+Takes a 2D mesh of a structure (e.g. an aircraft) and finds the 2D skin panels
+in order to do a buckling analysis.
+"""
 from __future__ import print_function
 import os
 from copy import deepcopy
@@ -5,13 +9,33 @@ from six import iteritems
 
 from numpy import hstack, unique, allclose, savetxt, array
 from numpy import zeros, abs
+from numpy import searchsorted, vstack
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.fieldWriter import print_card_8
 
 
-def find_ribs_and_spars(model, xyz_cid0, edge_to_eid_map, eid_to_edge_map):
+def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
+    """
+    Parameters
+    ----------
+    xyz_cid0 : (n, 3) ndarray
+        nodes in cid=0
+    edge_to_eid_map : dict[(int, int)] = [int, int, ...]
+        maps edges to element ids
+    eid_to_edge_map : dict[int] = [(int, int), (int, int), ...]
+        maps element ids to edges
+
+    Returns
+    -------
+    patch_edges_array : (n, 3) ndarray
+        all the edges on the geometry
+    eids_on_edge : Set[int]
+        all the elements on the edges
+    patches : List[List[int]]
+        the patches
+    """
 
     # find all the edges of any patch
     patch_edges = []
@@ -133,6 +157,7 @@ def find_ribs_and_spars(model, xyz_cid0, edge_to_eid_map, eid_to_edge_map):
     return patch_edges_array, eids_on_edge, patches
 
 def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
+    """saves the patch data"""
     unique_nids = unique(array(patch_edges, dtype='int32').ravel())
     print('unique_nids =', unique_nids)
 
@@ -171,32 +196,17 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
                if len(patch) > 1]
     print('npatches=%s npids=%s' % (npatches, sum(counter)))
 
-def main():
-    model = BDF()
-    bdf_filename = r'F:\work\pyNastran\set1_test\BWB_afl_static_analysis_short.bdf'
-    #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\models\solid_bending\solid_bending.bdf'
-    if not os.path.exists(bdf_filename):
-        bdf_filename = os.path.join(os.path.expanduser('~'),
-                                    'Desktop', 'move', '3_LoadCases_Final',
-                                    'BWB_afl_static_analysis_short.bdf')
-        op2_filename = os.path.join(os.path.expanduser('~'),
-                                    'Desktop', 'move', '3_LoadCases_Final',
-                                    'BWB_afl_static_analysis_short.op2')
-        assert os.path.exists(bdf_filename), bdf_filename
 
-    if not os.path.exists('model.obj') or 1:
-        model.read_bdf(bdf_filename)
-        # model.save_object('model.obj')
-    else:
-        model.load_object('model.obj')
-        model.cross_reference()
-
+def run(model, op2_filename, mode):
+    """
+    create the input decks for buckling
+    """
     out = model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
     (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
     xyz_cid0 = {}
     for nid, node in iteritems(model.nodes):
         xyz_cid0[nid] = node.get_position()
-    patch_edges, eids_on_edge, patches = find_ribs_and_spars(model, xyz_cid0, edge_to_eid_map, eid_to_edge_map)
+    patch_edges, eids_on_edge, patches = find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map)
 
     save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches)
 
@@ -207,14 +217,15 @@ def main():
     header += 'ECHO = NONE\n'
     header += 'SUBCASE 1\n'
     # header += '  SUPORT = 1\n'
-    header += '  LOAD = 1\n'
+    if mode == 'load':
+        header += '  LOAD = 55\n'
     header += '  METHOD = 42\n'
     header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
     header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
     header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
     header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
     header += '  SPC = 100\n'
-    header += '  MPC = 1\n'
+    #header += '  MPC = 1\n'
     # header += '  TRIM = 1\n'
     header += 'BEGIN BULK\n'
     header += 'PARAM,GRDPNT,0\n'
@@ -229,16 +240,26 @@ def main():
     eig2 = 100.
     nroots = 20
     method = 42
-    header += 'EIGB,%s,,%s,%s,%s\n' % (method, eig1, eig2, nroots)
+    spc_id = 100
+    load_id = 55
+    header += 'EIGB,%s,INV,%s,%s,%s\n' % (method, eig1, eig2, nroots)
 
     isubcase = 1
     out_model = OP2()
     out_model.read_op2(op2_filename)
-    nodal_forces = out_model.grid_point_forces[isubcase]
+    if mode == 'displacement':
+        displacements = out_model.displacements[isubcase]
+        node_ids_full_model = displacements.node_gridtype[:, 0]
+    elif mode == 'load':
+        nodal_forces = out_model.grid_point_forces[isubcase]
+    else:
+        raise RuntimeError(mode)
+
     for ipatch, patch in enumerate(patches):
         patch = array(patch, dtype='int32')
         eids = patch
         patch_file = open('patch_%i.bdf' % ipatch, 'w')
+        edge_file = open('edge_%i.bdf' % ipatch, 'w')
         patch_file.write(header)
 
         # get list of all nodes on patch; write elements
@@ -278,45 +299,126 @@ def main():
             for ekey, Force in sorted(iteritems(self.force_moment)):
                 for iLoad, force in enumerate(Force):
                     (f1, f2, f3, m1, m2, m3) = force
-                    elemName = self.elemName[ekey][iLoad]
+                    elem_name = self.elemName[ekey][iLoad]
                     eid = self.eids[ekey][iLoad]
                     # vals = [f1, f2, f3, m1, m2, m3]
                     # (vals2, is_all_zeros) = writeFloats13E(vals)
                     # [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elem_name,
                                                                                                          f1, f2, f3, m1, m2, m3))
                     zero = ' '
                 zero = '0'
 
-        patch_file.write('SPC1,1,123456,%i\n' % all_nids[0])
+        if mode == 'displacement':
+            patch_edge_nids = []
+            for edge in patch_edges:
+                n1, n2 = edge
+                if n1 in all_nids and n2 in all_nids:
+                    patch_edge_nids.append(edge)
+            patch_edge_nids = unique(vstack(patch_edge_nids))
+            #print('patch_edge_nids = %s' % patch_edge_nids)
+            #print('node_ids_full_model = %s' % node_ids_full_model)
+            idisp_full_model = searchsorted(node_ids_full_model, patch_edge_nids)
+            nids2 = node_ids_full_model[idisp_full_model]
+            #print('idisp_full_model = %s' % idisp_full_model)
+            #print('nids2 = %s' % nids2)
+            #print('delta = %s' % (node_ids_full_model[idisp_full_model] - patch_edge_nids))
+            disp = displacements.data[0, idisp_full_model, :]
+            #disp = displacements.data[:, 3]
 
-        for node_id, cdi in zip(all_nids[1:], cd[1:]):
-            Force = nodal_forces.force_moment[node_id]
-            force_moment_sum = zeros(6, dtype='float32')
-            for iload, force in enumerate(Force):
-                eid = nodal_forces.eids[node_id][iload]
-                element_name = nodal_forces.elemName[node_id][iload]
-                if eid not in eids: # neighboring element
-                    force_moment_sum += Force[iload]
-                elif eid == 0 and element_name != '*TOTALS*':
-                    print(element_name)
-                    force_moment_sum += Force[iload]
+            ipack = 0
+            spc_pack = []
 
-            abs_force_moment_sum = abs(force_moment_sum)
-            forcei = abs_force_moment_sum[:3]
-            momenti = abs_force_moment_sum[3:]
-            if forcei.sum() > 0.0:
-                # write force
-                card = ['FORCE', 1, node_id, cdi, 1.0, ] + list(forcei)
-                patch_file.write(print_card_8(card))
-            if momenti.sum() > 0.0:
-                # write moment
-                card = ['MOMENT', 1, node_id, cdi, 1.0, ] + list(momenti)
-                patch_file.write(print_card_8(card))
+            #$SPCD         100   20028       1.0009906   20028       24.3233-4
+            #$SPCD         100   20028       3.3169889   20028       41.6345-4
+            #$SPCD         100   20028       5.0004592   20028       6-2.092-3
+            #FORCE,1,20036,0,0.000001,1.0,1.0,1.0
+            #SPC1,100,123456,20028
+            n1 = patch_edge_nids[0]
+            n2 = patch_edge_nids[1]
+            patch_file.write('SPC1,%i,123456,%i\n' % (spc_id, n1))
+
+            # dummy load
+            patch_file.write('FORCE,%i,%i,0,0.000001,1.0,1.0,1.0\n' % (load_id, n2))
+            for i, nid in enumerate(patch_edge_nids):
+                if i == 0:
+                    continue
+                xyz = xyz_cid0[nid]
+                edge_file.write('%f, %f, %f\n' % (xyz[0], xyz[1], xyz[2]))
+                assert nids2[i] == nid, 'nid=%s nid2=%s' % (nid, node_ids_full_model[i])
+                for j in range(6):
+                    dispi = disp[i, j]
+                    if abs(dispi) > 0.0:
+                        # SPCD, sid, g1, c1, d1
+                        #patch_file.write(print_card_8(['SPCD', spc_id, nid, j + 1, dispi]))
+                        if ipack == 0:
+                            spc_pack = ['SPCD', spc_id, nid, j + 1, dispi]
+                            ipack += 1
+                        else:
+                            # ipack = 1
+                            spc_pack += [nid, j + 1, dispi]
+                            patch_file.write(print_card_8(spc_pack))
+                            ipack = 0
+                            spc_pack = []
+            if len(spc_pack):
+                patch_file.write(print_card_8(spc_pack))
+
+        elif mode == 'load':
+            for node_id, cdi in zip(all_nids[1:], cd[1:]):
+                Force = nodal_forces.force_moment[node_id]
+                force_moment_sum = zeros(6, dtype='float32')
+                for iload, force in enumerate(Force):
+                    eid = nodal_forces.eids[node_id][iload]
+                    element_name = nodal_forces.elemName[node_id][iload]
+                    if eid not in eids: # neighboring element
+                        force_moment_sum += Force[iload]
+                    elif eid == 0 and element_name != '*TOTALS*':
+                        print(element_name)
+                        force_moment_sum += Force[iload]
+
+                abs_force_moment_sum = abs(force_moment_sum)
+                forcei = abs_force_moment_sum[:3]
+                momenti = abs_force_moment_sum[3:]
+                if forcei.sum() > 0.0:
+                    # write force
+                    card = ['FORCE', load_id, node_id, cdi, 1.0, ] + list(forcei)
+                    patch_file.write(print_card_8(card))
+                if momenti.sum() > 0.0:
+                    # write moment
+                    card = ['MOMENT', load_id, node_id, cdi, 1.0, ] + list(momenti)
+                    patch_file.write(print_card_8(card))
+        else:
+            raise RuntimeError(mode)
         patch_file.write('ENDDATA\n')
+        patch_file.close()
+        edge_file.close()
+    return
 
+def main():
+    """prevents bleedover of data"""
+    model = BDF()
+    bdf_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.bdf'
+    op2_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.op2'
+    #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\models\solid_bending\solid_bending.bdf'
+    if not os.path.exists(bdf_filename):
+        bdf_filename = os.path.join(os.path.expanduser('~'),
+                                    'Desktop', 'move', '3_LoadCases_Final',
+                                    'BWB_afl_static_analysis_short.bdf')
+        op2_filename = os.path.join(os.path.expanduser('~'),
+                                    'Desktop', 'move', '3_LoadCases_Final',
+                                    'BWB_afl_static_analysis_short.op2')
+        assert os.path.exists(bdf_filename), bdf_filename
+
+    if not os.path.exists('model.obj') or 1:
+        model.read_bdf(bdf_filename)
+        # model.save_object('model.obj')
+    else:
+        model.load_object('model.obj')
+        model.cross_reference()
+    #run(model, op2_filename, 'load')
+    run(model, op2_filename, 'displacement')
 
 
 if __name__ == '__main__':

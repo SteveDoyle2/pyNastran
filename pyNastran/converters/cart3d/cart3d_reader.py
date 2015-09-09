@@ -15,13 +15,6 @@ from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
 
-def convert_to_float(svalues):
-    values = []
-    for value in svalues:
-        values.append(float(value))
-    return values
-
-
 def comp2tri(self, in_filenames, out_filename,
              is_binary=False, float_fmt='%6.7f'):
     """
@@ -69,27 +62,440 @@ def comp2tri(self, in_filenames, out_filename,
                       points, elements, regions,
                       loads=None, is_binary=False, float_fmt=float_fmt)
 
-
-class Cart3DReader(object):
-    modelType = 'cart3d'
-    isStructured = False
-    isOutwardNormals = True
-
+class Cart3dIO(object):
+    """
+    Cart3d IO class
+    """
     def __init__(self, log=None, debug=False):
+        self.log = get_logger(log, 'debug' if debug else 'info')
+        self._endian = b''
+        self.n = 0
+        self.infile = None
         self.readHalf = False
         self.cartType = None  # grid, results
         self.nPoints = None
         self.nElements = None
-        self.infile = None
         self.infilename = None
-        self._endian = b''
-        self.n = 0
 
         # updated later
         self.nResults = 0
         self.nElementsSkip = 0
         self.nElementsRead = 0
-        self.log = get_logger(log, 'debug' if debug else 'info')
+
+    def _write_header(self, f, points, elements, is_loads, is_binary=False):
+        npoints = points.shape[0]
+        nelements = elements.shape[0]
+
+        if is_binary:
+            if is_loads:
+                msg = pack('>iiiii', 3*4, npoints, nelements, 6, 4)
+            else:
+                msg = pack('>iiii', 2*4, npoints, nelements, 4)
+
+            int_fmt = None
+        else:
+            if is_loads:
+                msg = "%s %s 6\n" % (npoints, nelements)
+            else:
+                msg = "%s %s\n" % (npoints, nelements)
+
+            # take the max value, string it, and length it
+            # so 123,456 is length 6
+            int_fmt = '%%%si' % len(str(nelements))
+        f.write(msg)
+        return int_fmt
+
+    def _write_points(self, f, points, is_binary, float_fmt='%6.6f'):
+        if is_binary:
+            four = pack('>i', 4)
+            f.write(four)
+
+            npoints = points.shape[0]
+            fmt = '>%if' % (npoints * 3)
+            floats = pack(fmt, *ravel(points))
+
+            f.write(floats)
+            f.write(four)
+        else:
+            savetxt(f, points, float_fmt)
+
+    def _write_elements(self, f, elements, is_binary, int_fmt='%6i'):
+        min_e = elements.min()
+        assert min_e == 1, 'min(elements)=%s' % min_e
+        if is_binary:
+            four = pack('>i', 4)
+            f.write(four)
+            nelements = elements.shape[0]
+            fmt = '>%ii' % (nelements * 3)
+            ints = pack(fmt, *ravel(elements))
+
+            f.write(ints)
+            f.write(four)
+        else:
+            savetxt(f, elements, int_fmt)
+
+    def _write_regions(self, f, regions, is_binary):
+        if is_binary:
+            four = pack('>i', 4)
+            f.write(four)
+
+            nregions = len(regions)
+            fmt = '>%ii' % nregions
+            ints = pack(fmt, *regions)
+            f.write(ints)
+
+            f.write(four)
+        else:
+            savetxt(f, regions, '%i')
+
+    def _write_loads(self, f, loads, is_binary, float_fmt='%6.6f'):
+        if is_binary:
+            raise NotImplementedError('is_binary=%s' % is_binary)
+        else:
+            Cp = loads['Cp']
+            rho = loads['rho']
+            rhoU = loads['rhoU']
+            rhoV = loads['rhoV']
+            rhoW = loads['rhoW']
+            E = loads['E']
+
+            nrows = len(Cp)
+            fmt = '%s\n%s %s %s %s %s\n' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
+            for (cpi, rhoi, rhou, rhov, rhoe, e) in zip(Cp, rho, rhoU, rhoV, rhoW, E):
+                f.write(fmt % (cpi, rhoi, rhou, rhov, rhoe, e))
+
+    def _read_header_ascii(self):
+        line = self.infile.readline()
+        sline = line.strip().split()
+        if len(sline) == 2:
+            self.nPoints, self.nElements = int(sline[0]), int(sline[1])
+            self.cartType = 'grid'
+        elif len(sline) == 3:
+            self.nPoints = int(sline[0])
+            self.nElements = int(sline[1])
+            self.nResults = int(sline[2])
+            self.cartType = 'results'
+        else:
+            raise ValueError('invalid result type')
+
+        if self.readHalf:
+            self.nElementsRead = self.nElements // 2
+            self.nElementsSkip = self.nElements // 2
+        else:
+            self.nElementsRead = self.nElements
+            self.nElementsSkip = 0
+
+    def _read_points_ascii(self):
+        """
+        A point is defined by x,y,z and the ID is the location in points.
+        """
+        p = 0
+        data = []
+        assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
+        points = zeros((self.nPoints, 3), dtype='float32')
+        while p < self.nPoints:
+            data += self.infile.readline().strip().split()
+            while len(data) > 2:
+                x = data.pop(0)
+                y = data.pop(0)
+                z = data.pop(0)
+                points[p] = [x, y, z]
+                p += 1
+
+        #maxX = self.get_max(points, 0)
+        #maxY = self.get_max(points, 1)
+        #maxZ = self.get_max(points, 2)
+
+        #minX = self.get_min(points, 0)
+        #minY = self.get_min(points, 1)
+        #minZ = self.get_min(points, 2)
+
+        #self.log.debug("X  max=%g min=%g" % (maxX, minX))
+        #self.log.debug("Y  max=%g min=%g" % (maxY, minY))
+        #self.log.debug("Z  max=%g min=%g" % (maxZ, minZ))
+        return points
+
+    def _read_elements_ascii(self, bypass=False):
+        """
+        An element is defined by n1,n2,n3 and the ID is the location in elements.
+        """
+        assert bypass == False, 'bypass=%r' % bypass
+        assert self.nElementsRead > 0, 'nPoints=%s' % self.nPoints
+        elements = zeros((self.nElementsRead, 3), dtype='int32')
+
+        self.log.debug("nElementsRead=%s nElementsSkip=%s" % (self.nElementsRead, self.nElementsSkip))
+
+        e = 0
+        data = []
+        while e < self.nElementsRead:
+            data += self.infile.readline().strip().split()
+            while len(data) > 2:
+                n1 = int(data.pop(0))
+                n2 = int(data.pop(0))
+                n3 = int(data.pop(0))
+                elements[e] = [n1, n2, n3]
+                e += 1
+
+        e = 0
+        while e < self.nElementsSkip:
+            data += self.infile.readline().strip().split()
+            while len(data) > 2:
+                data.pop()  # popping from the end is faster
+                data.pop()
+                data.pop()
+                e += 1
+        return elements
+
+    def _read_regions_ascii(self, bypass=True):
+        regions = zeros(self.nElementsRead, dtype='int32')
+        if bypass:
+            for i in range(self.nElements):
+                self.infile.readline()
+        else:
+            r = 0
+            data = []
+            while r < self.nElementsRead:
+                data = self.infile.readline().strip().split()
+                ndata = len(data)
+                regions[r : r + ndata] = data
+                r += ndata
+
+            r = 0
+            while r < self.nElementsSkip:
+                data = self.infile.readline().strip().split()
+                ndata = len(data)
+                r += ndata
+        return regions
+
+    def _read_header_binary(self):
+        data = self.infile.read(4)
+        size_little, = unpack(b'<i', data)
+        size_big, = unpack(b'>i', data)
+        if size_big in [12, 8]:
+            self._endian = b'>'
+            size = size_big
+        elif size_little in [8, 12]:
+            self._endian = b'<'
+            size = size_little
+        else:
+            self.rewind()
+            self.show(100)
+            raise RuntimeError('unknown endian')
+
+        self.n += 4
+        data = self.infile.read(size)
+        self.n += size
+
+        so4 = size // 4  # size over 4
+        if so4 == 3:
+            (nPoints, nElements, nResults) = unpack(self._endian + b'iii', data)
+            self.log.info("nPoints=%s nElements=%s nResults=%s" % (nPoints, nElements, nResults))
+            self.cartType = 'grid'
+        elif so4 == 2:
+            (nPoints, nElements) = unpack(self._endian + b'ii', data)
+            self.log.info("nPoints=%s nElements=%s" % (nPoints, nElements))
+            self.cartType = 'results'
+        else:
+            self.rewind()
+            self.show(100)
+            raise RuntimeError('in the wrong spot...endian...size/4=%s' % so4)
+        self.infile.read(8)  # end of first block, start of second block
+
+        return (nPoints, nElements)
+
+    def _read_points_binary(self, npoints):
+        size = npoints * 12  # 12=3*4 all the points
+
+        n = 0
+        points = zeros(npoints * 3, dtype='float32')
+        s = Struct(self._endian + b'3000f') # 3000 floats; 1000 points
+        while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
+            data = self.infile.read(4 * 3000)
+
+            node_xyzs = s.unpack(data)
+            points[n:n+3000] = node_xyzs
+            n += 3000
+            size -= 4 * 3000
+
+        assert size >= 0, 'size=%s' % size
+
+        if size > 0:
+            data = self.infile.read(size)
+            Format = self._endian + b'%if' % (size // 4)
+
+            node_xyzs = unpack(Format, data)
+            points[n:] = node_xyzs
+
+        points = points.reshape((npoints, 3))
+
+        self.infile.read(8)  # end of second block, start of third block
+        return points
+
+    def _read_elements_binary(self, nelements):
+        self.nElementsRead = nelements
+        self.nElementsSkip = 0
+        size = nelements * 12  # 12=3*4 all the elements
+
+        elements = zeros(self.nElements*3, dtype='int32')
+
+        n = 0
+        s = Struct(self._endian + b'3000i')
+        while size > 12000:  # 4k is 1000 elements
+            data = self.infile.read(4 * 3000)
+            nodes = s.unpack(data)
+            elements[n : n + 3000] = nodes
+            size -= 4 * 3000
+            n += 3000
+
+        assert size >= 0, 'size=%s' % size
+        if size > 0:
+            data = self.infile.read(size)
+            Format = self._endian + b'%ii' % (size // 4)
+
+            nodes = unpack(Format, data)
+            elements[n:] = nodes
+
+        elements2 = elements.reshape((nelements, 3))
+        self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
+        return elements2
+
+    def _read_regions_binary(self, nelements):
+        size = nelements * 4  # 12=3*4 all the elements
+        s = Struct(self._endian + b'3000i')
+
+        regions = zeros(self.nElementsRead, dtype='int32')
+
+        nr = 0
+        while size > 12000:  # 12k is 3000 elements
+            data = self.infile.read(4 * 3000)
+            try:
+                region_data = s.unpack(data)
+            except:
+                print("len =", len(data))
+                raise
+
+            delta = len(region_data)
+            regions[nr:nr+delta] = region_data
+            nr += delta
+            size -= 4 * 3000
+
+        assert size >= 0, 'size=%s' % size
+        if size > 0:
+            data = self.infile.read(size)
+            Format = self._endian + b'%ii' % (size // 4)
+            try:
+                region_data = unpack(Format, data)
+            except:
+                print("len =", len(data))
+                raise
+
+            r = nelements
+            if len(regions[nr:]) != len(region_data):
+                msg = 'len(regions[nr:]=%s len(region_data)=%s' % (len(regions[nr:]), len(region_data))
+                raise RuntimeError(msg)
+            regions[nr:] = region_data
+            size = 0
+
+        self.infile.read(4)  # end of regions (fourth) block
+        return regions
+
+    def _read_results_binary(self, i, infile, result_names=None):
+        pass
+
+    def rewind(self):
+        self.n = 0
+        self.infile.seek(self.n)
+
+    def show(self, n, types='ifs', endian=None):
+        """
+        Parameters
+        ----------
+        self : Cart3DReader
+            the object pointer
+        """
+        assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
+        nints = n // 4
+        data = self.infile.read(4 * n)
+        strings, ints, floats = self.show_data(data, types=types, endian=endian)
+        self.infile.seek(self.n)
+        return strings, ints, floats
+
+    def show_data(self, data, types='ifs', endian=None):
+        return self.write_data(sys.stdout, data, types=types, endian=endian)
+
+    def write_data(self, f, data, types='ifs', endian=None):
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        Parameters
+        ----------
+        self : Cart3DReader
+            the object pointer
+        """
+        n = len(data)
+        nints = n // 4
+        ndoubles = n // 8
+        strings = None
+        ints = None
+        floats = None
+        longs = None
+
+        if endian is None:
+            endian = self._endian
+
+        if 's' in types:
+            strings = unpack(b'%s%is' % (endian, n), data)
+            f.write("strings = %s\n" % str(strings))
+        if 'i' in types:
+            ints = unpack(b'%s%ii' % (endian, nints), data)
+            f.write("ints    = %s\n" % str(ints))
+        if 'f' in types:
+            floats = unpack(b'%s%if' % (endian, nints), data)
+            f.write("floats  = %s\n" % str(floats))
+
+        if 'l' in types:
+            longs = unpack(b'%s%il' % (endian, nints), data)
+            f.write("long  = %s\n" % str(longs))
+        if 'I' in types:
+            ints2 = unpack(b'%s%iI' % (endian, nints), data)
+            f.write("unsigned int = %s\n" % str(ints2))
+        if 'L' in types:
+            longs2 = unpack(b'%s%iL' % (endian, nints), data)
+            f.write("unsigned long = %s\n" % str(longs2))
+        if 'q' in types:
+            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("long long = %s\n" % str(longs))
+        return strings, ints, floats
+
+    def show_ndata(self, n, types='ifs'):
+        return self.write_ndata(sys.stdout, n, types=types)
+
+    def write_ndata(self, f, n, types='ifs'):
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        Parameters
+        ----------
+        self : Cart3DReader
+            the object pointer
+        """
+        nold = self.n
+        data = self.infile.read(n)
+        self.n = nold
+        self.infile.seek(self.n)
+        return self.write_data(f, data, types=types)
+
+
+class Cart3DReader(Cart3dIO):
+    """
+    Cart3d interface class
+    """
+    modelType = 'cart3d'
+    isStructured = False
+    isOutwardNormals = True
+
+    def __init__(self, log=None, debug=False):
+        Cart3dIO.__init__(self, log=log, debug=debug)
 
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """
@@ -293,112 +699,6 @@ class Cart3DReader(object):
                 # print(edge)
         return free_edges
 
-    def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False, float_fmt='%6.7f'):
-        assert len(points) > 0, 'len(points)=%s' % len(points)
-
-        if loads is None or loads == {}:
-            loads = {}
-            is_loads = False
-            print("no loads")
-        else:
-            is_loads = True
-
-        self.log.info("---writing cart3d file...%r---" % outfilename)
-        f = open(outfilename, 'wb')
-
-        int_fmt = self._write_header(f, points, elements, is_loads, is_binary)
-        self._write_points(f, points, is_binary, float_fmt)
-        self._write_elements(f, elements, is_binary, int_fmt)
-        self._write_regions(f, regions, is_binary)
-
-        if is_loads:
-            assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
-            self._write_loads(f, loads, is_binary, float_fmt)
-        f.close()
-
-    def _write_header(self, f, points, elements, is_loads, is_binary=False):
-        npoints = points.shape[0]
-        nelements = elements.shape[0]
-
-        if is_binary:
-            if is_loads:
-                msg = pack('>iiiii', 3*4, npoints, nelements, 6, 4)
-            else:
-                msg = pack('>iiii', 2*4, npoints, nelements, 4)
-
-            int_fmt = None
-        else:
-            if is_loads:
-                msg = "%s %s 6\n" % (npoints, nelements)
-            else:
-                msg = "%s %s\n" % (npoints, nelements)
-
-            # take the max value, string it, and length it
-            # so 123,456 is length 6
-            int_fmt = '%%%si' % len(str(nelements))
-        f.write(msg)
-        return int_fmt
-
-    def _write_points(self, f, points, is_binary, float_fmt='%6.6f'):
-        if is_binary:
-            four = pack('>i', 4)
-            f.write(four)
-
-            npoints = points.shape[0]
-            fmt = '>%if' % (npoints * 3)
-            floats = pack(fmt, *ravel(points))
-
-            f.write(floats)
-            f.write(four)
-        else:
-            savetxt(f, points, float_fmt)
-
-    def _write_elements(self, f, elements, is_binary, int_fmt='%6i'):
-        min_e = elements.min()
-        assert min_e == 1, 'min(elements)=%s' % min_e
-        if is_binary:
-            four = pack('>i', 4)
-            f.write(four)
-            nelements = elements.shape[0]
-            fmt = '>%ii' % (nelements * 3)
-            ints = pack(fmt, *ravel(elements))
-
-            f.write(ints)
-            f.write(four)
-        else:
-            savetxt(f, elements, int_fmt)
-
-    def _write_regions(self, f, regions, is_binary):
-        if is_binary:
-            four = pack('>i', 4)
-            f.write(four)
-
-            nregions = len(regions)
-            fmt = '>%ii' % nregions
-            ints = pack(fmt, *regions)
-            f.write(ints)
-
-            f.write(four)
-        else:
-            savetxt(f, regions, '%i')
-
-    def _write_loads(self, f, loads, is_binary, float_fmt='%6.6f'):
-        if is_binary:
-            raise NotImplementedError('is_binary=%s' % is_binary)
-        else:
-            Cp = loads['Cp']
-            rho = loads['rho']
-            rhoU = loads['rhoU']
-            rhoV = loads['rhoV']
-            rhoW = loads['rhoW']
-            E = loads['E']
-
-            nrows = len(Cp)
-            fmt = '%s\n%s %s %s %s %s\n' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
-            for (cpi, rhoi, rhou, rhov, rhoe, e) in zip(Cp, rho, rhoU, rhoV, rhoW, E):
-                f.write(fmt % (cpi, rhoi, rhou, rhov, rhoe, e))
-
-
     def read_cart3d(self, infilename, result_names=None):
         """extracts the points, elements, and Cp"""
         self.infilename = infilename
@@ -427,114 +727,35 @@ class Cart3DReader(object):
         assert self.nElements > 0, 'nElements=%s' % self.nElements
         return (points, elements, regions, loads)
 
-    def _read_header_ascii(self):
-        line = self.infile.readline()
-        sline = line.strip().split()
-        if len(sline) == 2:
-            self.nPoints, self.nElements = int(sline[0]), int(sline[1])
-            self.cartType = 'grid'
-        elif len(sline) == 3:
-            self.nPoints = int(sline[0])
-            self.nElements = int(sline[1])
-            self.nResults = int(sline[2])
-            self.cartType = 'results'
+    def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False, float_fmt='%6.7f'):
+        assert len(points) > 0, 'len(points)=%s' % len(points)
+
+        if loads is None or loads == {}:
+            loads = {}
+            is_loads = False
+            print("no loads")
         else:
-            raise ValueError('invalid result type')
+            is_loads = True
 
-        if self.readHalf:
-            self.nElementsRead = self.nElements // 2
-            self.nElementsSkip = self.nElements // 2
-        else:
-            self.nElementsRead = self.nElements
-            self.nElementsSkip = 0
+        self.log.info("---writing cart3d file...%r---" % outfilename)
+        f = open(outfilename, 'wb')
 
-    def _read_points_ascii(self):
-        """
-        A point is defined by x,y,z and the ID is the location in points.
-        """
-        p = 0
-        data = []
-        assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
-        points = zeros((self.nPoints, 3), dtype='float32')
-        while p < self.nPoints:
-            data += self.infile.readline().strip().split()
-            while len(data) > 2:
-                x = data.pop(0)
-                y = data.pop(0)
-                z = data.pop(0)
-                points[p] = [x, y, z]
-                p += 1
+        int_fmt = self._write_header(f, points, elements, is_loads, is_binary)
+        self._write_points(f, points, is_binary, float_fmt)
+        self._write_elements(f, elements, is_binary, int_fmt)
+        self._write_regions(f, regions, is_binary)
 
-        maxX = self.get_max(points, 0)
-        maxY = self.get_max(points, 1)
-        maxZ = self.get_max(points, 2)
+        if is_loads:
+            assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
+            self._write_loads(f, loads, is_binary, float_fmt)
+        f.close()
 
-        minX = self.get_min(points, 0)
-        minY = self.get_min(points, 1)
-        minZ = self.get_min(points, 2)
-
-        self.log.debug("X  max=%g min=%g" % (maxX, minX))
-        self.log.debug("Y  max=%g min=%g" % (maxY, minY))
-        self.log.debug("Z  max=%g min=%g" % (maxZ, minZ))
-        return points
 
     def get_min(self, points, i):
         return amin(points[:, i])
 
     def get_max(self, points, i):
         return amax(points[:, i])
-
-    def _read_elements_ascii(self, bypass=False):
-        """
-        An element is defined by n1,n2,n3 and the ID is the location in elements.
-        """
-        assert bypass == False, 'bypass=%r' % bypass
-        assert self.nElementsRead > 0, 'nPoints=%s' % self.nPoints
-        elements = zeros((self.nElementsRead, 3), dtype='int32')
-
-        self.log.debug("nElementsRead=%s nElementsSkip=%s" % (self.nElementsRead, self.nElementsSkip))
-
-        e = 0
-        data = []
-        while e < self.nElementsRead:
-            data += self.infile.readline().strip().split()
-            while len(data) > 2:
-                n1 = int(data.pop(0))
-                n2 = int(data.pop(0))
-                n3 = int(data.pop(0))
-                elements[e] = [n1, n2, n3]
-                e += 1
-
-        e = 0
-        while e < self.nElementsSkip:
-            data += self.infile.readline().strip().split()
-            while len(data) > 2:
-                data.pop()  # popping from the end is faster
-                data.pop()
-                data.pop()
-                e += 1
-        return elements
-
-    def _read_regions_ascii(self, bypass=True):
-        regions = zeros(self.nElementsRead, dtype='int32')
-        if bypass:
-            for i in range(self.nElements):
-                self.infile.readline()
-        else:
-            r = 0
-            data = []
-            while r < self.nElementsRead:
-                data = self.infile.readline().strip().split()
-                ndata = len(data)
-                regions[r : r + ndata] = data
-                r += ndata
-
-            r = 0
-            while r < self.nElementsSkip:
-                data = self.infile.readline().strip().split()
-                ndata = len(data)
-                r += ndata
-        return regions
 
     def _read_results_ascii(self, i, infile, result_names=None):
         """
@@ -568,7 +789,7 @@ class Cart3DReader(object):
 
         if result_names is None:
             result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
-                            'Mach', 'U', 'V', 'W', 'E']
+                            'Mach', 'U', 'V', 'W', 'E', 'a', 'T', 'Pressure', 'q']
         self.log.info('---starting read_results---')
 
         results = zeros((self.nPoints, 6), dtype='float32')
@@ -609,7 +830,20 @@ class Cart3DReader(object):
 
         return self._calculate_results(result_names, results)
 
-    def _calculate_results(self, result_names, results):
+    def _calculate_results(self, result_names, results, loads=None):
+        """
+        Takes the Cart3d variables and calculates additional variables
+
+        Parameters
+        self : Cart3dReader
+            the object pointer
+        result_names : List[str]
+            the variables to calculate
+        results : (n,6) ndarray
+            the non-dimensional prmitive flow variables
+        """
+        if loads is None:
+            loads = {}
         Cp = results[:, 0]
         rho = results[:, 1]
         rhoU = results[:, 2]
@@ -648,8 +882,8 @@ class Cart3DReader(object):
         else:
             is_bad = False
 
+
         #loc = locals()
-        loads = {}
         if 'Cp' in result_names:
             loads['Cp'] = Cp
         if 'rhoU' in result_names:
@@ -668,8 +902,8 @@ class Cart3DReader(object):
             if not is_bad:
                 #Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2) / rho
                 Mach = sqrt(rhoU**2 + rhoV**2 + rhoW**2)
-
             loads['Mach'] = Mach
+
         if 'U' in result_names:
             if not is_bad:
                 U = rhoU / rho
@@ -687,146 +921,41 @@ class Cart3DReader(object):
                 #E = rhoE / rho
             loads['E'] = E
 
+        gamma = 1.4
+        qinf = 1.0
+        pinf = 1. / gamma
+        Tinf = 1.0
+        #Cp = (p - pinf) / qinf
+        p = Cp * qinf + pinf
+
+        T = (Tinf * gamma) * p / rho
+        q = 0.5 * rho * Mach ** 2
+
+        if 'a' in result_names:
+            loads['a'] = sqrt(T)
+        if 'T' in result_names:
+            loads['T'] = T
+
+        if 'Pressure' in result_names:
+            loads['Pressure'] = p
+        if 'q' in result_names:
+            loads['q'] = q
+        # dynamic pressure
+        # speed of sound
+        # total pressure = p0/rhoi*ainf**2
+        # total density
+        # entropy
+        # kinetic energy
+        # enthalpy
+        # energy, E
+        # total energy
+        # total enthalpy
+
         #i = where(Mach == max(Mach))[0][0]
         #self.log.info("i=%s Cp=%s rho=%s rhoU=%s rhoV=%s rhoW=%s Mach=%s" % (i, Cp[i], rho[i], rhoU[i],
         #              rhoV[i], rhoW[i], Mach[i]))
         self.log.info('---finished read_results---')
         return loads
-
-    def _read_header_binary(self):
-        data = self.infile.read(4)
-        size_little, = unpack(b'<i', data)
-        size_big, = unpack(b'>i', data)
-        if size_big in [12, 8]:
-            self._endian = b'>'
-            size = size_big
-        elif size_little in [8, 12]:
-            self._endian = b'<'
-            size = size_little
-        else:
-            self.rewind()
-            self.show(100)
-            raise RuntimeError('unknown endian')
-
-        self.n += 4
-        data = self.infile.read(size)
-        self.n += size
-
-        so4 = size // 4  # size over 4
-        if so4 == 3:
-            (nPoints, nElements, nResults) = unpack(self._endian + b'iii', data)
-            self.log.info("nPoints=%s nElements=%s nResults=%s" % (nPoints, nElements, nResults))
-            self.cartType = 'grid'
-        elif so4 == 2:
-            (nPoints, nElements) = unpack(self._endian + b'ii', data)
-            self.log.info("nPoints=%s nElements=%s" % (nPoints, nElements))
-            self.cartType = 'results'
-        else:
-            self.rewind()
-            self.show(100)
-            raise RuntimeError('in the wrong spot...endian...size/4=%s' % so4)
-        self.infile.read(8)  # end of first block, start of second block
-
-        return (nPoints, nElements)
-
-    def _read_points_binary(self, npoints):
-        size = npoints * 12  # 12=3*4 all the points
-
-        n = 0
-        points = zeros(npoints * 3, dtype='float32')
-        s = Struct(self._endian + b'3000f') # 3000 floats; 1000 points
-        while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
-            data = self.infile.read(4 * 3000)
-
-            nodeXYZs = s.unpack(data)
-            points[n:n+3000] = nodeXYZs
-            n += 3000
-            size -= 4 * 3000
-
-        assert size >= 0, 'size=%s' % size
-
-        if size > 0:
-            data = self.infile.read(size)
-            Format = self._endian + b'%if' % (size // 4)
-
-            nodeXYZs = unpack(Format, data)
-            points[n:] = nodeXYZs
-
-        points = points.reshape((npoints, 3))
-
-        self.infile.read(8)  # end of second block, start of third block
-        return points
-
-    def _read_elements_binary(self, nelements):
-        self.nElementsRead = nelements
-        self.nElementsSkip = 0
-        size = nelements * 12  # 12=3*4 all the elements
-
-        elements = zeros(self.nElements*3, dtype='int32')
-
-        n = 0
-        s = Struct(self._endian + b'3000i')
-        while size > 12000:  # 4k is 1000 elements
-            data = self.infile.read(4 * 3000)
-            nodes = s.unpack(data)
-            elements[n : n + 3000] = nodes
-            size -= 4 * 3000
-            n += 3000
-
-        assert size >= 0, 'size=%s' % size
-        if size > 0:
-            data = self.infile.read(size)
-            Format = self._endian + b'%ii' % (size // 4)
-
-            nodes = unpack(Format, data)
-            elements[n:] = nodes
-
-        elements2 = elements.reshape((nelements, 3))
-        self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
-        return elements2
-
-    def _read_regions_binary(self, nelements):
-        size = nelements * 4  # 12=3*4 all the elements
-        s = Struct(self._endian + b'3000i')
-
-        regions = zeros(self.nElementsRead, dtype='int32')
-
-        nr = 0
-        while size > 12000:  # 12k is 3000 elements
-            data = self.infile.read(4 * 3000)
-            try:
-                region_data = s.unpack(data)
-            except:
-                print("len =", len(data))
-                raise
-
-            delta = len(region_data)
-            regions[nr:nr+delta] = region_data
-            nr += delta
-            size -= 4 * 3000
-
-        assert size >= 0, 'size=%s' % size
-        if size > 0:
-            data = self.infile.read(size)
-            Format = self._endian + b'%ii' % (size // 4)
-            try:
-                region_data = unpack(Format, data)
-            except:
-                print("len =", len(data))
-                raise
-
-            r = nelements
-            if len(regions[nr:]) != len(region_data):
-                msg = 'len(regions[nr:]=%s len(region_data)=%s' % (len(regions[nr:]), len(region_data))
-                raise RuntimeError(msg)
-            regions[nr:] = region_data
-            size = 0
-
-        self.infile.read(4)  # end of regions (fourth) block
-        return regions
-
-    def _read_results_binary(self, i, infile, result_names=None):
-        pass
 
     def get_normals(self, nodes, elements, shift_nodes=True):
         """
@@ -927,88 +1056,14 @@ class Cart3DReader(object):
         nnormals /= ni[:, None]  # normal vector
         return nnormals
 
-    def rewind(self):
-        self.n = 0
-        self.infile.seek(self.n)
 
-    def show(self, n, types='ifs', endian=None):
-        """
-        Parameters
-        ----------
-        self : Cart3DReader
-            the object pointer
-        """
-        assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
-        nints = n // 4
-        data = self.infile.read(4 * n)
-        strings, ints, floats = self.show_data(data, types=types, endian=endian)
-        self.infile.seek(self.n)
-        return strings, ints, floats
 
-    def show_data(self, data, types='ifs', endian=None):
-        return self.write_data(sys.stdout, data, types=types, endian=endian)
-
-    def write_data(self, f, data, types='ifs', endian=None):
-        """
-        Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        self : Cart3DReader
-            the object pointer
-        """
-        n = len(data)
-        nints = n // 4
-        ndoubles = n // 8
-        strings = None
-        ints = None
-        floats = None
-        longs = None
-
-        if endian is None:
-            endian = self._endian
-
-        if 's' in types:
-            strings = unpack(b'%s%is' % (endian, n), data)
-            f.write("strings = %s\n" % str(strings))
-        if 'i' in types:
-            ints = unpack(b'%s%ii' % (endian, nints), data)
-            f.write("ints    = %s\n" % str(ints))
-        if 'f' in types:
-            floats = unpack(b'%s%if' % (endian, nints), data)
-            f.write("floats  = %s\n" % str(floats))
-
-        if 'l' in types:
-            longs = unpack(b'%s%il' % (endian, nints), data)
-            f.write("long  = %s\n" % str(longs))
-        if 'I' in types:
-            ints2 = unpack(b'%s%iI' % (endian, nints), data)
-            f.write("unsigned int = %s\n" % str(ints2))
-        if 'L' in types:
-            longs2 = unpack(b'%s%iL' % (endian, nints), data)
-            f.write("unsigned long = %s\n" % str(longs2))
-        if 'q' in types:
-            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("long long = %s\n" % str(longs))
-        return strings, ints, floats
-
-    def show_ndata(self, n, types='ifs'):
-        return self.write_ndata(sys.stdout, n, types=types)
-
-    def write_ndata(self, f, n, types='ifs'):
-        """
-        Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        self : Cart3DReader
-            the object pointer
-        """
-        nold = self.n
-        data = self.infile.read(n)
-        self.n = nold
-        self.infile.seek(self.n)
-        return self.write_data(f, data, types=types)
+def convert_to_float(svalues):
+    """Takes a list of strings and converts them to floats."""
+    values = []
+    for value in svalues:
+        values.append(float(value))
+    return values
 
 def _get_list(sline):
     """Takes a list of strings and converts them to floats."""

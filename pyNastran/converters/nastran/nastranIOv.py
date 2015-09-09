@@ -83,6 +83,7 @@ class NastranIO(object):
         self.nElements = None
         self.modelType = None
         self.iSubcaseNameMap = None
+        self.has_caero = False
 
     def get_nastran_wildcard_geometry_results_functions(self):
         if is_geom:
@@ -160,6 +161,8 @@ class NastranIO(object):
         Toggle the visibility of the CAERO panels. The visibility of the sub panels
         or panels will be set according to the current show_caero_sub_panels state.
         """
+        if not self.has_caero:
+            return
         self.show_caero_actor = not self.show_caero_actor
         if self.show_caero_actor:
             if self.show_caero_sub_panels:
@@ -175,6 +178,8 @@ class NastranIO(object):
         """
         Toggle the visibility of the CAERO sub panels
         """
+        if not self.has_caero:
+            return
         self.show_caero_sub_panels = not self.show_caero_sub_panels
         if self.show_caero_actor:
             if self.show_caero_sub_panels:
@@ -240,15 +245,6 @@ class NastranIO(object):
             self.TurnTextOff()
             self.grid.Reset()
             #self.grid2.Reset()
-
-            # create alt grids
-            yellow = (1., 1., 0.)
-            # pink = (0.98, 0.4, 0.93)
-            if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='surface')
-            if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='surface')
-            #print('alt_grids', self.alt_grids.keys())
 
             #self.gridResult = vtk.vtkFloatArray()
             #self.gridResult.Reset()
@@ -380,6 +376,7 @@ class NastranIO(object):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
             caero_points = vstack(caero_points)
+            self.has_caero = True
         else:
             caero_points = empty((0, 3))
 
@@ -421,7 +418,13 @@ class NastranIO(object):
 
         # Allocate grids
         self.grid.Allocate(self.nElements, 1000)
-        if 'caero' in self.alt_grids:
+        if self.has_caero:
+            yellow = (1., 1., 0.)
+            if 'caero' not in self.alt_grids:
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='surface')
+            if 'caero_sub' not in self.alt_grids:
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='surface')
+
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
             self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
             if has_control_surface:
@@ -706,8 +709,9 @@ class NastranIO(object):
                 if spc_id is not None:
                     nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
                     nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
+                    nspcds = model.card_count['SPCD'] if 'SPCD' in model.card_count else 0
                     if nspcs + nspc1s:
-                        self._fill_spc(spc_id, nspcs, nspc1s, dim_max, model, nid_to_pid_map)
+                        self._fill_spc(spc_id, nspcs, nspc1s, nspcds, dim_max, model, nid_to_pid_map)
 
             if 'MPC' in subcase:
                 mpc_id, options = subcase.get_parameter('MPC')
@@ -798,7 +802,7 @@ class NastranIO(object):
                 continue
         return node_ids_c1
 
-    def _fill_spc(self, spc_id, nspcs, nspc1s, dim_max, model, nid_to_pid_map):
+    def _fill_spc(self, spc_id, nspcs, nspc1s, nspcds, dim_max, model, nid_to_pid_map):
         purple = (1., 0., 1.)
         self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1., point_size=5, representation='point')
 
@@ -1398,21 +1402,6 @@ class NastranIO(object):
         pids = pids[:nelements]
         #print('len(pids) = ', len(pids))
         self.grid.SetPoints(points)
-        #self.grid2.SetPoints(points2)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print(dir(self.grid)) #.SetNumberOfComponents(0)
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
-
-
-        #print('a', self.geometry_actors['caero'].GetVisibility())
-        #print('b', self.geometry_actors['caero_sub'].GetVisibility())
-
-        #self.alt_grids['caero'].Modified()
-        #self.alt_grids['caero_sub'].Modified()
-        #if hasattr(self.grid, 'Update'):
-            #self.alt_grids['caero'].Update()
-            #self.alt_grids['caero_sub'].Update()
 
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
@@ -1581,8 +1570,7 @@ class NastranIO(object):
         return icase
 
     def _plot_applied_loads(self, model, cases, form0, icase):
-        # if not self.is_nodal:
-            # return
+        print('_plot_applied_loads')
         try:
             sucase_ids = model.caseControlDeck.get_subcase_list()
         except AttributeError:
@@ -1607,15 +1595,16 @@ class NastranIO(object):
             #eids = sorted(model.elements.keys())
             nids = sorted(model.nodes.keys())
             p0 = array([0., 0., 0.], dtype='float32')
-            pressures, forces = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
+            pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
 
+            form = []
             if abs(pressures).max():
                 case_name = 'Pressure Case=%i' % subcase_id
                 # print('iload=%s' % iload)
                 # print(case_name)
                 # subcase_id, resultType, vector_size, location, dataFormat
                 cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
-                form0.append((case_name, icase, []))
+                form.append((case_name, icase, []))
                 icase += 1
 
             if abs(forces.max() - forces.min()) > 0.0:
@@ -1623,19 +1612,41 @@ class NastranIO(object):
                 # if forces[:, 0].min() != forces[:, 0].max():
                 cases[(subcase_id, icase, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 0]
                 # if forces[:, 1].min() != forces[:, 1].max():
-                cases[(subcase_id, icase+1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
+                cases[(subcase_id, icase + 1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
                 # if forces[:, 2].min() != forces[:, 2].max():
-                cases[(subcase_id, icase+1, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
+                cases[(subcase_id, icase + 2, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
 
-                form = []
-                form0.append(('Load Case=%i' % subcase_id, None, form))
                 form.append(('Total Load FX', icase, []))
                 form.append(('Total Load FY', icase + 1, []))
                 form.append(('Total Load FZ', icase + 2, []))
                 icase += 2
+
+            if abs(spcd).max():
+                cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
+                form.append(('SPCDx', icase, []))
+                icase += 1
+
+                cases[(subcase_id, icase, 'SPCDy', 1, 'node', '%.3g')] = spcd[:, 1]
+                form.append(('SPCDy', icase, []))
+                icase += 1
+
+                #cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                cases[(subcase_id, icase, 'SPCDz', 1, 'node', '%.3g')] = spcd[:, 2]
+                form.append(('SPCDz', icase, []))
+                icase += 1
+
+                t123 = spcd[:, :3]
+                tnorm = norm(t123, axis=1)
+                assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
+                cases[(subcase_id, icase, 'SPCD XYZ', 1, 'node', '%.3g')] = tnorm
+                form.append(('SPCD XYZ', icase, []))
+                icase += 1
+            if form:
+                form0.append(('Load Case=%i' % subcase_id, None, form))
         return icase
 
     def _get_forces_moments_array(self, model, p0, load_case_id, include_grav=False):
+        print('_get_forces_moments_array')
         nids = sorted(model.nodes.keys())
         nnodes = len(nids)
 
@@ -1658,7 +1669,9 @@ class NastranIO(object):
         pressures = zeros(len(model.elements), dtype='float32')
 
         forces = zeros((nnodes, 3), dtype='float32')
+        spcd = zeros((nnodes, 3), dtype='float32')
         # loop thru scaled loads and plot the pressure
+        cards_ignored = {}
         for load, scale in zip(loads2, scale_factors2):
             if load.type == 'FORCE':
                 scale2 = load.mag * scale  # does this need a magnitude?
@@ -1721,8 +1734,21 @@ class NastranIO(object):
                         for nid in el.node_ids:
                             forces[nids.index(nid)] += F
                 #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+            elif load.type == 'SPCD':
+                #self.gids = [integer(card, 2, 'G1'),]
+                #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+                for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
+                    c1 = int(c1)
+                    assert c1 in [1, 2, 3, 4, 5, 6], c1
+                    if c1 < 4:
+                        spcd[nids.index(nid), c1 - 1] = d1
+            else:
+                if load.type not in cards_ignored:
+                    cards_ignored[load.type] = True
+                    print('  _get_forces_moment_array - load.type = %s' % load.type)
 
-        return pressures, forces
+        return pressures, forces, spcd
 
     def load_nastran_results(self, op2_filename, dirname):
         """

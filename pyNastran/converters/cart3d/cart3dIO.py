@@ -3,7 +3,7 @@ from six import iteritems
 from six.moves import range
 
 import os
-from numpy import arange, mean, amax, amin, vstack, zeros, unique, where
+from numpy import arange, mean, amax, amin, vstack, zeros, unique, where, sqrt
 
 import vtk
 from vtk import vtkTriangle, vtkHexahedron
@@ -228,8 +228,9 @@ class Cart3dIO(object):
         cases = {}
         ID = 1
 
-        form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
-        self._create_box(cart3d_filename, ID, form, cases, icase, regions)
+        mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
+        form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model,
+                                                    mach)
         self._finish_results_io2(form, cases)
 
     def _create_box(self, cart3d_filename, ID, form, cases, icase, regions):
@@ -237,9 +238,13 @@ class Cart3dIO(object):
         dirname = os.path.dirname(os.path.abspath(cart3d_filename))
         input_c3d_filename = os.path.join(dirname, 'input.c3d')
         input_cntl_filename = os.path.join(dirname, 'input.cntl')
+        mach = None
+        alpha = None
+        beta = None
         if os.path.exists(input_cntl_filename):
             cntl = InputCntlReader()
             cntl.read_input_cntl(input_cntl_filename)
+            mach, alpha, beta = cntl.get_flow_conditions()
             bcs = cntl.get_boundary_conditions()
             bc_xmin, bc_xmax, bc_ymin, bc_ymax, bc_xmin, bc_xmax, surfbcs = bcs
             stack = False
@@ -250,7 +255,8 @@ class Cart3dIO(object):
                     ('xVelocity', icase + 1, []),
                     ('yVelocity', icase + 2, []),
                     ('zVelocity', icase + 3, []),
-                    ('Pressure', icase + 4, []),
+                    ('Mach', icase + 4, []),
+                    ('Pressure', icase + 5, []),
                 ]
                 icase += 5
                 nelements = self.nElements
@@ -258,6 +264,7 @@ class Cart3dIO(object):
                 xvel = zeros(nelements, dtype='float32')
                 yvel = zeros(nelements, dtype='float32')
                 zvel = zeros(nelements, dtype='float32')
+                vel = zeros(nelements, dtype='float32')
                 pressure = zeros(nelements, dtype='float32')
 
                 uregions = set(unique(regions))
@@ -278,7 +285,8 @@ class Cart3dIO(object):
                 cases[(ID, icase + 1, 'xVelocity', 1, 'centroid', '%.3f')] = xvel
                 cases[(ID, icase + 2, 'yVelocity', 1, 'centroid', '%.3f')] = yvel
                 cases[(ID, icase + 3, 'zVelocity', 1, 'centroid', '%.3f')] = zvel
-                cases[(ID, icase + 4, 'Pressure', 1, 'centroid', '%.3f')] = pressure
+                cases[(ID, icase + 4, 'Mach', 1, 'centroid', '%.3f')] = sqrt(xvel ** 2 + yvel ** 2 + zvel ** 2)
+                cases[(ID, icase + 5, 'Pressure', 1, 'centroid', '%.3f')] = pressure
                 form.append(('Boundary Conditions', None, bc_form))
 
 
@@ -380,6 +388,7 @@ class Cart3dIO(object):
                 #for nodesi, elementsi in zip(nodes, elements):
                     #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color, line_width=1, opacity=1.)
                     #i += 1
+        return mach, alpha, beta
 
     def _create_cart3d_free_edegs(self, model, nodes, elements):
         free_edges = model.get_free_edges(elements)
@@ -457,9 +466,9 @@ class Cart3dIO(object):
         ]
         return form, cases
 
-    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model):
+    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model, mach):
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
-                        'rhoU', 'rhoV', 'rhoW', 'rhoE']
+                        'rhoU', 'rhoV', 'rhoW', 'rhoE', 'a', 'T', 'q', 'Pressure']
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
