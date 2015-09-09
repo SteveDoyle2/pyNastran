@@ -1595,15 +1595,16 @@ class NastranIO(object):
             #eids = sorted(model.elements.keys())
             nids = sorted(model.nodes.keys())
             p0 = array([0., 0., 0.], dtype='float32')
-            pressures, forces = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
+            pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
 
+            form = []
             if abs(pressures).max():
                 case_name = 'Pressure Case=%i' % subcase_id
                 # print('iload=%s' % iload)
                 # print(case_name)
                 # subcase_id, resultType, vector_size, location, dataFormat
                 cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
-                form0.append((case_name, icase, []))
+                form.append((case_name, icase, []))
                 icase += 1
 
             if abs(forces.max() - forces.min()) > 0.0:
@@ -1611,16 +1612,37 @@ class NastranIO(object):
                 # if forces[:, 0].min() != forces[:, 0].max():
                 cases[(subcase_id, icase, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 0]
                 # if forces[:, 1].min() != forces[:, 1].max():
-                cases[(subcase_id, icase+1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
+                cases[(subcase_id, icase + 1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
                 # if forces[:, 2].min() != forces[:, 2].max():
-                cases[(subcase_id, icase+2, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
+                cases[(subcase_id, icase + 2, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
 
-                form = []
-                form0.append(('Load Case=%i' % subcase_id, None, form))
                 form.append(('Total Load FX', icase, []))
                 form.append(('Total Load FY', icase + 1, []))
                 form.append(('Total Load FZ', icase + 2, []))
                 icase += 2
+
+            if abs(spcd).max():
+                cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
+                form.append(('SPCDx', icase, []))
+                icase += 1
+
+                cases[(subcase_id, icase, 'SPCDy', 1, 'node', '%.3g')] = spcd[:, 1]
+                form.append(('SPCDy', icase, []))
+                icase += 1
+
+                #cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                cases[(subcase_id, icase, 'SPCDz', 1, 'node', '%.3g')] = spcd[:, 2]
+                form.append(('SPCDz', icase, []))
+                icase += 1
+
+                t123 = spcd[:, :3]
+                tnorm = norm(t123, axis=1)
+                assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
+                cases[(subcase_id, icase, 'SPCD XYZ', 1, 'node', '%.3g')] = tnorm
+                form.append(('SPCD XYZ', icase, []))
+                icase += 1
+            if form:
+                form0.append(('Load Case=%i' % subcase_id, None, form))
         return icase
 
     def _get_forces_moments_array(self, model, p0, load_case_id, include_grav=False):
@@ -1647,7 +1669,9 @@ class NastranIO(object):
         pressures = zeros(len(model.elements), dtype='float32')
 
         forces = zeros((nnodes, 3), dtype='float32')
+        spcd = zeros((nnodes, 3), dtype='float32')
         # loop thru scaled loads and plot the pressure
+        cards_ignored = {}
         for load, scale in zip(loads2, scale_factors2):
             if load.type == 'FORCE':
                 scale2 = load.mag * scale  # does this need a magnitude?
@@ -1710,10 +1734,21 @@ class NastranIO(object):
                         for nid in el.node_ids:
                             forces[nids.index(nid)] += F
                 #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+            elif load.type == 'SPCD':
+                #self.gids = [integer(card, 2, 'G1'),]
+                #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+                for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
+                    c1 = int(c1)
+                    assert c1 in [1, 2, 3, 4, 5, 6], c1
+                    if c1 < 4:
+                        spcd[nids.index(nid), c1 - 1] = d1
             else:
-                print('load.type = %s' % load.type)
+                if load.type not in cards_ignored:
+                    cards_ignored[load.type] = True
+                    print('  _get_forces_moment_array - load.type = %s' % load.type)
 
-        return pressures, forces
+        return pressures, forces, spcd
 
     def load_nastran_results(self, op2_filename, dirname):
         """

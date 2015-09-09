@@ -218,7 +218,7 @@ def run(model, op2_filename, mode):
     header += 'SUBCASE 1\n'
     # header += '  SUPORT = 1\n'
     if mode == 'load':
-        header += '  LOAD = 1\n'
+        header += '  LOAD = 55\n'
     header += '  METHOD = 42\n'
     header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
     header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
@@ -241,7 +241,8 @@ def run(model, op2_filename, mode):
     nroots = 20
     method = 42
     spc_id = 100
-    header += 'EIGB,%s,,%s,%s,%s\n' % (method, eig1, eig2, nroots)
+    load_id = 55
+    header += 'EIGB,%s,INV,%s,%s,%s\n' % (method, eig1, eig2, nroots)
 
     isubcase = 1
     out_model = OP2()
@@ -334,8 +335,13 @@ def run(model, op2_filename, mode):
             #$SPCD         100   20028       3.3169889   20028       41.6345-4
             #$SPCD         100   20028       5.0004592   20028       6-2.092-3
             #FORCE,1,20036,0,0.000001,1.0,1.0,1.0
-            SPC1,100,123456,20028
-            patch_file.write('SPC1,%i,123456,%i\n' % (spc_id, patch_edge_nids[0]))
+            #SPC1,100,123456,20028
+            n1 = patch_edge_nids[0]
+            n2 = patch_edge_nids[1]
+            patch_file.write('SPC1,%i,123456,%i\n' % (spc_id, n1))
+
+            # dummy load
+            patch_file.write('FORCE,%i,%i,0,0.000001,1.0,1.0,1.0\n' % (load_id, n2))
             for i, nid in enumerate(patch_edge_nids):
                 if i == 0:
                     continue
@@ -377,11 +383,11 @@ def run(model, op2_filename, mode):
                 momenti = abs_force_moment_sum[3:]
                 if forcei.sum() > 0.0:
                     # write force
-                    card = ['FORCE', 1, node_id, cdi, 1.0, ] + list(forcei)
+                    card = ['FORCE', load_id, node_id, cdi, 1.0, ] + list(forcei)
                     patch_file.write(print_card_8(card))
                 if momenti.sum() > 0.0:
                     # write moment
-                    card = ['MOMENT', 1, node_id, cdi, 1.0, ] + list(momenti)
+                    card = ['MOMENT', load_id, node_id, cdi, 1.0, ] + list(momenti)
                     patch_file.write(print_card_8(card))
         else:
             raise RuntimeError(mode)
