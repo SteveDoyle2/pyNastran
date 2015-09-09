@@ -2,8 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, integer_types, iterkeys
-#import sys
-from numpy import ndarray
+from collections import defaultdict
 
 from pyNastran.bdf.deprecated import GetMethodsDeprecated
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
@@ -132,7 +131,32 @@ class GetMethods(GetMethodsDeprecated):
     def get_node_ids_with_element(self, eid, msg=''):
         return self.get_node_ids_with_elements([eid], msg=msg)
 
-    def _get_maps(self, eids=None, map_names=None, consider_0d=True, consider_1d=True, consider_2d=True, consider_3d=True):
+    def _get_maps(self, eids=None, map_names=None,
+                  consider_0d=True, consider_0d_rigid=True,
+                  consider_1d=True, consider_2d=True, consider_3d=True):
+        """
+        Gets a series of mappings (e.g. node_id to element_id)
+
+        eids : List[int]
+            the element ids to consider
+        map_names : List[str]; default=None -> []
+            does nothing
+        consider_0d : bool; default=True
+            considers CELASx, CDAMPx, CFAST
+        consider_0d_rigid : bool; default=True
+            considers MPC, RBAR, RBE2, RBE3 elements
+        consider_1d : bool; default=True
+            considers CONROD, CROD, CBAR, CBEAM elements
+        consider_2d : bool; default=True
+            considers CQUAD4, CQUAD8, CQUADR, CQUAD,
+            CTRIA3, CTRIA6, CTRIAX, CTRIAX6, CSHEAR elements
+        consider_2d : bool; default=True
+            considers CTETRA, CPENTA, CPYRAM, CHEXA elements
+
+        .. todo:: map_names support
+        .. todo:: consider_0d support
+        .. todo:: consider_0d_rigid support
+        """
         if map_names is None:
             map_names = []
         allowed_maps = [
@@ -146,7 +170,6 @@ class GetMethods(GetMethodsDeprecated):
         for name in map_names:
             assert name in allowed_maps, 'name=%s; allowed=%s' % (name, sorted(allowed_maps.keys()))
 
-        from collections import defaultdict
         eid_to_edge_map = {}
         eid_to_nid_map = {}
 
@@ -162,12 +185,15 @@ class GetMethods(GetMethodsDeprecated):
 
         types_to_consider = []
         if consider_0d:
-           types_to_consider += []
+            types_to_consider += []
+        if consider_0d_rigid:
+            types_to_consider += []
         if consider_1d:
             types_to_consider += ['CROD', 'CONROD', 'CBAR', 'CBEAM', 'CBEAM3']
         if consider_2d:
             types_to_consider += ['CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
-                                  'CQUAD4', 'CQUAD', 'CQUAD8',' CQUADR', 'CQUADX', 'CQUADX8']
+                                  'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
+                                  'CSHEAR']
         if consider_3d:
             types_to_consider += ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA']
 
@@ -453,6 +479,7 @@ class GetMethods(GetMethodsDeprecated):
         return mid_to_pids_map
 
     def Element(self, eid, msg=''):
+        """gets an element (not rigid (RBAR, RBE2, RBE3) or mass (CMASS1, CONM2))"""
         try:
             return self.elements[eid]
         except KeyError:
@@ -466,6 +493,7 @@ class GetMethods(GetMethodsDeprecated):
         return elements
 
     def Mass(self, eid, msg=''):
+        """gets a mass element (CMASS1, CONM2)"""
         try:
             return self.masses[eid]
         except KeyError:
@@ -473,6 +501,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (eid, msg, self.masses.keys()))
 
     def RigidElement(self, eid, msg=''):
+        """gets a rigid element (RBAR, RBE2, RBE3)"""
         try:
             return self.rigidElements[eid]
         except KeyError:
@@ -483,6 +512,10 @@ class GetMethods(GetMethodsDeprecated):
     # PROPERTY CARDS
 
     def Property(self, pid, msg=''):
+        """
+        gets an elemental property (e.g. PSOLID, PLSOLID, PCOMP, PSHELL, PSHEAR);
+        not mass property (PMASS)
+        """
         try:
             return self.properties[pid]
         except KeyError:
@@ -496,6 +529,9 @@ class GetMethods(GetMethodsDeprecated):
         return properties
 
     def PropertyMass(self, pid, msg=''):
+        """
+        gets a mass property (PMASS)
+        """
         try:
             return self.properties_mass[pid]
         except KeyError:
@@ -503,6 +539,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (pid, msg, self.mass_property.keys()))
 
     def Phbdy(self, pid, msg=''):
+        """gets a PHBDY"""
         try:
             return self.phbdys[pid]
         except KeyError:
@@ -573,6 +610,7 @@ class GetMethods(GetMethodsDeprecated):
         return load
 
     def DLoad(self, sid, msg=''):
+        """gets a DLOAD"""
         assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
         if sid in self.dloads:
             load = self.dloads[sid]
@@ -590,15 +628,17 @@ class GetMethods(GetMethodsDeprecated):
                 sid, msg, sorted(self.dload_entries.keys())))
         return load
 
-    def DELAY(self, id, msg=''):
+    def DELAY(self, delay_id, msg=''):
+        """gets a DELAY"""
         try:
-            return self.delays[id]
+            return self.delays[delay_id]
         except KeyError:
-            raise KeyError('id=%s not found%s.  Allowed DELAY=%s'
-                           % (id, msg, self.delays.keys()))
+            raise KeyError('delay_id=%s not found%s.  Allowed DELAY=%s'
+                           % (delay_id, msg, self.delays.keys()))
 
     #--------------------
     def MPC(self, conid, msg=''):
+        """gets an MPC"""
         assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
         if conid in self.mpcs:
             constraint = self.mpcs[conid]
@@ -607,6 +647,7 @@ class GetMethods(GetMethodsDeprecated):
         return constraint
 
     def SPC(self, conid, msg=''):
+        """gets an SPC"""
         assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
         if conid in self.spcs:
             constraint = self.spcs[conid]
@@ -617,6 +658,7 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # Sets
     def SET1(self, set_id, msg=''):
+        """gets a SET1"""
         assert isinstance(set_id, integer_types), 'set_id=%s is not an integer\n' % set_id
         if set_id in self.sets:
             set1 = self.sets[set_id]
@@ -627,6 +669,7 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # COORDINATES CARDS
     def Coord(self, cid, msg=''):
+        """gets an COORDx"""
         try:
             return self.coords[cid]
         except KeyError:
@@ -637,6 +680,7 @@ class GetMethods(GetMethodsDeprecated):
     # AERO CARDS
 
     def AEList(self, aelist, msg=''):
+        """gets an AELIST"""
         try:
             return self.aelists[aelist]
         except KeyError:
@@ -644,6 +688,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (aelist, msg, self.aelists.keys()))
 
     def AEFact(self, aefact, msg=''):
+        """gets an AEFACT"""
         try:
             return self.aefacts[aefact]
         except KeyError:
@@ -651,6 +696,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (aefact, msg, self.aefacts.keys()))
 
     def Aero(self, acsid, msg=''):
+        """gets an AERO"""
         try:
             return self.aero[acsid]
         except KeyError:
@@ -658,6 +704,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (acsid, msg, self.aero.keys()))
 
     def Aeros(self, acsid, msg=''):
+        """gets an AEROS"""
         try:
             return self.aeros[acsid]
         except KeyError:
@@ -665,6 +712,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (acsid, msg, self.aeros.keys()))
 
     def Spline(self, eid, msg=''):
+        """gets a SPLINEx"""
         try:
             return self.splines[eid]
         except KeyError:
@@ -672,6 +720,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (eid, msg, self.splines.keys()))
 
     def CAero(self, eid, msg=''):
+        """gets an CAEROx"""
         try:
             return self.caeros[eid]
         except KeyError:
@@ -679,6 +728,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (eid, msg, self.caero_ids))
 
     def PAero(self, pid, msg=''):
+        """gets a PAEROx"""
         try:
             return self.paeros[pid]
         except KeyError:
@@ -686,6 +736,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (pid, msg, self.paeros.keys()))
 
     def Gust(self, sid, msg=''):
+        """gets a GUST"""
         try:
             return self.gusts[sid]
         except KeyError:
@@ -695,6 +746,7 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # AERO CONTROL SURFACE CARDS
     def AEStat(self, aid, msg=''):
+        """gets an AESTAT"""
         try:
             return self.aestats[aid]
         except KeyError:
@@ -702,20 +754,23 @@ class GetMethods(GetMethodsDeprecated):
                            % (aid, msg, self.aestats.keys()))
 
     def AELIST(self, aid, msg=''):
+        """gets an AELIST"""
         try:
             return self.aelists[aid]
         except KeyError:
             raise KeyError('id=%s not found%s.  Allowed AELISTs=%s'
                            % (aid, msg, self.aelists.keys()))
 
-    def AELink(self, linkID, msg=''):
+    def AELink(self, link_id, msg=''):
+        """gets an AELINK"""
         try:
-            return self.aelinks[linkID]
+            return self.aelinks[link_id]
         except KeyError:
-            raise KeyError('linkID=%s not found%s.  Allowed AELINKs=%s'
-                           % (linkID, msg, self.aelinks.keys()))
+            raise KeyError('link_id=%s not found%s.  Allowed AELINKs=%s'
+                           % (link_id, msg, self.aelinks.keys()))
 
     def AEParam(self, aid, msg=''):
+        """gets an AEPARM"""
         try:
             return self.aeparams[aid]
         except KeyError:
@@ -726,6 +781,7 @@ class GetMethods(GetMethodsDeprecated):
     # FLUTTER CARDS
 
     def FLFACT(self, sid, msg=''):
+        """gets an FLFACT"""
         try:
             return self.flfacts[sid]
         except KeyError:
@@ -733,6 +789,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (sid, msg, self.flfacts.keys()))
 
     def Flutter(self, fid, msg=''):
+        """gets a FLUTTER"""
         try:
             return self.flutters[fid]
         except KeyError:
@@ -743,6 +800,7 @@ class GetMethods(GetMethodsDeprecated):
     # OPTIMIZATION CARDS
 
     def DConstr(self, oid, msg=''):
+        """gets a DCONSTR"""
         try:
             return self.dconstrs[oid]
         except KeyError:
@@ -750,6 +808,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (oid, msg, self.dconstrs.keys()))
 
     def Desvar(self, oid, msg=''):
+        """gets a DESVAR"""
         try:
             return self.desvars[oid]
         except KeyError:
@@ -757,6 +816,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (oid, msg, self.desvars.keys()))
 
     def DDVal(self, oid, msg=''):
+        """gets a DDVAL"""
         try:
             return self.ddvals[oid]
         except KeyError:
@@ -783,6 +843,7 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # METHOD CARDS
     def Method(self, sid, msg=''):
+        """gets a METHOD (EIGR, EIGRL)"""
         try:
             return self.methods[sid]
         except KeyError:
@@ -790,6 +851,7 @@ class GetMethods(GetMethodsDeprecated):
                            % (sid, msg, self.methods.keys()))
 
     def CMethod(self, sid, msg=''):
+        """gets a METHOD (EIGC)"""
         try:
             return self.cmethods[sid]
         except KeyError:
@@ -799,6 +861,7 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # TABLE CARDS
     def Table(self, tid, msg=''):
+        """gets a TABLEx (TABLED1, TABLED2, TABLD3)"""
         try:
             return self.tables[tid]
         except KeyError:
@@ -816,6 +879,7 @@ class GetMethods(GetMethodsDeprecated):
     # NONLINEAR CARDS
 
     def NLParm(self, nid, msg=''):
+        """gets an NLPARM"""
         try:
             return self.nlparms[nid]
         except KeyError:
@@ -825,6 +889,7 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # MATRIX ENTRY CARDS
     def DMIG(self, dname, msg=''):
+        """gets a DMIG"""
         try:
             return self.dmig[dname]
         except KeyError:

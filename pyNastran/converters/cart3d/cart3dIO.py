@@ -6,7 +6,7 @@ import os
 from numpy import arange, mean, amax, amin, vstack, zeros, unique, where, sqrt
 
 import vtk
-from vtk import vtkTriangle, vtkHexahedron
+from vtk import vtkTriangle
 
 from pyNastran.gui.qt_files.result import Result
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
@@ -227,10 +227,9 @@ class Cart3dIO(object):
         self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
-
+        form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, model)
         mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
-        form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model,
-                                                    mach)
+        self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
         self._finish_results_io2(form, cases)
 
     def _create_box(self, cart3d_filename, ID, form, cases, icase, regions):
@@ -410,7 +409,7 @@ class Cart3dIO(object):
             # elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
             # elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
 
-            eType = vtk.vtkLine().GetCellType()
+            etype = vtk.vtkLine().GetCellType()
             for free_edge in free_edges:
                 # (p1, p2) = free_edge
                 for ipoint, node_id in enumerate(free_edge):
@@ -420,7 +419,7 @@ class Cart3dIO(object):
                 elem = vtk.vtkLine()
                 elem.GetPointIds().SetId(0, j)
                 elem.GetPointIds().SetId(1, j + 1)
-                self.alt_grids['free_edges'].InsertNextCell(eType, elem.GetPointIds())
+                self.alt_grids['free_edges'].InsertNextCell(etype, elem.GetPointIds())
                 j += 2
             self.alt_grids['free_edges'].SetPoints(points)
 
@@ -466,9 +465,7 @@ class Cart3dIO(object):
         ]
         return form, cases
 
-    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model, mach):
-        result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
-                        'rhoU', 'rhoV', 'rhoW', 'rhoE', 'a', 'T', 'q', 'Pressure']
+    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, model):
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
@@ -476,7 +473,6 @@ class Cart3dIO(object):
         new = False
         is_normals = True
 
-        results_form = []
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),
@@ -495,26 +491,25 @@ class Cart3dIO(object):
             cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
             cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
 
-        i = 3
-
+        icase = 3
         if is_normals:
-            geometry_form.append(('Normal X', i, []))
-            geometry_form.append(('Normal Y', i + 1, []))
-            geometry_form.append(('Normal Z', i + 2, []))
+            geometry_form.append(('Normal X', icase, []))
+            geometry_form.append(('Normal Y', icase + 1, []))
+            geometry_form.append(('Normal Z', icase + 2, []))
 
             cnormals = model.get_normals(nodes, elements, shift_nodes=False)
             cnnodes = cnormals.shape[0]
             assert cnnodes == nelements, len(cnnodes)
 
             if new:
-                cases_new[i] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
-                cases_new[i + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
-                cases_new[i + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
+                cases_new[icase] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
+                cases_new[icase + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
+                cases_new[icase + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
             else:
-                cases[(ID, i, 'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
-                cases[(ID, i + 1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
-                cases[(ID, i + 2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
-            i += 3
+                cases[(ID, icase, 'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
+                cases[(ID, icase + 1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
+                cases[(ID, icase + 2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
+            icase += 3
 
         #if is_normals:
             #geometry_form.append(('Normal X', 1, []))
@@ -534,19 +529,28 @@ class Cart3dIO(object):
                 #cases[(ID, i + 2, 'Normal Z', 1, 'node', '%.3f')] = nnormals[:, 2]
             #i += 3
 
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+        return form, cases, icase
+
+    def _fill_cart3d_results(self, cases, form, icase, ID, loads, model, mach):
+        new = False
+        results_form = []
+        cases_new = []
+        result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
+                        'rhoU', 'rhoV', 'rhoW', 'rhoE', 'a', 'T', 'q', 'Pressure']
+
         for result_name in result_names:
             if result_name in loads:
                 nodal_data = loads[result_name]
                 if new:
-                    cases_new[i] = (result, result_name, 1, 'node', '%.3f')
+                    cases_new[icase] = (nodal_data, result_name, 1, 'node', '%.3f')
                 else:
-                    cases[(ID, i, result_name, 1, 'node', '%.3f')] = nodal_data
-                results_form.append((result_name, i, []))
-                i += 1
+                    cases[(ID, icase, result_name, 1, 'node', '%.3f')] = nodal_data
+                results_form.append((result_name, icase, []))
+                icase += 1
 
-        form = [
-            ('Geometry', None, geometry_form),
-        ]
         if len(results_form):
             form.append(('Results', None, results_form))
-        return form, cases, i
+        return form, cases, icase
