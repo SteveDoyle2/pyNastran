@@ -12,6 +12,27 @@ class InputCntlReader(object):
         self.sections = self._read_sections(lines)
         return self.sections
 
+    def get_flow_conditions(self):
+        section = self.sections['Case_Information']
+        name, comment, table = section
+
+        for line, commenti in table:
+            sline = line.split()
+            flow_type = sline[0]
+            #Mach     0.84  #  (double)
+            #alpha    2.81  #  (double) - angle of attach
+            #beta     0.0   #  (double) - sideslip Angle
+            if flow_type == 'Mach':
+                mach = float(sline[1])
+            if flow_type == 'alpha':
+                alpha = float(sline[1])
+            if flow_type == 'beta':
+                beta = float(sline[1])
+            else:
+                raise NotImplementedError(sline)
+
+        return mach, alpha, beta
+
     def get_post_processing(self):
         section = self.sections['Post_Processing']
         name, comment, table = section

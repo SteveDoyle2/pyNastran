@@ -252,7 +252,7 @@ class SPCD(Load):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
-            if card.field(5) is None:
+            if card.field(5) in [None, '']:
                 self.gids = [integer(card, 2, 'G1'),]
                 self.constraints = [components_or_blank(card, 3, 'C1', 0)]
                 self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
