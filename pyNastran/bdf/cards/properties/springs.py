@@ -37,11 +37,11 @@ class PELAS(SpringProperty):
         1: 'pid', 2:'k', 3:'ge', 4:'s',
     }
 
-    def __init__(self, card=None, nPELAS=0, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         SpringProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
-        nOffset = nPELAS * 5
+        nOffset = icard * 5
         if card:
             # 2 PELAS properties can be defined on 1 PELAS card
             # these are split into 2 separate cards

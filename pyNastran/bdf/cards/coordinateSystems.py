@@ -902,12 +902,12 @@ class Cord1x(Coord):
         """Gets the reference coordinate system self.rid"""
         return self.rid
 
-    def __init__(self, card, nCoord, data, comment):
+    def __init__(self, card, icard, data, comment):
         Coord.__init__(self, card, data, comment)
         self.isResolved = False
-        if nCoord is not None:
-            assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
-            nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
+        if icard is not None:
+            assert icard == 0 or icard == 1, 'icard=%r' % (icard)
+            nCoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
             #: the coordinate ID
             self.cid = integer(card, 1 + nCoord, 'cid')
@@ -1204,7 +1204,7 @@ class CORD1R(Cord1x, RectangularCoord):
     type = 'CORD1R'
     Type = 'R'
 
-    def __init__(self, card=None, nCoord=0, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         """
         Intilizes the CORD1R
 
@@ -1214,12 +1214,17 @@ class CORD1R(Cord1x, RectangularCoord):
         |CORD1R | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param self:   the CORD1R coordinate system object
-        :param nCoord: the coordinate location on the line
-                       (there are possibly 2 coordinates on 1 card)
-        :param card:   a list version of the fields (1 CORD1R only)
+        Parameters
+        ----------
+        self :CORD1R()
+            the CORD1R coordinate system object
+        icard : int
+            the coordinate location on the line
+            (there are possibly 2 coordinates on 1 card)
+        card : List
+            a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self, card, nCoord, data, comment)
+        Cord1x.__init__(self, card, icard, data, comment)
 
     def raw_fields(self):
         list_fields = ['CORD1R', self.cid] + self.node_ids
@@ -1230,7 +1235,7 @@ class CORD1C(Cord1x, CylindricalCoord):
     type = 'CORD1C'
     Type = 'C'
 
-    def __init__(self, card=None, nCoord=0, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         """
         Intilizes the CORD1R
 
@@ -1242,11 +1247,11 @@ class CORD1C(Cord1x, CylindricalCoord):
 
         :param self:   the CORD1C coordinate system object
         :param card:   a BDFCard object
-        :param nCoord: the coordinate location on the line
+        :param icard:  the coordinate location on the line
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self, card, nCoord, data, comment)
+        Cord1x.__init__(self, card, icard, data, comment)
 
     def raw_fields(self):
         list_fields = ['CORD1C', self.cid] + self.node_ids
@@ -1257,7 +1262,7 @@ class CORD1S(Cord1x, SphericalCoord):
     type = 'CORD1S'
     Type = 'S'
 
-    def __init__(self, card=None, nCoord=0, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         """
         Intilizes the CORD1S
 
@@ -1269,11 +1274,11 @@ class CORD1S(Cord1x, SphericalCoord):
 
         :param self:   the CORD1S coordinate system object
         :param card:   a BDFCard object
-        :param nCoord: the coordinate location on the line
+        :param icard: the coordinate location on the line
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1S only)
         """
-        Cord1x.__init__(self, card, nCoord, data, comment)
+        Cord1x.__init__(self, card, icard, data, comment)
 
     def raw_fields(self):
         list_fields = ['CORD1S', self.cid] + self.node_ids

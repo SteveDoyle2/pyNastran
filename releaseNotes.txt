@@ -125,7 +125,17 @@ OP2:
  - element_names removed from objects (element_name is used instead)
  - SPOINTs in tables (e.g. displacement/spc forces) now write properly
  - added subtable_name to objects
- 
+ - improved catching of SORT1 vs. SORT2
+ - improved catching of REAL vs. IMAG
+
+OP2 Issues:
+ - How to request results:
+    - Good : STRESS(PLOT,REAL)=ALL
+    - Bad  : STRESS = ALL
+    - IDs will be wrong with the later method due to a Nastran bug
+ - preload (e.g. SPCD) for a frequency/buckling/transient solution
+   is not supported
+
 F06:
  - reworked subcase/label parsing
  - still bad

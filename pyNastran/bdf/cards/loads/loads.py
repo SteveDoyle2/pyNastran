@@ -204,11 +204,11 @@ class DAREA(BaseCard):
     """
     type = 'DAREA'
 
-    def __init__(self, card=None, nOffset=0, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         if comment:
             self._comment = comment
         if card:
-            nOffset *= 3
+            nOffset = 3 * icard
             self.sid = integer(card, 1, 'sid')
             self.p = integer(card, 2 + nOffset, 'p')
             self.c = components_or_blank(card, 3 + nOffset, 'c', 0)

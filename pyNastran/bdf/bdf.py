@@ -11,7 +11,7 @@ from six import string_types, iteritems, itervalues
 from collections import defaultdict
 
 from codecs import open as codec_open
-import io
+# import io
 import os
 import sys
 import traceback
@@ -77,7 +77,7 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
 from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    CORD2R, CORD2C, CORD2S, CORD3G,
                                                    GMCORD)
-from pyNastran.bdf.cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
+from pyNastran.bdf.cards.dmig import DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI
 from pyNastran.bdf.cards.dynamic import (DELAY, FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL,
                                          NLPARM, NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD
@@ -419,9 +419,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'ENDDATA',
         ])
 
-        caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                                'TEMP', 'TSTEPNL', 'INCLUDE'])
-        self.uniqueBulkDataCards = self.cards_to_read.difference(caseControlCards)
+        case_control_cards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                                  'TEMP', 'TSTEPNL', 'INCLUDE'])
+        self.uniqueBulkDataCards = self.cards_to_read.difference(case_control_cards)
 
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
@@ -438,9 +438,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.case_control_lines = str(self.case_control_deck).split('\n')
         del self.case_control_deck
         self.uncross_reference()
-        f = open(obj_filename, "w")
-        pickle.dump(self, f)
-        f.close()
+        obj_file = open(obj_filename, "w")
+        pickle.dump(self, obj_file)
+        obj_file.close()
 
     def load_object(self, obj_filename='model.obj'):
         """
@@ -456,9 +456,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         #del self.case_control_deck
         #self.uncross_reference()
         #import types
-        f = open(obj_filename, "r")
-        obj = pickle.load(f)
-        f.close()
+        obj_file = open(obj_filename, "r")
+        obj = pickle.load(obj_file)
+        obj_file.close()
 
         keys_to_skip = [
             'case_control_deck', 'caseControlDeck',
@@ -486,11 +486,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Method for removing broken cards from the reader
 
-        :param self:  the BDF object
-        :param cards: a list/set of cards that should not be read
+        Paramters
+        ---------
+        self : BDF()
+            the BDF object
+        cards : List[str]; Set[str]
+            a list/set of cards that should not be read
         """
-        disableSet = set(cards)
-        self.cards_to_read.difference(disableSet)
+        disable_set = set(cards)
+        self.cards_to_read.difference(disable_set)
 
     def __init_attributes(self):
         """
@@ -1151,8 +1155,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self.case_control_lines = case_control_lines
             self.executive_control_lines = executive_control_lines
 
-            sol, method, iSolLine = parse_executive_control_deck(executive_control_lines)
-            self.update_solution(sol, method, iSolLine)
+            sol, method, isol_line = parse_executive_control_deck(executive_control_lines)
+            self.update_solution(sol, method, isol_line)
 
             self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
             self.caseControlDeck.solmap_toValue = self._solmap_to_value
@@ -1170,6 +1174,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.pop_xref_errors()
 
     def fill_dmigs(self):
+        """fills the DMIx cards with the column data that's been stored"""
         for name, card_comments in iteritems(self._dmig_temp):
             card0, comment0 = card_comments[0]
             card_name = card0[0]
@@ -1195,6 +1200,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._dmig_temp = defaultdict(list)
 
     def pop_parse_errors(self):
+        """raises an error if there are parsing errors"""
         if self._stop_on_parsing_error:
             if self._iparse_errors == 1 and self._nparse_errors == 0:
                 raise
@@ -1298,6 +1304,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 raise DuplicateIDsError(msg.rstrip())
 
     def pop_xref_errors(self):
+        """raises an error if there are cross-reference errors"""
         if self._stop_on_xref_error:
             if self._ixref_errors == 1 and self._nxref_errors == 0:
                 raise
@@ -1598,6 +1605,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # CPYRAM - added later
             'PSOLID' : (PSOLID, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
+            'PCONEAX' : (PCONEAX, self.add_property),
 
             'CBAR' : (CBAR, self.add_element),
             'PBAR' : (PBAR, self.add_property),
@@ -1866,120 +1874,186 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'CMASS3' : (CMASS3, self.add_mass),
             # CMASS4 - added later because documentation is wrong
 
-    #elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
-        #field2 = integer(card_obj, 2, 'flag')
-        #if field2 == 0:
-            #getattr(self, 'add_' + card_name)(_get_cls(card_name))
-        #else:
-            #name = string(card_obj, 1, 'name')
-            #getattr(self, card_name.lower() + 's')[name]._add_column(card_obj)
+            'DOPTPRM' : (DOPTPRM, self._add_doptprm),
+            'SPOINT' : (SPOINTs, self.add_SPOINT),
+            'EPOINT' : (EPOINTs, self.add_EPOINT),
     #elif card_name == 'BCTSET':
         #card = BCTSET(card_obj, comment=comment, sol=self.sol)
         #self.add_BCTSET(card)
         }
         self._card_parser_b = {
-            'CTETRA' : self._prepare_CTETRA,
-            'CPYRAM' : self._prepare_CPYRAM,
-            'CPENTA' : self._prepare_CPENTA,
-            'CHEXA' : self._prepare_CHEXA,
+            'CTETRA' : self._prepare_ctetra,
+            'CPYRAM' : self._prepare_cpyram,
+            'CPENTA' : self._prepare_cpenta,
+            'CHEXA' : self._prepare_chexa,
 
-            'CORD1R' : self._prepare_CORD1R,
-            'CORD1C' : self._prepare_CORD1C,
-            'CORD1S' : self._prepare_CORD1S,
+            'CORD1R' : self._prepare_cord1r,
+            'CORD1C' : self._prepare_cord1c,
+            'CORD1S' : self._prepare_cord1s,
             #'CORD3G' : self._prepare_CORD3G,
 
-            'DAREA' : self._prepare_DAREA,
-            'PMASS' : self._prepare_PMASS,
-            #CMASS4 : self._prepare_CMASS4,
+            'DAREA' : self._prepare_darea,
+            'PMASS' : self._prepare_pmass,
+            'CMASS4' : self._prepare_cmass4,
+
+            'DMIG' : self._prepare_dmig,
+            'DMI' : self._prepare_dmi,
+            'DMIJ' : self._prepare_dmij,
+            'DMIK' : self._prepare_dmik,
+            'DMIJI' : self._prepare_dmiji,
+            'DEQATN' : self._prepare_dequatn,
+
+            'PVISC' : self._prepare_pvisc,
+            'PELAS' : self._prepare_pelas,
+            'PDAMP' : self._prepare_pdamp,
         }
 
-    def _prepare_PELAS(self, card_obj, comment=''):
+
+    def _add_doptprm(self, doptprm, comment=''):
+        self.doptprm = doptprm
+
+    def _prepare_dequatn(self, card, card_obj, comment=''):
+        if comment:
+            self.rejects.append([comment])
+        #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
+        # should be later moved to loop below
+        #self.add_DEQATN(DEQATN(card_obj))
+        self.rejects.append(card)
+
+    def _prepare_dmig(self, card, card_obj, comment=''):
+        """adds a DMIG"""
+        # not done...
+        field2 = integer_or_string(card_obj, 2, 'flag')
+        name = string(card_obj, 1, 'name')
+        if field2 == 0:
+            self.add_DMIG(DMIG(card_obj, comment=comment))
+        # elif field2 == 'UACCEL':  # special DMIG card
+            # self.reject_cards(card)
+        else:
+            self._dmig_temp[name].append((card_obj, comment))
+
+
+    def _prepare_dmix(self, class_obj, add_method, card_obj, comment=''):
+        """adds a DMIx"""
+        #elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
+        field2 = integer(card_obj, 2, 'flag')
+        if field2 == 0:
+            add_method(class_obj(card_obj, comment=comment))
+        else:
+            name = string(card_obj, 1, 'name')
+            self._dmig_temp[name].append((card_obj, comment))
+
+    def _prepare_dmi(self, card, card_obj, comment=''):
+        """adds a DMI"""
+        self._prepare_dmix(DMI, self.add_DMI, card_obj, comment=comment)
+
+    def _prepare_dmij(self, card, card_obj, comment=''):
+        """adds a DMIJ"""
+        self._prepare_dmix(DMIJ, self.add_DMIJ, card_obj, comment=comment)
+
+    def _prepare_dmik(self, card, card_obj, comment=''):
+        """adds a DMIK"""
+        self._prepare_dmix(DMIK, self.add_DMIK, card_obj, comment=comment)
+
+    def _prepare_dmiji(self, card, card_obj, comment=''):
+        """adds a DMIJI"""
+        self._prepare_dmix(DMIJI, self.add_DMIJI, card_obj, comment=comment)
+
+    def _prepare_cmass4(self, card, card_obj, comment=''):
+        """adds a CMASS4"""
+        class_instance = CMASS4(card_obj, icard=0, comment=comment)
+        self.add_mass(class_instance)
+        if card_obj.field(5):
+            class_instance = CMASS4(card_obj, icard=1, comment=comment)
+            self.add_mass(class_instance)
+
+    def _prepare_pelas(self, card, card_obj, comment=''):
         """adds a PELAS"""
-        class_instance = PELAS(card_obj, nPELAS=0, comment=comment)
+        class_instance = PELAS(card_obj, icard=0, comment=comment)
         self.add_property(class_instance)
         if card_obj.field(5):
-            class_instance = PELAS(card_obj, nPELAS=1, comment=comment)
+            class_instance = PELAS(card_obj, icard=1, comment=comment)
             self.add_property(class_instance)
 
-    def _prepare_PVISC(self, card_obj, comment=''):
+    def _prepare_pvisc(self, card, card_obj, comment=''):
         """adds a PVISC"""
-        class_instance = PVISC(card_obj, nPVISC=0, comment=comment)
+        class_instance = PVISC(card_obj, icard=0, comment=comment)
         self.add_property(class_instance)
         if card_obj.field(5):
-            class_instance = PVISC(card_obj, nPVISC=1, comment=comment)
+            class_instance = PVISC(card_obj, icard=1, comment=comment)
             self.add_property(class_instance)
 
-    def _prepare_PDAMP(self, card_obj, comment=''):
+    def _prepare_pdamp(self, card, card_obj, comment=''):
         """adds a PDAMP"""
-        class_instance = PDAMP(card_obj, nPDAMP=0, comment=comment)
+        class_instance = PDAMP(card_obj, icard=0, comment=comment)
         self.add_property(class_instance)
         if card_obj.field(5):
-            class_instance = PDAMP(card_obj, nPDAMP=1, comment=comment)
+            class_instance = PDAMP(card_obj, icard=1, comment=comment)
             self.add_property(class_instance)
         if card_obj.field(7):
-            class_instance = PDAMP(card_obj, nPDAMP=2, comment=comment)
+            class_instance = PDAMP(card_obj, icard=2, comment=comment)
             self.add_property(class_instance)
 
-    def _prepare_PMASS(self, card_obj, comment=''):
+    def _prepare_pmass(self, card, card_obj, comment=''):
         """adds a PMASS"""
-        card_instance = PMASS(card_obj, nOffset=0, comment=comment)
+        card_instance = PMASS(card_obj, icard=0, comment=comment)
         self.add_property_mass(card_instance)
         for (i, j) in enumerate([3, 5, 7]):
             if card_obj.field(j) is not None:
-                card_instance = PMASS(card_obj, nOffset=i+1, comment=comment)
+                card_instance = PMASS(card_obj, icard=i+1, comment=comment)
                 self.add_property_mass(card_instance)
 
-    def _prepare_DAREA(self, card_obj, comment=''):
+    def _prepare_darea(self, card, card_obj, comment=''):
         """adds a DAREA"""
         class_instance = DAREA(card_obj, comment=comment)
         self.add_DAREA(class_instance)
         if card_obj.field(5):
-            class_instance = DAREA(card_obj, nOffset=1, comment=comment)
+            class_instance = DAREA(card_obj, icard=1, comment=comment)
             self.add_DAREA(class_instance)
 
-    def _prepare_CORD1R(self, card_obj, comment=''):
+    def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
         class_instance = CORD1R(card_obj, comment=comment)
         self.add_coord(class_instance)
         if card_obj.field(5):
-            class_instance = CORD1R(card_obj, nCoord=1, comment=comment)
+            class_instance = CORD1R(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
-    def _prepare_CORD1C(self, card_obj, comment=''):
+    def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
         class_instance = CORD1C(card_obj, comment=comment)
         self.add_coord(class_instance)
         if card_obj.field(5):
-            class_instance = CORD1C(card_obj, nCoord=1, comment=comment)
+            class_instance = CORD1C(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
-    def _prepare_CORD1S(self, card_obj, comment=''):
+    def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
         class_instance = CORD1S(card_obj, comment=comment)
         self.add_coord(class_instance)
         if card_obj.field(5):
-            class_instance = CORD1S(card_obj, nCoord=1, comment=comment)
+            class_instance = CORD1S(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
-    def _prepare_CTETRA(self, card_obj, comment=''):
+    def _prepare_ctetra(self, card, card_obj, comment=''):
         """adds a CTETRA"""
         card_class = CTETRA4 if card_obj.nfields == 7 else CTETRA10
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
-    def _prepare_CPYRAM(self, card_obj, comment=''):
+    def _prepare_cpyram(self, card, card_obj, comment=''):
         """adds a CPYRAM"""
         card_class = CPYRAM5 if card_obj.nfields == 8 else CPYRAM13
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
-    def _prepare_CPENTA(self, card_obj, comment=''):
+    def _prepare_cpenta(self, card, card_obj, comment=''):
         """adds a CPENTA"""
         card_class = CPENTA6 if card_obj.nfields == 9 else CPENTA15
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
-    def _prepare_CHEXA(self, card_obj, comment=''):
+    def _prepare_chexa(self, card, card_obj, comment=''):
         """adds a CHEXA"""
         card_class = CHEXA8 if card_obj.nfields == 11 else CHEXA20
         class_instance = card_class(card_obj, comment=comment)
@@ -2025,7 +2099,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #return
 
             try:
-                add_card_function(card_obj, comment=comment)
+                add_card_function(card, card_obj, comment=comment)
             except (SyntaxError, AssertionError, KeyError, ValueError) as e:
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
@@ -2359,10 +2433,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                                                    comment=comment))
 
             elif card_name == 'PMASS':
-                self.add_property_mass(PMASS(card_obj, nOffset=0, comment=comment))
+                self.add_property_mass(PMASS(card_obj, icard=0, comment=comment))
                 for (i, j) in enumerate([3, 5, 7]):
                     if card_obj.field(j) is not None:
-                        self.add_property_mass(PMASS(card_obj, nOffset=i+1,
+                        self.add_property_mass(PMASS(card_obj, icard=i+1,
                                                      comment=comment))
 
             elif card_name == 'CONV':
@@ -2651,9 +2725,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 try:
                     line = bdf_file.readline().rstrip()
                 except UnicodeDecodeError as e:
-                    i0 = max([iline-10, 0])
+                    i0 = max([iline - 10, 0])
                     for i1, line in enumerate(lines[i0:iline]):
-                        self.log.error('lines[%i]=%r' % (i0+i1, line))
+                        self.log.error('lines[%i]=%r' % (i0 + i1, line))
                     msg = "\n%s encoding error on line=%s of %s; not '%s'" % (self._encoding, iline, bdf_filename, self._encoding)
                     raise RuntimeError(msg)
                 if line:
@@ -2819,6 +2893,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return bdf_file
 
     def _parse_cards(self, cards, card_count):
+        """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
         for card_name, card in sorted(iteritems(cards)):
             #print('---%r---' % card_name)
@@ -3000,6 +3075,9 @@ def _clean_comment(comment):
 
 
 def main():
+    """
+    shows off how unicode works becausee it's overly complicated
+    """
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     bdf_filename = os.path.abspath(os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf'))
