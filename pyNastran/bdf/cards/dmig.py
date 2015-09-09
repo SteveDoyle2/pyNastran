@@ -675,7 +675,10 @@ class DMI(NastranMatrix):
     def ifo(self):
         return self.nRows == self.nCols
 
-    def _add_column(self, card=None, data=None):
+    def _add_column(self, card=None, data=None, comment=''):
+        """
+        .. todo :: support comment
+        """
         if not self.is_complex():  # real
             self._read_real(card)
 

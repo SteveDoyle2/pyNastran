@@ -780,6 +780,7 @@ class NastranIO(object):
         for card in sorted(spcs):
             if card.type == 'SPC':
                 for nid, c1 in zip(card.gids, card.constraints):
+                    assert nid is not None, card.gids
                     node_ids_c1[nid] += c1
             elif card.type == 'SPC1':
                 nids = card.node_ids
