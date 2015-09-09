@@ -73,7 +73,9 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                           renumber_nodes=False, neq_max=4, xref=True,
-                          node_set=None, crash_on_collapse=False):
+                          node_set=None,
+                          remove_collapsed_elements=False, avoid_collapsed_elements=False,
+                          crash_on_collapse=False):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -101,6 +103,14 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
            True: rereads the BDF which catches doubled nodes (temporary);
                  in the future collapse=True won't need to double read;
                  an alternative is to do Patran's method of avoiding collapse)
+    remove_collapsed_elements : bool; default=False (unsupported)
+        True  : 1D/2D/3D elements will not be collapsed;
+                CELASx/CDAMP/MPC/etc. are not considered
+        False : no elements will be removed
+    avoid_collapsed_elements : bool; default=False (unsupported)
+        True  : only collapses that don't break 1D/2D/3D elements will be considered;
+                CELASx/CDAMP/MPC/etc. are considered
+        False : element can be collapsed
 
     Returns
     -------
@@ -109,6 +119,9 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
+
+    .. todo :: remove_collapsed_elements is not supported
+    .. todo :: avoid_collapsed_elements is not supported
     """
     assert isinstance(tol, float), tol
     if node_set is not None:

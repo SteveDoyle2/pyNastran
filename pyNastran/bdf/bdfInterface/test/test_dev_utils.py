@@ -53,7 +53,6 @@ class DevUtils(unittest.TestCase):
 
     def test_eq2(self):
         """
-        Collapse 5,6 and 2,3; Put a 40 and 20 to test non-sequential IDs
           5
         6 *-------* 40
           | \     |
@@ -83,6 +82,7 @@ class DevUtils(unittest.TestCase):
         bdf_file.close()
 
         tol = 0.2
+        # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=None, crash_on_collapse=False)
@@ -94,6 +94,7 @@ class DevUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
 
         tol = 0.009
+        # Don't collapse anything because the tolerance is too small
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=None, crash_on_collapse=False)
@@ -104,6 +105,7 @@ class DevUtils(unittest.TestCase):
 
         tol = 0.2
         node_set = [2, 3]
+        # Node 2 is not defined, so crash
         with self.assertRaises(AssertionError):
             # node 2 is not defined because it should be node 20
             bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
@@ -112,6 +114,7 @@ class DevUtils(unittest.TestCase):
 
         tol = 0.2
         node_set = [20, 3]
+        # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False)
@@ -170,7 +173,10 @@ class DevUtils(unittest.TestCase):
         bdf_file = open(bdf_filename, 'wb')
         bdf_file.write('\n'.join(lines))
         bdf_file.close()
-        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, 0.01)
+        tol = 0.01
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=None, crash_on_collapse=False)
 
         model = BDF()
         model.read_bdf(bdf_filename_out)
