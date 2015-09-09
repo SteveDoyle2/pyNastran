@@ -492,9 +492,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             the BDF object
         cards : List[str]; Set[str]
             a list/set of cards that should not be read
+
+        .. python ::
+
+            bdfModel.disable_cards(['DMIG', 'PCOMP'])
         """
-        disable_set = set(cards)
-        self.cards_to_read.difference(disable_set)
+        if isinstance(cards, string_types):
+            disable_set = set([cards])
+        else:
+            disable_set = set(cards)
+        self.cards_to_read = self.cards_to_read.difference(disable_set)
 
     def __init_attributes(self):
         """
@@ -1496,8 +1503,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         Parameters
         ----------
-        self:        the BDF object
-        card_lines:  list of strings that represent the card's lines
+        self : BDF()
+            the BDF object
+        card_lines : List[str]
+            list of strings that represent the card's lines
 
         Returns
         -------
