@@ -88,6 +88,17 @@ except ImportError:
     is_tecplot = False
 
 try:
+    from pyNastran.converters.dev.avus.avus_io import AvusIO
+    is_avus = True
+except ImportError:
+    raise
+    class AvusIO(object):
+        def __init__(self):
+            pass
+    is_avus = False
+
+
+try:
     from pyNastran.converters.tetgen.tetgen_io import TetgenIO
     is_tetgen = True
 except ImportError:

@@ -91,6 +91,7 @@ def get_inputs():
     shots = None
     geom_script = None
     post_script = None
+    user_points = None
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
