@@ -93,15 +93,14 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     xref bool: bool
         does the model need to be cross_referenced
         (default=True; only applies to model option)
-    nodes_set : List[int] / (n, ) ndarray
+    node_set : List[int] / (n, ) ndarray
         the list/array of nodes to consider (not supported with renumber_nodes=True)
-    crash_on_collapse : bool
+    crash_on_collapse : bool; default=False
         stop if nodes have been collapsed
            False: blindly move on
            True: rereads the BDF which catches doubled nodes (temporary);
                  in the future collapse=True won't need to double read;
                  an alternative is to do Patran's method of avoiding collapse)
-            default=False
 
     Returns
     -------
@@ -140,7 +139,14 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     nid_map = {}
     if node_set is not None:
         import numpy as np
+        node_set = np.asarray(node_set, dtype='int32')
         all_nids = array(model.nodes.keys(), dtype='int32')
+
+        # B - A
+        diff_nodes = np.setdiff1d(node_set, all_nids)
+        assert len(diff_nodes) == 0, 'The following nodes cannot be found, but are included in the reduced set; nids=%s' % diff_nodes
+
+        # A & B
         nids = np.intersect1d(all_nids, node_set, assume_unique=True)  # the new values
 
         if renumber_nodes:
@@ -174,44 +180,55 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         nodes_xyz = array([model.nodes[nid].xyz
                            for nid in nids], dtype='float32')
 
+    if 0:
+        # I forget entirely what this block of code is for, but my general
+        # recollection was that it checked that all the nodes that were
+        # referenced were included in the nids list.  I'd rather break that
+        # check in order to support nodes_set.
+        #
+        # It's also possible that it's here, so you only consider nodes that
+        # are associated...
 
-    # there is some set of points that are used on the elements that
-    # will be considered.
-    #
-    # Presumably this is enough to capture all the node ids and NOT
-    # spoints, but I doubt it...
-    spoint_epoint_nid_set = set([])
-    for eid, element in sorted(iteritems(model.elements)):
-        spoint_epoint_nid_set.update(element.node_ids)
-    for eid, element in sorted(iteritems(model.masses)):
-        spoint_epoint_nid_set.update(element.node_ids)
+        # there is some set of points that are used on the elements that
+        # will be considered.
+        #
+        # Presumably this is enough to capture all the node ids and NOT
+        # spoints, but I doubt it...
+        spoint_epoint_nid_set = set([])
+        for eid, element in sorted(iteritems(model.elements)):
+            spoint_epoint_nid_set.update(element.node_ids)
+        for eid, element in sorted(iteritems(model.masses)):
+            spoint_epoint_nid_set.update(element.node_ids)
 
-    if model.spoints and model.epoints:
-        nids_new = spoint_epoint_nid_set - model.spoints.points - model.epoints.points
-    elif model.spoints:
-        nids_new = spoint_epoint_nid_set - model.spoints.points
-    elif model.epoints:
-        nids_new = spoint_epoint_nid_set - model.epoints.points
+        if model.spoints and model.epoints:
+            nids_new = spoint_epoint_nid_set - model.spoints.points - model.epoints.points
+        elif model.spoints:
+            nids_new = spoint_epoint_nid_set - model.spoints.points
+        elif model.epoints:
+            nids_new = spoint_epoint_nid_set - model.epoints.points
+        else:
+            nids_new = spoint_epoint_nid_set
+
+        if None in nids_new:
+            nids_new.remove(None)
+
+        # autosorts the data
+        nids_new = unique(list(nids_new))
+        assert isinstance(nids_new[0], integer_types), type(nids_new[0])
+
+        missing_nids = list(set(nids_new) - set(all_nids))
+        if missing_nids:
+            missing_nids.sort()
+            msg = 'There are missing nodes...\n'  # TODO: in what???
+            msg = 'missing nids=%s' % str(missing_nids)
+            raise RuntimeError(msg)
+
+        # get the node_id mapping for the kdtree
+        inew = searchsorted(nids, nids_new, side='left')
+        # print('nids_new =', nids_new)
     else:
-        nids_new = spoint_epoint_nid_set
-
-    if None in nids_new:
-        nids_new.remove(None)
-
-    # autosorts the data
-    nids_new = unique(list(nids_new))
-    assert isinstance(nids_new[0], integer_types), type(nids_new[0])
-
-    missing_nids = list(set(nids_new) - set(all_nids))
-    if missing_nids:
-        missing_nids.sort()
-        msg = 'There are missing nodes...\n'
-        msg = 'missing nids=%s' % str(missing_nids)
-        raise RuntimeError(msg)
-
-    # get the node_id mapping for the kdtree
-    inew = searchsorted(nids, nids_new, side='left')
-    #assert array_equal(nids[inew], nids_new), 'some nodes are not defined'
+        inew = slice(None)
+    #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
 
     # build the kdtree
     try:
@@ -269,7 +286,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     if crash_on_collapse:
         # lazy way to make sure there aren't any collapsed nodes
         model2 = BDF()
-        model.read_bdf(bdf_filename_out)
+        model2.read_bdf(bdf_filename_out)
     return model
 
 
@@ -787,8 +804,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     for materials in all_materials:
         for midi, material in iteritems(materials):
             mid = mid_map[midi]
-            #if midi == 15:
-                #print(material)
             assert hasattr(material, 'mid')
             material.mid = mid
 
