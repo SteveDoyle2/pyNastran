@@ -163,6 +163,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._encoding = None
         self.punch = None
 
+        # this flag will be flipped to True someday (and then removed), but
+        # doesn't support 100% of cards yet.  It enables a new method for card
+        # parsing.
+        #
+        # 80.3 seconds -> 67.2 seconds for full_bay model
+        # (multiple BDF passes among other things)
+        self._fast_add = True
+
         self._relpath = True
         if sys.version_info < (2, 6):
             self._relpath = False
@@ -2912,7 +2920,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     self._increase_card_count(card_name)
                     self.rejects.append([cardi[0]] + cardi[1])
             else:
-                if 0:
+                if self._fast_add:
                     self._make_card_parser()
                     for comment, card_lines in card:
                         self._add_card_new(card_lines, card_name, comment=comment, is_list=False)

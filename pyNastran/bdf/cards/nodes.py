@@ -1163,8 +1163,8 @@ class GRID(Node):
         cps = set_string8_blank_if_default(cp, 0)
         if [cd, self.ps, self.seid] == [0, '', 0]:
             # default
-            msg = '%-8s%8i%8s%s%s%s\n' % (
-                'GRID', self.nid, cps,
+            msg = 'GRID    %8i%8s%s%s%s\n' % (
+                self.nid, cps,
                 print_float_8(xyz[0]),
                 print_float_8(xyz[1]),
                 print_float_8(xyz[2]))
@@ -1172,8 +1172,8 @@ class GRID(Node):
         else:
             cds = set_string8_blank_if_default(cd, 0)
             seid = set_string8_blank_if_default(self.SEid(), 0)
-            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % (
-                'GRID', self.nid, cps,
+            msg = 'GRID    %8i%8s%s%s%s%s%8s%s\n' % (
+                self.nid, cps,
                 print_float_8(xyz[0]),
                 print_float_8(xyz[1]),
                 print_float_8(xyz[2]),
@@ -1182,33 +1182,50 @@ class GRID(Node):
 
     def write_card_16(self, is_double=False):
         """
-            Writes a GRID card in 16-field format
-            """
+        Writes a GRID card in 16-field format
+        """
         xyz = self.xyz
         cp = set_string16_blank_if_default(self.Cp(), 0)
         cd = set_string16_blank_if_default(self.Cd(), 0)
         seid = set_string16_blank_if_default(self.SEid(), 0)
+
         if is_double:
-            msg = ('%-8s%16i%16s%16s%16s\n'
-                   '%-8s%16s%16s%16s%16s\n' % (
-                       'GRID*', self.nid,
-                       cp,
-                       print_scientific_double(xyz[0]),
-                       print_scientific_double(xyz[1]),
-                       '*',
-                       print_scientific_double(xyz[2]),
-                       cd, self.ps, seid))
+            if [cd, self.ps, self.seid] == [0, '', 0]:
+                msg = ('GRID*   %16i%16s%16s%16s\n'
+                       '*       %16s\n' % (
+                           self.nid,
+                           cp,
+                           print_scientific_double(xyz[0]),
+                           print_scientific_double(xyz[1]),
+                           print_scientific_double(xyz[2])))
+            else:
+                msg = ('GRID*   %16i%16s%16s%16s\n'
+                       '*       %16s%16s%16s%16s\n' % (
+                           self.nid,
+                           cp,
+                           print_scientific_double(xyz[0]),
+                           print_scientific_double(xyz[1]),
+                           print_scientific_double(xyz[2]),
+                           cd, self.ps, seid))
         else:
-            msg = ('%-8s%16i%16s%16s%16s\n'
-                   '%-8s%16s%16s%16s%16s\n' % (
-                       'GRID*', self.nid,
-                       cp,
-                       print_float_16(xyz[0]),
-                       print_float_16(xyz[1]),
-                       '*',
-                       print_float_16(xyz[2]),
-                       cd, self.ps, seid))
-        return self.comment + msg.rstrip() + '\n'
+            if [cd, self.ps, self.seid] == [0, '', 0]:
+                msg = ('GRID*   %16i%16s%16s%16s\n'
+                       '*       %16s\n' % (
+                           self.nid,
+                           cp,
+                           print_float_16(xyz[0]),
+                           print_float_16(xyz[1]),
+                           print_float_16(xyz[2])))
+            else:
+                msg = ('GRID*   %16i%16s%16s%16s\n'
+                       '*       %16s%16s%16s%16s\n' % (
+                           self.nid,
+                           cp,
+                           print_float_16(xyz[0]),
+                           print_float_16(xyz[1]),
+                           print_float_16(xyz[2]),
+                           cd, self.ps, seid))
+        return self.comment + msg
 
 
 class POINT(Node):
