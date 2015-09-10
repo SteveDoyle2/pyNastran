@@ -956,11 +956,14 @@ class CAERO1(BaseCard):
         """
         Gets complicated parameters on the CAERO1 card
 
-        :param self:  the CAERO1 object pointer
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        self : CAERO1()
+            the CAERO1 object pointer
+        n : int
+            the field number to update
+        value : int/float
+            the value for the appropriate field
         """
         if n == 9:
             return self.p1[0]
@@ -982,11 +985,14 @@ class CAERO1(BaseCard):
         """
         Updates complicated parameters on the CAERO1 card
 
-        :param self:  the CAERO1 object pointer
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        self : CAERO1()
+            the CAERO1 object pointer
+        n : int
+            the field number to update
+        value : int/float
+            the value for the appropriate field
         """
         if n == 9:
             self.p1[0] = value
@@ -1046,6 +1052,7 @@ class CAERO1(BaseCard):
                              double_or_blank(card, 14, 'y4', 0.0),
                              double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.)
+
             if self.nspan == 0 and self.lspan == 0:
                 msg = 'NSPAN or LSPAN must be greater than 0'
                 raise ValueError(msg)
@@ -1059,8 +1066,6 @@ class CAERO1(BaseCard):
             if self.nchord != 0 and self.lchord != 0:
                 msg = 'Either NCHORD or LCHORD must 0'
                 raise ValueError(msg)
-
-            self._init_ids()
 
             assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
         else:
@@ -1120,6 +1125,7 @@ class CAERO1(BaseCard):
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan = model.AEFact(self.lspan, msg)
+        self._init_ids()
 
     @property
     def min_max_eid(self):
