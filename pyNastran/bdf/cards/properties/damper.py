@@ -34,11 +34,11 @@ class PDAMP(DamperProperty):
         1: 'pid', 2:'b',
     }
 
-    def __init__(self, card=None, nPDAMP=0, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
-        nOffset = nPDAMP * 2
+        nOffset = icard * 2
         if card:
             # 3 PDAMP properties can be defined on 1 PDAMP card
             #: Property ID
@@ -186,14 +186,14 @@ class PVISC(DamperProperty):
         1: 'pid', 2:'ce', 3:'cr',
     }
 
-    def __init__(self, card=None, nPVISC=0, data=None, comment=''):
+    def __init__(self, card=None, icard=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
-            self.pid = integer(card, 1 + 4 * nPVISC, 'pid')
-            self.ce = double(card, 2 + 4 * nPVISC, 'ce')
-            self.cr = double_or_blank(card, 3 + 4 * nPVISC, 'cr', 0.)
+            self.pid = integer(card, 1 + 4 * icard, 'pid')
+            self.ce = double(card, 2 + 4 * icard, 'ce')
+            self.cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)
         else:
             self.pid = data[0]
             self.ce = data[1]

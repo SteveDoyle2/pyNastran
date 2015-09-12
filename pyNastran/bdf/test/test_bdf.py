@@ -16,7 +16,8 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.utils import CardParseSyntaxError
 from pyNastran.bdf.bdfInterface.crossReference import CrossReferenceError
-from pyNastran.bdf.bdf import BDF, NastranMatrix, DuplicateIDsError
+from pyNastran.bdf.bdf import BDF, DuplicateIDsError
+from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 

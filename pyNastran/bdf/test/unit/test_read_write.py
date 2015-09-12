@@ -217,7 +217,6 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
     def test_encoding_write(self):
-        from pyNastran.bdf.bdf import BDF
 
         mesh = BDF()
         mesh.add_card(['GRID', 100000, 0, 43.91715, -29., .8712984], 'GRID')
@@ -250,6 +249,13 @@ class TestReadWrite(unittest.TestCase):
         with self.assertRaises(IOError):
             model._open_file('fake.file')
 
+    def test_disable_cards(self):
+        bdf_filename = os.path.join(root_path, '..', 'models',
+            'solid_bending', 'solid_bending.bdf')
+        model = BDF()
+        model.disable_cards(['CTETRA'])
+        model.read_bdf(bdf_filename)
+        assert len(model.elements) == 0, len(model.elements)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

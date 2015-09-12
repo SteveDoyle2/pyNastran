@@ -6,7 +6,7 @@ from __future__ import print_function
 from six import string_types, integer_types, iteritems, PY2
 from numpy import ndarray
 
-from pyNastran.bdf.cards.baseCard import collapse_thru_packs
+from pyNastran.bdf.cards.baseCard import collapse_thru_packs, deprecated
 
 class Subcase(object):
     """
@@ -32,6 +32,9 @@ class Subcase(object):
         self.params = {}
         self.sol = None
         #print("\n***adding subcase %s***" % self.id)
+
+    def deprecated(self, old_name, new_name, deprecated_version):
+        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def get_stress_code(self, key, options, value):
         """
@@ -82,9 +85,14 @@ class Subcase(object):
         """
         Gets the sort code of a given set of options and value
 
-        :param self:    the Subcase object
-        :param options: the options for a parameter
-        :param value:   the value of the parameter
+        Parameters
+        ----------
+        self : Subcase()
+            the Subcase object
+        options : List[int/str]
+            the options for a parameter
+        value : int; str
+            the value of the parameter
         """
         sort_code = 0
         if 'COMPLEX' in options:
@@ -129,24 +137,24 @@ class Subcase(object):
         .. todo:: verify
         """
         codes = {
-            101: 1,  # staics
-            103: 2,  # modes
-            105: 7,  # pre-buckling
-            106: 10, # nonlinear statics
-            107: 9,  # complex eigenvalues
-            108: 5,  # frequency
-            111: 5,
-            112: 6,
-            114: 1,
-            115: 2,
-            116: 7,
-            118: 5,
-            129: 6,  # nonlinear
-            144: 1,  # static aero
-            145: 1,
-            146: 1,  # flutter
-            153: 10,
-            159: 6,  # transient thermal
+            101 : 1,  # staics
+            103 : 2,  # modes
+            105 : 7,  # pre-buckling
+            106 : 10, # nonlinear statics
+            107 : 9,  # complex eigenvalues
+            108 : 5,  # frequency
+            111 : 5,
+            112 : 6,
+            114 : 1,
+            115 : 2,
+            116 : 7,
+            118 : 5,
+            129 : 6,  # nonlinear
+            144 : 1,  # static aero
+            145 : 1,
+            146 : 1,  # flutter
+            153 : 10,
+            159 : 6,  # transient thermal
         }
         #print("sol=%s" % sol)
         approach_code = codes[sol]
@@ -411,11 +419,19 @@ class Subcase(object):
         #print('param_name=%r value=%s options=%s param_type=%r' % (param_name, value, options, param_type))
         return value, options  #, param_type
 
+    def update_parameter_in_subcase(self, key, value, options, param_type):
+        self.deprecated('update_parameter_in_subcase', 'update', '0.8')
+        self.update(key, value, options, param_type)
+
     def add_parameter_to_subcase(self, key, value, options, param_type):
+        self.deprecated('add_parameter_to_subcase', 'add', '0.8')
+        self.add(key, value, options, param_type)
+
+    def add(self, key, value, options, param_type):
         assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type',], param_type
         self._add_data(key, value, options, param_type)
 
-    def update_parameter_in_subcase(self, key, value, options, param_type):
+    def update(self, key, value, options, param_type):
         assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type',], param_type
         assert key in self.params, 'key=%r is not in isubcase=%s' % (key, self.id)
         self._add_data(key, value, options, param_type)
@@ -627,7 +643,7 @@ class Subcase(object):
           not really that necessary.  it's only really useful when running an
           analysis.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
         #print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
             load_id = self.params['LOAD'][0]
