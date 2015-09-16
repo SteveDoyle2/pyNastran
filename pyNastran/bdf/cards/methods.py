@@ -195,10 +195,10 @@ class EIGC(Method):
             i = 9 + 8 * irow
             self.shift_r1 = double_or_blank(card, i, 'SHIFT_R1', 0.0)
             self.shift_i1 = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
-            2
-            3
-            4
-            self.isrr_flag = integer(card, i + 5, 'ISRR_FLAG', 0)
+            #2
+            #3
+            #4
+            self.isrr_flag = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
             self.nd1 = integer(card, i + 6, 'ND1')
 
     def loadCLAN(self, nrows, card):

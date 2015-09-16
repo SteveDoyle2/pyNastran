@@ -872,6 +872,7 @@ class GRID(Node):
         Node.__init__(self, card, data)
 
         if card:
+            nfields = len(card)
             #: Node ID
             self.nid = integer(card, 1, 'nid')
 
@@ -884,15 +885,20 @@ class GRID(Node):
                 double_or_blank(card, 4, 'x2', 0.),
                 double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
-            #: Analysis coordinate system
-            self.cd = integer_or_blank(card, 6, 'cd', 0)
+            if nfields > 6:
+                #: Analysis coordinate system
+                self.cd = integer_or_blank(card, 6, 'cd', 0)
 
-            #: SPC constraint
-            self.ps = str(integer_or_blank(card, 7, 'ps', ''))
+                #: SPC constraint
+                self.ps = unicode(integer_or_blank(card, 7, 'ps', ''))
 
-            #: Superelement ID
-            self.seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
+                #: Superelement ID
+                self.seid = integer_or_blank(card, 8, 'seid', 0)
+                assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
+            else:
+                self.cd = 0
+                self.ps = ''
+                self.seid = 0
         else:
             self.nid = data[0]
             self.cp = data[1]
@@ -915,7 +921,7 @@ class GRID(Node):
 
     def PositionWRT(self, model, cid, debug=False):
         self.deprecated('PositionWRT(self, model, cid)', 'get_position_wrt(model, cid)', '0.8')
-        return self.get_position_wrt(model, cid, debug=debug)
+        return self.get_position_wrt(model, cid)
 
     def UpdatePosition(self, model, xyz, cid=0):
         self.deprecated('UpdatePosition(self, model, xyz, cid', 'set_position(self, model, xyz, cid=cid)', '0.8')
@@ -1026,21 +1032,19 @@ class GRID(Node):
         msg = ' which is required by GRID nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
-    def get_position(self, debug=False):
+    def get_position(self):
         """
         Gets the point in the global XYZ coordinate system.
 
         :param self:   the GRID object pointer
-        :param debug:  developer debug (default=False)
-        :type debug:   bool
         :returns xyz:  the position of the GRID in the globaly
                        coordinate system
         :type xyz:     TYPE = NDARRAY.  SIZE=(3,)
         """
-        xyz = self.cp.transform_node_to_global(self.xyz, debug=debug)
+        xyz = self.cp.transform_node_to_global(self.xyz)
         return xyz
 
-    def get_position_wrt(self, model, cid, debug=False):
+    def get_position_wrt(self, model, cid):
         """
         Gets the location of the GRID which started in some arbitrary
         system and returns it in the desired coordinate system
@@ -1050,8 +1054,6 @@ class GRID(Node):
         :type model:  BDF()
         :param cid:   the desired coordinate ID
         :type cid:    int
-        :param debug: developer debug (default=False)
-        :type debug:  bool
         :returns xyz: the position of the GRID in an arbitrary
                       coordinate system
         :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
@@ -1060,7 +1062,7 @@ class GRID(Node):
             return self.xyz
 
         # converting the xyz point arbitrary->global
-        p = self.cp.transform_node_to_global(self.xyz, debug=debug)
+        p = self.cp.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)

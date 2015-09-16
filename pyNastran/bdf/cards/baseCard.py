@@ -369,7 +369,7 @@ class Element(BaseCard):
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = []
         if allow_empty_nodes:
-            nids2 = [nid for nid in nids if nid is not None]
+            nids2 = [nid for nid in nids if nid not in [None, 0]]
             if len(nids2) == 0:
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (self.type, nids2)
                 raise ValueError(msg)

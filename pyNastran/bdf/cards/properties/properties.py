@@ -230,9 +230,12 @@ class PLSOLID(SolidProperty):
             self.mid = data[1]
             self.ge = data[2]
             self.str = data[3]
-        if self.str not in ['GRID', 'GAUS']:
+
+        if self.str == 'GAUS':
+            self.str = 'GAUSS'
+        if self.str not in ['GRID', 'GAUSS']:
             raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
-                               'output value set; valid=["GRID", "GAUS"]\n'
+                               'output value set; valid=["GRID", "GAUSS"]\n'
                                % self.str)
 
     def cross_reference(self, model):

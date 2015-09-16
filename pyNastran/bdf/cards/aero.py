@@ -1060,8 +1060,6 @@ class CAERO1(BaseCard):
                 msg = 'Either NCHORD or LCHORD must 0'
                 raise ValueError(msg)
 
-            self._init_ids()
-
             assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
@@ -1120,6 +1118,7 @@ class CAERO1(BaseCard):
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan = model.AEFact(self.lspan, msg)
+        self._init_ids()
 
     @property
     def min_max_eid(self):

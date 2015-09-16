@@ -18,21 +18,21 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
-from six.moves import zip, range
+from six import integer_types
+from six.moves import zip
 
 from numpy import array, cross, allclose, unique, int32
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, expand_thru_by
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, expand_thru_by, range
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, string_or_blank,
     integer_or_string, fields, integer_string_or_blank, integer_or_double)
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, set_string8_blank_if_default
+from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16, set_string16_blank_if_default
+from pyNastran.bdf.field_writer_double import print_card_double, print_scientific_double
 
 
 class LOAD(LoadCombination):
@@ -370,8 +370,8 @@ class GRAV(BaseCard):
 
     def GravityVector(self):
         """returns the gravity vector in absolute coordinates"""
-        ## TODO: shouldn't be scaled by the
-        p = self.cid.transformVectorToGlobal(self.N)
+        ## TODO: shouldn't be scaled by the ???
+        p = self.cid.transform_vector_to_global(self.N)
         return self.scale * p
 
     def raw_fields(self):
@@ -704,9 +704,9 @@ class FORCE(Force):
             self.node = integer(card, 2, 'node')
             self.cid = integer_or_blank(card, 3, 'cid', 0)
             self.mag = double(card, 4, 'mag')
-            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                         double_or_blank(card, 6, 'X2', 0.0),
-                         double_or_blank(card, 7, 'X3', 0.0)])
+            self.xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                              double_or_blank(card, 6, 'X2', 0.0),
+                              double_or_blank(card, 7, 'X3', 0.0)])
             assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
         else:
             self.sid = data[0]
@@ -714,9 +714,8 @@ class FORCE(Force):
             self.cid = data[2]
             self.mag = data[3]
             xyz = data[4:7]
-
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        self.xyz = array(xyz)
+            assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+            self.xyz = array(xyz)
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -748,10 +747,24 @@ class FORCE(Force):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.raw_fields()
         if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
+            cids = set_string8_blank_if_default(self.Cid(), 0)
+            msg = 'FORCE   %8i%8i%8s%8s%8s%8s%8s\n' % (self.sid, self.node,
+                cids, print_float_8(self.mag), print_float_8(self.xyz[0]),
+                print_float_8(self.xyz[1]), print_float_8(self.xyz[2]))
+        else:
+            cids = set_string16_blank_if_default(self.Cid(), 0)
+            if is_double:
+                msg = ('FORCE*  %16i%16i%16s%s\n'
+                       '*       %16s%16s%16s') % (self.sid, self.node,
+                    cids, print_scientific_double(self.mag), print_scientific_double(self.xyz[0]),
+                    print_scientific_double(self.xyz[1]), print_scientific_double(self.xyz[2]))
+            else:
+                msg = ('FORCE*  %16i%16i%16s%s\n'
+                       '*       %16s%16s%16s') % (self.sid, self.node,
+                    cids, print_float_16(self.mag), print_float_16(self.xyz[0]),
+                    print_float_16(self.xyz[1]), print_float_16(self.xyz[2]))
+        return self.comment + msg
 
 
 class FORCE1(Force):
@@ -989,12 +1002,24 @@ class MOMENT(Moment):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.raw_fields()
         if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+            cids = set_string8_blank_if_default(self.Cid(), 0)
+            msg = 'MOMENT  %8i%8i%8s%8s%8s%8s%8s\n' % (self.sid, self.node,
+                cids, print_float_8(self.mag), print_float_8(self.xyz[0]),
+                print_float_8(self.xyz[1]), print_float_8(self.xyz[2]))
+        else:
+            cids = set_string16_blank_if_default(self.Cid(), 0)
+            if is_double:
+                msg = ('MOMENT* %16i%16i%16s%s\n'
+                       '*       %16s%16s%16s') % (self.sid, self.node,
+                    cids, print_scientific_double(self.mag), print_scientific_double(self.xyz[0]),
+                    print_scientific_double(self.xyz[1]), print_scientific_double(self.xyz[2]))
+            else:
+                msg = ('MOMENT* %16i%16i%16s%s\n'
+                       '*       %16s%16s%16s') % (self.sid, self.node,
+                    cids, print_float_16(self.mag), print_float_16(self.xyz[0]),
+                    print_float_16(self.xyz[1]), print_float_16(self.xyz[2]))
+        return self.comment + msg
 
 
 class MOMENT1(Moment):
@@ -1379,7 +1404,7 @@ class PLOAD1(Load):
         #return (g2)
 
     def getReducedLoads(self):
-        self.deprecated('getReducedLoads()', 'get_reduced_loads', '0.8')
+        self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
         return self.get_reduced_loads()
 
     def get_reduced_loads(self):
@@ -1395,6 +1420,10 @@ class PLOAD1(Load):
         return scale_factors, loads
 
     def organizeLoads(self, model):
+        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        return self.organize_loads(model)
+
+    def organize_loads(self, model):
         """
         Figures out magnitudes of the loads to be applied to the various nodes.
         This includes figuring out scale factors.

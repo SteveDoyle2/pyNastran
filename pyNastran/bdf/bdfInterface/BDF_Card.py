@@ -4,6 +4,7 @@ Defines the BDFCard class that is passed into the various Nastran cards.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.field_writer_16 import print_field_16
 from six.moves import range
 
 
@@ -12,8 +13,9 @@ class BDFCard(object):
     A BDFCard is a list that has a default value of None for fields out of
     range.
     """
-    def __init__(self, card, debug=False):
-        self.debug = debug
+    def __init__(self, card, has_none=True):
+        if has_none:
+            card = wipe_empty_fields([print_field_16(field) for field in card])
         self.card = card
         self.nfields = len(self.card)
 
@@ -56,7 +58,7 @@ class BDFCard(object):
         msg : str
             the string representation of the card
         """
-        return str(self.card)
+        return '%r' % self.card
 
     def nFields(self):
         """
@@ -140,6 +142,6 @@ class BDFCard(object):
         if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]
         else:
-            if default == None:
-                return ''
+            if default is None:
+                return u''
             return default

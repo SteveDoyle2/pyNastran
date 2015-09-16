@@ -1,3 +1,4 @@
+from __future__ import unicode_literals, print_function
 from six import string_types
 
 def build_table_lines(fields, nstart=1, nend=0):

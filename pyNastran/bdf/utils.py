@@ -120,7 +120,7 @@ def to_fields(card_lines, card_name):
             new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
                           line[56:72]]
         fields += new_fields
-        assert len(fields) == 5
+        assert len(fields) == 5, fields
     else:  # small field
         if ',' in line:  # csv
             new_fields = line[:72].split(',')[:9]
@@ -150,7 +150,7 @@ def to_fields(card_lines, card_name):
                     new_fields.append('')
             else:  # standard
                 new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
-            assert len(new_fields) == 4
+            assert len(new_fields) == 4, new_fields
         else:  # small field
             if ',' in line:  # csv
                 new_fields = line[:72].split(',')[1:9]
@@ -166,7 +166,7 @@ def to_fields(card_lines, card_name):
                 raise RuntimeError(msg)
 
         fields += new_fields
-    return [field.strip() for field in fields]
+    return fields #[field.strip() for field in fields]
 
 
 def get_include_filename(card_lines, include_dir=''):

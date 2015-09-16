@@ -158,7 +158,7 @@ class Coord(BaseCard):
             print("e3* = %s" % (e3))
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
-            print("k = normalize(e12)")
+            print("k   = normalize(e12)")
             raise
 
         try:
@@ -175,11 +175,11 @@ class Coord(BaseCard):
             print("e3* = %s" % (e3))
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
-            print("k = norm(e12)")
+            print("k   = norm(e12)")
             print("k   = %s\n" % (self.k))
-            print("j* = cross(k,e13)")
+            print("j*  = cross(k, e13)")
             print("j*  = %s" % (cross(self.k, e13)))
-            print("j = norm(cross(k,e13))\n")
+            print("j   = norm(cross(k, e13))\n")
             raise
 
         try:
@@ -194,18 +194,18 @@ class Coord(BaseCard):
             print("e3  = %s" % (self.e3))
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
-            print("k = normalize(e12)")
+            print("k   = normalize(e12)")
             print("k   = %s\n" % (self.k))
-            print("j = norm(cross(k,e13))")
+            print("j   = norm(cross(k,e13))")
             print("j   = %s" % (self.j))
             raise
 
         if 0:
             print("\nCid = %s" % (self.Cid()))
             print("Rid = %s" % (self.Rid()))
-            print("e1 = %s" % (self.e1))
-            print("e2 = %s" % (self.e2))
-            print("e3 = %s" % (self.e3))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
             print("e1* = [%g, %g, %g]" % tuple(e1))
             print("e2* = [%g, %g, %g]" % tuple(e2))
             print("e3* = [%g, %g, %g]" % tuple(e3))
@@ -227,7 +227,7 @@ class Coord(BaseCard):
         #Mdelta = cross(r, Fg)
         #return Fg, Mg + Mdelta
 
-    def transform_vector_to_global(self, p, debug=False):
+    def transform_vector_to_global(self, p):
         """
         Transforms a generalized vector from the local frame to the
         global frame.  A generalized vector is unchanged when you shift
@@ -266,7 +266,7 @@ class Coord(BaseCard):
         p3 = dot(p2, matrix)
         return p3
 
-    def transform_node_to_global(self, p, debug=False):
+    def transform_node_to_global(self, p):
         r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
@@ -345,7 +345,7 @@ class Coord(BaseCard):
         beta = self.beta()
         return self._transform_node_to_local(p, beta, debug)
 
-    def transform_vector_to_local(self, p, debug=False):
+    def transform_vector_to_local(self, p):
         """
         see transform_node_to_local, but set the origin to <0, 0, 0>
         """
@@ -1001,6 +1001,11 @@ class Cord1x(Coord):
         #: grid point 3
         self.g3 = model.Node(self.g3, msg=msg)
 
+    def uncross_reference(self):
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+        self.g3 = self.G3()
+
     def setup(self):
         """
         Finds the position of the nodes used define the coordinate system
@@ -1141,11 +1146,10 @@ class CORD3G(Coord):  # not done
             return self.rid
         return self.rid.cid
 
-    def coord3g_transformToGlobal(self, p, debug=False):
+    def coord3g_transform_to_global(self, p):
         """
         :param self:  the coordinate system object
         :param p:     the point to transform.  TYPE=NUMPY.NDARRAY.
-        :param debug: should debug messages be printed
 
         .. warning:: not done, just setting up how you'd do this
         .. note::    per http://en.wikipedia.org/wiki/Euler_angles
@@ -1160,7 +1164,7 @@ class CORD3G(Coord):  # not done
             for (rotation, theta) in zip(rotations, self.thetas):
                 ct = cos(radians(theta))
                 st = sin(radians(theta))
-                if   rotation == 1:
+                if rotation == 1:
                     p = dot(self.rotation_x(ct, st), p)
                 elif rotation == 2:
                     p = dot(self.rotation_y(ct, st), p)

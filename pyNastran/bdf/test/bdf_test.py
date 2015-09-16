@@ -46,7 +46,7 @@ def main():
     debug = False
 
     saveCases = True
-    regenerate = True
+    regenerate = False
     stopOnFailure = False
     nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
     nastran = ''

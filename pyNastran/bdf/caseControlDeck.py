@@ -39,10 +39,15 @@ class CaseControlDeck(object):
     """
     def __init__(self, lines, log=None):
         """
-        :param self:  the CaseControlDeck object
-        :param lines: list of lines that represent the case control deck
-                ending with BEGIN BULK
-        :param log:   a :mod: `logging` object
+        Parameters
+        ----------
+        self : CaseControlDeck
+            the CaseControlDeck object
+        lines : List[str]
+            list of lines that represent the case control deck
+            ending with BEGIN BULK
+        log : log()
+            a :mod: `logging` object
         """
         # pulls the logger from the BDF object
         self.log = get_logger(log, "debug")
@@ -275,12 +280,14 @@ class CaseControlDeck(object):
         i = 0
         is_output_lines = False
         while i < len(lines):
-            line = lines[i]
+            line = lines[i] #[:72]
+            #comment = lines[i][72:]
 
             lines2 = [line]
             while ',' in lines[i][-1]:
                 i += 1
                 lines2.append(lines[i])
+                #comment = lines[i][72:]
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
 
