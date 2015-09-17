@@ -917,9 +917,9 @@ class GRID(Node):
 
     def Position(self, debug=False):
         self.deprecated('Position()', 'get_position()', '0.8')
-        return self.get_position(debug)
+        return self.get_position()
 
-    def PositionWRT(self, model, cid, debug=False):
+    def PositionWRT(self, model, cid):
         self.deprecated('PositionWRT(self, model, cid)', 'get_position_wrt(model, cid)', '0.8')
         return self.get_position_wrt(model, cid)
 
@@ -1067,7 +1067,7 @@ class GRID(Node):
         # a matrix global->local matrix is found
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
         coordB = model.Coord(cid, msg=msg)
-        xyz = coordB.transform_node_to_local(p, debug=debug)
+        xyz = coordB.transform_node_to_local(p)
         return xyz
 
     def cross_reference(self, model, grdset=None):
@@ -1339,11 +1339,11 @@ class POINT(Node):
 
     def Position(self, debug=False):
         self.deprecated('Position()', 'get_position()', '0.8')
-        return self.get_position(debug)
+        return self.get_position()
 
     def PositionWRT(self, model, cid, debug=False):
         self.deprecated('Position()', 'get_position()', '0.8')
-        return self.get_position_wrt(model, cid, debug)
+        return self.get_position_wrt(model, cid)
 
     def UpdatePosition(self, model, xyz, cid=0):
         self.deprecated('UpdatePosition(self, model, xyz, cid)', 'set_position(model, xyz, cid)', '0.8')
@@ -1363,19 +1363,18 @@ class POINT(Node):
         msg = ' which is required by POINT nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
-    def get_position(self, debug=False):
+    def get_position(self):
         """
         Gets the point in the global XYZ coordinate system.
 
         :param self:  the POINT object pointer
-        :param debug: developer debug (default=False)
         :returns position: the position of the POINT in the globaly
                            coordinate system
         """
-        p = self.cp.transform_node_to_global(self.xyz, debug=debug)
+        p = self.cp.transform_node_to_global(self.xyz)
         return p
 
-    def get_position_wrt(self, model, cid, debug=False):
+    def get_position_wrt(self, model, cid):
         """
         Gets the location of the POINT which started in some arbitrary
         system and returns it in the desired coordinate system
@@ -1385,8 +1384,6 @@ class POINT(Node):
         :type model:  BDF()
         :param cid:   the desired coordinate ID
         :type cid:    int
-        :param debug: debug (default=False)
-        :type debug:  bool
         :returns xyz: the position of the POINT in an arbitrary
                       coordinate system
         :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
@@ -1395,12 +1392,12 @@ class POINT(Node):
             return self.xyz
 
         # converting the xyz point arbitrary->global
-        p = self.cp.transform_node_to_global(self.xyz, debug=debug)
+        p = self.cp.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
         coordB = model.Coord(cid, msg=msg)
-        xyz = coordB.transform_node_to_local(p, debug=debug)
+        xyz = coordB.transform_node_to_local(p)
         return xyz
 
     def Cp(self):

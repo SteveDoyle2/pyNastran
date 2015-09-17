@@ -5,7 +5,6 @@ Main OP2 class
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-from collections import defaultdict
 
 from numpy import unique
 from pyNastran.op2.op2_scalar import OP2_Scalar
@@ -36,7 +35,6 @@ class OP2(OP2_Scalar):
         OP2_Scalar.__init__(self,
                      debug=debug, log=log, debug_file=debug_file)
         self.ask = False
-        self.subcase_key = defaultdict(list)
 
     def set_mode(self, mode):
         if mode.lower() == 'msc':

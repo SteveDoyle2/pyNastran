@@ -226,18 +226,20 @@ class TestF06(unittest.TestCase):
         bdfname = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
         f06name = os.path.join(model_path, 'beam_modes', 'beam_modes.f06')
-        bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+        bdf, op2, f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
 
         assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
         assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
 
         subtitle_label= f06.iSubcaseNameMap[1]
         assert subtitle_label[0] == 'MODES', subtitle_label
-        assert subtitle_label[1] == '', subtitle_label
+        assert subtitle_label[1] == 2, subtitle_label  # 2=modal
+        assert subtitle_label[2] == '', subtitle_label
 
         subtitle_label = op2.iSubcaseNameMap[1]
         assert subtitle_label[0] == 'MODES', subtitle_label
-        assert subtitle_label[1] == '', subtitle_label
+        assert subtitle_label[1] == 2, subtitle_label  # 2=modal
+        assert subtitle_label[2] == '', subtitle_label
 
         assert len(f06.displacements) == 0, len(f06.displacements)
         assert len(f06.eigenvectors) == 1, len(f06.eigenvectors)
@@ -273,8 +275,10 @@ class TestF06(unittest.TestCase):
 
             assert f06.Title == title, 'i=%i title=%r expected=%r' % (i, f06.Title, title)
             subtitle_label = f06.iSubcaseNameMap[1]
-            assert subtitle_label[0] == subtitle, 'i=%i subtitle=%r expected=%r' % (i, subtitle_label[0], subtitle)
-            assert subtitle_label[1] == label, 'i=%i label=%r expected=%r' % (i, subtitle_label[1], label)
+            analysis_code = 1 # static
+            assert subtitle_label[0] == subtitle, 'f06_filename=%s i=%i subtitle=%r expected=%r' % (f06_filename, i, subtitle_label[0], subtitle)
+            assert subtitle_label[1] == 1, 'f06_filename=%s i=%i label=%r expected=%r' % (f06_filename, i, subtitle_label[1], analysis_code)
+            assert subtitle_label[2] == label, 'f06_filename=%s i=%i label=%r expected=%r' % (f06_filename, i, subtitle_label[2], label)
 
             assert len(f06.displacements) == 1, len(f06.displacements)
             assert len(f06.spc_forces) == 1, len(f06.spc_forces)
@@ -380,7 +384,8 @@ class TestF06(unittest.TestCase):
 
         subtitle_label = op2.iSubcaseNameMap[1]
         assert subtitle_label[0] == 'DEFAULT', subtitle_label
-        assert subtitle_label[1] == 'SUBCASE 1', subtitle_label
+        assert subtitle_label[1] == 2, subtitle_label  # 2=modal
+        assert subtitle_label[2] == 'SUBCASE 1', subtitle_label
 
         assert len(f06.displacements) == 0, len(f06.displacements)  # 0 is correct
         assert len(f06.spc_forces) == 1, len(f06.spc_forces)        # 1 is correct

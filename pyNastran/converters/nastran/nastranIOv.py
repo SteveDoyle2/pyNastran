@@ -45,8 +45,11 @@ from pyNastran.bdf.bdf import (BDF,
                                CHEXA8, CHEXA20,
                                CPYRAM5, CPYRAM13,
                                CONM2,
-                               ShellElement, LineElement, SpringElement,
                                LOAD)
+from pyNastran.bdf.cards.elements.shell import ShellElement
+from pyNastran.bdf.cards.elements.bars import LineElement
+from pyNastran.bdf.cards.elements.springs import SpringElement
+
 from pyNastran.op2.op2 import OP2
 from pyNastran.f06.f06_formatting import get_key0
 try:

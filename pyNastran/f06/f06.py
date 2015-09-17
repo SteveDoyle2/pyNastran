@@ -798,11 +798,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                 msg += 'i=%s - %s\n' % (i-10, line.rstrip())
             raise RuntimeError(msg)
 
-        key = (isubcase, subtitle)
-        if key not in self.labels:
-            self.subtitles[isubcase].append(subtitle)
-            self.labels[key] = label
-
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
         #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
@@ -812,7 +807,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 #label      ???
 
         self._subtitle = subtitle
-        self.iSubcaseNameMap[isubcase] = [subtitle, label]
         transient = self.stored_lines[-1].strip()
         is_sort1 = True
         if transient:
@@ -859,6 +853,13 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         else:
             transient = None
             analysis_code = 1
+
+
+        key = (isubcase, analysis_code, subtitle)
+        if key not in self.labels:
+            self.subtitles[isubcase].append(subtitle)
+            self.labels[key] = label
+        self.iSubcaseNameMap[isubcase] = [subtitle, analysis_code, label]
 
         dt = None
         if transient is not None:

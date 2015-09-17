@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, iteritems, PY2
 import copy
 from datetime import date
+from collections import defaultdict
 
 import pyNastran
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
@@ -175,6 +176,7 @@ class F06Writer(OP2_F06_Common):
         self.card_count = {}
         self.additional_matrices = {}
         self.matrices = {}
+        self.subcase_key = defaultdict(list)
 
         self._results = ResultSet(self.get_all_results())
 
@@ -404,7 +406,8 @@ class F06Writer(OP2_F06_Common):
             for res_keysii in res_keysi:
                 key = [isubcase] + list(res_keysii)
                 res_keys.append(tuple(key))
-        del key, isubcase#, subtitle
+            del key
+        # del isubcase#, subtitle
 
         #print('res_keys=%s' % res_keys)
         for res_key in res_keys:
