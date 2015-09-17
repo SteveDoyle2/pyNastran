@@ -596,7 +596,7 @@ class OP2_F06_Common(object):
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in ['card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
-                  'labels', 'subtitles', 'additional_matrices', 'matrices']]
+                  'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key']]
         for table in tables:
             assert table in table_types, table
         return table_types
@@ -611,7 +611,7 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key, value = key_value
-            if isinstance(key, int) or isinstance(key, int32):
+            if isinstance(key, (int, int32, str)):
                 return key
             else:
                 return key[0]

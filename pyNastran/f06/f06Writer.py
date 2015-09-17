@@ -397,16 +397,24 @@ class F06Writer(OP2_F06_Common):
         # has a special header
         iSubcases = sorted(self.iSubcaseNameMap.keys())
 
+        # superelement version...need the nominal...
         res_keys = []
-        for isubcase in iSubcases:
-            for subtitle in self.subtitles[isubcase]:
-                res_keys.append((isubcase, subtitle))
+        for isubcase, res_keysi in iteritems(self.subcase_key):
+            assert isinstance(res_keysi, list), res_keysi
+            for res_keysii in res_keysi:
+                key = [isubcase] + list(res_keysii)
+                res_keys.append(tuple(key))
+        del key, isubcase#, subtitle
 
         #print('res_keys=%s' % res_keys)
         for res_key in res_keys:
+            print('res_key =', res_key)
             isubcase = res_key[0]
-            subtitle = res_key[1]
-            label = self.labels[(isubcase, subtitle)]
+            # analysis code = res_key[1]
+            subtitle = res_key[2]
+            if res_key not in self.labels:
+                continue
+            label = self.labels[res_key]
 
             is_compressed = len(self.subtitles[isubcase]) == 1
             if is_compressed:
@@ -625,9 +633,10 @@ class F06Writer(OP2_F06_Common):
         for res_key in res_keys:
             #title = self.Title
 
-            isubcase = res_key[0]
-            subtitle = res_key[1]
-            label = self.labels[(isubcase, subtitle)]
+            #isubcase = res_key[0]
+            subtitle = res_key[2]
+            #print(res_key)
+            label = self.labels[res_key]
 
             is_compressed = len(self.subtitles[isubcase]) == 1
             #print(self.subtitles[isubcase])

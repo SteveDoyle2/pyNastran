@@ -133,23 +133,23 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['Title'] = self.Title
 
         if self.debug:
-            self.binary_debug.write('  Title    = %r\n' % self.Title)
-            self.binary_debug.write('  subtitle = %r\n' % self.subtitle)
-            self.binary_debug.write('  label    = %r\n' % self.label)
+            self.binary_debug.write('  Title        = %r\n' % self.Title)
+            self.binary_debug.write('  subtitle     = %r\n' % self.subtitle)
+            self.binary_debug.write('  label        = %r\n' % self.label)
 
     def _read_title(self, data):
         self._read_title_helper(data)
 
         if hasattr(self, 'isubcase'):
             if self.isubcase not in self.iSubcaseNameMap:
-                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
+                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
         else:
             raise  RuntimeError('isubcase is not defined')
 
         if hasattr(self, 'subtitle') and hasattr(self, 'label'):
-            if (self.isubcase, self.subtitle) not in self.labels:
+            if (self.isubcase, self.analysis_code, self.subtitle) not in self.labels:
                 self.subtitles[self.isubcase].append(self.subtitle)
-                self.labels[(self.isubcase, self.subtitle)] = self.label
+                self.labels[(self.isubcase, self.analysis_code, self.subtitle)] = self.label
 
     def _write_debug_bits(self):
         if self.debug:
@@ -525,9 +525,18 @@ class OP2Common(Op2Codes, F06Writer):
         """
         Creates a transient object (or None if the subcase should be skippied).
 
-        :param storageName:  the name of the dictionary to store the object in (e.g. 'displacements')
-        :param class_obj:    the class object to instantiate
-        :param debug:        developer debug
+        storageName : str
+            the name of the dictionary to store the object in (e.g. 'displacements')
+        class_obj : object()
+            the class object to instantiate
+        debug : bool
+            developer debug
+
+        .. python ::
+
+            slot = self.displacements
+            slot_vector = RealDisplacementArray
+            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
 
         .. note:: dt can also be load_step depending on the class
         """
@@ -571,7 +580,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _get_code(self):
         code = self.isubcase
-        code = (self.isubcase, self.subtitle)
+        code = (self.isubcase, self.analysis_code, self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))
         return self.code
@@ -613,6 +622,7 @@ class OP2Common(Op2Codes, F06Writer):
         #: approach_code and grid_device.  device_code defines what options
         #: inside a result, STRESS(PLOT,PRINT), are used.
         self.device_code = approach_code % 10
+
         self.data_code['device_code'] = self.device_code
         assert self.device_code in [0, 1, 2, 3, 4, 5, 6, 7], self.device_code
 
@@ -636,12 +646,14 @@ class OP2Common(Op2Codes, F06Writer):
 
         if self.debug3():
             self.binary_debug.write('  table_name    = %r\n' % self.table_name)
+            self.binary_debug.write('  approach_code = analysis_code * 10 + device_code\n')
             self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode         = %r\n' % self.tCode)
-            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
-            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
             self.binary_debug.write('  device_code   = %r\n' % self.device_code)
             self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
+            self.binary_debug.write('  tcode         = sort_code * 1000 + table_code\n')
+            self.binary_debug.write('  tcode         = %r\n' % self.tCode)
+            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
+            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
 
         self._parse_sort_code()
 

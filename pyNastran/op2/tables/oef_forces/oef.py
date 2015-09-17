@@ -651,6 +651,8 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+20]
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
 
                     if is_magnitude_phase:
@@ -671,7 +673,7 @@ class OEF(OP2Common):
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
-        elif self.element_type in [2]:  # cbeam
+        elif self.element_type == 2:  # cbeam
             #2-CBEAM
             if self.read_mode == 1:
                 return len(data)
@@ -740,6 +742,8 @@ class OEF(OP2Common):
                         n += 64
 
                         out = s2.unpack(edata)
+                        if self.debug4():
+                            self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
                         (nid, sd,
                          bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
                          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
@@ -856,6 +860,8 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n + 12]
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force_real, force_imag) = out
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, eid
@@ -875,7 +881,7 @@ class OEF(OP2Common):
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
-        elif self.element_type in [24]:  # CVISC
+        elif self.element_type == 24:  # CVISC
             if self.read_mode == 1:
                 return len(data)
             if self.format_code == 1 and self.num_wide == 3: # real
@@ -907,6 +913,8 @@ class OEF(OP2Common):
                     edata = data[n:n+20]
 
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, eid
@@ -928,7 +936,7 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
             #print self.viscForces
 
-        elif self.element_type in [34]:  # cbar
+        elif self.element_type == 34:  # cbar
             # 34-CBAR
             slot = self.cbar_force
             slot_vector = self.cbar_force
@@ -976,6 +984,8 @@ class OEF(OP2Common):
                     (eid_device,
                      bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                      bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
+                    if self.debug4():
+                        self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, eid
 
@@ -1008,7 +1018,7 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
             #print self.barForces
 
-        elif self.element_type in [100]:  # cbar
+        elif self.element_type == 100:  # cbar
             #100-BARS
             if self.read_mode == 1:
                 return len(data)
@@ -1022,12 +1032,11 @@ class OEF(OP2Common):
                     edata = data[n:n+32]
 
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
                     (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, eid
-
-                    if self.debug4():
-                        self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
 
                     data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
@@ -1186,7 +1195,7 @@ class OEF(OP2Common):
                     return len(data)
 
                 self.create_transient_object(slot, RealPlateBilinearForce)
-                ntotal = 8 + (nnodes+1) * 36 # centroidal node is the + 1
+                ntotal = 8 + (nnodes + 1) * 36 # centroidal node is the + 1
                 assert ntotal == self.num_wide * 4, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
                 nelements = len(data) // ntotal
                 #auto_return = self._create_oes_object2(nelements,
@@ -1240,6 +1249,8 @@ class OEF(OP2Common):
                     n += 76
 
                     out = s1.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, term, nid,
                      mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
@@ -1379,7 +1390,7 @@ class OEF(OP2Common):
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
-        elif self.element_type in [4]:  # cshear
+        elif self.element_type == 4:  # cshear
             # 4-CSHEAR
             if self.read_mode == 1:
                 return len(data)
@@ -1418,6 +1429,8 @@ class OEF(OP2Common):
                     n += ntotal
 
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
                     (eid_device,
                      f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r,
                      kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,
@@ -1498,7 +1511,7 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
 
 
-        elif self.element_type in [38]:  # cgap
+        elif self.element_type == 38:  # cgap
             # 38-GAP
             if self.read_mode == 1:
                 return len(data)
@@ -1526,7 +1539,7 @@ class OEF(OP2Common):
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
-        elif self.element_type in [69]:  # cbend
+        elif self.element_type == 69:  # cbend
             # 69-CBEND
             if self.read_mode == 1:
                 return len(data)
@@ -1566,6 +1579,8 @@ class OEF(OP2Common):
                     n += ntotal
 
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
                     (eid_device, nidA,
                      bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
                      bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
@@ -1663,6 +1678,8 @@ class OEF(OP2Common):
                     n += 64
 
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
                     (eid_device, eName,
                      axr, ayr, azr, vxr, vyr, vzr, pressure,
                      axi, ayi, azi, vxi, vyi, vzi) = out
@@ -1693,7 +1710,7 @@ class OEF(OP2Common):
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
 
-        elif self.element_type in [100]:  #  bars
+        elif self.element_type == 100:  #  bars
             # 100-BARS
             if self.read_mode == 1:
                 return len(data)
@@ -1720,7 +1737,7 @@ class OEF(OP2Common):
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
-        elif self.element_type in [102]:  # cbush
+        elif self.element_type == 102:  # cbush
             # 102-CBUSH
             self._results._found_result('cbush_force')
             if self.format_code == 1 and self.num_wide == 7:  # real
@@ -1751,6 +1768,8 @@ class OEF(OP2Common):
                     edata = data[n:n+52]
 
                     out = s.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
                     (eid_device,
                      fxr, fyr, fzr, mxr, myr, mzr,
                      fxi, fyi, fzi, mxi, myi, mzi) = out
@@ -1856,6 +1875,8 @@ class OEF(OP2Common):
                     n += 24
 
                     out = s1.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
                     (eid_device, parent, coord, icord, theta, _) = out
 
                     eid = (eid_device - self.device_code) // 10
@@ -1867,6 +1888,8 @@ class OEF(OP2Common):
                         edata = data[n:n+100]  # 13*4
                         n += 100
                         out = s2.unpack(edata)
+                        if self.debug4():
+                            self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
                         [vugrid, mfxr, mfyr, mfxyr, a, b, c, bmxr, bmyr, bmxyr, syzr, szxr, d,
                          mfxi, mfyi, mfxyi, a, b, c, bmxi, bmyi, bmxyi, syzi, szxi, d] = out
 
@@ -1964,6 +1987,8 @@ class OEF(OP2Common):
                     n += 16
 
                     out = s1.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
                     (eid_device, parent, coord, icord) = out
 
                     eid = (eid_device - self.device_code) // 10
@@ -1975,6 +2000,8 @@ class OEF(OP2Common):
                         edata = data[n:n+56]  # 14*4
                         n += 56
                         out = s2.unpack(edata)
+                        if self.debug4():
+                            self.binary_debug.write('%s\n' % str(out))
                         [vugrid, posit,
                          force_xr, shear_yr, shear_zr, torsionr, bending_yr, bending_zr,
                          force_xi, shear_yi, shear_zi, torsioni, bending_yi, bending_zi] = out

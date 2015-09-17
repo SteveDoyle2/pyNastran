@@ -213,8 +213,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     print('iSubcases = %s' % iSubcases)
 
     debug_file = None
+    model, ext = os.path.splitext(op2_filename)
     if binary_debug or write_op2:
-        debug_file = 'debug.out'
+        debug_file = model + '.debug.out'
     #print('debug_file = %r' % debug_file, os.getcwd())
 
     if make_geom and not is_geom:
@@ -265,7 +266,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            model, ext = os.path.splitext(op2_filename)
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:

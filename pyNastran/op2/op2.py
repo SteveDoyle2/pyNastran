@@ -5,7 +5,9 @@ Main OP2 class
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-from numpy import array, unique, where
+from collections import defaultdict
+
+from numpy import unique
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
@@ -34,6 +36,7 @@ class OP2(OP2_Scalar):
         OP2_Scalar.__init__(self,
                      debug=debug, log=log, debug_file=debug_file)
         self.ask = False
+        self.subcase_key = defaultdict(list)
 
     def set_mode(self, mode):
         if mode.lower() == 'msc':
@@ -151,10 +154,10 @@ class OP2(OP2_Scalar):
         .. code-block:: python
 
           stress = {
-              (1, 'SUPERELEMENT 0') : result1,
-              (1, 'SUPERELEMENT 10') : result2,
-              (1, 'SUPERELEMENT 20') : result3,
-              (2, 'SUPERELEMENT 0') : result4,
+              (1, 2, 'SUPERELEMENT 0') : result1,
+              (1, 2, 'SUPERELEMENT 10') : result2,
+              (1, 2, 'SUPERELEMENT 20') : result3,
+              (2, 2, 'SUPERELEMENT 0') : result4,
           }
         and convert it to:
 
@@ -165,26 +168,41 @@ class OP2(OP2_Scalar):
               2 : result4,
           }
         """
-        if not combine:
-            return
-        self.log.debug('compress_results')
         result_types = self.get_table_types()
 
         for result_type in result_types:
             result = getattr(self, result_type)
             case_keys = sorted(result.keys())
-            isubcases = [isubcase_name[0] if isinstance(isubcase_name, tuple) else isubcase_name
-                         for isubcase_name in case_keys]
-            #print('case_keys[%s]=%s; isubcases=%s' % (result_type, case_keys, isubcases))
-            unique_isubcases = unique(isubcases)
 
+            unique_isubcases = []
+            for case_key in case_keys:
+                if isinstance(case_key, tuple):
+                    isubcasei, analysis_codei, isubtitle = case_key
+                    value = (analysis_codei, isubtitle)
+                    if value not in self.subcase_key[isubcasei]:
+                        self.subcase_key[isubcasei].append(value)
+                else:
+                    break
+        if not combine:
+            return
+        del result, case_keys
+        isubcases = unique(self.subcase_key.keys())
+        unique_isubcases = unique(isubcases)
+
+        self.log.debug('compress_results')
+        for result_type in result_types:
+            result = getattr(self, result_type)
             for isubcase in unique_isubcases:
-                wherei = [i for i, isubcasei in enumerate(isubcases) if isubcasei == isubcase]
-                keys = [case_keys[i] for i in wherei]
-                if len(wherei) == 1:
+                keys = self.subcase_key[isubcase]
+                key0 = keys[0]
+                key = (isubcase, key0[0], key0[1])
+                if key not in result:
+                    #print(result_type)
+                    continue
+                if len(keys) == 1:
                     # rename the case since we have only one tuple for the result
-                    result[isubcase] = result[keys[0]]
-                    del result[keys[0]]
+                    result[isubcase] = result[key]
+                    del result[key]
                 else:
                     continue
                     # multiple results to combine
