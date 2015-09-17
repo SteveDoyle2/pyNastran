@@ -314,7 +314,7 @@ class BCTPARA(BaseCard):
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'INIPENE':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
+                    assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
                 elif param == 'PDEPTH':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'SEGNORM':
@@ -322,7 +322,7 @@ class BCTPARA(BaseCard):
                     assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
                 elif param == 'OFFTYPE':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'SEGNORM must be [0, 1, 2]; SEGNORM=%r' % value
+                    assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
                 elif param == 'OFFSET':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'TZPENE':

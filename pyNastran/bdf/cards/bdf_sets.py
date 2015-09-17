@@ -518,7 +518,7 @@ class SET1(Set):
         return s1.symmetric_difference(s2)
 
     def add_set(self, set1):
-        self.IDs += set1.get_IDs
+        self.IDs += set1.get_IDs()
         self.clean_ids()
 
     def IsSkin(self):
@@ -612,12 +612,13 @@ class SET3(Set):
         #:  Set description (Character). Valid options are 'GRID', 'ELEM',
         #:  'POINT' and 'PROP'.
         self.desc = string(card, 2, 'desc')
-        assert self.desc in ['GRID', 'POINT', 'ELEM', 'PROP'], 'desc = %r' % self.desc
+        if self.desc == 'ELEM':
+            self.desc = 'ELEMENT'
+        assert self.desc in ['GRID', 'POINT', 'ELEMENT', 'PROP'], 'desc = %r' % self.desc
 
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
         self.IDs = []
-
         IDs = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         self.IDs = expand_thru(IDs)
         self.clean_ids()
@@ -633,25 +634,29 @@ class SET3(Set):
         ids2 = set(s2.IDs)
         return ids1.symmetric_difference(ids2)
 
-    def IsGrid(self):
+    def is_grid(self):
         if self.desc == 'GRID':
             return True
         return False
 
-    def IsPoint(self):
+    def is_point(self):
         if self.desc == 'POINT':
             return True
         return False
 
-    def IsProperty(self):
+    def is_property(self):
         if self.desc == 'PROP':
             return True
         return False
 
-    def IsElement(self):
-        if self.desc == 'ELEM':
+    def is_element(self):
+        if self.desc == 'ELEMENT':
             return True
         return False
+
+    def SetIDs(self):
+        """gets the IDs of the SETx"""
+        return collapse_thru(self.IDs)
 
     def raw_fields(self):
         """Gets the "raw" card without any processing as a list for printing"""
@@ -659,12 +664,14 @@ class SET3(Set):
         return list_fields
 
     def __repr__(self):
-        fields_blocks = [
-            'SET3',
-            [[self.sid, self.desc], False], # these are not all integers
-            [self.SetIDs(), True], # these are all integers
-        ]
-        return self.comment + print_int_card_blocks(fields_blocks)
+        #fields_blocks = [
+            #'SET3',
+            #[[self.sid, self.desc], False], # these are not all integers
+            #[self.SetIDs(), True], # these are all integers
+        #]
+        #print(fields_blocks)
+        #return self.comment + print_int_card_blocks(fields_blocks)
+        return self.comment + print_card_8([self.sid, self.desc] + self.SetIDs())
 
 
 class SESET(SetSuper):
@@ -694,18 +701,18 @@ class SESET(SetSuper):
         return ['SESET', self.seid] + collapse_thru(self.IDs)
 
     def __repr__(self):
-        thruFields = collapse_thru(self.IDs)
+        thru_fields = collapse_thru(self.IDs)
         #list_fields = ['SESET', self.seid]
 
         cards = []
-        while 'THRU' in thruFields:
-            iThru = thruFields.index('THRU')
+        while 'THRU' in thru_fields:
+            ithru = thru_fields.index('THRU')
             card = print_card_8(['SESET', self.seid] +
-                                thruFields[iThru - 1:iThru + 2])
+                                thru_fields[ithru - 1:ithru + 2])
             cards.append(card)
-            thruFields = thruFields[0:iThru - 1]+thruFields[iThru + 2:]
-        if thruFields:
-            card = print_card_8(['SESET', self.seid] + thruFields)
+            thru_fields = thru_fields[0:ithru - 1]+thru_fields[ithru + 2:]
+        if thru_fields:
+            card = print_card_8(['SESET', self.seid] + thru_fields)
             cards.append(card)
         return ''.join(cards)
 

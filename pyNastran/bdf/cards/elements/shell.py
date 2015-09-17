@@ -268,16 +268,24 @@ class CTRIA3(TriShell):
                 integer(card, 5, 'n3')
             ]
 
-            self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
-            self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
-            blank(card, 8, 'blank')
-            blank(card, 9, 'blank')
+            if len(card) > 5:
+                self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+                self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+                blank(card, 8, 'blank')
+                blank(card, 9, 'blank')
 
-            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
+                self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+                assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
+            else:
+                self.thetaMcid = 0.0
+                self.zOffset = 0.0
+                self.TFlag = 0
+                self.T1 = 1.0
+                self.T2 = 1.0
+                self.T3 = 1.0
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -431,15 +439,22 @@ class CTRIA6(TriShell):
                 integer_or_blank(card, 7, 'n5', 0),
                 integer_or_blank(card, 8, 'n6', 0)
             ]
+            if len(card) > 9:
+                self.thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
+                self.zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
 
-            self.thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
-            self.zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
-
-            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            self.TFlag = integer_or_blank(card, 14, 'TFlag', 0)
-            assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
+                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+                self.TFlag = integer_or_blank(card, 14, 'TFlag', 0)
+                assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
+            else:
+                self.thetaMcid = 0.0
+                self.zOffset = 0.0
+                self.T1 = 1.0
+                self.T2 = 1.0
+                self.T3 = 1.0
+                self.TFlag = 0
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -1282,15 +1297,24 @@ class CQUAD4(QuadShell):
                     integer(card, 4, 'n2'),
                     integer(card, 5, 'n3'),
                     integer(card, 6, 'n4')]
-            self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
-            self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
-            blank(card, 9, 'blank')
-            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
-            assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
+            if len(card) > 6:
+                self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
+                self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
+                blank(card, 9, 'blank')
+                self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+                self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+                assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
+            else:
+                self.thetaMcid = 0.0
+                self.zOffset = 0.0
+                self.TFlag = 0
+                self.T1 = 1.0
+                self.T2 = 1.0
+                self.T3 = 1.0
+                self.T4 = 1.0
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -1399,8 +1423,6 @@ class CQUAD4(QuadShell):
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
             return self.comment + msg
         else:
-            row2_data = [thetaMcid, zOffset,
-                         TFlag, T1, T2, T3, T4]
             thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
             zOffset = set_blank_if_default(self.zOffset, 0.0)
             TFlag = set_blank_if_default(self.TFlag, 0)
@@ -1409,6 +1431,8 @@ class CQUAD4(QuadShell):
             T3 = set_blank_if_default(self.T3, 1.0)
             T4 = set_blank_if_default(self.T4, 1.0)
 
+            row2_data = [thetaMcid, zOffset,
+                         TFlag, T1, T2, T3, T4]
             row2 = [print_field_8(field) for field in row2_data]
             data = [self.eid, self.Pid()] + nodes + row2
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
@@ -1658,15 +1682,23 @@ class CQUAD8(QuadShell):
                     integer_or_blank(card, 8, 'n6', 0),
                     integer_or_blank(card, 9, 'n7', 0),
                     integer_or_blank(card, 10, 'n8', 0)]
-
-            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
-            self.thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
-            self.zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
-            self.TFlag = integer_or_blank(card, 17, 'TFlag', 0)
-            assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
+            if len(card) > 11:
+                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+                self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+                self.thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
+                self.zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
+                self.TFlag = integer_or_blank(card, 17, 'TFlag', 0)
+                assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
+            else:
+                self.thetaMcid = 0.0
+                self.zOffset = 0.0
+                self.T1 = 1.0
+                self.T2 = 1.0
+                self.T3 = 1.0
+                self.T4 = 1.0
+                self.TFlag = 0
         else:
             #print "CQUAD8 = ",data
             #(6401,

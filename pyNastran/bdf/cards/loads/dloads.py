@@ -94,7 +94,7 @@ class RLOAD1(TabularLoad):
             elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
                 self.Type = 'ACCE'
             else:
-                msg = 'invalid RLOAD1 type  Type=|%s|' % self.Type
+                msg = 'invalid RLOAD1 type  Type=%r' % self.Type
                 raise RuntimeError(msg)
             assert len(card) <= 8, 'len(RLOAD1 card) = %i' % len(card)
         else:
@@ -130,7 +130,7 @@ class RLOAD1(TabularLoad):
     def delay_id(self):
         if self.delay == 0:
             return None
-        elif isinstance(self.delay, integer_types):
+        elif isinstance(self.delay, (integer_types, float)):
             return self.delay
         return self.delay.sid
 
@@ -181,7 +181,7 @@ class RLOAD2(TabularLoad):
             self.dphase = integer_double_or_blank(card, 4, 'dphase')
             self.tb = integer_or_blank(card, 5, 'tb', 0)
             self.tp = integer_or_blank(card, 6, 'tp', 0)
-            self.Type = string_or_blank(card, 7, 'Type', 'LOAD')
+            self.Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
 
             if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
                 self.Type = 'LOAD'
@@ -437,6 +437,7 @@ class TLOAD2(TabularLoad):
 
     def cross_reference(self, model):
         if self.delay:
+            msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
             self.delay = model.DELAY(self.delay_id, msg=msg)
         # TODO: exciteID
 

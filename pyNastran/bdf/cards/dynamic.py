@@ -17,8 +17,9 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import log, exp, ceil
+from six import integer_types
 from six.moves import zip, range
+from math import log, exp, ceil
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -32,26 +33,51 @@ class DELAY(BaseCard):
     type = 'DELAY'
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        +-------+-----+-----------+-----+------+------+-----+-----+-----+
+        |   1   |  2  |     3     |  4  |  5   |  6   |  7  |  8  |  9  |
+        +=======+=====+===========+=====+======+======+=====+=====+=====+
+        | DELAY | SID | POINT ID1 | C1  | T1   | P2   | C2  | T2  |     |
+        +-------+-----+-----------+-----+------+------+-----+-----+-----+
+        """
         if comment:
             self._comment = comment
         self.sid = integer(card, 1, 'sid')
-        self.node = integer(card, 1, 'node')
-        self.components = integer(card, 1, 'components')
-        assert self.components in [0, 1, 2, 3, 4, 5, 6], self.components
-        self.delay = double_or_blank(card, 3, 'delay')
+        self.nodes = [integer(card, 2, 'node')]
+        self.components = [integer(card, 3, 'components')]
+        self.delays = [double_or_blank(card, 4, 'delay')]
+        assert self.components[0] in [0, 1, 2, 3, 4, 5, 6], self.components
+        if card.field(5):
+            self.nodes.append(integer(card, 5, 'node'))
+            self.components.append(integer(card, 6, 'components'))
+            self.delays.append(double_or_blank(card, 7, 'delay'))
+            assert self.components[1] in [0, 1, 2, 3, 4, 5, 6], self.components
 
     def cross_reference(self, model):
         msg = ', which is required by DELAY sid=%s' % self.sid
-        self.node = model.Node(self.node_id)
+        for nid in self.nodes:
+            self.node = model.Node(self.node_id)
 
     @property
-    def node_id(self):
-        if isinstance(self.node, integer_types):
-            return self.node
-        return self.node.nid
+    def node_id1(self):
+        if isinstance(self.nodes[0], integer_types):
+            return self.nodes[0]
+        return self.nodes[0].nid
+
+    @property
+    def node_id2(self):
+        if isinstance(self.nodes[1], integer_types):
+            return self.nodes[1]
+        return self.nodes[1].nid
 
     def raw_fields(self):
-        list_fields = ['DELAY', self.sid, self.node_id, self.components, self.delay]
+        list_fields = ['DELAY', self.sid]
+        for nid, comp, delay in zip(self.nodes, self.components, self.delays):
+            if isinstance(nid, integer_types):
+                nidi = nid
+            else:
+                nidi = nid.nid
+            list_fields += [nidi, comp, delay]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

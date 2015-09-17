@@ -1,0 +1,95 @@
+SOL 111
+CEND
+ECHO = NONE
+SET 100 = 1, 5, 9, 1000
+ACCE(PLOT,SORT1,PHASE) = 100
+DISP(PLOT,SORT1,PHASE) = 100
+SET 200 = 3,4,6,8
+FORCE(PLOT,SORT1,PHASE) = 200
+FREQ = 100
+SDAMP = 25
+METHOD= 1
+SUBCASE 101
+   LABEL = X INPUT
+   DLOAD = 1
+SUBCASE 102
+   LABEL = Y INPUT
+   DLOAD = 2
+SUBCASE 103
+   LABEL = Z INPUT
+   DLOAD = 3
+OUTPUT(XYPLOT)
+XYPUNCH,ELFORCE/ 6 (2)
+XYPUNCH,ELFORCE/ 6 (3)
+XYPUNCH,ELFORCE/ 6 (4)
+XYPUNCH,ELFORCE/ 6 (5)
+XYPUNCH,ELFORCE/ 6 (6)
+XYPUNCH,ELFORCE/ 6 (7)
+
+XYPUNCH,ELFORCE/ 3 (2)
+XYPUNCH,ELFORCE/ 3 (3)
+XYPUNCH,ELFORCE/ 3 (4)
+XYPUNCH,ELFORCE/ 3 (5)
+XYPUNCH,ELFORCE/ 3 (6)
+XYPUNCH,ELFORCE/ 3 (7)
+
+XYPUNCH,ELFORCE/ 5 (2)
+XYPUNCH,ELFORCE/ 5 (3)
+XYPUNCH,ELFORCE/ 5 (4)
+XYPUNCH,ELFORCE/ 5 (5)
+XYPUNCH,ELFORCE/ 5 (6)
+XYPUNCH,ELFORCE/ 5 (7)
+
+BEGIN BULK
+PARAM,PRGPST,NO
+PARAM,POST,-1
+PARAM,OGEOM,NO
+PARAM,AUTOSPC,YES
+PARAM,WTMASS,.00259
+EIGRL,1,,200.
+
+TABDMP1,25,CRIT,
++,0.0000,0.010,300.0,0.01,ENDT
+
+FORCE,1,1,0,1.E9,1.0,0.0,0.0
+FORCE,2,1,0,1.E9,0.0,1.0,0.0
+FORCE,3,1,0,1.E9,0.0,0.0,1.0
+RLOAD1,1,1,,,1
+RLOAD1,2,2,,,1
+RLOAD1,3,3,,,1
+
+TABLED1,1
+,0.0,1.0,1.+9,1.0,ENDT
+
+FREQ1,100,1.,1.,100
+
+PBAR           1       1     .08.00106672.6667-4 7.327-4      0.        +       
++            -.2     -.1      .2     -.1      .2      .1     -.2      .1+       
++         .84993.8507012      0.
+$ Femap with NX Nastran Property 3 : bush
+PBUSH          3       K1000000.1000000.1000000.    1.+9    1.+9    1.+9                
+$ Femap with NX Nastran Material 1 : ISOTROPIC Material
+MAT1           1    1.+73846154.      .3      .1      0.      0.        
+GRID           1       0      0.      0.      0.       0
+GRID           2       0    16.5      0.      0.       0
+GRID           3       0    20.5      0.      0.       0
+GRID           4       0      4.      0.      0.       0
+GRID           5       0      8.      0.      0.       0
+GRID           6       0     12.      0.      0.       0
+GRID           7       0     16.      0.      0.       0
+GRID           8       0     21.      0.      0.       0
+GRID           9       0     25.      0.      0.       0
+SPOINT      1000                        
+CBAR           1       1       1       4      0.      0.      1.
+CBAR           2       1       4       5      0.      0.      1.
+CBAR           3       1       5       6      0.      0.      1.
+CBAR           4       1       6       7      0.      0.      1.
+CBAR           5       1       2       3      0.      0.      1.
+CBUSH          6       3       7       2                               0
+CBAR           7       1       8       9      0.      0.      1.
+CBUSH          8       3       3       8                               0
+CONM2         11       1       0    1.+9      0.      0.      0.        +       
++           1.+9      0.    1.+9      0.      0.    1.+9
+
+SPOINT,1000
+ENDDATA

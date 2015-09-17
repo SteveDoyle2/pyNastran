@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import string_types, iteritems, PY2
 import os
 import sys
@@ -93,12 +94,12 @@ except:
 
 def parse_table_names_from_F06(f06Name):
     """gets the op2 names from the f06"""
-    infile = open(f06Name,'r')
+    infile = open(f06Name, 'r')
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
     names = []
     for line in infile:
         if marker in line:
-            word = line.replace(marker,'').strip().strip('.')
+            word = line.replace(marker, '').strip().strip('.')
             names.append(word)
     infile.close()
     return names
@@ -133,7 +134,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     iSubcases = []
     failed_cases = []
     nFailed = 0
-    nTotal  = 0
+    nTotal = 0
     nPassed = 0
     t0 = time.time()
     for i, op2file in enumerate(files[nStart:nStop], nStart):  # 149
@@ -150,7 +151,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             is_vector_failed = []
             for vectori, vector_stopi in zip(is_vector, vector_stop):
                 print('------running is_vector=%s------' % vectori)
-                is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
+                op2i, is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                       write_f06=write_f06, write_op2=write_op2,
                                       is_mag_phase=False,
                                       is_vector=vectori,
@@ -172,9 +173,9 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
     if saveCases:
         if PY2:
-            f = open('failedCases.in','wb')
+            f = open('failedCases.in', 'wb')
         else:
-            f = open('failedCases.in','w')
+            f = open('failedCases.in', 'w')
         for op2file in failed_cases:
             f.write('%s\n' % op2file)
         f.close()
@@ -195,12 +196,13 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False,
             is_vector=False, delete_f06=False,
             iSubcases=None, exclude=None, debug=False, binary_debug=False, stopOnFailure=True):
+    op2 = None
     if iSubcases is None:
         iSubcases = []
     if exclude is None:
         exclude = []
     assert '.op2' in op2_filename.lower(), 'op2FileName=%s is not an OP2' % op2_filename
-    isPassed = False
+    is_passed = False
 
     fname_base, ext = os.path.splitext(op2_filename)
     bdf_filename = fname_base + '.test_op2.bdf'
@@ -213,8 +215,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     print('iSubcases = %s' % iSubcases)
 
     debug_file = None
+    model, ext = os.path.splitext(op2_filename)
     if binary_debug or write_op2:
-        debug_file = 'debug.out'
+        debug_file = model + '.debug.out'
     #print('debug_file = %r' % debug_file, os.getcwd())
 
     if make_geom and not is_geom:
@@ -265,7 +268,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            model, ext = os.path.splitext(op2_filename)
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
@@ -282,8 +284,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                 except:
                     pass
 
-        del op2
         if is_memory:
+            del op2
             if is_linux: # linux
                 kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             else: # windows
@@ -299,42 +301,42 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #op2.caseControlDeck.sol = op2.sol
         #print(op2.caseControlDeck.get_op2_data())
         #print(op2.caseControlDeck.get_op2_data())
-        isPassed = True
+        is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2_filename)
         sys.exit('keyboard stop...')
     #except SortCodeError: # inherits from Runtime; comment this
-        #isPassed = True
+        #is_passed = True
 
     #except RuntimeError: # the op2 is bad, not my fault; comment this
-        #isPassed = True
+        #is_passed = True
         #if stopOnFailure:
             #raise
         #else:
-            #isPassed = True
+            #is_passed = True
 
     #except IOError: # missing file; this block should be commented
         #if stopOnFailure:
             #raise
-        #isPassed = True
+        #is_passed = True
     #except UnicodeDecodeError:  # this block should be commented
-        #isPassed = True
+        #is_passed = True
     #except NotImplementedError:  # this block should be commented
-        #isPassed = True
+        #is_passed = True
     #except FatalError:  # this block should be commented
         #if stopOnFailure:
             #raise
-        #isPassed = True
+        #is_passed = True
     #except KeyError:  # this block should be commented
-        #isPassed = True
+        #is_passed = True
     #except DeviceCodeError:  # this block should be commented
-        #isPassed = True
+        #is_passed = True
     #except AssertionError:  # this block should be commented
-        #isPassed = True
+        #is_passed = True
     #except RuntimeError: #invalid analysis code; this block should be commented
-        #isPassed = True
+        #is_passed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
         #sys.exit('stopping on sys.exit')
@@ -343,29 +345,29 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     #    if stopOnFailure:
     #        raise
     #    else:
-    #        isPassed = True
+    #        is_passed = True
     #except IndexError: # this block should be commented
-        #isPassed = True
+        #is_passed = True
     #except SyntaxError: #Param Parse; this block should be commented
         #if stopOnFailure:
             #raise
-        #isPassed = True
+        #is_passed = True
     except:
         #print e
         if stopOnFailure:
             raise
         else:
             print_exc(file=sys.stdout)
-            isPassed = False
+            is_passed = False
 
-    return isPassed
+    return op2, is_passed
 
 
 def main():
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
     if is_release:
         msg += "test_op2 [-q] [-b] [-f] [-z] [-t] [-s <sub>]  [-x <arg>]... OP2_FILENAME\n"
     else:
@@ -414,20 +416,20 @@ def main():
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
 
-    import time
+    #import time
     t0 = time.time()
     run_op2(data['OP2_FILENAME'],
-            make_geom     = data['--geometry'],
-            write_bdf     = data['--write_bdf'],
-            write_f06     = data['--write_f06'],
-            write_op2     = data['--write_op2'],
-            is_mag_phase  = data['--is_mag_phase'],
-            is_vector     = data['--vector'],
-            iSubcases     = data['--subcase'],
-            exclude       = data['--exclude'],
-            debug         = not(data['--quiet']),
-            binary_debug  = data['--binarydebug'])
+            make_geom=data['--geometry'],
+            write_bdf=data['--write_bdf'],
+            write_f06=data['--write_f06'],
+            write_op2=data['--write_op2'],
+            is_mag_phase=data['--is_mag_phase'],
+            is_vector=data['--vector'],
+            iSubcases=data['--subcase'],
+            exclude=data['--exclude'],
+            debug=not(data['--quiet']),
+            binary_debug=data['--binarydebug'])
     print("dt = %f" % (time.time() - t0))
 
-if __name__=='__main__':  # op2
+if __name__ == '__main__':  # op2
     main()

@@ -367,13 +367,16 @@ class MAT1(IsotropicMaterial):
         a = set_blank_if_default(self.a, 0.)
         TRef = set_blank_if_default(self.TRef, 0.)
         ge = set_blank_if_default(self.ge, 0.)
-        St = set_blank_if_default(self.St, 0.)
-        Sc = set_blank_if_default(self.Sc, 0.)
-        Ss = set_blank_if_default(self.Ss, 0.)
-        Mcsid = set_blank_if_default(self.Mcsid, 0)
 
-        list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge,
-                       St, Sc, Ss, Mcsid]
+        if [self.St, self.Sc, self.Ss, self.Mcsid] == [0., 0., 0., 0]:
+            list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge]
+        else:
+            St = set_blank_if_default(self.St, 0.)
+            Sc = set_blank_if_default(self.Sc, 0.)
+            Ss = set_blank_if_default(self.Ss, 0.)
+            Mcsid = set_blank_if_default(self.Mcsid, 0)
+            list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge,
+                           St, Sc, Ss, Mcsid]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

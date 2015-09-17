@@ -35,32 +35,31 @@ from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
                                                        PRAC2D, PRAC3D, PCONEAX)
 
-from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
-                                                  SpringElement)
+from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPYRAM5, CPYRAM13,
                                                 CPENTA6, CPENTA15,
-                                                CHEXA8, CHEXA20, SolidElement)
-from pyNastran.bdf.cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
+                                                CHEXA8, CHEXA20)
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                                 CSHEAR, CTRIA3, CTRIA6, CTRIAX,
-                                                CTRIAX6, CTRIAR, ShellElement)
+                                                CTRIAX6, CTRIAR)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
-                                                 CDAMP5, DamperElement)
+                                                 CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
-from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE, RodElement
-from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, CBEAM3, CBEND
+from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
+from pyNastran.bdf.cards.elements.bars import CBAR, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL  # PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
-                                               PointElement, PointMassElement)  # CMASS5
+                                               )  # CMASS5
 from pyNastran.bdf.cards.properties.mass import (PMASS, NSM)
 from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
                                       AESURF, AESURFS, AERO, AEROS, CSSCHD,
@@ -72,8 +71,7 @@ from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AE
                                       SPLINE5, TRIM)
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
-                                             GMSPC,
-                                             ConstraintObject)
+                                             GMSPC, ConstraintObject)
 from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    CORD2R, CORD2C, CORD2S, CORD3G,
                                                    GMCORD)
@@ -121,7 +119,7 @@ from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh, CrossReferenceError
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
-
+from pyNastran.bdf.field_writer_16 import print_field_16
 
 class DuplicateIDsError(RuntimeError):
     pass
@@ -250,7 +248,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5',
-            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
+            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', # 'PBEND',
             'PBEAML',  # not fully supported
             # 'PBEAM3',
 
@@ -350,7 +348,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'TF',  ## transfer_functions
 
             ## frequencies
-            'FREQ', 'FREQ1', 'FREQ2', 'FREQ4',
+            'FREQ', 'FREQ1', 'FREQ2', #'FREQ4',
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
@@ -433,6 +431,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
+        self._make_card_parser()
 
     def save_object(self, obj_filename='model.obj'):
         """
@@ -863,7 +862,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #'POINT', 'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG
-            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3'],
+            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
 
             'elements' : [
                 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -995,7 +994,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'transfer_functions' : ['TF'],
             'delays' : ['DELAY'],
 
-            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2'],
+            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ4'],
 
             # direct matrix input cards
             'dmigs' : ['DMIG'],
@@ -1179,8 +1178,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
             self._parse_cards(cards, card_count)
-            self.fill_dmigs()
             self.pop_parse_errors()
+            self.fill_dmigs()
+
             self.cross_reference(xref=xref)
             self._xref = xref
         except:
@@ -1542,7 +1542,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         card[0] = card_name
         return card
 
-    def create_card_object(self, card_lines, card_name, is_list=True):
+    def create_card_object(self, card_lines, card_name, is_list=True, has_none=True):
         card_name = card_name.upper()
         self._increase_card_count(card_name)
         if card_name in ['DEQATN']:
@@ -1556,21 +1556,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # apply OPENMDAO syntax
             if self._is_dynamic_syntax:
-                fields = [self._parse_dynamic_syntax(field) if '%' in
-                          field[0:1] else field for field in fields]
+                fields = [print_field_16(self._parse_dynamic_syntax(field)) if '%' in
+                          field.strip()[0:1] else print_field_16(field) for field in fields]
+                has_none = False
 
-                card = wipe_empty_fields([interpret_value(field, fields)
-                                          if field is not None
-                                          else None for field in fields])
-                                          #else '' for field in fields])  # has_none; remove previous
-                has_nones = False
+            if has_none:
+                card = wipe_empty_fields([print_field_16(field) for field in fields])
             else:
+                #card = remove_trailing_fields(fields)
                 card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card)
+            card_obj = BDFCard(card, has_none=False)
         return card_obj, card
 
     def _make_card_parser(self):
-        """creates the card parser variables that are used by _add_card_new"""
+        """creates the card parser variables that are used by add_card"""
         self._card_parser = {
             'GRID' : (GRID, self.add_node),
 
@@ -1778,7 +1777,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'SPC1' : (SPC1, self.add_constraint_SPC),
             'SPCAX' : (SPCAX, self.add_constraint_SPC),
             'SPCADD' : (SPCADD, self.add_constraint_SPC),
-            #'GMSPC' : (GMSPC, self.add_constraint_SPC),
+            'GMSPC' : (GMSPC, self.add_constraint_SPC),
 
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
 
@@ -1912,6 +1911,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'DAREA' : self._prepare_darea,
             'PMASS' : self._prepare_pmass,
             'CMASS4' : self._prepare_cmass4,
+            'CDAMP4' : self._prepare_cdamp4,
 
             'DMIG' : self._prepare_dmig,
             'DMI' : self._prepare_dmi,
@@ -1923,8 +1923,49 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PVISC' : self._prepare_pvisc,
             'PELAS' : self._prepare_pelas,
             'PDAMP' : self._prepare_pdamp,
+
+            'TEMPD' : self._prepare_tempd,
+            'CONV' : self._prepare_conv,
+            'RADM' : self._prepare_radm,
+            'RADBC' : self._prepare_radbc,
+            'GRDSET' : self._prepare_grdset,
+
+            'BCTSET' : self._prepare_bctset,
         }
 
+    def _prepare_bctset(self, card, card_obj, comment=''):
+        card = BCTSET(card_obj, comment=comment, sol=self.sol)
+        self.add_BCTSET(card)
+
+    def _prepare_grdset(self, card, card_obj, comment=''):
+        self.gridSet = GRDSET(card_obj, comment=comment)
+
+    def _prepare_cdamp4(self, card, card_obj, comment=''):
+        self.add_damper(CDAMP4(card_obj, comment=comment))
+        if card_obj.field(5):
+            self.add_damper(CDAMP4(card_obj, 1, comment=''))
+        return card_obj
+
+    def _prepare_conv(self, card, card_obj, comment=''):
+        bc = CONV(card_obj, comment=comment)
+        self.add_thermal_BC(bc, bc.eid)
+
+    def _prepare_radm(self, card, card_obj, comment=''):
+        bc = RADM(card_obj, comment=comment)
+        self.add_thermal_BC(bc, bc.radmid)
+
+    def _prepare_radbc(self, card, card_obj, comment=''):
+        bc = RADBC(card_obj, comment=comment)
+        self.add_thermal_BC(bc, bc.nodamb)
+
+    def _prepare_tempd(self, card, card_obj, comment=''):
+        self.add_TEMPD(TEMPD(card_obj, 0, comment=''))
+        if card_obj.field(3):
+            self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
+            if card_obj.field(5):
+                self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
+                if card_obj.field(7):
+                    self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
 
     def _add_doptprm(self, doptprm, comment=''):
         self.doptprm = doptprm
@@ -1941,12 +1982,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """adds a DMIG"""
         # not done...
         field2 = integer_or_string(card_obj, 2, 'flag')
-        name = string(card_obj, 1, 'name')
         if field2 == 0:
-            self.add_DMIG(DMIG(card_obj, comment=comment))
+            card = DMIG(card_obj, comment=comment)
+            self.add_DMIG(card)
         # elif field2 == 'UACCEL':  # special DMIG card
             # self.reject_cards(card)
         else:
+            name = string(card_obj, 1, 'name')
             self._dmig_temp[name].append((card_obj, comment))
 
 
@@ -2004,11 +2046,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """adds a PDAMP"""
         class_instance = PDAMP(card_obj, icard=0, comment=comment)
         self.add_property(class_instance)
-        if card_obj.field(5):
+        if card_obj.field(3):
             class_instance = PDAMP(card_obj, icard=1, comment=comment)
             self.add_property(class_instance)
-        if card_obj.field(7):
+        if card_obj.field(5):
             class_instance = PDAMP(card_obj, icard=2, comment=comment)
+            self.add_property(class_instance)
+        if card_obj.field(7):
+            class_instance = PDAMP(card_obj, icard=3, comment=comment)
             self.add_property(class_instance)
 
     def _prepare_pmass(self, card, card_obj, comment=''):
@@ -2016,7 +2061,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         card_instance = PMASS(card_obj, icard=0, comment=comment)
         self.add_property_mass(card_instance)
         for (i, j) in enumerate([3, 5, 7]):
-            if card_obj.field(j) is not None:
+            if card_obj.field(j):
                 card_instance = PMASS(card_obj, icard=i+1, comment=comment)
                 self.add_property_mass(card_instance)
 
@@ -2076,10 +2121,52 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
-    def _add_card_new(self, card_lines, card_name, comment='', is_list=True):
-        """Clearer and slightly faster version of add_card that hasn't been tested/finished"""
+    def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
+        """
+        Adds a card object to the BDF object.
+
+        Parameters
+        ----------
+        self : BDF
+            the BDF object
+        card_lines: list[str]
+            the list of the card fields
+        card_name : str
+            the card_name -> 'GRID'
+        comment : str
+            an optional the comment for the card
+        is_list : bool, optional
+            False : input is a list of card fields -> ['GRID', 1, 2, 3.0, 4.0, 5.0]
+            True :  input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
+
+        Returns
+        -------
+        card_object : BDFCard()
+            the card object representation of card
+
+        .. code-block:: python
+
+          >>> model = BDF()
+
+          # is_list is a somewhat misleading name; is it a list of card_lines
+          # where a card_line is an unparsed string
+          >>> card_lines = ['GRID,1,2']
+          >>> comment = 'this is a comment'
+          >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
+
+          # here is_list=False because it's been parsed
+          >>> card = ['GRID', 1, 2,]
+          >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
+
+        .. note:: this is a very useful method for interfacing with the code
+        .. note:: the card_object is not a card-type object...so not a GRID
+                  card or CQUAD4 object.  It's a BDFCard Object.  However,
+                  you know the type (assuming a GRID), so just call the
+                  *mesh.Node(nid)* to get the Node object that was just
+                  created.
+        """
         card_name = card_name.upper()
-        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
+        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list, has_none=has_none)
 
         if self._auto_reject:
             self.reject_cards.append(card)
@@ -2144,376 +2231,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
-        return card_obj
-
-
-    def add_card(self, card_lines, card_name, comment='', is_list=True):
-        """
-        Adds a card object to the BDF object.
-
-        Parameters
-        ----------
-        self : BDF
-            the BDF object
-        card_lines: list[str]
-            the list of the card fields
-        card_name : str
-            the card_name -> 'GRID'
-        comment : str
-            an optional the comment for the card
-        is_list : bool, optional
-            False : input is a list of card fields -> ['GRID', 1, 2, 3.0, 4.0, 5.0]
-            True :  input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
-
-        Returns
-        -------
-        card_object : BDFCard()
-            the card object representation of card
-
-        .. code-block:: python
-
-          >>> model = BDF()
-
-          # is_list is a somewhat misleading name; is it a list of card_lines
-          # where a card_line is an unparsed string
-          >>> card_lines = ['GRID,1,2']
-          >>> comment = 'this is a comment'
-          >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
-
-          # here is_list=False because it's been parsed
-         >>> card = ['GRID', 1, 2,]
-          >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
-
-        .. note:: this is a very useful method for interfacing with the code
-        .. note:: the card_object is not a card-type object...so not a GRID
-                  card or CQUAD4 object.  It's a BDFCard Object.  However,
-                  you know the type (assuming a GRID), so just call the
-                  *mesh.Node(nid)* to get the Node object that was just
-                  created.
-        """
-        card_name = card_name.upper()
-        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
-
-        if self._auto_reject:
-            self.reject_cards.append(card)
-            print('rejecting processed auto=rejected %s' % card)
-            return card_obj
-
-        if card_name == 'ECHOON':
-            self.echo = True
-            return
-        elif card_name == 'ECHOOFF':
-            self.echo = False
-            return
-
-        if self.echo:
-            print(print_card_8(card_obj).rstrip())
-
-        # function that gets by name the initialized object (from global scope)
-        if 1:
-            try:
-                _get_cls = lambda name: globals()[name](card_obj, comment=comment)
-            except Exception as e:
-                # if we'r in here, the card wasn't imported
-                if not e.args:
-                    e.args = ('',)
-                e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
-                raise
-            _cls = lambda name: globals()[name]
-        else:
-            _cls = globals()[card_name]
-            _get_cls = lambda name: globals()[name](card_obj, comment=comment)
-
-        try:
-            # cards that have their own method add_CARDNAME to add them
-            if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AECOMP', 'AEFACT',
-                             'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
-                             'FLUTTER', 'FLFACT', 'GUST', 'CSSCHD',
-                             'NLPARM', 'NLPCI', 'TSTEP',
-                             'TSTEPNL', 'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK',
-                             'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT', 'TF', 'DELAY',
-                             'DCONADD']:
-                try:
-                    # PHBDY -> add_PHBDY
-                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
-                except Exception as e:
-                    if not e.args:
-                        e.args = ('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
-                    raise
-                return card_obj
-
-            # dictionary of cards. Key is the name of the function to add the
-            # card
-            # 'PCOMPG':  # hasnt been verified
-            _cards = {
-                'add_node' : ['GRID'],
-                'add_mass' : ['CONM1', 'CONM2', 'CMASS1',
-                              'CMASS2', 'CMASS3',
-                              # CMASS4 - added later because documentation is wrong
-                              ],
-                'add_element' : ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
-                                 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-                                 'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
-                                 'CTUBE', 'CELAS1', 'CELAS2', 'CELAS3', # 'CBEND',
-                                 'CELAS4', 'CVISC', 'CSHEAR', 'CGAP',
-                                 'CRAC2D', 'CRAC3D'],
-                'add_damper' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
-                                'CDAMP2', 'CDAMP3', 'CDAMP5',
-                                # CDAMP4 - is added later because the documentation is wrong
-                                ],
-                'add_rigid_element' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
-                'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
-                                  'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
-                                  'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
-                                  'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D',
-                                  'PLPLANE',],
-
-                # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-                'add_creep_material': ['CREEP'],
-
-                # note there is no MAT6 or MAT7
-                'add_structural_material' : ['MAT1', 'MAT2', 'MAT3', 'MAT8',
-                                             'MAT9', 'MAT10', 'MAT11',
-                                             'EQUIV'],
-                'add_hyperelastic_material' : ['MATHE', 'MATHP',],
-                'add_thermal_material' : ['MAT4', 'MAT5'],
-                'add_material_dependence' : ['MATS1', 'MATS3', 'MATS8',
-                                             'MATT1', 'MATT2', 'MATT3', 'MATT4',
-                                             'MATT5', 'MATT8', 'MATT9'],
-
-                'add_load' : ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
-                              'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
-                              'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
-                              'RFORCE', 'SLOAD', 'RANDPS',
-                              'GMLOAD', 'SPCD',
-                              #thermal
-                              'QVOL',
-                              ],
-                'add_dload' : ['DLOAD'],
-                'add_dload_entry' : ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
-
-                'add_thermal_load' : ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
-                'add_thermal_element' : ['CHBDYE', 'CHBDYG', 'CHBDYP'],
-                'add_convection_property' : ['PCONV', 'PCONVM'],
-                'add_constraint_MPC' : ['MPC', 'MPCADD'],
-                'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD',
-                                        'GMSPC'],
-                'add_suport' : ['SUPORT'],  # pseudo-constraint
-                #'add_constraint' : ['SUPORT1'],  # pseudo-constraint - TODO: should this be add_suport1???
-                'add_suport1' : ['SUPORT1'],  # pseudo-constraint
-                'add_SESUP' : ['SESUP'],  # pseudo-constraint
-                'add_SPLINE' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'],
-                'add_CAERO' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
-                'add_PAERO' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
-                'add_MONPNT' : ['MONPNT1'],
-                'add_MKAERO' : ['MKAERO1', 'MKAERO2'],
-                'add_FREQ' : ['FREQ', 'FREQ1', 'FREQ2'],
-                'add_ASET' : ['ASET', 'ASET1'],
-                'add_BSET' : ['BSET', 'BSET1'],
-                'add_CSET' : ['CSET', 'CSET1'],
-                'add_QSET' : ['QSET', 'QSET1'],
-                'add_USET' : ['USET', 'USET1'],
-                'add_SET' : ['SET1', 'SET3'],
-                'add_SEBSET' : ['SEBSET', 'SEBSET1'],
-                'add_SECSET' : ['SECSET', 'SECSET1'],
-                'add_SEQSET' : ['SEQSET', 'SEQSET1'],
-                'add_SEUSET' : ['SEUSET', 'SEUSET1'],
-                'add_DRESP' : ['DRESP1', 'DRESP2', 'DRESP3'],
-                'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
-                'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S', 'GMCORD'],
-                'add_table' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
-                               'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                               'TABLES1', 'TABLEST', 'TABDMP1'],
-                'add_table_sdamping' : ['TABDMP1'],
-                'add_random_table' : ['TABRND1', 'TABRNDG'],
-                'add_method' : ['EIGB', 'EIGR', 'EIGRL'],
-                'add_cmethod' : ['EIGC', 'EIGP'],
-                'add_DVMREL' : ['DVMREL1'],
-            }
-
-            for func, names in iteritems(_cards):
-                if card_name in names:
-                    try:
-                        getattr(self, func)(_get_cls(card_name))
-                    except Exception as e:
-                        if not e.args:
-                            e.args = ('',)
-                        e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
-                        raise
-                    return card_obj
-
-            # card that requires more careful processing, elements
-            _dct = {
-                'CTETRA' : (7, CTETRA4, CTETRA10),
-                'CPYRAM' : (8, CPYRAM5, CPYRAM13),
-                'CPENTA' : (9, CPENTA6, CPENTA15),
-                'CHEXA' : (11, CHEXA8, CHEXA20),
-            }
-            if card_name in _dct:
-                d = _dct[card_name]
-                self.add_element((d[1] if card_obj.nfields == d[0]
-                                  else d[2])(card_obj, comment=comment))
-                return card_obj
-
-
-            # masses that violate the QRG...no duplicate elements on card...lies
-            _dct = {'CMASS4': (5,),}
-            if card_name in _dct:
-                try:
-                    self.add_mass(_get_cls(card_name))
-                except Exception as e:
-                    if not e.args:
-                        e.args = ('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
-                    raise
-                for i in _dct[card_name]:
-                    if card_obj.field(i):
-                        self.add_mass(_cls(card_name)(card_obj, 1, comment=comment))
-                return card_obj
-
-            # elements that violate the QRG...no duplicate elements on card...lies
-            if card_name == 'CDAMP4':
-                self.add_damper(CDAMP4(card_obj, comment=comment))
-                if card_obj.field(5):
-                    self.add_damper(CDAMP4(card_obj, 1, comment=''))
-                return card_obj
-
-            # elements that violate the QRG...no duplicate elements on card...lies
-            if card_name == 'TEMPD':
-                self.add_TEMPD(TEMPD(card_obj, 0, comment=''))
-                if card_obj.field(3):
-                    self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
-                    if card_obj.field(5):
-                        self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
-                        if card_obj.field(7):
-                            self.add_TEMPD(TEMPD(card_obj, 1, comment=''))
-                return card_obj
-
-            # dampers
-            _dct = {'PELAS': (5,), 'PVISC': (5,), 'PDAMP': (3, 5)}
-            if card_name in _dct:
-                try:
-                    self.add_property(_get_cls(card_name))
-                except Exception as e:
-                    if not e.args:
-                        e.args = ('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
-                    raise
-                for i in _dct[card_name]:
-                    if card_obj.field(i):
-                        self.add_property(_cls(card_name)(card_obj, 1, comment=comment))
-                        comment = ''
-                return card_obj
-
-            if card_name in ['DEQATN']:  # buggy for commas
-                if comment:
-                    self.rejects.append([comment])
-                #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
-                # should be later moved to loop below
-                #self.add_DEQATN(DEQATN(card_obj))
-                self.rejects.append(card)
-            elif card_name == 'GRDSET':
-                self.gridSet = GRDSET(card_obj, comment=comment)
-            elif card_name == 'DOPTPRM':
-                self.doptprm = DOPTPRM(card_obj, comment=comment)
-
-            elif card_name == 'DMIG':  # not done...
-                field2 = integer_or_string(card_obj, 2, 'flag')
-                name = string(card_obj, 1, 'name')
-                # print('card=%s field2=%r' % (card_obj, field2))
-                if field2 == 0:
-                    self.add_DMIG(DMIG(card_obj, comment=comment))
-                # elif field2 == 'UACCEL':  # special DMIG card
-                    # self.reject_cards(card)
-                else:
-                    self._dmig_temp[name].append((card_obj, comment))
-
-            elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
-                field2 = integer(card_obj, 2, 'flag')
-                if field2 == 0:
-                    getattr(self, 'add_' + card_name)(_get_cls(card_name))
-                else:
-                    name = string(card_obj, 1, 'name')
-                    self._dmig_temp[name].append((card_obj, comment))
-
-            # dynamic
-            elif card_name == 'DAREA':
-                self.add_DAREA(DAREA(card_obj, comment=comment))
-                if card_obj.field(5):
-                    self.add_DAREA(DAREA(card_obj, 1, comment=comment))
-
-            elif card_name in ['CORD1R', 'CORD1C', 'CORD1S']:
-                self.add_coord(_get_cls(card_name))
-                if card_obj.field(5):
-                    self.add_coord(_cls(card_name)(card_obj, nCoord=1,
-                                                   comment=comment))
-
-            elif card_name == 'PMASS':
-                self.add_property_mass(PMASS(card_obj, icard=0, comment=comment))
-                for (i, j) in enumerate([3, 5, 7]):
-                    if card_obj.field(j) is not None:
-                        self.add_property_mass(PMASS(card_obj, icard=i+1,
-                                                     comment=comment))
-
-            elif card_name == 'CONV':
-                bc = CONV(card_obj, comment=comment)
-                self.add_thermal_BC(bc, bc.eid)
-            #elif card_name == 'RADM':
-                #bc = RADM(card_obj, comment=comment)
-                #self.add_thermal_BC(bc, bc.nodamb)
-            elif card_name == 'RADBC':
-                bc = RADBC(card_obj, comment=comment)
-                self.add_thermal_BC(bc, bc.nodamb)
-
-            elif card_name == 'BCRPARA':
-                card = BCRPARA(card_obj, comment=comment)
-                self.add_BCRPARA(card)
-            elif card_name == 'BCTADD':
-                card = BCTADD(card_obj, comment=comment)
-                self.add_BCTADD(card)
-            elif card_name == 'BCTPARA':
-                card = BCTPARA(card_obj, comment=comment)
-                self.add_BCTPARA(card)
-            elif card_name == 'BCTSET':
-                card = BCTSET(card_obj, comment=comment, sol=self.sol)
-                self.add_BCTSET(card)
-            elif card_name == 'BSURF':
-                card = BSURF(card_obj, comment=comment)
-                self.add_BSURF(card)
-            elif card_name == 'BSURFS':
-                card = BSURFS(card_obj, comment=comment)
-                self.add_BSURFS(card)
-
-            elif card_name == 'SPOINT':
-                self.add_SPOINT(SPOINTs(card_obj, comment=comment))
-            elif card_name == 'EPOINT':
-                self.add_EPOINT(EPOINTs(card_obj, comment=comment))
-
-            elif 'ENDDATA' in card_name:
-                raise RuntimeError('this should never happen...')
-            else:
-                #: .. warning:: cards with = signs in them
-                #:              are not announced when they are rejected
-                if '=' not in card[0]:
-                    self.log.info('rejecting processed equal signed card %s' % card)
-                self.reject_cards.append(card)
-                #raise NotImplementedError(card)
-        except (SyntaxError, AssertionError, KeyError, ValueError) as e:
-            # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-            #tpl/cc451.bdf
-            raise
-
-            # NameErrors should be caught
-            self._iparse_errors += 1
-            var = traceback.format_exception_only(type(e), e)
-            self._stored_parse_errors.append((card, var))
-            if self._iparse_errors > self._nparse_errors:
-                self.pop_parse_errors()
-                #print(str(e))
-                #self.log.debug("card_name = %r" % card_name)
-                #self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
-                #self.log.debug("filename = %r\n" % self.bdf_filename)
         return card_obj
 
     def get_bdf_stats(self, return_type='string'):
@@ -2920,14 +2637,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     self._increase_card_count(card_name)
                     self.rejects.append([cardi[0]] + cardi[1])
             else:
-                if self._fast_add:
-                    self._make_card_parser()
-                    for comment, card_lines in card:
-                        self._add_card_new(card_lines, card_name, comment=comment, is_list=False)
-                else:
-                    for comment, card_lines in card:
-                        assert card_lines != []
-                        self.add_card(card_lines, card_name, comment=comment, is_list=False)
+                for comment, card_lines in card:
+                    self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
 
     def _parse_dynamic_syntax(self, key):
         """
@@ -2946,7 +2657,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             the dynamic value defined by dict_of_vars
         .. seealso:: :func: `set_dynamic_syntax`
         """
-        key = key[1:].strip()
+        key = key.strip()[1:]
         self.log.debug("dynamic key = %r" % key)
         #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
         if key not in self.dict_of_vars:

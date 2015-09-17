@@ -24,24 +24,7 @@ Release 0.7
 
  Remove
  ------
- - files
-   - tetgen / tecplot / plot3d  / iges / calculix / toCodeAster / toSfepy
-   - nastranwrapper-using_pynastran
-   - pch
-   - applications
-   - bdf_vectorized
-   - converters
-     - calculix
-     - code_aster
-     - cgns
-     - iges
-     - plot3d
-     - obj
-     - sfepy
-     - su2
 
- - functions
-   -
 
 Future
 ===========

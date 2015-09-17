@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
@@ -25,14 +25,14 @@ class ThermalCard(BaseCard):
 
 class ThermalBC(ThermalCard):
     def __init__(self, card, data):
-        pass
+        ThermalCard.__init__(self, card, data)
 
 
 class ThermalElement(ThermalCard):
     pid = 0
 
     def __init__(self, card, data):
-        pass
+        ThermalCard.__init__(self, card, data)
 
     def nodeIDs(self):
         return []
@@ -46,7 +46,7 @@ class ThermalElement(ThermalCard):
 
 class ThermalProperty(ThermalCard):
     def __init__(self, card, data):
-        pass
+        ThermalCard.__init__(self, card, data)
 
 #-------------------------------------------------------
 # Elements
@@ -413,6 +413,7 @@ class PCONV(ThermalProperty):
     type = 'PCONV'
 
     def __init__(self, card=None, data=None, comment=''):
+        ThermalProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -494,6 +495,7 @@ class PCONVM(ThermalProperty):
     type = 'PCONVM'
 
     def __init__(self, card=None, data=None, comment=''):
+        ThermalProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -562,6 +564,7 @@ class PHBDY(ThermalProperty):
     type = 'PHBDY'
 
     def __init__(self, card=None, data=None, comment=''):
+        ThermalProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -615,6 +618,7 @@ class CONV(ThermalBC):
     type = 'CONV'
 
     def __init__(self, card=None, data=None, comment=''):
+        ThermalBC.__init__(self, card, data)
         if comment:
             self._comment = comment
         #ThermalBC.__init__(self, card, data)
@@ -694,6 +698,7 @@ class CONVM(ThermalBC):
     type = 'CONV'
 
     def __init__(self, card=None, data=None, comment=''):
+        ThermalBC.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
@@ -772,7 +777,7 @@ class RADM(ThermalBC):
         for e in self.emissivity:
             assert 0. <= e <= 1.0
 
-    #def cross_reference(self,model):
+    #def cross_reference(self, model):
     #    pass
 
     def repr_fields(self):

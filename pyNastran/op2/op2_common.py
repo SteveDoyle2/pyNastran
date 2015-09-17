@@ -133,23 +133,23 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['Title'] = self.Title
 
         if self.debug:
-            self.binary_debug.write('  Title    = %r\n' % self.Title)
-            self.binary_debug.write('  subtitle = %r\n' % self.subtitle)
-            self.binary_debug.write('  label    = %r\n' % self.label)
+            self.binary_debug.write('  Title        = %r\n' % self.Title)
+            self.binary_debug.write('  subtitle     = %r\n' % self.subtitle)
+            self.binary_debug.write('  label        = %r\n' % self.label)
 
     def _read_title(self, data):
         self._read_title_helper(data)
 
         if hasattr(self, 'isubcase'):
             if self.isubcase not in self.iSubcaseNameMap:
-                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
+                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
         else:
             raise  RuntimeError('isubcase is not defined')
 
         if hasattr(self, 'subtitle') and hasattr(self, 'label'):
-            if (self.isubcase, self.subtitle) not in self.labels:
+            if (self.isubcase, self.analysis_code, self.subtitle) not in self.labels:
                 self.subtitles[self.isubcase].append(self.subtitle)
-                self.labels[(self.isubcase, self.subtitle)] = self.label
+                self.labels[(self.isubcase, self.analysis_code, self.subtitle)] = self.label
 
     def _write_debug_bits(self):
         if self.debug:
@@ -265,10 +265,10 @@ class OP2Common(Op2Codes, F06Writer):
                 else:
                     n = self._read_real_table_sort1(data, result_name, node_elem, is_cid=is_cid)
             else:
-                #n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
+                n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
                 #n = len(data)
-                msg = self.code_information()
-                n = self._not_implemented_or_skip(data, msg)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, msg)
         elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
@@ -280,9 +280,9 @@ class OP2Common(Op2Codes, F06Writer):
             if self.is_sort1():
                 n = self._read_complex_table_sort1(data, result_name, node_elem)
             else:
-                msg = self.code_information()
-                #n = self._read_complex_table_sort2(data, result_name, node_elem)
-                n = self._not_implemented_or_skip(data, msg)
+                n = self._read_complex_table_sort2(data, result_name, node_elem)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, msg)
         else:
             #msg = 'COMPLEX/PHASE is included in:\n'
             #msg += '  DISP(PLOT)=ALL\n'
@@ -472,12 +472,21 @@ class OP2Common(Op2Codes, F06Writer):
             n += ntotal
         return n
 
+    def get_oug2_flag(self):
+        if self.analysis_code == 5:
+            flag = 'freq'
+            flag_type = '%.2f'
+        else:
+            raise RuntimeError(self.code_information())
+        #flag = 'freq/dt/mode'
+        return flag, flag_type
+
     def _read_complex_table_sort2(self, data, result_name, flag):
         #return
         if self.debug4():
             self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
-        flag = 'freq/dt/mode'
+        flag, flag_type = self.get_oug2_flag()
         node_id = self.nonlinear_factor
 
         is_magnitude_phase = self.is_magnitude_phase()
@@ -491,6 +500,8 @@ class OP2Common(Op2Codes, F06Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
+        binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
+        #print('%r' % binary_debug_fmt)
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -499,7 +510,7 @@ class OP2Common(Op2Codes, F06Writer):
              txi, tyi, tzi, rxi, ryi, rzi) = out
 
             if self.debug4():
-                self.binary_debug.write('  %s=%i %s\n' % (flag, freq, str(out)))
+                self.binary_debug.write(binary_debug_fmt % (freq, str(out)))
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 ty = polar_to_real_imag(tyr, tyi)
@@ -525,9 +536,18 @@ class OP2Common(Op2Codes, F06Writer):
         """
         Creates a transient object (or None if the subcase should be skippied).
 
-        :param storageName:  the name of the dictionary to store the object in (e.g. 'displacements')
-        :param class_obj:    the class object to instantiate
-        :param debug:        developer debug
+        storageName : str
+            the name of the dictionary to store the object in (e.g. 'displacements')
+        class_obj : object()
+            the class object to instantiate
+        debug : bool
+            developer debug
+
+        .. python ::
+
+            slot = self.displacements
+            slot_vector = RealDisplacementArray
+            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
 
         .. note:: dt can also be load_step depending on the class
         """
@@ -571,7 +591,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _get_code(self):
         code = self.isubcase
-        code = (self.isubcase, self.subtitle)
+        code = (self.isubcase, self.analysis_code, self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))
         return self.code
@@ -613,6 +633,7 @@ class OP2Common(Op2Codes, F06Writer):
         #: approach_code and grid_device.  device_code defines what options
         #: inside a result, STRESS(PLOT,PRINT), are used.
         self.device_code = approach_code % 10
+
         self.data_code['device_code'] = self.device_code
         assert self.device_code in [0, 1, 2, 3, 4, 5, 6, 7], self.device_code
 
@@ -636,12 +657,14 @@ class OP2Common(Op2Codes, F06Writer):
 
         if self.debug3():
             self.binary_debug.write('  table_name    = %r\n' % self.table_name)
+            self.binary_debug.write('  approach_code = analysis_code * 10 + device_code\n')
             self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode         = %r\n' % self.tCode)
-            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
-            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
             self.binary_debug.write('  device_code   = %r\n' % self.device_code)
             self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
+            self.binary_debug.write('  tcode         = sort_code * 1000 + table_code\n')
+            self.binary_debug.write('  tcode         = %r\n' % self.tCode)
+            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
+            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
 
         self._parse_sort_code()
 

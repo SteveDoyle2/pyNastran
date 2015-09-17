@@ -149,7 +149,7 @@ class TestShells(unittest.TestCase):
         self.assertEqual(pcomp.Thickness(), 10 * t)
         self.assertEqual(pcomp.Thickness(0), t)
         self.assertEqual(pcomp.Thickness(1), 2 * t)
-        self.assertEqual(pcomp.Thickness(2), 3 * t)
+        self.assertAlmostEqual(pcomp.Thickness(2), 3 * t, places=8) # 0.3
         self.assertEqual(pcomp.Thickness(3), 4 * t)
         with self.assertRaises(IndexError):
             self.assertEqual(pcomp.Thickness(4), 5*t)

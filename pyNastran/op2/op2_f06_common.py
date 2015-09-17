@@ -6,6 +6,7 @@ from pyNastran import is_release
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes
+from pyNastran.bdf.cards.baseCard import deprecated
 
 
 class OP2_F06_Common(object):
@@ -26,6 +27,8 @@ class OP2_F06_Common(object):
         self.__objects_init__()
         self.__objects_common_init__()
 
+    def deprecated(self, old_name, new_name, deprecated_version):
+        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def __objects_vector_init__(self):
         """
@@ -596,7 +599,7 @@ class OP2_F06_Common(object):
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in ['card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
-                  'labels', 'subtitles', 'additional_matrices', 'matrices']]
+                  'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key']]
         for table in tables:
             assert table in table_types, table
         return table_types
@@ -611,7 +614,7 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key, value = key_value
-            if isinstance(key, int) or isinstance(key, int32):
+            if isinstance(key, (int, int32, str)):
                 return key
             else:
                 return key[0]

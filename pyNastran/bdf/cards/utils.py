@@ -1,3 +1,4 @@
+from __future__ import unicode_literals, print_function
 from six import string_types
 
 def build_table_lines(fields, nstart=1, nend=0):
@@ -73,28 +74,33 @@ def wipe_empty_fields_off(fields):
 
 def wipe_empty_fields(fields):
     i = len(fields) - 1
+    # print('fields1', fields)
     while i > 0:
         field = fields[i]
-
+        #print('i=%s %r; %s' % (i, field, type(field)))
         if isinstance(field, string_types):
             field_strip = field.strip()
             if field_strip:
+                break
+            else:
+                #print('popping %r' % field_strip)
                 fields.pop()
                 i -= 1
-            else:
-                break
+        else:
+            zafd
 
     while i > 0:
         field = fields[i]
         if isinstance(field, string_types):
             field_strip = field.strip()
-            if field_strip:
-                field = None
+            if not field_strip:
+                field = field_strip
                 i -= 1
             else:
+                # return fields
                 break
         fields[i] = field
-
+    # print('fields2', fields)
     return fields
 
 def _wipe_empty_fields(card):
@@ -146,3 +152,5 @@ def wipe_empty_fields_typed(card):
             imax = i
     out = short_card[:imax + 1]
     return out
+
+wipe_empty_fields = wipe_empty_fields_typed

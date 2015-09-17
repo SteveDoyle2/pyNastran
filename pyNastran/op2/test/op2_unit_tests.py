@@ -53,27 +53,33 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.displacements), 1), len(op2.displacements)
 
     def test_op2_01(self):
-        op2_filename = os.path.join('solid_bending', 'solid_bending.op2')
-        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        op2_filename = os.path.join('solid_bending.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
+        op2_filename = os.path.join(folder, op2_filename)
         make_geom = False
         write_bdf = False
         write_f06 = True
         debug = False
-        op2file = os.path.join(folder, op2_filename)
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
                 write_f06=write_f06, is_vector=False,
                 debug=debug, stopOnFailure=True, binary_debug=True)
-        assert os.path.exists('debug.out'), os.listdir('.')
-        os.remove('debug.out')
+        assert os.path.exists(debug_file), os.listdir(folder)
+        #os.remove(debug_file)
 
         make_geom = False
         write_bdf = False
         write_f06 = True
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
                 write_f06=write_f06, is_vector=True,
                 debug=debug, stopOnFailure=True, binary_debug=True)
-        assert os.path.exists('debug.out'), os.listdir('.')
-        os.remove('debug.out')
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
 
     def test_op2_02(self):
         op2_filename = os.path.join('plate_py', 'plate_py.op2')
@@ -94,6 +100,33 @@ class TestOP2(Tester):
                 write_f06=write_f06, is_vector=True,
                 debug=debug, stopOnFailure=True)
 
+    def test_op2_03(self):
+        op2_filename = os.path.join('freq_sine', 'good_sine.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        make_geom = False
+        write_bdf = False
+        write_f06 = False
+        debug = False
+        op2file = os.path.join(folder, op2_filename)
+        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+                                  write_f06=write_f06, is_vector=True,
+                                  debug=debug, stopOnFailure=True)
+
+        nids = [5]
+        with self.assertRaises(AssertionError):
+            op2i.accelerations[103].extract_xyplot(nids, 0)
+
+        accx = op2i.accelerations[103].extract_xyplot(nids, 1)
+        accxi = op2i.accelerations[103].extract_xyplot(nids, 1 + 6)
+        #print(accx)
+        #print(accxi)
+        #make_geom = False
+        #write_bdf = False
+        #write_f06 = True
+        #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+                #write_f06=write_f06, is_vector=True,
+                #debug=debug, stopOnFailure=True)
+
     def test_op2_eids_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         bdf_filename = os.path.join(folder, 'sol_101_elements', 'static_solid_comp_bar.bdf')
@@ -113,7 +146,7 @@ class TestOP2(Tester):
 
         op2 = OP2(debug=debug, debug_file=debug_file)
         op2.read_op2(op2_filename, vectorized=False)
-        assert os.path.exists('debug.out'), os.listdir('.')
+        assert os.path.exists(debug_file), os.listdir('.')
 
         self._verify_ids(bdf, op2, vectorized=False, isubcase=1)
         self._verify_ids(bdf, op2v, vectorized=True, isubcase=1)

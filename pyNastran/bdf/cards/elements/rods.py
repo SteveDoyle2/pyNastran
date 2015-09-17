@@ -78,6 +78,11 @@ class CROD(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        +------+-----+-----+----+----+
+        | CROD | EID | PID | N1 | N2 |
+        +------+-----+-----+----+----+
+        """
         RodElement.__init__(self, card, data)
         if comment:
             self._comment = comment
@@ -86,7 +91,7 @@ class CROD(RodElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             nids = [integer(card, 3, 'n1'),
                     integer(card, 4, 'n2')]
-            assert len(card) == 5, 'len(CROD card) = %i' % len(card)
+            assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), str(card))
         else:
             self.eid = data[0]
             self.pid = data[1]

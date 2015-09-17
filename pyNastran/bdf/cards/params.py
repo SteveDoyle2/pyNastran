@@ -28,11 +28,17 @@ class PARAM(BaseCard):
         """
         Creates a PARAM card.
 
-        :param self: the object
-        :param card: BDFCard object
-        :param data: list of PARAM entries not including 'PARAM';
-                     intended to be used by OP2 Reader (default=None)
-        :param comment: optional string (default='')
+        Parameters
+        ----------
+        self : PARAM()
+            the object pointer
+        card : BDFCard(); default=None
+            BDFCard object
+        data : List[int/float/str]; default=None
+            list of PARAM entries not including 'PARAM';
+            intended to be used by OP2 Reader
+        comment : str; default=''
+            optional string
         """
         if comment:
             self._comment = comment
@@ -69,7 +75,8 @@ class PARAM(BaseCard):
             value1 = double_or_blank(card, 2, 'value1', 0.0)
             value2 = double_or_blank(card, 3, 'value2', 0.0)
             n = 2
-        elif self.key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CM1', 'CM2', 'CP1', 'CP2']:
+        elif self.key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CK41', 'CK42',
+                          'CM1', 'CM2', 'CP1', 'CP2']:
             value1 = double_or_blank(card, 2, 'value1', 1.0)
             value2 = double_or_blank(card, 3, 'value2', 0.0)
             n = 2
