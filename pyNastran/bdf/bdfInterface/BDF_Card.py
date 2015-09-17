@@ -3,7 +3,7 @@ Defines the BDFCard class that is passed into the various Nastran cards.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.utils import deprecated
 from six.moves import range
 
 
@@ -16,6 +16,11 @@ class BDFCard(object):
         self.debug = debug
         self.card = card
         self.nfields = len(self.card)
+
+
+    def deprecated(self, old_name, new_name, deprecated_version):
+        """deprecates methods"""
+        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def pop(self):
         """card.pop()"""

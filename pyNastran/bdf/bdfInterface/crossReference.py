@@ -86,6 +86,14 @@ class XrefMesh(object):
         self._stop_on_xref_error = True
         self._stored_xref_errors = []
 
+    # def geom_check(self):
+        # """
+        # Performs various geometry checks
+          # 1.  nodal uniqueness on elements
+        # """
+        # for elem in model.elements:
+            # elem.check_unique_nodes()
+
     def _safe_cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,
