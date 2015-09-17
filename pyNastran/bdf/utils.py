@@ -10,7 +10,13 @@ Defines various utilities for BDF parsing including:
 from __future__ import print_function, unicode_literals
 from six import iteritems, StringIO, string_types
 import os
+import sys
+import inspect
+import warnings
+
 from numpy import unique, cross, dot, array
+
+import pyNastran
 
 _REMOVED_LINES = [
     '$EXECUTIVE CONTROL DECK',
@@ -33,12 +39,17 @@ def _clean_comment(comment, end=-1):
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
 
-    :param comment: the comment to possibly remove
-    :param end: lets you remove trailing characters (e.g. a ``\n``; default=-1)
+    Parameters
+    ----------
+    comment : str
+         the comment to possibly remove
+    end : int; default=-1
+        lets you remove trailing characters (e.g. a ``\n``)
     """
+    raise RuntimeError('is this used...')
     if comment[:end] in _REMOVED_LINES:
         comment = ''
-    elif 'pynastran' in line.lower():
+    elif 'pynastran' in comment.lower():
         comment = ''
     return comment
 
@@ -52,7 +63,7 @@ class CardParseSyntaxError(SyntaxError):
 
 
 def _to_fields_mntpnt1(card_lines, card_name):
-    print(card_lines)
+    print('_to_fields_mntpnt1', card_lines)
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 
@@ -79,9 +90,17 @@ def to_fields(card_lines, card_name):
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
 
-    :param lines:     the lines of the BDF card object
-    :param card_name: the card_name -> 'GRID'
-    :returns fields:  the string formatted fields of the card
+    Paramters
+    ---------
+    lines : List[str]
+        the lines of the BDF card object
+    card_name : str
+        the card_name -> 'GRID'
+
+    Returns
+    -------
+    fields : List[str]
+        the string formatted fields of the card
 
     .. warning:: this function is used by the reader and isn't intended
                  to be called by a separate process
@@ -173,9 +192,17 @@ def get_include_filename(card_lines, include_dir=''):
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
-    :param card_lines:  the list of lines in the include card (all the lines!)
-    :param include_dir: the include directory (default='')
-    :returns filename:  the INCLUDE filename
+    Parameters
+    ----------
+    card_lines : List[str]
+        the list of lines in the include card (all the lines!)
+    include_dir : str; default=''
+        the include directory
+
+    Returns
+    -------
+    filename : str
+        the INCLUDE filename
     """
     card_lines2 = []
     for line in card_lines:
@@ -271,8 +298,15 @@ def print_filename(filename, relpath):
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.
 
-    :param filename: a filename string
-    :returns filename_string: a shortened representation of the filename
+    Parameters
+    ----------
+    filename : str
+        a filename string
+
+    Returns
+    -------
+    filename_string : str
+        a shortened representation of the filename
     """
     if isinstance(filename, StringIO):
         return '<StringIO>'
@@ -545,3 +579,42 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         matrix = coord_to.beta()
         xyz_local = coord_to.transformToLocal(xyz_global, matrix)
     return xyz_local
+
+
+
+def deprecated(old_name, new_name, deprecated_version, levels=None):
+    """
+    :param deprecated_version: the version the method was first deprecated in
+
+    TODO: turn this into a decorator?
+    """
+    assert isinstance(deprecated_version, string_types), type(deprecated_version)
+    assert isinstance(levels, list), type(levels)
+    assert old_name != new_name, "'%s' and '%s' are the same..." % (old_name, new_name)
+
+    version = pyNastran.__version__.split('_')[0]
+    dep_ver_tuple = tuple([int(i) for i in deprecated_version.split('.')])
+    ver_tuple = tuple([int(i) for i in version.split('.')[:2]])
+
+    new_line = ''
+    if new_name:
+        new_line = "; replace it with '%s'\n" % new_name
+    msg = "'%s' was deprecated in v%s%s" % (old_name, deprecated_version, new_line)
+
+    for level in levels:
+        # jump to get out of the inspection code
+        frame = sys._getframe(3 + level)
+        line_no = frame.f_lineno
+        code = frame.f_code
+        filename = os.path.basename(frame.f_globals['__file__'])
+
+        source_lines, line_no0 = inspect.getsourcelines(code)
+        di = line_no - line_no0
+        line = source_lines[di]
+        msg += '  %-25s lineNo=%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
+
+    if ver_tuple > dep_ver_tuple:
+        # fail
+        raise NotImplementedError(msg)
+    else:
+        warnings.warn(msg, DeprecationWarning)

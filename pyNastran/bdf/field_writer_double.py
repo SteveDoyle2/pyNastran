@@ -7,7 +7,7 @@ from six import integer_types
 from six.moves import range
 
 import sys
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
 
 def print_scientific_double(value):
     """
@@ -77,7 +77,7 @@ def print_card_double(fields, wipe_fields=True):
       *
     """
     if wipe_fields:
-        fields = wipe_empty_fields(fields)
+        fields = wipe_empty_fields_typed(fields)
     nfields_main = len(fields) - 1  # chop off the card name
     nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:

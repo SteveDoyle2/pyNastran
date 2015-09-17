@@ -12,16 +12,22 @@ def build_table_lines(fields, nstart=1, nend=0):
     |        |  UM   | VAL1   | VAL2  | -etc.- |       |       |       |
     +--------+-------+--------+-------+--------+-------+-------+-------+
 
-    and then pads the rest of the fields with None's
+    and pads the rest of the fields with None's (e.g. at the end of the
+    DVID8 line).
 
-    :param fields: the fields to enter, including DESVAR
-    :type fields:  list of values
-    :param nStart: the number of blank fields at the start of the
-                   line (default=1)
-    :param nStart: int
-    :param nEnd:   the number of blank fields at the end of the
-                   line (default=0)
-    :param nEnd:   int
+    Parameters
+    ----------
+    fields: List[int/float/str]
+        the fields to enter, including DESVAR
+    nStart: int; default=1
+        the number of blank fields at the start of the line
+    nEnd : int; default=0)
+        the number of blank fields at the end of the line
+
+    Returns
+    -------
+    fields_out : List[str/None]
+        the values ready for card printing
 
     .. note:: will be used for DVPREL2, RBE1, RBE3
     .. warning:: only works for small field format???
@@ -47,10 +53,74 @@ def build_table_lines(fields, nstart=1, nend=0):
     return fields_out
 
 
-def wipe_empty_fields(card):
+def wipe_empty_fields_off(fields):
     """
     Removes any trailing Nones from the card.
     Also converts empty strings to None.
+
+    .. warning :: doesn't allows floats & ints.
+    """
+    nfields = len(fields)
+    for i, field in enumerate(reversed(fields)):
+        if field:
+            break
+    # print('i =', i)
+    # print('fields =', fields[:nfields-i])
+
+    # has the potential issue of not returning embedded Nones
+    return [field.strip() if isinstance(field, string_types) else field for field in fields[:nfields-i] ]
+    # return [field.strip() if field.strip() else None for field in fields[:nfields-i] ] # fails on ints/Nones
+
+def wipe_empty_fields(fields):
+    i = len(fields) - 1
+    while i > 0:
+        field = fields[i]
+
+        if isinstance(field, string_types):
+            field_strip = field.strip()
+            if field_strip:
+                fields.pop()
+                i -= 1
+            else:
+                break
+
+    while i > 0:
+        field = fields[i]
+        if isinstance(field, string_types):
+            field_strip = field.strip()
+            if field_strip:
+                field = None
+                i -= 1
+            else:
+                break
+        fields[i] = field
+
+    return fields
+
+def _wipe_empty_fields(card):
+    """
+    For testing:
+        this method is:   wipe_empty_fields
+        the one above is: wipe_empty_fields_new
+
+    In general:
+        this method is     _wipe_empty_fields
+        the  one above is: wipe_empty_fields
+    """
+    typed = wipe_empty_fields_typed(card)
+    untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
+    untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
+    if typed != untyped:
+        msg = 'typed   = %s\n' % typed
+        msg += 'untyped = %s\n' % untyped
+        print(msg)
+    return untyped
+
+def wipe_empty_fields_typed(card):
+    """
+    Removes any trailing Nones from the card.
+    Also converts empty strings to None.
+    Allows floats & ints.
 
     Parameters
     ----------

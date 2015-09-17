@@ -9,7 +9,7 @@ from six.moves import range
 import sys
 from numpy import float32, isnan
 
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 
 def set_string16_blank_if_default(value, default):
@@ -242,7 +242,7 @@ def print_card_16(fields, wipe_fields=True):
       *
     """
     if wipe_fields:
-        fields = wipe_empty_fields(fields)
+        fields = wipe_empty_fields_typed(fields)
     nfields_main = len(fields) - 1  # chop off the card name
     nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:

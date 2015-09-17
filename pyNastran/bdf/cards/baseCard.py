@@ -4,17 +4,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types, PY2
 from six.moves import zip, range
 
-import os
-import sys
-import warnings
-import inspect
-
 from numpy import nan, empty, unique
 
-import pyNastran
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
+from pyNastran.bdf.utils import deprecated
 
 
 if PY2:
@@ -38,44 +33,6 @@ if PY2:
     range = long_range
 else:
     pass
-
-
-def deprecated(old_name, new_name, deprecated_version, levels=None):
-    """
-    :param deprecated_version: the version the method was first deprecated in
-
-    TODO: turn this into a decorator?
-    """
-    assert isinstance(deprecated_version, string_types), type(deprecated_version)
-    assert isinstance(levels, list), type(levels)
-    assert old_name != new_name, "'%s' and '%s' are the same..." % (old_name, new_name)
-
-    version = pyNastran.__version__.split('_')[0]
-    dep_ver_tuple = tuple([int(i) for i in deprecated_version.split('.')])
-    ver_tuple = tuple([int(i) for i in version.split('.')[:2]])
-
-    new_line = ''
-    if new_name:
-        new_line = "; replace it with '%s'\n" % new_name
-    msg = "'%s' was deprecated in v%s%s" % (old_name, deprecated_version, new_line)
-
-    for level in levels:
-        # jump to get out of the inspection code
-        frame =  sys._getframe(3 + level)
-        line_no = frame.f_lineno
-        code = frame.f_code
-        filename = os.path.basename(frame.f_globals['__file__'])
-
-        source_lines, line_no0 = inspect.getsourcelines(code)
-        di = line_no - line_no0
-        line = source_lines[di]
-        msg += '  %-25s lineNo=%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
-
-    if ver_tuple > dep_ver_tuple:
-        # fail
-        raise NotImplementedError(msg)
-    else:
-        warnings.warn(msg, DeprecationWarning)
 
 
 class BaseCardDeprecated(object):
@@ -111,6 +68,7 @@ class BaseCard(BaseCardDeprecated):
         pass
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     @property
@@ -198,9 +156,12 @@ class BaseCard(BaseCardDeprecated):
         """
         Verifies all methods for this object work
 
-        :param self: the object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        self : BaseCard()
+            the object pointer
+        xref : bool
+            has this model been cross referenced
         """
         print('# skipping _verify (type=%s) because _verify is '
               'not implemented\n' % self.type)
@@ -261,9 +222,15 @@ class Property(BaseCard):
         """
         returns the property ID of an property
 
-        :param self:  the Property pointer
-        :returns pid: the Property ID
-        :type pid:    int
+        Parameters
+        ----------
+        self : Property()
+            the Property pointer
+
+        Returns
+        -------
+        pid : int
+            the Property ID
         """
         return self.pid
 
@@ -271,9 +238,15 @@ class Property(BaseCard):
         """
         returns the material ID of an element
 
-        :param self:  the Property pointer
-        :returns mid: the Material ID
-        :type mid:    int
+        Parameters
+        ----------
+        self : Property()
+            the Property pointer
+
+        Returns
+        -------
+        mid : int
+            the Material ID
         """
         if isinstance(self.mid, integer_types):
             return self.mid
@@ -308,9 +281,15 @@ class Material(BaseCard):
         """
         returns the material ID of an element
 
-        :param self:  the Property pointer
-        :returns mid: the Material ID
-        :type mid:    int
+        Parameters
+        ----------
+        self : Material()
+            the Material pointer
+
+        Returns
+        -------
+        mid : int
+            the Material ID
         """
         return self.mid
 
@@ -400,8 +379,12 @@ class Element(BaseCard):
         """
         Gets the faces of the element
 
-        :returns:  dictionary with face number as the keys and
-                   a list of nodes (integer pointers) as the values.
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
         .. note::  The order of the nodes are consistent with ANSYS numbering.
 
         Example
@@ -450,8 +433,17 @@ class Element(BaseCard):
         """
         returns the face number that matches the list of nodes input
 
-        :param nodes:   list of nodes
-        :returns faces: the face number as an integer
+        Parameters
+        -----------
+        self : Element()
+            the object pointer
+        nodes : List[node]
+            a series of nodes
+
+        Returns
+        -------
+        face_id : int
+            the face number as an integer
 
         .. warning:: It's assumed you have the nodes in the proper order.
         """
@@ -511,10 +503,15 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
 
-    :param fields:      the fields to expand
-    :param set_fields:  should the fields be converted to a set and then back
-                        to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
-    :param sort_fields: should the fields be sorted at the end? (default=False)
+    Parameters
+    ----------
+    fields : List[int/str]
+        the fields to expand
+    set_fields : bool; default=True
+        Should the fields be converted to a set and then back to a list?
+        This is useful for [2, 'THRU' 5, 1]
+    sort_fields : bool; default=False
+        Should the fields be sorted at the end?
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
     fields = [field.upper()
@@ -552,10 +549,15 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
 
-    :param fields:      the fields to expand
-    :param set_fields:  should the fields be converted to a set and then back
-                        to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
-    :param sort_fields: should the fields be sorted at the end? (default=False)
+    Parameters
+    ----------
+    fields : List[int/str]
+        the fields to expand
+    set_fields : bool; default=True
+        Should the fields be converted to a set and then back to a list?
+        This is useful for [2, 'THRU' 5, 1]
+    sort_fields : bool; default=False
+        Should the fields be sorted at the end?
 
     .. todo:: not tested
     .. note:: used for QBDY3 and what else ???
