@@ -340,20 +340,28 @@ class F06Writer(OP2_F06_Common):
             f06.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def write_f06(self, f06_outname, is_mag_phase=False,
+    def write_f06(self, f06_outname, is_mag_phase=False, is_sort2=False,
                   delete_objects=True, end_flag=False):
         """
         Writes an F06 file based on the data we have stored in the object
 
-        :param self:         the F06 object
-        :param f06_outname:  the name of the F06 file to write
-        :param is_mag_phase: should complex data be written using Magnitude/Phase
-                         instead of Real/Imaginary (default=False; Real/Imag)
-                         Real objects don't use this parameter.
-        :param delete_objects: should objects be deleted after they're written
-                         to reduce memory (default=True)
-        :param end_flag: should a dummy Nastran "END" table be made
-                         (default=False)
+        Parameters
+        ----------
+        self : F06() / OP2()
+            the F06 object
+        f06_outname : str
+            the name of the F06 file to write
+        is_mag_phase : bool; default=False
+            should complex data be written using Magnitude/Phase
+            instead of Real/Imaginary
+            Real objects don't use this parameter
+        is_sort2 : bool; default=False
+            writes output in SORT2 format if the output is transient;
+            ignored for static analyses
+        delete_objects : bool; default=True
+            should objects be deleted after they're written to reduce memory
+        end_flag : bool; default=False
+            should a dummy Nastran "END" table be made
         """
         print("F06:")
         if isinstance(f06_outname, str):
@@ -379,7 +387,6 @@ class F06Writer(OP2_F06_Common):
             assert isinstance(self.page_num, int), self.oload_resultant.__class__.__name__
 
 
-        #is_mag_phase = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
@@ -683,7 +690,7 @@ class F06Writer(OP2_F06_Common):
                             print(star + res_format % (result.__class__.__name__, isubcase, element_name))
                         else:
                             print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
-                        self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
+                        self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=is_mag_phase)
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                     except:
                         #print("result name = %r" % result.name())

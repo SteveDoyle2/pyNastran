@@ -4,70 +4,81 @@ from pyNastran.utils import object_attributes
 
 def writeFloats10E(vals):
     vals2 = []
-    isAllZeros = True
+    is_all_zeros = True
     for v in vals:
         v2 = '%10.3E' % v
         if v2 == ' 0.000E+00' or v2 == '-0.000E+00':
             v2 = ' 0.0'
         else:
-            isAllZeros = False
+            is_all_zeros = False
         vals2.append(v2)
-    return vals2, isAllZeros
+    return vals2, is_all_zeros
 
 
 def writeFloats12E(vals):
     vals2 = []
-    isAllZeros = True
+    is_all_zeros = True
     for v in vals:
         v2 = '%12.5E' % v
         if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
             v2 = ' 0.0'
         else:
-            isAllZeros = False
+            is_all_zeros = False
         vals2.append(v2)
-    return vals2, isAllZeros
+    return vals2, is_all_zeros
+
+
+def write_float_12E(val):
+    vals2 = []
+    is_all_zeros = True
+    v2 = '%12.5E' % val
+    if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
+        v2 = ' 0.0'
+    return v2
 
 
 def writeFloats13E(vals):
     vals2 = []
-    isAllZeros = True
+    is_all_zeros = True
     for v in vals:
         v2 = '%13.6E' % v
         if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
             v2 = ' 0.0'
         else:
-            isAllZeros = False
+            is_all_zeros = False
         vals2.append(v2)
-    return vals2, isAllZeros
+    return vals2, is_all_zeros
 
 
-def writeImagFloats13E(vals, isMagPhase):
+def writeImagFloats13E(vals, is_mag_phase):
     vals2 = []
-    isAllZeros = True
+    is_all_zeros = True
 
-    if isMagPhase:
+    if is_mag_phase:
         for v in vals:
             v2 = '%13.6E' % abs(v)
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
                 v2 = ' 0.0'
             else:
-                isAllZeros = False
+                is_all_zeros = False
             vals2.append(v2)
 
+        # phase
         for v in vals:
-            v3 = '%13.6E' % angle(v, deg=True)
-            if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
-                v3 = ' 0.0'
-            else:
-                isAllZeros = False
+            v2 = angle(v, deg=True)
+
+            v3 = '%-13.4f' % v2 if v2 >= 0.0 else '%-13.4f' % (v2 + 360.)
+            if v3 == '       0.0000':
+                v3 = '   0.0'
             vals2.append(v3)
+        is_all_zeros = False
     else:
         for v in vals:
             v2 = '%13.6E' % v.real
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
                 v2 = ' 0.0'
             else:
-                isAllZeros = False
+                is_all_zeros = False
             vals2.append(v2)
 
         for v in vals:
@@ -75,14 +86,14 @@ def writeImagFloats13E(vals, isMagPhase):
             if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
                 v3 = ' 0.0'
             else:
-                isAllZeros = False
+                is_all_zeros = False
             vals2.append(v3)
-    return vals2, isAllZeros
+    return vals2, is_all_zeros
 
 
 def writeFloats8p4F(vals):
     vals2 = []
-    isAllZeros = True
+    is_all_zeros = True
     for v in vals:
         if v >= 1000.0 or v <= -100.0:
             raise RuntimeError(v)
@@ -90,9 +101,9 @@ def writeFloats8p4F(vals):
         if v2 == '  0.0000' or v2 == ' -0.0000':
             v2 = '  0.0   '
         else:
-            isAllZeros = False
+            is_all_zeros = False
         vals2.append(v2)
-    return vals2, isAllZeros
+    return vals2, is_all_zeros
 
 
 def _eigenvalue_header(obj, header, itime, ntimes, dt):
