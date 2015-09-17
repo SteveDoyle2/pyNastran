@@ -265,10 +265,10 @@ class OP2Common(Op2Codes, F06Writer):
                 else:
                     n = self._read_real_table_sort1(data, result_name, node_elem, is_cid=is_cid)
             else:
-                #n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
+                n = self._read_real_table_sort2(data, result_name, node_elem, is_cid=is_cid)
                 #n = len(data)
-                msg = self.code_information()
-                n = self._not_implemented_or_skip(data, msg)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, msg)
         elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
@@ -280,9 +280,9 @@ class OP2Common(Op2Codes, F06Writer):
             if self.is_sort1():
                 n = self._read_complex_table_sort1(data, result_name, node_elem)
             else:
-                msg = self.code_information()
-                #n = self._read_complex_table_sort2(data, result_name, node_elem)
-                n = self._not_implemented_or_skip(data, msg)
+                n = self._read_complex_table_sort2(data, result_name, node_elem)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, msg)
         else:
             #msg = 'COMPLEX/PHASE is included in:\n'
             #msg += '  DISP(PLOT)=ALL\n'
@@ -472,12 +472,21 @@ class OP2Common(Op2Codes, F06Writer):
             n += ntotal
         return n
 
+    def get_oug2_flag(self):
+        if self.analysis_code == 5:
+            flag = 'freq'
+            flag_type = '%.2f'
+        else:
+            raise RuntimeError(self.code_information())
+        #flag = 'freq/dt/mode'
+        return flag, flag_type
+
     def _read_complex_table_sort2(self, data, result_name, flag):
         #return
         if self.debug4():
             self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
-        flag = 'freq/dt/mode'
+        flag, flag_type = self.get_oug2_flag()
         node_id = self.nonlinear_factor
 
         is_magnitude_phase = self.is_magnitude_phase()
@@ -491,6 +500,8 @@ class OP2Common(Op2Codes, F06Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
+        binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
+        #print('%r' % binary_debug_fmt)
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -499,7 +510,7 @@ class OP2Common(Op2Codes, F06Writer):
              txi, tyi, tzi, rxi, ryi, rzi) = out
 
             if self.debug4():
-                self.binary_debug.write('  %s=%i %s\n' % (flag, freq, str(out)))
+                self.binary_debug.write(binary_debug_fmt % (freq, str(out)))
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 ty = polar_to_real_imag(tyr, tyi)

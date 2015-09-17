@@ -100,6 +100,33 @@ class TestOP2(Tester):
                 write_f06=write_f06, is_vector=True,
                 debug=debug, stopOnFailure=True)
 
+    def test_op2_03(self):
+        op2_filename = os.path.join('freq_sine', 'good_sine.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        make_geom = False
+        write_bdf = False
+        write_f06 = False
+        debug = False
+        op2file = os.path.join(folder, op2_filename)
+        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+                                  write_f06=write_f06, is_vector=True,
+                                  debug=debug, stopOnFailure=True)
+
+        nids = [5]
+        with self.assertRaises(AssertionError):
+            op2i.accelerations[103].extract_xyplot(nids, 0)
+
+        accx = op2i.accelerations[103].extract_xyplot(nids, 1)
+        accxi = op2i.accelerations[103].extract_xyplot(nids, 1 + 6)
+        #print(accx)
+        #print(accxi)
+        #make_geom = False
+        #write_bdf = False
+        #write_f06 = True
+        #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+                #write_f06=write_f06, is_vector=True,
+                #debug=debug, stopOnFailure=True)
+
     def test_op2_eids_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         bdf_filename = os.path.join(folder, 'sol_101_elements', 'static_solid_comp_bar.bdf')

@@ -3,7 +3,7 @@ from six import string_types, iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, sqrt, abs, angle, float32, ndarray  # dot,
+from numpy import array, zeros, sqrt, abs, angle, float32, ndarray, searchsorted, asarray
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
@@ -106,6 +106,11 @@ class TableArray(ScalarObject):  # displacement style table
         # [t1, t2, t3, r1, r2, r3]
         #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
         #print "%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6])
+
+        # itotal - the node number
+        # itime - the time/frequency step
+
+        # the times/freqs
         self._times[self.itime] = dt
         self.node_gridtype[self.itotal, :] = [node_id, grid_type]
         self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -115,6 +120,7 @@ class TableArray(ScalarObject):  # displacement style table
         #print "dt=%s out=%s" %(dt,out)
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
+        print('itime=%s itotal=%s' % (self.itotal, self.itime))
         msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
         msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
         #print(msg)
@@ -129,10 +135,16 @@ class TableArray(ScalarObject):  # displacement style table
         # [t1, t2, t3, r1, r2, r3]
         #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
         #print "%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6])
+
+        # the node IDs
         self._times[self.itime] = dt
-        self.node_gridtype[self.itotal, :] = [node_id, grid_type]
-        self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+        self.node_gridtype[self.itime, :] = [node_id, grid_type]
+        self.data[self.itotal, self.itime, :] = [v1, v2, v3, v4, v5, v6]
+
+        # itotal - the node number
+        # itime - the time/frequency step
         self.itotal += 1
+        #self.itime += 1
 
 
 class RealTableArray(TableArray):  # displacement style table
@@ -349,10 +361,33 @@ class RealTableArray(TableArray):  # displacement style table
             page_num += 1
         return page_num - 1
 
+    def extract_xyplot(self, node_ids, index):
+        node_ids = asarray(node_ids, dtype='int32')
+        i = index - 1
+        assert index in [1, 2, 3, 4, 5, 6], index
+        nids = self.node_gridtype[:, 0]
+        inids = searchsorted(nids, node_ids)
+        assert all(nids[inids] == node_ids)
+        return self.data[:, inids, i]
+
 
 class ComplexTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def extract_xyplot(self, node_ids, index, is_mag_phase=False):
+        assert is_mag_phase == False, is_mag_phase
+        node_ids = asarray(node_ids, dtype='int32')
+        i = index - 1
+        assert index in [1, 2, 3, 4, 5, 6,
+                         7, 8, 9, 10, 11, 12], index
+        nids = self.node_gridtype[:, 0]
+        inids = searchsorted(nids, node_ids)
+        assert all(nids[inids] == node_ids)
+        if index <= 6:
+            return self.data[:, inids, i].real
+        else:
+            return self.data[:, inids, i - 6].imag
 
     def is_real(self):
         return False
@@ -839,8 +874,8 @@ class ComplexTableObject(ScalarObject):
         self.translations[dt][node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
         self.rotations[dt][node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
-    def add_sort2(self, node_id, data):
-        [dt, grid_type, v1, v2, v3, v4, v5, v6] = data
+    def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        #[dt, grid_type, v1, v2, v3, v4, v5, v6] = data
 
         if dt not in self.translations:
             self.add_new_transient(dt)

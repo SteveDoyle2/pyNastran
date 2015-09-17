@@ -408,7 +408,7 @@ class F06Writer(OP2_F06_Common):
 
         #print('res_keys=%s' % res_keys)
         for res_key in res_keys:
-            print('res_key =', res_key)
+            #print('res_key =', res_key)
             isubcase = res_key[0]
             # analysis code = res_key[1]
             subtitle = res_key[2]
