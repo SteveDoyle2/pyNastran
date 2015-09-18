@@ -176,16 +176,43 @@ class OES(OP2Common):
         self._parse_stress_code()
 
     def fix_format_code(self):
+        """
+        Nastran correctly calculates the proper defaults for the analysis
+        based on the solution type and the the user's requests.  However,
+        the user doesn't always set the values correctly, so when Nastran
+        goes to write the output, it uses the original values, rather
+        than the correct values that were used for analysis.
+
+        In the SOL 101 case:
+            STRESS(PLOT, SORT1, IMAG) = ALL
+
+        the user has set an incorrect value (IMAG), which gets turned into
+        a format code of 2, where:
+          1 - real
+          2 - real/imag (complex results)
+          3 - mag/phase (complex results)
+
+        This inconsistency causes problems with the parser.  Thus, based on
+        the analysis_code (1 is like SOL 101, but really means static), we
+        can switch mag/phase results to real static results.
+
+        Note that a case of 4 is not used and is used below as a placeholder,
+        while a case of -1 is some bizarre unhandled, undocumented case.
+        """
         if self.analysis_code == 1:   # statics / displacement / heat flux
             assert self.format_code in [1, 3], self.format_code
+            self.format_code = 1
         elif self.analysis_code == 2:  # real eigenvalues
             assert self.format_code in [1, 3], self.format_code
+            self.format_code = 1
         #elif self.analysis_code==3: # differential stiffness
         #elif self.analysis_code==4: # differential stiffness
         elif self.analysis_code == 5:   # frequency
             assert self.format_code in [1, 2, 3], self.format_code
+            self.format_code = 2
         elif self.analysis_code == 6:  # transient
             assert self.format_code in [1, 2, 3], self.format_code
+            self.format_code = 1
         elif self.analysis_code == 7:  # pre-buckling
             assert self.format_code in [1], self.format_code
         elif self.analysis_code == 8:  # post-buckling
@@ -197,10 +224,11 @@ class OES(OP2Common):
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             assert self.format_code in [1], self.format_code
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            assert self.format_code in [4], self.format_code
+            assert self.format_code in [4], self.format_code # invalid value
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
+        self.data_code['format_code'] = self.format_code
 
     def _parse_stress_code(self):
         """

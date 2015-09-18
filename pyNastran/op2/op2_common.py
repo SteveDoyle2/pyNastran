@@ -231,6 +231,9 @@ class OP2Common(Op2Codes, F06Writer):
         it's wrong, and should be:
             DISP(PLOT,REAL)=ALL
         """
+        # we'll probably remove this later because we're fixing
+        #it before we get to the object
+        return
         if self.format_code != format_code:
             self.format_code = format_code
             self.obj.format_code = format_code
