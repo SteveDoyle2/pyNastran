@@ -114,10 +114,11 @@ class TestOP2(Tester):
 
         nids = [5]
         with self.assertRaises(AssertionError):
-            op2i.accelerations[103].extract_xyplot(nids, 0)
+            # no index 0; fortran 1-based
+            op2i.accelerations[103].extract_xyplot(nids, 0, 'real')
 
-        accx = op2i.accelerations[103].extract_xyplot(nids, 1)
-        accxi = op2i.accelerations[103].extract_xyplot(nids, 1 + 6)
+        accx = op2i.accelerations[103].extract_xyplot(nids, 1, 'real')
+        accxi = op2i.accelerations[103].extract_xyplot(nids, 1, 'imag')
         #print(accx)
         #print(accxi)
         #make_geom = False

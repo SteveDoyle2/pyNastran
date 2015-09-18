@@ -2114,6 +2114,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #self.update_camera(key)
 
     def _finish_results_io2(self, form, cases):
+        assert len(cases) > 0, cases
         self.on_update_geometry_properties(self.geometry_properties)
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())

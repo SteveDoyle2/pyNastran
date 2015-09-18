@@ -1837,7 +1837,30 @@ class NastranIO(object):
 
         cases = {}
         subcase_ids = model.iSubcaseNameMap.keys()
-        self.iSubcaseNameMap = model.iSubcaseNameMap
+        #self.iSubcaseNameMap = model.iSubcaseNameMap
+        # self.iSubcaseNameMap = model.subcase_key
+        #print(self.iSubcaseNameMap)
+        self.iSubcaseNameMap = {}
+        for isubcase, values in iteritems(model.iSubcaseNameMap):
+            if not isinstance(isubcase, (int, int32)):
+                print('isubcase type =', type(isubcase))
+                continue
+            if isinstance(values, str):
+                # eigenvalue???
+                label = values
+                print('label??? =', label)
+            elif isinstance(values, list):
+                print(values)
+                subtitle, analysis_code, label = values
+            else:
+                print(values)
+                print(type(values))
+                raise RuntimeError(values)
+
+            self.iSubcaseNameMap[isubcase] = [subtitle, label]
+            del subtitle, label
+        # self.iSubcaseNameMap = {subcase_id : label for
+                                # in iteritems(model.iSubcaseNameMap)}
 
         form = []
         icase = 0
@@ -1876,121 +1899,132 @@ class NastranIO(object):
         ]
         nids = self.node_ids
 
+        case_key_slots = model.subcase_key[subcase_id]
+        #if len(case_key_slots) == 0:
+        #    return
+        if isinstance(case_key_slots, (int, int32)):
+            is_combined = False
+            keys = [subcase_id]
+        else:
+            is_combined = True
+            keys = [(subcase_id, analysis_code, label) for analysis_code, label in case_key_slots]
+
         for (result, name) in displacement_like:
-            if subcase_id in result:
-                case = result[subcase_id]
-                if not hasattr(case, 'data'):
-                    continue
-                if not case.is_real():
-                    continue
-                if case.nonlinear_factor is not None: # transient
-                    #ntimes = len(case._times)
-                    code_name = case.data_code['name']
-                    has_cycle = hasattr(case, 'mode_cycle')
+            for key in keys:
+                if key in result:
+                    case = result[key]
+                    if not hasattr(case, 'data'):
+                        continue
+                    if not case.is_real():
+                        continue
+                    if case.nonlinear_factor is not None: # transient
+                        #ntimes = len(case._times)
+                        code_name = case.data_code['name']
+                        has_cycle = hasattr(case, 'mode_cycle')
 
-                    itime0 = 0
-                    t1 = case.data[itime0, :, 0]
-                    ndata = t1.shape[0]
-                    if nnodes != ndata:
-                        nidsi = case.node_gridtype[:, 0]
-                        assert len(nidsi) == nnodes
-                        j = searchsorted(nids, nidsi)  # searching for nidsi
+                        itime0 = 0
+                        t1 = case.data[itime0, :, 0]
+                        ndata = t1.shape[0]
+                        if nnodes != ndata:
+                            nidsi = case.node_gridtype[:, 0]
+                            assert len(nidsi) == nnodes
+                            j = searchsorted(nids, nidsi)  # searching for nidsi
 
-                        try:
-                            if not allclose(nids[j], nidsi):
-                                msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
-                                raise RuntimeError(msg)
-                        except IndexError:
-                            msg = 'node_ids = %s\n' % list(nids)
-                            msg += 'nidsi in disp = %s\n' % list(nidsi)
-                            raise IndexError(msg)
+                            try:
+                                if not allclose(nids[j], nidsi):
+                                    msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                                    raise RuntimeError(msg)
+                            except IndexError:
+                                msg = 'node_ids = %s\n' % list(nids)
+                                msg += 'nidsi in disp = %s\n' % list(nidsi)
+                                raise IndexError(msg)
 
-                    for itime in range(case.ntimes):
-                        dt = case._times[itime]
-                        t1 = case.data[itime, :, 0]
-                        t2 = case.data[itime, :, 1]
-                        t3 = case.data[itime, :, 2]
+                        for itime in range(case.ntimes):
+                            dt = case._times[itime]
+                            t1 = case.data[itime, :, 0]
+                            t2 = case.data[itime, :, 1]
+                            t3 = case.data[itime, :, 2]
 
-                        t123 = case.data[itime, :, :3]
-                        #tnorm = norm(t123, axis=1)
+                            t123 = case.data[itime, :, :3]
+                            #tnorm = norm(t123, axis=1)
+
+                            if(t1.min() == t1.max() and t2.min() == t2.max() and
+                               t3.min() == t3.max()):
+                                continue
+                            if nnodes != ndata:
+                                t1i = zeros(nnodes, dtype='float32')
+                                t2i = zeros(nnodes, dtype='float32')
+                                t3i = zeros(nnodes, dtype='float32')
+                                t1i[j] = t1
+                                t2i[j] = t2
+                                t3i[j] = t3
+                                t1 = t1i
+                                t2 = t2i
+                                t3 = t3i
+
+                            if isinstance(dt, float):
+                                header = ' %s = %.4E' % (code_name, dt)
+                            else:
+                                header = ' %s = %i' % (code_name, dt)
+
+                            if has_cycle:
+                                freq = case.eigrs[itime]
+                                #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
+                                cycle = sqrt(abs(freq))/(2. * pi)
+                                header += '; freq=%g' % cycle
+
+                            form0 = (header, None, [])
+                            formi2 = form0[2]
+
+                            if 1:
+                                cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
+                                formi2.append((name + 'X', icase, []))
+                                icase += 1
+
+                                cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
+                                formi2.append((name + 'Y', icase, []))
+                                icase += 1
+
+                                cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                                formi2.append((name + 'Z', icase, []))
+                                icase += 1
+
+                            cases[(subcase_id, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
+                            formi2.append((name + 'XYZ', icase, []))
+                            icase += 1
+
+                            formi.append(form0)
+                    else:
+                        t1 = case.data[0, :, 0]
+                        t2 = case.data[0, :, 1]
+                        t3 = case.data[0, :, 2]
+                        t123 = case.data[0, :, :3]
+                        tnorm = norm(t123, axis=1)
+
 
                         if(t1.min() == t1.max() and t2.min() == t2.max() and
-                           t3.min() == t3.max()):
+                           t3.min() == t3.max() and t123.min() == t123.max()):
                             continue
-                        if nnodes != ndata:
-                            t1i = zeros(nnodes, dtype='float32')
-                            t2i = zeros(nnodes, dtype='float32')
-                            t3i = zeros(nnodes, dtype='float32')
-                            t1i[j] = t1
-                            t2i[j] = t2
-                            t3i[j] = t3
-                            t1 = t1i
-                            t2 = t2i
-                            t3 = t3i
-
-                        if isinstance(dt, float):
-                            header = ' %s = %.4E' % (code_name, dt)
-                        else:
-                            header = ' %s = %i' % (code_name, dt)
-
-                        if has_cycle:
-                            freq = case.eigrs[itime]
-                            #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-                            cycle = sqrt(abs(freq))/(2. * pi)
-                            header += '; freq=%g' % cycle
-
-                        form0 = (header, None, [])
-                        formi2 = form0[2]
-
-                        if 1:
-                            cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
-                            formi2.append((name + 'X', icase, []))
-                            icase += 1
-
-                            cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
-                            formi2.append((name + 'Y', icase, []))
-                            icase += 1
-
-                            cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                            formi2.append((name + 'Z', icase, []))
-                            icase += 1
-
-                        cases[(subcase_id, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
-                        formi2.append((name + 'XYZ', icase, []))
+                        #if t1.min() != t1.max():
+                        cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
+                        formi.append((name + 'X', icase, []))
                         icase += 1
 
-                        formi.append(form0)
-                else:
-                    t1 = case.data[0, :, 0]
-                    t2 = case.data[0, :, 1]
-                    t3 = case.data[0, :, 2]
-                    t123 = case.data[0, :, :3]
-                    tnorm = norm(t123, axis=1)
+                        #if t2.min() != t2.max():
+                        cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
+                        formi.append((name + 'Y', icase, []))
+                        icase += 1
 
+                        #if t3.min() != t3.max():
+                        cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
+                        formi.append((name + 'Z', icase, []))
+                        icase += 1
 
-                    if(t1.min() == t1.max() and t2.min() == t2.max() and
-                       t3.min() == t3.max() and t123.min() == t123.max()):
-                        continue
-                    #if t1.min() != t1.max():
-                    cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
-                    formi.append((name + 'X', icase, []))
-                    icase += 1
-
-                    #if t2.min() != t2.max():
-                    cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
-                    formi.append((name + 'Y', icase, []))
-                    icase += 1
-
-                    #if t3.min() != t3.max():
-                    cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
-                    formi.append((name + 'Z', icase, []))
-                    icase += 1
-
-                    #if t123.min() != t123.max():
-                    cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
-                    #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
-                    formi.append((name + 'XYZ', icase, []))
-                    icase += 1
+                        #if t123.min() != t123.max():
+                        cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
+                        #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
+                        formi.append((name + 'XYZ', icase, []))
+                        icase += 1
 
         for (result, name) in temperature_like:
             if subcase_id in result:
