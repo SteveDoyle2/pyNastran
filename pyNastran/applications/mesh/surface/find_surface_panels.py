@@ -5,7 +5,7 @@ in order to do a buckling analysis.
 from __future__ import print_function
 import os
 from copy import deepcopy
-from six import iteritems
+from six import iteritems, string_types
 
 from numpy import hstack, unique, allclose, savetxt, array
 from numpy import zeros, abs
@@ -15,9 +15,34 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.fieldWriter import print_card_8
 
+def get_patch_edges(edge_to_eid_map):
+    """
+    find all the edges of any patch
+    """
+    patch_edges = []
+    eids_on_edge = set([])
+
+    free_edges = []
+    free_eids = set([])
+    for edge, eids in iteritems(edge_to_eid_map):
+        # TODO: this is a special case to handle y=0 symmetry,
+        #       which will need to be updated to handle full models
+        yedge = [True for nid in edge
+                 if allclose(xyz_cid0[nid][0], 0.0)]
+
+        if len(eids) != 2 or len(yedge) > 1:
+            patch_edges.append(edge)
+            eids_on_edge.update(eids)
+            if len(eids) == 1:
+                free_edges.append(edge)
+                free_eids.update(eids)
+    return patch_edges, eids_on_edge, free_edges, free_eids
 
 def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
     """
+    Extracts rib/spar/skin patches based on geometry.  You can have a
+    single property id and this will still work.
+
     Parameters
     ----------
     xyz_cid0 : (n, 3) ndarray
@@ -35,21 +60,80 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
         all the elements on the edges
     patches : List[List[int]]
         the patches
+
+    .. note :: We're only considering shell elements, which probably is a poor
+               assumption given the stiffness of ring frames/longerons, which are
+               typically modeled as CBAR/CBEAMs.
+
+    Explanation of Approach
+    =======================
+    In the following case, we'll assume that line 6-7-8-9-10-11 is
+    a hard spar (=) and 10-15 is a rib (#).
+
+    1    2    3    4    5
+    +----+----+----+----+
+    |    |    |    |    |
+    | A1 | B1 | C1 | D1 |    <------ patch 1
+    |6   |7   |8   |9   |10  11
+    +====+====+====+====+====+
+    |    |    |    |    #    |
+    | A2 | B2 | C2 | D2 # E3 |   <------ patch 2, 3
+    |    |    |    |    #    |
+    +----+----+----+----+----+
+    11   12   13   14   15   16
+
+    We'll start with the patch edges as:
+        patch_edges = [
+            # free edges
+            (1, 2), (2, 3), (3, 4), (4, 5), # top
+            (5, 10), (10, 15), (10, 11), (11, 16), # corner right
+            (1, 6), (6, 11), # left
+            (11, 12), (12, 13), (13, 14), (14, 15), (15, 16), # bottom
+
+            # patch boundaries
+            (6, 7), (7, 8), (8, 9), (9, 10), # spar
+            (10, 15), # rib
+        ]
+    Note that node IDs tuples (n1, n2) have the property of n1 < n2.
+
+    Given, an arbitrary starting edge, we can search for the neighboring
+    elements and find all elements with a neighbor.  We have two cases:
+
+    Free Edge
+    =========
+    1.  If we start from edge (1, 2), so we'll start at element A1 and
+        identify the neighbors with no problems.
+
+    Common Edge
+    ===========
+    1.  If we start from edge (9, 10), we'll find D1 and D2, which jumps
+        patches.
+
+    2.  However, had we started from edge (1, 2), removed patch 1, and
+        then analyzed edge (9, 10), we'd wouldn't have jumped edges.
+
+    Solution
+    ========
+    There are two ways to handle this problem (Common Edge #1):
+
+    1.  For an asymmetrical model, you can calculate the free edges,
+        start from a free edge, and update the free edges after
+        finishing each patch.
+
+    2.  For a symmetrical model, you have to handle patch jumping by
+        only checking one of the possible edges for neighboring
+        elements.  This gets tricky because some edges lead to isolated
+        elements.  As such, you need to check to see if a valid patch was
+        created.
+
+    Note that option #2 is the general case and will probably be faster
+    than option #1 because you don't need to caculate/recalculate the
+    free edges ater each loop.
     """
-
-    # find all the edges of any patch
-    patch_edges = []
-    eids_on_edge = set([])
-    for edge, eids in iteritems(edge_to_eid_map):
-        yedge = [True for nid in edge
-                 if allclose(xyz_cid0[nid][0], 0.0)]
-
-        if len(eids) != 2 or len(yedge) > 1:
-            patch_edges.append(edge)
-            eids_on_edge.update(eids)
+    patch_edges, eids_on_edge, free_edges, free_eids = get_patch_edges(edge_to_eid_map)
     patch_edges_array = array(patch_edges, dtype='int32')
     #--------------------------
-    # we'll not get the patches
+    # we'll now get the patches
     patches = []
     patch_edge_count = len(patch_edges)
     assert patch_edge_count > 2, patch_edge_count
@@ -95,65 +179,73 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
         patch_len = 1
         # old_patch_len = 0
 
-        edges_to_check = set(eid_to_edge_map[eid0])
+        edges_to_check_all = set(eid_to_edge_map[eid0])
         i = 0
-        while len(edges_to_check):
-            print('len(edges_to_check) = %i' % len(edges_to_check))
-            if len(edges_to_check) < 5:
-                print('  edges =', edges_to_check)
+        # see docstring for an explanation of this "big giant for loop"
+        # for edge_to_check in edges_to_check_all:
+            # edges_to_check = [edge_to_check]
+        if 1:
+            # this sometimes leads to patch joining
+            edges_to_check = edges_to_check_all
 
-            edges_to_check_next = deepcopy(edges_to_check)
-            for edge in edges_to_check:
-                print('  edge =', edge)
-                edges_to_check_next.remove(edge)
-                if edge in patch_edges:
-                    print('    continuing on patch edge')
-                    continue
+            while len(edges_to_check):
+                print('len(edges_to_check) = %i' % len(edges_to_check))
+                if len(edges_to_check) < 5:
+                    print('  edges =', edges_to_check)
 
-                eids_to_check = [eid for eid in edge_to_eid_map[edge]
-                                 if eid not in used_eids]
-                print('  map = ', edge_to_eid_map[edge])
-                print('  eids_to_check[%s] = %s' % (edge, eids_to_check))
-                #print('  used_eids =', used_eids)
-                for eid in eids_to_check:
-                    if eid in used_eids:
-                        print('  eid=%s is used' % eid)
+                edges_to_check_next = deepcopy(edges_to_check)
+                for edge in edges_to_check:
+                    print('  edge =', edge)
+                    edges_to_check_next.remove(edge)
+                    if edge in patch_edges:
+                        print('    continuing on patch edge')
                         continue
-                    edgesi_to_check = eid_to_edge_map[eid]
-                    print('  edgesi_to_check[%i] = %s' % (eid, edgesi_to_check))
-                    for edgei in edgesi_to_check:
-                        #print('  edgei =', edgei)
-                        if edgei in used_edges:
-                            print('    edge=%s is used' % str(edgei))
-                            continue
-                        if edgei in patch_edges:
-                            print('    continuing on patch edge=%s' % str(edgei))
-                            continue
-                        used_edges.add(edgei)
-                        #edges_to_check_next.add(edgei)
-                        #edges_to_check_next.remove(edge)
-                        eidsi = edge_to_eid_map[edgei]
-                        for eidii in eidsi:
-                            edges_to_check_next.update(eid_to_edge_map[eidii])
-                        used_eids.update(eidsi)
-                        patch.update(eidsi)
-                        print('*    adding eids=%s' % eidsi)
-                        patch_len += 1
-                used_edges.add(edge)
-                print()
 
-            edges_to_check = edges_to_check_next
-            i += 1
-            if i == 1000:
-                raise RuntimeError('too many iterations')
-            print('len(edges_to_check) = %s' % (len(edges_to_check)))
-        if len(patch):
-            print('patch=%s; len(patch)=%s' % (patch, len(patch)))
-            new_patch_count += 1
-            patches.append(list(patch))
-        else:
-            break
-        print('*' * 80)
+                    eids_to_check = [eid for eid in edge_to_eid_map[edge]
+                                     if eid not in used_eids]
+                    print('  map = ', edge_to_eid_map[edge])
+                    print('  eids_to_check[%s] = %s' % (edge, eids_to_check))
+                    #print('  used_eids =', used_eids)
+                    for eid in eids_to_check:
+                        if eid in used_eids:
+                            print('  eid=%s is used' % eid)
+                            continue
+                        edgesi_to_check = eid_to_edge_map[eid]
+                        print('  edgesi_to_check[%i] = %s' % (eid, edgesi_to_check))
+                        for edgei in edgesi_to_check:
+                            #print('  edgei =', edgei)
+                            if edgei in used_edges:
+                                print('    edge=%s is used' % str(edgei))
+                                continue
+                            if edgei in patch_edges:
+                                print('    continuing on patch edge=%s' % str(edgei))
+                                continue
+                            used_edges.add(edgei)
+                            #edges_to_check_next.add(edgei)
+                            #edges_to_check_next.remove(edge)
+                            eidsi = edge_to_eid_map[edgei]
+                            for eidii in eidsi:
+                                edges_to_check_next.update(eid_to_edge_map[eidii])
+                            used_eids.update(eidsi)
+                            patch.update(eidsi)
+                            print('*    adding eids=%s' % eidsi)
+                            patch_len += 1
+                    used_edges.add(edge)
+                    print()
+
+                edges_to_check = edges_to_check_next
+                i += 1
+                if i == 1000:
+                    raise RuntimeError('too many iterations')
+                print('len(edges_to_check) = %s' % (len(edges_to_check)))
+
+            if len(patch):
+                print('patch=%s; len(patch)=%s' % (patch, len(patch)))
+                new_patch_count += 1
+                patches.append(list(patch))
+            else:
+                break
+            print('*' * 80)
     return patch_edges_array, eids_on_edge, patches
 
 def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
@@ -197,10 +289,24 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
     print('npatches=%s npids=%s' % (npatches, sum(counter)))
 
 
-def run(model, op2_filename, mode):
+def create_plate_buckling_models(model, op2_filename, mode):
     """
-    create the input decks for buckling
+    Create the input decks for buckling
+
+    Parameters
+    ----------
+    model : BDF()
+        a bdf object
+    op2_filename : str
+        the path to an OP2 file
+    mode : str
+        'load' : extract loads from the op2 and apply interface loads to
+            each patch and constrain a boundary node
+        'displacement' : extract displacements from the op2 and apply
+            interface displacements for each patch
     """
+    assert mode in ['load', 'displacement'], 'mode=%r' % mode
+    assert isinstance(op2_filename, string_types), 'op2_filename=%r' % op2_filename
     out = model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
     (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
     xyz_cid0 = {}
@@ -417,8 +523,8 @@ def main():
     else:
         model.load_object('model.obj')
         model.cross_reference()
-    #run(model, op2_filename, 'load')
-    run(model, op2_filename, 'displacement')
+    #create_plate_buckling_models(model, op2_filename, 'load')
+    create_plate_buckling_models(model, op2_filename, 'displacement')
 
 
 if __name__ == '__main__':

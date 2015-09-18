@@ -27,6 +27,10 @@ class BDFAttributes(object):
         return False
 
     @property
+    def subcases(self):
+        return self.case_control_deck.subcases
+
+    @property
     def nnodes(self):
         return len(self.nodes)
 

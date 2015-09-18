@@ -18,7 +18,7 @@ import traceback
 
 from numpy import unique
 
-from pyNastran.bdf.utils import _parse_pynastran_header
+from pyNastran.bdf.utils import _parse_pynastran_header, deprecated
 from pyNastran.utils import object_attributes, print_bad_path
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck,
@@ -427,11 +427,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         case_control_cards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                   'TEMP', 'TSTEPNL', 'INCLUDE'])
-        self.uniqueBulkDataCards = self.cards_to_read.difference(case_control_cards)
+        self._unique_bulk_data_cards = self.cards_to_read.difference(case_control_cards)
 
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
         self._make_card_parser()
+
+    def deprecated(self, old_name, new_name, deprecated_version):
+        """deprecates methods"""
+        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def save_object(self, obj_filename='model.obj'):
         """
@@ -475,9 +479,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
         ]
-        for key in object_attributes(self, mode="all"):
-            if key in keys_to_skip:
-                continue
+        for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
             if key.startswith('__') and key.endswith('__'):
                 continue
 
@@ -616,7 +618,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.solMethod = None
         #: the line with SOL on it, marks ???
         self.iSolLine = None
-        self.caseControlDeck = None
+        self.case_control_deck = None
 
         #: store the PARAM cards
         self.params = {}
@@ -1094,10 +1096,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
     @property
     def caseControlDeck(self):
+        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
         return self.case_control_deck
 
     @caseControlDeck.setter
     def caseControlDeck(self, value):
+        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
         self.case_control_deck = value
 
     def read_bdf(self, bdf_filename=None,
@@ -1172,9 +1176,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             sol, method, isol_line = parse_executive_control_deck(executive_control_lines)
             self.update_solution(sol, method, isol_line)
 
-            self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
-            self.caseControlDeck.solmap_toValue = self._solmap_to_value
-            self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
+            self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
+            self.case_control_deck.solmap_toValue = self._solmap_to_value
+            self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
 
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
             self._parse_cards(cards, card_count)
@@ -2310,7 +2314,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         ## TODO: why are some of these ignored?
         ignored_types2 = set([
-            'caseControlDeck', 'spcObject2', 'mpcObject2',
+            'case_control_deck', 'caseControlDeck',
+            'spcObject2', 'mpcObject2',
 
             # done
             'sol', 'loads', 'mkaeros',
@@ -2328,14 +2333,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'specialCards',
             'infilesPack'])
 
-        all_params = object_attributes(self)
-        # removing variables that are not supported
-        for attribute_name in ignored_types.union(ignored_types2):
-            try:
-                all_params.remove(attribute_name)
-                #print('removing attribute_name=%s' % attribute_name)
-            except ValueError:
-                pass
+        unsupported_types = ignored_types.union(ignored_types2)
+        all_params = object_attributes(self, keys_to_skip=unsupported_types)
 
         msg = ['---BDF Statistics---']
         # sol
