@@ -1,5 +1,5 @@
 from six.moves import range
-from struct import Struct, unpack
+from struct import Struct
 from pyNastran.op2.op2_common import OP2Common
 
 class OGS(OP2Common):
@@ -44,9 +44,10 @@ class OGS(OP2Common):
         #: Normal Specification Code
         self.normal = self.add_data_parameter(data, 'normal', 'i', 14, False)
 
+        self.fix_format_code()
         #print "dLoadID(8)=%s format_code(9)=%s num_wide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.format_code,self.num_wide,self.oCode,self.thermal)
         if not self.is_sort1():
-            raise NotImplementedError('sort2...')
+            raise NotImplementedError('OGS sort2...')
 
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics
@@ -101,7 +102,7 @@ class OGS(OP2Common):
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table27(data)
         elif self.table_code == 28:  # OGS1- grid point stresses - principal
-            assert self.table_name in [b'OGS1'],'table_name=%s table_code=%s' % (self.table_name,self.table_code)
+            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table28(data)
         #elif self.table_code == 35:  # OGS - Grid point stress discontinuities (plane strain)
             #n = self._not_implemented_or_skip(data, msg)
@@ -162,7 +163,7 @@ class OGS(OP2Common):
         nelements = len(data) // 36  # 9*4
         for i in range(nelements):
             edata = data[n:n+36]
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             (ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out
             nid = (ekey - self.device_code) // 10
             assert nid > 0, nid

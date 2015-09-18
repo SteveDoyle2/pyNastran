@@ -133,9 +133,9 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
     iSubcases = []
     failed_cases = []
-    nFailed = 0
-    nTotal = 0
-    nPassed = 0
+    nfailed = 0
+    ntotal = 0
+    npassed = 0
     t0 = time.time()
     for i, op2file in enumerate(files[nStart:nStop], nStart):  # 149
         basename = os.path.basename(op2file)
@@ -145,7 +145,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             print('file=%s\n' % op2file)
             n = '%s ' % i
             sys.stderr.write('%sfile=%s\n' % (n, op2file))
-            nTotal += 1
+            ntotal += 1
 
             is_passed = True
             is_vector_failed = []
@@ -166,9 +166,9 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             if not is_passed:
                 sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))
                 failed_cases.append(op2file)
-                nFailed += 1
+                nfailed += 1
             else:
-                nPassed += 1
+                npassed += 1
             #sys.exit('end of test...test_op2.py')
 
     if saveCases:
@@ -185,9 +185,9 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     print("dt = %s seconds = %s minutes" % (seconds, minutes))
 
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (
-        nPassed, nTotal,
-        100. * nPassed / float(nTotal),
-        nTotal - nPassed)
+        npassed, ntotal,
+        100. * npassed / float(ntotal),
+        ntotal - npassed)
     print(msg)
     sys.exit(msg)
 
@@ -317,18 +317,18 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #else:
             #is_passed = True
 
-    #except IOError: # missing file; this block should be commented
+    except IOError: # missing file; this block should be commented
         #if stopOnFailure:
             #raise
-        #is_passed = True
+        is_passed = True
     #except UnicodeDecodeError:  # this block should be commented
         #is_passed = True
     #except NotImplementedError:  # this block should be commented
         #is_passed = True
-    #except FatalError:  # this block should be commented
+    except FatalError:  # this block should be commented
         #if stopOnFailure:
             #raise
-        #is_passed = True
+        is_passed = True
     #except KeyError:  # this block should be commented
         #is_passed = True
     #except DeviceCodeError:  # this block should be commented

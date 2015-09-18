@@ -92,11 +92,12 @@ class TableArray(ScalarObject):  # displacement style table
         #print "dt=%s out=%s" %(dt,out)
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
-        msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
-        msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
         #print(msg)
         #assert node_id == 1575, msg
-        assert -1 < node_id < 1000000000, msg
+        if not (-1 < node_id < 1000000000):
+            msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
+            msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
+            raise RuntimeError(msg)
         assert isinstance(node_id, int), node_id
         #assert isinstance(node_id, int), msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
@@ -120,12 +121,13 @@ class TableArray(ScalarObject):  # displacement style table
         #print "dt=%s out=%s" %(dt,out)
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
-        print('itime=%s itotal=%s' % (self.itotal, self.itime))
-        msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
-        msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
+        #print('itime=%s itotal=%s' % (self.itotal, self.itime))
         #print(msg)
         #assert node_id == 1575, msg
-        assert -1 < node_id < 1000000000, msg
+        if not (-1 < node_id < 1000000000):
+            msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
+            msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
+            raise RuntimeError(msg)
         assert isinstance(node_id, int), node_id
         #assert isinstance(node_id, int), msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
@@ -420,9 +422,9 @@ class ComplexTableArray(TableArray):  # displacement style table
         return 'complex64'
 
     #def _write_f06_block(self, words, header, page_stamp, page_num, f, is_mag_phase):
-        #self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort2)
+        #self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f, is_mag_phase, is_sort2):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f, is_mag_phase, is_sort1):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:
@@ -434,7 +436,6 @@ class ComplexTableArray(TableArray):  # displacement style table
         if not len(header) >= 3:
             header.append('')
 
-        #is_sort1 = not is_sort2
         is_sort1 = True
         if is_sort1:
             for itime in range(self.ntimes):
@@ -710,7 +711,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None, is_sort1=True):
         msg = []
         #assert f is not None # remove
         for dt, translations in sorted(iteritems(self.translations)):
@@ -952,7 +953,7 @@ class ComplexTableObject(ScalarObject):
         self.translations[dt][node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
         self.rotations[dt][node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
-    def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort2=False):
+    def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         raise RuntimeError('is this function used???')
         #words += self.getTableMarker()
         if is_mag_phase:
@@ -988,7 +989,7 @@ class ComplexTableObject(ScalarObject):
         msg = ['']
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort2=False):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:

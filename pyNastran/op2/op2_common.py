@@ -343,7 +343,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
 
             if eid <= 0:
-                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg = 'The device code is set wrong, probably because you used:\n'
                 msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
                 msg += '  %s=%i; %s\n' % (flag, eid, str(out))
                 msg += str(self.code_information())
@@ -375,7 +375,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
 
             if eid <= 0:
-                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg = 'The device code is set wrong, probably because you used:\n'
                 msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
                 msg += '  %s=%i; %s\n' % (flag, eid, str(out))
                 msg += str(self.code_information())
@@ -445,7 +445,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
 
             if eid <= 0:
-                msg = 'THe device code is set wrong, probably because you used:\n'
+                msg = 'The device code is set wrong, probably because you used:\n'
                 msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
                 msg += '  %s=%i; %s\n' % (flag, eid, str(out))
                 msg += str(self.code_information())

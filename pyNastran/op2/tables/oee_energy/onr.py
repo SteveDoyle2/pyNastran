@@ -113,10 +113,11 @@ class ONR(OP2Common):
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
                                self.analysis_code)
 
+        self.fix_format_code()
         if self.debug:
             self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode    = %r\n' % self.tCode)
-            self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
+            self.binary_debug.write('  tCode         = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase      = %r\n' % self.isubcase)
         self._read_title(data)
         self._write_debug_bits()
 

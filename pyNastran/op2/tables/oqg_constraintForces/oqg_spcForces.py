@@ -6,7 +6,7 @@ class RealSPCForcesArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n', ]
                  #' \n',
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -20,9 +20,9 @@ class ComplexSPCForcesArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
 
 
 class RealSPCForces(RealTableObject):
@@ -30,12 +30,12 @@ class RealSPCForces(RealTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, page_stamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_sort1)
 
         msg = header + words
         for nodeID, translation in sorted(iteritems(self.translations)):

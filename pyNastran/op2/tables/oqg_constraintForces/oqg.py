@@ -108,7 +108,7 @@ class OQG(OP2Common):
             msg = 'invalid analysis_code...analysis_code=%s' % (self.analysis_code)
             raise RuntimeError(msg)
 
-        #print self.code_information()
+        self.fix_format_code()
         if self.debug:
             self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)

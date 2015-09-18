@@ -253,6 +253,7 @@ class OEF(OP2Common):
             raise RuntimeError(msg)
 
 
+        self.fix_format_code()
         try:
             self.element_name = self.element_mapper[self.element_type]
         except KeyError:
@@ -1988,7 +1989,7 @@ class OEF(OP2Common):
 
                     out = s1.unpack(edata)
                     if self.debug4():
-                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
+                        self.binary_debug.write('OEF_Force_191-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, parent, coord, icord) = out
 
                     eid = (eid_device - self.device_code) // 10

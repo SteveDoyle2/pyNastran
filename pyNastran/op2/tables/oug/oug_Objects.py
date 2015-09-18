@@ -1,7 +1,7 @@
 from six import  iteritems
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-
+from numpy import array
 
 #class staticFlux(scalarObject): # approach_code=1, table_code=3 - whatever the static version of this is...
 
@@ -25,10 +25,10 @@ class Flux(ScalarObject):  # approach_code=1, table_code=3, thermal=1
         k.sort()
         return k
 
-    def add(self, nodeID, gridType, v1, v2, v3, v4=None, v5=None, v6=None):
-        assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
-        assert nodeID not in self.fluxes
-        self.fluxes[nodeID] = array([v1, v2, v3])
+    def add(self, node_id, grid_type, v1, v2, v3, v4=None, v5=None, v6=None):
+        assert 0 < node_id < 1000000000, 'node_id=%s' % (node_id)
+        assert node_id not in self.fluxes
+        self.fluxes[node_id] = array([v1, v2, v3])
 
     def write_op2(self, block3, device_code=1):
         """
@@ -36,7 +36,7 @@ class Flux(ScalarObject):  # approach_code=1, table_code=3, thermal=1
         .. warning:: hasnt been tested...
         """
         msg = block3
-        for nodeID, flux in sorted(iteritems(self.fluxes)):
-            grid = nodeID * 10 + device_code
+        for node_id, flux in sorted(iteritems(self.fluxes)):
+            grid = node_id * 10 + device_code
             msg += pack('i6f', grid, flux[0], flux[1], flux[2], 0, 0, 0)
         return msg

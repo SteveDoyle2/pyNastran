@@ -120,7 +120,7 @@ class OPG(OP2Common):
         #print "*isubcase=%s"%(self.isubcase)
         #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
 
-        #print self.code_information()
+        self.fix_format_code()
         if self.debug:
             self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)

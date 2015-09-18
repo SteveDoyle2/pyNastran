@@ -8,11 +8,11 @@ class RealForceVectorArray(RealTableArray):  # table_code=2, sort_code=0, therma
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n']
         #words += self.get_table_marker()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, page_stamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f)
 
 
@@ -20,9 +20,9 @@ class ComplexForceVectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',]
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1=is_sort1)
 
 
 class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
@@ -30,9 +30,9 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1)
 
         msg = header + ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                         ' \n',
@@ -53,7 +53,7 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg = []
         words = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                  ' \n',
@@ -86,9 +86,9 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=is_sort1)
         msg = header + ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -124,7 +124,7 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',

@@ -12,7 +12,7 @@ class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if 0:
             msg += header
             freq = self.eigrs[i]
@@ -26,7 +26,7 @@ class ComplexEigenvectorArray(ComplexTableArray):
 
         words = ['                                         C O M P L E X   E I G E N V E C T O R   N O . ???\n \n']
         #words += self.get_table_marker()
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
 
 class RealEigenvectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt, f06_flag=False):
@@ -95,7 +95,7 @@ class RealEigenvectorArray(RealTableArray):
             datai.append([t1, t2, t3, r1, r2, r3])
         assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         #if self.nonlinear_factor is not None:
             #return self._write_f06_transient(header, page_stamp, page_num, f)
         # modes get added
