@@ -63,13 +63,16 @@ def print_bad_path(path):
     return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
 
 
-def __object_attr(obj, mode, attr_type):
+def __object_attr(obj, mode, keys_to_skip, attr_type):
     """list object attributes of a given type"""
-    test = {"public":  lambda k: not k.startswith('_'),
-            "private": lambda k: (k.startswith('_') and not k.startswith('__')),
-            "both": lambda k: not k.startswith('__'),
-            "all":  lambda k: True
-            }
+
+    keys_to_skip = [] if keys_to_skip is None else keys_to_skip
+    test = {
+        "public":  lambda k: (not k.startswith('_') and k not in keys_to_skip),
+        "private": lambda k: (k.startswith('_') and not k.startswith('__') and k not in keys_to_skip),
+        "both": lambda k: (not k.startswith('__') and k not in keys_to_skip),
+        "all":  lambda k: (k not in keys_to_skip),
+    }
 
     if not mode in test:
         print("Wrong mode! Accepted modes: public, private, both, all.")
@@ -78,6 +81,8 @@ def __object_attr(obj, mode, attr_type):
 
     out = []
     for k in dir(obj):
+        # if k in keys_to_skip:
+            # continue
         if check(k) and attr_type(getattr(obj, k)):
             out.append(k)
     out.sort()
@@ -86,7 +91,7 @@ def __object_attr(obj, mode, attr_type):
     #                                           attr_type(getattr(obj, k)))])
 
 
-def object_methods(obj, mode = "public"):
+def object_methods(obj, mode = "public", keys_to_skip=None):
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
@@ -101,6 +106,8 @@ def object_methods(obj, mode = "public"):
         * "private" - names that begin with single underscore
         * "both" - private and public
         * "all" - all methods that are defined for the object
+    keys_to_skip : List[str]; default=None -> []
+        names to not consider to avoid deprecation warnings
 
     Returns
     -------
@@ -108,10 +115,10 @@ def object_methods(obj, mode = "public"):
         sorted list of the names of methods of a given type
         or None if the mode is wrong
     """
-    return __object_attr(obj, mode, lambda x: isinstance(x, MethodType))
+    return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
 
-def object_attributes(obj, mode="public"):
+def object_attributes(obj, mode="public", keys_to_skip=None):
     """
     List the names of attributes of a class as strings. Returns public attributes
     as default.
@@ -133,7 +140,7 @@ def object_attributes(obj, mode="public"):
         sorted list of the names of attributes of a given type or None
         if the mode is wrong
     """
-    return __object_attr(obj, mode, lambda x: not isinstance(x, MethodType))
+    return __object_attr(obj, mode, keys_to_skip, lambda x: not isinstance(x, MethodType))
 
 
 def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=False):
@@ -164,12 +171,12 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
             key = '%s' % name
         else:
             key = "'%s'" % name
-    elif isinstance(name, unicode):
-        if isClass:
-            key = u'%s' % name
-        else:
-            key = "u'%s'" % name
-    elif isinstance(name, int) or isinstance(name, float) or isinstance(name, tuple) or name is None:
+    # elif isinstance(name, unicode):
+        # if isClass:
+            # key = u'%s' % name
+        # else:
+            # key = "u'%s'" % name
+    elif isinstance(name, (int, float, tuple)) or name is None:
         key = "%s" % str(name)
     else:
         raise RuntimeError('key=%s is not a string.  Type=%s' % (name, type(name)))
@@ -178,7 +185,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
         print("name=%s type=%s" % (name, type(obj)))
 
     # write the object
-    if isinstance(obj, int) or isinstance(obj, float) or obj is None:
+    if isinstance(obj, (int, float)) or obj is None:
         xml += '<name=%s value=%s type=%s>' % (name, obj, type(obj))
         msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))
     elif is_string(obj):
@@ -186,7 +193,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
 
     elif isinstance(obj, dict):
         msg += write_dict(obj, nspaces, nbase, isClass) + ',\n'
-    elif isinstance(obj, tuple) or isinstance(obj, list):
+    elif isinstance(obj, (tuple, list)):
         msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))
 
     elif isinstance(obj, ndarray):

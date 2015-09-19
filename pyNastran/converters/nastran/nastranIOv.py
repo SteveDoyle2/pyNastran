@@ -1506,7 +1506,7 @@ class NastranIO(object):
         """
         assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
         try:
-            sucaseIDs = model.caseControlDeck.get_subcase_list()
+            sucaseIDs = model.case_control_deck.get_subcase_list()
         except AttributeError:
             return icase
 
@@ -1515,7 +1515,7 @@ class NastranIO(object):
             if subcase_id == 0:
                 continue
             try:
-                load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
+                load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
             except KeyError:
                 continue
             try:
@@ -1575,7 +1575,7 @@ class NastranIO(object):
     def _plot_applied_loads(self, model, cases, form0, icase):
         print('_plot_applied_loads')
         try:
-            sucase_ids = model.caseControlDeck.get_subcase_list()
+            sucase_ids = model.case_control_deck.get_subcase_list()
         except AttributeError:
             print('no subcases....')
             return icase
@@ -1585,7 +1585,7 @@ class NastranIO(object):
                 continue
 
             try:
-                load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
+                load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
             except KeyError:
                 print('no load for isubcase=%s' % subcase_id)
                 continue

@@ -704,6 +704,9 @@ class Op2Codes(object):
 
         return msg
 
+    def approach_code_str(self, approach_code):
+        return ''
+
     def code_information(self):
         """
         prints the general table information

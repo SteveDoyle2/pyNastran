@@ -23,6 +23,8 @@ class TestReadWrite(unittest.TestCase):
         model.read_bdf(bdf_name)
         model.write_bdf(os.path.join(test_path, 'test_mass1a.out'), size=8)
         model.write_bdf(os.path.join(test_path, 'test_mass2a.out'), size=8)
+        msg = model.get_bdf_stats(return_type='list')
+        # print('\n'.join(msg))
 
         model.write_bdf(os.path.join(test_path, 'test_mass1b.out'), size=8, interspersed=False)
         model.write_bdf(os.path.join(test_path, 'test_mass2b.out'), size=8, interspersed=True)

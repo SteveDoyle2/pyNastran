@@ -260,7 +260,7 @@ class WriteMesh(object):
         """
         if self.punch is None:
             # writing a mesh without using read_bdf
-            if self.executive_control_lines or self.caseControlDeck:
+            if self.executive_control_lines or self.case_control_deck:
                 self.punch = True
             else:
                 self.punch = False
@@ -300,9 +300,9 @@ class WriteMesh(object):
 
         :param self: the BDF object
         """
-        if self.caseControlDeck:
+        if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
-            msg += str(self.caseControlDeck)
+            msg += str(self.case_control_deck)
             assert 'BEGIN BULK' in msg, msg
             outfile.write(''.join(msg))
 

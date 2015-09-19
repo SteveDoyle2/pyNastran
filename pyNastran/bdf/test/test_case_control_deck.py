@@ -68,22 +68,22 @@ class CaseControlTest(unittest.TestCase):
 
         mesh = BDF(debug=False, log=None)
         mesh.read_bdf(bdf_filename, xref=True)
-        str(mesh.caseControlDeck)
+        str(mesh.case_control_deck)
 
-        mesh.caseControlDeck.create_new_subcase(1)
+        mesh.case_control_deck.create_new_subcase(1)
 
         #with self.assertRaises(AssertionError):
-        str(mesh.caseControlDeck)
-        subcase1 = mesh.caseControlDeck.subcases[1]
+        str(mesh.case_control_deck)
+        subcase1 = mesh.case_control_deck.subcases[1]
         str(subcase1)
 
-        mesh.caseControlDeck.add_parameter_to_local_subcase(1, 'LOAD=1')
-        str(mesh.caseControlDeck)
+        mesh.case_control_deck.add_parameter_to_local_subcase(1, 'LOAD=1')
+        str(mesh.case_control_deck)
 
-        mesh.caseControlDeck.create_new_subcase(2)
-        mesh.caseControlDeck.add_parameter_to_local_subcase(2, 'LOAD=2')
+        mesh.case_control_deck.create_new_subcase(2)
+        mesh.case_control_deck.add_parameter_to_local_subcase(2, 'LOAD=2')
         mesh.write_bdf(bdf_filename2)
-        #print("---cc 3---\n%s" % str(mesh.caseControlDeck))
+        #print("---cc 3---\n%s" % str(mesh.case_control_deck))
 
         f = open(bdf_filename2, 'r')
         lines = f.readlines()

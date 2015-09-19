@@ -79,6 +79,7 @@ setup(name='pyNastran',
 
                             'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',
                             'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
+                            'tecplot360_to_tecplot = pyNastran.converters.dev.tecplot.tecplot360_to_tecplot:main',
                            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
                            ] + py2_gui_scripts
       },
