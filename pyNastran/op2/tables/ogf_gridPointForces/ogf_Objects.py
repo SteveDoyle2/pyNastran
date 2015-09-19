@@ -112,9 +112,9 @@ class RealGridPointForces(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                         ' \n',
@@ -141,7 +141,8 @@ class RealGridPointForces(ScalarObject):
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
+                             is_mag_phase=False, is_sort1=True):
         msg_pack = ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                     ' \n',
                     '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n', ]

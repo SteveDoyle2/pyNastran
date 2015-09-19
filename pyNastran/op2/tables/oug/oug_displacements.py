@@ -1,5 +1,6 @@
+from __future__ import print_function
 from six import iteritems, string_types
-from struct import pack, Struct
+from struct import pack
 
 
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
@@ -46,9 +47,12 @@ class RealDisplacementArray(RealTableArray):
                  #' \n',
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()
+        write_words = True
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_sort1)
-        return self._write_f06_block(words, header, page_stamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, write_words,
+                                                   is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
+                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
 
 class ComplexDisplacementArray(ComplexTableArray):
@@ -57,7 +61,8 @@ class ComplexDisplacementArray(ComplexTableArray):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f,
+                                               is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
 
 class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
@@ -71,8 +76,10 @@ class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
         words += self.get_table_marker()
 
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, page_stamp, page_num, f)
-        return self._write_f06_block(words, header, page_stamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f,
+                                                   is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        return self._write_f06_block(words, header, page_stamp, page_num, f,
+                                     is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
     def _write_table_3(self, f, fascii, itable):
         aCode = 1
@@ -143,7 +150,7 @@ class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
             if grid_type == 'G':
                 grid_type = 1
             else:
-                raise RuntimeError(gridType)
+                raise RuntimeError(grid_type)
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -158,4 +165,5 @@ class ComplexDisplacement(ComplexTableObject):  # approach_code=1, sort_code=0, 
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f,
+                                               is_mag_phase=is_mag_phase, is_sort1=is_sort1)

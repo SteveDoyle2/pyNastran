@@ -109,12 +109,12 @@ class ComplexRodStress(StressObject):
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         raise RuntimeError('this should never happen')
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.element_type == 1:
             element_header = '                           C O M P L E X   S T R E S S E S   I N   R O D   E L E M E N T S   ( C R O D )\n'
         elif self.element_type == 3:
@@ -245,12 +245,12 @@ class ComplexRodStrain(StrainObject):
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.dt is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         raise RuntimeError('this should never happen')
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.element_type == 1:
             element_header = '                           C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C R O D )\n'
         elif self.element_type == 3:

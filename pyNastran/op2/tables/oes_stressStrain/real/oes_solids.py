@@ -163,7 +163,8 @@ class RealSolidArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None,
+                  is_mag_phase=False, is_sort1=True):
         nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
 
         # write the f06
@@ -852,10 +853,12 @@ class RealSolidStress(StressObject):
         (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None,
+                  is_mag_phase=False, is_sort1=True):
         assert f is not None
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f,
+                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
         eids = self.oxx.keys()
@@ -873,7 +876,8 @@ class RealSolidStress(StressObject):
         f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num, f):
+    def _write_f06_transient(self, header, page_stamp, page_num, f,
+                             is_mag_phase=False, is_sort1=True):
         tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
 
         itime = 0
@@ -1357,10 +1361,11 @@ class RealSolidStrain(StrainObject):
         (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         assert f is not None
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f,
+                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
         eids = sorted(self.exx.keys())
@@ -1378,7 +1383,8 @@ class RealSolidStrain(StrainObject):
         f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
+                             is_mag_phase=False, is_sort1=True):
         tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
         itime = 0
         ntimes = len(self.exx)

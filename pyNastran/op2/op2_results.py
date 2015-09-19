@@ -257,8 +257,8 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
                 [ 0., oyy],
             ])
             eigs2 = eigvalsh(A2, UPLO='U')
-            maxP2 = eigs2.max()
-            minP2 = eigs2.min()
+            #maxP2 = eigs2.max()
+            #minP2 = eigs2.min()
 
             results['vonMises'][nid] = vonMises3D(*eigs)
             results['vonMises2D'][nid] = vonMises2D(*eigs2)

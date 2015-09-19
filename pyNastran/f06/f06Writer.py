@@ -340,7 +340,7 @@ class F06Writer(OP2_F06_Common):
             f06.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def write_f06(self, f06_outname, is_mag_phase=False, is_sort2=False,
+    def write_f06(self, f06_outname, is_mag_phase=False, is_sort1=True,
                   delete_objects=True, end_flag=False):
         """
         Writes an F06 file based on the data we have stored in the object
@@ -355,8 +355,8 @@ class F06Writer(OP2_F06_Common):
             should complex data be written using Magnitude/Phase
             instead of Real/Imaginary
             Real objects don't use this parameter
-        is_sort2 : bool; default=False
-            writes output in SORT2 format if the output is transient;
+        is_sort1 : bool; default=True
+            writes output in SORT1 format if the output is transient;
             ignored for static analyses
         delete_objects : bool; default=True
             should objects be deleted after they're written to reduce memory
@@ -406,7 +406,7 @@ class F06Writer(OP2_F06_Common):
         # has a special header
         iSubcases = sorted(self.iSubcaseNameMap.keys())
 
-        # superelement version...need the nominal...
+        # TODO: superelement version...need the nominal...
         res_keys = []
         for isubcase, res_keysi in iteritems(self.subcase_key):
             assert isinstance(res_keysi, list), res_keysi
@@ -449,7 +449,7 @@ class F06Writer(OP2_F06_Common):
                 print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle))
 
             self.page_num = result.write_f06(header, page_stamp,
-                                             self.page_num, f=f06, is_mag_phase=is_mag_phase)
+                                             self.page_num, f=f06, is_mag_phase=is_mag_phase, is_sort1=True)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
             if delete_objects:
                 del result
@@ -690,7 +690,8 @@ class F06Writer(OP2_F06_Common):
                             print(star + res_format % (result.__class__.__name__, isubcase, element_name))
                         else:
                             print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
-                        self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=is_mag_phase)
+                        self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num,
+                                                         f=f06, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                     except:
                         #print("result name = %r" % result.name())

@@ -4,7 +4,6 @@ from six import  iteritems
 from six.moves import range
 import copy
 from struct import pack
-import inspect
 
 
 from pyNastran import is_release
@@ -17,18 +16,26 @@ class BaseScalarObject(Op2Codes):
         Op2Codes.__init__(self)
         self.is_built = False
 
+        # init value
+        #  None - static
+        #  int/float - transient/freq/load step/eigenvalue
+        self.nonlinear_factor = None
+        self.format_code = None
+        self.sort_code = None
+
+
     def name(self):
         return self.__class__.__name__
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num=page_num, f=f, is_mag_phase=is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num=page_num, f=f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         msg = 'write_f06 is not implemented in %s\n' % self.__class__.__name__
         f.write(msg)
         print(msg[:-1])
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg = '_write_f06_transient is not implemented in %s\n' % self.__class__.__name__
         f.write(msg)
         print(msg[:-1])

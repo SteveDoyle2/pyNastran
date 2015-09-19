@@ -12,6 +12,8 @@ from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenv
 
 class RealRodForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -135,7 +137,7 @@ class RealRodForceArray(ScalarObject):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
@@ -179,6 +181,8 @@ class RealRodForceArray(ScalarObject):
 
 class RealRodForce(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
 
         self.axialForce = {}
@@ -254,7 +258,7 @@ class RealRodForce(ScalarObject):
             self.torque[dt][eid] = torsion
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
-                            is_mag_phase=False):
+                            is_mag_phase=False, is_sort1=True):
         msg = []
         itime = 0
         ntimes = len(self.axialForce)
@@ -319,48 +323,56 @@ class RealRodForce(ScalarObject):
 
 class RealCRodForce(RealRodForce):  # 1-CROD
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         RealRodForce.__init__(self, data_code, is_sort1, isubcase, dt)
         self.elementType = 'CROD'
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                           '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
                           '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(words, page_stamp, page_num, f)
+            return self._write_f06_transient(words, page_stamp, page_num, f, is_mag_phase, is_sort1)
         return self._write_f06(words, page_stamp, page_num, f)
 
 
 class RealCTubeForce(RealRodForce):  # 3-TUBE
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         RealRodForce.__init__(self, data_code, is_sort1, isubcase, dt)
         self.elementType = 'CTUBE'
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = header + ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n',
                           '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
                           '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(words, page_stamp, page_num, f)
+            return self._write_f06_transient(words, page_stamp, page_num, f, is_mag_phase, is_sort1)
         return self._write_f06(words, page_stamp, page_num, f)
 
 
 class RealConrodForce(RealRodForce):  # 10-CONROD
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         RealRodForce.__init__(self, data_code, is_sort1, isubcase, dt)
         self.elementType = 'CONROD'
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = header + ['                                           F O R C E S   I N   R O D   E L E M E N T S     ( C O N R O D )\n',
                           '       ELEMENT           AXIAL                                     ELEMENT           AXIAL\n',
                           '         ID.             FORCE          TORQUE                       ID.             FORCE          TORQUE\n']
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(words, page_stamp, page_num, f)
+            return self._write_f06_transient(words, page_stamp, page_num, f, is_mag_phase, is_sort1)
         return self._write_f06(words, page_stamp, page_num, f)
 
 
 class RealCBeamForce(ScalarObject):  # 2-CBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.nodes = {}
         self.bendingMoment = {}
@@ -482,7 +494,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         self.totalTorque[dt][eid] = {sd: ttrq}
         self.warpingTorque[dt][eid] = {sd: wtrq}
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                  '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
@@ -514,9 +526,9 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
             page_num += 1
         return page_num - 1
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         msg = header + ['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                         '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
@@ -540,6 +552,8 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
 
 class RealCShearForce(ScalarObject):  # 4-CSHEAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.force41 = {}
         self.force14 = {}
@@ -690,12 +704,9 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
         self.shear34[dt][eid] = s34
         self.shear41[dt][eid] = s41
 
-    #def self._write_f06_transient(header, page_stamp, page_num, f):
-        #return page_num - 1
-
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         words = [
             '                           F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)\n'
@@ -749,6 +760,8 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
 
 class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.force = {}
 
@@ -806,7 +819,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
             self.add_new_transient(dt)
         self.force[dt][eid] = force
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                  '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
                  '        ID.                              ID.                              ID.                              ID.\n',
@@ -838,9 +851,9 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
         return page_num - 1
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
         msg = header + ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                         '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
@@ -854,6 +867,8 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
 class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.force = {}
 
@@ -900,7 +915,7 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
             self.add_new_transient(dt)
         self.force[dt][eid] = force
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                  ' \n',
                  '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
@@ -931,9 +946,9 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
 
         return page_num - 1
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
         msg = header + ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                         ' \n',
                         '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
@@ -960,6 +975,8 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
 
 class RealViscForce(ScalarObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.axialForce = {}
         self.torque = {}
@@ -1014,6 +1031,8 @@ class RealViscForce(ScalarObject):  # 24-CVISC
 
 class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.mx = {}
         self.my = {}
@@ -1102,11 +1121,11 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
             f.write('%s._write_f06_transient is not implemented\n' % self.__class__.__name__)
             return page_num
-            #return self._write_f06_transient(header, page_stamp, page_num, f)
+            #return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         words = [
             '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
@@ -1137,6 +1156,8 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 
 class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
 
         self.dt = dt
@@ -1269,7 +1290,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
@@ -1321,6 +1342,8 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 
 class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.term = {}
         self.ngrids = {}
@@ -1489,9 +1512,9 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=is_sort1)
 
         words = header + [
             '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n'
@@ -1529,6 +1552,8 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
 class RealCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.bendingMomentA = {}
         self.bendingMomentB = {}
@@ -1598,9 +1623,9 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         self.torque[dt][eid] = trq
 
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=is_sort1)
 
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -1622,7 +1647,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
             f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num, f, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=True):
         assert f is not None
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -1648,6 +1673,8 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
 
 class RealCBarForceArray(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -1773,7 +1800,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             #msg = ctube_msg
         #return self.element_name, msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
@@ -1807,6 +1834,8 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
 
 class RealCBar100Force(ScalarObject):  # 100-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.bendingMoment = {}
         self.shear = {}
@@ -1871,6 +1900,8 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
 
 class RealConeAxForce(ScalarObject):  # 35-CCONEAX
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.hopa = {}
         self.bmu = {}
@@ -1945,6 +1976,8 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
 
 class RealCGapForce(ScalarObject):  # 38-CGAP
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.fx = {}
         self.sfy = {}
@@ -2029,6 +2062,8 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
 
 class RealBendForce(ScalarObject):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.nodeIDs = {}
         self.bendingMoment1 = {}
@@ -2110,6 +2145,8 @@ class RealBendForce(ScalarObject):  # 69-CBEND
 
 class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.acceleration = {}
         self.velocity = {}
@@ -2132,7 +2169,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
-            nelements = len(self.force)
+            nelements = len(self.acceleration)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  acceleration, velocity, pressure\n')
@@ -2166,17 +2203,17 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         #words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
         #         ' \n',
         #         '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
         f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
         #raise NotImplementedError()
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
                  ' \n',
                  '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
@@ -2202,6 +2239,8 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
 
 class RealCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.force = {}
         self.moment = {}
@@ -2256,6 +2295,8 @@ class RealCBushForce(ScalarObject):  # 102-CBUSH
 
 class RealForce_VU(ScalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.parent = {}
         self.coord = {}
@@ -2375,6 +2416,8 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
 
 class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
         self.parent = {}
         self.coord = {}

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import iteritems
 from six.moves import zip, range
 from numpy import zeros, searchsorted, unique, ravel
 
@@ -166,7 +166,7 @@ class RealCompositePlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         #msg, nnodes, is_bilinear = self._get_msgs()
         if self.is_von_mises():
             von = 'VON'
@@ -549,9 +549,10 @@ class RealCompositePlateStress(StressObject):
         msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
         raise NotImplementedError(msg)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f,
+                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         if self.is_von_mises():
             von = 'VON'
@@ -601,8 +602,8 @@ class RealCompositePlateStress(StressObject):
         f.write(''.join(cquad4_msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp,
-                             page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
+                             is_mag_phase=False, is_sort1=True):
         if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
@@ -851,9 +852,10 @@ class RealCompositePlateStrain(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f,
+                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         if self.is_von_mises():
             von = 'VON'
@@ -967,7 +969,8 @@ class RealCompositePlateStrain(StrainObject):
         msg = 'element_type=%s element_number=%s' % (etype, self.element_type)
         raise NotImplementedError(msg)
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
+                             is_mag_phase=False, is_sort1=True):
         if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'

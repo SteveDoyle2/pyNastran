@@ -6,8 +6,7 @@ import sys
 import copy
 from datetime import date
 from collections import defaultdict
-from struct import Struct, pack
-import warnings
+from struct import pack
 
 import pyNastran
 from pyNastran.op2.op2_f06_common import OP2_F06_Common

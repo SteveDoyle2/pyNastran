@@ -97,7 +97,7 @@ class RealEigenvectorArray(RealTableArray):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         #if self.nonlinear_factor is not None:
-            #return self._write_f06_transient(header, page_stamp, page_num, f)
+            #return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         # modes get added
         words = '                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' \
                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n'
@@ -157,7 +157,7 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
         #assert mode>=0.
         self.gridTypes = {}
         self.translations = {imode: {}}
-        self.rotations    = {imode: {}}
+        self.rotations = {imode: {}}
 
     def read_f06_data(self, data_code, data):
         """
@@ -209,7 +209,7 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         """
         ::
 
@@ -332,7 +332,7 @@ class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         """
         ::
 
@@ -435,7 +435,7 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
         assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
         assert self.eigis[-1] == data_code['eigi'], 'eigis=%s\ndata_code[eigis]=%s' %(self.eigis, data_code['eigi'])
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg = []
         #print self.data_code
         hasCycle = hasattr(self, 'mode_cycle')

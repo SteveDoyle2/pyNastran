@@ -125,8 +125,8 @@ class ComplexPlateArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase)
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
@@ -214,7 +214,7 @@ class ComplexPlateArray(OES_Object):
                 f.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % ('', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
-def _get_plate_msg(self, is_mag_phase=True):
+def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
     if self.is_von_mises():
         von_mises = 'VON MISES'
     else:
@@ -508,16 +508,16 @@ class ComplexPlateStress(StressObject):
         headers += ['oxx', 'oyy', 'txy']
         return headers
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         assert f is not None
         if len(self.eType) == 0:
             raise RuntimeError('The result object is empty')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         raise RuntimeError('this can never happen')
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        msg_pack, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase)
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_pack, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
 
         msg = []
         dts = list(self.oxx.keys())
@@ -851,16 +851,16 @@ class ComplexPlateStrain(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         assert f is not None
         if len(self.eType) == 0:
             raise RuntimeError('The result object is empty')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         raise RuntimeError('this can never happen')
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        msg_pack, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase)
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_pack, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
 
         msg = []
         dts = list(self.exx.keys())

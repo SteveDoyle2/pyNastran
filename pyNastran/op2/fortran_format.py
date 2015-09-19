@@ -18,6 +18,8 @@ class FortranFormat(object):
         self.data_code = None
         self.table_name = None
         self.isubcase = None
+        self.binary_debug = None
+        self.read_mode = None
         self._endian = None
         self._table_mapper = {}
 
@@ -281,6 +283,9 @@ class FortranFormat(object):
         # we've finished reading all subtables, but have one last marker to read
         self.read_markers([0])
         self.finish()
+
+    def _finish(self):
+        raise NotImplementedError('overwrite this')
 
     def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
         # this is the length of the current record inside table3/table4

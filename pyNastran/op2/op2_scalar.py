@@ -210,10 +210,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Initializes the OP2_Scalar object
 
-        :param debug: enables the debug log and sets the debug in the logger (default=False)
-        :param log: a logging object to write debug messages to
+        Parameters
+        ----------
+        debug : bool; default=False
+            enables the debug log and sets the debug in the logger
+        log : Log()
+            a logging object to write debug messages to
          (.. seealso:: import logging)
-        :param debug_file: sets the filename that will be written to (default=None -> no debug)
+        debug_file : str; default=None (No debug)
+            sets the filename that will be written to
         """
         assert isinstance(debug, bool), 'debug=%r' % debug
 

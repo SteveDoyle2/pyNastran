@@ -172,7 +172,7 @@ class RealPlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg, nnodes, cen = _get_plate_msg(self)
 
         # write the f06
@@ -725,9 +725,9 @@ class RealPlateStress(StressObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg_pack, nnodes, cen = _get_plate_msg(self)
 
@@ -749,7 +749,7 @@ class RealPlateStress(StressObject):
         msg = ['']
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg_pack, nnodes, cen = _get_plate_msg(self)
 
         dts = list(self.oxx.keys())
@@ -1250,9 +1250,9 @@ class RealPlateStrain(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg_pack, nnodes, cen = _get_plate_msg(self)
 
@@ -1275,7 +1275,7 @@ class RealPlateStrain(StrainObject):
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg_pack, nnodes, cen = _get_plate_msg(self)
 
         dts = list(self.exx.keys())

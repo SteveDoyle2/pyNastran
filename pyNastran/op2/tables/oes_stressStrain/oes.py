@@ -179,11 +179,11 @@ class OES(OP2Common):
         """
         Nastran correctly calculates the proper defaults for the analysis
         based on the solution type and the the user's requests.  However,
-        the user doesn't always set the values correctly, so when Nastran
+        the user doesn't always set the values correctly.  When Nastran
         goes to write the output, it uses the original values, rather
         than the correct values that were used for analysis.
 
-        In the SOL 101 case:
+        In a SOL 101 case:
             STRESS(PLOT, SORT1, IMAG) = ALL
 
         the user has set an incorrect value (IMAG), which gets turned into

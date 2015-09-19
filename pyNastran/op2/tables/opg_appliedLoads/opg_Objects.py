@@ -74,7 +74,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                      APPLIED LOADS VECTOR\n',
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']
@@ -111,7 +111,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                      APPLIED LOADS VECTOR\n',
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']

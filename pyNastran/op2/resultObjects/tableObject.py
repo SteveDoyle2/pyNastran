@@ -296,7 +296,8 @@ class RealTableArray(TableArray):  # displacement style table
         f.write(pack(b'%ii' % len(header), *header))
         return itable
 
-    def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words=True):
+    def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words,
+                         is_mag_phase=False, is_sort1=True):
         if write_words:
             words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
@@ -319,7 +320,8 @@ class RealTableArray(TableArray):  # displacement style table
         f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f, write_words=True):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f, write_words,
+                                   is_mag_phase=False, is_sort1=True):
         if write_words:
             words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
@@ -327,40 +329,74 @@ class RealTableArray(TableArray):  # displacement style table
         if not len(header) >= 3:
             header.append('')
 
-        node = self.node_gridtype[:, 0]
-        gridtype = self.node_gridtype[:, 1]
-        for itime in range(self.ntimes):
-            dt = self._times[itime]
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
+        if is_sort1 or self.nonlinear_factor is None:
+            node = self.node_gridtype[:, 0]
+            gridtype = self.node_gridtype[:, 1]
+            for itime in range(self.ntimes):
+                dt = self._times[itime]
+                t1 = self.data[itime, :, 0]
+                t2 = self.data[itime, :, 1]
+                t3 = self.data[itime, :, 2]
+                r1 = self.data[itime, :, 3]
+                r2 = self.data[itime, :, 4]
+                r3 = self.data[itime, :, 5]
 
-            if isinstance(dt, (float, float32)):
-                header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            else:
-                header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
-                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
-                (dx, dy, dz, rx, ry, rz) = vals2
-                if sgridtype == 'G':
-                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype == 'S':
-                    f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
-                elif sgridtype == 'H':
-                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype == 'L':
-                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                if isinstance(dt, (float, float32)):
+                    header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:
-                    raise NotImplementedError(sgridtype)
+                    header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
+                f.write(''.join(header + words))
+                for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
+                    sgridtype = self.recast_gridtype_as_string(gridtypei)
+                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    (dx, dy, dz, rx, ry, rz) = vals2
+                    if sgridtype == 'G':
+                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                    elif sgridtype == 'S':
+                        f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
+                    elif sgridtype == 'H':
+                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                    elif sgridtype == 'L':
+                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                    else:
+                        raise NotImplementedError(sgridtype)
+                f.write(page_stamp % page_num)
+                page_num += 1
+        else:
+            node = self.node_gridtype[:, 0]
+            gridtype = self.node_gridtype[:, 1]
+            times = self._times
+            for inode, (nid, gridtypei) in enumerate(zip(node, gridtype)):
+                t1 = self.data[itime, :, 0]
+                t2 = self.data[itime, :, 1]
+                t3 = self.data[itime, :, 2]
+                r1 = self.data[itime, :, 3]
+                r2 = self.data[itime, :, 4]
+                r3 = self.data[itime, :, 5]
 
-            f.write(page_stamp % page_num)
-            page_num += 1
+                if isinstance(dt, (float, float32)):
+                    header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                else:
+                    header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
+                f.write(''.join(header + words))
+                for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
+                    sgridtype = self.recast_gridtype_as_string(gridtypei)
+                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    (dx, dy, dz, rx, ry, rz) = vals2
+                    if sgridtype == 'G':
+                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                    elif sgridtype == 'S':
+                        f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
+                    elif sgridtype == 'H':
+                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                    elif sgridtype == 'L':
+                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                    else:
+                        raise NotImplementedError(sgridtype)
+                f.write(page_stamp % page_num)
+                page_num += 1
         return page_num - 1
 
     def extract_xyplot(self, node_ids, index):
@@ -424,7 +460,8 @@ class ComplexTableArray(TableArray):  # displacement style table
     #def _write_f06_block(self, words, header, page_stamp, page_num, f, is_mag_phase):
         #self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f, is_mag_phase, is_sort1):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f,
+                                   is_mag_phase, is_sort1):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:
@@ -680,7 +717,8 @@ class RealTableObject(ScalarObject):  # displacement style table
             #    rotations2[node_id]    = rotation
         return (translations2, rotations2)
 
-    def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None):
+    def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None,
+                         is_mag_phase=False, is_sort1=True):
         msg = words
         #assert f is not None # remove
         for node_id, translation in sorted(iteritems(self.translations)):
@@ -711,7 +749,8 @@ class RealTableObject(ScalarObject):  # displacement style table
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None, is_sort1=True):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None,
+                                   is_mag_phase=False, is_sort1=True):
         msg = []
         #assert f is not None # remove
         for dt, translations in sorted(iteritems(self.translations)):
@@ -989,7 +1028,8 @@ class ComplexTableObject(ScalarObject):
         msg = ['']
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None,
+                                   is_mag_phase=False, is_sort1=True):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:

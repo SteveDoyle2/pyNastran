@@ -193,7 +193,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
-            write_f06=True, write_op2=False, is_mag_phase=False, is_sort2=False,
+            write_f06=True, write_op2=False, is_mag_phase=False, is_sort1=True,
             is_vector=False, delete_f06=False,
             iSubcases=None, exclude=None, debug=False, binary_debug=False, stopOnFailure=True):
     op2 = None
@@ -268,7 +268,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase, is_sort2=is_sort2)
+            op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase, is_sort1=is_sort1)
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.f06')
@@ -394,7 +394,7 @@ def main():
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
     msg += "  -s <sub>, --subcase  Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -t, --vector         Vectorizes the results (default=False)\n"
-    msg += "  -w, --is_sort2       Switches F06 transient output to SORT2 (default=False)\n"
+    msg += "  -w, --is_sort1       Sets the F06 transient to SORT1 (default=True)\n"
     msg += "  -x <arg>, --exclude  Exclude specific results\n"
     msg += "  -h, --help           Show this help message and exit\n"
     msg += "  -v, --version        Show program's version number and exit\n"
@@ -430,7 +430,7 @@ def main():
             exclude=data['--exclude'],
             debug=not(data['--quiet']),
             binary_debug=data['--binarydebug'],
-            is_sort2=data['--is_sort2'],)
+            is_sort1=data['--is_sort1'],)
     print("dt = %f" % (time.time() - t0))
 
 if __name__ == '__main__':  # op2

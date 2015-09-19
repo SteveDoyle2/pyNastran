@@ -176,8 +176,8 @@ class ComplexSolidArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        msg_temp, nnodes = get_f06_header(self, is_mag_phase)
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
         # write the f06
         ntimes = self.data.shape[0]
@@ -231,7 +231,7 @@ class ComplexSolidStressArray(ComplexSolidArray, StressObject):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
         return headers
 
-def _get_msgs(self, is_mag_phase):
+def _get_msgs(self, is_mag_phase, is_sort1):
     if is_mag_phase:
         mag_phase = '                                                          (MAGNITUDE/PHASE)'
     else:
@@ -262,8 +262,8 @@ def _get_msgs(self, is_mag_phase):
     return tetra_msg, penta_msg, hexa_msg
 
 
-def get_f06_header(self, is_mag_phase=True):
-    tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase)
+def get_f06_header(self, is_mag_phase=True, is_sort1=True):
+    tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase, is_sort1)
 
     if self.element_type == 39:  # CTETRA
         return tetra_msg, 4
@@ -481,8 +481,8 @@ class ComplexSolidStress(StressObject):
         (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase)
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase, is_sort1)
         dts = list(self.oxx.keys())
         dts.sort()
         dt0 = dts[0]
@@ -655,8 +655,8 @@ class ComplexSolidStrain(StrainObject):
         (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        tetra_msg, hexa_msg, penta_msg = _get_msgs(self, is_mag_phase)
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        tetra_msg, hexa_msg, penta_msg = _get_msgs(self, is_mag_phase, is_sort1)
 
         dts = list(self.exx.keys())
         dts.sort()

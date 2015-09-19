@@ -135,9 +135,9 @@ class RealBush1DStress(StressObject):
         self.plastic_strain[dt][eid] = ep
         self.is_failed[dt][eid] = fail
 
-    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase, is_sort1=is_sort1)
 
         raise NotImplementedError('CBUSH1D')
         msg = header + ['    S T R A I N S   I N   B U S H   E L E M E N T S        ( C B U S H 1 D)',
@@ -163,7 +163,7 @@ class RealBush1DStress(StressObject):
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         #raise NotImplementedError('CBUSH1D')
         words = [
 #      ELEMENT-ID =    7001

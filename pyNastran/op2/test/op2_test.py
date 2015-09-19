@@ -62,18 +62,18 @@ def main():
     foldersFile = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
     iSubcases = []
-    debug     = False
+    debug = False
     make_geom = False
     write_bdf = False
     write_f06 = True
     write_op2 = False
-    is_vector   = [True, False] # is this vectorized
+    is_vector = [True, False] # is this vectorized
     vector_stop = [True, True]  # corresponds to is_vector; stop if case fails=True
     binary_debug = False  # catch any errors
 
     delete_f06 = True
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
     getSkipCards = False
 
@@ -108,5 +108,5 @@ def main():
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()

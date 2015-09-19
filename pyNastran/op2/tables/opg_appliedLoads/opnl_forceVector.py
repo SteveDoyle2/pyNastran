@@ -12,7 +12,7 @@ class RealForceVectorArray(RealTableArray):  # table_code=2, sort_code=0, therma
         msg = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n']
         #words += self.get_table_marker()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_sort1=is_sort1)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f)
 
 
@@ -22,7 +22,7 @@ class ComplexForceVectorArray(ComplexTableArray):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',]
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1=is_sort1)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
 
 class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0

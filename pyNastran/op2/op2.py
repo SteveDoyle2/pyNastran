@@ -1,4 +1,4 @@
-#pylint: disable=C0103,W0201,W0223,R0901,R0902,R0904
+#pylint: disable=W0201,W0223,R0901,R0902,R0904
 """
 Main OP2 class
 """
@@ -24,10 +24,15 @@ class OP2(OP2_Scalar):
         """
         Initializes the OP2 object
 
-        :param debug: enables the debug log and sets the debug in the logger (default=False)
-        :param log: a logging object to write debug messages to
+        Parameters
+        ----------
+        debug : bool; default=False
+            enables the debug log and sets the debug in the logger
+        log : Log()
+            a logging object to write debug messages to
          (.. seealso:: import logging)
-        :param debug_file: sets the filename that will be written to (default=None -> no debug)
+        debug_file : str; default=None (No debug)
+            sets the filename that will be written to
         """
         self.set_mode(mode)
         make_geom = False
@@ -111,12 +116,17 @@ class OP2(OP2_Scalar):
     def read_op2(self, op2_filename=None, vectorized=True, combine=True):
         """
         Starts the OP2 file reading
-        :param op2_filename: the op2_filename (default=None -> popup)
-        :param vectorized:   should the vectorized objects be used (default=True)
-        :param combine:      should objects be isubcase based (True) or
-                             (isubcase, subtitle) based (False)
-                             The second will be used for superelements regardless
-                             of the option (default=True)
+
+        Parameters
+        ----------
+        op2_filename : str (default=None -> popup)
+            the op2_filename
+        vectorized : bool; default=True
+            should the vectorized objects be used
+        combine : bool; default=True
+            True : objects are isubcase based
+            False : objects are (isubcase, subtitle) based;
+                    will be used for superelements regardless of the option
         """
         self.log.debug('vectorized=%s combine=%s' % (vectorized, combine))
         assert self.ask in [True, False], self.ask
@@ -225,7 +235,7 @@ class OP2(OP2_Scalar):
             setattr(self, result_type, result)
 
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
     import pyNastran
     pkg_path = pyNastran.__path__[0]
 
@@ -240,9 +250,9 @@ if __name__ == '__main__':  # pragma: no cover
     # ============displacement================
     # same for velocity/acceleration/mpc forces/spc forces/applied load
     # maybe not temperature because it's only 1 result...
-    displacement = model.displacement[isubcase]
+    displacement = model.displacements[isubcase]
     data = displacement.data
-    grid_type = model.displacement[isubcase].grid_type
+    grid_type = model.displacements[isubcase].grid_type
 
     # t1, t2, t3, r1, r2, r3
     assert displacement.ntimes == 1, displacement.ntimes
@@ -250,13 +260,13 @@ if __name__ == '__main__':  # pragma: no cover
     # get all the nodes for element 1
     inode1 = data.getNodeIndex([1])    # [itransient, node, t1/t2]
     datai = data[0, inode1, :]
-    grid_typei = grid_type[inode]
+    grid_typei = grid_type[inode1]
 
     # ============solid stress=================
     # same for solid strain
-    solid_stress = model.solidStress[isubcase]
+    solid_stress = model.ctetra_stress[isubcase]
     data = solid_stress.data
-    cid = model.solidStress[isubcase].cid
+    cid = model.ctetra_stress[isubcase].cid
 
     # oxx, oyy, ozz, txy, tyz, txz
     assert solid_stress.ntimes == 1, solid_stress.ntimes
@@ -294,7 +304,7 @@ if __name__ == '__main__':  # pragma: no cover
 
     # ============plate stress=================
     # same for plate strain
-    plate_stress = model.plateStress[isubcase]
+    plate_stress = model.cquad4_stress[isubcase]
     data = plate_stress.data
 
     # oxx, oyy, ozz, txy, tyz, txz
@@ -307,9 +317,9 @@ if __name__ == '__main__':  # pragma: no cover
 
     # ========composite plate stress============
     # same for plate strain
-    comp_plate_stress = model.compositePlateStress[isubcase]
+    comp_plate_stress = model.cquad4_composite_stress[isubcase]
     data = comp_plate_stress.data
-    cid = model.plateStress[isubcase].cid
+    cid = model.cquad4_stress[isubcase].cid
 
     # get the indexs for cid, element 1
     ielem1 = comp_plate_stress.getElementPropertiesIndex([1])  # element-specific properties
@@ -334,3 +344,7 @@ if __name__ == '__main__':  # pragma: no cover
     # get the index for element 1, layer 0, and all the nodes
     ielem1_layer = solid_stress.getElementLayerIndex([[1, 0]])
     datai = data[0, ielem1_layer, :]
+
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

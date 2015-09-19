@@ -160,7 +160,7 @@ class OQG(OP2Common):
                                  RealSPCForcesArray, ComplexSPCForcesArray, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermal_gradient_and_flux' #'finite element temperature gradients and fluxes'
-            storage_obj =  self.thermal_gradient_and_flux
+            storage_obj = self.thermal_gradient_and_flux
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)

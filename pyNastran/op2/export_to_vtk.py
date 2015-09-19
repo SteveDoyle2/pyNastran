@@ -5,7 +5,7 @@ from six import iteritems
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-from numpy import zeros, array, searchsorted, arange
+from numpy import zeros, searchsorted, arange
 
 #def pack_nodes(fmt, data):
     #return ''

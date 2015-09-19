@@ -87,9 +87,9 @@ class RealBushStress(StressObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg = header + [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n \n',
@@ -109,7 +109,7 @@ class RealBushStress(StressObject):
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n \n',
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
@@ -213,9 +213,9 @@ class RealBushStrain(StrainObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg = header + [
             '                                    S T R A I N S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
@@ -234,7 +234,7 @@ class RealBushStrain(StrainObject):
         f.write(''.join(msg))
         return page_num
 
-    def __write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def __write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         f.write('%s _write_f06_transient not implemented...\n' % self.__class__.__name__)
         raise NotImplementedError('CBUSH')
         return page_num - 1

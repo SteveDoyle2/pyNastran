@@ -117,7 +117,7 @@ class RealShearArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg_temp = self.get_f06_header()
 
         # write the f06
@@ -385,18 +385,18 @@ class RealShearStrain(StrainObject):
             self.avgShear[eid] = avg_shear
             self.margin[eid] = margin
 
-    def add_new_eid(self, dt, eid, axial, SMa, torsion, SMt):
-        raise NotImplementedError()
-        (axial, SMa, torsion, SMt) = out
+    #def add_new_eid(self, dt, eid, axial, SMa, torsion, SMt):
+        #raise NotImplementedError()
+        ##(axial, SMa, torsion, SMt) = out
         #print "Rod Strain add..."
-        assert eid >= 0, eid
+        #assert eid >= 0, eid
         #self.eType = self.eType
-        self.maxShear[eid] = axial
-        self.avgShear[eid] = SMa
-        self.margin[eid] = torsion
+        #self.maxShear[eid] = axial
+        #self.avgShear[eid] = SMa
+        #self.margin[eid] = torsion
 
     def add_new_eid_sort1(self, dt, eid, maxShear, avgShear, margin):
-        (maxShear, avgShear, margin) = out
+        #(maxShear, avgShear, margin) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
         assert eid >= 0, eid
@@ -407,7 +407,7 @@ class RealShearStrain(StrainObject):
         self.margin[dt][eid] = margin
 
     def add_new_eid_sort2(self, eid, dt, maxShear, avgShear, margin):
-        (maxShear, avgShear, margin) = out
+        #(maxShear, avgShear, margin) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
         assert eid >= 0, eid
