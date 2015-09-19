@@ -83,13 +83,13 @@ class OP2Common(Op2Codes, F06Writer):
 
     def add_data_parameter(self, data, var_name, Type, field_num,
                            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
-        datai = data[4*(field_num-1) : 4*(field_num)]
+        datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)
         value, = unpack(self._endian + Type, datai)
         if fixDeviceCode:
             value = (value - self.device_code) // 10
         if self.debug:
-            self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
+            self.binary_debug.write('  %-14s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
 
         if applyNonlinearFactor:
@@ -133,9 +133,9 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['Title'] = self.Title
 
         if self.debug:
-            self.binary_debug.write('  Title        = %r\n' % self.Title)
-            self.binary_debug.write('  subtitle     = %r\n' % self.subtitle)
-            self.binary_debug.write('  label        = %r\n' % self.label)
+            self.binary_debug.write('  %-14s = %r\n' % ('Title', self.Title))
+            self.binary_debug.write('  %-14s = %r\n' % ('subtitle', self.subtitle))
+            self.binary_debug.write('  %-14s = %r\n' % ('label', self.label))
 
     def _read_title(self, data):
         self._read_title_helper(data)
@@ -161,13 +161,13 @@ class OP2Common(Op2Codes, F06Writer):
                 if i % 5 == 4:
                     msg += '\n             '
             if hasattr(self, 'format_code'):
-                self.binary_debug.write('  sort_bits[0] = %i -> is_sort1 =%s\n' % (self.sort_bits[0], self.is_sort1()))
-                self.binary_debug.write('  sort_bits[1] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[1], self.is_real()))
-                self.binary_debug.write('  sort_bits[2] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[2], self.is_random()))
                 if self.is_complex():
-                    self.binary_debug.write('  format_code  = %i -> is_mag_phase=%s vs is_real_imag\n' % (self.format_code, self.is_mag_phase()))
+                    self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
                 else:
-                    self.binary_debug.write('  format_code  = %i\n' % self.format_code)
+                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+                self.binary_debug.write('    sort_bits[0] = %i -> is_sort1 =%s\n' % (self.sort_bits[0], self.is_sort1()))
+                self.binary_debug.write('    sort_bits[1] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[1], self.is_real()))
+                self.binary_debug.write('    sort_bits[2] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[2], self.is_random()))
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
     def _read_geom_4(self, mapper, data):
@@ -656,15 +656,15 @@ class OP2Common(Op2Codes, F06Writer):
                 self.data_code['device_code'] = self.device_code
 
         if self.debug3():
-            self.binary_debug.write('  table_name    = %r\n' % self.table_name)
-            self.binary_debug.write('  approach_code = analysis_code * 10 + device_code\n')
-            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
-            self.binary_debug.write('  device_code   = %r\n' % self.device_code)
-            self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
-            self.binary_debug.write('  tcode         = sort_code * 1000 + table_code\n')
-            self.binary_debug.write('  tcode         = %r\n' % self.tCode)
-            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
-            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
+            self.binary_debug.write('  table_name    = %r\n' % (self.table_name))
+            self.binary_debug.write('  %-14s = analysis_code * 10 + device_code\n' % 'approach_code')
+            self.binary_debug.write('  %-14s = %r\n' % ('approach_code', self.approach_code))
+            self.binary_debug.write('  %-14s = %r\n' % ('  device_code', self.device_code))
+            self.binary_debug.write('  %-14s = %r\n' % ('  analysis_code', self.analysis_code))
+            self.binary_debug.write('  %-14s = sort_code * 1000 + table_code\n' % ('tCode'))
+            self.binary_debug.write('  %-14s = %r\n' % ('tCode', self.tCode))
+            self.binary_debug.write('  %-14s = %r\n' % ('  table_code', self.table_code))
+            self.binary_debug.write('  %-14s = %r\n' % ('  sort_code', self.sort_code))
 
         self._parse_sort_code()
 
@@ -738,6 +738,14 @@ class OP2Common(Op2Codes, F06Writer):
         +-------+-----------+-------------+----------+
         |   6   |   SORT2   |    Real     |   Yes    |
         +-------+-----------+-------------+----------+
+
+        +-----+-------------+---------+
+        | Bit |     0       |    1    |
+        +-----+-------------+---------+
+        |  1  | Not Random  | Random  |
+        |  0  | Real        | Complex |
+        |  2  | SORT1       | SORT2   |
+        +-----+-------------+---------+
         """
         #tcode = self.table_code // 1000
         tcode = self.sort_code
@@ -751,6 +759,23 @@ class OP2Common(Op2Codes, F06Writer):
             is_real = False
         if tcode in [4, 5]:
             is_random = True
+
+        if sort_method == 1:
+            assert self.sort_bits[2] == 0, 'should be SORT1; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        else:
+            assert self.sort_bits[2] == 1, 'should be SORT2; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+
+        if is_real:
+            assert self.sort_bits[1] == 1, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        else:
+            assert self.sort_bits[1] == 0, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+
+        if is_random:
+            assert self.sort_bits[2] == 1, 'should be RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        else:
+            assert self.sort_bits[2] == 0, 'should be NOT RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+
+
         return sort_method, is_real, is_random
 
     def is_sort1(self):

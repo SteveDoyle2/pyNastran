@@ -263,10 +263,12 @@ class OEF(OP2Common):
         self.data_code['element_name'] = self.element_name
 
         if self.debug:
-            self.binary_debug.write('  element_name  = %r\n' % self.element_name)
-            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode    = %r\n' % self.tCode)
-            self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
+            self.binary_debug.write('  %-14s = %r\n' % ('element_name', self.element_name))
+            self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', self.approach_code,
+                                                           self.approach_code_str(self.approach_code)))
+            self.binary_debug.write('  %-14s = %r\n' % ('tCode', self.tCode))
+            self.binary_debug.write('  %-14s = %r\n' % ('isubcase', self.isubcase))
+
 
         self._read_title(data)
         if self.element_type not in self.element_mapper:
