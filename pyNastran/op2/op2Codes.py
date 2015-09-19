@@ -740,49 +740,50 @@ class Op2Codes(object):
         if hasattr(self, 'element_type'):
             element_type = self.element_type
 
-        sWord = ''
         if s_code == 0:
-            sWord += 'Coordinate Element - Stress Max Shear (Octahedral)'
+            s_word = 'Coordinate Element - Stress Max Shear (Octahedral)'
         elif s_code == 14:
-            sWord += 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
+            s_word = 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
 
         elif s_code == 1:
-            sWord += 'Coordinate Element - Stress von Mises'
+            s_word = 'Coordinate Element - Stress von Mises'
         elif s_code == 10:
-            sWord += 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
+            s_word = 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
 
         elif s_code == 11:
-            sWord += 'Coordinate Element - Strain Curvature von Mises'
+            s_word = 'Coordinate Element - Strain Curvature von Mises'
         elif s_code == 15:
-            sWord += 'Coordinate Element - Strain Fiber von Mises'
+            s_word = 'Coordinate Element - Strain Fiber von Mises'
 
         elif s_code == 16:
-            sWord += 'Coordinate Material - Stress Max Shear (Octahedral)'
+            s_word = 'Coordinate Material - Stress Max Shear (Octahedral)'
         elif s_code == 17:
-            sWord += 'Coordinate Material - Stress von Mises'
+            s_word = 'Coordinate Material - Stress von Mises'
 
         elif s_code == 26:
-            sWord += 'Coordinate Material - Strain Curvature Max Shear'
+            s_word = 'Coordinate Material - Strain Curvature Max Shear'
         elif s_code == 30:
-            sWord += 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
+            s_word = 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
 
         elif s_code == 27:
-            sWord += 'Coordinate Material - Strain Curvature von Mises'
+            s_word = 'Coordinate Material - Strain Curvature von Mises'
         elif s_code == 31:
-            sWord += 'Coordinate Material - Strain Fiber von Mises'
+            s_word = 'Coordinate Material - Strain Fiber von Mises'
         else:
             #sWord = 'Stress or Strain - UNDEFINED'
-            sWord = ''
+            s_word = ''
 
-        formatWord = '???'
+        format_word = '???'
         if format_code == 1:
-            formatWord = "Real"
+            format_word = "Real"
         elif format_code == 2:
-            formatWord = "Real/Imaginary"
+            format_word = "Real/Imaginary"
         elif format_code == 3:
-            formatWord = "Magnitude/Phase"
+            format_word = "Magnitude/Phase"
         else:
-            formatWord = '\n%18s1 - Real\n%18s2-Real/Imaginary\n%18s3-Magnitude/Phase\n' % ('', '', '')
+            format_word = '\n%18s1 - Real\n' % ''
+            format_word += '%18s2 - Real/Imaginary\n' % ''
+            format_word += '%18s3 - Magnitude/Phase\n' % ''
             #msg = 'unsupported format_code:  format_code=%s\n' % format_code
             #raise InvalidFormatCodeError(msg)
 
@@ -809,19 +810,19 @@ class Op2Codes(object):
             #raise RuntimeError(msg)
 
         if thermal == 0:
-            thermalWord = 'isHeatTransfer = False'
+            thermal_word = 'isHeatTransfer = False'
         elif thermal == 1:
-            thermalWord = 'isHeatTransfer = True'
+            thermal_word = 'isHeatTransfer = True'
         elif thermal == 2:
-            thermalWord = 'Scaled response spectra ABS'
+            thermal_word = 'Scaled response spectra ABS'
         elif thermal == 3:
-            thermalWord = 'Scaled response spectra SRSS'
+            thermal_word = 'Scaled response spectra SRSS'
         elif thermal == 4:
-            thermalWord = 'Scaled response spectra NRL'
+            thermal_word = 'Scaled response spectra NRL'
         elif thermal == 5:
-            thermalWord = 'Scaled response spectra NRLO'
+            thermal_word = 'Scaled response spectra NRLO'
         else:
-            thermalWord = '???'
+            thermal_word = '???'
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
             #raise ValueError(msg)
 
@@ -967,7 +968,7 @@ class Op2Codes(object):
         msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
         msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
         msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name, table)
-        msg += "  format_code   = %-3s %s\n" % (format_code, formatWord)
+        msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
 
         msg += "  dataFormat    = %-3s %s\n" % (self.sort_bits[0], sortWord1)
         msg += "  sortType      = %-3s %s\n" % (self.sort_bits[1], sortWord2)
@@ -975,10 +976,10 @@ class Op2Codes(object):
 
         if element_type is not None:
             msg += "  element_type  = %-3s %s\n" % (element_type, self.get_element_type(element_type))
-        if sWord:  # stress code
-            msg += "  s_code        = %-3s %s\n" % (s_code, sWord)
+        if s_word:  # stress code
+            msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
         if thermal is not None:
-            msg += "  thermal       = %-3s %s\n" % (thermal, thermalWord)
+            msg += "  thermal       = %-3s %s\n" % (thermal, thermal_word)
 
         if hasattr(self, 'num_wide'):
             msg += "  num_wide      = %-3s\n" % self.num_wide
@@ -1047,8 +1048,8 @@ class Op2Codes(object):
         #asfd
         #return self.isReal() or self.isRandom()
 
-    def isRealImaginaryOrMagnitudePhase(self):
-        return self.is_real_imaginary or self.MagnitudePhase()
+    #def isRealImaginaryOrMagnitudePhase(self):  # been broken for a long time
+        #return self.is_real_imaginary or self.MagnitudePhase()
 
     #----
     def isStress(self):

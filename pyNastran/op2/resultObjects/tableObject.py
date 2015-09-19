@@ -672,8 +672,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.translations[dt][node_id] = array([v1, v2, v3], dtype='float32')  # dx,dy,dz
         self.rotations[dt][node_id] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
 
-    def add_sort2(self, node_id, dt, grid_type, v1, v2, v3, v4, v5, v6):
-        raise NotImplementedError('sort2')
+    def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         if dt not in self.translations:
             self.add_new_transient(dt)
         msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)

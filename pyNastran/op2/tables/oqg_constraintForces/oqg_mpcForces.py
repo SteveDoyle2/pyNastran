@@ -48,7 +48,7 @@ class RealMPCForces(RealTableObject):
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
             (vals2, is_all_zeros) = writeFloats13E(vals)
-            [dx, dy, dz, rx, ry, rz] = vals2
+            dx, dy, dz, rx, ry, rz = vals2
             msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(page_stamp % page_num)

@@ -297,7 +297,7 @@ class OP2Common(Op2Codes, F06Writer):
         #n = self._not_implemented_or_skip(data, msg)
         return n
 
-    def function_code(value):
+    def function_code(self, value):
         """
         This is a new specification from NX that's really important and
         not in the MSC manual, even though they use it.
@@ -341,16 +341,10 @@ class OP2Common(Op2Codes, F06Writer):
             out = s.unpack(edata)
             (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
-            eid = (eid_device - self.device_code) // 10
+            eid = self._check_id(eid_device, flag, out)
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
 
-            if eid <= 0:
-                msg = 'The device code is set wrong, probably because you used:\n'
-                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
-                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
-                msg += str(self.code_information())
-                raise DeviceCodeError(msg)
             obj.add(eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
@@ -373,16 +367,10 @@ class OP2Common(Op2Codes, F06Writer):
             out = s.unpack(edata)
             (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
-            eid = (eid_device - self.device_code) // 10
+            eid = self._check_id(eid_device, flag, out)
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
 
-            if eid <= 0:
-                msg = 'The device code is set wrong, probably because you used:\n'
-                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
-                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
-                msg += str(self.code_information())
-                raise DeviceCodeError(msg)
             obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
@@ -443,16 +431,9 @@ class OP2Common(Op2Codes, F06Writer):
 
             (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
-            eid = (eid_device - self.device_code) // 10
+            eid = self._check_id(eid_device, flag, out)
             if self.debug4():
                 self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
-
-            if eid <= 0:
-                msg = 'The device code is set wrong, probably because you used:\n'
-                msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
-                msg += '  %s=%i; %s\n' % (flag, eid, str(out))
-                msg += str(self.code_information())
-                raise DeviceCodeError(msg)
 
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
@@ -474,6 +455,26 @@ class OP2Common(Op2Codes, F06Writer):
             obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
+
+    def _check_id(self, eid_device, flag, out):
+        """
+        Somewhat risky method for calculating the eid because the device code
+        is ignored.  However, this might be the actual way to parse the id.
+        """
+        eid = (eid_device - self.device_code) // 10
+        #print('eid =', eid)
+        #print('flag =', flag)
+        eid2 = eid_device // 10
+        #return eid2
+        if eid != eid2 or eid2 <= 0:
+            msg = 'eid_device=%s device_code=%s eid=%s eid2=%s\n\n' % (eid_device, self.device_code,
+                                                                       eid, eid2)
+            msg += 'The device code is set wrong, probably because you used:\n'
+            msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+            msg += '  %s=%i; %s\n' % (flag, eid, str(out))
+            msg += str(self.code_information())
+            raise DeviceCodeError(msg)
+        return eid2
 
     def get_oug2_flag(self):
         if self.analysis_code == 5:
@@ -504,7 +505,6 @@ class OP2Common(Op2Codes, F06Writer):
         #assert len(data) % ntotal == 0
 
         binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
-        #print('%r' % binary_debug_fmt)
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -741,12 +741,14 @@ class OP2Common(Op2Codes, F06Writer):
         +-------+-----------+-------------+----------+
         |   6   |   SORT2   |    Real     |   Yes    |
         +-------+-----------+-------------+----------+
+        |   7   |    ???    |    ???      |   ???    |
+        +-------+-----------+-------------+----------+
 
         +-----+-------------+---------+
         | Bit |     0       |    1    |
         +-----+-------------+---------+
-        |  1  | Not Random  | Random  |
-        |  0  | Real        | Complex |
+        |  0  | Not Random  | Random  |
+        |  1  | Real        | Complex |
         |  2  | SORT1       | SORT2   |
         +-----+-------------+---------+
         """
@@ -763,54 +765,41 @@ class OP2Common(Op2Codes, F06Writer):
         if tcode in [4, 5]:
             is_random = True
 
-        if sort_method == 1:
-            assert self.sort_bits[2] == 0, 'should be SORT1; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        if is_random:
+            assert self.sort_bits[0] == 1, 'should be RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
         else:
-            assert self.sort_bits[2] == 1, 'should be SORT2; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+            assert self.sort_bits[0] == 0, 'should be NOT RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+
+        if sort_method == 1:
+            assert self.sort_bits[1] == 0, 'should be SORT1; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        else:
+            assert self.sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
 
         if is_real:
-            assert self.sort_bits[1] == 1, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+            assert self.sort_bits[2] == 0, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
         else:
-            assert self.sort_bits[1] == 0, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-
-        if is_random:
-            assert self.sort_bits[2] == 1, 'should be RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        else:
-            assert self.sort_bits[2] == 0, 'should be NOT RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-
-
+            assert self.sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
         return sort_method, is_real, is_random
 
     def is_sort1(self):
         sort_method, is_real, is_random = self._table_specs()
         return True if sort_method == 1 else False
-        #if self.sort_bits[0] == 0:
-        #    return True
-        #return False
 
     def is_sort2(self):
         sort_method, is_real, is_random = self._table_specs()
         return True if sort_method == 2 else False
-        #return not self.is_sort1()
 
     def is_real(self):
         sort_method, is_real, is_random = self._table_specs()
         return is_real
-        #return not self.is_complex()
 
     def is_complex(self):
         sort_method, is_real, is_random = self._table_specs()
         return not is_real
-        #if self.sort_bits[1] == 1:
-        #    return True
-        #return False
 
     def is_random(self):
         sort_method, is_real, is_random = self._table_specs()
         return is_random
-        #if self.sort_bits[1] == 1:
-        #    return True
-        #return False
 
     #def is_mag_phase(self):
         #assert self.format_code in [0, 1], self.format_code

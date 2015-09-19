@@ -79,13 +79,13 @@ class ComplexPlateArray(OES_Object):
         # [oxx, oyy, txy]
         self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
 
-    def add_new_eid(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
+    def add_new_eid_sort1(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
         self.add_eid_sort1(eType, dt, eid, node_id, fdr, oxx, oyy, txy)
 
-    def add(self, dt, eid, gridC, fdr, oxx, oyy, txy):
+    def add_sort1(self, dt, eid, gridC, fdr, oxx, oyy, txy):
         self.add_eid_sort1(self.element_name, dt, eid, gridC, fdr, oxx, oyy, txy)
 
-    def addNewNode(self, dt, eid, gridc, fdr, oxx, oyy, txy):
+    def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
         self.add_eid_sort1(self.element_name, dt, eid, gridc, fdr, oxx, oyy, txy)
 
     def add_eid_sort1(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
@@ -363,20 +363,9 @@ class ComplexPlateStress(StressObject):
         self.txy = {}
 
         self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                self.addNewNode = self.addNewNodeSort1
-        else:
-            assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
-            #self.addNewNode = self.addNewNodeSort2
 
     def get_stats(self):
         nelements = len(self.eType)
-
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
@@ -462,12 +451,6 @@ class ComplexPlateStress(StressObject):
         #if eid in self.oxx[dt]:
         #    return self.add(eid, node_id, fdr, oxx, oyy, txy)
 
-        if 0: # this is caused by superelements
-            if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
-                #msg = "dt=%s eid=%s node_id=%s fdr=%s oxx=%s" % (dt, eid, node_id, str(self.fiberCurvature[eid][node_id]), str(self.oxx[dt][eid][node_id])))
-                self.delete_transient(dt)
-                self.add_new_transient(dt)
-
         assert isinstance(eid, int)
         assert isinstance(node_id, int), node_id
         self.eType[eid] = eType
@@ -477,6 +460,17 @@ class ComplexPlateStress(StressObject):
         self.oxx[dt][eid] = {node_id : [oxx]}
         self.oyy[dt][eid] = {node_id : [oyy]}
         self.txy[dt][eid] = {node_id : [txy]}
+
+    def add_new_node_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+        msg = "eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (eid, node_id, fdr, oxx, oyy, txy)
+        assert eid is not None, eid
+        assert isinstance(node_id, int), node_id
+        assert node_id > -1, msg
+        #assert node_id not in self.oxx[dt][eid]
+        self.fiberCurvature[eid][node_id] = [fdr]
+        self.oxx[dt][eid][node_id] = [oxx]
+        self.oyy[dt][eid][node_id] = [oyy]
+        self.txy[dt][eid][node_id] = [txy]
 
     def add_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
         msg = "dt=%s eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (dt, eid, node_id, fdr, oxx, oyy, txy)
@@ -488,17 +482,6 @@ class ComplexPlateStress(StressObject):
         self.oxx[dt][eid][node_id].append(oxx)
         self.oyy[dt][eid][node_id].append(oyy)
         self.txy[dt][eid][node_id].append(txy)
-
-    def addNewNodeSort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
-        msg = "eid=%s node_id=%s fdr=%g oxx=%s oyy=%s txy=%s" % (eid, node_id, fdr, oxx, oyy, txy)
-        assert eid is not None, eid
-        assert isinstance(node_id, int), node_id
-        assert node_id > -1, msg
-        #assert node_id not in self.oxx[dt][eid]
-        self.fiberCurvature[eid][node_id] = [fdr]
-        self.oxx[dt][eid][node_id] = [oxx]
-        self.oyy[dt][eid][node_id] = [oyy]
-        self.txy[dt][eid][node_id] = [txy]
 
     def _get_headers(self):
         if self.is_fiber_distance():
@@ -702,15 +685,7 @@ class ComplexPlateStrain(StrainObject):
         self.exx = {}
         self.eyy = {}
         self.exy = {}
-
         self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                self.addNewNode = self.add_sort1
-        else:
-            assert dt is not None
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -807,13 +782,6 @@ class ComplexPlateStrain(StrainObject):
             msg = "dt=%s eid=%s node_id=%s" % (dt, eid, node_id)
             self.add_new_transient(dt)
 
-        if 0: # this is caused by superelements
-            if dt in self.exx and eid in self.exx[dt]:  # SOL200, erase the old result
-                #nid = node_id
-                #msg = "dt=%s eid=%s node_id=%s fd=%s oxx=%s" %(dt,eid,node_id,str(self.fiberCurvature[eid][node_id]),str(self.exx[dt][eid][node_id])))
-                self.delete_transient(dt)
-                self.add_new_transient(dt)
-
         #if eid in self.exx[dt]:  # SOL200, erase the old result
             #nid = node_id
             #msg = "dt=%s eid=%s node_id=%s fd=%s oxx=%s" %(dt,eid,node_id,str(self.fiberCurvature[eid][node_id]),str(self.oxx[dt][eid][node_id]))
@@ -821,6 +789,9 @@ class ComplexPlateStrain(StrainObject):
             #self.add_new_transient()
 
         self.eType[eid] = eType
+        self.add_new_node_sort1(dt, eid, node_id, curvature, exx, eyy, exy)
+
+    def add_new_node_sort1(self, dt, eid, node_id, curvature, exx, eyy, exy):
         self.fiberCurvature[eid] = {node_id : [curvature]}
         self.exx[dt][eid] = {node_id : [exx]}
         self.eyy[dt][eid] = {node_id : [eyy]}

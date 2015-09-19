@@ -22,6 +22,13 @@ class BaseScalarObject(Op2Codes):
         self.nonlinear_factor = None
         self.format_code = None
         self.sort_code = None
+        self.table_code = None
+        self.Title = None
+        self.subtitle = None
+        self.label = None
+        self.num_wide = None
+        self.device_code = None
+        self.table_name = None
 
 
     def name(self):
@@ -95,7 +102,7 @@ class ScalarObject(BaseScalarObject):
                 name = name + 's'
             else:
                 vals = getattr(self, name)
-            msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])) )
+            msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
         #print("***dataNames =", self.dataNames)
         return msg
 

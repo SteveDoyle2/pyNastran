@@ -199,6 +199,10 @@ class OES(OP2Common):
         Note that a case of 4 is not used and is used below as a placeholder,
         while a case of -1 is some bizarre unhandled, undocumented case.
         """
+        if self.format_code == -1:
+            raise RuntimeError(self.code_information())
+            return
+
         if self.analysis_code == 1:   # statics / displacement / heat flux
             assert self.format_code in [1, 3], self.format_code
             self.format_code = 1
@@ -1123,8 +1127,8 @@ class OES(OP2Common):
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
 
-                    self.obj.add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1, txy1)
-                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2)
+                    self.obj.add_new_eid_sort1('CQUAD4', dt, eid, cen, fd1, sx1, sy1, txy1)
+                    self.obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
 
                     for node_id in range(nnodes):  # nodes pts
                         edata = data[n:n+60]  # 4*15=60
@@ -1150,8 +1154,8 @@ class OES(OP2Common):
                             sy2 = complex(sy2r, sy2i)
                             txy1 = complex(txy1r, txy1i)
                             txy2 = complex(txy2r, txy2i)
-                        self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
-                        self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
+                        self.obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
+                        self.obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
             elif self.format_code == 1 and self.num_wide == 0: # random
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
@@ -1255,8 +1259,8 @@ class OES(OP2Common):
                         sy2 = complex(sy2r, sy2i)
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
-                    self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1, txy1)
-                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2)
+                    self.obj.add_new_eid_sort1('CTRIA3', dt, eid, cen, fd1, sx1, sy1, txy1)
+                    self.obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
                     n += ntotal
             elif self.format_code == 1 and self.num_wide == 9: # random
                 msg = self.code_information()
@@ -1434,11 +1438,13 @@ class OES(OP2Common):
                     (eid_device, _) = s1.unpack(data[n:n+8])
                     n += 8
 
-                    eid = (eid_device - self.device_code) // 10
-                    assert eid > 0, eid
                     edata = data[n:n+60]  # 4*15
                     n += 60
                     out = s2.unpack(edata)  # len=15*4
+
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, 'element', out)
+                    assert eid > 0, eid
                     if self.debug4():
                         self.binary_debug.write('%s\n' % (str(out)))
                     (grid,
@@ -1461,11 +1467,11 @@ class OES(OP2Common):
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
 
-                    self.obj.add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1, txy1)
-                    self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2)
+                    self.obj.add_new_eid_sort1(etype, dt, eid, gridC, fd1, sx1, sy1, txy1)
+                    self.obj.add_sort1(dt, eid, gridC, fd2, sx2, sy2, txy2)
 
                     for node_id in range(nnodes):  # nodes pts
-                        edata = data[n:n+60]  # 4*15=60
+                        edata = data[n:n + 60]  # 4*15=60
                         n += 60
                         out = s2.unpack(edata)
                         if self.debug4():
@@ -1489,8 +1495,8 @@ class OES(OP2Common):
                             txy1 = complex(txy1r, txy1i)
                             txy2 = complex(txy2r, txy2i)
 
-                        self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
-                        self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
+                        self.obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
+                        self.obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
                 msg = 'numwide_real=%s\n' % numwide_real
                 msg = 'numwide_imag=%s\n' % numwide_imag

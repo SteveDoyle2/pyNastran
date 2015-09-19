@@ -163,9 +163,11 @@ class RealTriaxStress(StressObject):
         self.oms[dt][eid][nid] = tmax
         self.ovm[dt][eid][nid] = octs
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, header, page_stamp, page_num=1, f=None,
+                  is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+            return self._write_f06_transient(header, page_stamp, page_num, f,
+                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg = header + ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                         '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -196,7 +198,7 @@ class RealTriaxStress(StressObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp,
-                          page_num=1, f=None, is_mag_phase=False):
+                             page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                  '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
