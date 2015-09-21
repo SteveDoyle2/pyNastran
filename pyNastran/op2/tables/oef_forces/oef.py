@@ -29,16 +29,18 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealPentaPressureForce, RealCBushForce,           # TODO: vectorize 2
     RealForce_VU_2D, RealForce_VU)                    # TODO: vectorize 2
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
+    ComplexCBarForceArray, ComplexCBarForce,
+    ComplexCBushForceArray, ComplexCBushForce,
     # not vectorized
-    # TODO: vectorize 14
+    # TODO: vectorize 12
     ComplexRodForce, ComplexCBeamForce,
     ComplexCShearForce, ComplexSpringForce,
     ComplexDamperForce, ComplexViscForce,
     ComplexPlateForce, ComplexPlate2Force,
     ComplexBendForce,
     ComplexPentaPressureForce,
-    ComplexCBushForce, ComplexForce_VU_2D,
-    ComplexCBarForce, ComplexForce_VU)
+    ComplexForce_VU_2D,
+    ComplexForce_VU)
 
 
 class OEF(OP2Common):
@@ -301,6 +303,7 @@ class OEF(OP2Common):
         #is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
 
+        flag = 'element_id'
         if self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
             # 1-CROD
             # 2-CBEAM
@@ -319,7 +322,8 @@ class OEF(OP2Common):
 
                     out = s.unpack(edata)
                     (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
 
                     data_in = [eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
@@ -354,7 +358,9 @@ class OEF(OP2Common):
                     n += ntotal
                     out = s.unpack(edata)
                     (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
+
                     data_in = [eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     self.obj.add(dt, data_in)
 
@@ -370,7 +376,8 @@ class OEF(OP2Common):
                     n += ntotal
                     out = s.unpack(edata)
                     (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     self.obj.add(dt, data_in)
             else:
@@ -391,7 +398,8 @@ class OEF(OP2Common):
                     n += ntotal
                     out = s1.unpack(edata)
                     (eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
 
                     data_in = [eid, etype, fapplied, free_conv, force_conv, frad, ftotal]
                     if self.debug4():
@@ -415,7 +423,8 @@ class OEF(OP2Common):
                     n += 16
                     out = s1.unpack(edata)
                     (eid_device, cntl_node, free_conv, free_conv_k) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, cntl_node, free_conv, free_conv_k]
                     #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
@@ -449,7 +458,9 @@ class OEF(OP2Common):
                     n += 8
                     out = s1.unpack(edata)
                     (eid_device, parent) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    #eid = self._check_id(eid_device, flag, 'FORCE', out)
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, parent]
                     grad_fluxes = []
                     for i in range(nnodes):
@@ -489,7 +500,8 @@ class OEF(OP2Common):
 
                     out = s1.unpack(edata)
                     (eid_device, parent, coord, icord, theta, null) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, parent, coord, icord, theta]
 
                     grad_fluxes = []
@@ -524,7 +536,8 @@ class OEF(OP2Common):
                     out = s1.unpack(edata)
                     (eid_device, parent, coord, icord) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, parent, coord, icord]
 
                     grad_fluxes = []
@@ -565,6 +578,7 @@ class OEF(OP2Common):
             try:
                 n = func(self, data)
             except:
+                raise
                 print("----------")
                 try:
                     print(self.obj)
@@ -587,6 +601,7 @@ class OEF(OP2Common):
         """
         if self._results.is_not_saved('element_forces'):
             return len(data)
+        flag = 'element_id'
         (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
         if self.debug4():
             self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)
@@ -637,7 +652,8 @@ class OEF(OP2Common):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, axial, torque) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     if self.debug4():
                         self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
 
@@ -664,7 +680,8 @@ class OEF(OP2Common):
                     else:
                         axial = complex(axial_real, axial_imag)
                         torque = complex(torque_real, torque_imag)
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, axial, torque]
@@ -696,7 +713,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
                     (eid_device, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     n += 36
 
@@ -710,7 +728,8 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out=[eid_device])
                     n += 4
 
                     for i in range(11):
@@ -736,7 +755,8 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out=[eid_device])
                     assert eid > 0, eid
 
                     n += 4
@@ -846,7 +866,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, force]
@@ -866,7 +887,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force_real, force_imag) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     if is_magnitude_phase:
@@ -899,7 +921,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial, torque) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, axial, torque]
@@ -919,7 +942,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     if is_magnitude_phase:
@@ -945,8 +969,11 @@ class OEF(OP2Common):
             slot_vector = self.cbar_force
             result_name = 'cbar_force'
             result_vector_name = result_name
+
             obj_real = RealCBarForce
             obj_vector_real = RealCBarForceArray
+            obj_complex = ComplexCBarForce
+            obj_vector_complex = ComplexCBarForceArray
 
             if self.format_code == 1 and self.num_wide == 9: # real
                 ntotal = 36  # 9*4
@@ -959,13 +986,14 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
                 s = Struct(self._endian + b'i8f')  # 9
                 for i in range(nelements):
-                    edata = data[n:n+36]
+                    edata = data[n:n + 36]
 
                     out = s.unpack(edata)
                     if self.debug4():
                         self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
                     (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
@@ -974,14 +1002,20 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 17: # imag
-                if self.read_mode == 1:
-                    return len(data)
-                self.create_transient_object(self.cbar_force, ComplexCBarForce)
-                s = Struct(self._endian + b'i16f')
                 ntotal = 68  # 17*4
                 nelements = len(data) // ntotal
+                if 1:
+                    auto_return = self._create_oes_object2(nelements,
+                                                           result_name, result_vector_name,
+                                                           slot, slot_vector,
+                                                           obj_complex, obj_vector_complex)
+                    if auto_return:
+                        return nelements * self.num_wide * 4
+                else:
+                    self.create_transient_object(self.cbar_force, ComplexCBarForce)
+                s = Struct(self._endian + b'i16f')
                 for i in range(nelements):
-                    edata = data[n:n+68]
+                    edata = data[n:n + 68]
 
                     out = s.unpack(edata)
                     (eid_device,
@@ -989,7 +1023,8 @@ class OEF(OP2Common):
                      bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
                     if self.debug4():
                         self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     if is_magnitude_phase:
@@ -1011,10 +1046,10 @@ class OEF(OP2Common):
                         af = complex(afr, afi)
                         trq = complex(trqr, trqi)
 
-                    data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+                    #data_in = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
                     #eid = self.obj.add_new_eid(out)
-                    self.obj.add(dt, data_in)
+                    self.obj.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
                     n += ntotal
             else:
                 msg = self.code_information()
@@ -1038,7 +1073,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
                     (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
@@ -1091,7 +1127,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, 'eid_device=%s eid=%s table_name-%r' % (eid_device, eid, self.table_name)
 
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
@@ -1112,7 +1149,8 @@ class OEF(OP2Common):
                     (eid_device,
                      mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     if self.debug4():
                         self.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
@@ -1221,7 +1259,8 @@ class OEF(OP2Common):
                     (eid_device, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                     #term= 'CEN\'
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     #print "%s" % (self.get_element_type(self.element_type)), dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty
@@ -1259,7 +1298,8 @@ class OEF(OP2Common):
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     #term = 'CEN\'
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (`eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     if is_magnitude_phase:
                         mx = polar_to_real_imag(mxr, mxi)
@@ -1412,7 +1452,8 @@ class OEF(OP2Common):
                     (eid_device,
                      f41, f21, f12, f32, f23, f43, f34, f14, kf1,
                      s12, kf2, s23, kf3, s34, kf4, s41) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid,
@@ -1474,7 +1515,8 @@ class OEF(OP2Common):
                         f14 = complex(f14r, f14i)
                         s41 = complex(s41r, s41i)
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     data_in = [eid,
                                f41, f21, f12, f32, f23, f43, f34, f14,
@@ -1502,7 +1544,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
                     (eid_device, hopa, bmu, bmv, tm, su, sv) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, hopa, bmu, bmv, tm, su, sv]
@@ -1531,7 +1574,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
                     (eid_device, fx, sfy, sfz, u, v, w, sv, sw) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
@@ -1562,7 +1606,8 @@ class OEF(OP2Common):
                     (eid_device,
                      nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
                      nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     data_in = [eid,
                                nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
@@ -1590,7 +1635,8 @@ class OEF(OP2Common):
                      nidB,
                      bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
                      bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     if is_magnitude_phase:
@@ -1663,7 +1709,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
                     (eid_device, ename, ax, ay, az, vx, vy, vz, pressure) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, ename, ax, ay, az, vx, vy, vz, pressure]
@@ -1686,7 +1733,8 @@ class OEF(OP2Common):
                     (eid_device, eName,
                      axr, ayr, azr, vxr, vyr, vzr, pressure,
                      axi, ayi, azi, vxi, vyi, vzi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     ename = eName.decode('utf-8').strip()
                     #print "eType=%s" %(eType)
@@ -1731,7 +1779,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
                     (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
 
                     data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
@@ -1743,7 +1792,13 @@ class OEF(OP2Common):
         elif self.element_type == 102:  # cbush
             # 102-CBUSH
             self._results._found_result('cbush_force')
+            result_name = 'cbush_force'
+            slot_vector = getattr(self, result_name)
+            slot = slot_vector
             if self.format_code == 1 and self.num_wide == 7:  # real
+                if self.read_mode == 1:
+                    return len(data)
+
                 self.create_transient_object(self.cbush_force, RealCBushForce)
                 s = Struct(self._endian + b'i6f')
                 ntotal = 28 # 7*4
@@ -1754,21 +1809,29 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
                     (eid_device, fx, fy, fz, mx, my, mz) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
-
-                    data_in = [eid, fx, fy, fz, mx, my, mz]
-                    #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    self.obj.add(dt, data_in)
+                    self.obj.add(dt, eid, fx, fy, fz, mx, my, mz)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
-                self.create_transient_object(self.cbush_force, ComplexCBushForce)
-                s = Struct(self._endian + b'i12f')
-
                 ntotal = 52  # 13*4
                 nelements = len(data) // ntotal
+                obj_complex = ComplexCBushForce
+                obj_vector_complex = ComplexCBushForceArray
+                result_name = 'cbush_force'
+                result_vector_name = result_name
+                auto_return = self._create_oes_object2(nelements,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_complex, obj_vector_complex)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+                #self.create_transient_object(self.cbush_force, ComplexCBushForce)
+                s = Struct(self._endian + b'i12f')
+
                 for i in range(nelements):
-                    edata = data[n:n+52]
+                    edata = data[n:n + 52]
 
                     out = s.unpack(edata)
                     if self.debug4():
@@ -1776,9 +1839,9 @@ class OEF(OP2Common):
                     (eid_device,
                      fxr, fyr, fzr, mxr, myr, mzr,
                      fxi, fyi, fzi, mxi, myi, mzi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
-                    #print "eType=%s" % (eType)
 
                     if is_magnitude_phase:
                         fx = polar_to_real_imag(fxr, fxi)
@@ -1795,9 +1858,7 @@ class OEF(OP2Common):
                         fz = complex(fzr, fzi)
                         mz = complex(mzr, mzi)
 
-                    data_in = [eid, fx, fy, fz, mx, my, mz]
-                    #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    self.obj.add(dt, data_in)
+                    self.obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
                     n += ntotal
             else:
                 msg = self.code_information()
@@ -1845,7 +1906,8 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
                     (eid_device, parent, coord, icord, theta, _) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, parent, coord, icord, theta]
                     assert eid > 0, eid
 
@@ -1882,7 +1944,8 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
                     (eid_device, parent, coord, icord, theta, _) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     data_in = [eid, parent, coord, icord, theta]
 
@@ -1954,7 +2017,8 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_Force_VU-191 - %s\n' % (str(out)))
                     (eid_device, parent, coord, icord) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     data_in = [eid, parent, coord, icord]
 
@@ -1994,7 +2058,8 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_Force_191-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, parent, coord, icord) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, 'FORCE', out)
                     assert eid > 0, eid
                     data_in = [eid, parent, coord, icord]
 

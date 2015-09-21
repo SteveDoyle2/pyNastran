@@ -2273,20 +2273,17 @@ class RealCBushForce(ScalarObject):  # 102-CBUSH
         self.force[dt] = {}
         self.moment[dt] = {}
 
-    def add(self, dt, data):
-        [eid, fx, fy, fz, mx, my, mz] = data
+    def add(self, dt, eid, fx, fy, fz, mx, my, mz):
         self.force[eid] = array([fx, fy, fz], dtype='float32')
         self.moment[eid] = array([mx, my, mz], dtype='float32')
 
-    def add_sort1(self, dt, data):
-        [eid, fx, fy, fz, mx, my, mz] = data
+    def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         if dt not in self.force:
             self.add_new_transient(dt)
         self.force[dt][eid] = array([fx, fy, fz], dtype='float32')
         self.moment[dt][eid] = array([mx, my, mz], dtype='float32')
 
-    def add_sort2(self, eid, data):
-        [dt, fx, fy, fz, mx, my, mz] = data
+    def add_sort2(self, eid, dt, fx, fy, fz, mx, my, mz):
         if dt not in self.force:
             self.add_new_transient(dt)
         self.force[dt][eid] = array([fx, fy, fz], dtype='float32')

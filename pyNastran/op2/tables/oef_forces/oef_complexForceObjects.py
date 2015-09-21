@@ -2,8 +2,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0
-
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0, write_float_12E
+from numpy import zeros
 
 class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -17,7 +17,7 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def add_new_transient(self, dt):
         self.dt = dt
@@ -51,7 +51,7 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
@@ -76,7 +76,7 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         else:
             assert dt is not None
             self.add_new_element = self.addNewElementSort2
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -134,7 +134,7 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         self._fillNewObject(
             dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
@@ -183,7 +183,7 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -247,10 +247,9 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
         self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
                          kf1, s12, kf2, s23, kf3, s34, kf4, s41)
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, f41, f21, f12, f32, f23, f43, f34, f14,
-            kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-
+         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
         self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
                          kf1, s12, kf2, s23, kf3, s34, kf4, s41)
 
@@ -287,7 +286,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -318,7 +317,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
             self.add_new_transient(dt)
         self.force[dt][eid] = force
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
@@ -397,7 +396,7 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -428,7 +427,7 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
             self.add_new_transient(dt)
         self.force[dt][eid] = force
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, force] = data
         if dt not in self.force:
             self.add_new_transient(dt)
@@ -447,7 +446,7 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -481,7 +480,7 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, axialForce, torque] = data
         if dt not in self.axialForce:
             self.add_new_transient(dt)
@@ -634,12 +633,12 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
                 ([mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                   mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_all_zeros) = writeImagFloats13E([mx, my, mxy, bmx, bmy, bmxy, tx, ty], is_mag_phase)
 
-                """
-                    ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
-                      ID              FX            FY            FXY             MX            MY            MXY             QX            QY
-                0       564       1.543439E+03  7.311177E+02  1.322702E+02    1.080178E+00  1.699104E+00  2.618547E-01    3.877034E+01  4.518554E+00
-                                  358.3129      358.0245      177.5593        177.5292      178.2112        0.0907        358.1465      179.4567
-                """
+                #"""
+                    #ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
+                      #ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+                #0       564       1.543439E+03  7.311177E+02  1.322702E+02    1.080178E+00  1.699104E+00  2.618547E-01    3.877034E+01  4.518554E+00
+                                  #358.3129      358.0245      177.5593        177.5292      178.2112        0.0907        358.1465      179.4567
+                #"""
                 #                fx     fy     fxy     mx     my     mxy    qx      qy
                 msg = '0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (eid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr)
                 msg += '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % ('', mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi)
@@ -671,7 +670,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         else:
             assert dt is not None
             self.add_new_element = self.addNewElementSort2
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -769,7 +768,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid] = [tx]
         self.ty[dt][eid] = [ty]
 
-    def addSort2(self, dt, eid, data):
+    def add_sort2(self, dt, eid, data):
         [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         if dt not in self.mx:
             self.add_new_transient(dt)
@@ -799,6 +798,203 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         #raise NotImplementedError()
 
 
+class ComplexCBarForceArray(ScalarObject):
+    def get_headers(self):
+        headers = ['bendingMomentA', 'bendingMomentB', 'shear', 'axial', 'torque', ]
+        return headers
+
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        #ForceObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
+
+        #self.eType = {}
+        self.result_flag = 0
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.itime = 0
+        self.nelements = 0  # result specific
+        self.element_type = 'CBAR'
+        #self.cid = {}  # gridGauss
+
+        if is_sort1:
+            #sort1
+            pass
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        if self.is_built:
+            return
+        nnodes = 1
+
+        #self.names = []
+        #self.nelements //= nnodes
+        self.nelements /= self.ntimes
+        #self.ntotal //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        self._times = zeros(self.ntimes, 'float32')
+        self.element = zeros(self.ntotal, 'int32')
+
+        # the number is messed up because of the offset for the element's properties
+
+        if not self.nelements * nnodes == self.ntotal:
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           self.nelements, nnodes,
+                                                                           self.nelements * nnodes,
+                                                                           self.ntotal)
+            raise RuntimeError(msg)
+        #[bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+        self.data = zeros((self.ntimes, self.ntotal, 8), 'complex64')
+
+    def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+        #[bendingMomentA, bendingMomentB, shear, axial, torque]
+        self._times[self.itotal] = dt
+        self.data[self.itime, self.itotal, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+        self.element[self.itotal] = eid
+        self.itotal += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+        msg = []
+
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
+        msg.append('  eType, cid\n')
+        msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  CBAR\n')
+        msg += self.get_data_code()
+        return msg
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        #is_sort1 = False
+        if is_mag_phase:
+            mag_phase = '                                                          (MAGNITUDE/PHASE)\n'
+        else:
+            mag_phase = '                                                          (REAL/IMAGINARY)\n'
+
+
+        name = self.data_code['name']
+        if name == 'freq':
+            name = 'FREQUENCY'
+        else:
+            raise RuntimeError(name)
+
+        if is_sort1:
+            line1 = '0    ELEMENT         BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
+            line2 = '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n'
+        else:
+            line1 = '0                    BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
+            line2 = '   %26s       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n' % name
+
+        # force
+        msg_temp = header + [
+            '                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
+            mag_phase,
+            ' ',
+            line1,
+            line2,
+        ]
+        eids = self.element
+        times = self._times
+        assert self.is_sort1() == True, str(self)
+        if is_sort1:
+            for itime in range(ntimes):
+                dt = self._times[itime]
+                dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                header[1] = dt_line
+                msg = header + msg_temp
+                f.write(''.join(msg))
+
+                # TODO: can I get this without a reshape?
+                #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
+                assert self.is_sort1() == True, str(self)
+                bm1a = self.data[itime, :, 0]
+                bm2a = self.data[itime, :, 1]
+                bm1b = self.data[itime, :, 2]
+                bm2b = self.data[itime, :, 3]
+                ts1 = self.data[itime, :, 4]
+                ts2 = self.data[itime, :, 5]
+                af = self.data[itime, :, 6]
+                trq = self.data[itime, :, 7]
+
+                for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+                    vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
+                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                     bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
+
+                    f.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                eid, bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                                '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
+                f.write(page_stamp % page_num)
+                page_num += 1
+        else:
+            for ieid, eid in enumerate(eids):
+                eid_line = ' ELEMENT-ID = %s' % (eid)
+                header[1] = eid_line
+                msg = header + msg_temp
+                f.write(''.join(msg))
+
+                # TODO: can I get this without a reshape?
+                #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
+                bm1a = self.data[:, ieid, 0]
+                bm2a = self.data[:, ieid, 1]
+                bm1b = self.data[:, ieid, 2]
+                bm2b = self.data[:, ieid, 3]
+                ts1 = self.data[:, ieid, 4]
+                ts2 = self.data[:, ieid, 5]
+                af = self.data[:, ieid, 6]
+                trq = self.data[:, ieid, 7]
+
+                for dt, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(times, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+                    vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
+                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                     bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
+
+                    f.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                write_float_12E(dt),
+                                bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                                '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
+                f.write(page_stamp % page_num)
+                page_num += 1
+        return page_num - 1
+
+
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
@@ -807,14 +1003,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
         self.shear = {}
         self.axial = {}
         self.torque = {}
-
         self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.addSort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -839,30 +1028,16 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
         self.axial[dt] = {}
         self.torque[dt] = {}
 
-    def add(self, dt, data):
-        [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-
-        #self.eType[eid] = eType
-        self.bendingMomentA[eid] = [bm1a, bm2a]
-        self.bendingMomentB[eid] = [bm1b, bm2b]
-        self.shear[eid] = [ts1, ts2]
-        self.axial[eid] = af
-        self.torque[eid] = trq
-
-    def add_sort1(self, dt, data):
-        [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+    def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
         if dt not in self.axial:
             self.add_new_transient(dt)
-
-        #self.eType[eid] = eType
         self.bendingMomentA[dt][eid] = [bm1a, bm2a]
         self.bendingMomentB[dt][eid] = [bm1b, bm2b]
         self.shear[dt][eid] = [ts1, ts2]
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def addSort2(self, eid, data):
-        [dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+    def add_sort2(self, eid, dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.bendingMomentA[dt][eid] = [bm1a, bm2a]
@@ -939,7 +1114,7 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -984,7 +1159,7 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
             dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB)
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
         self._fillObject(
@@ -1018,7 +1193,7 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1055,13 +1230,209 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
 
-    def addSort2(self, eid, data):
+    def add_sort2(self, eid, data):
         [dt, eName, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
         self.acceleration[dt][eid] = [ax, ay, az]
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
+
+
+class ComplexCBushForceArray(ScalarObject):
+    def get_headers(self):
+        headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
+        return headers
+
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+
+        self.result_flag = 0
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.itime = 0
+        self.nelements = 0  # result specific
+        self.element_type = 'CBUSH'
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        if self.is_built:
+            return
+        nnodes = 1
+
+        #self.names = []
+        #self.nelements //= nnodes
+        self.nelements /= self.ntimes
+        #self.ntotal //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        self._times = zeros(self.ntimes, 'float32')
+        self.element = zeros(self.ntotal, 'int32')
+
+        # the number is messed up because of the offset for the element's properties
+
+        if not self.nelements * nnodes == self.ntotal:
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           self.nelements, nnodes,
+                                                                           self.nelements * nnodes,
+                                                                           self.ntotal)
+            raise RuntimeError(msg)
+        #[fx, fy, fz, mx, my, mz]
+        self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
+
+    def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+        #[fx, fy, fz, mx, my, mz]
+        self._times[self.itotal] = dt
+        self.data[self.itime, self.itotal, :] = [fx, fy, fz, mx, my, mz]
+        self.element[self.itotal] = eid
+        self.itotal += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+        msg = []
+
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
+        msg.append('  eType, cid\n')
+        msg.append('  data: [ntimes, nelements, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  CBUSH\n')
+        msg += self.get_data_code()
+        return msg
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        #is_sort1 = False
+        if is_mag_phase:
+            mag_phase = '                                                          (MAGNITUDE/PHASE)\n'
+        else:
+            mag_phase = '                                                          (REAL/IMAGINARY)\n'
+
+
+        name = self.data_code['name']
+        if name == 'freq':
+            name = 'FREQUENCY'
+        else:
+            raise RuntimeError(name)
+
+        if is_sort1:
+            line1 = '0    ELEMENT         BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
+            line2 = '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n'
+        else:
+            line1 = '0                    BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
+            line2 = '   %26s       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n' % name
+
+        # force
+        msg_temp = header + [
+            '                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
+            mag_phase,
+            ' ',
+            line1,
+            line2,
+        ]
+        eids = self.element
+        times = self._times
+        assert self.is_sort1() == True, str(self)
+        is_sort1 = True
+        if is_sort1:
+            for itime in range(ntimes):
+                dt = self._times[itime]
+                dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                header[1] = dt_line
+                msg = header + msg_temp
+                f.write(''.join(msg))
+
+                # TODO: can I get this without a reshape?
+                #fx, fy, fz, mx, my, mz
+                if self.is_sort1():
+                    fx = self.data[itime, :, 0]
+                    fy = self.data[itime, :, 1]
+                    fz = self.data[itime, :, 2]
+                    mx = self.data[itime, :, 3]
+                    my = self.data[itime, :, 4]
+                    mz = self.data[itime, :, 5]
+                else:
+                    fx = self.data[:, itime, 0]
+                    fy = self.data[:, itime, 1]
+                    fz = self.data[:, itime, 2]
+                    mx = self.data[:, itime, 3]
+                    my = self.data[:, itime, 4]
+                    mz = self.data[:, itime, 5]
+                    af = self.data[:, itime, 6]
+
+
+                for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
+                    vals = (fxi, fyi, fzi, mxi, myi, mzi)
+                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    (fxir, fyir, fzir, mxir, myir, mzir,
+                     fxii, fyii, fzii, mxii, myii, mzii) = vals2
+
+                    f.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                eid, fxir, fyir, fzir, mxir, myir, mzir,
+                                '', fxii, fyii, fzii, mxii, myii, mzii))
+                f.write(page_stamp % page_num)
+                page_num += 1
+        else:
+            for ieid, eid in enumerate(eids):
+                eid_line = ' ELEMENT-ID = %s' % (eid)
+                header[1] = eid_line
+                msg = header + msg_temp
+                f.write(''.join(msg))
+
+                # TODO: can I get this without a reshape?
+                if self.is_sort1():
+                    fx = self.data[:, ieid, 0]
+                    fy = self.data[:, ieid, 1]
+                    fz = self.data[:, ieid, 2]
+                    mx = self.data[:, ieid, 3]
+                    my = self.data[:, ieid, 4]
+                    mz = self.data[:, ieid, 5]
+                else:
+                    raise RuntimeError()
+
+                for dt, fxi, fyi, fzi, mxi, myi, mzi in zip(times, fx, fy, fz, mx, my, mz):
+                    vals = (fxi, fyi, fzi, mxi, myi, mzi)
+                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    (fxir, fyir, fzir, mxir, myir, mzir,
+                     fxii, fyii, fzii, mxii, myii, mzii) = vals2
+
+                    f.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                write_float_12E(dt),
+                                fxir, fyir, fzir, mxir, myir, mzir,
+                                '', fxii, fyii, fzii, mxii, myii, mzii))
+                f.write(page_stamp % page_num)
+                page_num += 1
+        return page_num - 1
 
 
 class ComplexCBushForce(ScalarObject):  # 102-CBUSH
@@ -1076,7 +1447,7 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1098,20 +1469,13 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
         self.force[dt] = {}
         self.moment[dt] = {}
 
-    def add(self, dt, data):
-        [eid, fx, fy, fz, mx, my, mz] = data
-        self.force[eid] = [fx, fy, fz]
-        self.moment[eid] = [mx, my, mz]
-
-    def add_sort1(self, dt, data):
-        [eid, fx, fy, fz, mx, my, mz] = data
+    def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         if dt not in self.force:
             self.add_new_transient(dt)
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
 
-    def addSort2(self, eid, data):
-        [dt, fx, fy, fz, mx, my, mz] = data
+    def add_sort2(self, eid, dt, fx, fy, fz, mx, my, mz):
         if dt not in self.force:
             self.add_new_transient(dt)
         self.force[dt][eid] = [fx, fy, fz]
@@ -1139,7 +1503,7 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1212,7 +1576,7 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def addSort2(self, nnodes, eid, data):
+    def add_sort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
@@ -1261,7 +1625,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -1320,7 +1684,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         [eid, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 
-    def addSort2(self, nnodes, eid, data):
+    def add_sort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 

@@ -1,4 +1,4 @@
-#pylint: disable=C0301,C0103,W0201,R0911,R0915,R0914
+#pylint: disable=C0301,W0201,R0911,R0915,R0914
 """
 Contains the OES class that is used to read stress/strain data
 """
@@ -31,7 +31,9 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import (RealSolidStre
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain, NonlinearSpringStress # TODO: vectorize 3
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress, RealTriaxStrain # TODO: vectorize 2
 
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStress, ComplexBarStrain      # TODO: vectorize 2
+
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import (ComplexBarStress, ComplexBarStrain,
+                                                                    ComplexBarStressArray, ComplexBarStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushStress, ComplexBushStrain    # TODO: vectorize 2
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress                   # TODO: vectorize 1
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (ComplexPlateStress, ComplexPlateStrain,
@@ -175,65 +177,6 @@ class OES(OP2Common):
         self._write_debug_bits()
         self._parse_stress_code()
 
-    def fix_format_code(self):
-        """
-        Nastran correctly calculates the proper defaults for the analysis
-        based on the solution type and the the user's requests.  However,
-        the user doesn't always set the values correctly.  When Nastran
-        goes to write the output, it uses the original values, rather
-        than the correct values that were used for analysis.
-
-        In a SOL 101 case:
-            STRESS(PLOT, SORT1, IMAG) = ALL
-
-        the user has set an incorrect value (IMAG), which gets turned into
-        a format code of 2, where:
-          1 - real
-          2 - real/imag (complex results)
-          3 - mag/phase (complex results)
-
-        This inconsistency causes problems with the parser.  Thus, based on
-        the analysis_code (1 is like SOL 101, but really means static), we
-        can switch mag/phase results to real static results.
-
-        Note that a case of 4 is not used and is used below as a placeholder,
-        while a case of -1 is some bizarre unhandled, undocumented case.
-        """
-        if self.format_code == -1:
-            raise RuntimeError(self.code_information())
-            return
-
-        if self.analysis_code == 1:   # statics / displacement / heat flux
-            assert self.format_code in [1, 3], self.format_code
-            self.format_code = 1
-        elif self.analysis_code == 2:  # real eigenvalues
-            assert self.format_code in [1, 3], self.format_code
-            self.format_code = 1
-        #elif self.analysis_code==3: # differential stiffness
-        #elif self.analysis_code==4: # differential stiffness
-        elif self.analysis_code == 5:   # frequency
-            assert self.format_code in [1, 2, 3], self.format_code
-            self.format_code = 2
-        elif self.analysis_code == 6:  # transient
-            assert self.format_code in [1, 2, 3], self.format_code
-            self.format_code = 1
-        elif self.analysis_code == 7:  # pre-buckling
-            assert self.format_code in [1], self.format_code
-        elif self.analysis_code == 8:  # post-buckling
-            assert self.format_code in [1, 2], self.format_code
-        elif self.analysis_code == 9:  # complex eigenvalues
-            assert self.format_code in [1, 2, 3], self.format_code
-        elif self.analysis_code == 10:  # nonlinear statics
-            assert self.format_code in [1], self.format_code
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
-            assert self.format_code in [1], self.format_code
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            assert self.format_code in [4], self.format_code # invalid value
-        else:
-            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
-            raise RuntimeError(msg)
-        self.data_code['format_code'] = self.format_code
-
     def _parse_stress_code(self):
         """
         s_code =  0 -> stress_bits = [0,0,0,0,0]
@@ -295,6 +238,7 @@ class OES(OP2Common):
             except AttributeError:
                 raise
             except:
+                raise
                 print("----------")
                 print(self.obj)
                 print(self.data_code)
@@ -337,10 +281,13 @@ class OES(OP2Common):
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
 
+        flag = 'element_id'
         if self.isStress():
             result_name = 'stress'
+            stress_name = 'STRESS'
         else:
             result_name = 'strain'
+            stress_name = 'STRAIN'
 
         if self._results.is_not_saved(result_name):
             return len(data)
@@ -412,7 +359,8 @@ class OES(OP2Common):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, axial, axial_margin, torsion, torsion_margin) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
@@ -431,8 +379,10 @@ class OES(OP2Common):
                 s = Struct(self._endian + b'i4f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
-                    (eid_device, axialReal, axial_imag, torsion_real, torsionImag) = s.unpack(edata)
-                    eid = (eid_device - self.device_code) // 10
+                    out = s.unpack(edata)
+                    (eid_device, axialReal, axial_imag, torsion_real, torsionImag) = out
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if is_magnitude_phase:
                         axial = polar_to_real_imag(axialReal, axial_imag)
@@ -510,7 +460,8 @@ class OES(OP2Common):
 
                     out = s1.unpack(edata)
                     eid_device = out[0]
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
@@ -550,7 +501,8 @@ class OES(OP2Common):
 
                     out = s1.unpack(edata)
                     eid_device = out[0]
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
@@ -613,7 +565,8 @@ class OES(OP2Common):
                         self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
 
                     (eid_device, max_strain, avg_strain, margin) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     self.obj.add_new_eid(dt, eid, max_strain, avg_strain, margin)
                     n += ntotal
 
@@ -634,7 +587,8 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
                     (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if is_magnitude_phase:
                         etmax = polar_to_real_imag(etmaxr, etmaxi)
@@ -699,7 +653,8 @@ class OES(OP2Common):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, ox) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (eid, i, eid_device, ox))
                     self.obj.add_new_eid(dt, eid, (ox,))
@@ -715,8 +670,10 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
-                    (eid_device, axial_real, axial_imag) = s.unpack(edata)
-                    eid = (eid_device - self.device_code) // 10
+                    out = s.unpack(edata)
+                    (eid_device, axial_real, axial_imag) = out
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if is_magnitude_phase:
                         axial = polar_to_real_imag(axial_real, axial_imag)
@@ -779,7 +736,8 @@ class OES(OP2Common):
                     (eid_device,
                      s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                      s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     assert eid > 0, eid
                     if self.debug4():
                         self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
@@ -788,17 +746,30 @@ class OES(OP2Common):
                                          s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                          s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
             elif self.format_code in [2, 3] and self.num_wide == 19:  # imag
-                if self.read_mode == 1:
-                    return len(data)
-
                 if self.isStress():
-                    self.create_transient_object(slot, ComplexBarStress)
+                    obj_complex = ComplexBarStress
+                    obj_vector_complex = ComplexBarStressArray
                 else:
-                    self.create_transient_object(slot, ComplexBarStrain)
+                    obj_complex = ComplexBarStrain
+                    obj_vector_complex = ComplexBarStrainArray
 
-                s = Struct(self._endian + b'i18f')
                 ntotal = 76
                 nelements = len(data) // ntotal
+                auto_return = self._create_oes_object2(nelements,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_complex, obj_vector_complex)
+                if auto_return:
+                    return len(data)
+
+                if self.debug4():
+                    self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                    self.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial,\n')
+                    self.binary_debug.write('                           s1b, s2b, s3b, s4b]\n')
+                    self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+                s = Struct(self._endian + b'i18f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
@@ -809,7 +780,10 @@ class OES(OP2Common):
                      s1br, s2br, s3br, s4br,
                      s1bi, s2bi, s3bi, s4bi) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
+                    if self.debug4():
+                        self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
                     if is_magnitude_phase:
                         s1a = polar_to_real_imag(s1ar, s1ai)
@@ -832,9 +806,9 @@ class OES(OP2Common):
                         s4b = complex(s4br, s4bi)
                         axial = complex(axialr, axiali)
 
-                    self.obj.add_new_eid('CBAR', dt, eid,
-                                         s1a, s2a, s3a, s4a, axial,
-                                         s1b, s2b, s3b, s4b)
+                    self.obj.add_new_eid_sort1('CBAR', dt, eid,
+                                               s1a, s2a, s3a, s4a, axial,
+                                               s1b, s2b, s3b, s4b)
             elif self.format_code == 1 and self.num_wide == 19: # random
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
@@ -927,7 +901,8 @@ class OES(OP2Common):
                     edata = data[n:n+16]
                     out = struct1.unpack(edata)
                     (eid_device, cid, abcd, nnodes) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if self.debug4():
                         self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
@@ -986,7 +961,8 @@ class OES(OP2Common):
                     n += 16
                     out = s1.unpack(edata)
                     (eid_device, cid, ctype, nodef) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
@@ -1022,7 +998,7 @@ class OES(OP2Common):
                             self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
                         self.obj.add_node_sort1(dt, eid, grid, inode,
                                                 ex, ey, ez, etxy, etyz, etzx)
-            elif self.format_code == 1 and self.num_wide == num_wide_random: # random
+            elif self.format_code == 1 and self.num_wide == numwide_random: # random
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
             else:
@@ -1076,7 +1052,8 @@ class OES(OP2Common):
                      fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
                      fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
@@ -1108,7 +1085,8 @@ class OES(OP2Common):
                      fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                      fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('  eid=%i C=%s\n' % (eid, str(out)))
 
@@ -1212,7 +1190,8 @@ class OES(OP2Common):
                     (eid_device,
                      fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                      fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if self.debug4():
                         self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
@@ -1240,7 +1219,8 @@ class OES(OP2Common):
                     (eid_device,
                      fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                      fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if self.debug4():
                         self.binary_debug.write('  OESC CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
@@ -1391,7 +1371,8 @@ class OES(OP2Common):
                     (eid_device, j, grid,
                      fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                      fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if self.debug4():
                         self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
@@ -1443,7 +1424,7 @@ class OES(OP2Common):
                     out = s2.unpack(edata)  # len=15*4
 
                     #eid = (eid_device - self.device_code) // 10
-                    eid = self._check_id(eid_device, 'element', out)
+                    eid = self._check_id(eid_device, 'element', stress_name, out)
                     assert eid > 0, eid
                     if self.debug4():
                         self.binary_debug.write('%s\n' % (str(out)))
@@ -1547,7 +1528,8 @@ class OES(OP2Common):
                     (eid_device, fd1,
                      sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                      ex1, ey1, ez1, exy1) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     indata = (eid, fd1,
                               sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                               ex1, ey1, ez1, exy1)
@@ -1572,7 +1554,8 @@ class OES(OP2Common):
                     (eid_device,
                      fd1, sx1, sy1, undef1, txy1, es1, eps1, ecs1, ex1, ey1, undef2, etxy1,
                      fd2, sx2, sy2, undef3, txy2, es2, eps2, ecs2, ex2, ey2, undef4, etxy2) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     #in_data = (eid, fd1, sx1, sy1, txy1, es1, eps1, ecs1, ex1, ey1, etxy1,
                                     #fd2, sx2, sy2, txy2, es2, eps2, ecs2, ex2, ey2, etxy2)
                     self.obj.add_new_eid(self.element_type, dt, (
@@ -1752,7 +1735,8 @@ class OES(OP2Common):
                     (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
                     if self.debug4():
                         self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
-                    eid = (eid_device - self.device_code) // 10
+                        #eid = (eid_device - self.device_code) // 10
+                        eid = self._check_id(eid_device, flag, stress_name, out)
 
                     self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                     n += 36
@@ -1785,7 +1769,8 @@ class OES(OP2Common):
                 for i in range(nelements):
                     out = s1.unpack(data[n:n + 40])
                     (eid_device, loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
 
@@ -1850,7 +1835,8 @@ class OES(OP2Common):
                         self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
 
                     (eid_device, tx, ty, tz, rx, ry, rz) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
                     n += ntotal
@@ -1872,7 +1858,8 @@ class OES(OP2Common):
                     (eid_device,
                      txr, tyr, tzr, rxr, ryr, rzr,
                      txi, tyi, tzi, rxi, ryi, rzi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if is_magnitude_phase:
                         tx = polar_to_real_imag(txr, txi)
@@ -1920,7 +1907,8 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('CBUSH1D-40 - %s\n' % (str(out)))
                     (eid_device, fe, ue, ve, ao, ae, ep, fail) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     # axial_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed
                     self.obj.add_new_eid(self.element_type, dt, eid, fe, ue, ve, ao, ae, ep, fail)
@@ -1942,7 +1930,8 @@ class OES(OP2Common):
                     (eid_device,
                      fer, uer, aor, aer,
                      fei, uei, aoi, aei) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     if is_magnitude_phase:
                         fe = polar_to_real_imag(fer, fei)
@@ -2007,7 +1996,8 @@ class OES(OP2Common):
 
                     (eid_device, axial, equivStress, totalStrain, effPlasticCreepStrain,
                      effCreepStrain, linearTorsionalStresss) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('%s - %s\n' % (name, str(out)))
                     indata = (eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss)
@@ -2050,7 +2040,8 @@ class OES(OP2Common):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)  # num_wide=3
                     (eid_device, force, stress) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('%s-%s - %s\n' % (self.element_name, self.element_type, str(out)))
                     self.obj.add_new_eid(self.element_name, dt, eid, force, stress)
@@ -2092,7 +2083,8 @@ class OES(OP2Common):
 
                     out = s.unpack(edata)  # num_wide=25
                     (eid_device, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.debug4():
                         self.binary_debug.write('CGAPNL-86 - %s\n' % str(out))
                     self.obj.add_new_eid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
@@ -2178,7 +2170,8 @@ class OES(OP2Common):
                     assert out[46-1] == b'   F', out[46-1]
 
                     eid_device = out[0]
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     self.obj.add_new_eid_sort1(dt, eid, out)
                     n += 204
 
@@ -2246,7 +2239,8 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
                     (eid_device, ctype) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     for i in range(nnodes):
                         edata = data[n:n+64]
@@ -2306,8 +2300,10 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal  # 2+16*9 = 146 -> 146*4 = 584
                 for i in range(nelements):
                     edata = data[n:n+8]
-                    (eid_device, parent_id) = s1.unpack(edata)
-                    eid = (eid_device - self.device_code) // 10
+                    out = s1.unpack(edata)
+                    (eid_device, parent_id) = out
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     for i in range(nnodes):
                         edata = data[n:n+48]
@@ -2355,7 +2351,8 @@ class OES(OP2Common):
                         self.binary_debug.write('CQUAD4FD-139A- %s\n' % (str(out)))
 
                     (eid_device, Type, ID, sx, sy, sxy, angle, smj, smi) = out
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     self.obj.add_new_eid(dt, [eid, Type, sx, sy, sxy, angle, smj, smi])
                     n += 36
 
@@ -2409,11 +2406,13 @@ class OES(OP2Common):
                 s3 = Struct(self._endian + b'i16f')
                 nelements = len(data) // ntotal
                 for i in range(nelements):
-                    (eid_device, parent, coord, icord, theta, itype) = s2.unpack(data[n:n+24])
+                    out = s2.unpack(data[n:n + 24])
+                    (eid_device, parent, coord, icord, theta, itype) = out
                     n += 24
-                    eid = (eid_device - self.device_code) // 10
+                    #eid = (eid_device - self.device_code) // 10
+                    eid = self._check_id(eid_device, flag, stress_name, out)
                     assert eid > 0, eid
-                    edata = data[n:n+68]
+                    edata = data[n:n + 68]
                     out = s3.unpack(edata)  # len=17*4
                     n += 68
 
@@ -2423,7 +2422,7 @@ class OES(OP2Common):
                     #self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
                     #self.obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
                     for node_id in range(nnodes - 1):  # nodes pts
-                        edata = data[n:n+68]
+                        edata = data[n:n + 68]
                         n += 68
                         out = s3.unpack(edata)
                         if self.debug4():
@@ -2534,26 +2533,34 @@ class OES(OP2Common):
                             obj, obj_vector):
         """
         Creates the self.obj parameter based on if this is vectorized or not.
-        :param self: the object pointer
-        :param nelements: the number of elements to preallocate for vectorization
-        :type nelements: integer
-        :param result_name: unused
-        :type result_name: string
-        :param result_vector_name: unused
-        :type result_vector_name: string
-        :param slot: the self dictionary that will be filled with a
-                     non-vectorized result
-        :type slot: dictionary
-        :param slot_vector: the self dictionary that will be filled with a
-                            vectorized result
-        :type slot: slot_vector
-        :param obj: a pointer to the non-vectorized class
-        :param obj_vector: a pointer to the vectorized class
 
-        :returns auto_return: a flag indicating a return n should be called
-        :type auto_return: bool
-        :returns result_name: string of result_name or result_vector_name
-        :type result_name: string
+        Parameters
+        ----------
+        self : OES()
+            the object pointer
+        nelements :  int
+            the number of elements to preallocate for vectorization
+        result_name : str
+            unused
+        result_vector_name : str
+            unused
+        slot : dict[(int, int, str)=obj
+            the self dictionary that will be filled with a
+            non-vectorized result
+        slot_vector : dict[(int, int, str)=obj
+            the self dictionary that will be filled with a
+            vectorized result
+        obj : OES
+            a pointer to the non-vectorized class
+        obj_vector : OESArray
+            a pointer to the vectorized class
+
+        Returns
+        -------
+        auto_return : bool
+            a flag indicating a return n should be called
+        result_name : str
+            string of result_name or result_vector_name
 
         Since that's confusing, let's say we have real CTETRA stress data.
         We're going to fill self.solidStress with the class

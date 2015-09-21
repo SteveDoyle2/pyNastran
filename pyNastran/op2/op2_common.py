@@ -67,6 +67,8 @@ class OP2Common(Op2Codes, F06Writer):
         #: currently unused
         self.expected_times = None
 
+        self._endian = None
+
         #self.show_table3_map = [
             ##'OUGV1',
             ##'OEF1X',
@@ -80,6 +82,66 @@ class OP2Common(Op2Codes, F06Writer):
 
         # sets the element mapper
         self.get_element_type(33)
+
+    def fix_format_code(self):
+        """
+        Nastran correctly calculates the proper defaults for the analysis
+        based on the solution type and the the user's requests.  However,
+        the user doesn't always set the values correctly.  When Nastran
+        goes to write the output, it uses the original values, rather
+        than the correct values that were used for analysis.
+
+        In a SOL 101 case:
+            STRESS(PLOT, SORT1, IMAG) = ALL
+
+        the user has set an incorrect value (IMAG), which gets turned into
+        a format code of 2, where:
+          1 - real
+          2 - real/imag (complex results)
+          3 - mag/phase (complex results)
+
+        This inconsistency causes problems with the parser.  Thus, based on
+        the analysis_code (1 is like SOL 101, but really means static), we
+        can switch mag/phase results to real static results.
+
+        Note that a case of 4 is not used and is used below as a placeholder,
+        while a case of -1 is some bizarre unhandled, undocumented case.
+        """
+        if self.format_code == -1:
+            raise RuntimeError(self.code_information())
+            #return
+
+        if self.analysis_code == 1:   # statics / displacement / heat flux
+            assert self.format_code in [1, 3], self.format_code
+            self.format_code = 1
+        elif self.analysis_code == 2:  # real eigenvalues
+            assert self.format_code in [1, 3], self.format_code
+            self.format_code = 1
+        #elif self.analysis_code==3: # differential stiffness
+        #elif self.analysis_code==4: # differential stiffness
+        elif self.analysis_code == 5:   # frequency
+            assert self.format_code in [1, 2, 3], self.format_code
+            self.format_code = 2
+        elif self.analysis_code == 6:  # transient
+            assert self.format_code in [1, 2, 3], self.format_code
+            self.format_code = 1
+        elif self.analysis_code == 7:  # pre-buckling
+            assert self.format_code in [1], self.format_code
+        elif self.analysis_code == 8:  # post-buckling
+            assert self.format_code in [1, 2], self.format_code
+        elif self.analysis_code == 9:  # complex eigenvalues
+            assert self.format_code in [1, 2, 3], self.format_code
+        elif self.analysis_code == 10:  # nonlinear statics
+            assert self.format_code in [1], self.format_code
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            assert self.format_code in [1], self.format_code
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            assert self.format_code in [4], self.format_code # invalid value
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+        self.data_code['format_code'] = self.format_code
+
 
     def add_data_parameter(self, data, var_name, Type, field_num,
                            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
@@ -341,7 +403,7 @@ class OP2Common(Op2Codes, F06Writer):
             out = s.unpack(edata)
             (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
-            eid = self._check_id(eid_device, flag, out)
+            eid = self._check_id(eid_device, flag, 'DISP', out)
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
 
@@ -367,7 +429,7 @@ class OP2Common(Op2Codes, F06Writer):
             out = s.unpack(edata)
             (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
-            eid = self._check_id(eid_device, flag, out)
+            eid = self._check_id(eid_device, flag, 'DISP', out)
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
 
@@ -431,7 +493,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
-            eid = self._check_id(eid_device, flag, out)
+            eid = self._check_id(eid_device, flag, 'DISP', out)
             if self.debug4():
                 self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
 
@@ -456,7 +518,7 @@ class OP2Common(Op2Codes, F06Writer):
             n += ntotal
         return n
 
-    def _check_id(self, eid_device, flag, out):
+    def _check_id(self, eid_device, flag, bdf_name, out):
         """
         Somewhat risky method for calculating the eid because the device code
         is ignored.  However, this might be the actual way to parse the id.
@@ -465,12 +527,12 @@ class OP2Common(Op2Codes, F06Writer):
         #print('eid =', eid)
         #print('flag =', flag)
         eid2 = eid_device // 10
-        #return eid2
+        return eid2
         if eid != eid2 or eid2 <= 0:
             msg = 'eid_device=%s device_code=%s eid=%s eid2=%s\n\n' % (eid_device, self.device_code,
                                                                        eid, eid2)
             msg += 'The device code is set wrong, probably because you used:\n'
-            msg += "  'DISP=ALL' instead of 'DISP(PLOT,PRINT,REAL)=ALL'"
+            msg += "  '%s=ALL' instead of '%s(PLOT,PRINT,REAL)=ALL'"  % (bdf_name, bdf_name)
             msg += '  %s=%i; %s\n' % (flag, eid, str(out))
             msg += str(self.code_information())
             raise DeviceCodeError(msg)
@@ -720,7 +782,7 @@ class OP2Common(Op2Codes, F06Writer):
             i -= 1
         #: the bytes describe the SORT information
         self.sort_bits = bits
-        #self.data_code['sort_bits'] = self.sort_bits
+        self.data_code['sort_bits'] = self.sort_bits
 
     def _table_specs(self):
         """

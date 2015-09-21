@@ -643,7 +643,7 @@ class F06Writer(OP2_F06_Common):
         for res_key in res_keys:
             #title = self.Title
 
-            #isubcase = res_key[0]
+            isubcase = res_key[0]
             subtitle = res_key[2]
             #print(res_key)
             label = self.labels[res_key]

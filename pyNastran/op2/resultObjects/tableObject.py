@@ -40,12 +40,12 @@ class TableArray(ScalarObject):  # displacement style table
         msg = []
 
         ntimes = len(self._times)
-        #len(self.node_gridtype)
         nnodes = self.node_gridtype.shape[0]
         ntimes, ntotal = self.data.shape[:2]
         assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
         assert self.ntotal == ntotal, 'ntotal=%s expected=%s' % (self.ntimes, ntimes)
 
+        msg.append('  isubcase = %s\n' % self.isubcase)
         if self.nonlinear_factor is not None:  # transient
             msg.append('  type=%s ntimes=%s nnodes=%s\n'
                        % (self.__class__.__name__, ntimes, nnodes))
@@ -83,17 +83,15 @@ class TableArray(ScalarObject):  # displacement style table
 
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), self.data_type())
-        #print(str(self))
 
     def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         self.add_sort1(None, node_id, grid_type, v1, v2, v3, v4, v5, v6)
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        #print "dt=%s out=%s" %(dt,out)
+        #print "dt=%s out=%s" %(dt, out)
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
         #print(msg)
-        #assert node_id == 1575, msg
         if not (-1 < node_id < 1000000000):
             msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
             msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
@@ -101,8 +99,6 @@ class TableArray(ScalarObject):  # displacement style table
         assert isinstance(node_id, int), node_id
         #assert isinstance(node_id, int), msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
-
-        #self.gridTypes[node_id] = self.recastGridType(grid_type)
 
         # [t1, t2, t3, r1, r2, r3]
         #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
@@ -118,21 +114,21 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
 
     def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        #print "dt=%s out=%s" %(dt,out)
+        #print "dt=%s out=%s" %(dt, out)
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
         #print('itime=%s itotal=%s' % (self.itotal, self.itime))
         #print(msg)
-        #assert node_id == 1575, msg
+        msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
+        msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
         if not (-1 < node_id < 1000000000):
-            msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
-            msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
+            #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
+            #msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
             raise RuntimeError(msg)
         assert isinstance(node_id, int), node_id
+        #print(msg)
         #assert isinstance(node_id, int), msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
-
-        #self.gridTypes[node_id] = self.recastGridType(grid_type)
 
         # [t1, t2, t3, r1, r2, r3]
         #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
@@ -141,10 +137,15 @@ class TableArray(ScalarObject):  # displacement style table
         # the node IDs
         self._times[self.itime] = dt
         self.node_gridtype[self.itime, :] = [node_id, grid_type]
-        self.data[self.itotal, self.itime, :] = [v1, v2, v3, v4, v5, v6]
+        if 0:
+            self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+            # itotal - the node number
+            # itime - the time/frequency step
+        else:
+            self.data[self.itotal, self.itime, :] = [v1, v2, v3, v4, v5, v6]
+            # itotal - the time/frequency step
+            # itime - the node number
 
-        # itotal - the node number
-        # itime - the time/frequency step
         self.itotal += 1
         #self.itime += 1
 
@@ -364,21 +365,18 @@ class RealTableArray(TableArray):  # displacement style table
                 f.write(page_stamp % page_num)
                 page_num += 1
         else:
-            node = self.node_gridtype[:, 0]
-            gridtype = self.node_gridtype[:, 1]
+            nodes = self.node_gridtype[:, 0]
+            gridtypes = self.node_gridtype[:, 1]
             times = self._times
-            for inode, (nid, gridtypei) in enumerate(zip(node, gridtype)):
-                t1 = self.data[itime, :, 0]
-                t2 = self.data[itime, :, 1]
-                t3 = self.data[itime, :, 2]
-                r1 = self.data[itime, :, 3]
-                r2 = self.data[itime, :, 4]
-                r3 = self.data[itime, :, 5]
+            for inode, (node_id, gridtypei) in enumerate(zip(nodes, gridtypes)):
+                t1 = self.data[inode, :, 0]
+                t2 = self.data[inode, :, 1]
+                t3 = self.data[inode, :, 2]
+                r1 = self.data[inode, :, 3]
+                r2 = self.data[inode, :, 4]
+                r3 = self.data[inode, :, 5]
 
-                if isinstance(dt, (float, float32)):
-                    header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                else:
-                    header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
+                header[1] = ' POINT-ID = %10i\n' % node_id
                 f.write(''.join(header + words))
                 for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                     sgridtype = self.recast_gridtype_as_string(gridtypei)
@@ -386,13 +384,16 @@ class RealTableArray(TableArray):  # displacement style table
                     (vals2, is_all_zeros) = writeFloats13E(vals)
                     (dx, dy, dz, rx, ry, rz) = vals2
                     if sgridtype == 'G':
-                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                        f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
+                                sgridtype, dx, dy, dz, rx, ry, rz))
                     elif sgridtype == 'S':
-                        f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
+                        f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                     elif sgridtype == 'H':
-                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                        f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
+                                sgridtype, dx, dy, dz, rx, ry, rz))
                     elif sgridtype == 'L':
-                        f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                        f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
+                                sgridtype, dx, dy, dz, rx, ry, rz))
                     else:
                         raise NotImplementedError(sgridtype)
                 f.write(page_stamp % page_num)
@@ -473,7 +474,6 @@ class ComplexTableArray(TableArray):  # displacement style table
         if not len(header) >= 3:
             header.append('')
 
-        is_sort1 = True
         if is_sort1:
             for itime in range(self.ntimes):
                 node = self.node_gridtype[:, 0]
@@ -521,7 +521,7 @@ class ComplexTableArray(TableArray):  # displacement style table
                 if len(r3) != len(times):
                     raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
 
-                header[2] = ' %s = %10i\n' % ('POINT-ID', node_id)
+                header[2] = ' POINT-ID = %10i\n' % node_id
                 f.write(''.join(header + words))
                 for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                     sgridtype = self.recast_gridtype_as_string(gridtypei)
