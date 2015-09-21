@@ -2713,6 +2713,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                         self._encoding = value
                     elif key == 'punch':
                         self.punch = True if value == 'true' else False
+                    elif key in ['nnodes', 'nelements']:
+                        pass
                     else:
                         raise NotImplementedError(key)
                 else:

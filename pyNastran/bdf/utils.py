@@ -258,7 +258,7 @@ def _parse_pynastran_header(line):
         key, value = word.strip().split('=')
         key = key.strip()
         value = value.strip()
-        if key in ['version', 'encoding', 'punch']:
+        if key in ['version', 'encoding', 'punch', 'nnodes', 'nelements']:
             pass
         else:
             msg = '\nunrecognized pyNastran key=%r\n' % key
@@ -607,7 +607,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         line_no = frame.f_lineno
         code = frame.f_code
         filename = os.path.basename(frame.f_globals['__file__'])
-
+        print(code)
         source_lines, line_no0 = inspect.getsourcelines(code)
         di = line_no - line_no0
         line = source_lines[di]
