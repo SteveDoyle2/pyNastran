@@ -1,11 +1,12 @@
 from six.moves import zip
 from numpy import unique
 
+from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-def cart3d_to_nastran(cart3d_filename, log=None, debug=False):
+def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
     """
     Converts a Cart3D file to Nastran format and returns a BDF() object.
 
@@ -24,7 +25,6 @@ def cart3d_to_nastran(cart3d_filename, log=None, debug=False):
     bdf_model : BDF
         BDF() model object
     """
-    from pyNastran.bdf.bdf import BDF
     cart3d = Cart3DReader(log=log, debug=debug)
     (nodes, elements, regions, loads) = cart3d.read_cart3d(cart3d_filename)
     i = 0

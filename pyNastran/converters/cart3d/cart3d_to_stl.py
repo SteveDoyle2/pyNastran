@@ -1,22 +1,22 @@
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.converters.stl.stl_reader import STLReader
 
-def cart3d_to_stl(cart3d, log=None, debug=False):
-    """
-    Converts a Cart3DReader object to STL format.
+# def cart3d_to_stl(cart3d, log=None, debug=False):
+    # """
+    # Converts a Cart3DReader object to STL format.
 
-    :param cart3d: a Cart3DReader object
-    :param log:    a logger object (or None)
-    :param debug:  True/False (used if log is not defined)
+    # :param cart3d: a Cart3DReader object
+    # :param log:    a logger object (or None)
+    # :param debug:  True/False (used if log is not defined)
 
-    :returns stl: an STLReader object
-    """
-    normals = cart3d.normals()
-    stl = STLReader(log=log, debug=debug)
-    stl.nodes = cart3d.nodes
-    stl.elements = cart3d.elements
-    stl.write_stl(stl_filename)
-    return stl
+    # :returns stl: an STLReader object
+    # """
+    # normals = cart3d.get_normals()
+    # stl = STLReader(log=log, debug=debug)
+    # stl.nodes = cart3d.nodes
+    # stl.elements = cart3d.elements
+    # stl.write_stl(stl_filename)
+    # return stl
 
 def cart3d_to_stl_filename(cart3d_filename, stl_filename, log=None, debug=False):
     """

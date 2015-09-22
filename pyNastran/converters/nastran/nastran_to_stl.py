@@ -6,6 +6,9 @@ from pyNastran.converters.stl.stl_reader import STLReader
 def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
     model = BDF(log=log)
     model.read_bdf(bdf_filename)
+    nastran_to_stl(model, stl_filename)
+
+def nastran_to_stl(model, stl_filename):
     #log.info('card_count = %s' % model.card_count)
 
     nnodes = len(model.nodes)
