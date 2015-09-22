@@ -50,9 +50,13 @@ class TecplotReader(FortranFormat):
         self.log = get_logger(log, 'debug' if debug else 'info')
         self.debug = debug
         self.xyz = array([], dtype='float32')
+
+        self.tet_elements = array([], dtype='int32')
         self.hexa_elements = array([], dtype='int32')
+
         self.quad_elements = array([], dtype='int32')
         self.tri_elements = array([], dtype='int32')
+
         self.results = array([], dtype='float32')
         self.tecplot_filename = ''
         self.variables = []
@@ -160,8 +164,7 @@ class TecplotReader(FortranFormat):
                         headers_dict[key] = value
                         #print('  ', value)
                         #value = value.strip()
-                        assert key in ['TITLE', 'VARIABLES', 'ZONE T', 'ZONETYPE', 'DATAPACKING',
-                                       'N', 'E', 'F', 'DT'], 'key=%r' % (key)
+                        assert key in ['TITLE', 'VARIABLES', 'ZONE T', 'T', 'ZONETYPE', 'DATAPACKING', 'N', 'E', 'F', 'DT'], 'key=%r' % (key)  # 'T' ???
                         parse = False
                 #print(headers_dict.keys())
 
@@ -279,12 +282,12 @@ class TecplotReader(FortranFormat):
 
                 if zone_type == 'FEBRICK':
                     hexas_list.append(elements + nnodes)
-                elif zone_type in ('FETETRAHEDRON'):
+                elif zone_type == 'FETETRAHEDRON':
                     tets_list.append(elements + nnodes)
                 elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
                     quads_list.append(elements + nnodes)
-                elif zone_type in ('FETRIANGLE'):
-                    tri_list.append(elements + nnodes)
+                elif zone_type == 'FETRIANGLE':
+                    tris_list.append(elements + nnodes)
                 else:
                     raise NotImplementedError(zone_type)
                 xyz_list.append(xyz)
@@ -637,7 +640,7 @@ class TecplotReader(FortranFormat):
         model = TecplotReader()
         model.xyz = nodes2
         model.results = results2
-        model.elements = elements3
+        model.hexa_elements = elements3
 
         if slice_filename:
             model.write_tecplot(slice_filename)
@@ -811,7 +814,7 @@ def main2():
     #fnames = [os.path.join(r'Z:\Temporary_Transfers\steve\output\time20000', fname)
     #          for fname in fnames]
     fnames = ['slice.plt']
-    tecplot_filename_out = None
+    # tecplot_filename_out = None
     #tecplot_filename_out = 'tecplot_joined.plt'
     #model = merge_tecplot_files(fnames, tecplot_filename_out)
 
