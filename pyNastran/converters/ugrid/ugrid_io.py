@@ -1,7 +1,7 @@
 from numpy import vstack, amax, amin, arange, ones, zeros, where
-from ulst.formats.aflr3.surf_reader import TagReader
-from ulst.formats.aflr3.ugrid_reader import UGRID
-from ulst.formats.aflr2.ugrid2d_reader import UGRID2D_Reader
+from pyNastran.converters.ugrid.surf_reader import TagReader
+from pyNastran.converters.ugrid.ugrid_reader import UGRID
+# from pyNastran.converters.ugrid.ugrid2d_reader import UGRID2D_Reader
 
 #VTK_TRIANGLE = 5
 from six import iteritems
