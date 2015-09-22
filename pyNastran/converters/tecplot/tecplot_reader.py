@@ -1,3 +1,7 @@
+"""
+models from:
+    http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
+"""
 from __future__ import print_function
 from six import iteritems
 
@@ -18,7 +22,10 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
     assert len(tecplot_filenames) > 1, tecplot_filenames
 
     xyz = []
-    elements = []
+    tri_elements = []
+    quad_elements = []
+    tet_elements = []
+    hexa_elements = []
     results = []
     nnodes = 0
 
@@ -27,12 +34,26 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
         print('reading %s' % tecplot_filename)
         model.read_tecplot(tecplot_filename)
         xyz.append(model.xyz)
-        elements.append(model.elements + nnodes)
+        if model.tri_elements:
+            tri_elements.append(model.tri_elements + nnodes)
+        if model.quad_elements:
+            quad_elements.append(model.quad_elements + nnodes)
+        if model.tet_elements:
+            tet_elements.append(model.tet_elements + nnodes)
+        if model.hexa_elements:
+            hexa_elements.append(model.hexa_elements + nnodes)
         results.append(model.results)
         nnodes += model.nnodes
 
     model.xyz = vstack(xyz)
-    model.elements = vstack(elements)
+    if tri_elements:
+        model.tri_elements = vstack(tri_elements)
+    if quad_elements:
+        model.quad_elements = vstack(quad_elements)
+    if tet_elements:
+        model.tet_elements = vstack(tet_elements)
+    if hexa_elements:
+        model.hexa_elements = vstack(hexa_elements)
     model.results = vstack(results)
     if tecplot_filename_out is not None:
         model.write_tecplot(tecplot_filename_out)
@@ -210,6 +231,8 @@ class TecplotReader(FortranFormat):
                 if zone_type in ('FEBRICK', 'FETETRAHEDRON'):
                     if data_packing == 'POINT':
                         for inode in range(nnodesi):
+                            if inode == 0:
+                                print('zone_type=%s sline=%s' %(zone_type, sline))
                             try:
                                 xyz[inode, :] = sline[:3]
                                 results[inode, :] = sline[3:]
@@ -238,6 +261,8 @@ class TecplotReader(FortranFormat):
                                 while line[0] == '#':
                                     line = f.readline().strip()
                                 sline = line.split()
+                                if i == 0:
+                                    print('zone_type=%s sline=%s' %(zone_type, sline))
                                 i += 1
                             assert i < nnodes_max, 'nresult=%s' % nresult
                             if ires in [0, 1, 2]:
@@ -480,7 +505,10 @@ class TecplotReader(FortranFormat):
         self.xyz = xyz
         self.results = results
 
-    def write_tecplot(self, tecplot_filename):
+    def write_tecplot(self, tecplot_filename, adjust_nids=True):
+        """
+        Only handles single type writing
+        """
         tecplot_file = open(tecplot_filename, 'w')
         is_results = bool(len(self.results))
         msg = 'TITLE     = "tecplot geometry and solution file"\n'
@@ -493,15 +521,51 @@ class TecplotReader(FortranFormat):
             msg += '"v"\n'
             msg += '"w"\n'
             msg += '"p"\n'
-        msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
+        # msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
+        msg += 'ZONE '
 
-        #is_points = not is_results
-        is_points = False
+        etype_elements = [
+            ('CHEXA', self.hexa_elements),
+            ('CTETRA', self.tet_elements),
+            ('CTRIA3', self.tri_elements),
+            ('CQUAD4', self.quad_elements),
+        ]
+        is_points = True
+        is_tets = False
+        is_hexas = False
+        is_tris = False
+        is_quads = False
+
         nnodes = self.nnodes
+        nelements = self.nelements
+        for etype, elements in etype_elements:
+            print(etype)
+            if etype == 'CHEXA' and len(elements):
+                is_hexas = True
+                nnodes_per_element = 8
+                zone_type = 'FEBrick'
+            elif etype == 'CTETRA' and len(elements):
+                is_tets = True
+                nnodes_per_element = 4
+                zone_type = 'FETETRAHEDRON'
+            elif etype == 'CTRIA3' and len(elements):
+                # is_points = True
+                is_tris = True
+                nnodes_per_element = 3
+                zone_type = 'FETRIANGLE'
+            elif etype == 'CQUAD4' and len(elements):
+                # is_points = True
+                is_quads = True
+                nnodes_per_element = 4
+                zone_type = 'FEQUADRILATERAL'
+            else:
+                continue
+            break
+
         if is_points:
-            msg += ' n=%i, e=%i, ZONETYPE=FEBrick, DATAPACKING=POINT\n' % (nnodes, self.nelements)
+            msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (nnodes, nelements, zone_type)
         else:
-            msg += ' n=%i, e=%i, ZONETYPE=FEBrick, DATAPACKING=BLOCK\n' % (nnodes, self.nelements)
+            msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=BLOCK\n' % (nnodes, nelements, zone_type)
         tecplot_file.write(msg)
 
         # xyz
@@ -526,13 +590,13 @@ class TecplotReader(FortranFormat):
                 msg = ''
                 for ival, val in enumerate(vals):
                     msg += ' %15.9E' % val
-                    if (ival + 1) % 5 == 0:
+                    if (ival + 1) % 3 == 0:
                         tecplot_file.write(msg)
                         msg = '\n'
                 tecplot_file.write(msg.rstrip() + '\n')
 
             if is_results:
-                for ivar in range(5):
+                for ivar in range(nnodes_per_element):
                     #tecplot_file.write('# ivar=%i\n' % ivar)
                     #print('xyz.shape =', self.xyz.shape)
                     vals = self.results[:, ivar].ravel()
@@ -544,12 +608,28 @@ class TecplotReader(FortranFormat):
                             msg = '\n'
                     tecplot_file.write(msg.rstrip() + '\n')
 
-        # elements
-        efmt = ' %i %i %i %i %i %i %i %i\n'
-        elements = self.hexa_elements + 1
+        print('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' % (is_hexas, is_tets, is_quads, is_tris))
+        if is_hexas:
+            # elements
+            efmt = ' %i %i %i %i %i %i %i %i\n'
+            elements = self.hexa_elements
+        elif is_tets:
+            efmt = ' %i %i %i %i\n'
+            elements = self.tet_elements
+        elif is_quads:
+            efmt = ' %i %i %i %i\n'
+            elements = self.quad_elements
+        elif is_tris:
+            efmt = ' %i %i %i\n'
+            elements = self.tri_elements
+        else:
+            raise RuntimeError()
+
+        if adjust_nids:
+            elements += 1
         print('inode_min =', elements.min())
         print('inode_max =', elements.max())
-        assert elements.min() > 0, elements.min()
+        assert elements.min() == 1, elements.min()
         assert elements.max() == nnodes, elements.max()
         for element in elements:
             tecplot_file.write(efmt % tuple(element))

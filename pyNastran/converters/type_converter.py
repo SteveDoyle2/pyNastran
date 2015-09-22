@@ -5,6 +5,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.tecplot.tecplot_reader import TecplotReader
 from pyNastran.converters.stl.stl_reader import STLReader
 # from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
@@ -44,17 +45,19 @@ def process_cart3d(cart3d_filename, fmt2, fname2):
     elif fmt2 == 'nastran':
         cart3d_to_nastran_filename(cart3d_filename, fname2)
     elif fmt2 == 'tecplot':
-        cart3d_to_tecplot(model, fname2)
+        cart3d_to_tecplot(cart3d_filename, fname2)
     # elif fmt2 == 'ugrid':
         # cart3d_to_ugrid(model, fname2)
     else:
         raise NotImplementedError(fmt2)
 
-def cart3d_to_tecplot(model, tecplot_filename):
+def cart3d_to_tecplot(cart3d_filename, tecplot_filename):
+    model = Cart3D()
+    model.read_cart3d(cart3d_filename)
     tecplot = TecplotReader()
-    tecplot.xyz = cart3d.points
-    tecplot.tri_elements = cart3d.elements
-    tecplot.write_tecplot(tecplot_filename)
+    tecplot.xyz = model.points
+    tecplot.tri_elements = model.elements
+    tecplot.write_tecplot(tecplot_filename, adjust_nids=False)
 
 def process_stl(stl_filename, fmt2, fname2):
     """
@@ -82,8 +85,8 @@ def process_tecplot(tecplot_filename, fmt2, fname2):
     """
     Converts Tecplot to ...
     """
-    model = TecplotReader()
-    model.read_tecplot(tecplot_filename)
+    # model = TecplotReader()
+    # model.read_tecplot(tecplot_filename)
     # if fmt2 == 'nastran':
         # tecplot_to_nastran(model, fname2)
     #if fmt2 == 'cart3d':
@@ -96,7 +99,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2):
 
 def process_ugrid(ugrid_filename, fmt2, fname2):
     """
-    Converts UGRID to Nastran/Tecplot
+    Converts UGRID to Nastran/Cart3d/STL/Tecplot
     """
     model = UGRID()
     model.read_ugrid(ugrid_filename)
@@ -106,9 +109,19 @@ def process_ugrid(ugrid_filename, fmt2, fname2):
         include_solids = True
         bdf_filename = fname2
         model.export_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
-    # elif fmt2 == 'cart3d':
+    elif fmt2 == 'cart3d':
+        include_shells = False
+        include_solids = True
+        bdf_filename = fname2 + '.bdf'
+        model.export_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
         # ugrid_to_cart3d(model, fname2)
-    # elif fmt2 == 'stl':
+        process_nastran(bdf_filename, 'cart3d', fname2)
+    elif fmt2 == 'stl':
+        include_shells = False
+        include_solids = True
+        bdf_filename = fname2 + '.bdf'
+        model.export_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
+        process_nastran(bdf_filename, 'cart3d', fname2)
         # ugrid_to_stl(model, fname2)
     elif fmt2 == 'tecplot':
         # ugrid_to_tecplot(model, fname2)

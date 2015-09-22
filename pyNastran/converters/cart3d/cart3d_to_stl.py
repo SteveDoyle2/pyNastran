@@ -22,10 +22,16 @@ def cart3d_to_stl_filename(cart3d_filename, stl_filename, log=None, debug=False)
     """
     Converts a Cart3D file to STL format.
 
-    :param cart3d_filename: path to the input Cart3D file
-    :param stl_filename:    path to the output STL file
-    :param log:             a logger object (or None)
-    :param debug:           True/False (used if log is not defined)
+    Parameters
+    ----------
+    cart3d_filename : str
+        path to the input Cart3D file
+    stl_filename : str
+        path to the output STL file
+    log : log
+        a logger object (or None)
+    debug : bool
+        True/False (used if log is not defined)
     """
     cart3d = Cart3DReader(log=log, debug=debug)
     (nodes, elements, regions, loads) = cart3d.read_cart3d(cart3d_filename)
