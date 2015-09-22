@@ -15,30 +15,55 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.fieldWriter import print_card_8
 
-def get_patch_edges(edge_to_eid_map):
+def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True):
     """
-    find all the edges of any patch
+    Find all the edges of any patch
+
+    Parameters
+    ----------
+    xyz_cid0 : (n, 3) ndarray
+        nodes in cid=0
+    eid_to_edge_map : dict[int] = [(int, int), (int, int), ...]
+        maps element ids to edges
+    is_symmetric : bool
+        enables yz symmetry
+
+    Returns
+    -------
+    patch_edges : List[(int, int), (int, int), ...]
+        the edges as sorted (int, int) pairs
+    eids_on_edge : Set([int, int, int])
+        the elements on the edges of patches
+    free_edges : List[(int, int), (int, int), ...]
+        the free edges of the model (will probably be removed)
+    free_eids : Set([int, int, int])
+        the free elements of the model (will probably be removed)
     """
     patch_edges = []
     eids_on_edge = set([])
 
     free_edges = []
     free_eids = set([])
-    for edge, eids in iteritems(edge_to_eid_map):
-        # TODO: this is a special case to handle y=0 symmetry,
-        #       which will need to be updated to handle full models
-        yedge = [True for nid in edge
-                 if allclose(xyz_cid0[nid][0], 0.0)]
+    if is_symmetric:
+        # yz symmetry
+        for edge, eids in iteritems(edge_to_eid_map):
+            yedge = [True for nid in edge
+                     if allclose(xyz_cid0[nid][0], 0.0)]
 
-        if len(eids) != 2 or len(yedge) > 1:
-            patch_edges.append(edge)
-            eids_on_edge.update(eids)
-            if len(eids) == 1:
-                free_edges.append(edge)
-                free_eids.update(eids)
+            if len(eids) != 2 or len(yedge) > 1:
+                patch_edges.append(edge)
+                eids_on_edge.update(eids)
+                if len(eids) == 1:
+                    free_edges.append(edge)
+                    free_eids.update(eids)
+    else:
+        for edge, eids in iteritems(edge_to_eid_map):
+            if len(eids) != 2:
+                patch_edges.append(edge)
+                eids_on_edge.update(eids)
     return patch_edges, eids_on_edge, free_edges, free_eids
 
-def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
+def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric=True):
     """
     Extracts rib/spar/skin patches based on geometry.  You can have a
     single property id and this will still work.
@@ -60,6 +85,8 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
         all the elements on the edges
     patches : List[List[int]]
         the patches
+    is_symmetric : bool
+        enables yz symmetry
 
     .. note :: We're only considering shell elements, which probably is a poor
                assumption given the stiffness of ring frames/longerons, which are
@@ -130,7 +157,8 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
     than option #1 because you don't need to caculate/recalculate the
     free edges ater each loop.
     """
-    patch_edges, eids_on_edge, free_edges, free_eids = get_patch_edges(edge_to_eid_map)
+    patch_edges, eids_on_edge, free_edges, free_eids = get_patch_edges(
+        edge_to_eid_map, xyz_cid0, is_symmetric=is_symmetric)
     patch_edges_array = array(patch_edges, dtype='int32')
     #--------------------------
     # we'll now get the patches
@@ -139,6 +167,8 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
     assert patch_edge_count > 2, patch_edge_count
 
     # dummy value
+    max_patches = 500
+    icheck_max = 1000
     new_patch_edge_count = patch_edge_count - 1
     patch_count = -1
     new_patch_count = 0
@@ -182,8 +212,8 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
         edges_to_check_all = set(eid_to_edge_map[eid0])
         i = 0
         # see docstring for an explanation of this "big giant for loop"
-        # for edge_to_check in edges_to_check_all:
-            # edges_to_check = [edge_to_check]
+        #for edge_to_check in edges_to_check_all:
+            #edges_to_check = [edge_to_check]
         if 1:
             # this sometimes leads to patch joining
             edges_to_check = edges_to_check_all
@@ -193,6 +223,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map):
                 if len(edges_to_check) < 5:
                     print('  edges =', edges_to_check)
 
+                #def get_next_edges(patch, used_eids, edges_to_check, edges_to_check_next):                edges_to_check_next = deepcopy(edges_to_check)
                 edges_to_check_next = deepcopy(edges_to_check)
                 for edge in edges_to_check:
                     print('  edge =', edge)
@@ -289,7 +320,7 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
     print('npatches=%s npids=%s' % (npatches, sum(counter)))
 
 
-def create_plate_buckling_models(model, op2_filename, mode):
+def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     """
     Create the input decks for buckling
 
@@ -305,6 +336,12 @@ def create_plate_buckling_models(model, op2_filename, mode):
         'displacement' : extract displacements from the op2 and apply
             interface displacements for each patch
     """
+    import glob
+    patch_filenames = glob.glob('patch_*.bdf')
+    edge_filenames = glob.glob('edge_*.bdf')
+    for fname in patch_filenames + edge_filenames:
+        os.remove(fname)
+
     assert mode in ['load', 'displacement'], 'mode=%r' % mode
     assert isinstance(op2_filename, string_types), 'op2_filename=%r' % op2_filename
     out = model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
@@ -312,7 +349,8 @@ def create_plate_buckling_models(model, op2_filename, mode):
     xyz_cid0 = {}
     for nid, node in iteritems(model.nodes):
         xyz_cid0[nid] = node.get_position()
-    patch_edges, eids_on_edge, patches = find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map)
+    patch_edges, eids_on_edge, patches = find_ribs_and_spars(
+        xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric=is_symmetric)
 
     save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches)
 
@@ -354,6 +392,7 @@ def create_plate_buckling_models(model, op2_filename, mode):
     out_model = OP2()
     out_model.read_op2(op2_filename)
     if mode == 'displacement':
+        #print('out_model.displacements =', out_model.displacements)
         displacements = out_model.displacements[isubcase]
         node_ids_full_model = displacements.node_gridtype[:, 0]
     elif mode == 'load':
