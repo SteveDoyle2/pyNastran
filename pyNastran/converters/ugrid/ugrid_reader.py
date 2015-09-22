@@ -422,11 +422,11 @@ class UGRID(object):
         #pids = self.pids
         #mid = 1
         points_filename = foam_filename  # remove...
-        #self.write_points(points_filename)
-        self.write_boundary(boundary_filename + '2', tag_filename)
-        self.write_faces(faces_filename + '2')
+        #self._write_points(points_filename)
+        self._write_boundary(boundary_filename + '2', tag_filename)
+        self._write_faces(faces_filename + '2')
 
-    def write_points(self, points_filename):
+    def _write_points(self, points_filename):
         points_file = open(points_filename, 'wb')
         nnodes = self.nodes.shape[0]
 
@@ -456,7 +456,7 @@ class UGRID(object):
         points_file.write(')\n')
         points_file.close()
 
-    def write_boundary(self, boundary_filename, tag_filename):
+    def _write_boundary(self, boundary_filename, tag_filename):
         boundary_file = open(boundary_filename, 'wb')
         boundary_file.write('\n\n')
         #f.write('%i\n' % (nnodes))
@@ -497,7 +497,7 @@ class UGRID(object):
 
         self.isort = isort
 
-    def write_faces(self, faces_filename):
+    def _write_faces(self, faces_filename):
         nhexas = self.hexas.shape[0]
         npenta6s = self.penta6s.shape[0]
         npenta5s = self.penta5s.shape[0]
