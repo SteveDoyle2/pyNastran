@@ -156,7 +156,6 @@ class Cart3dIO(object):
         """
         p = 0
         data = []
-        print('npoits! ', npoints)
         assert npoints > 0, 'npoints=%s' % npoints
         points = zeros((npoints, 3), dtype='float32')
         while p < npoints:
@@ -439,6 +438,27 @@ class Cart3D(Cart3dIO):
         self.loads = {}
         self.points = None
         self.elements = None
+
+    def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
+        """
+        Makes a full cart3d model about the given axis.
+
+        Parameters
+        ----------
+        nodes : (nnodes, 3) ndarray
+            the nodes
+        elements : (nelements, 3) ndarray
+            the elmements
+        regions :  (nelements) ndarray
+            the regions
+        loads : dict[str] = (nnodes) ndarray
+            not supported
+        axis : str; {"x", "y", "z", "-x", "-y", "-z"}
+            a string of the axis
+        tol : float; default=0.000001
+            the tolerance for the centerline points
+        """
+        raise NotImplementedError()
 
     def _get_ax(self, axis):
         axis = axis.lower().strip()
