@@ -1,0 +1,12 @@
+TITLE = "Animate"
+VARIABLES = "X", "Y", "Z"
+ZONE I=2, J=2, F=POINT
+0,0,0
+1,0,0 
+0,1,0
+1,1,0
+ZONE I=2, J=2, F=POINT
+0,0,1
+1,0,1
+0,1,1
+1,1,1
