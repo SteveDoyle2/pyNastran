@@ -223,47 +223,11 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric
                 if len(edges_to_check) < 5:
                     print('  edges =', edges_to_check)
 
-                #def get_next_edges(patch, used_eids, edges_to_check, edges_to_check_next):                edges_to_check_next = deepcopy(edges_to_check)
-                edges_to_check_next = deepcopy(edges_to_check)
-                for edge in edges_to_check:
-                    print('  edge =', edge)
-                    edges_to_check_next.remove(edge)
-                    if edge in patch_edges:
-                        print('    continuing on patch edge')
-                        continue
-
-                    eids_to_check = [eid for eid in edge_to_eid_map[edge]
-                                     if eid not in used_eids]
-                    print('  map = ', edge_to_eid_map[edge])
-                    print('  eids_to_check[%s] = %s' % (edge, eids_to_check))
-                    #print('  used_eids =', used_eids)
-                    for eid in eids_to_check:
-                        if eid in used_eids:
-                            print('  eid=%s is used' % eid)
-                            continue
-                        edgesi_to_check = eid_to_edge_map[eid]
-                        print('  edgesi_to_check[%i] = %s' % (eid, edgesi_to_check))
-                        for edgei in edgesi_to_check:
-                            #print('  edgei =', edgei)
-                            if edgei in used_edges:
-                                print('    edge=%s is used' % str(edgei))
-                                continue
-                            if edgei in patch_edges:
-                                print('    continuing on patch edge=%s' % str(edgei))
-                                continue
-                            used_edges.add(edgei)
-                            #edges_to_check_next.add(edgei)
-                            #edges_to_check_next.remove(edge)
-                            eidsi = edge_to_eid_map[edgei]
-                            for eidii in eidsi:
-                                edges_to_check_next.update(eid_to_edge_map[eidii])
-                            used_eids.update(eidsi)
-                            patch.update(eidsi)
-                            print('*    adding eids=%s' % eidsi)
-                            patch_len += 1
-                    used_edges.add(edge)
-                    print()
-
+                edges_to_check_next, patch_len = get_next_edges(
+                    eid_to_edge_map, edge_to_eid_map,
+                    patch, patch_edges,
+                    used_eids, used_edges,
+                    edges_to_check, patch_len)
                 edges_to_check = edges_to_check_next
                 i += 1
                 if i == 1000:
@@ -278,6 +242,51 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric
                 break
             print('*' * 80)
     return patch_edges_array, eids_on_edge, patches
+
+def get_next_edges(eid_to_edge_map, edge_to_eid_map,
+                   patch, patch_edges,
+                   used_eids, used_edges,
+                   edges_to_check, patch_len):
+    edges_to_check_next = deepcopy(edges_to_check)
+    for edge in edges_to_check:
+        print('  edge =', edge)
+        edges_to_check_next.remove(edge)
+        if edge in patch_edges:
+            print('    continuing on patch edge')
+            continue
+
+        eids_to_check = [eid for eid in edge_to_eid_map[edge]
+                         if eid not in used_eids]
+        print('  map = ', edge_to_eid_map[edge])
+        print('  eids_to_check[%s] = %s' % (edge, eids_to_check))
+        #print('  used_eids =', used_eids)
+        for eid in eids_to_check:
+            if eid in used_eids:
+                print('  eid=%s is used' % eid)
+                continue
+            edgesi_to_check = eid_to_edge_map[eid]
+            print('  edgesi_to_check[%i] = %s' % (eid, edgesi_to_check))
+            for edgei in edgesi_to_check:
+                #print('  edgei =', edgei)
+                if edgei in used_edges:
+                    print('    edge=%s is used' % str(edgei))
+                    continue
+                if edgei in patch_edges:
+                    print('    continuing on patch edge=%s' % str(edgei))
+                    continue
+                used_edges.add(edgei)
+                #edges_to_check_next.add(edgei)
+                #edges_to_check_next.remove(edge)
+                eidsi = edge_to_eid_map[edgei]
+                for eidii in eidsi:
+                    edges_to_check_next.update(eid_to_edge_map[eidii])
+                used_eids.update(eidsi)
+                patch.update(eidsi)
+                print('*    adding eids=%s' % eidsi)
+                patch_len += 1
+        used_edges.add(edge)
+        print()
+    return edges_to_check_next, patch_len
 
 def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
     """saves the patch data"""
