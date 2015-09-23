@@ -40,26 +40,44 @@ class Tecplot(FortranFormat):
 
     @property
     def result_names(self):
+        """gets the variables"""
         return self.variables
 
     @result_names.setter
     def result_names(self, vals):
+        """sets the variables"""
         self.variables = vals
 
     def read_tecplot(self, tecplot_filename):
+        """
+        Reads an ASCII/binary Tecplot file.
+
+        The binary file reader must have ONLY CHEXAs and be Tecplot 360.
+        The ASCII file reader has only been tested with Tecplot 10, but will
+        probably work on Tecplot360.
+        """
         if is_binary_file(tecplot_filename):
             return self.read_tecplot_binary(tecplot_filename)
         return self.read_tecplot_ascii(tecplot_filename)
 
     def read_tecplot_ascii(self, tecplot_filename, nnodes=None, nelements=None):
+        """
+        Reads a Tecplot ASCII file.
+
+        Supports:
+         - CTRIA3
+         - CQUAD4
+         - CTETRA
+         - CHEXA
+
+        .. note :: assumes single typed results
+        """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
 
         nnodes = -1
         nelements = -1
         with open(tecplot_filename, 'r') as tecplot_file:
-            f = tecplot_file
-
             quads_list = []
             hexas_list = []
             tris_list = []
@@ -68,7 +86,7 @@ class Tecplot(FortranFormat):
             xyz_list = []
             results_list = []
 
-            line = f.readline().strip()
+            line = tecplot_file.readline().strip()
             iblock = 0
             while 1:
                 i = 0
@@ -89,7 +107,7 @@ class Tecplot(FortranFormat):
                     # DATAPACKING=BLOCK
                     #self.n = 0
                     if len(line) == 0 or line[0] == '#':
-                        line = f.readline().strip()
+                        line = tecplot_file.readline().strip()
                         i += 1
                         continue
                     if line[0].isdigit() or line[0] == '-':
@@ -110,7 +128,7 @@ class Tecplot(FortranFormat):
                     #if len(vars_found) == 5:
                         #break
                     i += 1
-                    line = f.readline().strip()
+                    line = tecplot_file.readline().strip()
 
                 #print(header_lines)
                 headers_dict = {}
@@ -141,6 +159,8 @@ class Tecplot(FortranFormat):
                         #print('  parsing')
                         key = sline[0].strip().upper()
                         if key.startswith('ZONE '):
+                            # the key is not "ZONE T" or "ZONE E"
+                            # ZONE is a flag, T is title, E is number of elements
                             key = key[5:].strip()
                         value = [val.strip() for val in sline[1:]]
                         if len(value) == 1:
@@ -149,7 +169,9 @@ class Tecplot(FortranFormat):
                         headers_dict[key] = value
                         #print('  ', value)
                         #value = value.strip()
-                        assert key in ['TITLE', 'VARIABLES', 'ZONE T', 'T', 'ZONETYPE', 'DATAPACKING', 'N', 'E', 'F', 'DT'], 'key=%r' % (key)  # 'T' ???
+
+                        # 'T', 'ZONE T',  ???
+                        assert key in ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING', 'N', 'E', 'F', 'DT'], 'key=%r' % (key)
                         parse = False
                 #print(headers_dict.keys())
 
@@ -206,9 +228,9 @@ class Tecplot(FortranFormat):
                                 print(msg)
                                 raise
 
-                            line = f.readline().strip()
+                            line = tecplot_file.readline().strip()
                             while len(line) == 0 or line[0] == '#':
-                                line = f.readline().strip()
+                                line = tecplot_file.readline().strip()
                             sline = line.split()
                     elif data_packing == 'BLOCK':
                         for ires in range(3 + nresults):
@@ -221,9 +243,9 @@ class Tecplot(FortranFormat):
                                 nresult += len(sline)
                                 if nresult >= nnodesi:
                                     break
-                                line = f.readline().strip()
+                                line = tecplot_file.readline().strip()
                                 while line[0] == '#':
-                                    line = f.readline().strip()
+                                    line = tecplot_file.readline().strip()
                                 sline = line.split()
                                 if i == 0:
                                     print('zone_type=%s sline=%s' %(zone_type, sline))
@@ -243,9 +265,9 @@ class Tecplot(FortranFormat):
                         xyz[inode, :] = sline[:3]
                         #assert abs(xyz[inode, 1]) > 5.0, 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
                         results[inode, :] = sline[3:]
-                        line = f.readline().strip()
+                        line = tecplot_file.readline().strip()
                         while line[0] == '#':
-                            line = f.readline().strip()
+                            line = tecplot_file.readline().strip()
                         sline = line.split()
                 else:
                     raise NotImplementedError(zone_type)
@@ -265,7 +287,7 @@ class Tecplot(FortranFormat):
                         raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
                     except ValueError:
                         raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
-                    line = f.readline()
+                    line = tecplot_file.readline()
                     sline = line.strip().split()
                 #print(f.readline())
 
@@ -338,6 +360,7 @@ class Tecplot(FortranFormat):
         tecplot_file = open(tecplot_filename, 'rb')
         self.f = tecplot_file
         self.n = 0
+        self.variables = ['rho', 'u', 'v', 'w', 'p']
 
         data = self.f.read(8)
         self.n += 8
@@ -468,6 +491,7 @@ class Tecplot(FortranFormat):
 
         self.xyz = xyz
         self.results = results
+        del self.f
 
     def write_tecplot(self, tecplot_filename, adjust_nids=True):
         """
@@ -507,23 +531,23 @@ class Tecplot(FortranFormat):
         nelements = self.nelements
         for etype, elements in etype_elements:
             if etype == 'CHEXA' and len(elements):
-                print(etype)
+                #print(etype)
                 is_hexas = True
                 nnodes_per_element = 8
                 zone_type = 'FEBrick'
             elif etype == 'CTETRA' and len(elements):
-                print(etype)
+                #print(etype)
                 is_tets = True
                 nnodes_per_element = 4
                 zone_type = 'FETETRAHEDRON'
             elif etype == 'CTRIA3' and len(elements):
-                print(etype)
+                #print(etype)
                 # is_points = True
                 is_tris = True
                 nnodes_per_element = 3
                 zone_type = 'FETRIANGLE'
             elif etype == 'CQUAD4' and len(elements):
-                print(etype)
+                #print(etype)
                 # is_points = True
                 is_quads = True
                 nnodes_per_element = 4
@@ -539,8 +563,12 @@ class Tecplot(FortranFormat):
         tecplot_file.write(msg)
 
         # xyz
+        assert self.nnodes > 0, 'nnodes=%s' % self.nnodes
+        nresults = len(self.result_names)
+        nresults2 = self.results.shape[1]
+        assert nresults == nresults2, 'nresults=%s nresults2=%s' % (nresults, nresults2)
         if is_points:
-            if len(self.result_names):
+            if nresults:
                 try:
                     data = hstack([self.xyz, self.results])
                 except ValueError:
@@ -548,15 +576,13 @@ class Tecplot(FortranFormat):
                     msg += 'xyz.shape=%s\n' % str(self.xyz.shape)
                     msg += 'results.shape=%s\n' % str(self.results.shape)
                     raise ValueError(msg)
-                nresults = self.results.shape[1]
-                fmt = ' %15.9E' * nresults# + '\n'
+                fmt = ' %15.9E' * (3 + nresults)
             else:
                 data = self.xyz
                 fmt = ' %15.9E %15.9E %15.9E'
             #vals = self.xyz[:, ivar].ravel()
             # for vals in enumerate(data):
                 # tecplot_file.write(fmt % tuple(vals))
-            assert self.nnodes > 0
             savetxt(tecplot_file, data, fmt=fmt)
         else:
             #nvalues_per_line = 5
@@ -694,7 +720,7 @@ class Tecplot(FortranFormat):
         print(inodes)
         nodes2 = nodes[inodes, :]
         results2 = results[inodes, :]
-        model = TecplotReader()
+        model = Tecplot()
         model.xyz = nodes2
         model.results = results2
         model.hexa_elements = elements3
@@ -706,7 +732,7 @@ class Tecplot(FortranFormat):
 
 
 def main():
-    plt = TecplotReader()
+    plt = Tecplot()
     fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
 
 
@@ -844,6 +870,7 @@ def main():
               for fname in fnames]
     tecplot_filename_out = None
     #tecplot_filename_out = 'tecplot_joined.plt'
+    from pyNastran.converters.tecplot.utils import merge_tecplot_files
     model = merge_tecplot_files(fnames, tecplot_filename_out)
 
     y0 = 0.0
@@ -866,6 +893,7 @@ def main():
         #break
 
 def main2():
+    """tests slicing"""
     plt = Tecplot()
     #fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
     #fnames = [os.path.join(r'Z:\Temporary_Transfers\steve\output\time20000', fname)
