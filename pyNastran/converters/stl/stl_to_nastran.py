@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pyNastran.converters.stl.stl_reader import STL
+from pyNastran.converters.stl.stl import STL
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double

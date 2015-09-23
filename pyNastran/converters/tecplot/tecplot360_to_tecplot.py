@@ -1,7 +1,7 @@
 import sys
 import glob
 
-from pyNastran.converters.tecplot.tecplot_reader import merge_tecplot_files
+from pyNastran.converters.tecplot.tecplot import merge_tecplot_files
 
 
 def run():

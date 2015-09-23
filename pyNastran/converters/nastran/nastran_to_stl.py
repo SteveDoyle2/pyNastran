@@ -1,7 +1,7 @@
 from six import iteritems
 from numpy import zeros, array
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl import STL
 
 def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
     model = BDF(log=log)
@@ -45,7 +45,7 @@ def nastran_to_stl(model, stl_filename):
         else:
             print(element.type)
     elements = array(elements, dtype='int32')
-    stl = STLReader()
+    stl = STL()
     stl.nodes = nodes
     stl.elements = elements
     stl.write_stl(stl_filename)

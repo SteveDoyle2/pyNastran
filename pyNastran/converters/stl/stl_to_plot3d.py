@@ -1,11 +1,11 @@
 from six.moves import range
 from numpy import savetxt
 
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl import STL
 #from pyNastran.bdf.field_writer_8 import print_card
 
 def stl_to_plot3d_filename(stl_filename, p3d_filename, log=None, ascii=True):
-    model = STLReader(log=log)
+    model = STL(log=log)
     model.read_stl(stl_filename)
 
     #nodal_normals = model.get_normals_at_nodes(model.elements)

@@ -6,7 +6,7 @@ from numpy import arange
 import vtk
 from vtk import vtkTriangle
 
-from pyNastran.converters.stl.stl_reader import STL
+from pyNastran.converters.stl.stl import STL
 
 
 class STL_IO(object):

@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.utils.log import get_logger
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
-from pyNastran.converters.tecplot.tecplot_reader import Tecplot
+from pyNastran.converters.tecplot.tecplot import Tecplot
 
 
 class UGRID(object):
@@ -276,7 +276,7 @@ class UGRID(object):
             elements.append([n1, n2, n3, n4,
                              n5, n6, n7, n8])
         elements = array(elements, dtype='int32') - 1
-        tecplot = TecplotReader()
+        tecplot = Tecplot()
         tecplot.xyz = self.nodes
         tecplot.hexa_elements = elements
         tecplot.write_tecplot(tecplot_filename)

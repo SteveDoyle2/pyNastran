@@ -3,7 +3,7 @@ from docopt import docopt
 from copy import deepcopy
 
 import pyNastran
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl_reader import STL
 
 def main():
     # --ascii <fmt> doesn't work for binary properly, so we set:
@@ -92,7 +92,7 @@ def stl_reshape(data):
     out_stl_filename = data['<out_stl_filename>']
     assert in_stl_filename != out_stl_filename
 
-    stl = STLReader()
+    stl = STL()
     stl.read_stl(in_stl_filename)
 
     if data['<fmt>'] in ['False', False]:
