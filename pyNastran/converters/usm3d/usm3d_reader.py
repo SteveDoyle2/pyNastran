@@ -11,7 +11,7 @@ def write_front(model):
 def write_face(model):
     pass
 
-class Usm3dReader(object):
+class Usm3d(object):
     bcmap_to_bc_name = {
         0 : 'Supersonic Inflow',
         1 : 'Reflection plane',
@@ -722,7 +722,7 @@ def write_cogsg_volume(model, cogsg_file):
 
 
 def main():
-    model = Usm3dReader()
+    model = Usm3d()
     if 1:
         #basename = 'HSCT_inviscid'
         #basename = 'box'

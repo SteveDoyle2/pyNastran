@@ -6,7 +6,7 @@ from pyNastran.utils.log import get_logger
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
-class TetgenReader(object):
+class Tetgen(object):
     """
     http://www.wias-berlin.de/preprint/1762/wias_preprints_1762.pdf
     """
@@ -155,7 +155,7 @@ def main():
     import os
     from pyNastran.converters.stl.stl_reader import STLReader
 
-    m1 = STLReader()
+    m1 = STL()
     m1.read_stl('tetgen_test.stl')
     m1.flip_normals()
     m1.write_stl('tetgen_test_flipped.stl')
@@ -163,7 +163,7 @@ def main():
 
     os.system('tetgen.exe -pqcvVqY tetgen_test_flipped.stl')
 
-    m = TetgenReader()
+    m = Tetgen()
     base = 'tetgen_test_flipped.1'
     m.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=3)
     m.write_nastran(base + '.bdf')

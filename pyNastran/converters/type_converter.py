@@ -12,7 +12,8 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.tecplot.tecplot import Tecplot
 from pyNastran.converters.tecplot.utils import merge_tecplot_files
-from pyNastran.converters.stl.stl import STL
+# from pyNastran.converters.stl.stl import STL
+from pyNastran.converters.stl.utils import merge_stl_files
 # from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
@@ -33,7 +34,7 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None):
     model = BDF()
     model.read_bdf(bdf_filename)
     if fmt2 == 'stl':
-        nastran_to_stl(model, fname2)
+        nastran_to_stl(model, fname2, is_binary=data['--binary'])
     elif fmt2 == 'cart3d':
         nastran_to_cart3d(model, fname2)
     elif fmt2 == 'tecplot':
@@ -154,14 +155,14 @@ def nastran_to_tecplot(model, tecplot_filename):
     tecplot.write_tecplot(tecplot_filename, adjust_nids=False)
 
 
-def process_cart3d(cart3d_filename, fmt2, fname2):
+def process_cart3d(cart3d_filename, fmt2, fname2, data):
     """
     Converts Cart3d to STL/Nastran
     """
-    # model = Cart3DReader()
+    # model = Cart3D()
     # model.read_cart3d(cart3d_filename, fname2)
     if fmt2 == 'stl':
-        cart3d_to_stl_filename(cart3d_filename, fname2)
+        cart3d_to_stl_filename(cart3d_filename, fname2, is_binary=data['--binary'])
     elif fmt2 == 'nastran':
         cart3d_to_nastran_filename(cart3d_filename, fname2)
     elif fmt2 == 'tecplot':
@@ -182,12 +183,18 @@ def cart3d_to_tecplot(cart3d_filename, tecplot_filename):
     tecplot.tri_elements = model.elements
     tecplot.write_tecplot(tecplot_filename, adjust_nids=False)
 
-def process_stl(stl_filename, fmt2, fname2):
+def process_stl(stl_filename, fmt2, fname2, data=None):
     """
     Converts STL to Nastran/Cart3d
     """
-    model = STL()
-    model.read_stl(stl_filename)
+    if '*' in stl_filename:
+        stl_filenames = glob.glob(stl_filename)
+    else:
+        stl_filenames = [stl_filename]
+    model = merge_stl_files(stl_filenames, stl_out_filename=None)
+
+    # model = STL()
+    # model.read_stl(stl_filename)
     if fmt2 == 'nastran':
         stl_to_nastran_filename(stl_filename, fname2)
         # stl_to_cart3d(model, fname2 + '.cart')
@@ -197,6 +204,9 @@ def process_stl(stl_filename, fmt2, fname2):
         # stl_to_cart3d(model, fname2)
         stl_to_nastran_filename(stl_filename, fname2 + '.bdf')
         stl_to_nastran_filename(fname2 + '.bdf', fname2)
+    elif fmt2 == 'stl':
+        is_binary = data['--binary']
+        model.write_stl(fname2, is_binary=is_binary, float_fmt='%6.12f')
     # elif fmt2 == 'tecplot':
         # stl_to_tecplot(model, fname2)
     # elif fmt2 == 'ugrid':
@@ -204,9 +214,11 @@ def process_stl(stl_filename, fmt2, fname2):
     else:
         raise NotImplementedError(fmt2)
 
-def process_tecplot(tecplot_filename, fmt2, fname2):
+def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
     """
-    Converts Tecplot to ...
+    Converts Tecplot to Tecplot
+
+    Globs all input tecplot files (e.g. tecplot*.plt)
     """
     if '*' in tecplot_filename:
         tecplot_filenames = glob.glob(tecplot_filename)
@@ -228,7 +240,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2):
     else:
         raise NotImplementedError(fmt2)
 
-def process_ugrid(ugrid_filename, fmt2, fname2):
+def process_ugrid(ugrid_filename, fmt2, fname2, data=None):
     """
     Converts UGRID to Nastran/Cart3d/STL/Tecplot
     """
@@ -268,13 +280,13 @@ def run(fmt1, fname1, fmt2, fname2, data):
     if fmt1 == 'nastran':
         process_nastran(fname1, fmt2, fname2, data)
     elif fmt1 == 'cart3d':
-        process_cart3d(fname1, fmt2, fname2)
+        process_cart3d(fname1, fmt2, fname2, data)
     elif fmt1 == 'stl':
-        process_stl(fname1, fmt2, fname2)
+        process_stl(fname1, fmt2, fname2, data)
     elif fmt1 == 'tecplot':
-        process_tecplot(fname1, fmt2, fname2)
+        process_tecplot(fname1, fmt2, fname2, data)
     elif fmt1 == 'ugrid':
-        process_ugrid(fname1, fmt2, fname2)
+        process_ugrid(fname1, fmt2, fname2, data)
     else:
         raise NotImplementedError(fmt1)
 
@@ -283,6 +295,7 @@ def main():
     """Interface for format_converter"""
     msg = "Usage:\n"
     msg += "  format_converter nastran <INPUT> <format2> <OUTPUT> -o <OP2>\n"
+    msg += "  format_converter <format1> <INPUT> stl     <OUTPUT> -b\n"
     msg += "  format_converter <format1> <INPUT> <format2> <OUTPUT>\n"
     #msg += "  format_converter nastran  <INPUT> <format2> <OUTPUT>\n"
     #msg += "  format_converter cart3d   <INPUT> <format2> <OUTPUT>\n"
@@ -296,15 +309,17 @@ def main():
     msg += "  OUTPUT         path to output file\n"
     msg += "  OP2            path to results file (nastran-specific)\n"
     msg += "                 only used for Tecplot\n"
+    msg += "  -b, --binary   writes the STL in binary\n"
     msg += "  -h, --help     show this help message and exit\n"
     msg += "  -v, --version  show program's version number and exit\n\n"
     msg += 'Notes:\n'
     msg += "  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n"
-    msg += "  Tecplot supports globbing as the input filename\n"
+    msg += "  STL/Tecplot supports globbing as the input filename\n"
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-    #print(data)
+    print(data)
+
 
     is_nastran = data['nastran']
     format1 = data['<format1>']
@@ -312,6 +327,10 @@ def main():
         format1 = 'nastran'
 
     format2 = data['<format2>']
+    is_stl = data['stl']
+    if is_stl:
+        format2 = 'stl'
+
     input_filename = data['<INPUT>']
     output_filename = data['<OUTPUT>']
     op2_filename = data['<OP2>']

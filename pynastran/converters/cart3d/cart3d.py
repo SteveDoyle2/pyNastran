@@ -881,7 +881,7 @@ class Cart3D(Cart3dIO):
 
         Parameters
         ----------
-        self : Cart3DReader()
+        self : Cart3D()
             the reader object
         cnormals : (n, 3) ndarray
             normalized centroidal normal vectors

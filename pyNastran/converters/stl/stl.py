@@ -1,12 +1,9 @@
-#pylint:  disable=C0103,C0111
+#pylint:  disable=C0111
 from __future__ import print_function
 from six import iteritems
 from six.moves import zip, range
-import os
 from copy import deepcopy
 #from struct import pack
-
-from docopt import docopt
 
 from numpy import array, zeros, ndarray, cross, where, vstack, unique
 from numpy import arctan2, cos, sin, transpose, pi
@@ -20,54 +17,6 @@ from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
 
-def combine_stls(stl_filenames, stl_out_filename=None, remove_bad_elements=False, is_binary=True, float_fmt='%6.12f'):
-    """
-    Combines multiple STLs into a single file
-
-    Parameters
-    ----------
-    stl_filenames : List[str, str, ...]
-        list of stl filenames or a string filename
-        (useful for removing bad elements)
-    remove_bad_elements : bool; default=False
-        should elements with invalid normals be removed?
-    stl_out_filename : str; default=None -> no writing
-        string of stl output filename
-    is_binary : bool; default=True
-        should the output file be binary
-    float_fmt : str; default='%6.12f'
-        the ascii float format
-
-    Returns
-    -------
-    stl : STL()
-        the stl object
-    """
-    nodes = []
-    elements = []
-
-    if isinstance(stl_filenames, str):
-        stl_filenames = [stl_filenames]
-
-    n0 = 0
-    for fname in stl_filenames:
-        stl = STLReader()
-        stl.read_stl(fname)
-        nnodes = stl.nodes.shape[0]
-        nodes.append(stl.nodes)
-        elements.append(stl.elements + n0)
-        n0 += nnodes
-
-    stl.nodes = vstack(nodes)
-    stl.elements = vstack(elements)
-
-    if remove_bad_elements:
-        stl.remove_elements_with_bad_normals(stl.elements, nodes=stl.nodes)
-
-    if stl_out_filename is not None:
-        stl.write_stl(stl_out_filename, is_binary=is_binary, float_fmt=float_fmt)
-    return stl
-
 class STL(object):
     #modelType = 'stl'
     #isStructured = False
@@ -78,6 +27,8 @@ class STL(object):
 
         self.nodes = None
         self.elements = None
+        self.header = None
+        self.infilename = None
 
     def write_stl(self, out_filename, is_binary=False, float_fmt='%6.12f'):
         self.log.info("---writing STL file...%r---" % out_filename)
@@ -105,28 +56,28 @@ class STL(object):
 
     def write_binary_stl(self, stl_filename):
         """Write an STL binary file."""
-        f = open(stl_filename, "wb")
+        infile = open(stl_filename, "wb")
 
         if hasattr(self, 'header'):
             self.header.ljust(80, '\0')
-            f.write(self.header)
+            infile.write(self.header)
         else:
             header = '%-80s' % stl_filename
-            f.write(pack('80s', header))
-        a = [0., 0., 0.]
-        b = [0., 0., 0.]
-        c = [0., 0., 0.]
+            infile.write(pack('80s', header))
+        #avector = [0., 0., 0.]
+        #bvector = [0., 0., 0.]
+        #cvector = [0., 0., 0.]
         nelements = self.elements.shape[0]
-        f.write(pack('i', nelements))
+        infile.write(pack('i', nelements))
         elements = self.elements
 
         p1 = self.nodes[elements[:, 0], :]
         p2 = self.nodes[elements[:, 1], :]
         p3 = self.nodes[elements[:, 2], :]
-        a = p2 - p1
-        b = p3 - p1
-        n = cross(a, b)
-        del a, b
+        avector = p2 - p1
+        bvector = p3 - p1
+        n = cross(avector, bvector)
+        del avector, bvector
         #n /= norm(n, axis=1)
 
         s = Struct('12fH')
@@ -135,14 +86,14 @@ class STL(object):
                           p1[eid, 0], p1[eid, 1], p1[eid, 2],
                           p2[eid, 0], p2[eid, 1], p2[eid, 2],
                           p3[eid, 0], p3[eid, 1], p3[eid, 2], 0)
-            f.write(data)
-        f.close()
+            infile.write(data)
+        infile.close()
 
     def read_binary_stl(self, stl_filename):
         """Read an STL binary file."""
-        self.infile = open(stl_filename, 'rb')
-        data = self.infile.read()
-        self.infile.close()
+        with open(stl_filename, 'rb') as infile:
+            data = infile.read()
+
         self.header = data[:80]
         print('header = %r' % self.header.rstrip())
         nelements, = unpack('i', data[80:84])
@@ -205,27 +156,27 @@ class STL(object):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-        n = norm(v123, axis=1)
-        inan = where(n == 0)[0]
-        return v123, n, inan
+        normals_norm = norm(v123, axis=1)
+        inan = where(normals_norm == 0)[0]
+        return v123, normals_norm, inan
 
     def remove_elements_with_bad_normals(self, elements, nodes=None):
-        v123, n, inan = self._get_normals_data(elements, nodes=nodes)
+        v123, normals_norm, inan = self._get_normals_data(elements, nodes=nodes)
         if len(inan):
-            inotnan = where(n != 0)[0]
+            inotnan = where(normals_norm != 0)[0]
             self.elements = elements[inotnan, :]
-            n = n[inotnan]
+            normals_norm = normals_norm[inotnan]
             v123 = v123[inotnan]
             self.log.info('removing %i elements with coincident nodes' % len(inan))
 
         normals = v123
-        normals[:, 0] /= n
-        normals[:, 1] /= n
-        normals[:, 2] /= n
+        normals[:, 0] /= normals_norm
+        normals[:, 1] /= normals_norm
+        normals[:, 2] /= normals_norm
         return normals
 
     def get_area(self, elements, stop_on_failure=True):
-        v123, n, inan = self._get_normals_data(elements, nodes=self.nodes)
+        v123, normals_norm, inan = self._get_normals_data(elements, nodes=self.nodes)
 
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
@@ -233,9 +184,9 @@ class STL(object):
                 for inani in inan:
                     msg += '  eid=%s nodes=%s\n' % (inani, elements[inani, :])
                     for ni in elements[inani]:
-                        msg += '    nid=%s node=%s\n' % (ni, nodes[ni, :])
+                        msg += '    nid=%s node=%s\n' % (ni, self.nodes[ni, :])
                 raise RuntimeError(msg)
-        return 0.5 * n
+        return 0.5 * normals_norm
 
     def get_normals(self, elements, nodes=None, stop_on_failure=True):
         """
@@ -251,7 +202,7 @@ class STL(object):
         """
         if nodes is None:
             nodes = self.nodes
-        v123, n, inan = self._get_normals_data(elements, nodes=nodes)
+        v123, normals_norm, inan = self._get_normals_data(elements, nodes=nodes)
 
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
@@ -266,17 +217,17 @@ class STL(object):
                 msg += 'Failed Elements: %s; n=%s\n' % (inan, len(inan))
                 raise RuntimeError(msg)
         else:
-            inotnan = where(n != 0)[0]
-            n[inan] = array([1., 0., 0.])
+            inotnan = where(normals_norm != 0)[0]
+            normals_norm[inan] = array([1., 0., 0.])
             elements = elements[inotnan, :]
-            n = n[inotnan]
+            normals_norm = normals_norm[inotnan]
             v123 = v123[inotnan]
 
         # we need to divide our (n,3) array in 3 steps
-        normals = v123 # /n
-        normals[:, 0] /= n
-        normals[:, 1] /= n
-        normals[:, 2] /= n
+        normals = v123 # / normals_norm
+        normals[:, 0] /= normals_norm
+        normals[:, 1] /= normals_norm
+        normals[:, 2] /= normals_norm
         return normals
 
     def flip_normals(self, i=None):
@@ -447,58 +398,56 @@ class STL(object):
         eid2 = 1
         pid = 100
         mid = 100
-        bdf = open(volume_bdfname, 'wb')
-        bdf.write('CEND\nBEGIN BULK\n')
-        bdf.write('$NODES in Layer=0\n')
-        for (x, y, z) in nodes:
-            card = ['GRID', nid, cid, x, y, z]
-            bdf.write(print_card_8(card))
-            nid += 1
-
-        for deltaN in deltaNs:
-            outer_points = nodes + normals_at_nodes * deltaN
-            nodes2[ni*nnodes : (ni+1)*nnodes, :] = outer_points
-
-            nnbase = ni * nnodes
-            nnshift = (ni+1) * nnodes
-
-            nebase = (ni) * nelements
-            neshift = (ni + 1) * nelements
-            elements2[neshift : neshift + nelements, :] = elements + nnodes * (ni + 1)
-
-            self.log.info('nodes = %s' % str(nodes))
-            self.log.info('deltaN = %s' % str(deltaN))
-            self.log.info('normals_at_nodes = %s' % str(normals_at_nodes))
-            self.log.info('outer_points = %s' % str(outer_points))
-            bdf.write('$NODES in Layer=%i\n' % (ni + 1))
-            for x, y, z in outer_points:
+        with open(volume_bdfname, 'wb') as bdf:
+            bdf.write('CEND\nBEGIN BULK\n')
+            bdf.write('$NODES in Layer=0\n')
+            for (x, y, z) in nodes:
                 card = ['GRID', nid, cid, x, y, z]
                 bdf.write(print_card_8(card))
                 nid += 1
 
-            bdf.flush()
-            bdf.write('$SOLID ELEMENTS in Layer=%i\n' % (ni + 1))
-            for eid in range(nelements):
-                (n1, n2, n3) = elements2[nebase  + eid] + 1
-                (n4, n5, n6) = elements2[neshift + eid] + 1
-                card = ['CPENTA', eid2, pid, n1, n2, n3, n4, n5, n6]
+            for deltaN in deltaNs:
+                outer_points = nodes + normals_at_nodes * deltaN
+                nodes2[ni*nnodes : (ni+1)*nnodes, :] = outer_points
+
+                nnbase = ni * nnodes
+                nnshift = (ni+1) * nnodes
+
+                nebase = (ni) * nelements
+                neshift = (ni + 1) * nelements
+                elements2[neshift : neshift + nelements, :] = elements + nnodes * (ni + 1)
+
+                self.log.info('nodes = %s' % str(nodes))
+                self.log.info('deltaN = %s' % str(deltaN))
+                self.log.info('normals_at_nodes = %s' % str(normals_at_nodes))
+                self.log.info('outer_points = %s' % str(outer_points))
+                bdf.write('$NODES in Layer=%i\n' % (ni + 1))
+                for x, y, z in outer_points:
+                    card = ['GRID', nid, cid, x, y, z]
+                    bdf.write(print_card_8(card))
+                    nid += 1
+
+                bdf.write('$SOLID ELEMENTS in Layer=%i\n' % (ni + 1))
+                for eid in range(nelements):
+                    (n1, n2, n3) = elements2[nebase  + eid] + 1
+                    (n4, n5, n6) = elements2[neshift + eid] + 1
+                    card = ['CPENTA', eid2, pid, n1, n2, n3, n4, n5, n6]
+                    bdf.write(print_card_8(card))
+                    eid2 += 1
+
+                card = ['PSOLID', pid, mid]
                 bdf.write(print_card_8(card))
-                eid2 += 1
-                bdf.flush()
 
-            card = ['PSOLID', pid, mid]
-            bdf.write(print_card_8(card))
+                E = 1e7
+                G = None
+                nu = 0.3
+                card = ['MAT1', mid, E, G, nu]
+                bdf.write(print_card_8(card))
 
-            E = 1e7
-            G = None
-            nu = 0.3
-            card = ['MAT1', mid, E, G, nu]
-            bdf.write(print_card_8(card))
+                pid += 1
+                mid += 1
+                ni += 1
 
-            pid += 1
-            mid += 1
-            ni += 1
-        bdf.close()
         #print(elements2)
         #for node in nodes:
             #normal = normals_elements[nid]
@@ -506,11 +455,11 @@ class STL(object):
         #print(deltaN)
 
         #----------- make far field---------------
-        nodes3 = nodes2[nnbase : , :]
-        nodes3 = nodes2[nnbase : , :]
+        nodes3 = nodes2[nnbase:, :]
+        nodes3 = nodes2[nnbase:, :]
 
-        elements3 = elements2[nebase : , :]
-        elements3 = elements2[nebase : , :]
+        elements3 = elements2[nebase:, :]
+        elements3 = elements2[nebase:, :]
         self.log.debug("done projecting...")
         return nodes2, elements2
 
@@ -529,10 +478,10 @@ class STL(object):
         """
         nodes = self.nodes
         elements = self.elements
-        self.log.info("---_write_stl_ascii...%r---" % out_filename)
+        self.log.info("---write_stl_ascii...%r---" % out_filename)
         msg = ''
-        nFormat = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
-        vFormat = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
+        node_format = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
+        vertex_format = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         msg += 'solid %s\n' % solid_name
         out = open(out_filename, 'wb')
         out.write(msg)
@@ -547,11 +496,11 @@ class STL(object):
                 raise
 
             #msg  += '  facet normal -6.601157e-001 6.730213e-001 3.336009e-001\n'
-            msg = nFormat % tuple(normal)
+            msg = node_format % tuple(normal)
             msg += '   outer loop\n'
-            msg += vFormat % tuple(p1)
-            msg += vFormat % tuple(p2)
-            msg += vFormat % tuple(p3)
+            msg += vertex_format % tuple(p1)
+            msg += vertex_format % tuple(p2)
+            msg += vertex_format % tuple(p3)
             msg += '   endloop\n'
             msg += ' endfacet\n'
             #print(msg)
@@ -562,16 +511,15 @@ class STL(object):
 
 
     def read_ascii_stl(self, stl_filename):
-        self.infile = open(stl_filename, 'r')
-        f = self.infile
-        line = f.readline()
+        infile = open(stl_filename, 'r')
+        line = infile.readline()
         inode = 0
         ielement = 0
         nodes_dict = {}
         elements = []
         while line:
             if 'solid' in line[:6].lower():
-                line = f.readline()  # facet
+                line = infile.readline()  # facet
                 while 'facet' in line.strip()[:5].lower():
                     #facet normal -6.665299e-001 6.795624e-001 3.064844e-001
                     #   outer loop
@@ -581,16 +529,16 @@ class STL(object):
                     #   endloop
                     #endfacet
 
-                    f.readline() # outer loop
-                    L1 = f.readline().strip()
-                    L2 = f.readline().strip()
-                    L3 = f.readline().strip()
+                    infile.readline() # outer loop
+                    L1 = infile.readline().strip()
+                    L2 = infile.readline().strip()
+                    L3 = infile.readline().strip()
 
                     v1 = L1.split()[1:]
                     v2 = L2.split()[1:]
                     v3 = L3.split()[1:]
-                    f.readline() # endloop
-                    f.readline() # endfacet
+                    infile.readline() # endloop
+                    infile.readline() # endfacet
                     t1 = tuple(v1)
                     t2 = tuple(v2)
                     t3 = tuple(v3)
@@ -622,18 +570,18 @@ class STL(object):
                     element = [i1, i2, i3]
                     elements.append(element)
                     ielement += 1
-                    line = f.readline()  # facet
+                    line = infile.readline()  # facet
                 #print "end of solid..."
             elif 'endsolid' in line.lower():
-                line = f.readline()
+                line = infile.readline()
             elif line.strip() == '':
-                line = f.readline()
+                line = infile.readline()
             else:
                 self.log.error(line)
                 #line = f.readline()
                 raise NotImplementedError('multiple solids are not supported; line=%r' % line)
                 #break
-        self.infile.close()
+        infile.close()
 
         assert inode > 0, inode
         nnodes = inode + 1 # accounting for indexing
@@ -758,7 +706,8 @@ def _rotate_model(stl):  # pragma: no cover
         (nodes2, elements2) = stl.project_mesh(nodes_rotated, elements)
 
     # write the model
-    stl._write_stl_ascii(stl_geom_out, 'sphere', nodes, elements)
+    stl_geom_out = 'rotated.stl'
+    stl.write_stl_ascii(stl_geom_out, 'sphere')
 
 
 if __name__ == '__main__':  # pragma: no cover

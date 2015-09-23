@@ -95,10 +95,10 @@ def main():
         stl_to_nastran_filename(stl_filename, bdf_filename2, log=log)
     print("----------")
     #nastran_to_cart3d(bdf_filename2, cart3d_filename)
-    #cart3d = Cart3dReader()
+    #cart3d = Cart3d()
     #cart3d.read_cart3d(cart3d_filename)
 
-    stl = STLReader()
+    stl = STL()
     stl.read_stl(stl_filename)
 
     if flip_normals:

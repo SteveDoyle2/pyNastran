@@ -55,7 +55,7 @@ def write_new_cart3d_mesh(cfdGridFile, cfdGridFile2, wA):
     log.info("---starting write_new_cart3d_mesh---")
 
     # make half model
-    cart = Cart3DReader()
+    cart = Cart3D()
     result_names = ['Cp']
     points, elements, regions, loads = cart.read_cart3d(cfdGridFile, result_names=result_names) # reading full model
     points, elements, regions, loads = cart.make_half_model(points, elements, regions, loads)
