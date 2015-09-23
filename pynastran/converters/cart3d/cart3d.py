@@ -349,7 +349,7 @@ class Cart3dIO(object):
         """
         Parameters
         ----------
-        self : Cart3DReader
+        self : Cart3D()
             the object pointer
         """
         assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
@@ -368,7 +368,7 @@ class Cart3dIO(object):
 
         Parameters
         ----------
-        self : Cart3DReader
+        self : Cart3D()
             the object pointer
         """
         n = len(data)
@@ -415,7 +415,7 @@ class Cart3dIO(object):
 
         Parameters
         ----------
-        self : Cart3DReader
+        self : Cart3D()
             the object pointer
         """
         nold = self.n
@@ -710,7 +710,7 @@ class Cart3D(Cart3dIO):
         Takes the Cart3d variables and calculates additional variables
 
         Parameters
-        self : Cart3dReader
+        self : Cart3d()
             the object pointer
         result_names : List[str]
             the variables to calculate

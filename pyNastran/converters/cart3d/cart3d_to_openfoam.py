@@ -1,7 +1,8 @@
 import os
 
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DInpt
-from pyNastran.converters.cart3d.cart3d_reader import Cart3dReader
+from numpy import array
+# from pyNastran.converters.cart3d.cart3d_reader import Cart3DInpt
+from pyNastran.converters.cart3d.cart3d import Cart3d
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 
 def get_header():
@@ -35,8 +36,10 @@ def cart3d_to_openfoam(cart3d_filename, inpt_filename, basepath):
     stl_filename = 'cart3d.stl'
     cart3d_to_stl_filename(cart3d_filename, stl_filename)
 
-    cart3d = Cart3dReader()
-    points, elements, regions, loads = cart3d.read_cart3d(cart3d_filename)
+    cart3d = Cart3d()
+    cart3d.read_cart3d(cart3d_filename)
+    points = cart3d.points
+    elements = cart3d.elements
 
     # convert to 0 based
     elements -= 1
@@ -52,8 +55,8 @@ def cart3d_to_openfoam(cart3d_filename, inpt_filename, basepath):
     os.makedirs(os.path.join(basepath, 'constant', 'polyMesh'))
     os.mkdir(os.path.join(basepath, 'system'))
 
-    fsnappy  = open(os.path.join(basepath, 'constant', 'snappyHexMeshDict'))
-    fblock   = open(os.path.join(basepath, 'constant', 'polyMesh', 'blockMeshDict'))
+    fsnappy = open(os.path.join(basepath, 'constant', 'snappyHexMeshDict'))
+    fblock = open(os.path.join(basepath, 'constant', 'polyMesh', 'blockMeshDict'))
     fcontrol = open(os.path.join(basepath, 'system', 'controlMeshDict'))
     fsnappy.write(get_header())
     fblock.write(get_header())
@@ -63,8 +66,8 @@ def cart3d_to_openfoam(cart3d_filename, inpt_filename, basepath):
     block = ''
     control = ''
 
-    block   += write_foam_file(data, 'blockMeshDict', 'constant/polyMesh')
-    snappy  += write_foam_file(data, 'autoMeshDict')
+    block += write_foam_file(data, 'blockMeshDict', 'constant/polyMesh')
+    snappy += write_foam_file(data, 'autoMeshDict')
     control += write_foam_file(data, 'controlMeshDict', 'constant/polyMesh')
 
     maxR = inpt.maxR
@@ -122,7 +125,7 @@ def cart3d_to_openfoam(cart3d_filename, inpt_filename, basepath):
     block += 'mergePatchParis();\n'
 
     assert os.path.exists(stl_filename), stl_filename
-    stl_base, ext = os.getext(stl_filename)
+    stl_base, ext = os.path.splitext(stl_filename)
 
     snappy += 'geometry;\n'
     snappy += '{\n'
@@ -209,8 +212,13 @@ class Inpt(object):
 def create_openfoam_inputs(inpt_filename):
     inpt = read_cart3d_inpt(inpt_filename)
 
-if __name__ == '__main__':  # pragma: no cover
+
+def main():
     #bdf_filename = 'g278.bdf'
     cart3d_geo_filename = 'g278.tri'
     cart3d_inpt_filename = 'g278.inpt'
     cart3d_to_openfoam(cartcart3d_geo_filename, cart3d_inpt_filename)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

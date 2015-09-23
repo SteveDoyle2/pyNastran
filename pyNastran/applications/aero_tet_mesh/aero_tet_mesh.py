@@ -47,7 +47,7 @@ from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl_filename
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl import STL
 
 
 

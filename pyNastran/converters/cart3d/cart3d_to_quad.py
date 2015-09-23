@@ -1,15 +1,16 @@
 from collections import defaultdict
 from numpy import cross, allclose
-from numpy import unique, zeros, dot, where
 from numpy.linalg import norm
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 def main():
     """tests getting the normal groups"""
-    cart3d = Cart3DReader(log=None, debug=False)
+    cart3d = Cart3D(log=None, debug=False)
     result_names = []  # read the mesh only
-    (points, elements, regions, loads) = cart3d.read_cart3d('Cart3d_55000_2.4_10_0_0_0_0.i.triq', result_names=result_names)
+    cart3d.read_cart3d('Cart3d_55000_2.4_10_0_0_0_0.i.triq', result_names=result_names)
+    points = cart3d.points
+    elements = cart3d.elements
 
     celements = elements.copy()
     normals, groups = get_normal_groups(points, celements)
@@ -49,51 +50,59 @@ def normal_groups_to_quads(elements, normals, normal_groups):
     return tris, quads
 
 def write_nastran_quads_tris(nodes, tris, quads, bdf_filename='tris_quads.bdf'):
-    f = open(bdf_filename, 'wb')
-    f.write('CEND\n')
-    f.write('BEGIN BULK\n')
-    cp = 0
-    for inode, node in enumerate(nodes):
-        card = ['GRID', inode + 1, cp, ] + list(node)
-        f.write(print_card_8(card))
+    with open(bdf_filename, 'wb') as bdf_file:
+        bdf_file.write('CEND\n')
+        bdf_file.write('BEGIN BULK\n')
+        cp = 0
+        for inode, node in enumerate(nodes):
+            card = ['GRID', inode + 1, cp, ] + list(node)
+            bdf_file.write(print_card_8(card))
 
-    eid = 1
-    pid = 1
-    mid = 1
-    for tri in tris:
-        #print(tri)
-        card = ['CTRIA3', eid, pid, ] + list(tri)
-        #print card
-        f.write(print_card_8(card))
-        eid += 1
+        eid = 1
+        pid = 1
+        mid = 1
+        for tri in tris:
+            #print(tri)
+            card = ['CTRIA3', eid, pid, ] + list(tri)
+            #print card
+            bdf_file.write(print_card_8(card))
+            eid += 1
 
-    for quad in quads:
-        #print "quad[%s] = %s" % (eid, str(quad))
-        card = ['CQUAD4', eid, pid, ] + list(quad)
-        f.write(print_card_8(card))
-        eid += 1
+        for quad in quads:
+            #print "quad[%s] = %s" % (eid, str(quad))
+            card = ['CQUAD4', eid, pid, ] + list(quad)
+            bdf_file.write(print_card_8(card))
+            eid += 1
 
-    t = 0.1
-    card = ['PSHELL', pid, mid, t]
-    f.write(print_card_8(card))
+        t = 0.1
+        card = ['PSHELL', pid, mid, t]
+        bdf_file.write(print_card_8(card))
 
-    E = 1e7
-    G = None
-    nu = 0.3
-    card = ['MAT1', mid, E, G, nu]
-    f.write(print_card_8(card))
+        E = 1e7
+        G = None
+        nu = 0.3
+        card = ['MAT1', mid, E, G, nu]
+        bdf_file.write(print_card_8(card))
 
-    f.write('ENDDATA\n')
-    f.close()
+        bdf_file.write('ENDDATA\n')
 
 def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
     """
     Gets the normal groups for a cart3d model
 
-    :param points: the points from the Cart3dReader
-    :param elements: the elements from the Cart3dReader
-    :returns normal_groups: the list of list of ints of the element IDs
-                            with the same normal that are touching
+    Parameters
+    ----------
+    points : ndarray
+        the points from Cart3d()
+    elements : ndarray
+        the elements from Cart3d()
+
+    Returns
+    -------
+    normal_groups : List[int, int, ...]
+        the list of list of ints of the element IDs
+        with the same normal that are touching
+
     .. note:: modifies elements
     """
     elements -= 1
@@ -160,7 +169,8 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
         #normali = normal[eid, :]
         if eid not in set_elements:
             same_normals = [eid]
-            check_normals(eid, elements, normals, cdict, same_normals, rtol=1e-4, atol=1e-3)  # same_normals is modified
+            check_normals(eid, elements, normals, cdict, same_normals,
+                          rtol=1e-4, atol=1e-3)  # same_normals is modified
             #print same_normals, '\n'
             groups.append(same_normals)
             set_elements.update(same_normals)

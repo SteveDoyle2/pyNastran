@@ -1,38 +1,22 @@
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 from six.moves import zip
 from itertools import count
 from numpy import unique
 
-def cart3d_to_usm3d_bc(cart3d, log=None, debug=False):
+def cart3d_to_usm3d_bc(cart3d, usm3d_bc_filename):
     """
-    Converts a Cart3DReader object to STL format.
+    Creates a USM3D boundary condtion file from the Cart3d regions.
 
-    :param cart3d: a Cart3DReader object
-    :param log:    a logger object (or None)
-    :param debug:  True/False (used if log is not defined)
-
-    :returns stl: an STLReader object
+    Parameters
+    ----------
+    cart3d : Cart3D()
+        a Cart3D object
+    usm3d_bc_filename : str
+        path to the output BC file
     """
-    normals = cart3d.normals()
-    raise NotImplementedError()
-    #stl = STLReader(log=log, debug=debug)
-    #stl.nodes = nodes
-    #stl.elements = elements
-    #stl.write_stl(stl_filename)
-    #return stl
-
-def cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, debug=False):
-    """
-    Converts a Cart3D file to STL format.
-
-    :param cart3d_filename: path to the input Cart3D file
-    :param usm3d_bc_filename:    path to the output BC file
-    :param log:             a logger object (or None)
-    :param debug:           True/False (used if log is not defined)
-    """
-    cart3d = Cart3DReader(log=log, debug=debug)
-    (nodes, elements, regions, loads) = cart3d.read_cart3d(cart3d_filename)
-
+    # nodes = cart3d.points
+    elements = cart3d.elements
+    regions = cart3d.regions
     #nodes = cart3d.nodes
     #elements = cart3d.elements
     #regions = cart3d.regions
@@ -49,7 +33,30 @@ def cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, de
         usm3d_bc.write('%-8s %-8s %-8s %-8s %s\n' % (i+1, iregion, n1, n2, n3))
     usm3d_bc.close()
 
-if __name__ == '__main__':  # pragma: no cover
+def cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, debug=False):
+    """
+    Creates a USM3D boundary condtion file from the Cart3d regions.
+
+    Parameters
+    ----------
+    cart3d_filename : str
+        path to the input Cart3D file
+    usm3d_bc_filename : str
+        path to the output BC file
+    log : log(); default=None
+        a logger object
+    debug : bool; default=False
+        True/False (used if log is not defined)
+    """
+    cart3d = Cart3D(log=log, debug=debug)
+    cart3d.read_cart3d(cart3d_filename)
+    cart3d_to_usm3d_bc(cart3d, usm3d_bc_filename)
+
+
+def main():  # pragma: no cover
     cart3d_filename = 'threePlugs.a.tri'
     usm3d_bc_filename = 'threePlugs.bc'
     cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

@@ -151,9 +151,9 @@ class Tetgen(object):
     #self.tet = self.read_ele(ele_filename)
 
 
-def main():
+def main():  # pragma: no cover
     import os
-    from pyNastran.converters.stl.stl_reader import STLReader
+    from pyNastran.converters.stl.stl_reader import STL
 
     m1 = STL()
     m1.read_stl('tetgen_test.stl')

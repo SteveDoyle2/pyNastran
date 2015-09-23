@@ -411,7 +411,7 @@ class Cart3dIO(object):
         """
         Parameters
         ----------
-        self : Cart3DReader
+        self : Cart3dIO()
             the object pointer
         """
         assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
@@ -430,7 +430,7 @@ class Cart3dIO(object):
 
         Parameters
         ----------
-        self : Cart3DReader
+        self : Cart3dIO()
             the object pointer
         """
         n = len(data)
@@ -477,7 +477,7 @@ class Cart3dIO(object):
 
         Parameters
         ----------
-        self : Cart3DReader
+        self : Cart3dIO()
             the object pointer
         """
         nold = self.n

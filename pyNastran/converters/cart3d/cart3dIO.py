@@ -443,7 +443,7 @@ class Cart3dIO(object):
         pass
 
     def load_cart3d_results(self, cart3d_filename, dirname):
-        model = Cart3DReader(log=self.log, debug=False)
+        model = Cart3D(log=self.log, debug=False)
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
     def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, loads, model):
