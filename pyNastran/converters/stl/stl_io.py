@@ -6,7 +6,7 @@ from numpy import arange
 import vtk
 from vtk import vtkTriangle
 
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl_reader import STL
 
 
 class STL_IO(object):
@@ -53,7 +53,7 @@ class STL_IO(object):
         if skipReading:
             return
 
-        model = STLReader(log=self.log, debug=False)
+        model = STL(log=self.log, debug=False)
         #self.modelType = model.modelType
         model.read_stl(stl_filename)
         nodes = model.nodes

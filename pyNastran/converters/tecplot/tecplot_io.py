@@ -8,7 +8,7 @@ from numpy import arange, mean, amax, amin, array
 import vtk
 from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
-from pyNastran.converters.tecplot.tecplot_reader import TecplotReader, merge_tecplot_files
+from pyNastran.converters.tecplot.tecplot_reader import Tecplot, merge_tecplot_files
 
 
 class TecplotIO(object):

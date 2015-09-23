@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.utils.log import get_logger
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
-from pyNastran.converters.tecplot.tecplot_reader import TecplotReader
+from pyNastran.converters.tecplot.tecplot_reader import Tecplot
 
 
 class UGRID(object):

@@ -24,14 +24,24 @@ def combine_stls(stl_filenames, stl_out_filename=None, remove_bad_elements=False
     """
     Combines multiple STLs into a single file
 
-    :param stl_filenames:        list of stl filenames or a
-                                 string filename (useful for removing bad elements)
-    :param remove_bad_elements:  should elements with invalid normals be removed?  (default=False)
-    :param stl_out_filename:     string of stl output filename (default=None -> no writing)
-    :param is_binary:            should the output file be binary (default=True)
-    :param float_fmt:            the ascii float format (default='%6.12f')
+    Parameters
+    ----------
+    stl_filenames : List[str, str, ...]
+        list of stl filenames or a string filename
+        (useful for removing bad elements)
+    remove_bad_elements : bool; default=False
+        should elements with invalid normals be removed?
+    stl_out_filename : str; default=None -> no writing
+        string of stl output filename
+    is_binary : bool; default=True
+        should the output file be binary
+    float_fmt : str; default='%6.12f'
+        the ascii float format
 
-    :retval stl:  the stl object
+    Returns
+    -------
+    stl : STL()
+        the stl object
     """
     nodes = []
     elements = []
@@ -58,7 +68,7 @@ def combine_stls(stl_filenames, stl_out_filename=None, remove_bad_elements=False
         stl.write_stl(stl_out_filename, is_binary=is_binary, float_fmt=float_fmt)
     return stl
 
-class STLReader(object):
+class STL(object):
     #modelType = 'stl'
     #isStructured = False
     #isOutwardNormals = True
@@ -229,10 +239,15 @@ class STLReader(object):
 
     def get_normals(self, elements, nodes=None, stop_on_failure=True):
         """
-        :param elements: the elements to get the normals for
-        :param nodes: a subset of the nodes (default=None -> all)
-        :param stop_on_failure: True:  crash if there are coincident points (default=True)
-                                False: delete elements
+        Parameters
+        ----------
+        elements : (n, 3) ndarray ints
+            the elements to get the normals for
+        nodes : (n, ) ndarray; default=None -> all
+            a subset of the nodes
+        stop_on_failure : bool (default=True)
+            True:  crash if there are coincident points
+            False: delete elements
         """
         if nodes is None:
             nodes = self.nodes
@@ -268,8 +283,11 @@ class STLReader(object):
         """
         Flips the normals of the specified elements.
 
-        :param self: The STL object
-        :param i:    NDARRAY of the indicies to flip (default=None -> all)
+        Parameters
+        ----------
+        self: The STL object
+        i : (n, ) ndarray ints; default=None -> all
+            the indicies to flip
         """
         self.log.info("---flip_normals---")
         if i is None:
@@ -292,12 +310,22 @@ class STLReader(object):
         Calculates the normal vector of the nodes based on the average
         element normal.
 
-        :param self: The STL object
-        :param elements: The elements...should be removed
-        :param normals: The elemental normals
-        :param nid_to_eid: dictionary of node_id -> list of element_ids
+        Parameters
+        ----------
+        self : STL()
+            The STL object
+        elements : ????
+            The elements...should be removed
+        normals : (n, 3) ndarray floats
+            The elemental normals
+        nid_to_eid : Dict[int] = [int, int, ... ]
+            key = node_id
+            value = list of element_ids
 
-        :returns normals_at_nodes: NDARRAY of the normals shape=(nnodes, 3)
+        Returns
+        -------
+        normals_at_nodes : (nnodes, 3) ndarray ints
+            the normals
         """
         if normals is None:
             nodes = self.nodes
@@ -360,13 +388,23 @@ class STLReader(object):
         """
         Create a boundary layer mesh.
 
-        :param self: The STL object
-        :param nodes: The nodes on the surface.
-        :param elements: The elements on the surface.
-        :param volume_bdfname: The CPENTA bdf file to write.
+        Parameters
+        ----------
+        self : STL()
+            The STL object
+        nodes : (n, 3) ndarray floats
+            The nodes on the surface.
+        elements : (n, 3) ndarray ints
+            The elements on the surface.
+        volume_bdfname : str
+            The CPENTA bdf file to write.
 
-        :returns nodes2: The boundary layer nodes
-        :returns elements2: The boundary layer elements
+        Returns
+        -------
+        nodes2 : (n, 3) ndarray floats
+            The boundary layer nodes
+        elements2 : (n, 6) ndarray ints
+            The boundary layer elements
         """
         self.log.info("project_mesh...")
 
@@ -637,8 +675,12 @@ class STLReader(object):
         """
         Creates a mirror model.
 
-        :param xyz: the direction of symmetry
-        :param tol: the tolerance for symmetry plane nodes
+        Parameters
+        ----------
+        xyz : str {x, y, z}
+            the direction of symmetry
+        tol: float
+            the tolerance for symmetry plane nodes
 
         .. note:: All elements on the symmetry plane will be removed
         """

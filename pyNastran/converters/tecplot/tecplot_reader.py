@@ -60,7 +60,7 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
     return model
 
 
-class TecplotReader(FortranFormat):
+class Tecplot(FortranFormat):
     """
     Parses a hexa binary/ASCII Tecplot 360 file.
     Writes an ASCII Tecplot 10 file (no transient support).
@@ -889,7 +889,7 @@ def main():
         #break
 
 def main2():
-    plt = TecplotReader()
+    plt = Tecplot()
     #fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
     #fnames = [os.path.join(r'Z:\Temporary_Transfers\steve\output\time20000', fname)
     #          for fname in fnames]

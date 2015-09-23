@@ -2,8 +2,8 @@ from docopt import docopt
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.tecplot.tecplot_reader import TecplotReader
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.tecplot.tecplot_reader import Tecplot
+from pyNastran.converters.stl.stl_reader import STL
 # from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
@@ -85,7 +85,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2):
     """
     Converts Tecplot to ...
     """
-    # model = TecplotReader()
+    # model = Tecplot()
     # model.read_tecplot(tecplot_filename)
     # if fmt2 == 'nastran':
         # tecplot_to_nastran(model, fname2)
