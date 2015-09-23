@@ -38,6 +38,14 @@ class Tecplot(FortranFormat):
         self.tecplot_filename = ''
         self.variables = []
 
+    @property
+    def result_names(self):
+        return self.variables
+
+    @result_names.setter
+    def result_names(self, vals):
+        self.variables = vals
+
     def read_tecplot(self, tecplot_filename):
         if is_binary_file(tecplot_filename):
             return self.read_tecplot_binary(tecplot_filename)
@@ -472,11 +480,14 @@ class Tecplot(FortranFormat):
         msg += '"y"\n'
         msg += '"z"\n'
         if is_results:
-            msg += '"rho"\n'
-            msg += '"u"\n'
-            msg += '"v"\n'
-            msg += '"w"\n'
-            msg += '"p"\n'
+            print('vars =', self.variables)
+            for var in self.variables:
+                msg += '"%s"\n' % var
+            #msg += '"rho"\n'
+            #msg += '"u"\n'
+            #msg += '"v"\n'
+            #msg += '"w"\n'
+            #msg += '"p"\n'
         # msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
         msg += 'ZONE '
 
@@ -495,21 +506,24 @@ class Tecplot(FortranFormat):
         nnodes = self.nnodes
         nelements = self.nelements
         for etype, elements in etype_elements:
-            print(etype)
             if etype == 'CHEXA' and len(elements):
+                print(etype)
                 is_hexas = True
                 nnodes_per_element = 8
                 zone_type = 'FEBrick'
             elif etype == 'CTETRA' and len(elements):
+                print(etype)
                 is_tets = True
                 nnodes_per_element = 4
                 zone_type = 'FETETRAHEDRON'
             elif etype == 'CTRIA3' and len(elements):
+                print(etype)
                 # is_points = True
                 is_tris = True
                 nnodes_per_element = 3
                 zone_type = 'FETRIANGLE'
             elif etype == 'CQUAD4' and len(elements):
+                print(etype)
                 # is_points = True
                 is_quads = True
                 nnodes_per_element = 4
@@ -526,8 +540,14 @@ class Tecplot(FortranFormat):
 
         # xyz
         if is_points:
-            if self.results:
-                data = hstack([self.xyz, self.results])
+            if len(self.result_names):
+                try:
+                    data = hstack([self.xyz, self.results])
+                except ValueError:
+                    msg = 'Cant hstack...\n'
+                    msg += 'xyz.shape=%s\n' % str(self.xyz.shape)
+                    msg += 'results.shape=%s\n' % str(self.results.shape)
+                    raise ValueError(msg)
                 nresults = self.results.shape[1]
                 fmt = ' %15.9E' * nresults# + '\n'
             else:
@@ -536,6 +556,7 @@ class Tecplot(FortranFormat):
             #vals = self.xyz[:, ivar].ravel()
             # for vals in enumerate(data):
                 # tecplot_file.write(fmt % tuple(vals))
+            assert self.nnodes > 0
             savetxt(tecplot_file, data, fmt=fmt)
         else:
             #nvalues_per_line = 5

@@ -22,7 +22,7 @@ class UGRID(object):
         self.n = 0
 
         self.nodes = None
-        self.tris  = None
+        self.tris = None
         self.quads = None
         self.pids = None
 
@@ -30,6 +30,8 @@ class UGRID(object):
         self.penta5s = None
         self.penta6s = None
         self.hexas = None
+
+        self.isort = None
 
     def read_ugrid(self, ugrid_filename):
         """
@@ -66,14 +68,15 @@ class UGRID(object):
         assert endian in ['<', '>'], ndarray_float
 
 
-        f = open(ugrid_filename, 'rb')
-        data = f.read(7 * 4)
+        ugrid_file = open(ugrid_filename, 'rb')
+        data = ugrid_file.read(7 * 4)
         self.n += 7 * 4
 
         nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas = struct.unpack(endian + '7i', data)
         npids = nquads + ntris
         nvol_elements = ntets + npenta5s + npenta6s + nhexas
-        self.log.info('nnodes=%s ntris=%s nquads=%s ntets=%s npenta5s=%s npenta6s=%s nhexas=%s' % (nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas))
+        self.log.info('nnodes=%s ntris=%s nquads=%s ntets=%s npenta5s=%s npenta6s=%s nhexas=%s' % (
+            nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas))
 
         nvolume_elements = ntets + npenta5s + npenta6s + nhexas
         self.log.info('nsurface_elements=%s nvolume_elements=%.3f Million' % (npids, nvolume_elements / 1e6))
@@ -83,7 +86,7 @@ class UGRID(object):
         # data and and then do a reshape
         self.log.debug('ndarray_float=%s' % (ndarray_float))
         nodes = zeros(nnodes * 3, dtype=ndarray_float)
-        tris  = zeros(ntris * 3, dtype='int32')
+        tris = zeros(ntris * 3, dtype='int32')
         quads = zeros(nquads * 4, dtype='int32')
         pids = zeros(npids, dtype='int32')
 
@@ -94,7 +97,7 @@ class UGRID(object):
 
 
         ## NODES
-        data = f.read(nnodes * 3 * nfloat)
+        data = ugrid_file.read(nnodes * 3 * nfloat)
         self.n += nnodes * 3 * nfloat
         fmt = '%s%i%s' % (endian, nnodes * 3, float_fmt)  # >9f
         nodes[:] = struct.unpack(fmt, data)
@@ -103,7 +106,7 @@ class UGRID(object):
         #print('max xyz value = ' , nodes.max())
 
         ## CTRIA3
-        data = f.read(ntris * 3 * 4)
+        data = ugrid_file.read(ntris * 3 * 4)
         self.n += ntris * 3 * 4
         fmt = '%s%ii' % (endian, ntris * 3)  # >9i
         tris[:] = struct.unpack(fmt, data)
@@ -112,7 +115,7 @@ class UGRID(object):
         #print('max tris value = ' , tris.max())
 
         ## CQUAD4
-        data = f.read(nquads * 4 * 4)
+        data = ugrid_file.read(nquads * 4 * 4)
         self.n += nquads * 4 * 4
         fmt = '%s%ii' % (endian, nquads * 4)  # >12i
         quads[:] = struct.unpack(fmt, data)
@@ -120,7 +123,7 @@ class UGRID(object):
         #print('min quads value = ' , quads.min())
         #print('max quads value = ' , quads.max())
 
-        data = f.read(npids * 4)
+        data = ugrid_file.read(npids * 4)
         self.n += npids * 4
         fmt = '%s%ii' % (endian, npids)  # >12i
         pids[:] = struct.unpack(fmt, data)
@@ -131,7 +134,7 @@ class UGRID(object):
         # solids
 
         ## CTETRA
-        data = f.read(ntets * 4 * 4)
+        data = ugrid_file.read(ntets * 4 * 4)
         self.n += ntets * 4 * 4
         fmt = '%s%ii' % (endian, ntets * 4)  # >12i
         try:
@@ -144,7 +147,7 @@ class UGRID(object):
         #print('max tets value = ' , tets.max())
 
         ## CPYRAM
-        data = f.read(npenta5s * 5 * 4)
+        data = ugrid_file.read(npenta5s * 5 * 4)
         self.n += npenta5s * 5 * 4
         fmt = '%s%ii' % (endian, npenta5s * 5)
         penta5s[:] = struct.unpack(fmt, data)
@@ -153,7 +156,7 @@ class UGRID(object):
         #print('max penta5s value = ' , penta5s.max())
 
         ## cPENTA
-        data = f.read(npenta6s * 6 * 4)
+        data = ugrid_file.read(npenta6s * 6 * 4)
         self.n += npenta6s * 6 * 4
         fmt = '%s%ii' % (endian, npenta6s * 6)
         penta6s[:] = struct.unpack(fmt, data)
@@ -162,7 +165,7 @@ class UGRID(object):
         #print('max penta6s value = ' , penta6s.max())
 
         ## CHEXA
-        data = f.read(nhexas * 8 * 4)
+        data = ugrid_file.read(nhexas * 8 * 4)
         self.n += nhexas * 8 * 4
         fmt = '%s%ii' % (endian, nhexas * 8)
         hexas[:] = struct.unpack(fmt, data)
@@ -171,7 +174,7 @@ class UGRID(object):
         #print('max hexas value = ' , hexas.max())
 
         self.nodes = nodes
-        self.tris  = tris
+        self.tris = tris
         self.quads = quads
         self.pids = pids
 
@@ -185,15 +188,15 @@ class UGRID(object):
             if nvol_elements == 0:
                 raise RuntimeError('not a volume grid')
 
-            data = f.read(4)
+            data = ugrid_file.read(4)
             nBL_tets = struct.unpack(endian + 'i', data)
             self.n += 4
             print('nBL_tets=%s' % (nBL_tets)) # trash
 
 
-            data = f.read(nvol_elements * 4)
+            data = ugrid_file.read(nvol_elements * 4)
             self.n += nvol_elements * 4
-            print('len(data)=%s len/4=%s nvol_elements=%s' % ( len(data), len(data) / 4., nvol_elements))
+            print('len(data)=%s len/4=%s nvol_elements=%s' % (len(data), len(data) / 4., nvol_elements))
             assert len(data) == (nvol_elements * 4)
 
             fmt = endian + '%ii' % (nvol_elements * 4)
@@ -203,10 +206,10 @@ class UGRID(object):
             # some more data we're not reading for now...
 
             #self.show(100, types='i', big_endian=True)
-        assert self.n == f.tell()
-        f.close()
+        assert self.n == ugrid_file.tell()
+        ugrid_file.close()
 
-    def export_bdf(self, bdf_filename, include_shells=True, include_solids=True):
+    def write_bdf(self, bdf_filename, include_shells=True, include_solids=True, convert_pyram_to_penta=True):
         bdf_file = open(bdf_filename, 'wb')
         #bdf_file.write('CEND\n')
         #bdf_file.write('BEGIN BULK\n')
@@ -249,7 +252,7 @@ class UGRID(object):
         # solids
         if include_solids:
             pid = max_pid + 1
-            eid, pid = self.write_bdf_solids(bdf_file, eid, pid)
+            eid, pid = self._write_bdf_solids(bdf_file, eid, pid, convert_pyram_to_penta=convert_pyram_to_penta)
         bdf_file.write('ENDDATA\n')
         bdf_file.close()
 
@@ -258,28 +261,38 @@ class UGRID(object):
         nodes = zeros((nnodes, 3), dtype='float64')
         elements = []
 
-        i = 0
-        for element in self.tets:
-            n1, n2, n3, n4 = element
-            elements.append([n1, n2, n3, n4,
-                             n4, n4, n4, n4])
-        for element in self.penta5s:
-            n1, n2, n3, n4, n5 = element
-            elements.append([n1, n2, n3, n4,
-                             n5, n5, n5, n5])
-        for element in self.penta6s:
-            n1, n2, n3, n4, n5, n6 = element
-            elements.append([n1, n2, n3, n4,
-                             n5, n6, n6, n6])
-        for element in self.hexas:
-            n1, n2, n3, n4, n5, n6, n7, n8 = element
-            elements.append([n1, n2, n3, n4,
-                             n5, n6, n7, n8])
-        elements = array(elements, dtype='int32') - 1
+        ntets = len(self.tets)
+        non_tets = len(self.penta5s) + len(self.penta6s) + len(self.hexas)
+
         tecplot = Tecplot()
         tecplot.xyz = self.nodes
-        tecplot.hexa_elements = elements
-        tecplot.write_tecplot(tecplot_filename)
+
+        if ntets and non_tets == 0:
+            elements = self.tets
+            tecplot.tet_elements = elements - 1
+        elif non_tets:
+            for element in self.tets:
+                n1, n2, n3, n4 = element
+                elements.append([n1, n2, n3, n4,
+                                 n4, n4, n4, n4])
+            for element in self.penta5s:
+                n1, n2, n3, n4, n5 = element
+                elements.append([n1, n2, n3, n4,
+                                 n5, n5, n5, n5])
+            for element in self.penta6s:
+                n1, n2, n3, n4, n5, n6 = element
+                elements.append([n1, n2, n3, n4,
+                                 n5, n6, n6, n6])
+            for element in self.hexas:
+                n1, n2, n3, n4, n5, n6, n7, n8 = element
+                elements.append([n1, n2, n3, n4,
+                                 n5, n6, n7, n8])
+            elements = array(elements, dtype='int32') - 1
+            tecplot.hexa_elements = elements
+        else:
+            raise RuntimeError()
+
+        tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
         tecplot.results = array([], dtype='float32')
 
     def write_ugrid(self, ugrid_filename_out):
@@ -351,7 +364,7 @@ class UGRID(object):
             s = Struct(fmt)
             f_ugrid.write(s.pack(*hexas.ravel()))
 
-    def write_bdf_solids(self, f, eid, pid):
+    def _write_bdf_solids(self, f, eid, pid, convert_pyram_to_penta=True):
         #pid = 0
         f.write('PSOLID,%i,1\n' % pid)
         print('writing CTETRA')
@@ -363,13 +376,21 @@ class UGRID(object):
                 eid, pid, element[0], element[1], element[2], element[3]))
             eid += 1
 
-        # skipping the penta5s
-        print('writing CPYRAM as CPENTA with node6=node5')
-        f.write('$ CPYRAM - CPENTA5\n')
-        for element in self.penta5s:
-            f.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
-                eid, pid, element[0], element[1], element[2], element[3], element[4], element[4]))
-            eid += 1
+        if convert_pyram_to_penta:
+            # skipping the penta5s
+            print('writing CPYRAM as CPENTA with node6=node5')
+            f.write('$ CPYRAM - CPENTA5\n')
+            for element in self.penta5s:
+                f.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                    eid, pid, element[0], element[1], element[2], element[3], element[4], element[4]))
+                eid += 1
+        else:
+            print('writing CPYRAM')
+            f.write('$ CPYRAM - CPENTA5\n')
+            for element in self.penta5s:
+                f.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                    eid, pid, element[0], element[1], element[2], element[3], element[4]))
+                eid += 1
 
         print('writing CPENTA')
         f.write('$ CPENTA6\n')
@@ -390,7 +411,7 @@ class UGRID(object):
             eid += 1
         return eid, pid
 
-    def export_foam(self, foam_filename, tag_filename):
+    def write_foam(self, foam_filename, tag_filename):
         dirname = os.path.dirname(foam_filename)
         base = os.path.splitext(foam_filename)[0]
 
@@ -477,7 +498,8 @@ class UGRID(object):
         pids = self.pids
         for iboundary in uboundaries:
             data = tag_data[iboundary]
-            #name, is_visc, is_recon, is_rebuild, is_fixed, is_source, is_trans, is_delete, bl_spacing, bl_thickness, nlayers = data
+            #name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
+            #is_trans, is_delete, bl_spacing, bl_thickness, nlayers = data
             name = data[0]
 
             i = where(iboundary == pids)[0]
@@ -516,10 +538,10 @@ class UGRID(object):
         tri_faces = zeros((ntri_faces, 3), dtype='int32')
         quad_faces = zeros((nquad_faces, 4), dtype='int32')
 
-        f = open(faces_filename, 'wb')
-        f.write('\n\n')
-        #f.write('%i\n' % (nnodes))
-        f.write('(\n')
+        faces_file = open(faces_filename, 'wb')
+        faces_file.write('\n\n')
+        #faces_file.write('%i\n' % (nnodes))
+        faces_file.write('(\n')
 
         it_start = {}
         iq_start = {}
@@ -530,14 +552,14 @@ class UGRID(object):
         it_start[1] = it
         iq_start[1] = iq
         min_eids[eid] = self.tets
-        for element in self.tets-1:
+        for element in self.tets - 1:
             (n1, n2, n3, n4) = element
             face1 = [n3, n2, n1]
             face2 = [n1, n2, n4]
             face3 = [n4, n3, n1]
             face4 = [n2, n3, n4]
 
-            tri_faces[it,   :] = face1
+            tri_faces[it, :] = face1
             tri_faces[it+1, :] = face2
             tri_faces[it+2, :] = face3
             tri_faces[it+3, :] = face4
@@ -567,7 +589,7 @@ class UGRID(object):
             face5 = [n4, n3, n7, n8]
             face6 = [n5, n6, n2, n1]
 
-            quad_faces[iq,   :] = face1
+            quad_faces[iq, :] = face1
             quad_faces[iq+1, :] = face2
             quad_faces[iq+2, :] = face3
             quad_faces[iq+3, :] = face4
@@ -603,7 +625,7 @@ class UGRID(object):
             face4 = [n5, n3, n4]
             face5 = [n4, n3, n2, n1]
 
-            tri_faces[it,   :] = face1
+            tri_faces[it, :] = face1
             tri_faces[it+1, :] = face2
             tri_faces[it+2, :] = face3
             tri_faces[it+3, :] = face4
@@ -638,9 +660,9 @@ class UGRID(object):
             face4 = [n4, n1, n3, n6]
             face5 = [n4, n5, n2, n1]
 
-            tri_faces[it,   :] = face1
-            tri_faces[it+1, :]  = face2
-            quad_faces[iq,   :] = face3
+            tri_faces[it, :] = face1
+            tri_faces[it+1, :] = face2
+            quad_faces[iq, :] = face3
             quad_faces[iq+1, :] = face4
             quad_faces[iq+2, :] = face5
 
@@ -780,8 +802,8 @@ class UGRID(object):
 
 
             #asdf
-        f.write(')\n')
-        f.close()
+        faces_file.write(')\n')
+        faces_file.close()
 
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
@@ -822,8 +844,8 @@ def main():
     assert os.path.exists(tag_filename)
     ugrid_model = UGRID()
     ugrid_model.read_ugrid(ugrid_filename)
-    #ugrid_model.export_bdf(bdf_filename)
-    ugrid_model.export_foam(foam_filename, tag_filename)
+    #ugrid_model.write_bdf(bdf_filename)
+    ugrid_model.write_foam(foam_filename, tag_filename)
 
 
 
