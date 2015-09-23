@@ -15,6 +15,12 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
     nnodes = 0
 
     model = Tecplot(log=log)
+    if len(tecplot_filenames) == 1:
+        model.read_tecplot(tecplot_filename[0])
+        if tecplot_filename_out is not None:
+            model.write_tecplot(tecplot_filename_out)
+        return model
+
     for tecplot_filename in tecplot_filenames:
         model.log('reading %s' % tecplot_filename)
         model.read_tecplot(tecplot_filename)

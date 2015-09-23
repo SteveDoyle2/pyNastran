@@ -3,6 +3,7 @@ Multi-input/output format converter
 """
 from __future__ import print_function
 from six import iteritems
+import glob
 from docopt import docopt
 
 from numpy import zeros, array
@@ -10,6 +11,7 @@ from numpy import zeros, array
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.tecplot.tecplot import Tecplot
+from pyNastran.converters.tecplot.utils import merge_tecplot_files
 from pyNastran.converters.stl.stl import STL
 # from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.converters.cart3d.cart3d import Cart3D
@@ -198,7 +200,12 @@ def process_tecplot(tecplot_filename, fmt2, fname2):
     """
     Converts Tecplot to ...
     """
-    # model = Tecplot()
+    #model = Tecplot()
+    if '*' in tecplot_filename:
+        tecplot_filenames = glob.glob(tecplot_filename)
+    else:
+        tecplot_filenames = tecplot_filename
+    tecplot = merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None)
     # model.read_tecplot(tecplot_filename)
     # if fmt2 == 'nastran':
         # tecplot_to_nastran(model, fname2)
@@ -208,6 +215,9 @@ def process_tecplot(tecplot_filename, fmt2, fname2):
         #tecplot_to_stl(model, fname2)
     # elif fmt2 == 'ugrid':
         # tecplot_to_ugrid(model, fname2)
+    if fmt2 == 'tecplot':
+        # this is a good way to merge files
+        tecplot.write_tecplot(fname2)
     raise NotImplementedError(fmt2)
 
 def process_ugrid(ugrid_filename, fmt2, fname2):
@@ -271,7 +281,7 @@ def main():
     msg += '  format_convert -v | --version\n'
     msg += "\n"
     msg += "Options:\n"
-    msg += "  format1        format type (nastran, cart3d, stl, ugrid)\n"
+    msg += "  format1        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
     msg += "  format2        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
     msg += "  INPUT          path to input file\n"
     msg += "  OUTPUT         path to output file\n"
@@ -281,6 +291,7 @@ def main():
     msg += "  -v, --version  show program's version number and exit\n\n"
     msg += 'Notes:\n'
     msg += "  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n"
+    msg += "  Tecplot supports globbing as the input filename\n"
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
