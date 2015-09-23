@@ -43,7 +43,7 @@ class CaseControlTest(unittest.TestCase):
         deck.add_parameter_to_local_subcase(1, 'SET 1 = 100')
         deck.add_parameter_to_local_subcase(1, 'SET 2 = 200')
 
-        lines = [
+        lines_expected = [
             'DISPLACEMENT(PLOT,PUNCH) = 8',
             'GPFORCE = 7',
             'MPC = 3',
@@ -60,7 +60,8 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_string.strip().splitlines()
 
         msg = '\n' + '\n'.join(deck_lines)
-        self.assertEqual(lines, deck_lines, msg=msg)
+        self.assertEqual(lines_expected, deck_lines, msg=msg)
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
     def test_case_control_02(self):
         bdf_filename = os.path.join(test_path, 'unit', 'case_control.dat')
@@ -93,6 +94,8 @@ class CaseControlTest(unittest.TestCase):
             '$pyNastran: version=msc',
             '$pyNastran: punch=False',
             '$pyNastran: encoding=ascii',
+            '$pyNastran: nnodes=1',
+            '$pyNastran: nelements=0',
             '$EXECUTIVE CONTROL DECK',
             'SOL 101',
             'CEND',
@@ -210,15 +213,7 @@ class CaseControlTest(unittest.TestCase):
             '            1000000000000000000000000000000000000000000000000000000,',
             '            11 THRU 26',
         ]
-        for line, line_expected in zip(deck_lines, lines_expected):
-            line = line.rstrip()
-            msg = 'The lines are not the same...\n'
-            msg += 'line     = %r\n' % line
-            msg += 'expected = %r' % line_expected
-            msg += '-------------\n--Actual--\n%s' % deck_msg
-            msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
-            self.assertEqual(line, line_expected, msg)
-        #print('%s' % deck)
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
     def test_case_control_06(self):
         lines_expected = [
@@ -229,15 +224,7 @@ class CaseControlTest(unittest.TestCase):
         deck = CaseControlDeck(lines_expected)
         deck_msg = '%s' % deck
         deck_lines = deck_msg.split('\n')
-        for line, line_expected in zip(deck_lines, lines_expected):
-            line = line.rstrip()
-            msg = 'The lines are not the same...\n'
-            msg += 'line     = %r\n' % line
-            msg += 'expected = %r' % line_expected
-            msg += '-------------\n--Actual--\n%s' % deck_msg
-            msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
-            self.assertEqual(line, line_expected, msg)
-        #print('%s' % deck)
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
 
     def test_case_control_07(self):
@@ -288,17 +275,7 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         #print "--------"
         #print deck_msg
-
-        i = 0
-        for line, line_expected in zip(deck_lines, lines_expected):
-            line = line.rstrip()
-            msg = 'The lines are not the same...i=%s\n' % i
-            msg += 'line     = %r\n' % line
-            msg += 'expected = %r\n' % line_expected
-            msg += '-------------\n--Actual--\n%s' % deck_msg
-            msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
-            self.assertEqual(line, line_expected, msg)
-            i += 1
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
     def test_case_control_08(self):
         lines_expected = [
@@ -319,17 +296,23 @@ class CaseControlTest(unittest.TestCase):
 
         with codec_open(bdf_filename, 'r', encoding='ascii') as f:
             lines = f.readlines()
-            i = 0
-            for line, line_expected in zip(lines, lines_expected):
-                line = line.rstrip()
-                line_expected = line_expected.rstrip()
-                msg = 'The lines are not the same...i=%s\n' % i
-                msg += 'line     = %r\n' % line
-                msg += 'expected = %r\n' % line_expected
-                msg += '-------------\n--Actual--\n%s' % ''.join(lines)
-                msg += '-------------\n--Expected--\n%s' % ''.join(lines_expected)
-                self.assertEqual(line, line_expected, msg)
-                i += 1
+            compare_lines(self, lines, lines_expected, has_endline=True)
+
+def compare_lines(self, lines, lines_expected, has_endline):
+    i = 0
+    for line, line_expected in zip(lines, lines_expected):
+        line = line.rstrip()
+        line_expected = line_expected.rstrip()
+        msg = 'The lines are not the same...i=%s\n' % i
+        msg += 'line     = %r\n' % line
+        msg += 'expected = %r\n' % line_expected
+        msg += '-------------\n--Actual--\n%s' % ''.join(lines)
+        if has_endline:
+            msg += '-------------\n--Expected--\n%s' % ''.join(lines_expected)
+        else:
+            msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
+        self.assertEqual(line, line_expected, msg)
+        i += 1
 
 
 if __name__ == '__main__':  # pragma: no cover

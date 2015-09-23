@@ -6,6 +6,7 @@ from codecs import open as codec_open
 import os
 import pyNastran
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.test.test_case_control_deck import compare_lines
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
@@ -227,23 +228,15 @@ class TestReadWrite(unittest.TestCase):
             '$pyNastran: version=msc',
             '$pyNastran: punch=False',
             '$pyNastran: encoding=ascii',
+            '$pyNastran: nnodes=1',
+            '$pyNastran: nelements=0',
             '$NODES',
             'GRID      100000        43.91715    -29..8712984',
         ]
         bdf_filename = 'out.bdf'
         with codec_open(bdf_filename, 'r', encoding='ascii') as f:
             lines = f.readlines()
-            i = 0
-            for line, line_expected in zip(lines, lines_expected):
-                line = line.rstrip()
-                line_expected = line_expected.rstrip()
-                msg = 'The lines are not the same...i=%s\n' % i
-                msg += 'line     = %r\n' % line
-                msg += 'expected = %r\n' % line_expected
-                msg += '-------------\n--Actual--\n%s' % ''.join(lines)
-                msg += '-------------\n--Expected--\n%s' % ''.join(lines_expected)
-                self.assertEqual(line, line_expected, msg)
-                i += 1
+            compare_lines(self, lines, lines_expected, has_endline=False)
 
     def test_read_bad_01(self):
         model = BDF()
