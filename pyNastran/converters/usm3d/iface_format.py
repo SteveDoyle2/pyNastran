@@ -170,7 +170,7 @@ class IFace(object):
 
 
 #if __name__ == '__main__':  # pragma: no cover
-    #cogsg_obj = Usm3dReader()
+    #cogsg_obj = Usm3d()
     #model = 'new2'
     #cogsg_obj.read_cogsg(model + '.cogsg')
     #iface_obj = IFace()

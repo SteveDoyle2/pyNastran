@@ -269,6 +269,8 @@ class WriteMesh(object):
             outfile.write('$pyNastran: version=%s\n' % self.nastran_format)
             outfile.write('$pyNastran: punch=%s\n' % self.punch)
             outfile.write('$pyNastran: encoding=%s\n' % encoding)
+            outfile.write('$pyNastran: nnodes=%s\n' % len(self.nodes))
+            outfile.write('$pyNastran: nelements=%s\n' % len(self.elements))
 
         if not self.punch:
             self._write_executive_control_deck(outfile)

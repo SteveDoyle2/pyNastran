@@ -176,8 +176,11 @@ class Cart3dToPanair(PanairGridHelper):
 
             BCMap = varmap['bcMap']
 
-            cart = Cart3dReader()
-            (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
+            cart = Cart3d()
+            cart.read_cart3d(cart3dGeom)
+            points = cart.points
+            elements = cart.elements
+            regions = cart.regions
 
             #for pid, point in sorted(iteritems(points)):
                 #if pid<85:

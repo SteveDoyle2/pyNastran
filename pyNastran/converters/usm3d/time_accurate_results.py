@@ -62,7 +62,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
     """
     node ids start at index=0
     """
-    model = Usm3dReader()
+    model = Usm3d()
 
     n_list, flo_filenames = get_flo_files(dirname, model_name, nstart, nlimit)
     nlimit = len(flo_filenames)
@@ -92,7 +92,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
     #flo_filenames = flo_filenames[:10]
     #num_cpus = 1
     if num_cpus == 1:
-        model = Usm3dReader()
+        model = Usm3d()
         for flo_filename in flo_filenames:
             node_ids2, loads = model.read_flo(flo_filename, node_ids=node_ids)
             for i, node_id in enumerate(node_ids):
@@ -129,7 +129,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
 
 def _loads_func(data):
     flo_filename, node_ids = data
-    model = Usm3dReader()
+    model = Usm3d()
     node_ids2, loads = model.read_flo(flo_filename, node_ids=node_ids)
     return loads
 

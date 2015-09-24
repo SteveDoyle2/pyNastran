@@ -2,20 +2,28 @@ from six import iteritems
 from numpy import zeros, ones
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 
 
 def nastran_to_cart3d(bdf, log=None, debug=False):
     """
-    Converts a Nastran BDF object to Cart3D format.
+    Converts a Nastran BDF() object to a Cart3D() object.
 
-    :param bdf:    a BDF object
-    :param log:    a logger object (or None)
-    :param debug:  True/False (used if log is not defined)
+    Parameters
+    ----------
+    bdf : BDF()
+        a BDF object
+    log : log; default=None -> dummyLogger
+        a logger object
+    debug : bool; default=False
+        True/False (used if log is not defined)
 
-    :returns cart3d: a Cart3D object
+    Returns
+    -------
+    cart3d : Cart3D()
+        a Cart3D object
     """
-    cart3d = Cart3DReader(log=log, debug=debug)
+    cart3d = Cart3D(log=log, debug=debug)
 
     nnodes = len(bdf.nodes)
     nelements = len(bdf.elements)
@@ -42,12 +50,18 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
 
 def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=False):
     """
-    Converts a Nastran file to Cart3D format.
+    Creates a Nastran BDF from a Cart3D file.
 
-    :param bdf_filename: the path to the BDF
-    :param cart3d_filename: the path to the Cart3D output file
-    :param log:    a logger object (or None)
-    :param debug:  True/False (used if log is not defined)
+    Parameters
+    ----------
+    bdf_filename : str
+        the path to the bdf file
+    cart3d_filename : str
+        the path to the cart3d output file
+    log : log; default=None -> dummyLogger
+        a logger object
+    debug : bool; default=False
+        True/False (used if log is not defined)
     """
     model = BDF(log=log, debug=debug)
     model.read_bdf(bdf_filename)
@@ -71,7 +85,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
         assert element.type in ['CTRIA3', 'CTRIAR'], element.type
 
 
-        out = element.nodeIDs()
+        out = element.node_ids()
         try:
             n1, n2, n3 = out
         except:

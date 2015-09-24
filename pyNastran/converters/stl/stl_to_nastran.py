@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl import STL
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -9,7 +9,7 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
                             pid=100, mid=200,
                             size=8, is_double=False,
                             log=None):
-    model = STLReader(log=log)
+    model = STL(log=log)
     model.read_stl(stl_filename)
 
     nid = nnodes_offset + 1

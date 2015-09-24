@@ -1,11 +1,14 @@
 from six import iteritems
 from numpy import zeros, array
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl import STL
 
-def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
+def nastran_to_stl_filename(bdf_filename, stl_filename, is_binary=False, log=None):
     model = BDF(log=log)
     model.read_bdf(bdf_filename)
+    return nastran_to_stl(model, stl_filename, is_binary=is_binary)
+
+def nastran_to_stl(model, stl_filename, is_binary=False):
     #log.info('card_count = %s' % model.card_count)
 
     nnodes = len(model.nodes)
@@ -42,10 +45,11 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
         else:
             print(element.type)
     elements = array(elements, dtype='int32')
-    stl = STLReader()
+    stl = STL()
     stl.nodes = nodes
     stl.elements = elements
-    stl.write_stl(stl_filename)
+    stl.write_stl(stl_filename, is_binary=is_binary)
+    return stl
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -8,7 +8,8 @@ from numpy import arange, mean, amax, amin, array
 import vtk
 from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
-from pyNastran.converters.dev.tecplot.tecplot_reader import TecplotReader, merge_tecplot_files
+from pyNastran.converters.tecplot.tecplot import Tecplot
+from pyNastran.converters.tecplot.utils import merge_tecplot_files
 
 
 class TecplotIO(object):
@@ -37,7 +38,7 @@ class TecplotIO(object):
             fnames = [os.path.join('time20000', fname) for fname in fnames]
             model = merge_tecplot_files(fnames, tecplot_filename_out=None, log=self.log)
         else:
-            model = TecplotReader(log=self.log, debug=False)
+            model = Tecplot(log=self.log, debug=False)
             model.read_tecplot(tecplot_filename)
 
         self.modelType = 'tecplot'
@@ -214,7 +215,7 @@ class TecplotIO(object):
         pass
 
     #def load_tecplot_results(self, cart3d_filename, dirname):
-        #model = Cart3DReader(log=self.log, debug=False)
+        #model = Cart3D(log=self.log, debug=False)
         #self.load_cart3d_geometry(cart3d_filename, dirname)
 
     def _fill_tecplot_case(self, cases, ID, model, is_surface):

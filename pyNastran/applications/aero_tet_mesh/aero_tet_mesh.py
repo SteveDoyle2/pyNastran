@@ -47,7 +47,7 @@ from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl_filename
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
-from pyNastran.converters.stl.stl_reader import STLReader
+from pyNastran.converters.stl.stl import STL
 
 
 
@@ -95,10 +95,10 @@ def main():
         stl_to_nastran_filename(stl_filename, bdf_filename2, log=log)
     print("----------")
     #nastran_to_cart3d(bdf_filename2, cart3d_filename)
-    #cart3d = Cart3dReader()
+    #cart3d = Cart3d()
     #cart3d.read_cart3d(cart3d_filename)
 
-    stl = STLReader()
+    stl = STL()
     stl.read_stl(stl_filename)
 
     if flip_normals:

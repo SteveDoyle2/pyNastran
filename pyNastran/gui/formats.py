@@ -78,7 +78,7 @@ except ImportError:
 
 
 try:
-    from pyNastran.converters.dev.tecplot.tecplot_io import TecplotIO
+    from pyNastran.converters.tecplot.tecplot_io import TecplotIO
     is_tecplot = True
 except ImportError:
     raise

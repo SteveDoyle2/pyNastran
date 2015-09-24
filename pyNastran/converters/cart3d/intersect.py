@@ -130,10 +130,10 @@ class Intersect(object):
         pass
 
 def intersect_model(cart3d_filename):
-    cart3d = Cart3DReader()
-    points, elements, regions, loads = cart3d.read_cart3d(cart3d_filename)
+    cart3d = Cart3D()
+    cart3d.read_cart3d(cart3d_filename)
 
-    intersect = Intersect(points, elements, regions)
+    intersect = Intersect(cart3d.points, cart3d.elements, cart3d.regions)
     intersect.intersect_tris()
 
 def main():

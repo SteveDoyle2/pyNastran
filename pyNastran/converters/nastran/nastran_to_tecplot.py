@@ -1,7 +1,7 @@
 from six import iteritems
 from numpy import zeros, array
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.dev.tecplot.tecplot_binary import TecplotReader
+from pyNastran.converters.tecplot.tecplot import Tecplot
 
 def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
     model = BDF(log=log)
@@ -51,7 +51,7 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
         else:
             print(element.type)
     elements = array(elements, dtype='int32')
-    tecplot = TecplotReader()
+    tecplot = Tecplot()
     tecplot.xyz = nodes
     tecplot.elements = elements
     tecplot.write_tecplot(tecplot_filename)

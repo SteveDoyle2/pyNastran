@@ -9,7 +9,7 @@ import vtk
 from vtk import vtkTriangle
 
 from pyNastran.gui.qt_files.result import Result
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.cart3d.input_c3d_reader import InputC3dReader
 from pyNastran.converters.cart3d.input_cntl_reader import InputCntlReader
 
@@ -146,12 +146,17 @@ class Cart3dIO(object):
         if skip_reading:
             return
 
-        model = Cart3DReader(log=self.log, debug=False)
+        model = Cart3D(log=self.log, debug=False)
         self.modelType = 'cart3d'
         #self.modelType = model.modelType
-        (nodes, elements, regions, loads) = model.read_cart3d(cart3d_filename)
-        self.nNodes = model.nPoints
-        self.nElements = model.nElementsRead
+        model.read_cart3d(cart3d_filename)
+        nodes = model.nodes
+        elements = model.elements
+        regions = model.regions
+        loads = model.loads
+
+        self.nNodes = model.npoints
+        self.nElements = model.nelements
 
         #print("nNodes = ",self.nNodes)
         #print("nElements = ", self.nElements)
@@ -438,7 +443,7 @@ class Cart3dIO(object):
         pass
 
     def load_cart3d_results(self, cart3d_filename, dirname):
-        model = Cart3DReader(log=self.log, debug=False)
+        model = Cart3D(log=self.log, debug=False)
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
     def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, loads, model):
@@ -497,7 +502,7 @@ class Cart3dIO(object):
             geometry_form.append(('Normal Y', icase + 1, []))
             geometry_form.append(('Normal Z', icase + 2, []))
 
-            cnormals = model.get_normals(nodes, elements, shift_nodes=False)
+            cnormals = model.get_normals(shift_nodes=False)
             cnnodes = cnormals.shape[0]
             assert cnnodes == nelements, len(cnnodes)
 
