@@ -123,7 +123,6 @@ class ComplexBarArray(OES_Object):
         # write the f06
         ntimes = self.data.shape[0]
 
-        # TODO: these are not
         if is_mag_phase:
             mag_phase = '                                                          (MAGNITUDE/PHASE)'
         else:
@@ -141,14 +140,10 @@ class ComplexBarArray(OES_Object):
         if is_sort1:
             line1 = '            ELEMENT                    LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n',
             line2 = '              ID.                          1              2              3              4             AXIAL STRESS\n',
-            #line1 = '    ELEMENT          BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR'
-            #line2 = '      ID.          PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE'
         else:
-            #line1 = '                     BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR'
             line1 = '                                       LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n',
             if name == 'freq':
                 line2 = '           FREQUENCY                       1              2              3              4             AXIAL STRESS\n',
-                #line2 = '   FREQUENCY       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE'
             else:
                 raise RuntimeError(name)
 

@@ -26,7 +26,7 @@ from six.moves import zip, range
 import os
 from collections import defaultdict
 
-from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty
+from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross
 from numpy.linalg import norm
 
@@ -1584,82 +1584,89 @@ class NastranIO(object):
             if subcase_id == 0:
                 continue
 
-            try:
-                load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
-            except KeyError:
-                print('no load for isubcase=%s' % subcase_id)
-                continue
-            try:
-                loadCase = model.loads[load_case_id]
-            except KeyError:
-                self.log.warning('LOAD=%s not found' % load_case_id)
-                continue
-
-            #eids = sorted(model.elements.keys())
-            nids = sorted(model.nodes.keys())
-            p0 = array([0., 0., 0.], dtype='float32')
-            pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
+            found_load = None
+            found_temperature = None
 
             form = []
-            if abs(pressures).max():
-                case_name = 'Pressure Case=%i' % subcase_id
-                # print('iload=%s' % iload)
-                # print(case_name)
-                # subcase_id, resultType, vector_size, location, dataFormat
-                cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
-                form.append((case_name, icase, []))
-                icase += 1
+            for key in ('LOAD', 'TEMPERATURE(INITIAL)'):
+                try:
+                    load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, key)
+                except KeyError:
+                    print('no load for isubcase=%s' % subcase_id)
+                    continue
+                try:
+                    load_case = model.loads[load_case_id]
+                except KeyError:
+                    self.log.warning('LOAD=%s not found' % load_case_id)
+                    continue
 
-            if abs(forces.max() - forces.min()) > 0.0:
-                print('plot applied loads loadcase =', load_case_id)
-                # if forces[:, 0].min() != forces[:, 0].max():
-                cases[(subcase_id, icase, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 0]
-                # if forces[:, 1].min() != forces[:, 1].max():
-                cases[(subcase_id, icase + 1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
-                # if forces[:, 2].min() != forces[:, 2].max():
-                cases[(subcase_id, icase + 2, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
+                if key == 'LOAD':
+                    p0 = array([0., 0., 0.], dtype='float32')
+                    pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
+                    found_load = True
+                elif key == 'TEMPERATURE(INITIAL)':
+                    temperatures = self._get_temperatures_array(model, load_case_id)
+                    found_temperature = True
+                else:
+                    raise NotImplementedError(key)
 
-                form.append(('Total Load FX', icase, []))
-                form.append(('Total Load FY', icase + 1, []))
-                form.append(('Total Load FZ', icase + 2, []))
-                icase += 2
+            if found_load:
+                if abs(pressures).max():
+                    case_name = 'Pressure Case=%i' % subcase_id
+                    # print('iload=%s' % iload)
+                    # print(case_name)
+                    # subcase_id, resultType, vector_size, location, dataFormat
+                    cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
+                    form.append((case_name, icase, []))
+                    icase += 1
 
-            if abs(spcd).max():
-                cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
-                form.append(('SPCDx', icase, []))
-                icase += 1
+                if abs(forces.max() - forces.min()) > 0.0:
+                    print('plot applied loads loadcase =', load_case_id)
+                    # if forces[:, 0].min() != forces[:, 0].max():
+                    cases[(subcase_id, icase, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 0]
+                    # if forces[:, 1].min() != forces[:, 1].max():
+                    cases[(subcase_id, icase + 1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
+                    # if forces[:, 2].min() != forces[:, 2].max():
+                    cases[(subcase_id, icase + 2, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
 
-                cases[(subcase_id, icase, 'SPCDy', 1, 'node', '%.3g')] = spcd[:, 1]
-                form.append(('SPCDy', icase, []))
-                icase += 1
+                    form.append(('Total Load FX', icase, []))
+                    form.append(('Total Load FY', icase + 1, []))
+                    form.append(('Total Load FZ', icase + 2, []))
+                    icase += 2
 
-                #cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                cases[(subcase_id, icase, 'SPCDz', 1, 'node', '%.3g')] = spcd[:, 2]
-                form.append(('SPCDz', icase, []))
-                icase += 1
+                if abs(spcd).max():
+                    cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
+                    form.append(('SPCDx', icase, []))
+                    icase += 1
 
-                t123 = spcd[:, :3]
-                tnorm = norm(t123, axis=1)
-                assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
-                cases[(subcase_id, icase, 'SPCD XYZ', 1, 'node', '%.3g')] = tnorm
-                form.append(('SPCD XYZ', icase, []))
+                    cases[(subcase_id, icase, 'SPCDy', 1, 'node', '%.3g')] = spcd[:, 1]
+                    form.append(('SPCDy', icase, []))
+                    icase += 1
+
+                    #cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                    cases[(subcase_id, icase, 'SPCDz', 1, 'node', '%.3g')] = spcd[:, 2]
+                    form.append(('SPCDz', icase, []))
+                    icase += 1
+
+                    t123 = spcd[:, :3]
+                    tnorm = norm(t123, axis=1)
+                    assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
+                    cases[(subcase_id, icase, 'SPCD XYZ', 1, 'node', '%.3g')] = tnorm
+                    form.append(('SPCD XYZ', icase, []))
+                    icase += 1
+            if found_temperature:
+                cases[(subcase_id, icase, 'Temperature(Initial)', 1, 'node', '%.3g')] = temperatures
+                form.append(('Temperature(Initial)', icase, []))
                 icase += 1
             if form:
                 form0.append(('Load Case=%i' % subcase_id, None, form))
         return icase
 
-    def _get_forces_moments_array(self, model, p0, load_case_id, include_grav=False):
-        print('_get_forces_moments_array')
-        nids = sorted(model.nodes.keys())
-        nnodes = len(nids)
-
-
-        loadCase = model.loads[load_case_id]
-
+    def _get_loads_and_scale_factors(self, load_case):
         # account for scale factors
         loads2 = []
         scale_factors2 = []
-        for load in loadCase:
+        for load in load_case:
             if isinstance(load, LOAD):
                 scale_factors, loads = load.get_reduced_loads()
                 scale_factors2 += scale_factors
@@ -1667,6 +1674,35 @@ class NastranIO(object):
             else:
                 scale_factors2.append(1.)
                 loads2.append(load)
+        return loads2, scale_factors2
+
+    def _get_temperatures_array(self, model, load_case_id):
+        print('_get_forces_moments_array')
+        nids = sorted(model.nodes.keys())
+        nnodes = len(nids)
+
+        load_case = model.loads[load_case_id]
+        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
+        tempd = model.tempds[load_case_id].temperature if load_case_id in model.tempds else 0.
+        temperatures = ones(len(model.nodes), dtype='float32') * tempd
+        for load, scale in zip(loads2, scale_factors2):
+            if load.type == 'TEMP':
+                #print(dir(load))
+                temps_dict = load.temperatures
+                for nid, val in iteritems(temps_dict):
+                    nidi = nids.index(nid)
+                    temperatures[nidi] = val
+            else:
+                print(load.type)
+        return temperatures
+
+    def _get_forces_moments_array(self, model, p0, load_case_id, include_grav=False):
+        print('_get_forces_moments_array')
+        nids = sorted(model.nodes.keys())
+        nnodes = len(nids)
+
+        load_case = model.loads[load_case_id]
+        loads2, scale_factors2 == self._get_loads_and_scale_factors(load_case)
 
         eids = sorted(model.elements.keys())
         pressures = zeros(len(model.elements), dtype='float32')

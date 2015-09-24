@@ -1048,12 +1048,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edgeActor.SetVisibility(self.is_edges)
         self.rend.AddActor(self.edgeActor)
 
-    def createText(self, position, label, textSize=18, movable=False):
+    def createText(self, position, label, text_size=18, movable=False):
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
         #text_prop.SetFontFamilyToArial()
-        text_prop.SetFontSize(textSize)
+        text_prop.SetFontSize(int(text_size))
         text_prop.SetColor(self.text_col)
         text_actor.SetDisplayPosition(*position)
 
@@ -1875,7 +1875,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self._update_text_size(magnify=1.0)
 
     def _update_text_size(self, magnify=1.0):
-        text_size = 14 * magnify
+        text_size = int(14 * magnify)
         for itext, text_actor in iteritems(self.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
