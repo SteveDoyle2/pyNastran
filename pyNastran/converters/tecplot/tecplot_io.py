@@ -215,7 +215,7 @@ class TecplotIO(object):
         pass
 
     #def load_tecplot_results(self, cart3d_filename, dirname):
-        #model = Cart3DReader(log=self.log, debug=False)
+        #model = Cart3D(log=self.log, debug=False)
         #self.load_cart3d_geometry(cart3d_filename, dirname)
 
     def _fill_tecplot_case(self, cases, ID, model, is_surface):

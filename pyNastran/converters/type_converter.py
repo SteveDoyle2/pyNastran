@@ -14,7 +14,7 @@ from pyNastran.converters.tecplot.tecplot import Tecplot
 from pyNastran.converters.tecplot.utils import merge_tecplot_files
 # from pyNastran.converters.stl.stl import STL
 from pyNastran.converters.stl.utils import merge_stl_files
-# from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+# from pyNastran.converters.cart3d.cart3d_reader import Cart3D
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
@@ -25,6 +25,7 @@ from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 
 
 def process_nastran(bdf_filename, fmt2, fname2, data=None):
@@ -49,11 +50,15 @@ def nastran_to_tecplot(model, tecplot_filename):
     tecplot = Tecplot()
 
     nnodes = model.nnodes
-    xyz = zeros((nnodes, 3), dtype='float64')
-    i = 0
-    for nid, node in sorted(iteritems(model.nodes)):
-        xyz[i, :] = node.get_position()
-        i += 1
+    inode_max = max(model.nodes.keys())
+    if nnodes == inode_max:
+        xyz = zeros((nnodes, 3), dtype='float64')
+        i = 0
+        for nid, node in sorted(iteritems(model.nodes)):
+            xyz[i, :] = node.get_position()
+            i += 1
+        else:
+            raise RuntimeError('sequential node IDs required; nnodes=%s inode_max=%s' % (nnodes, inode_max))
     tecplot.xyz = xyz
 
     nquads = model.card_count['CQUAD4'] if 'CQUAD4' in model.card_count else 0
@@ -237,6 +242,14 @@ def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
     if fmt2 == 'tecplot':
         # this is a good way to merge files
         model.write_tecplot(fname2)
+    elif fmt2 == 'nastran':
+        tecplot_to_nastran_filename(model, fname2)
+    elif fmt2 == 'stl':
+        tecplot_to_nastran_filename(model, fname2 + '.bdf')
+        process_nastran(fname2 + '.bdf', fmt2, fname2, data=data)
+    elif fmt2 == 'cart3d':
+        tecplot_to_nastran_filename(model, fname2 + '.bdf')
+        process_nastran(fname2 + '.bdf', fmt2, fname2, data=data)
     else:
         raise NotImplementedError(fmt2)
 

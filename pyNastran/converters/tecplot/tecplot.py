@@ -71,6 +71,7 @@ class Tecplot(FortranFormat):
          - CHEXA
 
         .. note :: assumes single typed results
+        .. warning :: BLOCK option doesn't work if line length isn't the same...
         """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
@@ -183,15 +184,15 @@ class Tecplot(FortranFormat):
                     assert isinstance(fe, str), headers_dict
                     zone_type = fe.upper() # FEPoint
                     assert zone_type == 'FEPOINT', zone_type
-                    print('zone_type = %r' % zone_type[0])
+                    self.log.debug('zone_type = %r' % zone_type[0])
                 else:
                     raise NotImplementedError('headers=%s' % str(headers_dict.keys()))
                 if iblock == 0:
                     variables = headers_dict['VARIABLES']
                     self.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
-                    print('self.variables =', self.variables)
+                    self.log.debug('self.variables = %s' % self.variables)
                     nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
-                    print('nvariables =', nresults)
+                    self.log.debug('nresults = %s' % nresults)
 
                 print(headers_dict)
                 nnodesi = int(headers_dict['N'])
@@ -248,11 +249,11 @@ class Tecplot(FortranFormat):
                                     line = tecplot_file.readline().strip()
                                 sline = line.split()
                                 if i == 0:
-                                    print('zone_type=%s sline=%s' %(zone_type, sline))
-                                i += 1
+                                    self.log.debug('zone_type=%s sline=%s' % (zone_type, sline))
+                                i += len(sline)
                             assert i < nnodes_max, 'nresult=%s' % nresult
                             if ires in [0, 1, 2]:
-                                print('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
+                                self.log.debug('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
                                 xyz[:, ires] = result
                             else:
                                 results[:, ires - 3] = result
@@ -305,15 +306,15 @@ class Tecplot(FortranFormat):
                 results_list.append(results)
                 nnodes += nnodesi
                 nelements += nelementsi
-                print(nnodes, nelements)
+                self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
                 del headers_dict
                 iblock += 1
                 if iblock == 10:
                     break
-                print('final sline', sline)
+                self.log.debug('final sline=%s' % sline)
 
         #f.close()
-        print('stacking elements')
+        self.log.debug('stacking elements')
         if len(hexas_list):
             self.hexa_elements = vstack(hexas_list)
         if len(tets_list):
@@ -323,7 +324,7 @@ class Tecplot(FortranFormat):
         if len(tris_list):
             self.tri_elements = vstack(tris_list)
 
-        print('stacking nodes')
+        self.log.debug('stacking nodes')
         if len(xyz_list) == 1:
             xyz = xyz_list[0]
         else:
@@ -532,11 +533,13 @@ class Tecplot(FortranFormat):
         for etype, elements in etype_elements:
             if etype == 'CHEXA' and len(elements):
                 #print(etype)
+                # is_points = False
                 is_hexas = True
                 nnodes_per_element = 8
                 zone_type = 'FEBrick'
             elif etype == 'CTETRA' and len(elements):
                 #print(etype)
+                # is_points = False
                 is_tets = True
                 nnodes_per_element = 4
                 zone_type = 'FETETRAHEDRON'
@@ -556,6 +559,7 @@ class Tecplot(FortranFormat):
                 continue
             break
 
+        self.log.info('is_points = %s' % is_points)
         if is_points:
             msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (nnodes, nelements, zone_type)
         else:
@@ -565,10 +569,10 @@ class Tecplot(FortranFormat):
         # xyz
         assert self.nnodes > 0, 'nnodes=%s' % self.nnodes
         nresults = len(self.result_names)
-        nresults2 = self.results.shape[1]
-        assert nresults == nresults2, 'nresults=%s nresults2=%s' % (nresults, nresults2)
         if is_points:
             if nresults:
+                nresults2 = self.results.shape[1]
+                assert nresults == nresults2, 'nresults=%s nresults2=%s' % (nresults, nresults2)
                 try:
                     data = hstack([self.xyz, self.results])
                 except ValueError:
@@ -599,6 +603,8 @@ class Tecplot(FortranFormat):
                 tecplot_file.write(msg.rstrip() + '\n')
 
             if is_results:
+                nresults2 = self.results.shape[1]
+                assert nresults == nresults2, 'nresults=%s nresults2=%s' % (nresults, nresults2)
                 for ivar in range(nnodes_per_element):
                     #tecplot_file.write('# ivar=%i\n' % ivar)
                     #print('xyz.shape =', self.xyz.shape)
@@ -611,7 +617,7 @@ class Tecplot(FortranFormat):
                             msg = '\n'
                     tecplot_file.write(msg.rstrip() + '\n')
 
-        print('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' % (is_hexas, is_tets, is_quads, is_tris))
+        self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' % (is_hexas, is_tets, is_quads, is_tris))
         if is_hexas:
             # elements
             efmt = ' %i %i %i %i %i %i %i %i\n'
@@ -630,8 +636,8 @@ class Tecplot(FortranFormat):
 
         if adjust_nids:
             elements += 1
-        print('inode_min =', elements.min())
-        print('inode_max =', elements.max())
+        self.log.info('inode_min = %s' % elements.min())
+        self.log.info('inode_max = %s' % elements.max())
         assert elements.min() == 1, elements.min()
         assert elements.max() == nnodes, elements.max()
         for element in elements:

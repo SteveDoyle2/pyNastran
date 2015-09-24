@@ -27,7 +27,6 @@ else:
         """Is the string a valid Python variable name?"""
         return string.isidentifier()
 
-
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
     """
     Removes nodes from a model that are not referenced.
@@ -302,6 +301,12 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         model2.read_bdf(bdf_filename_out)
     return model
 
+
+def slice_model(model):
+    """
+
+    """
+    pass
 
 def cut_model(model, axis='-y'):
     """
