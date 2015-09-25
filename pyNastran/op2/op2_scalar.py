@@ -223,6 +223,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert isinstance(debug, bool), 'debug=%r' % debug
 
         self.log = get_logger(log, 'debug' if debug else 'info')
+        self.count = 0
         self.op2_filename = None
         self.bdf_filename = None
         self.f06_filename = None
@@ -644,6 +645,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |    string    | the path is used      |
         +--------------+-----------------------+
         """
+        self.count = 0
         if self.read_mode in [0, 1]:
             #sr = list(self._results.saved)
             #sr.sort()

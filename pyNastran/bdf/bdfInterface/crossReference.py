@@ -149,6 +149,10 @@ class XrefMesh(object):
     def _uncross_reference_elements(self):
         for element in itervalues(self.elements):
             element.uncross_reference()
+        for element in itervalues(self.rigidElements):
+            element.uncross_reference()
+        for element in itervalues(self.plotels):
+            element.uncross_reference()
 
     def _uncross_reference_properties(self):
         for prop in itervalues(self.properties):
@@ -385,10 +389,18 @@ class XrefMesh(object):
                 self._stored_xref_errors.append((elem, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
-                    #msg = "Couldn't cross reference Element.\n%s" % str(elem)
-                    #self.log.error(msg)
-                    #raise
+
         for elem in itervalues(self.rigidElements):
+            try:
+                elem.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((elem, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
+        for elem in itervalues(self.plotels):
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
@@ -403,7 +415,7 @@ class XrefMesh(object):
         Links the nodes to all connected elements
         """
         nodes = defaultdict(set)
-        for element in self.elements.values():
+        for element in itervalues(self.elements):
             if element.nodes is not None:
                 for node in element.nodes:
                     if node is None:
@@ -414,7 +426,7 @@ class XrefMesh(object):
                         print(element)
                         print('node = %s' % str(node))
                         raise
-        for node in self.nodes.values():
+        for node in itervalues(self.nodes):
             node.elements = nodes[node.nid]
 
     def _cross_reference_masses(self):
@@ -431,9 +443,6 @@ class XrefMesh(object):
                 self._stored_xref_errors.append((mass, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
-                    #msg = "Couldn't cross reference Mass.\n%s" % str(mass)
-                    #self.log.error(msg)
-                    #raise
 
         for prop in itervalues(self.properties_mass):
             try:
@@ -444,9 +453,6 @@ class XrefMesh(object):
                 self._stored_xref_errors.append((prop, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
-                    #msg = "Couldn't cross reference PropertyMass.\n%s" % (str(prop))
-                    #self.log.error(msg)
-                    #raise
 
     def _cross_reference_properties(self):
         """
@@ -461,9 +467,6 @@ class XrefMesh(object):
                 self._stored_xref_errors.append((prop, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
-                    #msg = "Couldn't cross reference Property.\n%s" % (str(prop))
-                    #self.log.error(msg)
-                    #raise
 
     def _cross_reference_materials(self):
         """
@@ -479,9 +482,6 @@ class XrefMesh(object):
                 self._stored_xref_errors.append((mat, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
-                    #msg = "Couldn't cross reference Material\n%s" % (str(mat))
-                    #self.log.error(msg)
-                    #raise
 
         # CREEP - depends on MAT1
         data = [self.MATS1, self.MATS3, self.MATS8,
@@ -497,9 +497,6 @@ class XrefMesh(object):
                     self._stored_xref_errors.append((mat, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
-                        #msg = "Couldn't cross reference Material\n%s" % (str(mat))
-                        #self.log.error(msg)
-                        #raise
 
     def _cross_reference_loads(self):
         """
@@ -516,10 +513,6 @@ class XrefMesh(object):
                     self._stored_xref_errors.append((load, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
-                        #self.log.error("lid=%s sid=%s" % (lid, sid))
-                        #msg = "Couldn't cross reference Load\n%s" % (str(load))
-                        #self.log.error(msg)
-                        #raise
 
         for (lid, sid) in iteritems(self.dloads):
             #self.log.debug("lid=%s sid=%s" %(lid, sid))
@@ -534,7 +527,6 @@ class XrefMesh(object):
                         self.pop_xref_errors()
 
         for (lid, sid) in iteritems(self.dload_entries):
-            #self.log.debug("lid=%s sid=%s" %(lid, sid))
             for load in sid:
                 try:
                     load.cross_reference(self)
@@ -544,8 +536,6 @@ class XrefMesh(object):
                     self._stored_xref_errors.append((load, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
-
-        self.log.debug("done with xref_loads")
 
     def _cross_reference_sets(self):
         for set_obj in self.asets:

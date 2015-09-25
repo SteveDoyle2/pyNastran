@@ -641,12 +641,15 @@ class F06Writer(OP2_F06_Common):
         ]
 
         for res_key in res_keys:
+            print(res_key)
             #title = self.Title
 
             isubcase = res_key[0]
+            analysis_code = res_key[1]
             subtitle = res_key[2]
+            label_key = (isubcase, analysis_code, subtitle)
             #print(res_key)
-            label = self.labels[res_key]
+            label = self.labels[label_key]
 
             is_compressed = len(self.subtitles[isubcase]) == 1
             #print(self.subtitles[isubcase])

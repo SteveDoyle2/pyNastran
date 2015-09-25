@@ -13,7 +13,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
 
-from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.cards.baseCard import Element, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string)  # double
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -355,6 +355,75 @@ class CRAC3D(CrackElement):
 
     def raw_fields(self):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.node_ids
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class PLOTEL(BaseCard):
+    type = 'PLOTEL'
+    _field_map = {
+        1: 'eid', 3:'g1', 4:'g2',
+    }
+
+    def __init__(self, card=None, data=None, comment=''):
+        """
+        Defines a 1D dummy element used for plotting.
+        +--------+-----+-----+-----+
+        |   1    |  2  |  3  |  4  |
+        +--------+-----+-----+-----+
+        | PLOTEL | EID | G1  | G2  |
+        +--------+-----+-----+-----+
+        """
+        BaseCard.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            self.eid = integer(card, 1, 'eid')
+            self.nodes = [
+                integer(card, 2, 'g1'),
+                integer(card, 3, 'g2'),
+                ]
+            assert len(card) <= 4, 'len(CGAP card) = %i' % len(card)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            self.nodes = [data[2], data[3]]
+
+    def _verify(self, xref=True):
+        pass
+
+    def cross_reference(self, model):
+        msg = ' which is required by PLOTEL eid=%s' % self.Eid()
+        node_ids = self.node_ids
+        self.nodes = [
+            model.Node(node_ids[0], msg=msg),
+            model.Node(node_ids[1], msg=msg),
+        ]
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+
+    def Eid(self):
+        return self.eid
+
+    @property
+    def node_ids(self):
+        node_idsi = self.nodes
+        n1, n2 = node_idsi
+        if not isinstance(n1, integer_types):
+            node_idsi[0] = n1.Nid()
+        if not isinstance(n2, integer_types):
+            node_idsi[1] = n2.Nid()
+        return node_idsi
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
+
+    def raw_fields(self):
+        list_fields = ['PLOTEL', self.eid] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):

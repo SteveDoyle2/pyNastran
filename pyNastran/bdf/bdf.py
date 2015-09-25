@@ -31,7 +31,7 @@ from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
                                                     integer_or_string, string)
 
-from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
+from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
 from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
                                                        PRAC2D, PRAC3D, PCONEAX)
 
@@ -641,6 +641,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
+        #: stores PLOTELs
+        self.plotels = {}
 
         #: store CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
         self.masses = {}
@@ -1601,6 +1603,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'QVOL' : (QVOL, self.add_load),  # thermal
 
 
+            'PLOTEL' : (PLOTEL, self.add_plotel),
             'CQUAD' : (CQUAD, self.add_element),
             'CQUAD4' : (CQUAD4, self.add_element),
             'CQUAD8' : (CQUAD8, self.add_element),

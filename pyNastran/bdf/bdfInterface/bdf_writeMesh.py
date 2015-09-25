@@ -943,11 +943,11 @@ class WriteMesh(object):
     def _write_rigid_elements(self, outfile, size=8, is_double=False):
         """Writes the rigid elements in a sorted order"""
         if self.rigidElements:
-            msg = ['$RIGID ELEMENTS\n']
+            outfile.write('$RIGID ELEMENTS\n')
             if self.is_long_ids:
                 for (eid, element) in sorted(iteritems(self.rigidElements)):
                     try:
-                        msg.append(element.write_card_16(is_double))
+                        outfile.write(element.write_card_16(is_double))
                     except:
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
@@ -955,12 +955,15 @@ class WriteMesh(object):
             else:
                 for (eid, element) in sorted(iteritems(self.rigidElements)):
                     try:
-                        msg.append(element.write_card(size, is_double))
+                        outfile.write(element.write_card(size, is_double))
                     except:
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
                         raise
-            outfile.write(''.join(msg))
+        if self.plotels:
+            outfile.write('$PLOT ELEMENTS\n')
+            for (eid, element) in sorted(iteritems(self.plotels)):
+                outfile.write(element)
 
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
