@@ -190,12 +190,10 @@ class AddMethods(object):
 
     def add_DELAY(self, delay, allowOverwrites=False):
         key = delay.sid
-        if key in self.delays and not allowOverwrites:
-            if not delay._is_same_card(self.delays[key]):
-                assert key not in self.delays, 'pid=%s old_DELAY=\n%snew_DELAY=\n%s' % (
-                    key, self.delays[key], delay)
+        assert key > 0, 'sid=%s delay=%s' % (key, delay)
+        if key in self.delays:
+            self.delays[key].add(delay)
         else:
-            assert key > 0, 'sid=%s delay=%s' % (key, delay)
             self.delays[key] = delay
             self._type_to_id_map[delay.type].append(key)
 

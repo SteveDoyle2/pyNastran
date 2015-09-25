@@ -35,6 +35,7 @@ class ThermalElement(ThermalCard):
         ThermalCard.__init__(self, card, data)
 
     def nodeIDs(self):
+        self.deprecated('self.nodeIDs()', 'self.node_ids','0.8')
         return []
 
     def Pid(self):
@@ -247,20 +248,32 @@ class CHBDYG(ThermalElement):
     def nodes(self):
         return self.grids
 
+    @nodes.setter
+    def nodes(self, nodes):
+        self.grids = nodes
+
+    #@property
+    #def node_ids(self):
+        #return _node_ids(self, nodes=self.grids, allowEmptyNodes=False, msg='')
+
     @property
     def node_ids(self):
         # TODO: is this correct?
-        return self.grids
+        return _node_ids(self, nodes=self.grids, allowEmptyNodes=False, msg='')
 
     def get_edge_ids(self):
         # TODO: not implemented
         return []
 
     def cross_reference(self, model):
-        pass
-        #msg = ' which is required by CHBDYG eid=%s' % self.eid
+        msg = ' which is required by CHBDYG eid=%s' % self.eid
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
         #self.pid = model.Phbdy(self.pid, msg=msg)
         #self.grids
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        #self.pid = self.Pid()
 
     def Eid(self):
         return self.eid
@@ -268,7 +281,7 @@ class CHBDYG(ThermalElement):
     def raw_fields(self):
         list_fields = (['CHBDYG', self.eid, None, self.Type, self.iViewFront,
                         self.iViewBack, self.radMidFront, self.radMidBack, None,] +
-                       self.grids)
+                        self.node_ids)
         return list_fields
 
     def repr_fields(self):
@@ -278,7 +291,7 @@ class CHBDYG(ThermalElement):
         radMidBack = set_blank_if_default(self.radMidBack, 0)
 
         list_fields = (['CHBDYG', self.eid, None, self.Type, iViewFront,
-                        iViewBack, radMidFront, radMidBack, None, ] + self.grids)
+                        iViewBack, radMidFront, radMidBack, None, ] + self.node_ids)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -360,9 +373,26 @@ class CHBDYP(ThermalElement):
     def nodes(self):
         return [self.g1, self.g2, self.g0, self.gmid]
 
+    @nodes.setter
+    def nodes(self, nodes):
+        self.g1 = nodes[0]
+        self.g2 = nodes[1]
+        self.g0 = nodes[2]
+        self.gmid = nodes[3]
+        assert len(nodes) == 4, len(nodes)
+
+    @property
+    def node_ids(self):
+        return _node_ids(self, nodes=self.nodes, allowEmptyNodes=True, msg='')
+
     def cross_reference(self, model):
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -374,9 +404,10 @@ class CHBDYP(ThermalElement):
         return self.eid
 
     def raw_fields(self):
+        (g1, g2, g0, gmid) = self.node_ids
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type,
-                       self.iViewFront, self.iViewBack, self.g1, self.g2, self.g0,
-                       self.radMidFront, self.radMidBack, self.gmid, self.ce,
+                       self.iViewFront, self.iViewBack, g1, g2, g0,
+                       self.radMidFront, self.radMidBack, gmid, self.ce,
                        self.e1, self.e2, self.e3]
         return list_fields
 
@@ -386,12 +417,13 @@ class CHBDYP(ThermalElement):
         radMidFront = set_blank_if_default(self.radMidFront, 0)
         radMidBack = set_blank_if_default(self.radMidBack, 0)
 
-        g0 = set_blank_if_default(self.g0, 0)
+        (g1, g2, g0, gmid) = self.node_ids
+        g0 = set_blank_if_default(g0, 0)
         ce = set_blank_if_default(self.ce, 0)
 
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, iViewFront,
-                       iViewBack, self.g1, self.g2, g0, radMidFront, radMidBack,
-                       self.gmid, ce, self.e1, self.e2, self.e3]
+                       iViewBack, g1, g2, g0, radMidFront, radMidBack,
+                       gmid, ce, self.e1, self.e2, self.e3]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -531,6 +563,7 @@ class PCONVM(ThermalProperty):
             assert len(card) <= 9, 'len(PCONVM card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
     #def cross_reference(self,model):
     #    pass
 

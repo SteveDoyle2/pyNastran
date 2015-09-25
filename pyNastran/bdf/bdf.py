@@ -243,6 +243,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             ## rigidElements
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
 
+            ## plotels
+            'PLOTEL',
+
             ## properties
             'PMASS',
             'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
@@ -887,6 +890,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
             'rigidElements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',],
+            'plotels' : ['PLOTEL',],
 
             'properties_mass' : ['PMASS'],
             'properties' : [

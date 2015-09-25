@@ -650,12 +650,12 @@ def get_element_stats(fem1, fem2):
 
 def get_matrix_stats(fem1, fem2):
     """
-    Verifies the dmig.getMatrix() method works.
+    Verifies the dmig.get_matrix() method works.
     """
     for (key, dmig) in sorted(iteritems(fem1.dmigs)):
         try:
             if isinstance(dmig, NastranMatrix):
-                dmig.getMatrix()
+                dmig.get_matrix()
             else:
                 print("statistics not available - "
                       "matrix.type=%s matrix.name=%s" % (dmig.type, dmig.name))

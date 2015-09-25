@@ -53,6 +53,13 @@ class DELAY(BaseCard):
             self.delays.append(double_or_blank(card, 7, 'delay'))
             assert self.components[1] in [0, 1, 2, 3, 4, 5, 6], self.components
 
+    def add(self, delay):
+        assert self.sid == delay.sid, 'sid=%s delay.sid=%s' % (self.sid, delay.sid)
+        self._comment += delay.comment
+        self.nodes += delay.nodes
+        self.components += delay.components
+        self.delays += delay.delays
+
     def cross_reference(self, model):
         msg = ', which is required by DELAY sid=%s' % self.sid
         for nid in self.nodes:
@@ -81,10 +88,16 @@ class DELAY(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
+        msg = self.comment
+        node_ids = self.nodes
         if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
+            for nid, comp, delay in zip(node_ids, self.components, self.delays):
+                msg += print_card_8(['DELAY', self.sid, nid, comp, delay])
+        else:
+            for nid, comp, delay in zip(node_ids, self.components, self.delays):
+                msg += print_card_16(['DELAY', self.sid, nid, comp, delay])
+        print(msg)
+        return msg
 
 
 class FREQ(BaseCard):

@@ -884,8 +884,12 @@ class WriteMesh(object):
         """
         if self.params:
             msg = ['$PARAMS\n']
-            for (unused_key, param) in sorted(iteritems(self.params)):
-                msg.append(param.write_card(size, is_double))
+            if self.is_long_ids:
+                for (unused_key, param) in sorted(iteritems(self.params)):
+                    msg.append(param.write_card(16, is_double))
+            else:
+                for (unused_key, param) in sorted(iteritems(self.params)):
+                    msg.append(param.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_properties(self, outfile, size=8, is_double=False):
@@ -963,7 +967,7 @@ class WriteMesh(object):
         if self.plotels:
             outfile.write('$PLOT ELEMENTS\n')
             for (eid, element) in sorted(iteritems(self.plotels)):
-                outfile.write(element)
+                outfile.write(element.write_card(size, is_double))
 
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""

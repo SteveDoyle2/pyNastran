@@ -165,6 +165,8 @@ class BDFMethods(object):
                     mass += m
                     cg += m * p
                 except:
+                    #raise
+                    # PLPLANE
                     self.log.warning("could not get the inertia for element\n%s" % element)
                     continue
         if mass:

@@ -349,7 +349,7 @@ def get_matrix_stats(fem1, fem2):
     for (key, dmig) in sorted(iteritems(fem1.dmigs)):
         try:
             if isinstance(dmig, NastranMatrix):
-                dmig.getMatrix()
+                dmig.get_matrix()
             else:
                 print("statistics not available - "
                       "matrix.type=%s matrix.name=%s" % (dmig.type, dmig.name))

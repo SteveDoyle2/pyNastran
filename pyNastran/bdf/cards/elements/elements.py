@@ -377,7 +377,7 @@ class PLOTEL(BaseCard):
         | PLOTEL | EID | G1  | G2  |
         +--------+-----+-----+-----+
         """
-        BaseCard.__init__(self, card, data)
+        BaseCard.__init__(self)
         if comment:
             self._comment = comment
         if card:

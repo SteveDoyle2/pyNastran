@@ -466,7 +466,6 @@ class TEMPD(BaseCard):
             nfields = len(card) - 1
             assert nfields % 2 == 0
             i = 2 * icard
-            print('i =', i)
             self.sid = integer(card, i + 1, 'sid')
             self.temperature = double(card, i + 2, 'temp')
         else:

@@ -234,8 +234,6 @@ class XrefMesh(object):
 
             if xref_elements:
                 self._cross_reference_elements()
-            if xref_nodes_with_elements:
-                self._cross_reference_nodes_with_elements()
             if xref_properties:
                 self._cross_reference_properties()
             if xref_masses:
@@ -253,6 +251,8 @@ class XrefMesh(object):
                 self._cross_reference_sets()
             if xref_optimization:
                 self._cross_reference_optimization()
+            if xref_nodes_with_elements:
+                self._cross_reference_nodes_with_elements()
             #self.caseControlDeck.cross_reference(self)
 
     def _cross_reference_constraints(self):

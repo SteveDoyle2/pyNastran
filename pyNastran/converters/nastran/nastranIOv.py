@@ -1702,7 +1702,7 @@ class NastranIO(object):
         nnodes = len(nids)
 
         load_case = model.loads[load_case_id]
-        loads2, scale_factors2 == self._get_loads_and_scale_factors(load_case)
+        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
 
         eids = sorted(model.elements.keys())
         pressures = zeros(len(model.elements), dtype='float32')
