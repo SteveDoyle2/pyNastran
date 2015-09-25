@@ -1584,8 +1584,8 @@ class NastranIO(object):
             if subcase_id == 0:
                 continue
 
-            found_load = None
-            found_temperature = None
+            found_load = False
+            found_temperature = False
 
             form = []
             for key in ('LOAD', 'TEMPERATURE(INITIAL)'):
