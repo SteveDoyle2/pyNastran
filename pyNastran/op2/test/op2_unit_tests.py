@@ -111,12 +111,20 @@ class TestOP2(Tester):
         op2file = os.path.join(folder, op2_filename)
         op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
                                   write_f06=write_f06, is_vector=True,
-                                  debug=debug, stopOnFailure=True)
+                                  debug=debug, stopOnFailure=True,
+                                  quiet=True)
 
         nids = [5]
+        isubcase = 103
         with self.assertRaises(AssertionError):
             # no index 0; fortran 1-based
-            op2i.accelerations[103].extract_xyplot(nids, 0, 'real')
+            try:
+                acc = op2i.accelerations[isubcase]
+            except KeyError:
+                raise KeyError('getting accelerations; isubcase=%s; keys=%s' % (
+                    isubcase, op2i.accelerations.keys()))
+
+            acc.extract_xyplot(nids, 0, 'real')
 
         accx = op2i.accelerations[103].extract_xyplot(nids, 1, 'real')
         accxi = op2i.accelerations[103].extract_xyplot(nids, 1, 'imag')
@@ -159,17 +167,29 @@ class TestOP2(Tester):
 
         card_type = 'CQUAD4'
         if op2.cquad4_stress:
-            case = op2.cquad4_stress[isubcase]
+            try:
+                case = op2.cquad4_stress[isubcase]
+            except KeyError:
+                raise KeyError('getting cquad4_stress; isubcase=%s; keys=%s' % (
+                    isubcase, op2.cquad4_stress.keys()))
             eids = unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_strain:
-            case = op2.cquad4_strain[isubcase]
+            try:
+                case = op2.cquad4_strain[isubcase]
+            except KeyError:
+                raise KeyError('getting cquad4_strain; isubcase=%s; keys=%s' % (
+                    isubcase, op2.cquad4_strain.keys()))
             eids = unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_strain:
-            case = op2.cquad4_composite_strain[isubcase]
+            try:
+                case = op2.cquad4_composite_strain[isubcase]
+            except KeyError:
+                raise KeyError('getting cquad4_composite_strain; isubcase=%s; keys=%s' % (
+                    isubcase, op2.cquad4_composite_strain.keys()))
             if vectorized:
                 eids = unique(case.element_layer[:, 0])
             else:
@@ -177,7 +197,12 @@ class TestOP2(Tester):
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_stress:
-            case = op2.cquad4_composite_stress[isubcase]
+            try:
+                case = op2.cquad4_composite_stress[isubcase]
+            except KeyError:
+                raise KeyError('getting cquad4_composite_stress; isubcase=%s; keys=%s' % (
+                    isubcase, op2.cquad4_composite_stress.keys()))
+
             if vectorized:
                 eids = unique(case.element_layer[:, 0])
             else:
@@ -185,7 +210,12 @@ class TestOP2(Tester):
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_force:
-            case = op2.cquad4_force[isubcase]
+            try:
+                case = op2.cquad4_force[isubcase]
+            except KeyError:
+                raise KeyError('getting cquad4_force; isubcase=%s; keys=%s' % (
+                    isubcase, op2.cquad4_force.keys()))
+
             if isinstance(case, RealPlateBilinearForce):
                 eids = unique(case.tx.keys())
             else:

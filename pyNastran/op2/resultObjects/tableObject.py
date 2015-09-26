@@ -137,7 +137,7 @@ class TableArray(ScalarObject):  # displacement style table
         # the node IDs
         self._times[self.itime] = dt
         self.node_gridtype[self.itime, :] = [node_id, grid_type]
-        if 0:
+        if 0:  # this is needed for SORT1 tables
             self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
             # itotal - the node number
             # itime - the time/frequency step

@@ -162,10 +162,11 @@ class OP2(OP2_Scalar):
         .. code-block:: python
 
           stress = {
-              (1, 2, 'SUPERELEMENT 0') : result1,
-              (1, 2, 'SUPERELEMENT 10') : result2,
-              (1, 2, 'SUPERELEMENT 20') : result3,
-              (2, 2, 'SUPERELEMENT 0') : result4,
+              # isubcase, analysis_code, sort_method, count, subtitle
+              (1, 2, 1, 0, 'SUPERELEMENT 0') : result1,
+              (1, 2, 1, 0, 'SUPERELEMENT 10') : result2,
+              (1, 2, 1, 0, 'SUPERELEMENT 20') : result3,
+              (2, 2, 1, 0, 'SUPERELEMENT 0') : result4,
           }
         and convert it to:
 
@@ -185,8 +186,9 @@ class OP2(OP2_Scalar):
             unique_isubcases = []
             for case_key in case_keys:
                 if isinstance(case_key, tuple):
-                    isubcasei, analysis_codei, isubtitle = case_key
-                    value = (analysis_codei, isubtitle)
+                    isubcasei, analysis_codei, sort_methodi, counti, isubtitle = case_key
+                    #value = (analysis_codei, isubtitle)
+                    value = (analysis_codei, sort_methodi, counti, isubtitle)
                     if value not in self.subcase_key[isubcasei]:
                         self.subcase_key[isubcasei].append(value)
                 else:
@@ -202,36 +204,39 @@ class OP2(OP2_Scalar):
             result = getattr(self, result_type)
             for isubcase in unique_isubcases:
                 keys = self.subcase_key[isubcase]
-                key0 = keys[0]
-                key = (isubcase, key0[0], key0[1])
-                if key not in result:
-                    #print(result_type)
-                    continue
-                if len(keys) == 1:
-                    # rename the case since we have only one tuple for the result
-                    result[isubcase] = result[key]
-                    del result[key]
-                else:
-                    continue
-                    # multiple results to combine
-                    res1 = result[keys[0]]
-                    if not hasattr(res1, 'combine'):
-                        print("res1=%s has no method combine" % res1.__class__.__name__)
+                for keyi in keys:
+                    #print('keyi =', keyi)
+                    key = tuple([isubcase] + list(keyi))
+                    #print(key)
+                    if key not in result:
+                        #print(result_type)
                         continue
+                    if len(keys) == 1:
+                        # rename the case since we have only one tuple for the result
+                        result[isubcase] = result[key]
+                        del result[key]
+                    else:
+                        print(key)
+                        continue
+                        # multiple results to combine
+                        res1 = result[key]
+                        if not hasattr(res1, 'combine'):
+                            print("res1=%s has no method combine" % res1.__class__.__name__)
+                            continue
 
-                    #raise NotImplementedError('multiple results to combine')
-                    del result[keys[0]]
-
-                    results_list = []
-                    for key in keys[1:]:
-                        results_list.append(result[key])
+                        #raise NotImplementedError('multiple results to combine')
                         del result[key]
 
-                    #res1.data = hstack(res1.data, res2.data)
-                    # combination method depends on result, so stresses are
-                    # combined differently than displacements
-                    res1.combine(results_list)
-                    result[isubcase] = res1
+                        results_list = []
+                        for key in keys[1:]:
+                            results_list.append(result[key])
+                            del result[key]
+
+                        #res1.data = hstack(res1.data, res2.data)
+                        # combination method depends on result, so stresses are
+                        # combined differently than displacements
+                        res1.combine(results_list)
+                        result[isubcase] = res1
             setattr(self, result_type, result)
 
 

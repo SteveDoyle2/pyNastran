@@ -646,7 +646,7 @@ class F06Writer(OP2_F06_Common):
 
             isubcase = res_key[0]
             analysis_code = res_key[1]
-            subtitle = res_key[2]
+            subtitle = res_key[-1]
             label_key = (isubcase, analysis_code, subtitle)
             #print(res_key)
             label = self.labels[label_key]

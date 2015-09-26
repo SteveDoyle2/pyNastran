@@ -195,7 +195,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False, is_sort1=True,
             is_vector=False, delete_f06=False,
-            iSubcases=None, exclude=None, debug=False, binary_debug=False, stopOnFailure=True):
+            iSubcases=None, exclude=None, debug=False, binary_debug=False,
+            quiet=False, stopOnFailure=True):
     op2 = None
     if iSubcases is None:
         iSubcases = []
@@ -248,9 +249,13 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
         op2.read_op2(op2_filename, vectorized=is_vector)
-        print("---stats for %s---" % op2_filename)
+        if not quiet:
+            print("---stats for %s---" % op2_filename)
         #op2.get_op2_stats()
-        print(op2.get_op2_stats())
+        if quiet:
+            op2.get_op2_stats()
+        else:
+            print(op2.get_op2_stats())
         if write_bdf:
             op2.write_bdf(bdf_filename)
         if write_bdf and 0:
@@ -307,8 +312,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2_filename)
         sys.exit('keyboard stop...')
-    #except SortCodeError: # inherits from Runtime; comment this
-        #is_passed = True
+    except SortCodeError: # inherits from Runtime; comment this
+        is_passed = True
 
     #except RuntimeError: # the op2 is bad, not my fault; comment this
         #is_passed = True

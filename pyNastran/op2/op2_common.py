@@ -657,7 +657,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _get_code(self):
         code = self.isubcase
-        code = (self.isubcase, self.analysis_code, self.subtitle)
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))
         return self.code
@@ -843,6 +843,12 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             assert self.sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
         return sort_method, is_real, is_random
+
+    @property
+    def _sort_method(self):
+        sort_method, is_real, is_random = self._table_specs()
+        assert sort_method in [1, 2], sort_method
+        return sort_method
 
     def is_sort1(self):
         sort_method, is_real, is_random = self._table_specs()
