@@ -44,7 +44,6 @@ class RealCelasStress(StressObject):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
-        eTypes = list(set(self.eType.values()))
         if self.dt is not None:  # transient
             ntimes = len(self.stress)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -53,7 +52,7 @@ class RealCelasStress(StressObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, stress\n')
-        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
+        msg.append('  %s\n' % self.element_name)
         return msg
 
     def getLength(self):
@@ -204,8 +203,6 @@ class RealCelasStrain(StrainObject):
 
     def get_stats(self):
         nelements = len(self.eType)
-        eTypes = list(set(self.eType.values()))
-
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.stress)
@@ -215,7 +212,7 @@ class RealCelasStrain(StrainObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, strain\n')
-        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
+        msg.append('  %s\n' % self.element_name)
         return msg
 
     def getLength(self):
@@ -298,8 +295,6 @@ class NonlinearSpringStress(StressObject):
 
     def get_stats(self):
         nelements = len(self.eType)
-        eTypes = list(set(self.eType.values()))
-
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.stress)
@@ -309,7 +304,7 @@ class NonlinearSpringStress(StressObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, force, stress\n')
-        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
+        msg.append('  %s\n' % self.element_name)
         return msg
 
     def delete_transient(self, dt):

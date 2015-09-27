@@ -635,4 +635,9 @@ class OP2_F06_Common(object):
             except:
                 print(table)
                 raise
-        return ''.join(msg)
+        try:
+            return ''.join(msg)
+        except TypeError:
+            for msgi in msg:
+                print(msgi.rstrip())
+                assert isinstance(msgi, str), msgi

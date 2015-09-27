@@ -96,6 +96,7 @@ class ScalarObject(BaseScalarObject):
         if 'dataNames' not in self.data_code:
             return []
 
+        msg.append('sort1\n  ' if self.is_sort1() else 'sort2\n  ')
         for name in self.data_code['dataNames']:
             if hasattr(self, name + 's'):
                 vals = getattr(self, name + 's')

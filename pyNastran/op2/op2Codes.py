@@ -1011,9 +1011,9 @@ class Op2Codes(object):
         return False
 
     #----
-    # sort_code 0
+    # sort_code
     def is_sort1(self):
-        if self.sort_bits[0] == 0:
+        if self.sort_bits[1] == 0:
             return True
         return False
 
@@ -1021,11 +1021,11 @@ class Op2Codes(object):
         return not self.is_sort1()
 
     #----
-    # sort_code 1
+    # sort_code
     def isReal(self):  # format_code=1, this one is tricky b/c you can overwrite the Real code
         #if self.format_code==1:
         #    return True
-        if self.sort_bits[1] == 0:
+        if self.sort_bits[2] == 0:
             return True
         return False
 
@@ -1033,9 +1033,9 @@ class Op2Codes(object):
         return not self.isReal()
 
     #----
-    # sort_code 2
+    # sort_code
     def isSortedResponse(self):
-        if self.sort_bits[2] == 0:
+        if self.sort_bits[0] == 0:
             return True
         return False
 

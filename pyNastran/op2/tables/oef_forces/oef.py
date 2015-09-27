@@ -278,6 +278,7 @@ class OEF(OP2Common):
             msg = 'element_type = %s' % self.element_type
             return self._not_implemented_or_skip(data, msg)
         self._write_debug_bits()
+        assert self.num_wide != 146, self.code_information()
 
     def _read_oef2_3(self, data):
         """Table 3 parser for OEF2 table"""
@@ -2101,6 +2102,16 @@ class OEF(OP2Common):
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
+
+        elif self.element_type in [228]: # CQUADR-NX
+            if self.num_wide == 9:
+                # real
+                return len(data)
+            elif self.num_wide == 17:
+                # complex?
+                return len(data)
+            else:
+                raise RuntimeError(self.code_information())
 
         elif self.element_type in [233, 235]:
             # 233-TRIARLC

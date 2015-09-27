@@ -313,7 +313,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         table_mapper = {
             #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
             b'HISADD': [self._table_passer, self._table_passer],
-            b'R1TABRG': [self._table_passer, self._table_passer],
+            b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
 
             b'MATPOOL': [self._table_passer, self._table_passer],
             b'CSTM':    [self._table_passer, self._table_passer],
@@ -380,13 +380,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #=======================
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature
-            b'OUG1'    : [self._read_oug1_3, self._read_oug1_4],  # displacements in nodal frame
-            b'OUGV1'   : [self._read_oug1_3, self._read_oug1_4],  # displacements in nodal frame
-            b'BOUGV1'  : [self._read_oug1_3, self._read_oug1_4],  # OUG1 on the boundary???
-            b'OUGV1PAT': [self._read_oug1_3, self._read_oug1_4],  # OUG1 + coord ID
-            b'OUPV1'   : [self._read_oug1_3, self._read_oug1_4],  # scaled response spectra - displacement
+            b'OUG1'    : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
+            b'OUGV1'   : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
+            b'BOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # OUG1 on the boundary???
+            b'OUGV1PAT': [self._read_oug1_3, self._read_oug_4],  # OUG1 + coord ID
+            b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
 
-            b'OUGV2'   : [self._read_oug2_3, self._read_oug1_4],  # displacements in nodal frame
+            b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
             #=======================
             # OGPWG
@@ -595,6 +595,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """auto-table skipper"""
         return len(data)
 
+    def _table_passer_r1tabrg(self, data):
+        """auto-table skipper"""
+        if self._table4_count == 0:
+            self._count += 1
+        self._table4_count += 1
+        return len(data)
+
     def _validate_op2_filename(self, op2_filename):
         """
         Pops a GUI if the op2_filename hasn't been set.
@@ -626,6 +633,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         if self.debug_file is not None:
             #: an ASCII version of the op2 (creates lots of output)
+            self.log.debug('debug_file = %s' % self.debug_file)
             self.binary_debug = open(self.debug_file, wb)
             self.binary_debug.write(self.op2_filename + '\n')
         else:

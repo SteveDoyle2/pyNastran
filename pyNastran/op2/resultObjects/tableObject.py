@@ -13,8 +13,10 @@ class TableArray(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = None
         self.table_name = None
+        self.approach_code = None
         self.analysis_code = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
+        self.is_sort1()
         #self.dt = dt
 
         #self.eType = {}
@@ -39,11 +41,19 @@ class TableArray(ScalarObject):  # displacement style table
         #ngrids = len(self.gridTypes)
         msg = []
 
+        ntimesi, ntotal = self.data.shape[:2]
         ntimes = len(self._times)
         nnodes = self.node_gridtype.shape[0]
-        ntimes, ntotal = self.data.shape[:2]
-        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
-        assert self.ntotal == ntotal, 'ntotal=%s expected=%s' % (self.ntimes, ntimes)
+
+
+        nmajor = self.ntimes
+        nminor = self.ntotal
+        if self.is_sort1():
+            assert nmajor == ntimes, 'ntimes=%s expected=%s' % (nmajor, ntimes)
+            assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, nnodes)
+        else:
+            assert nmajor == nnodes, 'nnodes=%s expected=%s' % (nmajor, nnodes)
+            assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, ntimes)
 
         msg.append('  isubcase = %s\n' % self.isubcase)
         if self.nonlinear_factor is not None:  # transient
@@ -72,17 +82,27 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal = 0
         self.is_built = True
 
-        #print("ntimes=%s nnodes/elements=%s" % (self.ntimes, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
+        if self.is_sort1():
+            ntimes = self.ntimes
+            nnodes = self.ntotal
+            nx = ntimes
+            ny = self.ntotal
+            #print("ntimes=%s nnodes=%s" % (ntimes, nnodes))
+        if self.is_sort2():
+            ntotal = self.ntotal
+            nnodes = self.ntimes
+            ntimes = self.ntotal
+            nx = nnodes
+            ny = ntimes
+            #print("ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
+
+        self._times = zeros(ntimes, dtype=self._times_dtype)
         #self.types = array(self.nelements, dtype='|S1')
 
-        self.node_gridtype = zeros((self.ntotal, 2), dtype='int32')
+        self.node_gridtype = zeros((nnodes, 2), dtype='int32')
 
         #[t1, t2, t3, r1, r2, r3]
-        self.data = zeros((self.ntimes, self.ntotal, 6), self.data_type())
+        self.data = zeros((nx, ny, 6), self.data_type())
 
     def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         self.add_sort1(None, node_id, grid_type, v1, v2, v3, v4, v5, v6)
@@ -92,7 +112,7 @@ class TableArray(ScalarObject):  # displacement style table
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
         #print(msg)
-        if not (-1 < node_id < 1000000000):
+        if not 0 < node_id < 1000000000:
             msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
             msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
             raise RuntimeError(msg)
@@ -121,7 +141,7 @@ class TableArray(ScalarObject):  # displacement style table
         #print(msg)
         msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
         msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        if not (-1 < node_id < 1000000000):
+        if not 0 < node_id < 1000000000:
             #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
             #msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
             raise RuntimeError(msg)
@@ -131,17 +151,25 @@ class TableArray(ScalarObject):  # displacement style table
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
 
         # [t1, t2, t3, r1, r2, r3]
-        #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
-        #print "%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6])
+        #asd
+        #print("%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6]))
 
         # the node IDs
+        #print('itime =', self.itime)
         self._times[self.itime] = dt
-        self.node_gridtype[self.itime, :] = [node_id, grid_type]
-        if 0:  # this is needed for SORT1 tables
+
+        if 1:  # this is needed for SORT1 tables
+            #inode = self.itotal // self.ntimes
+            inode = self.itime
+            #print("%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, inode,
+                                                    #[node_id, grid_type]))
+            #print("%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6]))
+            self.node_gridtype[self.itime, :] = [node_id, grid_type]
             self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
             # itotal - the node number
             # itime - the time/frequency step
         else:
+            self.node_gridtype[self.itime, :] = [node_id, grid_type]
             self.data[self.itotal, self.itime, :] = [v1, v2, v3, v4, v5, v6]
             # itotal - the time/frequency step
             # itime - the node number
@@ -474,8 +502,10 @@ class ComplexTableArray(TableArray):  # displacement style table
         if not len(header) >= 3:
             header.append('')
 
+        is_sort1 = self.is_sort1()
         if is_sort1:
-            for itime in range(self.ntimes):
+            assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
+            for itime, dt in enumerate(self._times):
                 node = self.node_gridtype[:, 0]
                 gridtype = self.node_gridtype[:, 1]
                 t1 = self.data[itime, :, 0]
@@ -485,7 +515,6 @@ class ComplexTableArray(TableArray):  # displacement style table
                 r2 = self.data[itime, :, 4]
                 r3 = self.data[itime, :, 5]
 
-                dt = self._times[itime]
                 header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 f.write(''.join(header + words))
                 for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
@@ -510,14 +539,16 @@ class ComplexTableArray(TableArray):  # displacement style table
             node = self.node_gridtype[:, 0]
             gridtype = self.node_gridtype[:, 1]
 
+            times = self._times
             for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
-                times = self._times
-                t1 = self.data[:, inode, 0].ravel()
-                t2 = self.data[:, inode, 1].ravel()
-                t3 = self.data[:, inode, 2].ravel()
-                r1 = self.data[:, inode, 3].ravel()
-                r2 = self.data[:, inode, 4].ravel()
-                r3 = self.data[:, inode, 5].ravel()
+                # TODO: for SORT1 pretending to be SORT2
+                #t1 = self.data[:, inode, 0].ravel()
+                t1 = self.data[inode, :, 0]
+                t2 = self.data[inode, :, 1]
+                t3 = self.data[inode, :, 2]
+                r1 = self.data[inode, :, 3]
+                r2 = self.data[inode, :, 4]
+                r3 = self.data[inode, :, 5]
                 if len(r3) != len(times):
                     raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
 
@@ -540,7 +571,9 @@ class ComplexTableArray(TableArray):  # displacement style table
                         f.write('0 %12s %6s     %-s\n'
                                 '  %12s %6s     %-s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                     else:
-                        raise NotImplementedError(sgridtype)
+                        msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
+                        node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                        raise NotImplementedError(msg)
                 f.write(page_stamp % page_num)
                 page_num += 1
         return page_num - 1
@@ -936,20 +969,20 @@ class ComplexTableObject(ScalarObject):
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        #msg = "node_id=%s v1=%s v2=%s v3=%s" %(node_id, v1, v2, v3)
-        #assert isinstance(node_id, int), node_id
-        msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
-        msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print(msg)
-        assert 0 < node_id < 1000000000, msg  # -1
-        assert -0.5 < dt, msg              # remove
-        assert isinstance(node_id, int), msg
-        #assert node_id not in self.translations,'complexDisplacementObject - static failure'
+    #def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        ##msg = "node_id=%s v1=%s v2=%s v3=%s" %(node_id, v1, v2, v3)
+        ##assert isinstance(node_id, int), node_id
+        #msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
+        #msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
+        ##print(msg)
+        #assert 0 < node_id < 1000000000, msg  # -1
+        #assert -0.5 < dt, msg              # remove
+        #assert isinstance(node_id, int), msg
+        ##assert node_id not in self.translations,'complexDisplacementObject - static failure'
 
-        self.gridTypes[node_id] = self.recast_gridtype_as_string(grid_type)
-        self.translations[node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
-        self.rotations[node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
+        #self.gridTypes[node_id] = self.recast_gridtype_as_string(grid_type)
+        #self.translations[node_id] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+        #self.rotations[node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s" %(dt, node_id, v1, v2, v3)
@@ -1069,3 +1102,79 @@ class ComplexTableObject(ScalarObject):
             msg = ['']
             page_num += 1
         return page_num - 1
+
+class StaticArrayNode(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def node_ids(self):
+        return self.node_gridtype[:, 0]
+
+class StaticArrayElement(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def element_ids(self):
+        return self.node_gridtype[:, 0]
+
+class TimeArrayNodeSort1(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def times(self):
+        return self._times
+    @property
+    def node_ids(self):
+        return self.node_gridtype[:, 0]
+
+class TimeArrayElementSort1(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def times(self):
+        return self._times
+    @property
+    def element_ids(self):
+        return self.node_gridtype[:, 0]
+
+class TimeArrayNodeSort2(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def times(self):
+        return self._times
+    @property
+    def node_ids(self):
+        return self.node_gridtype[:, 0]
+
+class TimeArrayElementSort2(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def times(self):
+        return self._times
+    @property
+    def element_ids(self):
+        return self.node_gridtype[:, 0]
+
+class FrequencyArrayNodeSort2(ComplexTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def frequencies(self):
+        return self._times
+    @property
+    def node_ids(self):
+        return self.node_gridtype[:, 0]
+
+class FrequencyArrayElementSort2(ComplexTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+    @property
+    def frequencies(self):
+        return self._times
+    @property
+    def node_ids(self):
+        return self.node_gridtype[:, 0]
+
+

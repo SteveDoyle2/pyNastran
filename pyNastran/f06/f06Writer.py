@@ -641,7 +641,7 @@ class F06Writer(OP2_F06_Common):
         ]
 
         for res_key in res_keys:
-            print(res_key)
+            #print(res_key)
             #title = self.Title
 
             isubcase = res_key[0]

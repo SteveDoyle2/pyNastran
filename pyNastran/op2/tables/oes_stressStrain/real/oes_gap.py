@@ -39,7 +39,6 @@ class NonlinearGapStress(StressObject):
 
     def get_stats(self):
         nelements = len(self.eType)
-        eTypes = list(set(self.eType.values()))
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.compX)
@@ -49,7 +48,7 @@ class NonlinearGapStress(StressObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW\n')
-        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
+        msg.append('  %s\n' % self.element_name)
         return msg
 
     def getLength(self):

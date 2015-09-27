@@ -170,9 +170,8 @@ class ComplexSolidArray(OES_Object):
             msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-
-        msg.append(', '.join(set(self.eType.values())))
+        msg.append('  data.shape = %s\n  ' % str(self.data.shape).replace('L', ''))
+        msg.append('  %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -329,7 +328,7 @@ class ComplexSolidStress(StressObject):
         else:
             msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
         msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz\n  ')
-        msg.append(', '.join(set(self.eType.values()))+'\n  ')
+        msg.append('%s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -566,7 +565,7 @@ class ComplexSolidStrain(StrainObject):
         else:
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__, nelements))
         msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz\n  ')
-        msg.append(', '.join(set(self.eType.values()))+'\n  ')
+        msg.append('%s\n  ' % self.element_name)
         msg = msg + self.get_data_code()
         return msg
 

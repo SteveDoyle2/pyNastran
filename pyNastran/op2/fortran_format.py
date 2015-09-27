@@ -1,8 +1,10 @@
 from __future__ import print_function
+from six import iteritems
 from six.moves import range
 import sys
 from struct import unpack
-from pyNastran.op2.errors import FortranMarkerError
+from copy import deepcopy
+from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 
 class FortranFormat(object):
     def __init__(self):
@@ -233,6 +235,8 @@ class FortranFormat(object):
             the OP2 object pointer
         """
         # this parameters is used for numpy streaming
+        self._table4_count = 0
+        self.is_table_1 = True
         self._data_factor = 1
 
         nstart = self.n
@@ -276,6 +280,7 @@ class FortranFormat(object):
             self.is_start_of_subtable = True
             self.binary_debug.write('***isubtable = %i\n' % self.isubtable)
             self._read_subtable_3_4(table3_parser, table4_parser, passer)
+            #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])
             markers = self.get_nmarkers(1, rewind=True)
@@ -291,12 +296,27 @@ class FortranFormat(object):
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         self.binary_debug.write('record_length = %s\n' % record_len)
+
+        oes_nl = ['OESNLXD', 'OESNL1X', 'OESNLXR']
         if record_len == 584:  # table3 has a length of 584
+            if self.table_name in oes_nl and hasattr(self, 'num_wide') and self.num_wide == 146:
+                    data_code_old = deepcopy(self.data_code)
+
             self.data_code = {}
             self.obj = None
             data = self._read_record()
             if not passer:
-                table3_parser(data)
+                try:
+                    table3_parser(data)
+                except SortCodeError:
+                    self.binary_debug.write('except SortCodeError!\n')
+                    if self.table_name in oes_nl:
+                        self.data_code = data_code_old
+                        for key, value in iteritems(data_code_old):
+                            setattr(self, key, value)
+                        table4_parser(data)
+                        return False
+                    raise RuntimeError(self.code_information())
                 #if hasattr(self, 'isubcase'):
                     #print("code = ", self._get_code())
         else:
@@ -311,6 +331,7 @@ class FortranFormat(object):
                     data = self._read_record()
                     n = table4_parser(data)
                 #del n
+
 
     def _read_subtable_results(self, table4_parser, record_len):
         """

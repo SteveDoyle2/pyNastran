@@ -33,6 +33,7 @@
 
 import string
 import sys
+import os
 
 usage = \
 """Usage:
@@ -42,7 +43,13 @@ usage = \
 
         plc.py <file1.py> <file2.py> <file3.py>"""
 
-def countLines(fnames=[]):
+def get_folders_files(base_dir):
+    all_files = []
+    for root, dirnames, filenames in os.walk(base_dir):
+        all_files += [os.path.join(root, fname) for fname in filenames]
+    return all_files
+
+def countLines(fnames=None):
     """
     def f(x):                                        -> code
         '''                                          -> header line
@@ -68,8 +75,7 @@ def countLines(fnames=[]):
     #if fnames==[]:
     #    fnames = sys.argv[1:]
     import os
-    from applyLicense import get_folders_files
-    fnames = get_folders_files(os.path.join('..','pyNastran'))[1]
+    fnames = get_folders_files(os.path.join('..','pyNastran'))
 
     total_lines = 0
     comment_lines = 0
@@ -84,9 +90,8 @@ def countLines(fnames=[]):
 
     input_file_list = []
 
-    print
-
-    if 0 and len(sys.argv) < 2 and len(fnames)==0:
+    if len(sys.argv) < 2 and len(fnames) == 0:
+        aaa
         try:
             inputs_file = open("inputs.txt", "r")
             for line in inputs_file.readlines():
@@ -105,7 +110,6 @@ def countLines(fnames=[]):
         input_file_list = fnames
 
     print("Input files:")
-
     for input_file_name in input_file_list:
         if not input_file_name.endswith('.py'):
             continue

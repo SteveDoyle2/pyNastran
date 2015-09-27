@@ -875,7 +875,7 @@ class ComplexPlateStrain(StrainObject):
                 f.write(''.join(msg))
                 msg = ['']
                 page_num += 1
-        elif self.element_type == 64:  #CQUAD8
+        elif self.element_type in [64, 82]:  #CQUAD8, CQUADR
             for dt in dts:
                 header[1] = ' %s = %10.4E\n' % (name, dt)
                 msg += header + msg_pack

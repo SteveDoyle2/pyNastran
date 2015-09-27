@@ -246,7 +246,6 @@ class RodDamper(StressObject):
 
     def get_stats(self):
         msg = self.get_data_code()
-        eTypes = list(set(self.eType.values()))
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.axial)
             a0 = get_key0(self.stress)
@@ -258,7 +257,7 @@ class RodDamper(StressObject):
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
         msg.append('  eType, axial, torsion\n')
-        msg.append('  eTypes = %s\n' %(', '.join(eTypes)))
+        msg.append('  eTypes = %s\n' % self.element_name)
         return msg
 
 

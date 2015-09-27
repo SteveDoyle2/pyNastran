@@ -558,7 +558,7 @@ class RealSolidStress(StressObject):
                    'o1, o2, o3, ovmShear\n  ')
         msg.append('  scode=%s stress_bits=%s is_stress=%s dist=%s vm=%s\n' % (
             self.s_code, self.stress_bits, self.is_stress(), self.is_fiber_distance(), self.is_von_mises()))
-        msg.append('elementTypes: %s\n  ' % ', '.join(set(self.eType.values())))
+        msg.append('  %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1055,7 +1055,7 @@ class RealSolidStrain(StrainObject):
                                                      nelements))
         msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz, '
                    'e1, e2, e3, evmShear\n')
-        msg.append('  elementTypes: %s\n  ' % ', '.join(set(self.eType.values())))
+        msg.append('  %s\n' % self.element_name)
         msg.append('  scode=%s stress_bits=%s is_stress=%s dist=%s vm=%s\n' % (
             self.s_code, self.stress_bits, self.is_stress(), self.is_fiber_distance(), self.is_von_mises()))
         msg += self.get_data_code()

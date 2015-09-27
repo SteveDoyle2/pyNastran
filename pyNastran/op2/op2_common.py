@@ -107,9 +107,15 @@ class OP2Common(Op2Codes, F06Writer):
         Note that a case of 4 is not used and is used below as a placeholder,
         while a case of -1 is some bizarre unhandled, undocumented case.
         """
+        self._set_times_dtype()
         self.format_code_original = self.format_code
         if self.format_code == -1:
-            raise RuntimeError(self.code_information())
+            self.write_ndata(self.binary_debug, 100)
+            if self.table_name in ['OESNLXR', 'OESNLBR', 'OESNLXD', 'OESNL1X']:
+                assert self.format_code == -1, self.format_code
+                self.format_code = 1
+            else:
+                raise RuntimeError(self.code_information())
             #return
 
         if self.analysis_code == 1:   # statics / displacement / heat flux
@@ -122,7 +128,8 @@ class OP2Common(Op2Codes, F06Writer):
         #elif self.analysis_code==4: # differential stiffness
         elif self.analysis_code == 5:   # frequency
             assert self.format_code in [1, 2, 3], self.format_code
-            self.format_code = 2
+            if self.format_code == 1:
+                self.format_code = 2
         elif self.analysis_code == 6:  # transient
             assert self.format_code in [1, 2, 3], self.format_code
             self.format_code = 1
@@ -132,6 +139,8 @@ class OP2Common(Op2Codes, F06Writer):
             assert self.format_code in [1, 2], self.format_code
         elif self.analysis_code == 9:  # complex eigenvalues
             assert self.format_code in [1, 2, 3], self.format_code
+            if self.format_code == 1:
+                self.format_code = 2
         elif self.analysis_code == 10:  # nonlinear statics
             assert self.format_code in [1], self.format_code
         elif self.analysis_code == 11:  # old geometric nonlinear statics
@@ -142,7 +151,37 @@ class OP2Common(Op2Codes, F06Writer):
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
         self.data_code['format_code'] = self.format_code
+        #if self.format_code != self.format_code_original:
+            #print('self.format_code=%s orig=%s' % (self.format_code,
+                                                   #self.format_code_original))
 
+    def _set_times_dtype(self):
+        self.data_code['_times_dtype'] = 'float32'
+        if self.analysis_code == 1:   # statics / displacement / heat flux
+            pass # static doesn't have a type
+        elif self.analysis_code == 2:  # real eigenvalues
+            pass
+        #elif self.analysis_code==3: # differential stiffness
+        #elif self.analysis_code==4: # differential stiffness
+        elif self.analysis_code == 5:   # frequency
+            pass
+        elif self.analysis_code == 6:  # transient
+            pass
+        elif self.analysis_code == 7:  # pre-buckling
+            pass
+        elif self.analysis_code == 8:  # post-buckling
+            pass
+        elif self.analysis_code == 9:  # complex eigenvalues
+            pass
+        elif self.analysis_code == 10:  # nonlinear statics
+            pass
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            pass
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            pass
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
 
     def add_data_parameter(self, data, var_name, Type, field_num,
                            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
@@ -196,6 +235,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['Title'] = self.Title
 
         if self.debug:
+            self.binary_debug.write('  %-14s = %r\n' % ('count', self._count))
             self.binary_debug.write('  %-14s = %r\n' % ('Title', self.Title))
             self.binary_debug.write('  %-14s = %r\n' % ('subtitle', self.subtitle))
             self.binary_debug.write('  %-14s = %r\n' % ('label', self.label))
@@ -228,9 +268,11 @@ class OP2Common(Op2Codes, F06Writer):
                     self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
                 else:
                     self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
-                self.binary_debug.write('    sort_bits[0] = %i -> is_sort1 =%s\n' % (self.sort_bits[0], self.is_sort1()))
-                self.binary_debug.write('    sort_bits[1] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[1], self.is_real()))
-                self.binary_debug.write('    sort_bits[2] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[2], self.is_random()))
+                self.binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], self.is_random()))
+                self.binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], self.is_sort1()))
+                self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], self.is_real()))
+                sort_method, is_real, is_random = self._table_specs()
+                self.binary_debug.write('    sort_method = %s\n' % sort_method)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
     def _read_geom_4(self, mapper, data):
@@ -316,7 +358,7 @@ class OP2Common(Op2Codes, F06Writer):
         #print('self.num_wide =', self.num_wide)
         #print('random...%s' % self.isRandomResponse())
         #if not self.isRandomResponse():
-        if self.format_code in [1, 2, 3] and self.num_wide == 8:  # real/random
+        if self.format_code == 1 and self.num_wide == 8:  # real/random
             # real_obj
             assert real_obj is not None
             nnodes = len(data) // 32  # 8*4
@@ -335,7 +377,7 @@ class OP2Common(Op2Codes, F06Writer):
                 #n = len(data)
                 #msg = self.code_information()
                 #n = self._not_implemented_or_skip(data, msg)
-        elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
+        elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
             nnodes = len(data) // 56  # 14*4
@@ -657,7 +699,9 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _get_code(self):
         code = self.isubcase
+        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
         code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
+        #print('%r' % self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))
         return self.code
@@ -722,7 +766,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.data_code['device_code'] = self.device_code
 
         if self.debug3():
-            self.binary_debug.write('  table_name    = %r\n' % (self.table_name))
+            self.binary_debug.write('  %-14s = %r\n' % ('table_name', self.table_name))
             self.binary_debug.write('  %-14s = analysis_code * 10 + device_code\n' % 'approach_code')
             self.binary_debug.write('  %-14s = %r\n' % ('approach_code', self.approach_code))
             self.binary_debug.write('  %-14s = %r\n' % ('  device_code', self.device_code))
@@ -763,9 +807,9 @@ class OP2Common(Op2Codes, F06Writer):
           sort_code = 7 -> sort_bits = [1,1,1]  # random, sort2, complex
           # random, sort2, complex <- [1, 1, 1]
 
-          sort_bits[0] = 0 -> is_sort1=True  is_sort2=False
-          sort_bits[1] = 0 -> isReal=True   isReal/Imaginary=False
-          sort_bits[2] = 0 -> isSorted=True isRandom=False
+          sort_bits[0] = 0 -> isSorted=True isRandom=False
+          sort_bits[1] = 0 -> is_sort1=True is_sort2=False
+          sort_bits[2] = 0 -> isReal=True   isReal/Imaginary=False
         """
         bits = [0, 0, 0]
         sort_code = self.sort_code
@@ -775,12 +819,17 @@ class OP2Common(Op2Codes, F06Writer):
         if self.sort_code not in [0, 1, 2, 3, 4, 5, 6, 7]:
             msg = 'Invalid sort_code=%s' % (self.sort_code)
             raise SortCodeError(msg)
+            if self.sort_code == 1145655:
+                return
         i = 2
         while sort_code > 0:
             value = sort_code % 2
             sort_code = (sort_code - value) // 2
             bits[i] = value
             i -= 1
+
+        # fixing bit[1]
+        bits[1] = 0 if self.is_table_1 else 1
         #: the bytes describe the SORT information
         self.sort_bits = bits
         self.data_code['sort_bits'] = self.sort_bits
@@ -811,8 +860,8 @@ class OP2Common(Op2Codes, F06Writer):
         | Bit |     0       |    1    |
         +-----+-------------+---------+
         |  0  | Not Random  | Random  |
-        |  1  | Real        | Complex |
-        |  2  | SORT1       | SORT2   |
+        |  1  | SORT1       | SORT2   |
+        |  2  | Real        | Complex |
         +-----+-------------+---------+
         """
         #tcode = self.table_code // 1000

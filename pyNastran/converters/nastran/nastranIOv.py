@@ -1943,7 +1943,7 @@ class NastranIO(object):
             keys = [subcase_id]
         else:
             is_combined = True
-            keys = [(subcase_id, analysis_code, label) for analysis_code, label in case_key_slots]
+            keys = [(subcase_id, analysis_code, sort_method, count, subtitle) for analysis_code, sort_method, count, subtitle in case_key_slots]
 
         for (result, name) in displacement_like:
             for key in keys:

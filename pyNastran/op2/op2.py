@@ -216,7 +216,7 @@ class OP2(OP2_Scalar):
                         result[isubcase] = result[key]
                         del result[key]
                     else:
-                        print(key)
+                        #print(key)
                         continue
                         # multiple results to combine
                         res1 = result[key]

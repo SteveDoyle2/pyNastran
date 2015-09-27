@@ -564,17 +564,17 @@ class RealCompositePlateStress(StressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        etypes = list(self.eType.values())
-        if self._is_cquad4(etypes[0]):
+        etype = self.element_name
+        if self._is_cquad4(etype):
             cquad4_msg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-        elif self._is_ctria3(etypes[0]):
+        elif self._is_ctria3(etype):
             cquad4_msg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-        elif self._is_ctria6(etypes[0]):
+        elif self._is_ctria6(etype):
             cquad4_msg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-        elif self._is_cquad8(etypes[0]):
+        elif self._is_cquad8(etype):
             cquad4_msg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
         else:
-            raise NotImplementedError(etypes)
+            raise NotImplementedError(etype)
 
         for eid, o11s in sorted(iteritems(self.o11)):
             out = ''
@@ -614,14 +614,14 @@ class RealCompositePlateStress(StressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        etypes = list(self.eType.values())
-        if self._is_cquad4(list(etypes)[0]):
+        etype = self.element_name
+        if self._is_cquad4(etype):
             cquad4_words = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-        elif self._is_ctria3(list(etypes)[0]):
+        elif self._is_ctria3(etype):
             cquad4_words = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-        elif self._is_ctria6(list(etypes)[0]):
+        elif self._is_ctria6(etype):
             cquad4_words = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-        elif self._is_cquad8(list(etypes)[0]):
+        elif self._is_cquad8(etype):
             cquad4_words = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
         else:
             raise NotImplementedError(etypes)
@@ -867,14 +867,14 @@ class RealCompositePlateStrain(StrainObject):
         words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        etypes = list(self.eType.values())
-        if self._is_cquad4(list(etypes)[0]):
+        etype = self.element_name
+        if self._is_cquad4(etype):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-        elif self._is_ctria3(list(etypes)[0]):
+        elif self._is_ctria3(etype):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-        elif self._is_ctria6(list(etypes)[0]):
+        elif self._is_ctria6(etype):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-        elif self._is_cquad8(list(etypes)[0]):
+        elif self._is_cquad8(etype):
             cquad4_msg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
         else:
             raise NotImplementedError(etypes)
@@ -982,14 +982,14 @@ class RealCompositePlateStrain(StrainObject):
                         '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
         words = []
 
-        etypes = set(self.eType.values())
-        if self._is_cquad4(list(etypes)[0]):
+        etype = self.element_name
+        if self._is_cquad4(etypes):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + common_words
-        elif self._is_ctria3(list(etypes)[0]):
+        elif self._is_ctria3(etypes):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + common_words
-        elif self._is_ctria6(list(etypes)[0]):
+        elif self._is_ctria6(etypes):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + common_words
-        elif self._is_cquad8(list(etypes)[0]):
+        elif self._is_cquad8(etypes):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + common_words
         else:
             raise NotImplementedError(etypes)

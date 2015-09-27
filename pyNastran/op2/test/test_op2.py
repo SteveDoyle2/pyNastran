@@ -312,8 +312,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2_filename)
         sys.exit('keyboard stop...')
-    except SortCodeError: # inherits from Runtime; comment this
-        is_passed = True
+    #except SortCodeError: # inherits from Runtime; comment this
+        #is_passed = True
 
     #except RuntimeError: # the op2 is bad, not my fault; comment this
         #is_passed = True

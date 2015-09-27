@@ -164,10 +164,10 @@ class OES(OP2Common):
             raise
         self.data_code['element_name'] = self.element_name
         if self.debug3():
-            self.binary_debug.write('  element_name = %r\n' % self.element_name)
-            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode    = %r\n' % self.tCode)
-            self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
+            self.binary_debug.write('  element_name   = %r\n' % self.element_name)
+            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
+            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
 
         self._read_title(data)
         if self.element_type not in self.element_mapper:
@@ -176,6 +176,7 @@ class OES(OP2Common):
 
         self._write_debug_bits()
         self._parse_stress_code()
+        #assert self.num_wide != 146, self.code_information()
 
     def _parse_stress_code(self):
         """
@@ -256,7 +257,9 @@ class OES(OP2Common):
         """
         Reads OES1 subtable 4
         """
-        #return len(data)
+        #if self.num_wide == 146:
+            #assert self.num_wide != 146
+            #assert len(data) != 146, self.code_information()
         assert self.is_sort1() == True
         if self.thermal == 0:
             n = self._read_oes_loads(data)
@@ -2205,7 +2208,7 @@ class OES(OP2Common):
 
             numwide_real = 4 + (25 - 4) * nnodes  # real???
             numwide_random = 2 + (18 - 2) * nnodes  # imag???
-            #print "numwide=%s numwide_real=%s numwide_imag=%s" % (self.num_wide, numwide_real, numwide_imag)
+            #print("numwide=%s numwide_real=%s numwide_random=%s" % (self.num_wide, numwide_real, numwide_random))
 
             #numwide_real = 0
             #numwide_imag = 2 + 16 * nnodes

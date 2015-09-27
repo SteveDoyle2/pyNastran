@@ -9,7 +9,6 @@ from numpy import concatenate, zeros
 class ComplexBarArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -101,19 +100,20 @@ class ComplexBarArray(OES_Object):
         nelements = self.nelements
         ntimes = self.ntimes
         #ntotal = self.ntotal
-        nnodes = self.element_node.shape[0]
+        nelements2 = self.element.shape[0]
+        assert nelements, nelements2
         msg = []
 
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements, nnodes))
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
         else:
-            msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
+            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
 
-        msg.append(', '.join(set(self.eType.values())))
+        msg.append('  CBAR\n  ')
         msg += self.get_data_code()
         return msg
 
@@ -136,14 +136,14 @@ class ComplexBarArray(OES_Object):
             #'                     BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR',
             #'   FREQUENCY       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE',
         #]
-
+        name = self.data_code['name']
         if is_sort1:
-            line1 = '            ELEMENT                    LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n',
-            line2 = '              ID.                          1              2              3              4             AXIAL STRESS\n',
+            line1 = '            ELEMENT                    LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n'
+            line2 = '              ID.                          1              2              3              4             AXIAL STRESS\n'
         else:
-            line1 = '                                       LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n',
+            line1 = '                                       LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n'
             if name == 'freq':
-                line2 = '           FREQUENCY                       1              2              3              4             AXIAL STRESS\n',
+                line2 = '           FREQUENCY                       1              2              3              4             AXIAL STRESS\n'
             else:
                 raise RuntimeError(name)
 
@@ -152,7 +152,7 @@ class ComplexBarArray(OES_Object):
         else:
             stress_strain = '                             C O M P L E X   S T R A I N S   I N   B A R   E L E M E N T S   ( C B A R )'
 
-        msg_temp = header + [
+        msg_temp = [
             stress_strain,
             mag_phase,
             ' ',
@@ -163,7 +163,7 @@ class ComplexBarArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
 
-            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            dt_line = ' %14s = %12.5E\n' % (name, dt)
             header[1] = dt_line
             msg = header + msg_temp
             f.write('\n'.join(msg))
@@ -180,7 +180,7 @@ class ComplexBarArray(OES_Object):
             sb4 = self.data[itime, :, 8]
             #[sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4]
 
-            eids = self.element_node[:, 0]
+            eids = self.element
             for eid, s1ai, s2ai, s3ai, s4ai, axiali, s2ai, s2bi, s2ci, s2di in zip(eids, sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4):
                 vals = (s1ai, s2ai, s3ai, s4ai, axiali,
                         s2ai, s2bi, s2ci, s2di)

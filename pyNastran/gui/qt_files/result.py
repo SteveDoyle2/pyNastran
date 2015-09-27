@@ -1,6 +1,9 @@
 from __future__ import print_function
 
-import numexpr as ne
+try:
+    import numexpr as ne
+except ImportError:
+    pass
 from numpy import array, zeros
 
 
