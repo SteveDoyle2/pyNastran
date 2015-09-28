@@ -177,6 +177,7 @@ class OP2(OP2_Scalar):
               2 : result4,
           }
         """
+        self.combine = combine
         result_types = self.get_table_types()
 
         for result_type in result_types:

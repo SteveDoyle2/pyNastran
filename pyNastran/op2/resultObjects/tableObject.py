@@ -547,88 +547,140 @@ class ComplexTableArray(TableArray):  # displacement style table
         else:
             words += ['                                                          (REAL/IMAGINARY)\n', ]
 
-        words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.getTableMarker()
-
         if not len(header) >= 3:
             header.append('')
 
-        is_sort1 = self.is_sort1()
-        if is_sort1:
-            assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
-            for itime, dt in enumerate(self._times):
-                node = self.node_gridtype[:, 0]
-                gridtype = self.node_gridtype[:, 1]
-                t1 = self.data[itime, :, 0]
-                t2 = self.data[itime, :, 1]
-                t3 = self.data[itime, :, 2]
-                r1 = self.data[itime, :, 3]
-                r2 = self.data[itime, :, 4]
-                r3 = self.data[itime, :, 5]
-
-                header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                f.write(''.join(header + words))
-                for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                    sgridtype = self.recast_gridtype_as_string(gridtypei)
-                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
-                    [dxr, dyr, dzr, rxr, ryr, rzr,
-                     dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                    if sgridtype == 'G':
-                        f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                                '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                    node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                    '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                    elif sgridtype == 'S':
-                        f.write('0 %12i %6s     %-s\n'
-                                '  %12s %6s     %-s\n' % (node_id, sgridtype, dxr, '', '', dxi))
-                    else:
-                        raise NotImplementedError(sgridtype)
-                f.write(page_stamp % page_num)
-                page_num += 1
+        if self.is_sort1():
+            if is_sort1:
+                words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+                page_num = self.write_sort1_as_sort1(f, page_num, page_stamp, header, words, is_mag_phase)
+            else:
+                words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
+                page_num = self.write_sort1_as_sort2(f, page_num, page_stamp, header, words, is_mag_phase)
         else:
-            node = self.node_gridtype[:, 0]
-            gridtype = self.node_gridtype[:, 1]
-
-            times = self._times
-            for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
-                # TODO: for SORT1 pretending to be SORT2
-                #t1 = self.data[:, inode, 0].ravel()
-                t1 = self.data[inode, :, 0]
-                t2 = self.data[inode, :, 1]
-                t3 = self.data[inode, :, 2]
-                r1 = self.data[inode, :, 3]
-                r2 = self.data[inode, :, 4]
-                r3 = self.data[inode, :, 5]
-                if len(r3) != len(times):
-                    raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
-
-                header[2] = ' POINT-ID = %10i\n' % node_id
-                f.write(''.join(header + words))
-                for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
-                    sgridtype = self.recast_gridtype_as_string(gridtypei)
-                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
-                    [dxr, dyr, dzr, rxr, ryr, rzr,
-                     dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                    sdt = write_float_12E(dt)
-                    #if not is_all_zeros:
-                    if sgridtype == 'G':
-                        f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                                '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                    sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                    '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                    elif sgridtype == 'S':
-                        f.write('0 %12s %6s     %-s\n'
-                                '  %12s %6s     %-s\n' % (sdt, sgridtype, dxr, '', '', dxi))
-                    else:
-                        msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
-                        node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
-                        raise NotImplementedError(msg)
-                f.write(page_stamp % page_num)
-                page_num += 1
+            words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
+            page_num = self.write_sort2_as_sort2(f, page_num, page_stamp, header, words, is_mag_phase)
         return page_num - 1
 
+    def write_sort1_as_sort1(self, f, page_num, page_stamp, header, words, is_mag_phase):
+        assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
+        for itime, dt in enumerate(self._times):
+            node = self.node_gridtype[:, 0]
+            gridtype = self.node_gridtype[:, 1]
+            t1 = self.data[itime, :, 0]
+            t2 = self.data[itime, :, 1]
+            t3 = self.data[itime, :, 2]
+            r1 = self.data[itime, :, 3]
+            r2 = self.data[itime, :, 4]
+            r3 = self.data[itime, :, 5]
+
+            header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            f.write(''.join(header + words))
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
+                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                [dxr, dyr, dzr, rxr, ryr, rzr,
+                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
+                if sgridtype == 'G':
+                    f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                            '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                elif sgridtype == 'S':
+                    f.write('0 %12i %6s     %-13s\n'
+                            '  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
+                else:
+                    raise NotImplementedError(sgridtype)
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
+
+    def write_sort1_as_sort2(self, f, page_num, page_stamp, header, words, is_mag_phase):
+        node = self.node_gridtype[:, 0]
+        gridtype = self.node_gridtype[:, 1]
+
+        times = self._times
+        for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
+            # TODO: for SORT1 pretending to be SORT2
+            #t1 = self.data[:, inode, 0].ravel()
+            t1 = self.data[:, inode, 0].ravel()
+            t2 = self.data[:, inode, 1].ravel()
+            t3 = self.data[:, inode, 2].ravel()
+            r1 = self.data[:, inode, 3].ravel()
+            r2 = self.data[:, inode, 4].ravel()
+            r3 = self.data[:, inode, 5].ravel()
+            if len(r3) != len(times):
+                raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
+
+            header[2] = ' POINT-ID = %10i\n' % node_id
+            f.write(''.join(header + words))
+            for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
+                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                [dxr, dyr, dzr, rxr, ryr, rzr,
+                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
+                sdt = write_float_12E(dt)
+                #if not is_all_zeros:
+                if sgridtype == 'G':
+                    f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                            '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                elif sgridtype == 'S':
+                    f.write('0 %12s %6s     %-13s\n'
+                            '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
+                else:
+                    msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
+                    node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                    raise NotImplementedError(msg)
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
+
+    def write_sort2_as_sort2(self, f, page_num, page_stamp, header, words, is_mag_phase):
+        node = self.node_gridtype[:, 0]
+        gridtype = self.node_gridtype[:, 1]
+
+        times = self._times
+        for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
+            # TODO: for SORT1 pretending to be SORT2
+            #t1 = self.data[:, inode, 0].ravel()
+            t1 = self.data[inode, :, 0]
+            t2 = self.data[inode, :, 1]
+            t3 = self.data[inode, :, 2]
+            r1 = self.data[inode, :, 3]
+            r2 = self.data[inode, :, 4]
+            r3 = self.data[inode, :, 5]
+            if len(r3) != len(times):
+                raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
+
+            header[2] = ' POINT-ID = %10i\n' % node_id
+            f.write(''.join(header + words))
+            for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
+                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                [dxr, dyr, dzr, rxr, ryr, rzr,
+                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
+                sdt = write_float_12E(dt)
+                #if not is_all_zeros:
+                if sgridtype == 'G':
+                    f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                            '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                elif sgridtype == 'S':
+                    f.write('0 %12s %6s     %-13s\n'
+                            '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
+                else:
+                    msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
+                    node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                    raise NotImplementedError(msg)
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
 
 class RealTableObject(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):

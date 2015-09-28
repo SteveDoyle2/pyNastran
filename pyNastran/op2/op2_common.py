@@ -29,6 +29,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.result_names = set([])
         #: bool
         self.is_vectorized = None
+        self.combine = False
 
         #: the storage dictionary that is passed to OP2 objects (e.g. DisplacementObject)
         #: the key-value pairs are extracted and used to generate dynamic self

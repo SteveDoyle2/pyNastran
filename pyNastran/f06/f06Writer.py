@@ -386,7 +386,15 @@ class F06Writer(OP2_F06_Common):
             self.page_num = self.oload_resultant.write_f06(f06, page_stamp, self.page_num)
             assert isinstance(self.page_num, int), self.oload_resultant.__class__.__name__
 
+        # writes all results for
+        self._write_f06_subcase_based(f06, page_stamp, delete_objects=delete_objects,
+                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #self._write_f06_time_based(f06, page_stamp)
+        f06.write(make_end(end_flag))
+        f06.close()
 
+    def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
+                                 is_mag_phase=False, is_sort1=True):
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
@@ -404,7 +412,7 @@ class F06Writer(OP2_F06_Common):
 
         # then eigenvectors
         # has a special header
-        iSubcases = sorted(self.iSubcaseNameMap.keys())
+        # isubcases = sorted(self.iSubcaseNameMap.keys())
 
         # TODO: superelement version...need the nominal...
         res_keys = []
@@ -421,7 +429,7 @@ class F06Writer(OP2_F06_Common):
             #print('res_key =', res_key)
             isubcase = res_key[0]
             # analysis code = res_key[1]
-            subtitle = res_key[2]
+            subtitle = res_key[-1]
             if res_key not in self.labels:
                 continue
             label = self.labels[res_key]
@@ -464,9 +472,9 @@ class F06Writer(OP2_F06_Common):
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
         res_types = [
-            self.accelerations,
             self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
             self.displacements_scaled,  # ???
+            self.accelerations,
 
             self.force_vectors,
             self.load_vectors,
@@ -651,7 +659,8 @@ class F06Writer(OP2_F06_Common):
             #print(res_key)
             label = self.labels[label_key]
 
-            is_compressed = len(self.subtitles[isubcase]) == 1
+            #is_compressed = len(self.subtitles[isubcase]) == 1
+            is_compressed = self.combine
             #print(self.subtitles[isubcase])
             if is_compressed:
                 res_key = isubcase
@@ -662,6 +671,7 @@ class F06Writer(OP2_F06_Common):
 
             res_length = self._get_result_length(res_types, res_key)
             if res_length == 0:
+                asdf
                 # skipped subcase; no saved results
                 continue
 
@@ -702,5 +712,3 @@ class F06Writer(OP2_F06_Common):
                     if delete_objects:
                         del result
                     self.page_num += 1
-        f06.write(make_end(end_flag))
-        f06.close()
