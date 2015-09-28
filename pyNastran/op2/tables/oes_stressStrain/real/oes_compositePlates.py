@@ -983,13 +983,13 @@ class RealCompositePlateStrain(StrainObject):
         words = []
 
         etype = self.element_name
-        if self._is_cquad4(etypes):
+        if self._is_cquad4(etype):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + common_words
-        elif self._is_ctria3(etypes):
+        elif self._is_ctria3(etype):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + common_words
-        elif self._is_ctria6(etypes):
+        elif self._is_ctria6(etype):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + common_words
-        elif self._is_cquad8(etypes):
+        elif self._is_cquad8(etype):
             words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + common_words
         else:
             raise NotImplementedError(etypes)

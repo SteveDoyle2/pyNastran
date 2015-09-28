@@ -54,6 +54,8 @@ class TrashWriter(object):
         pass
 
 GEOM_TABLES = [
+    # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
+    # GEOM4 - Table of Bulk Data entry images related to constraints, degree-of-freedom membership and rigid element connectivity.
     b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4',  # regular
     b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
     b'GEOM1N', b'GEOM1VU', b'GEOM2VU',
@@ -65,10 +67,14 @@ GEOM_TABLES = [
 
     b'PVT0', b'CASECC',
     b'EDOM', b'OGPFB1',
-    b'BGPDT', b'BGPDTS', b'BGPDTOLD',
+    # GPDT  - Grid point definition table
+    # BGPDT - Basic grid point definition table.
+    b'GPDT', b'BGPDT', b'BGPDTS', b'BGPDTOLD',
     b'DYNAMIC', b'DYNAMICS',
+
+    # EQEXIN - quivalence table between external and internal grid/scalaridentification numbers.
     b'EQEXIN', b'EQEXINS',
-    b'GPDT', b'ERRORN',
+    b'ERRORN',
     b'DESTAB', b'R1TABRG', b'HISADD',
 
     # eigenvalues
@@ -91,19 +97,35 @@ RESULT_TABLES = [
     # strain
     b'OSTR1X', b'OSTR1C',
     # forces
+
+    # OEF1  - Element forces (linear elements only)
+    # HOEF1 - Element heat flux
+    # OEF1X - Element forces with intermediate (CBAR and CBEAM) station forces
+    #         and forces on nonlinear elements
+    # DOEF1 - Scaled Response Spectra
     b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
+
     # spc forces - gset - sort 1
     b'OQG1', b'OQGV1',
     # mpc forces - gset - sort 1
     b'OQMG1',
     # ??? forces
     b'OQP1',
+
     # displacement/velocity/acceleration/eigenvector/temperature
+    # OUPV1 - Scaled Response Spectra
     b'OUG1', b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
 
+    # OUGV1PAT - Displacements in the basic coordinate system
+    # OUGV1  - Displacements in the global coordinate system
+    # BOUGV1 - Displacements in the basic coordinate system
+    # BOPHIG - Eigenvectors in the basic coordinate system
+    # ROUGV1 - Relative OUGV1
+    # TOUGV1 - Temperature OUGV1
     b'ROUGV1', b'TOUGV1', b'RSOUGV1', b'RESOES1', b'RESEF1',
 
     # applied loads
+    # OPG1 - Applied static loads
     b'OPNL1', # nonlinear applied loads - sort 1
     b'OPG1', b'OPGV1', # applied loads - gset? - sort 1
     b'OPG2', # applied loads - sort 2 - v0.8
@@ -317,7 +339,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'MATPOOL': [self._table_passer, self._table_passer],
             b'CSTM':    [self._table_passer, self._table_passer],
-            b'TOUGV1':  [self._table_passer, self._table_passer],  # grid point temperature
             b'AXIC':    [self._table_passer, self._table_passer],
             b'BOPHIG':  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
             b'ONRGY2':  [self._table_passer, self._table_passer],
@@ -337,13 +358,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #=======================
             # OQG
             # spc forces
-            b'OQG1'  : [self._read_oqg1_3, self._read_oqg1_4],  # spc forces in the nodal frame
-            b'OQGV1' : [self._read_oqg1_3, self._read_oqg1_4],  # spc forces in the nodal frame
-            # mpc forces
-            b'OQMG1' : [self._read_oqg1_3, self._read_oqg1_4],
+            # OQG1/OQGV1 - spc forces in the nodal frame
+            # OQP1 - scaled response spectra - spc forces
 
-            # ???? - passer
-            #'OQP1': [self._table_passer, self._table_passer],  # scaled response spectra - displacement
+            b'OQG1' : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQG2' : [self._read_oqg2_3, self._read_oqg_4],
+
+            b'OQGV1' : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQGV2' : [self._read_oqg2_3, self._read_oqg_4],
+
+            'OQP1' : [self._read_oqg1_3, self._read_oqg_4],
+
+            # OQGM1     - mpc forces in the nodal frame
+            b'OQMG1' : [self._read_oqg1_3, self._read_oqg_4],
+
             #=======================
             # OPG
             # applied loads
@@ -374,8 +402,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
 
             # strain
-            b'OSTR1X'  : [self._read_oes1_3, self._read_oes1_4],  # strain - isotropic
-            b'OSTR1C'  : [self._read_oes1_3, self._read_oes1_4],  # strain - composite
+            b'OSTR1X' : [self._read_oes1_3, self._read_oes1_4],  # strain - isotropic
+            b'OSTR1C' : [self._read_oes1_3, self._read_oes1_4],  # strain - composite
 
             #=======================
             # OUG
@@ -385,6 +413,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # OUG1 on the boundary???
             b'OUGV1PAT': [self._read_oug1_3, self._read_oug_4],  # OUG1 + coord ID
             b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
+            b'TOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # grid point temperature
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
@@ -400,43 +429,43 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
             #=======================
             # eigenvalues
-            b'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
-            b'CLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
-            b'LAMA' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
+            b'BLAMA' : [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
+            b'CLAMA' : [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
+            b'LAMA'  : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
 
             # ===geom passers===
             # geometry
-            b'GEOM1': [self._table_passer, self._table_passer],
-            b'GEOM2': [self._table_passer, self._table_passer],
-            b'GEOM3': [self._table_passer, self._table_passer],
-            b'GEOM4': [self._table_passer, self._table_passer],
+            b'GEOM1' : [self._table_passer, self._table_passer],
+            b'GEOM2' : [self._table_passer, self._table_passer],
+            b'GEOM3' : [self._table_passer, self._table_passer],
+            b'GEOM4' : [self._table_passer, self._table_passer],
 
             # superelements
-            b'GEOM1S': [self._table_passer, self._table_passer],  # GEOMx + superelement
-            b'GEOM2S': [self._table_passer, self._table_passer],
-            b'GEOM3S': [self._table_passer, self._table_passer],
-            b'GEOM4S': [self._table_passer, self._table_passer],
+            b'GEOM1S' : [self._table_passer, self._table_passer],  # GEOMx + superelement
+            b'GEOM2S' : [self._table_passer, self._table_passer],
+            b'GEOM3S' : [self._table_passer, self._table_passer],
+            b'GEOM4S' : [self._table_passer, self._table_passer],
 
-            b'GEOM1N': [self._table_passer, self._table_passer],
-            b'GEOM2N': [self._table_passer, self._table_passer],
-            b'GEOM3N': [self._table_passer, self._table_passer],
-            b'GEOM4N': [self._table_passer, self._table_passer],
+            b'GEOM1N' : [self._table_passer, self._table_passer],
+            b'GEOM2N' : [self._table_passer, self._table_passer],
+            b'GEOM3N' : [self._table_passer, self._table_passer],
+            b'GEOM4N' : [self._table_passer, self._table_passer],
 
-            b'GEOM1OLD': [self._table_passer, self._table_passer],
-            b'GEOM2OLD': [self._table_passer, self._table_passer],
-            b'GEOM3OLD': [self._table_passer, self._table_passer],
-            b'GEOM4OLD': [self._table_passer, self._table_passer],
+            b'GEOM1OLD' : [self._table_passer, self._table_passer],
+            b'GEOM2OLD' : [self._table_passer, self._table_passer],
+            b'GEOM3OLD' : [self._table_passer, self._table_passer],
+            b'GEOM4OLD' : [self._table_passer, self._table_passer],
 
             b'EPT' : [self._table_passer, self._table_passer],  # elements
-            b'EPTS': [self._table_passer, self._table_passer],  # elements - superelements
+            b'EPTS' : [self._table_passer, self._table_passer],  # elements - superelements
             b'EPTOLD' : [self._table_passer, self._table_passer],
 
             b'MPT' : [self._table_passer, self._table_passer],  # materials
-            b'MPTS': [self._table_passer, self._table_passer],  # materials - superelements
+            b'MPTS' : [self._table_passer, self._table_passer],  # materials - superelements
 
-            b'DYNAMIC': [self._table_passer, self._table_passer],
-            b'DYNAMICS': [self._table_passer, self._table_passer],
-            b'DIT': [self._table_passer, self._table_passer],
+            b'DYNAMIC' : [self._table_passer, self._table_passer],
+            b'DYNAMICS' : [self._table_passer, self._table_passer],
+            b'DIT' : [self._table_passer, self._table_passer],
 
             # geometry
             #b'GEOM1': [self._read_geom1_4, self._read_geom1_4],
@@ -475,102 +504,102 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EQEXIN': [self._table_passer, self._table_passer],
             b'EQEXINS': [self._table_passer, self._table_passer],
 
-            b'GPDT': [self._table_passer, self._table_passer],     # grid points?
-            b'BGPDT': [self._table_passer, self._table_passer],    # basic grid point defintion table
-            b'BGPDTS': [self._table_passer, self._table_passer],
-            b'BGPDTOLD': [self._table_passer, self._table_passer],
+            b'GPDT' : [self._table_passer, self._table_passer],     # grid points?
+            b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point defintion table
+            b'BGPDTS' : [self._table_passer, self._table_passer],
+            b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
-            b'PVT0': [self._table_passer, self._table_passer],  # user parameter value table
-            b'DESTAB': [self._table_passer, self._table_passer],
-            b'STDISP': [self._table_passer, self._table_passer],
-            b'CASECC': [self._table_passer, self._table_passer],  # case control deck
+            b'PVT0' : [self._table_passer, self._table_passer],  # user parameter value table
+            b'DESTAB' : [self._table_passer, self._table_passer],
+            b'STDISP' : [self._table_passer, self._table_passer],
+            b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
 
-            b'EDTS': [self._table_passer, self._table_passer],
-            b'FOL': [self._table_passer, self._table_passer],
-            b'MONITOR': [self._table_passer, self._table_passer],  # monitor points
-            b'PERF': [self._table_passer, self._table_passer],
-            b'VIEWTB': [self._table_passer, self._table_passer],   # view elements
+            b'EDTS' : [self._table_passer, self._table_passer],
+            b'FOL' : [self._table_passer, self._table_passer],
+            b'MONITOR' : [self._table_passer, self._table_passer],  # monitor points
+            b'PERF' : [self._table_passer, self._table_passer],
+            b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================
-            b'OUGATO2': [self._table_passer, self._table_passer],
-            b'OUGCRM2': [self._table_passer, self._table_passer],
-            b'OUGNO2': [self._table_passer, self._table_passer],
-            b'OUGPSD2': [self._table_passer, self._table_passer],  # psd
-            b'OUGRMS2': [self._table_passer, self._table_passer],  # rms
+            b'OUGATO2' : [self._table_passer, self._table_passer],
+            b'OUGCRM2' : [self._table_passer, self._table_passer],
+            b'OUGNO2' : [self._table_passer, self._table_passer],
+            b'OUGPSD2' : [self._table_passer, self._table_passer],  # psd
+            b'OUGRMS2' : [self._table_passer, self._table_passer],  # rms
 
-            b'OQGATO2': [self._table_passer, self._table_passer],
-            b'OQGCRM2': [self._table_passer, self._table_passer],
+            b'OQGATO2' : [self._table_passer, self._table_passer],
+            b'OQGCRM2' : [self._table_passer, self._table_passer],
 
-            b'OQGNO2': [self._table_passer, self._table_passer],
-            b'OQGPSD2': [self._table_passer, self._table_passer],
-            b'OQGRMS2': [self._table_passer, self._table_passer],
+            b'OQGNO2' : [self._table_passer, self._table_passer],
+            b'OQGPSD2' : [self._table_passer, self._table_passer],
+            b'OQGRMS2' : [self._table_passer, self._table_passer],
 
-            b'OFMPF2M': [self._table_passer, self._table_passer],
-            b'OLMPF2M': [self._table_passer, self._table_passer],
-            b'OPMPF2M': [self._table_passer, self._table_passer],
-            b'OSMPF2M': [self._table_passer, self._table_passer],
-            b'OGPMPF2M': [self._table_passer, self._table_passer],
+            b'OFMPF2M' : [self._table_passer, self._table_passer],
+            b'OLMPF2M' : [self._table_passer, self._table_passer],
+            b'OPMPF2M' : [self._table_passer, self._table_passer],
+            b'OSMPF2M' : [self._table_passer, self._table_passer],
+            b'OGPMPF2M' : [self._table_passer, self._table_passer],
 
-            b'OEFATO2': [self._table_passer, self._table_passer],
-            b'OEFCRM2': [self._table_passer, self._table_passer],
-            b'OEFNO2': [self._table_passer, self._table_passer],
-            b'OEFPSD2': [self._table_passer, self._table_passer],
-            b'OEFRMS2': [self._table_passer, self._table_passer],
+            b'OEFATO2' : [self._table_passer, self._table_passer],
+            b'OEFCRM2' : [self._table_passer, self._table_passer],
+            b'OEFNO2' : [self._table_passer, self._table_passer],
+            b'OEFPSD2' : [self._table_passer, self._table_passer],
+            b'OEFRMS2' : [self._table_passer, self._table_passer],
 
-            b'OESATO2': [self._table_passer, self._table_passer],
-            b'OESCRM2': [self._table_passer, self._table_passer],
-            b'OESNO2': [self._table_passer, self._table_passer],
-            b'OESPSD2': [self._table_passer, self._table_passer],
-            b'OESRMS2': [self._table_passer, self._table_passer],
+            b'OESATO2' : [self._table_passer, self._table_passer],
+            b'OESCRM2' : [self._table_passer, self._table_passer],
+            b'OESNO2' : [self._table_passer, self._table_passer],
+            b'OESPSD2' : [self._table_passer, self._table_passer],
+            b'OESRMS2' : [self._table_passer, self._table_passer],
 
-            b'OVGATO2': [self._table_passer, self._table_passer],
-            b'OVGCRM2': [self._table_passer, self._table_passer],
-            b'OVGNO2': [self._table_passer, self._table_passer],
-            b'OVGPSD2': [self._table_passer, self._table_passer],
-            b'OVGRMS2': [self._table_passer, self._table_passer],
+            b'OVGATO2' : [self._table_passer, self._table_passer],
+            b'OVGCRM2' : [self._table_passer, self._table_passer],
+            b'OVGNO2' : [self._table_passer, self._table_passer],
+            b'OVGPSD2' : [self._table_passer, self._table_passer],
+            b'OVGRMS2' : [self._table_passer, self._table_passer],
 
             #==================================
             #b'GPL': [self._table_passer, self._table_passer],
-            b'OMM2': [self._table_passer, self._table_passer],
-            b'ERRORN': [self._table_passer, self._table_passer],  # p-element error summary table
+            b'OMM2' : [self._table_passer, self._table_passer],
+            b'ERRORN' : [self._table_passer, self._table_passer],  # p-element error summary table
             #==================================
 
-            b'OCRPG': [self._table_passer, self._table_passer],
-            b'OCRUG': [self._table_passer, self._table_passer],
+            b'OCRPG' : [self._table_passer, self._table_passer],
+            b'OCRUG' : [self._table_passer, self._table_passer],
 
-            b'EDOM': [self._table_passer, self._table_passer],
-            b'OUG2T': [self._table_passer, self._table_passer],
+            b'EDOM' : [self._table_passer, self._table_passer],
+            b'OUG2T' : [self._table_passer, self._table_passer],
 
-            b'OAGPSD2': [self._table_passer, self._table_passer],
-            b'OAGATO2': [self._table_passer, self._table_passer],
-            b'OAGRMS2': [self._table_passer, self._table_passer],
-            b'OAGNO2': [self._table_passer, self._table_passer],
-            b'OAGCRM2': [self._table_passer, self._table_passer],
+            b'OAGPSD2' : [self._table_passer, self._table_passer],
+            b'OAGATO2' : [self._table_passer, self._table_passer],
+            b'OAGRMS2' : [self._table_passer, self._table_passer],
+            b'OAGNO2' : [self._table_passer, self._table_passer],
+            b'OAGCRM2' : [self._table_passer, self._table_passer],
 
-            b'OPGPSD2': [self._table_passer, self._table_passer],
-            b'OPGATO2': [self._table_passer, self._table_passer],
-            b'OPGRMS2': [self._table_passer, self._table_passer],
-            b'OPGNO2': [self._table_passer, self._table_passer],
-            b'OPGCRM2': [self._table_passer, self._table_passer],
+            b'OPGPSD2' : [self._table_passer, self._table_passer],
+            b'OPGATO2' : [self._table_passer, self._table_passer],
+            b'OPGRMS2' : [self._table_passer, self._table_passer],
+            b'OPGNO2' : [self._table_passer, self._table_passer],
+            b'OPGCRM2' : [self._table_passer, self._table_passer],
 
-            b'OSTRPSD2': [self._table_passer, self._table_passer],
-            b'OSTRATO2': [self._table_passer, self._table_passer],
-            b'OSTRRMS2': [self._table_passer, self._table_passer],
-            b'OSTRNO2': [self._table_passer, self._table_passer],
-            b'OSTRCRM2': [self._table_passer, self._table_passer],
+            b'OSTRPSD2' : [self._table_passer, self._table_passer],
+            b'OSTRATO2' : [self._table_passer, self._table_passer],
+            b'OSTRRMS2' : [self._table_passer, self._table_passer],
+            b'OSTRNO2' : [self._table_passer, self._table_passer],
+            b'OSTRCRM2' : [self._table_passer, self._table_passer],
 
-            b'OQMPSD2': [self._table_passer, self._table_passer],
-            b'OQMATO2': [self._table_passer, self._table_passer],
-            b'OQMRMS2': [self._table_passer, self._table_passer],
-            b'OQMNO2': [self._table_passer, self._table_passer],
-            b'OQMCRM2': [self._table_passer, self._table_passer],
+            b'OQMPSD2' : [self._table_passer, self._table_passer],
+            b'OQMATO2' : [self._table_passer, self._table_passer],
+            b'OQMRMS2' : [self._table_passer, self._table_passer],
+            b'OQMNO2' : [self._table_passer, self._table_passer],
+            b'OQMCRM2' : [self._table_passer, self._table_passer],
 
-            #b'AAA': [self._table_passer, self._table_passer],
-            #b'AAA': [self._table_passer, self._table_passer],
-            #b'AAA': [self._table_passer, self._table_passer],
-            #b'AAA': [self._table_passer, self._table_passer],
+            #b'AAA' : [self._table_passer, self._table_passer],
+            #b'AAA' : [self._table_passer, self._table_passer],
+            #b'AAA' : [self._table_passer, self._table_passer],
+            #b'AAA' : [self._table_passer, self._table_passer],
         }
         return table_mapper
 

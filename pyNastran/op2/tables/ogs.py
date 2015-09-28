@@ -107,7 +107,7 @@ class OGS(OP2Common):
         #elif self.table_code == 35:  # OGS - Grid point stress discontinuities (plane strain)
             #n = self._not_implemented_or_skip(data, msg)
         else:
-            raise NotImplementedError(self.table_code)
+            raise NotImplementedError('table_code=%s table_name=%s' % (self.table_code, self.table_name))
         return n
 
     def _read_ogs1_table28(self, data):

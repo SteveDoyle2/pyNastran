@@ -83,6 +83,19 @@ class OP2Common(Op2Codes, F06Writer):
         # sets the element mapper
         self.get_element_type(33)
 
+    def _device_code_(self):
+        """
+        0 -
+        1 - PRINT
+        2 - PLOT
+        3 - PRINT, PLOT
+        4 - PUNCH
+        5 - PRINT, PUNCH
+        6 - PLOT, PUNCH
+        7 - PRINT, PLOT, PUNCH
+        """
+        pass
+
     def fix_format_code(self):
         """
         Nastran correctly calculates the proper defaults for the analysis
@@ -709,6 +722,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _not_implemented_or_skip(self, data, msg=''):
         if is_release:
             if msg != self._last_comment:
+                #print(self.code_information())
                 self.log.warning(msg)
                 self._last_comment = msg
             return len(data)
@@ -777,6 +791,95 @@ class OP2Common(Op2Codes, F06Writer):
             self.binary_debug.write('  %-14s = %r\n' % ('  sort_code', self.sort_code))
 
         self._parse_sort_code()
+
+    def _parse_thermal_code(self):
+        """
+        +------------+---------------+
+        |  thermal   | thermal_bits  |
+        +============+===============+
+        | 0          |  [0, 0, 0]    |
+        +------------+---------------+
+        | 1          |  [0, 0, 1]    |
+        +------------+---------------+
+        | 2          |  [0, 1, 0]    |
+        +------------+---------------+
+        | 3          |  [0, 1, 1]    |
+        +------------+---------------+
+        | ...        | ...           |
+        +------------+---------------+
+        | 7          |  [1, 1, 1, 1] |
+        +------------+---------------+
+
+        1 Thermal
+        2 Scaled response spectra ABS
+        3 Scaled response spectra SRSS
+        4 Scaled response spectra NRL
+        5 Scaled response spectra NRLO
+        ::
+          thermal =  0 -> thermal_bits = [0,0,0,0,0]  # no thermal
+          thermal =  1 -> thermal_bits = [0,0,0,0,1]  # 1- thermal
+          thermal =  2 -> thermal_bits = [0,0,0,1,0]  # 2 - Scaled response spectra ABS
+          thermal =  3 -> thermal_bits = [0,0,0,1,1]
+          thermal =  4 -> thermal_bits = [0,0,1,0,0]  # 3 - Scaled response spectra SRSS
+          thermal =  5 -> thermal_bits = [0,0,1,0,1]
+          thermal =  6 -> thermal_bits = [0,0,1,1,0]
+          thermal =  7 -> thermal_bits = [0,0,1,1,1]
+
+          thermal =  8 -> thermal_bits = [0,1,0,0,0]  # 4-Scaled response spectra NRL
+          thermal =  9 -> thermal_bits = [0,1,0,0,1]  # NRL + thermal
+          thermal = 10 -> thermal_bits = [0,1,0,1,0]
+          thermal = 11 -> thermal_bits = [0,1,0,1,1]
+          thermal = 12 -> thermal_bits = [0,1,1,0,0]
+          thermal = 13 -> thermal_bits = [0,1,1,0,1]
+          thermal = 14 -> thermal_bits = [0,1,1,1,0]
+          thermal = 15 -> thermal_bits = [0,1,1,1,1]
+
+          #------
+          thermal = 16 -> thermal_bits = [1,0,0,0,0]  # 5 - Scaled response spectra NRLO
+          thermal = 17 -> thermal_bits = [1,0,0,0,1]
+          thermal = 18 -> thermal_bits = [1,0,0,1,0]
+          thermal = 19 -> thermal_bits = [1,0,0,1,1]
+          thermal = 20 -> thermal_bits = [1,0,1,0,0]
+          thermal = 21 -> thermal_bits = [1,0,1,0,1]
+          thermal = 22 -> thermal_bits = [1,0,1,1,0]
+          thermal = 23 -> thermal_bits = [1,0,1,1,1]
+
+          thermal = 24 -> thermal_bits = [1,1,0,0,0]
+          thermal = 25 -> thermal_bits = [1,1,0,0,1]
+          thermal = 26 -> thermal_bits = [1,1,0,1,0]
+          thermal = 27 -> thermal_bits = [1,1,0,1,1]
+          thermal = 28 -> thermal_bits = [1,1,1,0,0]
+          thermal = 29 -> thermal_bits = [1,1,1,0,1]
+          thermal = 30 -> thermal_bits = [1,1,1,1,0]
+          thermal = 31 -> thermal_bits = [1,1,1,1,1]
+
+
+          thermal_bits[4] = 0 -> thermal
+          thermal_bits[3] = 0 -> ABS
+          thermal_bits[2] = 0 -> SRSS
+          thermal_bits[1] = 0 -> NRL
+          thermal_bits[0] = 0 -> NRLO
+        """
+        bits = [0, 0, 0, 0, 0]
+        thermal_code = self.thermal
+
+        # Sort codes can range from 0 to 7, but most of the examples
+        # are covered by these.  The ones that break are incredibly large.
+        #if self.thermal not in [0, 1, 2, 3, 4, 5, 6, 7]:
+            #msg = 'Invalid sort_code=%s' % (self.sort_code)
+            #raise SortCodeError(msg)
+            #if self.sort_code == 1145655:
+                #return
+        i = 4
+        while thermal_code > 0:
+            value = thermal_code % 2
+            thermal_code = (thermal_code - value) // 2
+            bits[i] = value
+            i -= 1
+
+        #: the bytes describe the Random information
+        self.thermal_bits = bits
+        self.data_code['thermal_bits'] = self.thermal_bits
 
     def _parse_sort_code(self):
         """

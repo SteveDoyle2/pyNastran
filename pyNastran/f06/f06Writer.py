@@ -466,7 +466,7 @@ class F06Writer(OP2_F06_Common):
         res_types = [
             self.accelerations,
             self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
-            self.scaledDisplacements,  # ???
+            self.displacements_scaled,  # ???
 
             self.force_vectors,
             self.load_vectors,

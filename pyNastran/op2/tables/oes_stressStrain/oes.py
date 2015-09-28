@@ -157,6 +157,7 @@ class OES(OP2Common):
         #    self.lsdvmn = self.get_values(data,'i',5)
 
         self.fix_format_code()
+        self._parse_thermal_code()
         try:
             self.element_name = self.element_mapper[self.element_type]
         except KeyError:
@@ -1680,7 +1681,7 @@ class OES(OP2Common):
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
-                return self._not_implemented_or_skip(data, msg)
+                #return self._not_implemented_or_skip(data, msg)
 
                 # TODO: this is an OEF result???
                 #    furthermore the actual table is calle dout as

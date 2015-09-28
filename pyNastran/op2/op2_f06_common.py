@@ -175,7 +175,7 @@ class OP2_F06_Common(object):
         self.displacementsRMS = {}        # random
         self.displacementsCRM = {}        # random
         self.displacementsNO = {}         # random
-        self.scaledDisplacements = {}     # tCode=1 thermal=8
+        self.displacements_scaled = {}    # tCode=1 thermal=8
 
         #: OUP
 
@@ -360,7 +360,7 @@ class OP2_F06_Common(object):
             'displacementsRMS',
             'displacementsCRM',
             'displacementsNO',
-            'scaledDisplacements',
+            'displacements_scaled',
 
             # OUG - temperatures
             'temperatures',

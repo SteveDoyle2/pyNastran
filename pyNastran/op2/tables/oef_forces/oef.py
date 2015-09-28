@@ -256,6 +256,7 @@ class OEF(OP2Common):
 
 
         self.fix_format_code()
+        self._parse_thermal_code()
         try:
             self.element_name = self.element_mapper[self.element_type]
         except KeyError:
@@ -290,6 +291,8 @@ class OEF(OP2Common):
             n = self._read_oef1_loads(data)
         elif self.thermal == 1:
             n = self._read_oef1_thermal(data)
+        elif self.thermal == 8: # NRL
+            n = self._read_oef1_loads(data)
         else:
             n = self._not_implemented_or_skip(data, 'thermal=%s' % self.thermal)
         return n
@@ -2123,7 +2126,7 @@ class OEF(OP2Common):
             msg = self.code_information()
             return self._not_implemented_or_skip(data, msg)
 
-        assert self.thermal == 0, self.thermal
+        #assert self.thermal == 0, self.thermal
         assert len(data) > 0, len(data)
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)

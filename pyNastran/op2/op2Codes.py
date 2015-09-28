@@ -980,6 +980,8 @@ class Op2Codes(object):
             msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
         if thermal is not None:
             msg += "  thermal       = %-3s %s\n" % (thermal, thermal_word)
+            #if hasattr(self, 'thermal_bits'):
+            msg += "  thermal_bits  = %s\n" % str(self.thermal_bits)
 
         if hasattr(self, 'num_wide'):
             msg += "  num_wide      = %-3s\n" % self.num_wide
