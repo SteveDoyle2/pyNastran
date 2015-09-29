@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 
-from numpy import unique
+from numpy import unique, vstack
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
@@ -188,7 +188,6 @@ class OP2(OP2_Scalar):
             for case_key in case_keys:
                 if isinstance(case_key, tuple):
                     isubcasei, analysis_codei, sort_methodi, counti, isubtitle = case_key
-                    #value = (analysis_codei, isubtitle)
                     value = (analysis_codei, sort_methodi, counti, isubtitle)
                     if value not in self.subcase_key[isubcasei]:
                         self.subcase_key[isubcasei].append(value)
@@ -200,45 +199,63 @@ class OP2(OP2_Scalar):
         isubcases = unique(self.subcase_key.keys())
         unique_isubcases = unique(isubcases)
 
-        self.log.debug('compress_results')
+        self.log.info('combine_results')
         for result_type in result_types:
             result = getattr(self, result_type)
+            if len(result) == 0:
+                continue
             for isubcase in unique_isubcases:
                 keys = self.subcase_key[isubcase]
-                for keyi in keys:
-                    #print('keyi =', keyi)
-                    key = tuple([isubcase] + list(keyi))
-                    #print(key)
-                    if key not in result:
-                        #print(result_type)
+                #keys = result.keys()
+                #if not len(keys):
+                #    continue
+                key0 = tuple([isubcase] + list(keys[0]))
+                #print(keys)
+                if len(keys) == 1:
+                    # rename the case since we have only one tuple for the result
+                    # key0 = tuple([isubcase] + list(key0))
+                    result[isubcase] = result[key0]
+                    del result[key]
+                elif len(keys) == 2:
+                    # continue
+                    print('key0 =', result_type, key0)
+                    # res0 = result[key0]
+
+                    isubcase, analysis_code, sort_code, count, subtitle = key0
+                    key1 = (isubcase, analysis_code, 1, count, subtitle)
+                    key2 = (isubcase, analysis_code, 2, count, subtitle)
+                    if not (key1 in result and key2 in result):
+                        if key1 in result:
+                            res1 = result[key1]
+                            self.log.info("res=%s has a single case; trivial" % res1.__class__.__name__)
+                            result[isubcase] = result[key1]
+                            del result[key1]
+                        elif key2 in result:
+                            res2 = result[key2]
+                            self.log.info("res=%s has a single case; trivial" % res2.__class__.__name__)
+                            result[isubcase] = result[key2]
+                            del result[key2]
                         continue
-                    if len(keys) == 1:
-                        # rename the case since we have only one tuple for the result
-                        result[isubcase] = result[key]
-                        del result[key]
+
+                    res1 = result[key1]
+                    if not hasattr(res1, 'combine'):
+                        self.log.info("res=%s has no method combine" % res1.__class__.__name__)
+                        continue
                     else:
-                        #print(key)
-                        continue
-                        # multiple results to combine
-                        res1 = result[key]
-                        if not hasattr(res1, 'combine'):
-                            print("res1=%s has no method combine" % res1.__class__.__name__)
-                            continue
-
-                        #raise NotImplementedError('multiple results to combine')
-                        del result[key]
-
-                        results_list = []
-                        for key in keys[1:]:
-                            results_list.append(result[key])
-                            del result[key]
-
-                        #res1.data = hstack(res1.data, res2.data)
-                        # combination method depends on result, so stresses are
-                        # combined differently than displacements
-                        res1.combine(results_list)
-                        result[isubcase] = res1
+                        self.log.info("res=%s has combine" % res1.__class__.__name__)
+                    res2 = result[key2]
+                    del result[key1]
+                    del result[key2]
+                    res1.combine(res2)
+                    result[isubcase] = res1
+                    # print('r[isubcase] =', result[isubcase])
+                else:
+                    self.log.info("continue")
+                    continue
             setattr(self, result_type, result)
+        # print('**********', self.displacements.keys())
+
+
 
 
 def main():

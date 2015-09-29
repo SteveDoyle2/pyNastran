@@ -327,8 +327,12 @@ class OP2_F06_Common(object):
         for res_type in res_types:
             if not res_type:
                 continue
-            if not type(res_type.keys()[0]) == type(res_key):
-                raise RuntimeError('bad compression check...')
+            key0 = res_type.keys()[0]
+            if not isinstance(key0, (int, int32)) and not isinstance(res_key, (int, int32)):
+                if not type(key0) == type(res_key):
+                    raise RuntimeError('bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
+                        key0, type(key0),
+                        res_key, type(res_key)))
 
             #print('res_type.keys()=%s' % res_type.keys())
             # res_key_list = res_key[:-1] + [res_key[-1]]
@@ -353,6 +357,7 @@ class OP2_F06_Common(object):
 
                 # get the class name
                 class_name = result.__class__.__name__
+                res_length = max(len(class_name), res_length)
 
                 if not is_release:
                     print('%s - results not found...key=%s' % (class_name, res_key))

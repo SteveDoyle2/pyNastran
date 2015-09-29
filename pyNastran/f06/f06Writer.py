@@ -415,53 +415,51 @@ class F06Writer(OP2_F06_Common):
         # isubcases = sorted(self.iSubcaseNameMap.keys())
 
         # TODO: superelement version...need the nominal...
+        res_keys_subcase = {}
         res_keys = []
         for isubcase, res_keysi in iteritems(self.subcase_key):
+            res_keys = [isubcase]
             assert isinstance(res_keysi, list), res_keysi
             for res_keysii in res_keysi:
                 key = [isubcase] + list(res_keysii)
                 res_keys.append(tuple(key))
+            res_keys_subcase[isubcase] = res_keys
             del key
-        # del isubcase#, subtitle
 
-        #print('res_keys=%s' % res_keys)
-        for res_key in res_keys:
-            #print('res_key =', res_key)
-            isubcase = res_key[0]
-            # analysis code = res_key[1]
-            subtitle = res_key[-1]
-            if res_key not in self.labels:
-                continue
-            label = self.labels[res_key]
+        for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
+            for res_key in res_keys:
+                if isinstance(res_key, tuple):
+                    is_compressed = False
+                else:
+                    # int
+                    is_compressed = True
+                    isubcase = res_key
 
-            is_compressed = len(self.subtitles[isubcase]) == 1
-            if is_compressed:
-                res_key = isubcase
+                if res_key not in self.eigenvectors:
+                    continue
+                result = self.eigenvectors[res_key]
+                subtitle = result.subtitle
+                header[0] = '     %s\n' % subtitle
+                header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
+                #header[2] = complex/nonlinear
+                star = ' '
+                if hasattr(self, 'data'):
+                    star = '*'
 
-            if res_key not in self.eigenvectors:
-                continue
-            result = self.eigenvectors[res_key]
-            header[0] = '     %s\n' % subtitle
-            header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
-            #header[2] = complex/nonlinear
-            star = ' '
-            if hasattr(self, 'data'):
-                star = '*'
+                res_length = 18
+                res_format = '%%-%is SUBCASE=%%i' % res_length
+                res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
+                if class_name.endswith('Array'):
+                    print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle))
+                else:
+                    print(star + res_format % (result.__class__.__name__, isubcase))
 
-            res_length = 18
-            res_format = '%%-%is SUBCASE=%%i' % res_length
-            res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
-            if is_compressed:
-                print(star + res_format % (result.__class__.__name__, isubcase))
-            else:
-                print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle))
-
-            self.page_num = result.write_f06(header, page_stamp,
-                                             self.page_num, f=f06, is_mag_phase=is_mag_phase, is_sort1=True)
-            assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
-            if delete_objects:
-                del result
-            self.page_num += 1
+                self.page_num = result.write_f06(header, page_stamp,
+                                                 self.page_num, f=f06, is_mag_phase=is_mag_phase, is_sort1=True)
+                assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
+                if delete_objects:
+                    del result
+                self.page_num += 1
 
         # finally, we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,
@@ -487,7 +485,6 @@ class F06Writer(OP2_F06_Common):
 
             self.strain_energy,
 
-
             #------------------------------------------
             # OEF - forces
 
@@ -505,8 +502,6 @@ class F06Writer(OP2_F06_Common):
             self.celas2_force,
             self.celas3_force,
             self.celas4_force,
-
-            self.conrod_force,
 
             self.cquad4_force,
             self.cquad8_force,
@@ -622,6 +617,7 @@ class F06Writer(OP2_F06_Common):
             self.cquad4_stress,
             self.cquad8_stress,
             self.cquadr_stress,
+
             self.crod_stress,
             self.cshear_stress,
             self.ctetra_stress,
@@ -648,47 +644,35 @@ class F06Writer(OP2_F06_Common):
             self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         ]
 
-        for res_key in res_keys:
-            #print(res_key)
-            #title = self.Title
+        for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
+            # print(res_keys)
+            for res_key in res_keys:
+                if isinstance(res_key, tuple):
+                    is_compressed = False
+                else:
+                    is_compressed = True
 
-            isubcase = res_key[0]
-            analysis_code = res_key[1]
-            subtitle = res_key[-1]
-            label_key = (isubcase, analysis_code, subtitle)
-            #print(res_key)
-            label = self.labels[label_key]
+                res_length = self._get_result_length(res_types, res_key)
+                if res_length == 0:
+                    # skipped subcase; no saved results
+                    continue
 
-            #is_compressed = len(self.subtitles[isubcase]) == 1
-            is_compressed = self.combine
-            #print(self.subtitles[isubcase])
-            if is_compressed:
-                res_key = isubcase
+                res_format = '%%-%is SUBCASE=%%i%%s' % res_length
+                res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
 
-            #header[0] = '     %-127s\n' % subtitle
-            #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
-            #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
+                print('f06 res_key =', res_key)
+                for res_type in sorted(res_types):
+                    if res_key not in res_type:
+                        continue
 
-            res_length = self._get_result_length(res_types, res_key)
-            if res_length == 0:
-                asdf
-                # skipped subcase; no saved results
-                continue
-
-            res_format = '%%-%is SUBCASE=%%i%%s' % res_length
-            res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
-
-            for res_type in res_types:
-                #print("res_type ", res_type)
-                header = ['', '']
-                #header[0] = '     %s\n' % subtitle
-                header[0] = '      %-126s\n' % subtitle
-                header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
-                #print("res_type = %s" % res_type)
-
-                if res_key in res_type:
-                    #header = copy.deepcopy(headerOld)  # fixes bug in case
                     result = res_type[res_key]
+                    subtitle = result.subtitle
+                    label = result.label
+
+                    header = ['', '']
+                    header[0] = '      %-126s\n' % subtitle
+                    header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
+
                     if result.nonlinear_factor is not None:
                         header.append('')
                     try:
@@ -699,10 +683,12 @@ class F06Writer(OP2_F06_Common):
                         star = '*'
                         if hasattr(result, 'data'):
                             star = ' '
-                        if is_compressed:
-                            print(star + res_format % (result.__class__.__name__, isubcase, element_name))
+
+                        class_name = result.__class__.__name__
+                        if class_name.endswith('Array'):
+                            print(star + res_format_vectorized % (class_name, isubcase, subtitle, element_name))
                         else:
-                            print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
+                            print(star + res_format % (class_name, isubcase, element_name))
                         self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num,
                                                          f=f06, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)

@@ -998,7 +998,6 @@ class ComplexCBarForceArray(ScalarObject):
                 (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
                 (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
                  bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
-                print(dt)
 
                 f.write('0%16s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         ' %15s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
@@ -1090,6 +1089,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        raise RuntimeError('is this used...')
         msg = header + ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -1333,8 +1333,8 @@ class ComplexCBushForceArray(ScalarObject):
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
-        msg.append('  CBUSH\n')
+        # msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  CBUSH\n  ')
         msg += self.get_data_code()
         return msg
 

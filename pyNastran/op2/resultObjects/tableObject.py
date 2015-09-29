@@ -3,11 +3,37 @@ from six import iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, abs, angle, float32, ndarray, searchsorted, asarray
+from numpy import array, zeros, abs, angle, float32, ndarray, searchsorted, asarray, vstack, swapaxes, hstack
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, write_float_12E
 
+
+def append_sort1_sort2(data1, data2, to_sort1=True):
+    """
+    data1 : (ntimes, nnids, 6)
+    data2 : (nnids, ntimes, 6)
+
+    """
+    assert len(data1.shape) == 3, data1.shape
+    assert len(data2.shape) == 3, data2.shape
+    ntimes1, nnids1 = data1.shape[:2]
+    nnids2, ntimes2 = data2.shape[:2]
+    ntimes = ntimes1 + ntimes2
+    nnids = nnids1 + nnids2
+    assert ntimes1 == ntimes2
+    if to_sort1:
+        out = hstack([
+            data1,
+            swapaxes(data2, 0, 1),])
+    else:
+        out = hstack([
+            swapaxes(data1, 0, 1),
+            data2,])
+    #print(data1.shape)
+    #print(data2.shape)
+    #print(out.shape)
+    return out
 
 class TableArray(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -25,6 +51,20 @@ class TableArray(ScalarObject):  # displacement style table
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
         self._nnodes = 0  # result specific
+
+    def combine(self, result, is_sort1=True):
+        #print("combine; result=%s" % result)
+        assert self.is_sort1() != result.is_sort1()
+        assert self.nonlinear_factor is not None
+        assert result.nonlinear_factor is not None
+        # self.ntimes += result.ntimes
+        self.ntotal += result.data.shape[0]
+        self.data = append_sort1_sort2(self.data, result.data)
+        #print(self._times)
+        #print(result._times)
+        # self._times = hstack([self._times, result._times])
+        self.node_gridtype = vstack([self.node_gridtype, result.node_gridtype])
+        #print('%s' % ''.join(self.get_stats()))
 
     def _get_msgs(self, is_mag_phase):
         raise NotImplementedError()
@@ -44,7 +84,6 @@ class TableArray(ScalarObject):  # displacement style table
         ntimesi, ntotal = self.data.shape[:2]
         ntimes = len(self._times)
         nnodes = self.node_gridtype.shape[0]
-
 
         nmajor = self.ntimes
         nminor = self.ntotal
@@ -155,14 +194,14 @@ class TableArray(ScalarObject):  # displacement style table
         #print("%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6]))
 
         # the node IDs
-        #print('itime =', self.itime)
-        self._times[self.itime] = dt
+        #print('itime =', self.itotal)
+        self._times[self.itotal] = dt
 
         if 1:  # this is needed for SORT1 tables
             #inode = self.itotal // self.ntimes
             inode = self.itime
-            #print("%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, inode,
-                                                    #[node_id, grid_type]))
+            # print("%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, inode,
+                                                    # [node_id, grid_type]))
             #print("%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6]))
             self.node_gridtype[self.itime, :] = [node_id, grid_type]
             self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -601,6 +640,7 @@ class ComplexTableArray(TableArray):  # displacement style table
         gridtype = self.node_gridtype[:, 1]
 
         times = self._times
+        # print(self.data.shape)
         for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
             # TODO: for SORT1 pretending to be SORT2
             #t1 = self.data[:, inode, 0].ravel()
