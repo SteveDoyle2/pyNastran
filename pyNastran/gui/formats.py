@@ -9,7 +9,6 @@ except ImportError:
     is_cart3d = False
 
 try:
-    #from pyNastran.converters.nastran.nastranIO import NastranIO
     from pyNastran.converters.nastran.nastranIOv import NastranIO
     is_nastran = True
 except ImportError:
@@ -129,6 +128,26 @@ except ImportError:
             pass
     is_fast = False
 
+
+try:
+    from pyNastran.converters.ugrid.surf_io import SurfIO
+    is_surf = True
+except ImportError:
+    #raise
+    class SurfIO(object):
+        def __init__(self):
+            pass
+    is_surf = False
+
+try:
+    from pyNastran.converters.ugrid.ugrid_io import UGRID_IO
+    is_ugrid = True
+except ImportError:
+    #raise
+    class UGRID_IO(object):
+        def __init__(self):
+            pass
+    is_ugrid = False
 
 try:
     from pyNastran.converters.openvsp.adb_io import ADB_IO
