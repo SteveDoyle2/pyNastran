@@ -102,7 +102,15 @@ class GuiCommon(object):
         self.iCase = icase
         case = self.resultCases[key]
         label2 = ''
-        if len(key) == 5:
+        if isinstance(key, int):
+            (obj, (i, name)) = self.resultCases[key]
+            subcase_id = obj.subcase_id
+            case = obj.get_result(i, name)
+            result_type = obj.get_title(i, name)
+            vector_size = obj.get_vector_size(i, name)
+            location = obj.get_location(i, name)
+            data_format = obj.get_data_fmt(i, name)
+        elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
         elif len(key) == 6:
             (subcase_id, j, result_type, vector_size, location, data_format) = key
@@ -227,7 +235,15 @@ class GuiCommon(object):
         return grid_result
 
     def final_grid_update(self, name, grid_result, key, subtitle, label):
-        if len(key) == 5:
+        if isinstance(key, int):
+            (obj, (i, name)) = self.resultCases[key]
+            subcase_id = obj.subcase_id
+            #case = obj.get_result(i, name)
+            result_type = obj.get_title(i, name)
+            vector_size = obj.get_vector_size(i, name)
+            location = obj.get_location(i, name)
+            data_format = obj.get_data_fmt(i, name)
+        elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
         elif len(key) == 6:
             (subcase_id, j, result_type, vector_size, location, data_format) = key
@@ -349,7 +365,10 @@ class GuiCommon(object):
         return found_cases
 
     def get_result_name(self, key):
-        if len(key) == 5:
+        if isinstance(key, int):
+            (obj, (i, name)) = self.resultCases[key]
+            return name
+        elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
         elif len(key) == 6:
             (subcase_id, i, result_type, vector_size, location, data_format) = key
@@ -358,7 +377,10 @@ class GuiCommon(object):
         return result_type
 
     def get_case_location(self, key):
-        if len(key) == 5:
+        if isinstance(key, int):
+            (obj, (i, name)) = self.resultCases[key]
+            return obj.get_location(i, name)
+        elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
         elif len(key) == 6:
             (subcase_id, i, result_type, vector_size, location, data_format) = key

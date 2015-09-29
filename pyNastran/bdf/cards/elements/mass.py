@@ -727,7 +727,8 @@ class CONM2(PointMassElement):
                             double_or_blank(card, 12, 'I31', 0.0),
                             double_or_blank(card, 13, 'I32', 0.0),
                             double_or_blank(card, 14, 'I33', 0.0)])
-            assert self.I.min() >= 0., 'Imin=%s > 0; I=%s' % (self.I.min(), self.I)
+            assert self.I[:3].min() >= 0., 'I[0,1,2].min=%s >= 0; I=%s' % (self.I[:3].min(), self.I)
+            assert self.I[3:].min() <= 0., 'I[3,4,5].max=%s <= 0; I=%s' % (self.I[3:].min(), self.I)
             assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
         else:
             self.eid = data[0]

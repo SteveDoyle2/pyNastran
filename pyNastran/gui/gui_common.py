@@ -2147,7 +2147,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         data = []
         for key in self.caseKeys:
             print(key)
-            t = (key[1], [])
+            if isinstance(key, int):
+                obj, (i, name) = self.resultCases[key]
+                t = (i, [])
+            else:
+                t = (key[1], [])
             data.append(t)
 
         self.res_widget.update_results(form)
@@ -2241,10 +2245,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.caseKeys[self.iCase]
-        if len(case_key) == 5:
-            value = case_key[1]
+        if isinstance(case_key, int):
+            obj, (i, name) = self.resultCases[case_key]
+            value = name
         else:
-            value = case_key[2]
+            if len(case_key) == 5:
+                value = case_key[1]
+            else:
+                value = case_key[2]
         return value
 
     def finish_io(self, cases):

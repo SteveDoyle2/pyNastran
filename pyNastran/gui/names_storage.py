@@ -20,6 +20,7 @@ class NamesStorage(object):
         """
         adds the approximate name and value to the loaded_names dictionary
         """
+        #print('name =', name)
         key = name[:4]
         value = name[4:]
         assert len(key) == 4, key

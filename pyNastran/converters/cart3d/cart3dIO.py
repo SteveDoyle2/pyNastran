@@ -14,7 +14,7 @@ from pyNastran.converters.cart3d.input_c3d_reader import InputC3dReader
 from pyNastran.converters.cart3d.input_cntl_reader import InputCntlReader
 
 class Cart3dGeometry(Result):
-    def __init__(self, nodes, elements, regions, uname='Cart3dGeometry', labels=None):
+    def __init__(self, subcase_id, nodes, elements, regions, uname='Cart3dGeometry', labels=None):
         self.uname = uname
         self.n = 2
         self.nodes = nodes # 0
@@ -23,16 +23,47 @@ class Cart3dGeometry(Result):
         self.labels = labels
         self.data_formats = ['%i', '%i', '%i']
         self.titles = ['NodeID', 'ElementID', 'Region']
+        self.result_types = ['NodeID', 'ElementID', 'Region']
+        self.subcase_id = subcase_id
 
+    def get_location(self, i, name):
+        j = self.titles.index(name)
+        if name == 'NodeID':
+            return 'node'
+        elif name == 'ElementID':
+            return 'centroid'
+        elif name == 'Region':
+            return 'node'
+        raise NotImplementedError('i=%s' % str(i))
+
+    def get_data(self, i, name):
+        j = self.titles.index(name)
+        if name == 'NodeID':
+            return self.nodes
+        elif name == 'ElementID':
+            return self.elements
+        elif name == 'Region':
+            return self.regions
+        raise NotImplementedError('i=%s' % str(i))
+
+    def get_title(self, i, name):
+        j = self.titles.index(name)
+        return self.result_types[j]
+
+    def get_data_fmt(self, i, name):
+        j = self.titles.index(name)
+        return self.data_formats[j]
+
+    def get_vector_size(self, i, name):
+        j = self.titles.index(name)
+        return 1
 
     def get_methods(self, i):
         if i == 1:
             return ['centroid']
         return ['node']
 
-    def get_data(self, i, method):
-        print('method = %r' % method)
-        ii, name = i
+    def get_result(self, i, name):
         if name == 'NodeID':
             return self.nodes
         elif name == 'ElementID':
@@ -232,9 +263,12 @@ class Cart3dIO(object):
         self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
-        form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, model)
-        mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
-        self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
+        if 0:
+            form, cases, icase = self._fill_cart3d_case2(cases, ID, nodes, elements, regions, model)
+        else:
+            form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, model)
+            mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
+            self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
         self._finish_results_io2(form, cases)
 
     def _create_box(self, cart3d_filename, ID, form, cases, icase, regions):
@@ -446,14 +480,15 @@ class Cart3dIO(object):
         model = Cart3D(log=self.log, debug=False)
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
-    def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, loads, model):
+    def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
         print('_fill_cart3d_case2')
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
-        cart3d_geo = Cart3dGeometry(nids, eids, regions, uname='Cart3dGeometry', labels=None)
+        subcase_id = 0
+        cart3d_geo = Cart3dGeometry(subcase_id, nids, eids, regions, uname='Cart3dGeometry', labels=None)
         cases = {
             0 : (cart3d_geo, (0, 'NodeID')),
             1 : (cart3d_geo, (0, 'ElementID')),
@@ -468,7 +503,8 @@ class Cart3dIO(object):
         form = [
             ('Geometry', None, geometry_form),
         ]
-        return form, cases
+        icase = 3
+        return form, cases, icase
 
     def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, model):
         nelements = elements.shape[0]
