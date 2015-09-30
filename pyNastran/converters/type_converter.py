@@ -196,6 +196,7 @@ def process_stl(stl_filename, fmt2, fname2, data=None):
         stl_filenames = glob.glob(stl_filename)
     else:
         stl_filenames = [stl_filename]
+    assert len(stl_filenames) > 0, stl_filenames
     model = merge_stl_files(stl_filenames, stl_out_filename=None)
 
     # model = STL()
@@ -229,6 +230,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
         tecplot_filenames = glob.glob(tecplot_filename)
     else:
         tecplot_filenames = [tecplot_filename]
+    assert len(tecplot_filenames) > 0, tecplot_filename
     model = merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None)
     # model.read_tecplot(tecplot_filename)
     # if fmt2 == 'nastran':

@@ -68,7 +68,7 @@ def writeImagFloats13E(vals, is_mag_phase):
             v2 = angle(v, deg=True)
 
             v3 = '%-13.4f' % v2 if v2 >= 0.0 else '%-13.4f' % (v2 + 360.)
-            if v3 == '       0.0000':
+            if v3 == '0.0000       ':
                 v3 = '   0.0'
             vals2.append(v3)
         is_all_zeros = False

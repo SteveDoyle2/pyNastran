@@ -862,7 +862,7 @@ class ComplexCBarForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
         #[bendingMomentA, bendingMomentB, shear, axial, torque]
-        self._times[self.itotal] = dt
+        self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.element[self.itotal] = eid
         self.itotal += 1
@@ -896,14 +896,12 @@ class ComplexCBarForceArray(ScalarObject):
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
-        # write the f06
-        ntimes = self.data.shape[0]
 
         #is_sort1 = False
         if is_mag_phase:
-            mag_phase = '                                                          (MAGNITUDE/PHASE)\n'
+            mag_phase = '                                                          (MAGNITUDE/PHASE)\n \n'
         else:
-            mag_phase = '                                                          (REAL/IMAGINARY)\n'
+            mag_phase = '                                                          (REAL/IMAGINARY)\n \n'
 
 
         name = self.data_code['name']
@@ -916,8 +914,8 @@ class ComplexCBarForceArray(ScalarObject):
             line1 = '0    ELEMENT         BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
             line2 = '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n'
         else:
-            line1 = '0                    BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
-            line2 = '   %26s       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n' % name
+            line1 = '                    BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
+            line2 = '   %16s       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n' % name
 
         # force
         msg_temp = header + [
@@ -927,74 +925,88 @@ class ComplexCBarForceArray(ScalarObject):
             line1,
             line2,
         ]
-        eids = self.element
-        times = self._times
-        assert self.is_sort1() == True, str(self)
-        if is_sort1:
-            for itime in range(ntimes):
-                dt = self._times[itime]
-                dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dt_line
-                msg = header + msg_temp
-                f.write(''.join(msg))
-
-                # TODO: can I get this without a reshape?
-                #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
-                assert self.is_sort1() == True, str(self)
-                bm1a = self.data[itime, :, 0]
-                bm2a = self.data[itime, :, 1]
-                bm1b = self.data[itime, :, 2]
-                bm2b = self.data[itime, :, 3]
-                ts1 = self.data[itime, :, 4]
-                ts2 = self.data[itime, :, 5]
-                af = self.data[itime, :, 6]
-                trq = self.data[itime, :, 7]
-
-                for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
-                    vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
-                    (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
-                     bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
-
-                    f.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                eid, bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
-                                '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
-                f.write(page_stamp % page_num)
-                page_num += 1
+        if self.is_sort1():
+            assert self.is_sort1() == True, str(self)
+            if is_sort1:
+                page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+            else:
+                self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
-            for ieid, eid in enumerate(eids):
-                eid_line = ' ELEMENT-ID = %s' % (eid)
-                header[1] = eid_line
-                msg = header + msg_temp
-                f.write(''.join(msg))
-
-                # TODO: can I get this without a reshape?
-                #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
-                bm1a = self.data[:, ieid, 0]
-                bm2a = self.data[:, ieid, 1]
-                bm1b = self.data[:, ieid, 2]
-                bm2b = self.data[:, ieid, 3]
-                ts1 = self.data[:, ieid, 4]
-                ts2 = self.data[:, ieid, 5]
-                af = self.data[:, ieid, 6]
-                trq = self.data[:, ieid, 7]
-
-                for dt, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(times, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
-                    vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
-                    (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
-                     bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
-
-                    f.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                write_float_12E(dt),
-                                bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
-                                '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
-                f.write(page_stamp % page_num)
-                page_num += 1
+            assert self.is_sort1() == True, str(self)
         return page_num - 1
 
+    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+        eids = self.element
+        times = self._times
+        ntimes = self.data.shape[0]
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dt_line
+            msg = header + msg_temp
+            f.write(''.join(msg))
+
+            # TODO: can I get this without a reshape?
+            #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
+            assert self.is_sort1() == True, str(self)
+            bm1a = self.data[itime, :, 0]
+            bm2a = self.data[itime, :, 1]
+            bm1b = self.data[itime, :, 2]
+            bm2b = self.data[itime, :, 3]
+            ts1 = self.data[itime, :, 4]
+            ts2 = self.data[itime, :, 5]
+            af = self.data[itime, :, 6]
+            trq = self.data[itime, :, 7]
+
+            for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+                vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                 bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
+
+                f.write('0%16i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                        ' %14s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            eid, bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                            '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
+
+    def _write_sort1_as_sort2(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+        eids = self.element
+        times = self._times
+        ntimes = self.data.shape[0]
+        for ieid, eid in enumerate(eids):
+            eid_line = ' ELEMENT-ID = %s' % (eid)
+            header[1] = eid_line
+            msg = header + msg_temp
+            f.write(''.join(msg))
+
+            # TODO: can I get this without a reshape?
+            #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
+            bm1a = self.data[:, ieid, 0]
+            bm2a = self.data[:, ieid, 1]
+            bm1b = self.data[:, ieid, 2]
+            bm2b = self.data[:, ieid, 3]
+            ts1 = self.data[:, ieid, 4]
+            ts2 = self.data[:, ieid, 5]
+            af = self.data[:, ieid, 6]
+            trq = self.data[:, ieid, 7]
+
+            for dt, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(times, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+                vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                 bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
+
+                f.write('0%16s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                        ' %15s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            write_float_12E(dt),
+                            bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                            '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1077,6 +1089,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        raise RuntimeError('is this used...')
         msg = header + ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -1294,7 +1307,7 @@ class ComplexCBushForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         #[fx, fy, fz, mx, my, mz]
-        self._times[self.itotal] = dt
+        self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [fx, fy, fz, mx, my, mz]
         self.element[self.itotal] = eid
         self.itotal += 1
@@ -1320,8 +1333,8 @@ class ComplexCBushForceArray(ScalarObject):
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
-        msg.append('  CBUSH\n')
+        # msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  CBUSH\n  ')
         msg += self.get_data_code()
         return msg
 
@@ -1329,13 +1342,12 @@ class ComplexCBushForceArray(ScalarObject):
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
         # write the f06
-        ntimes = self.data.shape[0]
 
         #is_sort1 = False
         if is_mag_phase:
-            mag_phase = '                                                          (MAGNITUDE/PHASE)\n'
+            mag_phase = '                                                          (MAGNITUDE/PHASE)\n\n'
         else:
-            mag_phase = '                                                          (REAL/IMAGINARY)\n'
+            mag_phase = '                                                          (REAL/IMAGINARY)\n\n'
 
 
         name = self.data_code['name']
@@ -1344,97 +1356,106 @@ class ComplexCBushForceArray(ScalarObject):
         else:
             raise RuntimeError(name)
 
+        # is_sort1 = True
         if is_sort1:
-            line1 = '0    ELEMENT         BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
-            line2 = '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n'
+            line2 = '       ID.     FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n'
         else:
-            line1 = '0                    BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
-            line2 = '   %26s       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n' % name
+            line2 = '   %26s        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n' % name
 
         # force
         msg_temp = header + [
-            '                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
+            '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n',
             mag_phase,
             ' ',
-            line1,
+            # line1,
             line2,
         ]
-        eids = self.element
-        times = self._times
-        assert self.is_sort1() == True, str(self)
-        is_sort1 = True
-        if is_sort1:
-            for itime in range(ntimes):
-                dt = self._times[itime]
-                dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dt_line
-                msg = header + msg_temp
-                f.write(''.join(msg))
-
-                # TODO: can I get this without a reshape?
-                #fx, fy, fz, mx, my, mz
-                if self.is_sort1():
-                    fx = self.data[itime, :, 0]
-                    fy = self.data[itime, :, 1]
-                    fz = self.data[itime, :, 2]
-                    mx = self.data[itime, :, 3]
-                    my = self.data[itime, :, 4]
-                    mz = self.data[itime, :, 5]
-                else:
-                    fx = self.data[:, itime, 0]
-                    fy = self.data[:, itime, 1]
-                    fz = self.data[:, itime, 2]
-                    mx = self.data[:, itime, 3]
-                    my = self.data[:, itime, 4]
-                    mz = self.data[:, itime, 5]
-                    af = self.data[:, itime, 6]
-
-
-                for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
-                    vals = (fxi, fyi, fzi, mxi, myi, mzi)
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
-                    (fxir, fyir, fzir, mxir, myir, mzir,
-                     fxii, fyii, fzii, mxii, myii, mzii) = vals2
-
-                    f.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                eid, fxir, fyir, fzir, mxir, myir, mzir,
-                                '', fxii, fyii, fzii, mxii, myii, mzii))
-                f.write(page_stamp % page_num)
-                page_num += 1
+        if self.is_sort1():
+            if is_sort1:
+                page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+            else:
+                page_num = self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
-            for ieid, eid in enumerate(eids):
-                eid_line = ' ELEMENT-ID = %s' % (eid)
-                header[1] = eid_line
-                msg = header + msg_temp
-                f.write(''.join(msg))
-
-                # TODO: can I get this without a reshape?
-                if self.is_sort1():
-                    fx = self.data[:, ieid, 0]
-                    fy = self.data[:, ieid, 1]
-                    fz = self.data[:, ieid, 2]
-                    mx = self.data[:, ieid, 3]
-                    my = self.data[:, ieid, 4]
-                    mz = self.data[:, ieid, 5]
-                else:
-                    raise RuntimeError()
-
-                for dt, fxi, fyi, fzi, mxi, myi, mzi in zip(times, fx, fy, fz, mx, my, mz):
-                    vals = (fxi, fyi, fzi, mxi, myi, mzi)
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
-                    (fxir, fyir, fzir, mxir, myir, mzir,
-                     fxii, fyii, fzii, mxii, myii, mzii) = vals2
-
-                    f.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                            ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                write_float_12E(dt),
-                                fxir, fyir, fzir, mxir, myir, mzir,
-                                '', fxii, fyii, fzii, mxii, myii, mzii))
-                f.write(page_stamp % page_num)
-                page_num += 1
+            assert self.is_sort1() == True, str(self)
         return page_num - 1
 
+    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+        ntimes = self.data.shape[0]
+        eids = self.element
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dt_line
+            msg = header + msg_temp
+            f.write(''.join(msg))
+
+            # TODO: can I get this without a reshape?
+            #fx, fy, fz, mx, my, mz
+            if self.is_sort1():
+                fx = self.data[itime, :, 0]
+                fy = self.data[itime, :, 1]
+                fz = self.data[itime, :, 2]
+                mx = self.data[itime, :, 3]
+                my = self.data[itime, :, 4]
+                mz = self.data[itime, :, 5]
+            else:
+                fx = self.data[:, itime, 0]
+                fy = self.data[:, itime, 1]
+                fz = self.data[:, itime, 2]
+                mx = self.data[:, itime, 3]
+                my = self.data[:, itime, 4]
+                mz = self.data[:, itime, 5]
+                af = self.data[:, itime, 6]
+
+
+            for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
+                vals = (fxi, fyi, fzi, mxi, myi, mzi)
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                (fxir, fyir, fzir, mxir, myir, mzir,
+                 fxii, fyii, fzii, mxii, myii, mzii) = vals2
+
+                f.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                        ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            eid, fxir, fyir, fzir, mxir, myir, mzir,
+                            '', fxii, fyii, fzii, mxii, myii, mzii))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
+
+    def _write_sort1_as_sort2(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+        eids = self.element
+        times = self._times
+        for ieid, eid in enumerate(eids):
+            eid_line = ' ELEMENT-ID = %s' % (eid)
+            header[1] = eid_line
+            msg = header + msg_temp
+            f.write(''.join(msg))
+
+            # TODO: can I get this without a reshape?
+            if self.is_sort1():
+                fx = self.data[:, ieid, 0]
+                fy = self.data[:, ieid, 1]
+                fz = self.data[:, ieid, 2]
+                mx = self.data[:, ieid, 3]
+                my = self.data[:, ieid, 4]
+                mz = self.data[:, ieid, 5]
+            else:
+                raise RuntimeError()
+
+            for dt, fxi, fyi, fzi, mxi, myi, mzi in zip(times, fx, fy, fz, mx, my, mz):
+                vals = (fxi, fyi, fzi, mxi, myi, mzi)
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                (fxir, fyir, fzir, mxir, myir, mzir,
+                 fxii, fyii, fzii, mxii, myii, mzii) = vals2
+
+                f.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                        ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            write_float_12E(dt),
+                            fxir, fyir, fzir, mxir, myir, mzir,
+                            '', fxii, fyii, fzii, mxii, myii, mzii))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
 
 class ComplexCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
