@@ -206,16 +206,14 @@ class OP2(OP2_Scalar):
                 continue
             for isubcase in unique_isubcases:
                 keys = self.subcase_key[isubcase]
-                #keys = result.keys()
-                #if not len(keys):
-                #    continue
                 key0 = tuple([isubcase] + list(keys[0]))
-                #print(keys)
                 if len(keys) == 1:
+                    if key0 not in result:
+                        continue
                     # rename the case since we have only one tuple for the result
                     # key0 = tuple([isubcase] + list(key0))
                     result[isubcase] = result[key0]
-                    del result[key]
+                    del result[key0]
                 elif len(keys) == 2:
                     # continue
                     print('key0 =', result_type, key0)
@@ -253,9 +251,18 @@ class OP2(OP2_Scalar):
                     self.log.info("continue")
                     continue
             setattr(self, result_type, result)
-        # print('**********', self.displacements.keys())
 
-
+        subcase_key2 = {}
+        for result_type in result_types:
+            result = getattr(self, result_type)
+            case_keys = sorted(result.keys())
+            if len(result) == 0:
+                continue
+            for isubcase in unique_isubcases:
+                for case_key in case_keys:
+                    if isubcase in subcase_key2 and case_key not in subcase_key2[isubcase]:
+                        subcase_key2[isubcase].append(case_key)
+        self.subcase_key = subcase_key2
 
 
 def main():

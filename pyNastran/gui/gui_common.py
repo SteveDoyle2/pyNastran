@@ -17,7 +17,7 @@ from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import eye, array, zeros, loadtxt
+from numpy import eye, array, zeros, loadtxt, int32
 from numpy.linalg import norm
 
 import pyNastran
@@ -2147,7 +2147,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         data = []
         for key in self.caseKeys:
             print(key)
-            t = (key[1], [])
+            if isinstance(key, int):
+                obj, (i, name) = self.resultCases[key]
+                t = (i, [])
+            else:
+                t = (key[1], [])
             data.append(t)
 
         self.res_widget.update_results(form)
@@ -2221,7 +2225,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         node_id = cell.GetPointId(imin)
         xyz = array(point_min, dtype='float32')
-        result_values = self.resultCases[case_key][node_id]
+        case = self.resultCases[case_key]
+        if isinstance(case_key, (int, int32)):
+            (obj, (i, res_name)) = case
+            subcase_id = obj.subcase_id
+            case = obj.get_result(i, res_name)
+            result_values = case[node_id]
+        else:
+            result_values = case[node_id]
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
 
@@ -2241,10 +2252,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.caseKeys[self.iCase]
-        if len(case_key) == 5:
-            value = case_key[1]
+        if isinstance(case_key, int):
+            obj, (i, name) = self.resultCases[case_key]
+            value = name
         else:
-            value = case_key[2]
+            if len(case_key) == 5:
+                value = case_key[1]
+            else:
+                value = case_key[2]
         return value
 
     def finish_io(self, cases):
@@ -2501,17 +2516,31 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
-        if len(key) == 5:
+        if isinstance(key, (int, int32)):
+            #(subcase_id, result_type, vector_size, location, data_format) = key
+            (obj, (i, res_name)) = self.resultCases[key]
+            #subcase_id = obj.subcase_id
+            case = obj.get_result(i, res_name)
+            result_type = obj.get_title(i, res_name)
+            #vector_size = obj.get_vector_size(i, res_name)
+            #location = obj.get_location(i, res_name)
+            data_format = obj.get_data_format(i, res_name)
+            scale = obj.get_scale(i, res_name)
+        elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
+            scale = 0.0
         elif len(key) == 6:
             (subcase_id, i, result_type, vector_size, location, data_format) = key
+            scale = 0.0
         else:
             (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+            scale = 0.0
 
         data = {
             'name' : result_type,
             'min' : case.min(),
             'max' : case.max(),
+            'scale' : scale,
             'format' : data_format,
             'is_blue_to_red' : True,
             'is_discrete': True,
@@ -2536,25 +2565,37 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         title = data['name']
         min_value = data['min']
         max_value = data['max']
+        scale_value = data['scale']
         data_format = data['format']
         is_blue_to_red = data['is_blue_to_red']
         is_discrete = data['is_discrete']
         is_horizontal = data['is_horizontal']
         is_shown = data['is_shown']
-        self.on_update_legend(Title=title, min_value=min_value, max_value=max_value,
+        self.on_update_legend(Title=title, min_value=min_value, max_value=max_value, scale=scale_value,
                               data_format=data_format,
                               is_blue_to_red=is_blue_to_red,
                               is_discrete=is_discrete, is_horizontal=is_horizontal,
                               is_shown=is_shown)
 
-    def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
+    def on_update_legend(self, Title='Title', min_value=0., max_value=1., scale=0.0,
                          data_format='%.0f',
                          is_blue_to_red=True, is_discrete=True, is_horizontal=True,
                          is_shown=True):
 
+
         key = self.caseKeys[self.iCase]
-        case = self.resultCases[key]
-        if len(key) == 5:
+        if isinstance(key, (int, int32)):
+            case = self.resultCases[key]
+            #(subcase_id, result_type, vector_size, location, data_format) = key
+            (obj, (i, res_name)) = self.resultCases[key]
+            subcase_id = obj.subcase_id
+            case = obj.get_result(i, res_name)
+            result_type = obj.get_title(i, res_name)
+            vector_size = obj.get_vector_size(i, res_name)
+            #location = obj.get_location(i, res_name)
+            #data_format = obj.get_data_format(i, res_name)
+            obj.set_scale(i, res_name, scale)
+        elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, _data_format) = key
         elif len(key) == 6:
             (subcase_id, i, result_type, vector_size, location, _data_format) = key
@@ -2562,7 +2603,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (subcase_id, i, result_type, vector_size, location, _data_format, label2) = key
 
         subtitle, label = self.get_subtitle_label(subcase_id)
-        name = (vector_size, subcase_id, result_type, label, min_value, max_value)
+        name = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
 
         norm_value = float(max_value - min_value)
         #if name not in self._loaded_names:

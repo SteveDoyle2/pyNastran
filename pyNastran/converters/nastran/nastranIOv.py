@@ -7,6 +7,7 @@ Defines the GUI IO file for Nastran.
 from __future__ import print_function
 from six import iteritems, itervalues
 from six.moves import zip, range
+from copy import deepcopy
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -59,6 +60,84 @@ except ImportError:
     is_geom = False
 #from pyNastran.f06.f06 import F06
 is_geom = False
+
+class NastranComplexDisplacementResults(object):
+    def __init__(self, subcase_id, labels, xyz, dxyz, scalar,
+                 default_scale=40., uname='NastranGeometry'):
+        self.subcase_id = subcase_id
+        self.labels = labels
+        self.data_formats = ['%g', '%g', '%g']
+        self.xyz = xyz
+        self.dxyz = dxyz
+        self.dxyz_norm = norm(dxyz, axis=1)
+        self.labels = labels
+        self.titles = deepcopy(labels)
+        self.scale = default_scale
+        self.default_scale = default_scale
+
+        #theta = (2*np.pi * i/frame) % (2 * pi)
+        theta = 0.0
+
+        # calculate deflections
+        eigvs = model.eigenvectors[1000].data[6, :, :]
+        defl = scale * (np.real(eigvs[:,:3]) * np.cos(theta) + np.imag(eigvs[:,:3]) * sin(theta))
+
+class NastranDisplacementResults(object):
+    def __init__(self, subcase_id, labels, xyz, dxyz, scalar,
+                 default_scale=40., uname='NastranGeometry'):
+        self.subcase_id = subcase_id
+        self.labels = labels
+        self.data_formats = ['%g', '%g', '%g']
+        self.xyz = xyz
+        self.dxyz = dxyz
+        self.dxyz_norm = norm(dxyz, axis=1)
+        self.labels = labels
+        self.titles = deepcopy(labels)
+        self.scale = default_scale
+        self.default_scale = default_scale
+        #self.result_types = ['NodeID', 'ElementID', 'Region',
+                             #'NormalX', 'NormalY', 'NormalZ', ]
+        self.subcase_id = subcase_id
+
+    def get_location(self, i, name):
+        return 'node'
+
+    def get_title(self, i, name):
+        j = self.titles.index(name)
+        return self.labels[j]
+
+    def get_data_format(self, i, name):
+        j = self.titles.index(name)
+        return self.data_formats[j]
+
+    def get_vector_size(self, i, name):
+        j = self.titles.index(name)
+        return 3
+
+    def get_methods(self, i):
+        return ['node']
+
+    def get_result(self, i, name):
+        return self.dxyz
+
+    def get_vector_result(self, i, name):
+        print(self.xyz.shape)
+        print(self.dxyz.shape)
+        print(self.scale)
+        xyz = self.xyz + self.scale * self.dxyz
+        return self.xyz, xyz, self.dxyz_norm
+
+    def get_scale(self, i, name):
+        j = self.titles.index(name)
+        return self.scale
+
+    def set_scale(self, i, name, scale):
+        self.scale = scale
+
+    def __repr__(self):
+        msg = 'NastranDisplacementResults\n'
+        msg += '    uname=%r\n' % self.uname
+        return msg
 
 class NastranIO(object):
     """
@@ -456,12 +535,13 @@ class NastranIO(object):
         zmax = position0[2]
         if self.save_data:
             self.model = model
-            n = len(model.nodes)
-            xyz_cid0 = zeros((n, 3), dtype='float64')
-            for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-                xyz = node.get_position()
-                xyz_cid0[i, :] = xyz
-            self.xyz_cid0 = xyz_cid0
+
+        n = len(model.nodes)
+        xyz_cid0 = zeros((n, 3), dtype='float32')
+        for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+            xyz = node.get_position()
+            xyz_cid0[i, :] = xyz
+        self.xyz_cid0 = xyz_cid0
 
         self._create_nastran_coords(model)
 
@@ -1852,7 +1932,7 @@ class NastranIO(object):
                 for result in desired_results:
                     if result in all_results:
                         model._results.saved.add(result)
-            model.read_op2(op2_filename)
+            model.read_op2(op2_filename, combine=True)
 
             self.log.info(model.get_op2_stats())
             print(model.get_op2_stats())
@@ -1911,6 +1991,49 @@ class NastranIO(object):
 
         self._finish_results_io2(form, cases)
 
+    def __fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
+        print('_fill_cart3d_case2')
+        nelements = elements.shape[0]
+        nnodes = nodes.shape[0]
+
+        eids = arange(1, nelements + 1)
+        nids = arange(1, nnodes + 1)
+        cnormals = model.get_normals(shift_nodes=False)
+        cnnodes = cnormals.shape[0]
+        assert cnnodes == nelements, len(cnnodes)
+
+        #print('nnodes =', nnodes)
+        #print('nelements =', nelements)
+        #print('regions.shape =', regions.shape)
+        subcase_id = 0
+        labels = ['NodeID', 'ElementID', 'Region',
+                  'Normal X', 'Normal Y', 'Normal Z']
+        cart3d_geo = Cart3dGeometry(subcase_id, labels,
+                                    nids, eids, regions, cnormals,
+                                    uname='Cart3dGeometry')
+
+        cases = {
+            0 : (cart3d_geo, (0, 'NodeID')),
+            1 : (cart3d_geo, (0, 'ElementID')),
+            2 : (cart3d_geo, (0, 'Region')),
+            3 : (cart3d_geo, (0, 'NormalX')),
+            4 : (cart3d_geo, (0, 'NormalY')),
+            5 : (cart3d_geo, (0, 'NormalZ')),
+        }
+        geometry_form = [
+            ('NodeID', 0, []),
+            ('ElementID', 1, []),
+            ('Region', 2, []),
+            ('Normal X', 3, []),
+            ('Normal Y', 4, []),
+            ('Normal Z', 5, []),
+        ]
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+        icase = 6
+        return form, cases, icase
+
     def fill_oug_oqg(self, cases, model, subcase_id, formi, icase):
         """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
@@ -1935,18 +2058,13 @@ class NastranIO(object):
         ]
         nids = self.node_ids
 
-        case_key_slots = model.subcase_key[subcase_id]
-        #if len(case_key_slots) == 0:
-        #    return
-        if isinstance(case_key_slots, (int, int32)):
-            is_combined = False
-            keys = [subcase_id]
-        else:
-            is_combined = True
-            keys = [(subcase_id, analysis_code, sort_method, count, subtitle) for analysis_code, sort_method, count, subtitle in case_key_slots]
-
         for (result, name) in displacement_like:
+            keys = result.keys()
+            if len(keys) == 0:
+                continue
+
             for key in keys:
+                #print('dkey =', key)
                 if key in result:
                     case = result[key]
                     if not hasattr(case, 'data'):
@@ -1954,7 +2072,6 @@ class NastranIO(object):
                     if not case.is_real():
                         continue
                     if case.nonlinear_factor is not None: # transient
-                        #ntimes = len(case._times)
                         code_name = case.data_code['name']
                         has_cycle = hasattr(case, 'mode_cycle')
 
@@ -2006,7 +2123,7 @@ class NastranIO(object):
                             if has_cycle:
                                 freq = case.eigrs[itime]
                                 #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-                                cycle = sqrt(abs(freq))/(2. * pi)
+                                cycle = sqrt(abs(freq)) / (2. * pi)
                                 header += '; freq=%g' % cycle
 
                             form0 = (header, None, [])
@@ -2031,36 +2148,51 @@ class NastranIO(object):
 
                             formi.append(form0)
                     else:
-                        t1 = case.data[0, :, 0]
-                        t2 = case.data[0, :, 1]
-                        t3 = case.data[0, :, 2]
+                        assert case.is_sort1(), case.is_sort1()
+
                         t123 = case.data[0, :, :3]
                         tnorm = norm(t123, axis=1)
+                        if name == 'Displacement':
+                            print('*name = %r' % name)
+                            subcase_id = 0
+                            labels = [name + 'XYZ']
+                            nastran_res = NastranDisplacementResults(subcase_id, labels,
+                                                                     self.xyz_cid0, t123, tnorm,
+                                                                     default_scale=40.,
+                                                                     uname='NastranGeometry')
+                            cases[icase] = (nastran_res, (0, name + 'XYZ'))
+                            #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
+                            formi.append((name + 'XYZ', icase, []))
+                            icase += 1
+                        else:
+                            print('name = %r' % name)
+                            t1 = case.data[0, :, 0]
+                            t2 = case.data[0, :, 1]
+                            t3 = case.data[0, :, 2]
 
+                            if(t1.min() == t1.max() and t2.min() == t2.max() and
+                               t3.min() == t3.max() and t123.min() == t123.max()):
+                                continue
+                            #if t1.min() != t1.max():
+                            cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
+                            formi.append((name + 'X', icase, []))
+                            icase += 1
 
-                        if(t1.min() == t1.max() and t2.min() == t2.max() and
-                           t3.min() == t3.max() and t123.min() == t123.max()):
-                            continue
-                        #if t1.min() != t1.max():
-                        cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
-                        formi.append((name + 'X', icase, []))
-                        icase += 1
+                            #if t2.min() != t2.max():
+                            cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
+                            formi.append((name + 'Y', icase, []))
+                            icase += 1
 
-                        #if t2.min() != t2.max():
-                        cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
-                        formi.append((name + 'Y', icase, []))
-                        icase += 1
+                            #if t3.min() != t3.max():
+                            cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
+                            formi.append((name + 'Z', icase, []))
+                            icase += 1
 
-                        #if t3.min() != t3.max():
-                        cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
-                        formi.append((name + 'Z', icase, []))
-                        icase += 1
-
-                        #if t123.min() != t123.max():
-                        cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
-                        #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
-                        formi.append((name + 'XYZ', icase, []))
-                        icase += 1
+                            #if t123.min() != t123.max():
+                            cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
+                            #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
+                            formi.append((name + 'XYZ', icase, []))
+                            icase += 1
 
         for (result, name) in temperature_like:
             if subcase_id in result:
