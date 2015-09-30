@@ -83,35 +83,34 @@ class NastranComplexDisplacementResults(object):
         defl = scale * (np.real(eigvs[:,:3]) * np.cos(theta) + np.imag(eigvs[:,:3]) * sin(theta))
 
 class NastranDisplacementResults(object):
-    def __init__(self, subcase_id, labels, xyz, dxyz, scalar,
+    def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
                  default_scale=40., uname='NastranGeometry'):
         self.subcase_id = subcase_id
-        self.labels = labels
         self.data_formats = ['%g', '%g', '%g']
         self.xyz = xyz
         self.dxyz = dxyz
         self.dxyz_norm = norm(dxyz, axis=1)
-        self.labels = labels
-        self.titles = deepcopy(labels)
+        self.titles = titles
         self.scale = default_scale
-        self.default_scale = default_scale
-        #self.result_types = ['NodeID', 'ElementID', 'Region',
-                             #'NormalX', 'NormalY', 'NormalZ', ]
         self.subcase_id = subcase_id
+
+        self.titles_default = deepcopy(titles)
+        self.data_formats_default = deepcopy(self.data_formats)
+        self.default_scale = default_scale
 
     def get_location(self, i, name):
         return 'node'
 
     def get_title(self, i, name):
-        j = self.titles.index(name)
-        return self.labels[j]
+        j = self.titles_default.index(name)
+        return self.titles[j]
 
     def get_data_format(self, i, name):
-        j = self.titles.index(name)
+        j = self.titles_default.index(name)
         return self.data_formats[j]
 
     def get_vector_size(self, i, name):
-        j = self.titles.index(name)
+        j = self.titles_default.index(name)
         return 3
 
     def get_methods(self, i):
@@ -121,14 +120,11 @@ class NastranDisplacementResults(object):
         return self.dxyz
 
     def get_vector_result(self, i, name):
-        print(self.xyz.shape)
-        print(self.dxyz.shape)
-        print(self.scale)
         xyz = self.xyz + self.scale * self.dxyz
         return self.xyz, xyz, self.dxyz_norm
 
     def get_scale(self, i, name):
-        j = self.titles.index(name)
+        j = self.titles_default.index(name)
         return self.scale
 
     def set_scale(self, i, name, scale):

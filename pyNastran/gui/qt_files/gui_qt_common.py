@@ -279,6 +279,8 @@ class GuiCommon(object):
 
     def _final_grid_update(self, name, grid_result, obj, i, res_name,
                            vector_size, subcase_id, result_type, location, subtitle, label):
+        if name is None:
+            return
         name_str = self._names_storage.get_name_string(name)
         if not self._names_storage.has_exact_name(name):
             grid_result.SetName(name_str)

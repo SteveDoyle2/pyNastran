@@ -2584,36 +2584,56 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
 
         key = self.caseKeys[self.iCase]
+        name_vector = None
+        case = self.resultCases[key]
+        vector_size1 = 1
         if isinstance(key, (int, int32)):
-            case = self.resultCases[key]
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.resultCases[key]
             subcase_id = obj.subcase_id
             case = obj.get_result(i, res_name)
             result_type = obj.get_title(i, res_name)
             vector_size = obj.get_vector_size(i, res_name)
-            #location = obj.get_location(i, res_name)
+            location = obj.get_location(i, res_name)
             #data_format = obj.get_data_format(i, res_name)
             obj.set_scale(i, res_name, scale)
+            subtitle, label = self.get_subtitle_label(subcase_id)
+            name_vector = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale)
         elif len(key) == 5:
-            (subcase_id, result_type, vector_size, location, _data_format) = key
+            (subcase_id, result_type, vector_size1, location, _data_format) = key
         elif len(key) == 6:
-            (subcase_id, i, result_type, vector_size, location, _data_format) = key
+            (subcase_id, i, result_type, vector_size1, location, _data_format) = key
         else:
-            (subcase_id, i, result_type, vector_size, location, _data_format, label2) = key
+            (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
 
         subtitle, label = self.get_subtitle_label(subcase_id)
-        name = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
+        scale1 = 1.0
+        name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
+        # if vector_size == 3:
 
         norm_value = float(max_value - min_value)
-        #if name not in self._loaded_names:
+        # if name not in self._loaded_names:
         grid_result = self.set_grid_values(name, case, vector_size,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)
+
+        grid_result_vector = None
+        if name_vector:
+            vector_size = 3
+            grid_result_vector = self.set_grid_values(name_vector, case, vector_size,
+                                                      min_value, max_value, norm_value,
+                                                      is_blue_to_red=is_blue_to_red)
+
         self.update_scalar_bar(Title, min_value, max_value, norm_value,
                                data_format, is_blue_to_red=is_blue_to_red,
                                is_horizontal=is_horizontal, is_shown=is_shown)
-        self.final_grid_update(name, grid_result, key, subtitle, label)
+
+        self._final_grid_update(name, grid_result, None, None, None,
+                                1, subcase_id, result_type, location, subtitle, label)
+        if vector_size == 3:
+            self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
+                                    vector_size, subcase_id, result_type, location, subtitle, label)
+
         self.is_horizontal_scalar_bar = is_horizontal
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
                          '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
