@@ -24,7 +24,7 @@ class NamesStorage(object):
         key = name[:4]
         value = name[4:]
         assert len(key) == 4, key
-        assert len(value) == 2, value
+        #assert len(value) == 2, value
         assert key not in self.loaded_names
         self.loaded_names[key] = value
         #self.loaded_names.add(name)

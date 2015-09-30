@@ -11,6 +11,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_min = data['min']
         self._default_max = data['max']
         self._default_format = data['format']
+        self._default_scale = data['scale']
         self._default_is_blue_to_red = data['is_blue_to_red']
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
@@ -46,6 +47,14 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.format = QtGui.QLabel("Format (e.g. %.3f, %g, %.6e):")
         self.format_edit = QtGui.QLineEdit(str(self._default_format))
         self.format_button = QtGui.QPushButton("Default")
+
+        # Scale
+        self.scale = QtGui.QLabel("Scale:")
+        self.scale_edit = QtGui.QLineEdit(str(self._default_scale))
+        self.scale_button = QtGui.QPushButton("Default")
+        if self._default_scale == 0.0:
+            self.scale_edit.setEnabled(False)
+            self.scale_button.setEnabled(False)
         #tip = QtGui.QToolTip()
         #tip.setTe
         #self.format_edit.toolTip(tip)
@@ -112,6 +121,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
         grid.addWidget(self.format_edit, 3, 1)
         grid.addWidget(self.format_button, 3, 2)
 
+        grid.addWidget(self.scale, 4, 0)
+        grid.addWidget(self.scale_edit, 4, 1)
+        grid.addWidget(self.scale_button, 4, 2)
+
         ok_cancel_box = QtGui.QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
@@ -168,6 +181,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
         self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
         self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
+        self.connect(self.scale_button, QtCore.SIGNAL('clicked()'), self.on_default_scale)
 
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
@@ -191,6 +205,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def on_default_format(self):
         self.format_edit.setText(str(self._default_format))
         self.format_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_scale(self):
+        self.scale_edit.setText(str(self._default_scale))
+        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def check_float(self, cell):
         text = cell.text()
@@ -251,14 +269,16 @@ class LegendPropertiesWindow(QtGui.QDialog):
         min_value, flag1 = self.check_float(self.min_edit)
         max_value, flag2 = self.check_float(self.max_edit)
         format_value, flag3 = self.check_format(self.format_edit)
+        scale_value, flag4 = self.check_float(self.scale_edit)
         if 'i' in format_value:
             format_value = '%i'
 
-        if flag0 and flag1 and flag2 and flag3:
+        if flag0 and flag1 and flag2 and flag3 and flag4:
             self.out_data['name'] = name_value
             self.out_data['min'] = min_value
             self.out_data['max'] = max_value
             self.out_data['format'] = format_value
+            self.out_data['scale'] = scale_value
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
             self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
             self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()
