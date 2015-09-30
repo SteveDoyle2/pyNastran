@@ -3,13 +3,14 @@ models from:
     http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
 """
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, string_types
 
 import os
 from struct import unpack
 from collections import defaultdict
 
-from numpy import array, vstack, hstack, where, unique, savetxt, zeros
+from numpy import array, vstack, hstack, where, unique, savetxt, zeros, arange
+import numpy as np
 
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
@@ -52,9 +53,11 @@ class Tecplot(FortranFormat):
         """
         Reads an ASCII/binary Tecplot file.
 
-        The binary file reader must have ONLY CHEXAs and be Tecplot 360.
+        The binary file reader must have ONLY CHEXAs and be Tecplot 360 with
+        `rho`, `u`, `v`, `w`, and `p`.
         The ASCII file reader has only been tested with Tecplot 10, but will
-        probably work on Tecplot360.
+        probably work on Tecplot360.  It **should** work with any set of
+        variables.
         """
         if is_binary_file(tecplot_filename):
             return self.read_tecplot_binary(tecplot_filename)
@@ -313,7 +316,6 @@ class Tecplot(FortranFormat):
                     break
                 self.log.debug('final sline=%s' % sline)
 
-        #f.close()
         self.log.debug('stacking elements')
         if len(hexas_list):
             self.hexa_elements = vstack(hexas_list)
@@ -356,6 +358,10 @@ class Tecplot(FortranFormat):
                 self.quad_elements.shape[0] + self.tri_elements.shape[0])
 
     def read_tecplot_binary(self, tecplot_filename, nnodes=None, nelements=None):
+        """
+        The binary file reader must have ONLY CHEXAs and be Tecplot 360 with
+        `rho`, `u`, `v`, `w`, and `p`.
+        """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
         tecplot_file = open(tecplot_filename, 'rb')
@@ -366,7 +372,7 @@ class Tecplot(FortranFormat):
         data = self.f.read(8)
         self.n += 8
         word, = unpack(b'8s', data)
-        #print('word = ', word)
+        print('word = ', word)
 
         values = []
         ii = 0
@@ -494,26 +500,107 @@ class Tecplot(FortranFormat):
         self.results = results
         del self.f
 
-    def write_tecplot(self, tecplot_filename, adjust_nids=True):
+    def slice_x(self, xslice):
+        x = self.xyz[:, 0]
+        self._slice_plane(x, xslice)
+
+    def slice_y(self, yslice):
+        y = self.xyz[:, 1]
+        self._slice_plane(y, yslice)
+
+    def slice_z(self, zslice):
+        z = self.xyz[:, 2]
+        self._slice_plane(z, zslice)
+
+    def _slice_plane(self, y, slice_value):
+        """
+        - Only works for CHEXA
+        - Doesn't remove unused nodes/renumber elements
+        """
+        slice_value = float(slice_value)
+        inodes = where(y < slice_value)[0]
+        #print('inodes =', inodes)
+
+        old_num = inodes
+        new_num = arange(self.xyz.shape[0], dtype='int32')
+        #print('old =', old_num)
+        #print('new =', new_num)
+
+        # lookup_table = dict( zip( old_num, new_num ) ) # create your translation dict
+        # vect_lookup = np.vectorize( lookup_table.get ) # create a function to do the translation
+
+        nhexas = self.hexa_elements.shape[0]
+        if nhexas:
+            #boolean_hexa = self.hexa_elements.ravel() == inodes
+            #boolean_hexa = (self.hexa_elements.ravel() == inodes)#.all(axis=1)
+            boolean_hexa = np.in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
+            # print(boolean_hexa)
+            # assert len(boolean_hexa) == self.hexa_elements.shape[0]
+            assert True in boolean_hexa
+            irow, icol = where(boolean_hexa)
+            isave = unique(irow)
+            nsave = len(isave)
+            self.hexa_elements = self.hexa_elements[isave, :]
+            # print(self.hexa_elements)
+            #self.hexa_elements =
+
+            # vect_lookup(self.hexa_elements) # Reassign the elements you want to change
+            self.hexa_elements.reshape(nsave, 8)
+
+        # print(boolean_hexa)
+        # for hexa in hexas:
+            # if
+        # self.hexa_elements
+
+    def write_tecplot(self, tecplot_filename, res_types=None, is_points=True, adjust_nids=True):
         """
         Only handles single type writing
+
+        Parameters
+        ----------
+        tecplot_filename : str
+            the path to the output file
+        res_types : str; List[str, str, ...]; default=None -> all
+            the results that will be written (must be consistent with self.variables)
+        is_points : bool; default=True
+            write in POINT format vs. BLOCK format
+        adjust_nids : bool; default=True
+            element_ids are 0-based in binary and must be switched to 1-based in ASCII
         """
+        self.log.info('writing tecplot %s' % tecplot_filename)
         tecplot_file = open(tecplot_filename, 'w')
         is_results = bool(len(self.results))
         msg = 'TITLE     = "tecplot geometry and solution file"\n'
         msg += 'VARIABLES = "x"\n'
         msg += '"y"\n'
         msg += '"z"\n'
+        if res_types is None:
+            res_types = self.variables
+        elif isinstance(res_types, string_types):
+            res_types = [res_types]
+        result_indices_to_write = []
         if is_results:
-            print('vars =', self.variables)
-            for var in self.variables:
-                msg += '"%s"\n' % var
             #msg += '"rho"\n'
             #msg += '"u"\n'
             #msg += '"v"\n'
             #msg += '"w"\n'
             #msg += '"p"\n'
-        # msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
+            # msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
+            # print('res_types =', res_types)
+            # print('vars =', self.variables)
+            for ivar, var in enumerate(res_types):
+                if var not in self.variables:
+                    raise RuntimeError('var=%r not in variables=%s' % (var, self.variables))
+                result_indices_to_write.append(self.variables.index(var))
+            ivars = unique(result_indices_to_write)
+            ivars.sort()
+            for ivar in ivars:
+                var = self.variables[ivar]
+                msg += '"%s"\n' % var
+            # print('ivars =', ivars)
+        else:
+            assert len(res_types) == 0, len(res_types)
+            ivars = []
         msg += 'ZONE '
 
         etype_elements = [
@@ -568,13 +655,12 @@ class Tecplot(FortranFormat):
 
         # xyz
         assert self.nnodes > 0, 'nnodes=%s' % self.nnodes
-        nresults = len(self.result_names)
+        nresults = len(ivars)
         if is_points:
             if nresults:
-                nresults2 = self.results.shape[1]
-                assert nresults == nresults2, 'nresults=%s nresults2=%s' % (nresults, nresults2)
+                res = self.results[:, ivars]
                 try:
-                    data = hstack([self.xyz, self.results])
+                    data = hstack([self.xyz, res])
                 except ValueError:
                     msg = 'Cant hstack...\n'
                     msg += 'xyz.shape=%s\n' % str(self.xyz.shape)
@@ -592,7 +678,6 @@ class Tecplot(FortranFormat):
             #nvalues_per_line = 5
             for ivar in range(3):
                 #tecplot_file.write('# ivar=%i\n' % ivar)
-                #print('xyz.shape =', self.xyz.shape)
                 vals = self.xyz[:, ivar].ravel()
                 msg = ''
                 for ival, val in enumerate(vals):
@@ -602,12 +687,11 @@ class Tecplot(FortranFormat):
                         msg = '\n'
                 tecplot_file.write(msg.rstrip() + '\n')
 
-            if is_results:
-                nresults2 = self.results.shape[1]
-                assert nresults == nresults2, 'nresults=%s nresults2=%s' % (nresults, nresults2)
-                for ivar in range(nnodes_per_element):
+            if nresults:
+                # print('nnodes_per_element =', nnodes_per_element)
+                # for ivar in range(nnodes_per_element):
+                for ivar in ivars:
                     #tecplot_file.write('# ivar=%i\n' % ivar)
-                    #print('xyz.shape =', self.xyz.shape)
                     vals = self.results[:, ivar].ravel()
                     msg = ''
                     for ival, val in enumerate(vals):
@@ -638,8 +722,11 @@ class Tecplot(FortranFormat):
             elements += 1
         self.log.info('inode_min = %s' % elements.min())
         self.log.info('inode_max = %s' % elements.max())
-        assert elements.min() == 1, elements.min()
-        assert elements.max() == nnodes, elements.max()
+        assert elements.min() >= 1, elements.min()
+        assert elements.max() <= nnodes, elements.max()
+        # assert elements.min() == 1, elements.min()
+        # assert elements.max() == nnodes, elements.max()
+
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
         tecplot_file.close()

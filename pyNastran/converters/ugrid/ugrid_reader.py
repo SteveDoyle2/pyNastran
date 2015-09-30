@@ -257,41 +257,7 @@ class UGRID(object):
         bdf_file.close()
 
     def write_tecplot(self, tecplot_filename):
-        nnodes = len(self.nodes)
-        nodes = zeros((nnodes, 3), dtype='float64')
-        elements = []
-
-        ntets = len(self.tets)
-        non_tets = len(self.penta5s) + len(self.penta6s) + len(self.hexas)
-
-        tecplot = Tecplot()
-        tecplot.xyz = self.nodes
-
-        if ntets and non_tets == 0:
-            elements = self.tets
-            tecplot.tet_elements = elements - 1
-        elif non_tets:
-            for element in self.tets:
-                n1, n2, n3, n4 = element
-                elements.append([n1, n2, n3, n4,
-                                 n4, n4, n4, n4])
-            for element in self.penta5s:
-                n1, n2, n3, n4, n5 = element
-                elements.append([n1, n2, n3, n4,
-                                 n5, n5, n5, n5])
-            for element in self.penta6s:
-                n1, n2, n3, n4, n5, n6 = element
-                elements.append([n1, n2, n3, n4,
-                                 n5, n6, n6, n6])
-            for element in self.hexas:
-                n1, n2, n3, n4, n5, n6, n7, n8 = element
-                elements.append([n1, n2, n3, n4,
-                                 n5, n6, n7, n8])
-            elements = array(elements, dtype='int32') - 1
-            tecplot.hexa_elements = elements
-        else:
-            raise RuntimeError()
-
+        tecplot = ugrid_to_tecplot(self)
         tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
         tecplot.results = array([], dtype='float32')
 
@@ -794,13 +760,9 @@ class UGRID(object):
                     # spits out 3
                 else:
                     asdf
-
-
             #type1 = type_mapper[i1]
             #type2 = type_mapper[i2]
             #if type1:
-
-
             #asdf
         faces_file.write(')\n')
         faces_file.close()
@@ -835,6 +797,43 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
         raise NotImplementedError(msg)
     return ndarray_float, float_fmt, nfloat, endian
 
+
+def ugrid_to_tecplot(ugrid_model):
+    nnodes = len(ugrid_model.nodes)
+    nodes = zeros((nnodes, 3), dtype='float64')
+    elements = []
+
+    ntets = len(ugrid_model.tets)
+    non_tets = len(ugrid_model.penta5s) + len(ugrid_model.penta6s) + len(ugrid_model.hexas)
+
+    tecplot = Tecplot()
+    tecplot.xyz = ugrid_model.nodes
+
+    if ntets and non_tets == 0:
+        elements = ugrid_model.tets
+        tecplot.tet_elements = elements - 1
+    elif non_tets:
+        for element in ugrid_model.tets:
+            n1, n2, n3, n4 = element
+            elements.append([n1, n2, n3, n4,
+                             n4, n4, n4, n4])
+        for element in ugrid_model.penta5s:
+            n1, n2, n3, n4, n5 = element
+            elements.append([n1, n2, n3, n4,
+                             n5, n5, n5, n5])
+        for element in ugrid_model.penta6s:
+            n1, n2, n3, n4, n5, n6 = element
+            elements.append([n1, n2, n3, n4,
+                             n5, n6, n6, n6])
+        for element in ugrid_model.hexas:
+            n1, n2, n3, n4, n5, n6, n7, n8 = element
+            elements.append([n1, n2, n3, n4,
+                             n5, n6, n7, n8])
+        elements = array(elements, dtype='int32') - 1
+        tecplot.hexa_elements = elements
+    else:
+        raise RuntimeError()
+    return tecplot
 
 def main():
     ugrid_filename = 'bay_steve_recon1_fixed0.b8.ugrid'
