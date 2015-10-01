@@ -52,6 +52,19 @@ class GuiCommon(object):
             for cid, axes in iteritems(self.axes):
                 axes.SetTotalLength(dim_max, dim_max, dim_max)
 
+    @property
+    def displacement_scale_factor(self):
+        """
+        # dim_max = max_val * scale
+        # scale = dim_max / max_val
+        # 0.25 added just cause
+
+        scale = self.displacement_scale_factor / tnorm_abs_max
+        """
+        #scale = self.dim_max / tnorm_abs_max * 0.25
+        scale = self.dim_max * 0.25
+        return scale
+
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         self.text_actors[0].SetInput('Max:  %g' % max_value)  # max
         self.text_actors[1].SetInput('Min:  %g' % min_value)  # min
@@ -92,10 +105,13 @@ class GuiCommon(object):
             #self.log_command(""didn't find case...")
         return result_type
 
-    def _set_case(self, result_name, icase, explicit=False, cycle=False):
-        if not cycle and icase == self.iCase:
-            # don't click the button twice
-            return
+    def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False):
+        if not skip_click_check:
+            if not cycle and icase == self.iCase:
+                # don't click the button twice
+                # cycle=True means we're cycling
+                # cycle=False skips that check
+                return
 
         try:
             key = self.caseKeys[icase]
@@ -255,6 +271,8 @@ class GuiCommon(object):
     def final_grid_update(self, name, grid_result,
                           name_vector, grid_result_vector,
                           key, subtitle, label):
+
+        obj = None
         if isinstance(key, int):
             (obj, (i, res_name)) = self.resultCases[key]
             subcase_id = obj.subcase_id
@@ -272,13 +290,20 @@ class GuiCommon(object):
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
 
         self._final_grid_update(name, grid_result, None, None, None,
-                                1, subcase_id, result_type, location, subtitle, label)
+                                1, subcase_id, result_type, location, subtitle, label,
+                                revert_displaced=True)
+        if obj is None:
+            return
         if vector_size == 3:
             self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
-                                    vector_size, subcase_id, result_type, location, subtitle, label)
+                                    vector_size, subcase_id, result_type, location, subtitle, label,
+                                    revert_displaced=False)
+            #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+            #self._update_grid(vector_data)
 
     def _final_grid_update(self, name, grid_result, obj, i, res_name,
-                           vector_size, subcase_id, result_type, location, subtitle, label):
+                           vector_size, subcase_id, result_type, location, subtitle, label,
+                           revert_displaced=True):
         if name is None:
             return
         name_str = self._names_storage.get_name_string(name)
@@ -286,7 +311,7 @@ class GuiCommon(object):
             grid_result.SetName(name_str)
             self._names_storage.add(name)
 
-            if self._is_displaced:
+            if self._is_displaced and revert_displaced:
                 self._is_displaced = False
                 self._update_grid(self._xyz_nominal)
 
@@ -310,7 +335,8 @@ class GuiCommon(object):
                                   % (vector_size, subcase_id, result_type, subtitle, label))
                     point_data.AddArray(grid_result)
                 elif vector_size == 3:
-                    xyz_nominal, vector_data, norm = obj.get_vector_result(i, res_name)
+                    #print('vector_size3; get, update')
+                    xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
 
                     #grid_result1 = self.set_grid_values(name, case, 1,
                                                         #min_value, max_value, norm_value)
