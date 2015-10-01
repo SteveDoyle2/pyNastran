@@ -112,10 +112,10 @@ class NastranDisplacementResults(object):
 
     def get_default_title(self, i, name):
         #j = self.titles_default.index(name)
-        return self.titles_default[j]
+        return self.titles_default[i]
 
     def get_data_format(self, i, name):
-        print(self.titles_default, i)
+        #print(self.titles_default, i)
         #j = self.titles_default.index(name)
         #return self.data_formats[j]
         return self.data_formats[i]
@@ -141,12 +141,12 @@ class NastranDisplacementResults(object):
         return self.xyz, xyz
 
     def get_scale(self, i, name):
-        j = self.titles_default.index(name)
-        return self.scales[j]
+        #j = self.titles_default.index(name)
+        return self.scales[i]
 
     def get_default_scale(self, i, name):
-        j = self.titles_default.index(name)
-        return self.default_scales[j]
+        #j = self.titles_default.index(name)
+        return self.scales_default[i]
 
     def set_scale(self, i, name, scale):
         j = self.titles_default.index(name)
@@ -2000,6 +2000,9 @@ class NastranIO(object):
         form = []
         icase = 0
         for subcase_id in subcase_ids:
+            if subcase_id == 0:
+                # subcase id can be 0...what...see ISAT....
+                continue
             subcase_name = 'Subcase %i' % subcase_id
             form0 = (subcase_name, None, [])
             formi = form0[2]
@@ -2086,6 +2089,7 @@ class NastranIO(object):
                 #print('dkey =', key)
                 if key in result:
                     case = result[key]
+                    subcase_idi = case.isubcase
                     if not hasattr(case, 'data'):
                         continue
                     if not case.is_real():
@@ -2126,7 +2130,7 @@ class NastranIO(object):
                             ntimes = case.ntimes
                             titles = []
                             scales = []
-                            nastran_res = NastranDisplacementResults(subcase_id, titles,
+                            nastran_res = NastranDisplacementResults(subcase_idi, titles,
                                                                      self.xyz_cid0, t123, tnorm,
                                                                      scales,
                                                                      uname='NastranResult')
@@ -2163,7 +2167,6 @@ class NastranIO(object):
                                 icase += 1
                                 formi.append(form0)
                             nastran_res.save_defaults()
-                            asdf
                         else:
                             print('name=%r' % name)
                             assert case.is_sort1(), case.is_sort1()
@@ -2205,19 +2208,19 @@ class NastranIO(object):
                                 formi2 = form0[2]
 
                                 if 1:
-                                    cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
+                                    cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g', header)] = t1
                                     formi2.append((name + 'X', icase, []))
                                     icase += 1
 
-                                    cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
+                                    cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g', header)] = t2
                                     formi2.append((name + 'Y', icase, []))
                                     icase += 1
 
-                                    cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                                    cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g', header)] = t3
                                     formi2.append((name + 'Z', icase, []))
                                     icase += 1
 
-                                cases[(subcase_id, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
+                                cases[(subcase_idi, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
                                 formi2.append((name + 'XYZ', icase, []))
                                 icase += 1
 
@@ -2228,7 +2231,6 @@ class NastranIO(object):
                         tnorm = norm(t123, axis=1)
                         if name == 'Displacement':
                             print('*name = %r' % name)
-                            #subcase_id = 0
                             titles = [name + 'XYZ']
 
                             tnorm_abs_max = tnorm.max()
@@ -2252,22 +2254,22 @@ class NastranIO(object):
                                t3.min() == t3.max() and t123.min() == t123.max()):
                                 continue
                             #if t1.min() != t1.max():
-                            cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
+                            cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g')] = t1
                             formi.append((name + 'X', icase, []))
                             icase += 1
 
                             #if t2.min() != t2.max():
-                            cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
+                            cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g')] = t2
                             formi.append((name + 'Y', icase, []))
                             icase += 1
 
                             #if t3.min() != t3.max():
-                            cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
+                            cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g')] = t3
                             formi.append((name + 'Z', icase, []))
                             icase += 1
 
                             #if t123.min() != t123.max():
-                            cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
+                            cases[(subcase_idi, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
                             #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
                             formi.append((name + 'XYZ', icase, []))
                             icase += 1
@@ -2275,10 +2277,11 @@ class NastranIO(object):
         for (result, name) in temperature_like:
             if subcase_id in result:
                 case = result[subcase_id]
+                subcase_idi = case.subcase_id
                 if not hasattr(case, 'data'):
                     continue
                 temperatures = case.data[0, :, 0]
-                cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
+                cases[(subcase_idi, name, 1, 'node', '%g')] = temperatures
                 formi.append((name, icase, []))
                 icase += 1
         return icase
