@@ -112,19 +112,21 @@ def process_stl(stl_filename, fmt2, fname2, data=None):
     else:
         raise NotImplementedError(fmt2)
 
+
 def element_slice(tecplot, data):
     xslice = data['--xx']
     yslice = data['--yy']
     zslice = data['--zz']
-    if xslice is not None:
-        xslice = data['--xx']
-        tecplot.slice_x(xslice)
-    if yslice is not None:
-        yslice = data['--yy']
-        tecplot.slice_y(yslice)
-    if zslice is not None:
-        zslice = data['--zz']
-        tecplot.slice_z(zslice)
+    # if xslice is not None:
+        # xslice = data['--xx']
+        # tecplot.slice_x(xslice)
+    # if yslice is not None:
+        # yslice = data['--yy']
+        # tecplot.slice_y(yslice)
+    # if zslice is not None:
+        # zslice = data['--zz']
+        # tecplot.slice_z(zslice)
+    tecplot.slice_xyz(xslice, yslice, zslice)
 
 def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
     """

@@ -9,13 +9,50 @@ import os
 from struct import unpack
 from collections import defaultdict
 
-from numpy import array, vstack, hstack, where, unique, savetxt, zeros, arange
+from numpy import array, vstack, hstack, where, unique, savetxt, zeros, intersect1d, arange
 import numpy as np
 
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 from pyNastran.op2.fortran_format import FortranFormat
 
+
+def unique_rows(A, return_index=False, return_inverse=False):
+    """
+    Similar to MATLAB's unique(A, 'rows'), this returns B, I, J
+    where B is the unique rows of A and I and J satisfy
+    A = B[J,:] and B = A[I,:]
+
+    Returns
+    -------
+    I : ndarray?
+        the index array;
+        returns if return_index=True
+    J : ndarray?
+        the inverse array;
+        returns if return_inverse=True
+
+    Example (not tested)
+    --------------------
+    >>> B       = unique_rows(A, return_index=False, return_inverse=False)
+    >>> B, I    = unique_rows(A, return_index=True,  return_inverse=False)
+    >>> B, J    = unique_rows(A, return_index=False, return_inverse=True)
+    >>> B, I, J = unique_rows(A, return_index=True,  return_inverse=True)
+
+    per https://github.com/numpy/numpy/issues/2871
+    """
+    A = np.require(A, requirements='C')
+    assert A.ndim == 2, "array must be 2-dim'l"
+
+    B = np.unique(A.view([('', A.dtype)]*A.shape[1]),
+               return_index=return_index,
+               return_inverse=return_inverse)
+
+    if return_index or return_inverse:
+        return (B[0].view(A.dtype).reshape((-1, A.shape[1]), order='C'),) \
+            + B[1:]
+    else:
+        return B.view(A.dtype).reshape((-1, A.shape[1]), order='C')
 
 class Tecplot(FortranFormat):
     """
@@ -256,7 +293,8 @@ class Tecplot(FortranFormat):
                                 i += len(sline)
                             assert i < nnodes_max, 'nresult=%s' % nresult
                             if ires in [0, 1, 2]:
-                                self.log.debug('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
+                                self.log.debug('ires=%s nnodes=%s len(result)=%s' %
+                                               (ires, nnodes, len(result)))
                                 xyz[:, ires] = result
                             else:
                                 results[:, ires - 3] = result
@@ -501,16 +539,47 @@ class Tecplot(FortranFormat):
         del self.f
 
     def slice_x(self, xslice):
+        """TODO: doesn't remove unused nodes"""
         x = self.xyz[:, 0]
         self._slice_plane(x, xslice)
 
     def slice_y(self, yslice):
+        """TODO: doesn't remove unused nodes"""
         y = self.xyz[:, 1]
         self._slice_plane(y, yslice)
 
     def slice_z(self, zslice):
+        """TODO: doesn't remove unused nodes"""
         z = self.xyz[:, 2]
         self._slice_plane(z, zslice)
+
+    def slice_xyz(self, xslice, yslice, zslice):
+        """TODO: doesn't remove unused nodes"""
+        x = self.xyz[:, 0]
+        y = self.xyz[:, 1]
+        z = self.xyz[:, 2]
+
+        inodes = []
+        if xslice is not None:
+            xslice = float(xslice)
+            inodes.append(where(x < xslice)[0])
+        if yslice is not None:
+            yslice = float(yslice)
+            inodes.append(where(y < yslice)[0])
+        if zslice is not None:
+            zslice = float(zslice)
+            inodes.append(where(z < zslice)[0])
+        if len(inodes) == 1:
+            nodes = inodes[0]
+        elif len(inodes) == 2:
+            nodes = intersect1d(inodes[0], inodes[1], assume_unique=True)
+        elif len(inodes) == 3:
+            nodes = intersect1d(
+                intersect1d(inodes[0], inodes[1], assume_unique=True),
+                inodes[2], assume_unique=True)
+            inodes = arange(self.nodes.shape[0])
+            # nodes = unique(hstack(inodes))
+        self._slice_plane_inodes(nodes)
 
     def _slice_plane(self, y, slice_value):
         """
@@ -520,9 +589,11 @@ class Tecplot(FortranFormat):
         slice_value = float(slice_value)
         inodes = where(y < slice_value)[0]
         #print('inodes =', inodes)
+        self._slice_plane_inodes(inodes)
 
-        old_num = inodes
-        new_num = arange(self.xyz.shape[0], dtype='int32')
+    def _slice_plane_inodes(self, inodes):
+        # old_num = inodes
+        # new_num = arange(self.xyz.shape[0], dtype='int32')
         #print('old =', old_num)
         #print('new =', new_num)
 
@@ -537,7 +608,7 @@ class Tecplot(FortranFormat):
             # print(boolean_hexa)
             # assert len(boolean_hexa) == self.hexa_elements.shape[0]
             assert True in boolean_hexa
-            irow, icol = where(boolean_hexa)
+            irow = where(boolean_hexa)[0]
             isave = unique(irow)
             nsave = len(isave)
             self.hexa_elements = self.hexa_elements[isave, :]
@@ -701,7 +772,8 @@ class Tecplot(FortranFormat):
                             msg = '\n'
                     tecplot_file.write(msg.rstrip() + '\n')
 
-        self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' % (is_hexas, is_tets, is_quads, is_tris))
+        self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
+                      (is_hexas, is_tets, is_quads, is_tris))
         if is_hexas:
             # elements
             efmt = ' %i %i %i %i %i %i %i %i\n'
@@ -730,6 +802,37 @@ class Tecplot(FortranFormat):
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
         tecplot_file.close()
+
+    def skin_elements(self):
+        tris = []
+        quads = []
+        if len(self.tet_elements):
+            faces1 = self.tet_elements[:, :3]
+            faces2 = self.tet_elements[:, 1:4]
+            faces3 = self.tet_elements[:, [2, 3, 0]]
+            tris.append(faces1)
+            tris.append(faces2)
+            tris.append(faces3)
+
+        if len(self.hexa_elements):
+            faces1 = self.hexa_elements[:, :4]
+            faces2 = self.hexa_elements[:, 4:7]
+            assert faces1.shape[1] == 4, faces1.shape
+            assert faces2.shape[1] == 4, faces2.shape
+            #faces3 = self.hexa_elements[:, [2, 3, 0]]
+            # TODO: others CHEXA faces...
+            quads.append(faces1)
+            quads.append(faces2)
+
+        # if tris:
+            # tris = vstack(tris)
+            # tris.sort(axis=0)
+            # tris = unique_rows(tris)
+        # if quads:
+            # quads = vstack(quads)
+            # quads.sort(axis=0)
+            # quads = unique_rows(tris)
+        return tris, quads
 
     def get_free_faces(self):
         self.log.info('start get_free_faces')
