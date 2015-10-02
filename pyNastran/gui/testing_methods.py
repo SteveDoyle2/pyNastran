@@ -86,13 +86,16 @@ class GUIMethods(object):
     def TurnTextOff(self):
         pass
     def update_axes_length(self, value):
-        pass
+        self.dim_max = value
     def passer(self):
         pass
     def passer1(self, a):
         pass
     def passer2(self, a, b):
         pass
+    @property
+    def displacement_scale_factor(self):
+        return 1 * self.dim_max
     def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None, point_size=None, representation=None):
         self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
