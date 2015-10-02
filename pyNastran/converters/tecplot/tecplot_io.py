@@ -117,87 +117,73 @@ class TecplotIO(object):
         is_solids = is_tets + is_hexas
         if is_shells:
             is_surface = True
-            if is_quads:
-                elements = quads
-                for iface, face in enumerate(quads):
-                    elem = vtkQuad()
-                    epoints = elem.GetPointIds()
-                    epoints.SetId(0, face[0])
-                    epoints.SetId(1, face[1])
-                    epoints.SetId(2, face[2])
-                    epoints.SetId(3, face[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-                    #break
-            if is_tris:
-                elements = tris
-                for iface, face in enumerate(tris):
-                    elem = vtkTriangle()
-                    epoints = elem.GetPointIds()
-                    epoints.SetId(0, face[0])
-                    epoints.SetId(1, face[1])
-                    epoints.SetId(2, face[2])
-                    self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-                    #break
+            self.self._create_tecplot_shells(is_quads, quads, is_tris, tris)
 
         elif is_solids:
-            if is_tets:
-                elements = tets
-                is_surface = False
-                self.nElements = model.nelements
-                self.grid.Allocate(self.nElements, 1000)
-
-                nelements = elements.shape[0]
-                for eid in range(nelements):
-                    elem = vtkTetra()
-                    node_ids = elements[eid, :]
-                    epoints = elem.GetPointIds()
-                    epoints.SetId(0, node_ids[0])
-                    epoints.SetId(1, node_ids[1])
-                    epoints.SetId(2, node_ids[2])
-                    epoints.SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-
-
-            if is_hexas:
-                elements = hexas
-                is_surface = True
-                # is_surface = False
-                is_volume = not is_surface
-
-                if is_surface:
-                    self.nElements = model.nelements
-                    free_faces = array(model.get_free_faces(), dtype='int32')# + 1
-                    nfaces = len(free_faces)
-                    elements = free_faces
-                    self.grid.Allocate(nfaces, 1000)
-
-                    for face in free_faces:
-                        elem = vtkQuad()
-                        epoints = elem.GetPointIds()
-                        epoints.SetId(0, face[0])
-                        epoints.SetId(1, face[1])
-                        epoints.SetId(2, face[2])
-                        epoints.SetId(3, face[3])
-                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-
-                elif is_volume:
+            if 0:
+                tris, quads = model.skin_elements()
+                is_tris = bool(len(tris))
+                is_quads = bool(len(quads))
+                self.self._create_tecplot_shells(is_quads, quads, is_tris, tris)
+            else:
+                if is_tets:
+                    elements = tets
+                    is_surface = False
                     self.nElements = model.nelements
                     self.grid.Allocate(self.nElements, 1000)
 
                     nelements = elements.shape[0]
                     for eid in range(nelements):
-                        elem = vtkHexahedron()
+                        elem = vtkTetra()
                         node_ids = elements[eid, :]
                         epoints = elem.GetPointIds()
                         epoints.SetId(0, node_ids[0])
                         epoints.SetId(1, node_ids[1])
                         epoints.SetId(2, node_ids[2])
                         epoints.SetId(3, node_ids[3])
-                        epoints.SetId(4, node_ids[4])
-                        epoints.SetId(5, node_ids[5])
-                        epoints.SetId(6, node_ids[6])
-                        epoints.SetId(7, node_ids[7])
                         self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+
+
+                if is_hexas:
+                    elements = hexas
+                    is_surface = True
+                    # is_surface = False
+                    is_volume = not is_surface
+
+                    if is_surface:
+                        self.nElements = model.nelements
+                        free_faces = array(model.get_free_faces(), dtype='int32')# + 1
+                        nfaces = len(free_faces)
+                        elements = free_faces
+                        self.grid.Allocate(nfaces, 1000)
+
+                        for face in free_faces:
+                            elem = vtkQuad()
+                            epoints = elem.GetPointIds()
+                            epoints.SetId(0, face[0])
+                            epoints.SetId(1, face[1])
+                            epoints.SetId(2, face[2])
+                            epoints.SetId(3, face[3])
+                            self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+
+                    elif is_volume:
+                        self.nElements = model.nelements
+                        self.grid.Allocate(self.nElements, 1000)
+
+                        nelements = elements.shape[0]
+                        for eid in range(nelements):
+                            elem = vtkHexahedron()
+                            node_ids = elements[eid, :]
+                            epoints = elem.GetPointIds()
+                            epoints.SetId(0, node_ids[0])
+                            epoints.SetId(1, node_ids[1])
+                            epoints.SetId(2, node_ids[2])
+                            epoints.SetId(3, node_ids[3])
+                            epoints.SetId(4, node_ids[4])
+                            epoints.SetId(5, node_ids[5])
+                            epoints.SetId(6, node_ids[6])
+                            epoints.SetId(7, node_ids[7])
+                            self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         else:
             raise NotImplementedError()
 
@@ -210,6 +196,29 @@ class TecplotIO(object):
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
         return is_surface
+
+    def _create_tecplot_shells(self, is_quads, quads, is_tris, tris):
+        if is_quads:
+            elements = quads
+            for iface, face in enumerate(quads):
+                elem = vtkQuad()
+                epoints = elem.GetPointIds()
+                epoints.SetId(0, face[0])
+                epoints.SetId(1, face[1])
+                epoints.SetId(2, face[2])
+                epoints.SetId(3, face[3])
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                #break
+        if is_tris:
+            elements = tris
+            for iface, face in enumerate(tris):
+                elem = vtkTriangle()
+                epoints = elem.GetPointIds()
+                epoints.SetId(0, face[0])
+                epoints.SetId(1, face[1])
+                epoints.SetId(2, face[2])
+                self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                #break
 
     def clear_tecplot(self):
         pass

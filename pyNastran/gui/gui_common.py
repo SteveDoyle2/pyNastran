@@ -31,6 +31,7 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.menus.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.menus.clipping import ClippingPropertiesWindow
 from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import ApplicationLogDockWidget
 from pyNastran.gui.menus.manage_actors import EditGroupProperties
@@ -81,6 +82,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #-------------
         # window variables
         self._legend_shown = False
+        self._clipping_shown = False
         self._edit_group_properties_shown = False
         #-------------
         # inputs dict
@@ -334,6 +336,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
 
                 ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
+                ('clipping', 'Set clipping', '', None, 'Set Clipping', self.set_clipping),
                 ('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
@@ -433,7 +436,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'scshot', '', 'wireframe', 'surface', 'creset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
-            'legend', 'axis', 'edges_black',
+            'legend', 'clipping', 'axis', 'edges', 'edges_black',
         ]
         if self.html_logging:
             self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
@@ -2496,6 +2499,60 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                              % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
 
     #---------------------------------------------------------------------------------------
+    # CLIPPING MENU
+    def set_clipping(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        |  Max   |  Float   |
+        +--------+----------+
+        """
+        #if not hasattr(self, 'caseKeys'):  # TODO: maybe include...
+            #self.log_error('No model has been loaded.')
+            #return
+        camera = self.GetCamera()
+        min_clip, max_clip = camera.GetClippingRange()
+
+        data = {
+            'min' : min_clip,
+            'max' : max_clip,
+            'clicked_ok' : False,
+        }
+        if not self._clipping_shown:
+            self._clipping_window = ClippingPropertiesWindow(data, win_parent=self)
+            self._clipping_window.show()
+            self._clipping_shown = True
+            self._clipping_window.exec_()
+        else:
+            self._clipping_window.activateWindow()
+
+        if data['clicked_ok']:
+            self._apply_clipping(data)
+            del self._clipping_window
+            self._clipping_shown = False
+        #else:
+            #self._clipping_window.activateWindow()
+
+    def _apply_clipping(self, data):
+        min_clip = data['min']
+        max_clip = data['max']
+        self.on_update_clipping(min_clip, max_clip)
+
+    def on_update_clipping(self, min_clip=None, max_clip=None):
+        camera = self.GetCamera()
+        _min_clip, _max_clip = camera.GetClippingRange()
+        if min_clip is None:
+            min_clip = _min_clip
+        if max_clip is None:
+            max_clip = _max_clip
+        camera.SetClippingRange(min_clip, max_clip)
+        self.log_command('self.on_update_clipping(min_value=%s, max_clip=%s)'
+                         % (min_clip, max_clip))
+
+    #---------------------------------------------------------------------------------------
     # LEGEND MENU
     def set_legend(self):
         """
@@ -2516,6 +2573,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
+        default_format = None
+        default_scale = None
         if isinstance(key, (int, int32)):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.resultCases[key]
@@ -2526,6 +2585,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #location = obj.get_location(i, res_name)
             data_format = obj.get_data_format(i, res_name)
             scale = obj.get_scale(i, res_name)
+
+            default_title = obj.get_default_title(i, res_name)
+            default_scale = obj.get_default_scale(i, res_name)
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
             scale = 0.0
@@ -2535,6 +2597,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
             scale = 0.0
+        if default_format is None:
+            default_format = data_format
+        if scale == 0.0:
+            default_scale = 0.0
+
 
         data = {
             'name' : result_type,
@@ -2542,6 +2609,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'max' : case.max(),
             'scale' : scale,
             'format' : data_format,
+
+            'default_title' : default_title,
+            'default_scale' : default_scale,
+            'default_format' : default_format,
+
             'is_blue_to_red' : True,
             'is_discrete': True,
             'is_horizontal': False,
@@ -2557,11 +2629,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self._legend_window.activateWindow()
 
         if data['clicked_ok']:
-            self.apply_legend(data)
+            self._apply_legend(data)
             del self._legend_window
             self._legend_shown = False
+        else:
+            self._legend_window.activateWindow()
 
-    def apply_legend(self, data):
+    def _apply_legend(self, data):
         title = data['name']
         min_value = data['min']
         max_value = data['max']
@@ -2585,18 +2659,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         key = self.caseKeys[self.iCase]
         name_vector = None
-        case = self.resultCases[key]
+        plot_value = self.resultCases[key] # scalar
         vector_size1 = 1
         if isinstance(key, (int, int32)):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.resultCases[key]
             subcase_id = obj.subcase_id
-            case = obj.get_result(i, res_name)
+            plot_value = obj.get_plot_value(i, res_name) # vector
+
             result_type = obj.get_title(i, res_name)
             vector_size = obj.get_vector_size(i, res_name)
+            scalar = obj.get_scalar(i, res_name)
+
             location = obj.get_location(i, res_name)
+
             #data_format = obj.get_data_format(i, res_name)
             obj.set_scale(i, res_name, scale)
+            #obj.set_format(i, res_name, data_format)
+            #obj.set_data_format(i, res_name, data_format)
             subtitle, label = self.get_subtitle_label(subcase_id)
             name_vector = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale)
         elif len(key) == 5:
@@ -2605,7 +2685,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (subcase_id, i, result_type, vector_size1, location, _data_format) = key
         else:
             (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
+        assert vector_size1 == 1, vector_size1
 
+        self._set_case(self.result_name, self.iCase,
+                       explicit=False, cycle=False, skip_click_check=True)
+
+        return
         subtitle, label = self.get_subtitle_label(subcase_id)
         scale1 = 1.0
         name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
@@ -2613,14 +2698,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
-        grid_result = self.set_grid_values(name, case, vector_size,
+        grid_result = self.set_grid_values(name, plot_value, vector_size,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)
 
         grid_result_vector = None
-        if name_vector:
+        if name_vector and 0:
             vector_size = 3
-            grid_result_vector = self.set_grid_values(name_vector, case, vector_size,
+            grid_result_vector = self.set_grid_values(name_vector, plot_value, vector_size,
                                                       min_value, max_value, norm_value,
                                                       is_blue_to_red=is_blue_to_red)
 
@@ -2628,11 +2713,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                data_format, is_blue_to_red=is_blue_to_red,
                                is_horizontal=is_horizontal, is_shown=is_shown)
 
+        revert_displaced = True
         self._final_grid_update(name, grid_result, None, None, None,
-                                1, subcase_id, result_type, location, subtitle, label)
-        if vector_size == 3:
+                                1, subcase_id, result_type, location, subtitle, label,
+                                revert_displaced=revert_displaced)
+        if grid_result_vector is not None:
             self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
-                                    vector_size, subcase_id, result_type, location, subtitle, label)
+                                    vector_size, subcase_id, result_type, location, subtitle, label,
+                                    revert_displaced=False)
+            if 0:
+                xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                self._update_grid(vector_data)
+                self.grid.Modified()
+                self.geom_actor.Modified()
+                self.vtk_interactor.Render()
+            #revert_displaced = False
+        #self._final_grid_update(name, grid_result, None, None, None,
+                                #1, subcase_id, result_type, location, subtitle, label,
+                                #revert_displaced=revert_displaced)
 
         self.is_horizontal_scalar_bar = is_horizontal
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'

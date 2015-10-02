@@ -10,12 +10,15 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_name = data['name']
         self._default_min = data['min']
         self._default_max = data['max']
-        self._default_format = data['format']
-        self._default_scale = data['scale']
+        self._format = data['format']
+        self._scale = data['scale']
         self._default_is_blue_to_red = data['is_blue_to_red']
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
         self._default_is_shown = data['is_shown']
+
+        self._default_format = data['default_format']
+        self._default_scale = data['default_scale']
 
         self.out_data = data
 
@@ -45,14 +48,14 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
         # Format
         self.format = QtGui.QLabel("Format (e.g. %.3f, %g, %.6e):")
-        self.format_edit = QtGui.QLineEdit(str(self._default_format))
+        self.format_edit = QtGui.QLineEdit(str(self._format))
         self.format_button = QtGui.QPushButton("Default")
 
         # Scale
         self.scale = QtGui.QLabel("Scale:")
-        self.scale_edit = QtGui.QLineEdit(str(self._default_scale))
+        self.scale_edit = QtGui.QLineEdit(str(self._scale))
         self.scale_button = QtGui.QPushButton("Default")
-        if self._default_scale == 0.0:
+        if self._scale == 0.0:
             self.scale_edit.setEnabled(False)
             self.scale_button.setEnabled(False)
         #tip = QtGui.QToolTip()
@@ -295,7 +298,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def on_apply(self):
         passed = self.on_validate()
         if passed:
-            self.win_parent.apply_legend(self.out_data)
+            self.win_parent._apply_legend(self.out_data)
         return passed
 
     def on_ok(self):

@@ -75,8 +75,9 @@ class UGRID(object):
         nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas = struct.unpack(endian + '7i', data)
         npids = nquads + ntris
         nvol_elements = ntets + npenta5s + npenta6s + nhexas
-        self.log.info('nnodes=%s ntris=%s nquads=%s ntets=%s npenta5s=%s npenta6s=%s nhexas=%s' % (
-            nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas))
+        self.log.info('nnodes=%.3fm ntris=%s nquads=%s ntets=%.3fm npenta5s=%.3fm npenta6s=%sm nhexas=%.3fm' % (
+            nnodes / 1e6, ntris, nquads,
+            ntets / 1e6, npenta5s / 1e6, npenta6s / 1e6, nhexas / 1e6))
 
         nvolume_elements = ntets + npenta5s + npenta6s + nhexas
         self.log.info('nsurface_elements=%s nvolume_elements=%.3f Million' % (npids, nvolume_elements / 1e6))
