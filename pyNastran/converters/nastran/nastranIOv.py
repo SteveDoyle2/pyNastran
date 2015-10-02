@@ -499,9 +499,9 @@ class NastranIO(object):
         if self.has_caero:
             yellow = (1., 1., 0.)
             if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='surface')
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='toggle')
             if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='surface')
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='toggle')
 
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
             self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
@@ -794,7 +794,7 @@ class NastranIO(object):
 
             if 'MPC' in subcase:
                 mpc_id, options = subcase.get_parameter('MPC')
-                if spc_id is not None:
+                if mpc_id is not None:
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
                         self._fill_mpc(mpc_id, dim_max, model, nid_to_pid_map)
@@ -1100,8 +1100,13 @@ class NastranIO(object):
             #node_ids += suport.IDs
 
         # dict
-        suport1 = model.suport1[suport_id]
-        node_ids += suport1.IDs
+        if suport_id in model.suport1:
+            suport1 = model.suport1[suport_id]
+            node_ids += suport1.IDs
+        else:
+            for suport in model.suport:
+                if suport_id in suport.IDs:
+                    node_ids.append(suport_id)
 
         node_ids = unique(node_ids)
         self._add_nastran_nodes_to_grid('suport', node_ids, model)
