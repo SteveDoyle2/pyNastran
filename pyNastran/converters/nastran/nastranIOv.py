@@ -2093,12 +2093,30 @@ class NastranIO(object):
         ]
         nids = self.node_ids
 
+        keys2 = []
         for (result, name) in displacement_like:
             keys = result.keys()
             if len(keys) == 0:
                 continue
 
             for key in keys:
+                if isinstance(key, (int, int32)):
+                    if key != subcase_id:
+                        continue
+                else:
+                    subcase_idi = key[0]
+                    if subcase_id != subcase_idi:
+                        continue
+
+                if key not in result:
+                    continue
+                if key not in keys2:
+                    keys2.append(key)
+
+        for key in keys2:
+            for (result, name) in displacement_like:
+                if key not in result:
+                    continue
                 if isinstance(key, (int, int32)):
                     if key != subcase_id:
                         continue
@@ -2190,7 +2208,7 @@ class NastranIO(object):
                             formi.append(form0)
                         nastran_res.save_defaults()
                     else:
-                        print('name=%r' % name)
+                        # print('name=%r' % name)
                         assert case.is_sort1(), case.is_sort1()
                         for itime in range(case.ntimes):
                             dt = case._times[itime]

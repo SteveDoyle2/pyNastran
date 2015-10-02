@@ -12,7 +12,7 @@ def eval_float_from_string(value_str):
         raise ValueError('%s  must be a string' % value_str)
     if len(value_str)  > 50:
         raise ValueError('%s must be less than 50 characters' % value_str)
-    allowed_letters = r'0123456789.()+-*/'
+    allowed_letters = r'0123456789.()+-*/e'
 
     for letter in value_str:
         if letter not in allowed_letters:

@@ -47,7 +47,7 @@ class OES(object):
             ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
                14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01
         """
-        (isubcase, transient, dt, data_code) = self._get_rod_header(element_name, element_type, False)
+        (isubcase, transient, dt, data_code) = self._get_rod_header(element_name, element_type, is_strain=False)
         data_code['table_name'] = 'OES1X'
         data = self._read_rod_stress()
         slot = getattr(self, result_type)
@@ -61,7 +61,7 @@ class OES(object):
 
     def _strain_in_rod_elements(self, element_name, element_type, result_name):
         slot = getattr(self, result_name)
-        (isubcase, transient, dt, data_code) = self._get_rod_header(element_name, element_type, False)
+        (isubcase, transient, dt, data_code) = self._get_rod_header(element_name, element_type, is_strain=True)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_rod_stress()
         if isubcase in slot:
@@ -135,8 +135,7 @@ class OES(object):
         """
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
-
-        (stress_bits, s_code) = make_stress_bits(is_strain=False, is_rod_or_solid=True)
+        (stress_bits, s_code) = make_stress_bits(is_strain=is_strain, is_rod_or_solid=True)
         data_code = {
             'analysis_code': analysis_code,
             'device_code': 1, 'table_code': 5, 'sort_code': 0,
@@ -146,7 +145,6 @@ class OES(object):
             'lsdvmn' : 1,
             'dataNames':['lsdvmn']
         }
-
         return (isubcase, transient, dt, data_code)
 
     def _read_rod_stress(self):
@@ -164,10 +162,8 @@ class OES(object):
             sline = [line[0:13], line[13:29], line[29:42], line[42:55], line[55:67], line[67:78], line[78:94], line[94:107], line[107:120], line[120:131]]
             if 'PAGE' in line:
                 break
-            #print sline
             data_types = [int, float, float, float, float, int, float, float, float, float]
             out = self._parse_line_blanks(sline, data_types)  # line 1
-            #print out
             data.append(out[:5])
             if isinstance(out[5], int):
                 data.append(out[5:])
@@ -191,13 +187,11 @@ class OES(object):
             #sline = [line[0:13], line[13:29], line[29:42], line[42:55], line[55:67], line[67:78], line[78:94], line[94:107], line[107:120], line[120:131]]
             if 'PAGE' in line:
                 break
-            #print sline
             n = len(sline) // 2
             assert len(sline) % 2 == 0, sline
 
             data_types = [int, float] * n
             out = self._parse_line_blanks(sline, data_types)  # line 1
-            #print out
 
             while out:
                 strain = out.pop()
@@ -238,7 +232,7 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _strain_in_cbar_elements(self):
-        (isubcase, transient, dt, data_code) = self._get_bar_header(False)
+        (isubcase, transient, dt, data_code) = self._get_bar_header(True)
         data_code['table_name'] = 'OSTR1X'
 
         data = self._read_bar_stress()
@@ -255,7 +249,7 @@ class OES(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        (stress_bits, s_code) = make_stress_bits(is_strain=is_strain, is_rod_or_solid=True)
+        (stress_bits, s_code) = make_stress_bits(is_strain=is_strain, is_rod_or_solid=True, debug=True)
         data_code = {
             'analysis_code': analysis_code,
             'device_code': 1, 'table_code': 5, 'sort_code': 0,
@@ -597,18 +591,19 @@ class OES(object):
             result = class_obj(data_code, is_sort1, isubcase, transient)
             result.add_f06_data(data, transient)
             slot[isubcase] = result
-            is_von_mises = not(is_max_shear)
+            is_von_mises = not is_max_shear
             assert result.is_max_shear() == is_max_shear
             assert result.is_von_mises() == is_von_mises
         self.iSubcases.append(isubcase)
 
-    def _get_quad_header(self, nHeaderLines, element_name, element_type, is_strain):
+    def _get_quad_header(self, nheader_lines, element_name, element_type, is_strain):
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
-        headers = self.skip(nHeaderLines)
+        headers = self.skip(nheader_lines)
         #print "headers = %s" %(headers)
 
         is_fiber_distance = None
         is_max_shear = None  # Von Mises/Max Shear
+
         if 'DISTANCE' in headers:
             is_fiber_distance = True
         elif 'CURVATURE' in headers:
@@ -698,7 +693,7 @@ class OES(object):
         (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, nnodes, is_strain=False)
         data_code['table_name'] = 'OES1X'
 
-        data = self._read_3D_stress(element_name, nnodes, is_strain=False)
+        data = self._read_3d_stress(element_name, nnodes, is_strain=False)
         if isubcase in slot:
             slot[isubcase].add_f06_data(data, transient)
         else:
@@ -713,7 +708,7 @@ class OES(object):
         (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, nnodes, is_strain=True)
         data_code['table_name'] = 'OSTR1X'
 
-        data = self._read_3D_stress(element_name, nnodes, is_strain=True)
+        data = self._read_3d_stress(element_name, nnodes, is_strain=True)
         if isubcase in slot:
             slot[isubcase].add_f06_data(data, transient)
         else:
@@ -758,9 +753,9 @@ class OES(object):
             data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
 
-    def _read_3D_stress(self, eType, nnodes, is_strain=False):
+    def _read_3d_stress(self, etype, nnodes, is_strain=False):
         data = []
-        eType2 = eType + str(nnodes)
+        etype2 = etype + str(nnodes)
         while 1:
             line = self.infile.readline().rstrip('\n\r')  # [1:]
                     #              CENTER         X          #          XY             #        A         #
@@ -769,12 +764,12 @@ class OES(object):
             if 'PAGE' in line:
                 break
             elif '' is not sline[0]:
-                sline = [eType2] + sline
+                sline = [etype2] + sline
             data.append(sline)
 
         return data
 
-def make_stress_bits(is_fiber_distance=False, is_max_shear=True, is_strain=True, is_rod_or_solid=False):
+def make_stress_bits(is_fiber_distance=False, is_max_shear=True, is_strain=True, is_rod_or_solid=False, debug=False):
     """
     Therefore, stress_code can be one of the following values:
     +------+---------+----------------------------------------------+
@@ -788,8 +783,10 @@ def make_stress_bits(is_fiber_distance=False, is_max_shear=True, is_strain=True,
     |  15  | 1 1 1 1 | Strain Fibre von Mises                       |
     +------+---------+----------------------------------------------+
     """
-    #print "is_max_shear=%s is_fiber_distance=%s" %(is_max_shear, is_fiber_distance)
-
+    #if debug:
+    msg = ("  is_max_shear=%s is_fiber_distance=%s is_strain=%s is_rod_or_solid=%s"
+           % (is_max_shear, is_fiber_distance, is_strain, is_rod_or_solid))
+    #print(msg)
    #code = (isVonMises, isFiberCurvatur, isStress, isNotRod)
     von_mises_code = 0 if is_max_shear else 1
     strain_code = 1 if is_strain else 0
@@ -813,11 +810,19 @@ def make_stress_bits(is_fiber_distance=False, is_max_shear=True, is_strain=True,
     # True, False, True, False
     #[zero, one, two, three, is_von_mises]
     code = (is_max_shear, is_fiber_distance, is_strain, is_rod_or_solid)
+
     mapper = {
         # element coordinate system (no material support)
-        (True,  False, False, True) : ([0, 0, 0, 0, 0], 0),  # 0,  rod/csolid
-        (False, False, False, True) : ([0, 0, 0, 0, 1], 1),  # 1,  rod/csolid strain
-        (False, False, True,  True) : ([0, 1, 0, 1, 1], 1),   # ???, rod/csolid strain
+        #(is_max_shear, is_fiber_distance, is_strain, is_rod_or_solid), scode
+        (True,  False, True,  True) : ([0, 1, 1, 1, 0], None), # bar (rod/solid) strain
+        (False, False, True,  True) : ([0, 1, 1, 1, 1], None), # solid (rod/solid) strain
+        (True,  False, False, True) : ([0, 0, 1, 0, 0], None), # rod (crod/solid) stress
+        (False, False, False, True) : ([0, 0, 1, 0, 1], None), # solid (crod/solid) stress
+
+        #(True,  False, False, True) : ([0, 0, 0, 0, 0], 0),  # 0,  rod/csolid
+        #(False, False, False, True) : ([0, 0, 0, 0, 1], 1),  # 1,  rod/csolid strain
+        #(False, False, True,  True) : ([0, 1, 0, 1, 1], 1),   # ???, rod/csolid strain
+        #(True,  False, True,  True) : ([0, 1, 0, 1, 1], 1), # cbar strain...probably not correct...
 
         #(True,  False, True, False) : ([0, 1, 0, 1, 0], 10),  # 10
         #(False, False, True, False) : ([0, 1, 0, 1, 1], 11),  # 11
@@ -832,8 +837,43 @@ def make_stress_bits(is_fiber_distance=False, is_max_shear=True, is_strain=True,
     try:
         (stress_bits, s_code) = mapper[code]
     except KeyError:
-        msg = 'is_max_shear=%s is_fiber_distance=%s is_strain=%s is_rod_or_solid=%s' % (is_max_shear, is_fiber_distance, is_strain, is_rod_or_solid)
         raise RuntimeError(msg)
+
+    if is_strain:
+        # strain
+        assert stress_bits[1] == 1, stress_bits
+    else:
+        # stress
+        assert stress_bits[1] == 0, stress_bits
+    assert stress_bits[1] == stress_bits[3], stress_bits
+
+    # backwards
+    if is_fiber_distance:
+        # fiber distance
+        assert stress_bits[2] == 0, stress_bits
+    else:
+        # curvature
+        assert stress_bits[2] == 1, stress_bits
+
+    # backwards
+    if is_max_shear:
+        assert stress_bits[4] == 0, stress_bits
+    else:
+        assert stress_bits[4] == 1, stress_bits
+
+    # def is_curvature(self):
+        # return True if self.stress_bits[2] == 1 else False
+    # def is_max_shear(self):
+        # return True if self.stress_bits[4] == 0 else False
+
+    # def is_fiber_distance(self):
+        # return not self.is_curvature()
+        # return True if self.stress_bits[2] == 0 else False
+
+    # def is_von_mises(self):
+        # return not self.is_max_shear()
+        # return True if self.stress_bits[4] == 1 else False
+
 
     #if is_max_shear==False:
     #    stress_bits[4] = 1 # Von Mises

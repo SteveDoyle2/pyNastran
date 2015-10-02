@@ -327,6 +327,10 @@ def main():
         'name' : 'asdf',
         'min' : 0.,
         'max' : 10,
+        'scale' : 1e-12,
+        'default_scale' : 1.0,
+
+        'default_format' : '%s',
         'format' : '%g',
         'is_blue_to_red': True,
         'is_discrete' : False,
