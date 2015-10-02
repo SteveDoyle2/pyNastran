@@ -6,7 +6,7 @@ This file defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, itervalues, PY2
+from six import string_types, iteritems, itervalues, PY2, StringIO
 import sys
 from codecs import open
 
@@ -66,7 +66,9 @@ class WriteMesh(object):
             title = 'Save BDF/DAT/PCH'
             out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
             assert out_filename is not None, out_filename
-        if not isinstance(out_filename, string_types):
+        if isinstance(out_filename, (file, StringIO)):
+            return out_filename
+        elif not isinstance(out_filename, string_types):
             raise TypeError('out_filename=%r must be a string' % out_filename)
 
         if size == 8:
@@ -145,24 +147,38 @@ class WriteMesh(object):
 
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
-                  interspersed=True, enddata=None):
+                  interspersed=True, enddata=None, close=True):
         """
         Writes the BDF.
 
-        :param self:         the BDF object
-        :param out_filename: the name to call the output bdf
-                             (default=None; pops a dialog)
-        :param encoding:     the unicode encoding (latin1, and utf8 are generally good options)
-                             default=None -> system specified encoding
-        :param size:      the field size (8 is recommended)
-        :param is_double: small field (False) or large field (True); default=False
-        :param interspersed: Writes a bdf with properties & elements
-              interspersed like how Patran writes the bdf.  This takes
-              slightly longer than if interspersed=False, but makes it
-              much easier to compare to a Patran-formatted bdf and is
-              more clear. (default=True)
-        :param enddata:   Flag to enable/disable writing ENDDATA
-                          (default=None -> depends on input BDF)
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        out_filename : varies; default=None
+            str        - the name to call the output bdf
+            file       - a file object
+            StringIO() - a StringIO object
+            None       - pops a dialog
+        encoding : str; default=None -> system specified encoding
+            the unicode encoding
+            latin1, and utf8 are generally good options
+        size : int; {8, 16}
+            the field size
+        is_double : bool; default=False
+            False : small field
+            True : large field
+        interspersed : bool; default=True
+            Writes a bdf with properties & elements
+            interspersed like how Patran writes the bdf.  This takes
+            slightly longer than if interspersed=False, but makes it
+            much easier to compare to a Patran-formatted bdf and is
+            more clear.
+        enddata : bool; default=None
+            bool - enable/disable writing ENDDATA
+            None - depends on input BDF
+        close : bool; default=True
+            should the output file be closed
         """
         #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
@@ -173,10 +189,13 @@ class WriteMesh(object):
             encoding = self._encoding
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
-        if PY2:
-            outfile = open(out_filename, 'wb', encoding=encoding)
+        if isinstance(out_filename, (file, StringIO)):
+            outfile = out_filename
         else:
-            outfile = open(out_filename, 'w', encoding=encoding)
+            if PY2:
+                outfile = open(out_filename, 'wb', encoding=encoding)
+            else:
+                outfile = open(out_filename, 'w', encoding=encoding)
         self._write_header(outfile, encoding)
         self._write_params(outfile, size, is_double)
         self._write_nodes(outfile, size, is_double)
@@ -192,31 +211,37 @@ class WriteMesh(object):
         self._write_common(outfile, size, is_double)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             outfile.write('ENDDATA\n')
-        outfile.close()
+        if close:
+            outfile.close()
 
     def write_bdf_symmetric(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
-                  enddata=None, plane='xz'):
+                  enddata=None, close=True, plane='xz'):
         """
         Writes the BDF.
 
-        :param self:         the BDF object
-        :param out_filename: the name to call the output bdf
-                             (default=None; pops a dialog)
-        :param encoding:     the unicode encoding (latin1, and utf8 are generally good options)
-                             default=None -> system specified encoding
-        :param size:      the field size (8 is recommended)
-        :param is_double: small field (False) or large field (True); default=False
-        :param interspersed: Writes a bdf with properties & elements
-              interspersed like how Patran writes the bdf.  This takes
-              slightly longer than if interspersed=False, but makes it
-              much easier to compare to a Patran-formatted bdf and is
-              more clear. (default=True)
-        :param enddata:   Flag to enable/disable writing ENDDATA
-                          (default=None -> depends on input BDF)
-
         Parameters
         ----------
+        self : BDF()
+            the BDF object
+        out_filename : varies; default=None
+            str        - the name to call the output bdf
+            file       - a file object
+            StringIO() - a StringIO object
+            None       - pops a dialog
+        encoding : str; default=None -> system specified encoding
+            the unicode encoding
+            latin1, and utf8 are generally good options
+        size : int; {8, 16}
+            the field size
+        is_double : bool; default=False
+            False : small field
+            True : large field
+        enddata : bool; default=None
+            bool - enable/disable writing ENDDATA
+            None - depends on input BDF
+        close : bool; default=True
+            should the output file be closed
         plane : str; {'xy', 'yz', 'xz'}; default='xz'
             the plane to mirror about
         """
@@ -230,10 +255,13 @@ class WriteMesh(object):
             encoding = self._encoding
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
-        if PY2:
-            outfile = open(out_filename, 'wb', encoding=encoding)
+        if isinstance(out_filename, (file, StringIO)):
+            outfile = out_filename
         else:
-            outfile = open(out_filename, 'w', encoding=encoding)
+            if PY2:
+                outfile = open(out_filename, 'wb', encoding=encoding)
+            else:
+                outfile = open(out_filename, 'w', encoding=encoding)
         self._write_header(outfile, encoding)
         self._write_params(outfile, size, is_double)
         self._write_nodes_symmetric(outfile, size, is_double, plane=plane)
@@ -250,13 +278,17 @@ class WriteMesh(object):
         self._write_common(outfile, size, is_double)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             outfile.write('ENDDATA\n')
-        outfile.close()
+        if close:
+            outfile.close()
 
     def _write_header(self, outfile, encoding):
         """
         Writes the executive and case control decks.
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.punch is None:
             # writing a mesh without using read_bdf
@@ -280,7 +312,10 @@ class WriteMesh(object):
         """
         Writes the executive control deck.
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.executive_control_lines:
             msg = '$EXECUTIVE CONTROL DECK\n'
@@ -300,7 +335,10 @@ class WriteMesh(object):
         """
         Writes the Case Control Deck.
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
@@ -312,7 +350,10 @@ class WriteMesh(object):
         """
         Writes the elements in a sorted order
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.elements:
             outfile.write('$ELEMENTS\n')
@@ -332,7 +373,10 @@ class WriteMesh(object):
         """
         Writes the elements in a sorted order
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         nid_offset = max(self.nodes.keys())
         eid_offset = max(self.elements.keys())
@@ -358,6 +402,11 @@ class WriteMesh(object):
     def _write_elements_properties(self, outfile, size=8, is_double=False):
         """
         Writes the elements and properties in and interspersed order
+
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         missing_properties = []
         if self.properties:
@@ -468,8 +517,15 @@ class WriteMesh(object):
         """
         Write the common outputs so none get missed...
 
-        :param self: the BDF object
-        :returns msg: part of the bdf
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+
+        Returns
+        -------
+        msg : str
+            part of the bdf
         """
         self._write_rigid_elements(outfile, size, is_double)
         self._write_dmigs(outfile, size, is_double)
@@ -557,9 +613,17 @@ class WriteMesh(object):
         """
         Writes the DMIG cards
 
-        :param self:  the BDF object
-        :param size:  large field (16) or small field (8)
-        :returns msg: string representation of the DMIGs
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        size : int
+            large field (16) or small field (8)
+
+        Returns
+        -------
+        msg : str
+            string representation of the DMIGs
         """
         msg = []
         for (unused_name, dmig) in sorted(iteritems(self.dmigs)):
@@ -572,6 +636,8 @@ class WriteMesh(object):
             msg.append(dmiji.write_card(size, is_double))
         for (unused_name, dmik) in sorted(iteritems(self.dmiks)):
             msg.append(dmik.write_card(size, is_double))
+        for unused_name, deqatn in  sorted(iteritems(self.dequations)):
+            msg.append(deqatn.write_card(size, is_double))
         outfile.write(''.join(msg))
 
     def _write_dynamic(self, outfile, size=8, is_double=False):
@@ -718,7 +784,10 @@ class WriteMesh(object):
         """
         Writes the NODE-type cards
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.spoints:
             msg = []
@@ -913,7 +982,7 @@ class WriteMesh(object):
     def _write_rejects(self, outfile, size=8, is_double=False):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
-        cardLines
+        cardlines
         """
         if size == 8:
             print_func = print_card_8

@@ -1986,8 +1986,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             self.rejects.append([comment])
         #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
         # should be later moved to loop below
-        #self.add_DEQATN(DEQATN(card_obj))
-        self.rejects.append(card)
+        if hasattr(self, 'test_deqatn'):
+            self.add_DEQATN(DEQATN(card_obj))
+        else:
+            self.rejects.append(card)
 
     def _prepare_dmig(self, card, card_obj, comment=''):
         """adds a DMIG"""

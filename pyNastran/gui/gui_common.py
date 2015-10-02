@@ -12,6 +12,7 @@ import cgi #  html lib
 import inspect
 import traceback
 from copy import deepcopy
+from collections import OrderedDict
 
 from PyQt4 import QtCore, QtGui
 import vtk
@@ -2118,9 +2119,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _finish_results_io2(self, form, cases):
         assert len(cases) > 0, cases
+        if isinstance(cases, OrderedDict):
+            self.caseKeys = cases.keys()
+        else:
+            self.caseKeys = sorted(cases.keys())
+            assert isinstance(cases, dict), type(cases)
+
         self.on_update_geometry_properties(self.geometry_properties)
         self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
+
         #print("cases =", cases)
         #print("caseKeys =", self.caseKeys)
 

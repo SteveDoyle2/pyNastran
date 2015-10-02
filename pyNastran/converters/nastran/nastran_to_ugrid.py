@@ -14,7 +14,7 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None):
             # pids_to_include.append(pid)
     if properties is not None:
         for pid, pid_new in iteritems(properties):
-            bdf_model.properties[pid] = pid_new
+            bdf_model.properties[pid].pid = pid_new
 
     card_types = ['CQUAD4', 'CTRIA3', 'CTETRA', 'CHEXA', 'GRID', 'CPENTA', 'CPYRAM']
     out = bdf_model.get_card_ids_by_card_types(card_types)

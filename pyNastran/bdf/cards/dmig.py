@@ -78,38 +78,87 @@ class DEQATN(BaseCard):  # needs work...
             self._comment = comment
         new_card = ''
         found_none = False
-        for field in card.card:
-            if found_none is False and field is not None:
-                new_card += field + ','
-                found_none = True
-            elif found_none is True and field is not None:
-                new_card += field
+        #print(card)
+        line0 = card[0]
+        name_eqid = line0[:16]
+        #print('name_eqid = %r' % name_eqid)
+        assert ',' not in name_eqid, name_eqid
 
-        line0 = new_card
-        self.eqID = line0[8:16]
+        try:
+            name, eq_id = name_eqid.split()
+        except ValueError:
+            msg = 'cannot split %r\n' % name_eqid
+            msg += "Expected data of the form 'DEQATN  100'\n"
+            msg += 'card=%s' % card
+            raise ValueError(msg)
 
-        assert len(self.eqID) == 8, 'len(eqID)==%s' % (len(self.eqID))
-        eq = line0[16:]
-        eq = eq.replace(' ', '').lower()
-        (self.name, self.eq) = eq.split('=')
-        #print("EQ = %s" %(self.eq))
+        self.eqID = int(eq_id)
+
+        line0_eq = line0[16:]
+        eqs = [line0_eq] + card[1:]
+        self.eqs = []
+        neqs = len(eqs)
+        for i, eq in enumerate(eqs):
+            eqi = eq.strip()
+            if i == 0 and eqi == '':
+                #self.eqs.append(eqi)
+                continue
+
+            if i == 0:
+                # first line
+                assert len(eqi) <= 56, eqi
+            elif i != neqs-1:
+                # mid line
+                assert len(eqi) <= 64, eqi
+                assert eqi.endswith(';'), eqi
+                eqi = eqi[:-1]
+                assert not eqi.endswith(';'), eq
+            else:
+                # last line
+                pass
+            self.eqs.append(eqi)
+            #print(i, eqi)
+
+        #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(self.eqID))
 
     def evaluate(self, args):
         #eqLow = self.eq.lower()
         #eval(self.eq)
-        pass
+        func = eval(fortran_to_python(self.eqs))
+        return func(*args)
 
-    def __repr__(self):
-        eq = self.name + '=' + self.eq
-        equation_line = eq[0:56]
-        eq = eq[56:]
-        list_fields = ['DEQATN  ', '%8s' % (self.eqID), equation_line]
 
-        if len(eq):
-            equation_line = eq[0:72]
-            eq = eq[72:]
-            list_fields += ['        ' + equation_line]
-        return ''.join(list_fields)
+    def write_card(self, size=8, is_double=False):
+        #self.evaluate([1, 2, 3])
+        equation_line0 = self.eqs[0]
+        assert len(equation_line0) < 56, equation_line0
+        msg = 'DEQATN  %8i%56s' % (self.eqID, equation_line0)
+        assert len(equation_line0) < 56, equation_line0
+        for eq in self.eqs[1:]:
+            msg += '        %64s\n' % eq
+            assert len(eq) < 64, eq
+        return msg
+
+def fortran_to_python(lines):
+    print(lines)
+    msg = ''
+    #line0 = lines[0].lower()
+    #print('line0=%r' % line0)
+    for i, line in enumerate(lines):
+        #print('line=%r' % line)
+        f, eq = line.split('=')
+        f = f.strip()
+        eq = eq.strip()
+
+        if i == 0:
+            msg += 'def %s:\n' % f
+        else:
+            msg += '    %s = %s\n' % (f, eq)
+        print('  i=%s f=%r eq=%r' % (i, f, eq))
+    msg += '    return %s\n' % f
+
+    print(msg)
+    return msg
 
 
 class NastranMatrix(BaseCard):

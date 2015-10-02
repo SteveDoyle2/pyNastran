@@ -25,7 +25,7 @@ from copy import deepcopy
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import os
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross
@@ -1151,8 +1151,20 @@ class NastranIO(object):
         nelements = len(model.elements)
         pids = zeros(nelements, 'int32')
 
+        # pids_good = []
+        # pids_to_keep = []
+        # pids_btm = []
+        # pids_to_drop = []
         nid_to_pid_map = defaultdict(list)
         for (eid, element) in sorted(iteritems(model.elements)):
+            # if element.Pid() >= 82:
+                # continue
+            # if element.Pid() in pids_to_drop:
+                # continue
+            # if element.Pid() not in pids_to_keep:
+                # continue
+            # if element.pid.type == 'PSOLID':
+                # continue
             self.eidMap[eid] = i
             pid = 0
             if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
@@ -1205,7 +1217,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[4]])
                 self.eid_to_nid_map[eid] = [nodeIDs[0], nodeIDs[2], nodeIDs[4]]
-                #a = [0,2,4]
+                #a = [0, 2, 4]
                 #msg = "CTRIAX6 %i %i %i" %(nidMap[nodeIDs[a[0]]],
                 #                           nidMap[nodeIDs[a[1]]],
                 #                           nidMap[nodeIDs[a[2]]])
@@ -1496,6 +1508,7 @@ class NastranIO(object):
                 pids[i] = pid
                 pids_dict[eid] = pid
             i += 1
+        assert len(self.eidMap) > 0, self.eidMap
 
         nelements = i
         self.nElements = nelements
@@ -1970,7 +1983,7 @@ class NastranIO(object):
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
 
-        cases = {}
+        cases = OrderedDict()
         subcase_ids = model.iSubcaseNameMap.keys()
         #self.iSubcaseNameMap = model.iSubcaseNameMap
         # self.iSubcaseNameMap = model.subcase_key
@@ -2086,196 +2099,205 @@ class NastranIO(object):
                 continue
 
             for key in keys:
+                if isinstance(key, (int, int32)):
+                    if key != subcase_id:
+                        continue
+                else:
+                    subcase_idi = key[0]
+                    if subcase_id != subcase_idi:
+                        continue
+
                 #print('dkey =', key)
-                if key in result:
-                    case = result[key]
-                    subcase_idi = case.isubcase
-                    if not hasattr(case, 'data'):
-                        continue
-                    if not case.is_real():
-                        continue
-                    if case.nonlinear_factor is not None: # transient
-                        code_name = case.data_code['name']
-                        has_cycle = hasattr(case, 'mode_cycle')
-                        assert case.is_sort1(), case.is_sort1()
+                if key not in result:
+                    continue
+                case = result[key]
+                subcase_idi = case.isubcase
+                if not hasattr(case, 'data'):
+                    continue
+                if not case.is_real():
+                    continue
+                if case.nonlinear_factor is not None: # transient
+                    code_name = case.data_code['name']
+                    has_cycle = hasattr(case, 'mode_cycle')
+                    assert case.is_sort1(), case.is_sort1()
 
-                        itime0 = 0
-                        t1 = case.data[itime0, :, 0]
-                        ndata = t1.shape[0]
+                    itime0 = 0
+                    t1 = case.data[itime0, :, 0]
+                    ndata = t1.shape[0]
+                    if nnodes != ndata:
+                        nidsi = case.node_gridtype[:, 0]
+                        assert len(nidsi) == nnodes
+                        j = searchsorted(nids, nidsi)  # searching for nidsi
+
+                        try:
+                            if not allclose(nids[j], nidsi):
+                                msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                                raise RuntimeError(msg)
+                        except IndexError:
+                            msg = 'node_ids = %s\n' % list(nids)
+                            msg += 'nidsi in disp = %s\n' % list(nidsi)
+                            raise IndexError(msg)
+
+
+                    if name in ['Displacement', 'Eigenvectors']:
+                        assert case.is_sort1(), case.is_sort1()
+                        # we'll pass all the times in
+                        t123 = case.data[:, :, :3]
                         if nnodes != ndata:
-                            nidsi = case.node_gridtype[:, 0]
-                            assert len(nidsi) == nnodes
-                            j = searchsorted(nids, nidsi)  # searching for nidsi
+                            t123i = zeros((nnodes, 3), dtype='float32')
+                            t123i[j, :] = t123
+                            t123 = t123i
+                        tnorm = norm(t123, axis=1)
+                        assert len(tnorm) == t123.shape[0]
+                        ntimes = case.ntimes
+                        titles = []
+                        scales = []
+                        nastran_res = NastranDisplacementResults(subcase_idi, titles,
+                                                                 self.xyz_cid0, t123, tnorm,
+                                                                 scales,
+                                                                 uname='NastranResult')
 
-                            try:
-                                if not allclose(nids[j], nidsi):
-                                    msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
-                                    raise RuntimeError(msg)
-                            except IndexError:
-                                msg = 'node_ids = %s\n' % list(nids)
-                                msg += 'nidsi in disp = %s\n' % list(nidsi)
-                                raise IndexError(msg)
+                        for itime in range(ntimes):
+                            dt = case._times[itime]
 
+                            if isinstance(dt, float):
+                                header = ' %s = %.4E' % (code_name, dt)
+                            else:
+                                header = ' %s = %i' % (code_name, dt)
 
-                        if name in ['Displacement', 'Eigenvectors'] and 1:
-                            assert case.is_sort1(), case.is_sort1()
-                            # we'll pass all the times in
-                            t123 = case.data[:, :, :3]
-                            if nnodes != ndata:
-                                t123i = zeros((nnodes, 3), dtype='float32')
-                                t123i[j, :] = t123
-                                t123 = t123i
-                            tnorm = norm(t123, axis=1)
-                            assert len(tnorm) == t123.shape[0]
-                            ntimes = case.ntimes
-                            titles = []
-                            scales = []
-                            nastran_res = NastranDisplacementResults(subcase_idi, titles,
-                                                                     self.xyz_cid0, t123, tnorm,
-                                                                     scales,
-                                                                     uname='NastranResult')
+                            if has_cycle:
+                                freq = case.eigrs[itime]
+                                #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
+                                cycle = sqrt(abs(freq)) / (2. * pi)
+                                header += '; freq=%g' % cycle
 
-                            for itime in range(ntimes):
-                                dt = case._times[itime]
+                            form0 = (header, None, [])
+                            formi2 = form0[2]
 
-                                if isinstance(dt, float):
-                                    header = ' %s = %.4E' % (code_name, dt)
-                                else:
-                                    header = ' %s = %i' % (code_name, dt)
-
-                                if has_cycle:
-                                    freq = case.eigrs[itime]
-                                    #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-                                    cycle = sqrt(abs(freq)) / (2. * pi)
-                                    header += '; freq=%g' % cycle
-
-                                form0 = (header, None, [])
-                                formi2 = form0[2]
-
-                                print('*name = %r' % name)
-                                tnorm_abs_max = tnorm.max()
-                                scale = self.displacement_scale_factor / tnorm_abs_max
-
-                                scale = self.dim_max / tnorm_abs_max * 0.25
-                                scales.append(scale)
-
-                                title = name + 'XYZ'
-                                titles.append(title)
-
-                                cases[icase] = (nastran_res, (itime, title))
-                                formi2.append((title, icase, []))
-                                icase += 1
-                                formi.append(form0)
-                            nastran_res.save_defaults()
-                        else:
-                            print('name=%r' % name)
-                            assert case.is_sort1(), case.is_sort1()
-                            for itime in range(case.ntimes):
-                                dt = case._times[itime]
-                                t1 = case.data[itime, :, 0]
-                                t2 = case.data[itime, :, 1]
-                                t3 = case.data[itime, :, 2]
-
-                                t123 = case.data[itime, :, :3]
-                                #tnorm = norm(t123, axis=1)
-
-                                if(t1.min() == t1.max() and t2.min() == t2.max() and
-                                   t3.min() == t3.max()):
-                                    continue
-                                if nnodes != ndata:
-                                    t1i = zeros(nnodes, dtype='float32')
-                                    t2i = zeros(nnodes, dtype='float32')
-                                    t3i = zeros(nnodes, dtype='float32')
-                                    t1i[j] = t1
-                                    t2i[j] = t2
-                                    t3i[j] = t3
-                                    t1 = t1i
-                                    t2 = t2i
-                                    t3 = t3i
-
-                                if isinstance(dt, float):
-                                    header = ' %s = %.4E' % (code_name, dt)
-                                else:
-                                    header = ' %s = %i' % (code_name, dt)
-
-                                if has_cycle:
-                                    freq = case.eigrs[itime]
-                                    #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-                                    cycle = sqrt(abs(freq)) / (2. * pi)
-                                    header += '; freq=%g' % cycle
-
-                                form0 = (header, None, [])
-                                formi2 = form0[2]
-
-                                if 1:
-                                    cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g', header)] = t1
-                                    formi2.append((name + 'X', icase, []))
-                                    icase += 1
-
-                                    cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g', header)] = t2
-                                    formi2.append((name + 'Y', icase, []))
-                                    icase += 1
-
-                                    cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                                    formi2.append((name + 'Z', icase, []))
-                                    icase += 1
-
-                                cases[(subcase_idi, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
-                                formi2.append((name + 'XYZ', icase, []))
-                                icase += 1
-
-                                formi.append(form0)
-                    else:
-                        assert case.is_sort1(), case.is_sort1()
-
-                        if name == 'Displacement':
-                            t123 = case.data[:, :, :3]
-                            tnorm = norm(t123, axis=1)
                             print('*name = %r' % name)
-                            titles = [name + 'XYZ']
-
                             tnorm_abs_max = tnorm.max()
                             scale = self.displacement_scale_factor / tnorm_abs_max
-                            scales = [scale]
-                            nastran_res = NastranDisplacementResults(subcase_id, titles,
-                                                                     self.xyz_cid0, t123, tnorm,
-                                                                     scales=scales,
-                                                                     uname='NastranResult')
-                            nastran_res.save_defaults()
-                            cases[icase] = (nastran_res, (0, name + 'XYZ'))
-                            formi.append((name + 'XYZ', icase, []))
+
+                            scale = self.dim_max / tnorm_abs_max * 0.25
+                            scales.append(scale)
+
+                            title = name + 'XYZ'
+                            titles.append(title)
+
+                            cases[icase] = (nastran_res, (itime, title))
+                            formi2.append((title, icase, []))
                             icase += 1
-                        else:
-                            t123 = case.data[0, :, :3]
-                            tnorm = norm(t123, axis=1)
-                            print('name = %r' % name)
-                            t1 = case.data[0, :, 0]
-                            t2 = case.data[0, :, 1]
-                            t3 = case.data[0, :, 2]
+                            formi.append(form0)
+                        nastran_res.save_defaults()
+                    else:
+                        print('name=%r' % name)
+                        assert case.is_sort1(), case.is_sort1()
+                        for itime in range(case.ntimes):
+                            dt = case._times[itime]
+                            t1 = case.data[itime, :, 0]
+                            t2 = case.data[itime, :, 1]
+                            t3 = case.data[itime, :, 2]
+
+                            t123 = case.data[itime, :, :3]
+                            #tnorm = norm(t123, axis=1)
 
                             if(t1.min() == t1.max() and t2.min() == t2.max() and
-                               t3.min() == t3.max() and t123.min() == t123.max()):
+                               t3.min() == t3.max()):
                                 continue
-                            #if t1.min() != t1.max():
-                            cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g')] = t1
-                            formi.append((name + 'X', icase, []))
+                            if nnodes != ndata:
+                                t1i = zeros(nnodes, dtype='float32')
+                                t2i = zeros(nnodes, dtype='float32')
+                                t3i = zeros(nnodes, dtype='float32')
+                                t1i[j] = t1
+                                t2i[j] = t2
+                                t3i[j] = t3
+                                t1 = t1i
+                                t2 = t2i
+                                t3 = t3i
+
+                            if isinstance(dt, float):
+                                header = ' %s = %.4E' % (code_name, dt)
+                            else:
+                                header = ' %s = %i' % (code_name, dt)
+
+                            if has_cycle:
+                                freq = case.eigrs[itime]
+                                #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
+                                cycle = sqrt(abs(freq)) / (2. * pi)
+                                header += '; freq=%g' % cycle
+
+                            form0 = (header, None, [])
+                            formi2 = form0[2]
+
+                            if 1:
+                                cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g', header)] = t1
+                                formi2.append((name + 'X', icase, []))
+                                icase += 1
+
+                                cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g', header)] = t2
+                                formi2.append((name + 'Y', icase, []))
+                                icase += 1
+
+                                cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                                formi2.append((name + 'Z', icase, []))
+                                icase += 1
+
+                            cases[(subcase_idi, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
+                            formi2.append((name + 'XYZ', icase, []))
                             icase += 1
 
-                            #if t2.min() != t2.max():
-                            cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g')] = t2
-                            formi.append((name + 'Y', icase, []))
-                            icase += 1
+                            formi.append(form0)
+                else:
+                    assert case.is_sort1(), case.is_sort1()
 
-                            #if t3.min() != t3.max():
-                            cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g')] = t3
-                            formi.append((name + 'Z', icase, []))
-                            icase += 1
+                    if name == 'Displacement' and 1:
+                        t123 = case.data[:, :, :3]
+                        tnorm = norm(t123, axis=1)
+                        #print('*name = %r' % name)
+                        titles = [name + 'XYZ']
 
-                            #if t123.min() != t123.max():
-                            cases[(subcase_idi, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
-                            #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
-                            formi.append((name + 'XYZ', icase, []))
-                            icase += 1
+                        tnorm_abs_max = tnorm.max()
+                        scale = self.displacement_scale_factor / tnorm_abs_max
+                        scales = [scale]
+                        nastran_res = NastranDisplacementResults(subcase_idi, titles,
+                                                                 self.xyz_cid0, t123, tnorm,
+                                                                 scales=scales,
+                                                                 uname='NastranResult')
+                        nastran_res.save_defaults()
+                        cases[icase] = (nastran_res, (0, name + 'XYZ'))
+                        formi.append((name + 'XYZ', icase, []))
+                        icase += 1
+                    else:
+                        t123 = case.data[0, :, :3]
+                        tnorm = norm(t123, axis=1)
+                        print('name = %r' % name)
+                        t1 = case.data[0, :, 0]
+                        t2 = case.data[0, :, 1]
+                        t3 = case.data[0, :, 2]
+
+                        if(t1.min() == t1.max() and t2.min() == t2.max() and
+                           t3.min() == t3.max() and t123.min() == t123.max()):
+                            continue
+                        #if t1.min() != t1.max():
+                        cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g')] = t1
+                        formi.append((name + 'X', icase, []))
+                        icase += 1
+
+                        #if t2.min() != t2.max():
+                        cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g')] = t2
+                        formi.append((name + 'Y', icase, []))
+                        icase += 1
+
+                        #if t3.min() != t3.max():
+                        cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g')] = t3
+                        formi.append((name + 'Z', icase, []))
+                        icase += 1
+
+                        #if t123.min() != t123.max():
+                        cases[(subcase_idi, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
+                        #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
+                        formi.append((name + 'XYZ', icase, []))
+                        icase += 1
 
         for (result, name) in temperature_like:
             if subcase_id in result:
@@ -2842,6 +2864,7 @@ class NastranIO(object):
         assert is_stress in [True, False], is_stress
         assert is_static in [True, False], is_static
         eids = self.element_ids
+        assert len(eids) > 0, eids
         nelements = self.nElements
 
         isElementOn = zeros(nelements, dtype='int8')  # is the element supported
