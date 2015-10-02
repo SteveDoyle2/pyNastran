@@ -7,7 +7,7 @@ from itertools import count
 from math import ceil
 
 from numpy import (array, unique, where, arange, hstack, searchsorted,
-                   unique)
+                   setdiff1d, intersect1d, asarray)
 from numpy.linalg import norm
 import scipy
 
@@ -124,8 +124,17 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     """
     assert isinstance(tol, float), tol
     if node_set is not None:
+
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
+
+        print(type(node_set))
+        print('*node_set', node_set)
+        assert len(node_set) > 0, node_set
+        if isinstance(node_set, set):
+            node_set = asarray(list(node_set), dtype='int32')
+        else:
+            node_set = asarray(node_set, dtype='int32')
 
     if isinstance(bdf_filename, string_types):
         xref = True
@@ -150,16 +159,14 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     inode = 0
     nid_map = {}
     if node_set is not None:
-        import numpy as np
-        node_set = np.asarray(node_set, dtype='int32')
         all_nids = array(model.nodes.keys(), dtype='int32')
 
         # B - A
-        diff_nodes = np.setdiff1d(node_set, all_nids)
+        diff_nodes = setdiff1d(node_set, all_nids)
         assert len(diff_nodes) == 0, 'The following nodes cannot be found, but are included in the reduced set; nids=%s' % diff_nodes
 
         # A & B
-        nids = np.intersect1d(all_nids, node_set, assume_unique=True)  # the new values
+        nids = intersect1d(all_nids, node_set, assume_unique=True)  # the new values
 
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
@@ -424,7 +431,7 @@ def _roundup(value, n=100):
     return int(ceil(value / float(n))) * n
 
 
-def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
+def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None):
     """
     Merges multiple BDF into one file
 
@@ -474,7 +481,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
     #}
     model = BDF()
     bdf_filename0 = bdf_filenames[0]
-    model.read_bdf(bdf_filename0)
+    model.read_bdf(bdf_filename0, encoding=encoding)
     print('primary=%s' % bdf_filename0)
 
     data_members = [

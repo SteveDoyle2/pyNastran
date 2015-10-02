@@ -4,7 +4,8 @@ import os
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
 
 
-def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, include_solids=True):
+def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, include_solids=True,
+                       convert_pyram_to_penta=False, encoding=None):
     """
     Converts a UGRID to a BDF.
 
@@ -18,7 +19,8 @@ def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, includ
     model = UGRID(log=None, debug=False)
     assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
     model.read_ugrid(ugrid_filename)
-    model.export_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
+    model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids,
+                    convert_pyram_to_penta=convert_pyram_to_penta, encoding=encoding)
 
 
 def main():

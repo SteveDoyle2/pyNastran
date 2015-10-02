@@ -2227,9 +2227,10 @@ class NastranIO(object):
                                 formi.append(form0)
                     else:
                         assert case.is_sort1(), case.is_sort1()
-                        t123 = case.data[0, :, :3]
-                        tnorm = norm(t123, axis=1)
+
                         if name == 'Displacement':
+                            t123 = case.data[:, :, :3]
+                            tnorm = norm(t123, axis=1)
                             print('*name = %r' % name)
                             titles = [name + 'XYZ']
 
@@ -2245,6 +2246,8 @@ class NastranIO(object):
                             formi.append((name + 'XYZ', icase, []))
                             icase += 1
                         else:
+                            t123 = case.data[0, :, :3]
+                            tnorm = norm(t123, axis=1)
                             print('name = %r' % name)
                             t1 = case.data[0, :, 0]
                             t2 = case.data[0, :, 1]
