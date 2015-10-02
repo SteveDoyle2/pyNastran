@@ -4,6 +4,7 @@ import unittest
 #from codecs import open as codec_open
 
 import os
+from numpy import array, intersect1d
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF
 
@@ -123,8 +124,35 @@ class DevUtils(unittest.TestCase):
         assert len(model.nodes) == 5, len(model.nodes)
         os.remove(bdf_filename_out)
 
+        tol = 0.2
+        node_set = set([20, 3])
+        # Only collpase 2 nodes
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=node_set, crash_on_collapse=False)
+        model = BDF()
+        model.read_bdf(bdf_filename_out)
+        assert len(model.nodes) == 5, len(model.nodes)
+        os.remove(bdf_filename_out)
+
+        tol = 0.2
+        aset = array([20, 3, 4], dtype='int32')
+        bset = array([20, 3], dtype='int32')
+
+        node_set = intersect1d(aset, bset)
+        assert len(node_set) > 0, node_set
+        # Only collpase 2 nodes
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=node_set, crash_on_collapse=False)
+        model = BDF()
+        model.read_bdf(bdf_filename_out)
+        assert len(model.nodes) == 5, len(model.nodes)
+        os.remove(bdf_filename_out)
+
 
     def test_eq3(self):
+        """node_set=None"""
         lines = [
             '$pyNastran: version=msc',
             '$pyNastran: punch=True',

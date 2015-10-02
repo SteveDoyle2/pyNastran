@@ -539,22 +539,22 @@ class Tecplot(FortranFormat):
         del self.f
 
     def slice_x(self, xslice):
-        """TODO: doesn't remove unused nodes"""
+        """TODO: doesn't remove unused nodes/renumber elements"""
         x = self.xyz[:, 0]
         self._slice_plane(x, xslice)
 
     def slice_y(self, yslice):
-        """TODO: doesn't remove unused nodes"""
+        """TODO: doesn't remove unused nodes/renumber elements"""
         y = self.xyz[:, 1]
         self._slice_plane(y, yslice)
 
     def slice_z(self, zslice):
-        """TODO: doesn't remove unused nodes"""
+        """TODO: doesn't remove unused nodes/renumber elements"""
         z = self.xyz[:, 2]
         self._slice_plane(z, zslice)
 
     def slice_xyz(self, xslice, yslice, zslice):
-        """TODO: doesn't remove unused nodes"""
+        """TODO: doesn't remove unused nodes/renumber elements"""
         x = self.xyz[:, 0]
         y = self.xyz[:, 1]
         z = self.xyz[:, 2]
@@ -592,6 +592,9 @@ class Tecplot(FortranFormat):
         self._slice_plane_inodes(inodes)
 
     def _slice_plane_inodes(self, inodes):
+        """
+        TODO: doesn't remove unused nodes/renumber elements
+        """
         # old_num = inodes
         # new_num = arange(self.xyz.shape[0], dtype='int32')
         #print('old =', old_num)

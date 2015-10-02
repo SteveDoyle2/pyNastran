@@ -7,10 +7,17 @@ def combine_surfs(surf_filenames, surf_out_filename=None):
     """
     Combines multiple SURFs into a single file
 
-    :param surf_filenames:       list of surf filenames
-    :param surf_out_filename:     string of stl output filename (default=None -> no writing)
+    Parameters
+    ----------
+    surf_filenames : List[str]
+        list of surf filenames
+    surf_out_filename : str; default=None -> no writing
+        string of stl output filename
 
-    :retval surf:  the surf object
+    Returns
+    -------
+    surf : SurfReader
+        the surf object
     """
     nodes = []
     tris = []
@@ -66,7 +73,7 @@ class SurfReader(object):
         +---------+--------------------------------------------------------------+
         |     2   | standard surface that intersects the BL region               |  *** boundary layer
         +---------+--------------------------------------------------------------+
-        |     3   | embedded/transparent surface or source surface that will be  |
+        |     3   | embedded/transparent surface or source surface that will be  |  *** source
         |         | converted to source nodes                                    |
         +---------+--------------------------------------------------------------+
         |     4   | embedded/transparent surface that intersects the BL region   |
