@@ -431,7 +431,7 @@ def _roundup(value, n=100):
     return int(ceil(value / float(n))) * n
 
 
-def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
+def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None):
     """
     Merges multiple BDF into one file
 
@@ -481,7 +481,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
     #}
     model = BDF()
     bdf_filename0 = bdf_filenames[0]
-    model.read_bdf(bdf_filename0)
+    model.read_bdf(bdf_filename0, encoding=encoding)
     print('primary=%s' % bdf_filename0)
 
     data_members = [

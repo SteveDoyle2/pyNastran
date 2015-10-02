@@ -20,7 +20,7 @@ from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
 from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
-# from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
+from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename
@@ -33,9 +33,13 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None):
     """
     Converts Nastran to STL/Cart3d/Tecplot
     """
-    assert fmt2 in ['stl', 'cart3d', 'tecplot'], 'format2=%s' % fmt2
+    assert fmt2 in ['stl', 'cart3d', 'tecplot', 'ugrid'], 'format2=%s' % fmt2
+    xref = True
+    if fmt2 == 'ugrid':
+        xref = False
     model = BDF()
-    model.read_bdf(bdf_filename)
+    model.read_bdf(bdf_filename, xref=xref)
+
     if fmt2 == 'stl':
         nastran_to_stl(model, fname2, is_binary=data['--binary'])
     elif fmt2 == 'cart3d':
@@ -44,8 +48,8 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None):
         tecplot = nastran_to_tecplot(model)
         tecplot_filename = fname2
         tecplot.write_tecplot(tecplot_filename, adjust_nids=False)
-    # elif fmt2 == 'ugrid':
-        # nastran_to_ugrid(model, fname2)
+    elif fmt2 == 'ugrid':
+        ugrid = nastran_to_ugrid(model, fname2)
     else:
         raise NotImplementedError(fmt2)
 
@@ -78,6 +82,7 @@ def cart3d_to_tecplot(cart3d_filename, tecplot_filename):
     tecplot.xyz = model.points
     tecplot.tri_elements = model.elements
     tecplot.write_tecplot(tecplot_filename, adjust_nids=False)
+    return tecplot
 
 def process_stl(stl_filename, fmt2, fname2, data=None):
     """
@@ -141,9 +146,6 @@ def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
         tecplot_filenames = [tecplot_filename]
     assert len(tecplot_filenames) > 0, tecplot_filename
     model = merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None)
-    # model.read_tecplot(tecplot_filename)
-    # if fmt2 == 'nastran':
-        # tecplot_to_nastran(model, fname2)
     #if fmt2 == 'cart3d':
         #tecplot_to_cart3d(model, fname2)
     #elif fmt2 == 'stl':
@@ -255,6 +257,7 @@ def main():
     msg += "  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n"
     msg += "  STL/Tecplot supports globbing as the input filename\n"
     msg += "  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)\n"
+    msg += "  UGRID outfiles must be of the form model.b8.ugrid, where b8, b4, lb8, lb4 are valid choices and periods are important\n"
 
 
     ver = str(pyNastran.__version__)
