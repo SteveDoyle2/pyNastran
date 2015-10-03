@@ -52,6 +52,7 @@ class ScalarBar(object):
 
 class GUIMethods(object):
     def __init__(self):
+        self.is_testing = True
         self.debug = False
         self.form = []
         self.result_cases = {}

@@ -1966,8 +1966,9 @@ class NastranIO(object):
                         model._results.saved.add(result)
             model.read_op2(op2_filename, combine=True)
 
-            self.log.info(model.get_op2_stats())
-            print(model.get_op2_stats())
+            if not self.is_testing:
+                self.log.info(model.get_op2_stats())
+            # print(model.get_op2_stats())
 
         elif ext == '.pch':
             raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
@@ -2012,6 +2013,8 @@ class NastranIO(object):
 
         form = []
         icase = 0
+        self._fill_nastran_output(cases, model, form, icase)
+
         for subcase_id in subcase_ids:
             if subcase_id == 0:
                 # subcase id can be 0...what...see ISAT....
@@ -2068,6 +2071,125 @@ class NastranIO(object):
         ]
         icase = 6
         return form, cases, icase
+
+    def _fill_nastran_output(self, cases, model, form, icase):
+        keys = self._get_nastran_key_order(model)
+        assert keys is not None, keys
+        print('keys_order =', keys)
+        return
+        # for key in keys:
+            # self.fill_oug_oqg(cases, model, subcase_id, formi, icase)
+            # self.fill_stress(cases, model, subcase_id, formi, icase)
+
+
+    def _get_nastran_key_order(self, model):
+        displacement_like = [
+            model.displacements,
+            model.velocities,
+            model.accelerations,
+            model.eigenvectors,
+            model.spc_forces,
+            model.mpc_forces,
+
+            # untested
+            model.load_vectors,
+            model.applied_loads,
+            model.force_vectors,
+            #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
+        ]
+        temperature_like = [
+            model.temperatures,
+        ]
+        stress = [
+            model.crod_stress, model.conrod_stress, model.ctube_stress,
+            model.cbar_stress,
+            model.cbeam_stress,
+
+            model.ctria3_stress, model.cquad4_stress,
+            model.ctria6_stress, model.cquad8_stress,
+            model.ctriar_stress, model.cquadr_stress,
+
+            model.ctria3_composite_stress, model.cquad4_composite_stress,
+            model.ctria6_composite_stress, model.cquad8_composite_stress,
+
+            model.ctetra_stress, model.cpenta_stress, model.chexa_stress,
+        ]
+        strain = [
+            model.crod_strain, model.conrod_strain, model.ctube_strain,
+            model.cbar_strain,
+            model.cbeam_strain,
+
+            model.ctria3_strain, model.cquad4_strain,
+            model.ctria6_strain, model.cquad8_strain,
+            model.ctriar_strain, model.cquadr_strain,
+
+            model.ctria3_composite_strain, model.cquad4_composite_strain,
+            model.ctria6_composite_strain, model.cquad8_composite_strain,
+
+            model.ctetra_strain, model.cpenta_strain, model.chexa_strain,
+        ]
+        strain_energy = [model.strain_energy]
+
+        result_groups = [
+            displacement_like, temperature_like, stress, strain, strain_energy,
+        ]
+
+        nids = self.node_ids
+        eids = self.element_ids
+        keys_order = []
+        # model = OP2()
+
+
+        # subcase_ids = model.subcase_key.keys()
+        subcase_ids = model.iSubcaseNameMap.keys()
+        subcase_ids.sort()
+        #print('subcase_ids =', subcase_ids)
+        if subcase_ids[0] == 0:
+            subcase_ids = subcase_ids[1:]
+
+            for isubcase in subcase_ids:
+                keys = model.subcase_key[isubcase]
+                key0 = keys[0]
+                if isinstance(key0, (int, int32)):
+                    keys_order += keys
+                    continue
+
+                # this while loop lets us make sure we pull the analysis codes in the expected order
+                # TODO: doesn't pull count in the right order
+                # TODO: doesn't pull subtitle in right order
+                while keys:
+                    key = keys[-1]
+                    #print('while keys ->', key)
+                    (isubcasei, analysis_code, sort_method, count, subtitle) = key
+                    assert isubcase == isubcasei, 'isubcase=%s isubcasei=%s' % (isubcase, isubcasei)
+                    assert analysis_code < 12, analysis_code
+                    for ianalysis_code in range(12):
+                        keyi = (isubcasei, ianalysis_code, sort_method, count, subtitle)
+                        if keyi in keys:
+                            keys_order.append(keyi)
+                            keys.remove(keyi)
+                keys_order += keys
+        return keys_order
+
+        # for i, result_group in enumerate(result_groups): # result_group = displacement_like
+            # assert isinstance(result_group, list), 'i=%s type=%s result_group=%s' % (i, type(result_group), str(result_group))
+            # #print('*******************')
+            # #print(result_group)
+            # for j, results in enumerate(result_group): # result_group = displacements
+                # #print('-------------')
+                # #print(results)
+                # assert isinstance(results, dict), 'i=%s j=%s type=%s results=%s' % (i, j, type(results), str(results))
+                # if len(results) == 0:
+                    # continue
+                # for isubcase in subcase_ids:
+                    # # print('subcase_key =', model.subcase_key)
+                    # keys = model.subcase_key[isubcase]
+                    # for key in keys:
+                        # if key not in keys_order:
+                            # keys_order.append(key)
+        # return keys_order
+
+
 
     def fill_oug_oqg(self, cases, model, subcase_id, formi, icase):
         """
@@ -2192,7 +2314,7 @@ class NastranIO(object):
                             form0 = (header, None, [])
                             formi2 = form0[2]
 
-                            print('*name = %r' % name)
+                            #print('*name = %r' % name)
                             tnorm_abs_max = tnorm.max()
                             scale = self.displacement_scale_factor / tnorm_abs_max
 
@@ -2288,7 +2410,7 @@ class NastranIO(object):
                     else:
                         t123 = case.data[0, :, :3]
                         tnorm = norm(t123, axis=1)
-                        print('name = %r' % name)
+                        #print('name = %r' % name)
                         t1 = case.data[0, :, 0]
                         t2 = case.data[0, :, 1]
                         t3 = case.data[0, :, 2]
@@ -2928,6 +3050,7 @@ class NastranIO(object):
             min_principal[i] = max_principal[i] - 2 * txy[i]
         del rods
 
+
         if is_stress:
             bars = model.cbar_stress
         else:
@@ -2980,6 +3103,7 @@ class NastranIO(object):
             del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
         del bars
 
+
         if is_stress:
             beams = model.cbeam_stress
         else:
@@ -3018,6 +3142,7 @@ class NastranIO(object):
                 ovm[eid2] = ovmi
             del j, eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
         del beams
+
 
         if is_stress:
             plates = [
@@ -3091,6 +3216,7 @@ class NastranIO(object):
             max_principal[i] = o1i
             min_principal[i] = o3i
             ovm[i] = ovmi
+
 
         if is_stress:
             cplates = [

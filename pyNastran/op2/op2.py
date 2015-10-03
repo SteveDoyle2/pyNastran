@@ -5,8 +5,9 @@ Main OP2 class
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
+from collections import defaultdict
 
-from numpy import unique, vstack
+from numpy import unique, vstack, int32
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
@@ -251,16 +252,22 @@ class OP2(OP2_Scalar):
                     self.log.info("continue")
                     continue
             setattr(self, result_type, result)
+        print('subcase_key =', self.subcase_key)
 
         subcase_key2 = {}
         for result_type in result_types:
+            if result_type == 'eigenvalues':
+                continue
             result = getattr(self, result_type)
             case_keys = sorted(result.keys())
             if len(result) == 0:
                 continue
             for isubcase in unique_isubcases:
+                if isubcase not in subcase_key2:
+                    subcase_key2[isubcase] = []
                 for case_key in case_keys:
-                    if isubcase in subcase_key2 and case_key not in subcase_key2[isubcase]:
+                    assert not isinstance(case_key, str), result_type
+                    if case_key not in subcase_key2[isubcase]:
                         subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
 

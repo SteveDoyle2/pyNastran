@@ -69,6 +69,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         GuiCommon.__init__(self)
 
         self.html_logging = html_logging
+        self.is_testing = False
         self._logo = None
         self._script_path = None
         self._icon_path = ''
