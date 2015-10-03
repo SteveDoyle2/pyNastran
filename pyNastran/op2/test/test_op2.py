@@ -256,6 +256,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             op2.get_op2_stats()
         else:
             print(op2.get_op2_stats())
+            print(op2.print_subcase_key())
         if write_bdf:
             op2.write_bdf(bdf_filename)
         if write_bdf and 0:

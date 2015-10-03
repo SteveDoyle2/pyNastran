@@ -253,7 +253,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
         RealCompositePlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def isStress(self):
+    def is_stress(self):
         return True
 
     def isStrain(self):
@@ -273,7 +273,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
         RealCompositePlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def isStress(self):
+    def is_stress(self):
         return False
 
     def isStrain(self):

@@ -79,13 +79,15 @@ class StressObject(OES_Object):
             self.add_new_transient(dt)
 
     def is_strain(self):
-        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
-        assert self.stress_bits[1] == 0, 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        class_name = self.__class__.__name__
+        assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
+        assert self.stress_bits[1] == 0, 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
         return False
 
     def is_stress(self):
-        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
-        assert self.stress_bits[1] == 0, 'scode=%s stress_bits=%s' % (self.s_code, self.stress_bits)
+        class_name = self.__class__.__name__
+        assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
+        assert self.stress_bits[1] == 0, 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
         return True
 
 
@@ -106,12 +108,13 @@ class StrainObject(OES_Object):
             self.add_new_transient(dt)
 
     def is_strain(self):
-        if self.table_name != 'asdf':
-            assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s; table_name+%r' % (self.s_code, self.stress_bits, self.table_name)
-            assert self.stress_bits[1] == 1, 'scode=%s stress_bits=%s; table_name=%r' % (self.s_code, self.stress_bits, self.table_name)
+        class_name = self.__class__.__name__
+        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s; table_name+%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
+        assert self.stress_bits[1] == 1, 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         return True
 
     def is_stress(self):
-        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s; table_name+%r' % (self.s_code, self.stress_bits, self.table_name)
-        assert self.stress_bits[1] == 1, 'is_stress=False scode=%s stress_bits=%s; element_type=%s element_name=%s; table_name=%r' % (self.s_code, self.stress_bits, self.element_type, self.element_name, self.table_name)
+        class_name = self.__class__.__name__
+        assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name+%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
+        assert self.stress_bits[1] == 1, 'class_name=%s is_stress=False scode=%s stress_bits=%s; element_type=%s element_name=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.element_type, self.element_name, self.table_name)
         return False

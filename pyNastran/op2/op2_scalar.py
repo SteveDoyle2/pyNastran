@@ -397,13 +397,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear stresses
             b'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear transient stresses
             b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESTRCP' : [self._read_oes1_3, self._read_oes1_4],
             b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
             b'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
 
             # strain
-            b'OSTR1X' : [self._read_oes1_3, self._read_oes1_4],  # strain - isotropic
-            b'OSTR1C' : [self._read_oes1_3, self._read_oes1_4],  # strain - composite
+            b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
+            b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
+            b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
             #=======================
             # OUG
@@ -414,6 +414,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGV1PAT': [self._read_oug1_3, self._read_oug_4],  # OUG1 + coord ID
             b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
             b'TOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # grid point temperature
+            b'ROUGV1'  : [self._read_oug1_3, self._read_oug_4], # relative OUG
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
@@ -595,11 +596,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQMRMS2' : [self._table_passer, self._table_passer],
             b'OQMNO2' : [self._table_passer, self._table_passer],
             b'OQMCRM2' : [self._table_passer, self._table_passer],
-
-            #b'AAA' : [self._table_passer, self._table_passer],
-            #b'AAA' : [self._table_passer, self._table_passer],
-            #b'AAA' : [self._table_passer, self._table_passer],
-            #b'AAA' : [self._table_passer, self._table_passer],
         }
         return table_mapper
 

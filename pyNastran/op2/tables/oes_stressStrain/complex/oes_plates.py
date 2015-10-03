@@ -332,6 +332,7 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
+        assert self.is_strain(), self.stress_bits
 
     def _get_headers(self):
         return ['exx', 'eyy', 'exy']

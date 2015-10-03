@@ -4,10 +4,10 @@ Main OP2 class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 import os
-from collections import defaultdict
 
-from numpy import unique, vstack, int32
+from numpy import unique, int32
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
@@ -191,6 +191,7 @@ class OP2(OP2_Scalar):
                     isubcasei, analysis_codei, sort_methodi, counti, isubtitle = case_key
                     value = (analysis_codei, sort_methodi, counti, isubtitle)
                     if value not in self.subcase_key[isubcasei]:
+                        #print('isubcase=%s value=%s' % (isubcasei, value))
                         self.subcase_key[isubcasei].append(value)
                 else:
                     break
@@ -217,7 +218,7 @@ class OP2(OP2_Scalar):
                     del result[key0]
                 elif len(keys) == 2:
                     # continue
-                    print('key0 =', result_type, key0)
+                    #print('key0 =', result_type, key0)
                     # res0 = result[key0]
 
                     isubcase, analysis_code, sort_code, count, subtitle = key0
@@ -249,10 +250,10 @@ class OP2(OP2_Scalar):
                     result[isubcase] = res1
                     # print('r[isubcase] =', result[isubcase])
                 else:
-                    self.log.info("continue")
+                    #self.log.info("continue")
                     continue
             setattr(self, result_type, result)
-        print('subcase_key =', self.subcase_key)
+        #print('subcase_key =', self.subcase_key)
 
         subcase_key2 = {}
         for result_type in result_types:
@@ -265,11 +266,32 @@ class OP2(OP2_Scalar):
             for isubcase in unique_isubcases:
                 if isubcase not in subcase_key2:
                     subcase_key2[isubcase] = []
+
+            for isubcase in unique_isubcases:
                 for case_key in case_keys:
+                    #print('isubcase=%s case_key=%s' % (isubcase, case_key))
                     assert not isinstance(case_key, str), result_type
-                    if case_key not in subcase_key2[isubcase]:
-                        subcase_key2[isubcase].append(case_key)
+                    if isinstance(case_key, (int, int32)):
+                        if isubcase == case_key and case_key not in subcase_key2[isubcase]:
+                            subcase_key2[isubcase] = [isubcase]
+                    else:
+                        subcasei = case_key[0]
+                        #if not subcasei == isubcase:
+                            #continue
+                        if case_key not in subcase_key2[subcasei]:
+                            subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
+
+    def print_subcase_key(self):
+        self.log.info('---self.subcase_key---')
+        for isubcase, keys in sorted(iteritems(self.subcase_key)):
+            if len(keys) == 1:
+                self.log.info('subcase_id=%s : keys=%s' % (isubcase, keys))
+            else:
+                self.log.info('subcase_id=%s' % isubcase)
+                for key in keys:
+                    self.log.info('  %s' % str(key))
+        #self.log.info('subcase_key = %s' % self.subcase_key)
 
 
 def main():

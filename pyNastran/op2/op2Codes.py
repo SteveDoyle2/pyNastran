@@ -731,7 +731,7 @@ class Op2Codes(object):
 
         stressWord = ''
         if hasattr(self, 'stress_bits'):
-            if self.isStress():
+            if self.is_stress():
                 stressWord = 'Stress'
             else:
                 stressWord = 'Strain'
@@ -1012,27 +1012,73 @@ class Op2Codes(object):
             return True
         return False
 
-    #----
-    # sort_code
+
     def is_sort1(self):
-        if self.sort_bits[1] == 0:
-            return True
-        return False
+        sort_method, is_real, is_random = self._table_specs()
+        return True if sort_method == 1 else False
 
     def is_sort2(self):
-        return not self.is_sort1()
+        sort_method, is_real, is_random = self._table_specs()
+        return True if sort_method == 2 else False
 
-    #----
-    # sort_code
-    def isReal(self):  # format_code=1, this one is tricky b/c you can overwrite the Real code
-        #if self.format_code==1:
-        #    return True
-        if self.sort_bits[2] == 0:
-            return True
-        return False
+    def _table_specs(self):
+        """
+        +-------+-----------+-------------+----------+
+        | Value | Sort Type | Data Format | Random ? |
+        +-------+-----------+-------------+----------+
+        |   0   |   SORT1   |    Real     |   No     |
+        +-------+-----------+-------------+----------+
+        |   1   |   SORT1   |    Complex  |   No     |
+        +-------+-----------+-------------+----------+
+        |   2   |   SORT2   |    Real     |   No     |
+        +-------+-----------+-------------+----------+
+        |   3   |   SORT2   |    Complex  |   No     |
+        +-------+-----------+-------------+----------+
+        |   4   |   SORT1   |    Real     |   Yes    |
+        +-------+-----------+-------------+----------+
+        |   5   |   SORT1   |    Real     |   ???    |
+        +-------+-----------+-------------+----------+
+        |   6   |   SORT2   |    Real     |   Yes    |
+        +-------+-----------+-------------+----------+
+        |   7   |    ???    |    ???      |   ???    |
+        +-------+-----------+-------------+----------+
 
-    def is_real_imaginary(self):  # format_code=2...does that dominate?
-        return not self.isReal()
+        +-----+-------------+---------+
+        | Bit |     0       |    1    |
+        +-----+-------------+---------+
+        |  0  | Not Random  | Random  |
+        |  1  | SORT1       | SORT2   |
+        |  2  | Real        | Complex |
+        +-----+-------------+---------+
+        """
+        #tcode = self.table_code // 1000
+        tcode = self.sort_code
+        sort_method = 1
+        is_real = True
+        is_random = False
+        assert tcode in [0, 1, 2, 3, 4, 5], tcode
+        if tcode in [2, 3, 5]:
+            sort_method = 2
+        if tcode in [1, 3]:
+            is_real = False
+        if tcode in [4, 5]:
+            is_random = True
+
+        if is_random:
+            assert self.sort_bits[0] == 1, 'should be RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        else:
+            assert self.sort_bits[0] == 0, 'should be NOT RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+
+        if sort_method == 1:
+            assert self.sort_bits[1] == 0, 'should be SORT1; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        else:
+            assert self.sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+
+        if is_real:
+            assert self.sort_bits[2] == 0, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        else:
+            assert self.sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        return sort_method, is_real, is_random
 
     #----
     # sort_code
@@ -1054,10 +1100,6 @@ class Op2Codes(object):
         #return self.is_real_imaginary or self.MagnitudePhase()
 
     #----
-    def isStress(self):
-        if self.stress_bits[1] == 0:
-            return True
-        return False
 
     def _set_op2_date(self, month, day, year):
         self.date = (month, day, 2000 + year)

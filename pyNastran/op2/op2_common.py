@@ -735,6 +735,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.approach_code = approach_code
         self.tCode = tCode
         self.int3 = int3
+        self.data_code['is_msc'] = self.is_msc
 
         if not hasattr(self, 'subtable_name'):
             self.data_code['subtable_name'] = self.subtable_name
@@ -938,78 +939,11 @@ class OP2Common(Op2Codes, F06Writer):
         self.sort_bits = bits
         self.data_code['sort_bits'] = self.sort_bits
 
-    def _table_specs(self):
-        """
-        +-------+-----------+-------------+----------+
-        | Value | Sort Type | Data Format | Random ? |
-        +-------+-----------+-------------+----------+
-        |   0   |   SORT1   |    Real     |   No     |
-        +-------+-----------+-------------+----------+
-        |   1   |   SORT1   |    Complex  |   No     |
-        +-------+-----------+-------------+----------+
-        |   2   |   SORT2   |    Real     |   No     |
-        +-------+-----------+-------------+----------+
-        |   3   |   SORT2   |    Complex  |   No     |
-        +-------+-----------+-------------+----------+
-        |   4   |   SORT1   |    Real     |   Yes    |
-        +-------+-----------+-------------+----------+
-        |   5   |   SORT1   |    Real     |   ???    |
-        +-------+-----------+-------------+----------+
-        |   6   |   SORT2   |    Real     |   Yes    |
-        +-------+-----------+-------------+----------+
-        |   7   |    ???    |    ???      |   ???    |
-        +-------+-----------+-------------+----------+
-
-        +-----+-------------+---------+
-        | Bit |     0       |    1    |
-        +-----+-------------+---------+
-        |  0  | Not Random  | Random  |
-        |  1  | SORT1       | SORT2   |
-        |  2  | Real        | Complex |
-        +-----+-------------+---------+
-        """
-        #tcode = self.table_code // 1000
-        tcode = self.sort_code
-        sort_method = 1
-        is_real = True
-        is_random = False
-        assert tcode in [0, 1, 2, 3, 4, 5], tcode
-        if tcode in [2, 3, 5]:
-            sort_method = 2
-        if tcode in [1, 3]:
-            is_real = False
-        if tcode in [4, 5]:
-            is_random = True
-
-        if is_random:
-            assert self.sort_bits[0] == 1, 'should be RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        else:
-            assert self.sort_bits[0] == 0, 'should be NOT RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-
-        if sort_method == 1:
-            assert self.sort_bits[1] == 0, 'should be SORT1; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        else:
-            assert self.sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-
-        if is_real:
-            assert self.sort_bits[2] == 0, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        else:
-            assert self.sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        return sort_method, is_real, is_random
-
     @property
     def _sort_method(self):
         sort_method, is_real, is_random = self._table_specs()
         assert sort_method in [1, 2], sort_method
         return sort_method
-
-    def is_sort1(self):
-        sort_method, is_real, is_random = self._table_specs()
-        return True if sort_method == 1 else False
-
-    def is_sort2(self):
-        sort_method, is_real, is_random = self._table_specs()
-        return True if sort_method == 2 else False
 
     def is_real(self):
         sort_method, is_real, is_random = self._table_specs()
@@ -1047,12 +981,20 @@ class OP2Common(Op2Codes, F06Writer):
             return True
         return False
 
-    def isStress(self):
-        if self.stress_bits[1] == 0:
+    #def is_stress(self):
+        #if self.stress_bits[1] == 0:
+            #return True
+        #return False
+
+    def is_stress(self):
+        return not self.is_strain()
+
+    def is_strain(self):
+        if self.stress_bits[1] == 1:
             return True
         return False
 
-    def _create_table_object(self, result_name,  nnodes,
+    def _create_table_object(self, result_name, nnodes,
                              slot, slot_object, slot_vector, is_cid=False):
         assert isinstance(result_name, string_types), result_name
         assert isinstance(slot, dict), slot

@@ -33,6 +33,14 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename, None)
 
     def test_solid_shell_bar_03(self):
+        bdf_filename = os.path.join(model_path, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')
+        op2_filename = os.path.join(model_path, 'sol_101_elements', 'buckling_solid_shell_bar.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
+    def test_solid_comp_bar_01(self):
         bdf_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_comp_bar.bdf')
         op2_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_comp_bar.op2')
 
@@ -48,7 +56,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
 
-    def test_contact(self):
+    def _test_contact(self):
         bdf_filename = os.path.join(model_path, 'contact', 'contact.bdf')
         op2_filename = os.path.join(model_path, 'contact', 'contact.op2')
 

@@ -415,16 +415,7 @@ class F06Writer(OP2_F06_Common):
         # isubcases = sorted(self.iSubcaseNameMap.keys())
 
         # TODO: superelement version...need the nominal...
-        res_keys_subcase = {}
-        res_keys = []
-        for isubcase, res_keysi in iteritems(self.subcase_key):
-            res_keys = [isubcase]
-            assert isinstance(res_keysi, list), res_keysi
-            for res_keysii in res_keysi:
-                key = [isubcase] + list(res_keysii)
-                res_keys.append(tuple(key))
-            res_keys_subcase[isubcase] = res_keys
-            del key
+        res_keys_subcase = self.subcase_key
 
         for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
             for res_key in res_keys:
@@ -442,17 +433,15 @@ class F06Writer(OP2_F06_Common):
                 header[0] = '     %s\n' % subtitle
                 header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
                 #header[2] = complex/nonlinear
-                star = ' '
-                if hasattr(self, 'data'):
-                    star = '*'
 
                 res_length = 18
-                res_format = '%%-%is SUBCASE=%%i' % res_length
-                res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
-                if class_name.endswith('Array'):
-                    print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle))
+                res_format = '*%%-%is SUBCASE=%%i' % res_length
+                res_format_vectorized = ' %%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
+                class_name = result.__class__.__name__
+                if hasattr(self, 'data'):
+                    print(res_format_vectorized % (class_name, isubcase, subtitle))
                 else:
-                    print(star + res_format % (result.__class__.__name__, isubcase))
+                    print(res_format % (class_name, isubcase))
 
                 self.page_num = result.write_f06(header, page_stamp,
                                                  self.page_num, f=f06, is_mag_phase=is_mag_phase, is_sort1=True)
@@ -657,10 +646,9 @@ class F06Writer(OP2_F06_Common):
                     # skipped subcase; no saved results
                     continue
 
-                res_format = '%%-%is SUBCASE=%%i%%s' % res_length
-                res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
+                res_format = ' %%-%is SUBCASE=%%i%%s' % res_length
+                res_format_vectorized = '*%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
 
-                print('f06 res_key =', res_key)
                 for res_type in sorted(res_types):
                     if res_key not in res_type:
                         continue
@@ -680,15 +668,11 @@ class F06Writer(OP2_F06_Common):
                         if hasattr(result, 'element_name'):
                             element_name = ' - ' + result.element_name
 
-                        star = '*'
-                        if hasattr(result, 'data'):
-                            star = ' '
-
                         class_name = result.__class__.__name__
-                        if class_name.endswith('Array'):
-                            print(star + res_format_vectorized % (class_name, isubcase, subtitle, element_name))
+                        if hasattr(result, 'data'):
+                            print(res_format_vectorized % (class_name, isubcase, subtitle, element_name))
                         else:
-                            print(star + res_format % (class_name, isubcase, element_name))
+                            print(res_format % (class_name, isubcase, element_name))
                         self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num,
                                                          f=f06, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
