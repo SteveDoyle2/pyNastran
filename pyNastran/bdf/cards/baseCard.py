@@ -353,15 +353,16 @@ class Element(BaseCard):
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (self.type, nids2)
                 raise ValueError(msg)
 
-            unique_nodes = unique(nids2)
-            if len(nids2) != len(unique_nodes):
-                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids2)
-                raise IndexError(msg)
+            #unique_nodes = unique(nids2)
+            #if len(nids2) != len(unique_nodes):
+                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids2)
+                #raise IndexError(msg)
         else:
-            unique_nodes = unique(nids)
-            if len(nids) != len(unique_nodes):
-                msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids)
-                raise IndexError(msg)
+            pass
+            #unique_nodes = unique(nids)
+            #if len(nids) != len(unique_nodes):
+                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids)
+                #raise IndexError(msg)
 
         for nid in nids:
             if isinstance(nid, integer_types):

@@ -28,6 +28,8 @@ class BDFAttributes(object):
 
     @property
     def subcases(self):
+        if self.case_control_deck is None:
+            return {}
         return self.case_control_deck.subcases
 
     @property

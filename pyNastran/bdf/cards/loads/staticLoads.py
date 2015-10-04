@@ -1360,6 +1360,9 @@ class PLOAD1(Load):
             self.p1 = data[5]
             self.x2 = data[6]
             self.p2 = data[7]
+            self.Type = self.validTypes[self.Type - 1]
+            self.scale = self.validScales[self.scale - 1]
+
         if self.Type not in self.validTypes:
             msg = '%s is an invalid type on the PLOAD1 card; validTypes=[%s]' % (
                 self.Type, ', '.join(self.validTypes).rstrip(', '))
@@ -1671,6 +1674,8 @@ class PLOAD4(Load):
             self.g1 = self.g1
             self.g34 = self.g34
             self.eids = [self.eid]
+            self.sorl = 'SURF'
+            self.ldir = 'NORM'
 
         if self.sorl not in ['SURF', 'LINE']:
             raise RuntimeError(self.sorl)

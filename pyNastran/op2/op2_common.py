@@ -62,7 +62,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.date = (1, 1, 2000)
 
         #: set of all the subcases that have been found
-        self.subcases = set()
+        #self.subcases = set()
 
         #: the list/set/tuple of times/modes/frequencies that should be read
         #: currently unused
@@ -290,6 +290,8 @@ class OP2Common(Op2Codes, F06Writer):
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
     def _read_geom_4(self, mapper, data):
+        if self.read_mode == 1:
+            return len(data)
         if not self.make_geom:
             return len(data)
         n = 0
@@ -313,22 +315,27 @@ class OP2Common(Op2Codes, F06Writer):
         #ni = self.f.tell() - len(data) + 12
         #self.binary_debug.write('**:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), ni, self.n))
 
-        # we're only going to use the keys if istream=0 (so the beginning of the record)
-        if self.istream == 0 and keys in mapper:
-            pass
-        elif self.isubtable_old == self.isubtable:
-            # we didn't increment the record, so we fix the n+=12 statement we called before
-            # then we toss the keys and use the old geom_keys
-            n = 0
-            keys = self.geom_keys
-        else:
-            msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s' % (
-                str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old)
-            raise NotImplementedError(msg)
+        if 0:
+            # we're only going to use the keys if istream=0 (so the beginning of the record)
+            if self.istream == 0 and keys in mapper:
+                pass
+            elif self.isubtable_old == self.isubtable:
+                # we didn't increment the record, so we fix the n+=12 statement we called before
+                # then we toss the keys and use the old geom_keys
+                n = 0
+                keys = self.geom_keys
+            else:
+                msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s\n mapper=%s' % (
+                    str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old,
+                    mapper.keys())
+                raise NotImplementedError(msg)
 
-        name, func = mapper[keys]
+        try:
+            name, func = mapper[keys]
+        except KeyError:
+            return n
         self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
-        #print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
+        print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
 
         n = func(data, n)  # gets all the grid/mat cards
         assert n != None, name

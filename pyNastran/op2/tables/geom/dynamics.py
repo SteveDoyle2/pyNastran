@@ -10,6 +10,7 @@ class DYNAMICS(object):
     def __init__(self):
         self.card_count = {}
         self._dynamics_map = {
+            (5307,53,379) : ['ACSRCE', self._readFake], # 1
             (27, 17, 182): ['DAREA', self.readDArea],  # 2
             (37, 18, 183): ['DELAY', self.readDelay],  # 3
             (57, 5, 123): ['DLOAD', self.readDLoad],  # 4
@@ -18,10 +19,9 @@ class DYNAMICS(object):
             (207, 2, 87): ['EIGC', self.readEigc],   # 8
             (257, 4, 158): ['EIGP', self.readEigp],   # 9
             (307, 3, 85): ['EIGR', self.readEigr],   # 10
+
             (308, 8, 348): ['EIGRL', self.readEigrl],  # 11
             (707, 7, 124): ['EPOINT', self.readEPoint],  # 12
-
-
             (1307, 13, 126): ['FREQ', self.readFreq],   # 13
             (1007, 10, 125): ['FREQ1', self.readFreq1],  # 14
             (1107, 11, 166): ['FREQ2', self.readFreq2],  # 15
@@ -29,16 +29,34 @@ class DYNAMICS(object):
             (1507, 15, 40): ['FREQ4', self.readFreq4],  # 17
             (1607, 16, 41): ['FREQ5', self.readFreq5],  # 18
 
-            (3107, 31, 127): ['', self._readFake],
+            (3707, 37, 556) : ['NLRGAP', self._readFake], # 19
+
+            (3107, 31, 127): ['NONLIN1', self._readFake], # 20
+            (3207, 32, 128): ['NONLIN2', self._readFake], # 21
+            (3207, 33, 129): ['NONLIN3', self._readFake], # 22
+            (3207, 34, 130): ['NONLIN4', self._readFake], # 23
+            (2107, 21, 195): ['RANDPS', self._readFake], # 24
+            (2207, 22, 196): ['RANDT1', self._readFake], # 25
             (5107, 51, 131): ['RLOAD1', self.readRLoad1],  # 26
             (5207, 52, 132): ['RLOAD2', self.readRLoad2],  # 27
-            (6207, 62, 136): ['', self._readFake],
-            (6607, 66, 137): ['', self._readFake],
+            (8910, 89, 606): ['ROTORB', self._readFake],  # 28
+            (8210, 82, 599): ['ROTORD', self._readFake],  # 29
+            (8410, 84, 600): ['ROTORG', self._readFake],  # 30
+            (5707, 57, 135): ['SEQEP', self._readFake],  # 31
+            (6207, 62, 136): ['TF', self._readFake],  # 32
+            (6607, 66, 137): ['TIC', self._readFake],  # 33
             (7107, 71, 138): ['TLOAD1', self.readTLoad1],  # 37
             (7207, 72, 139): ['TLOAD2', self.readTLoad2],  # 38
             (8307, 83, 142): ['TSTEP', self.readTStep],  # 39
-            (2107, 21, 195): ['', self._readFake],
-            (2207, 22, 196): ['', self._readFake],
+
+            (10701, 107, 117) : ['', self._readFake],
+            (10801, 108, 242) : ['', self._readFake],
+            (3807, 38, 505) : ['', self._readFake],
+            (4807, 48, 306) : ['', self._readFake],
+            (11001, 110, 310) : ['', self._readFake],
+            (10901, 109, 260) : ['', self._readFake],
+            (3307, 33, 129) : ['', self._readFake],
+            (11101, 111, 368) : ['', self._readFake],
         }
 
 #ACSRCE (5307,53,379)

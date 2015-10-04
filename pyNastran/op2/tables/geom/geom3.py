@@ -15,8 +15,6 @@ class GEOM3(object):
         raise RuntimeError('this should be overwritten')
 
     def _read_geom3_4(self, data):
-        if self.read_mode == 1:
-            return len(data)
         return self._read_geom_4(self._geom3_map, data)
 
     def __init__(self):
@@ -65,6 +63,8 @@ class GEOM3(object):
             (11329, 113, 9602): ['', self._readFake],  # record
             (11429, 114, 9603): ['', self._readFake],  # record
             (11529, 115, 9604): ['', self._readFake],  # record
+            (7002, 70, 254) : ['', self._readFake],  # record
+            (7601, 76, 608) : ['', self._readFake],  # record
         }
 
 # ACCEL
@@ -98,7 +98,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 20]
             out = s.unpack(eData)
-            out = (sid, g, f, n1, n2)
+            (sid, g, f, n1, n2) = out
             self.binary_debug.write('  FORCE1=%s\n' % str(out))
             load = FORCE1(None, [sid, g, f, n1, n2])
             self.add_load(load)
@@ -436,7 +436,7 @@ class GEOM3(object):
             out = unpack('if', eData)
             self.binary_debug.write('  TEMPD=%s\n' % str(out))
             (sid, T) = out
-            load = TEMPD(None, out)
+            load = TEMPD(None, 0, out)
             #self.add_thermal_load(load)
             n += 8
         self.card_count['TEMPD'] = nEntries

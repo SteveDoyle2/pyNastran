@@ -176,6 +176,7 @@ class CDAMP2(LineDamper):
             self.c1 = data[3]
             self.c2 = data[5]
 
+        # CDAMP2 do not have to be unique
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)

@@ -28,7 +28,7 @@ import os
 from collections import defaultdict, OrderedDict
 
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
-from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross
+from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle
 from numpy.linalg import norm
 
 import vtk
@@ -59,7 +59,6 @@ try:
 except ImportError:
     is_geom = False
 #from pyNastran.f06.f06 import F06
-is_geom = False
 
 class NastranComplexDisplacementResults(object):
     def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
@@ -95,12 +94,18 @@ class NastranDisplacementResults(object):
         self.titles = titles
         self.scales = scales
         self.subcase_id = subcase_id
+        self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
+        self.is_real = True if self.data_type == '<f4' else False
+        self.is_complex = not self.is_real
 
     def save_defaults(self):
         self.data_formats = ['%g'] * len(self.titles)
         self.titles_default = deepcopy(self.titles)
         self.data_formats_default = deepcopy(self.data_formats)
         self.scales_default = deepcopy(self.scales)
+
+    def get_data_type(self, i, name):
+        return self.data_type
 
     def get_location(self, i, name):
         return 'node'
@@ -126,18 +131,50 @@ class NastranDisplacementResults(object):
         return 3
 
     def get_methods(self, i):
-        return ['node']
+        if self.is_real:
+            return ['node']
+        else:
+            return ['node real', 'node imag', 'node magnitude', 'node phase']
 
     def get_plot_value(self, i, name):
-        return self.dxyz[i, :]
+        if self.is_real:
+            return self.dxyz[i, :]
+        if method == 'real':
+            return self.dxyz[i, :].real
+        elif method == 'imag':
+            return self.dxyz[i, :].imag
+        elif method == 'magnitude':
+            return abs(self.dxyz[i, :])
+        elif method == 'phase':
+            return angle(self.dxyz[i, :], deg=True)
+        else:
+            raise RuntimeError(method)
+
     def get_result(self, i, name):
-        return self.dxyz[i, :]
+        if self.is_real:
+            return self.dxyz[i, :]
+        else:
+            if method == 'real':
+                return self.dxyz[i, :].real
+            elif method == 'imag':
+                return self.dxyz[i, :].imag
+            elif method == 'magnitude':
+                return abs(self.dxyz[i, :])
+            elif method == 'phase':
+                return angle(self.dxyz[i, :], deg=True)
+            else:
+                raise RuntimeError(method)
 
     def get_scalar(self, i, name):
         return self.dxyz_norm
 
     def get_vector_result(self, i, name):
-        xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
+        if self.is_real:
+            xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
+        else:
+            # z = x + i*y
+            #
+            phase = self.phase
         return self.xyz, xyz
 
     def get_scale(self, i, name):
@@ -151,6 +188,10 @@ class NastranDisplacementResults(object):
     def set_scale(self, i, name, scale):
         j = self.titles_default.index(name)
         self.scales[i] = scale
+
+    def set_phase(self, i, name, phase):
+        j = self.titles_default.index(name)
+        self.phase[i] = phase
 
     def __repr__(self):
         msg = 'NastranDisplacementResults\n'
@@ -425,13 +466,14 @@ class NastranIO(object):
             self.scalarBar.VisibilityOff()
             self.scalarBar.Modified()
 
-        ext = os.path.splitext(bdf_filename)[0].lower()
+        ext = os.path.splitext(bdf_filename)[1].lower()
         punch = False
         if ext == '.pch':
             punch = True
 
         xref_loads = True
-        if ext == '.op2' and 0 and is_geom:
+        print('ext=%r is_geom=%s' % (ext, is_geom))
+        if ext == '.op2' and is_geom:
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
                             debug_file=None)
             model._clear_results()
@@ -800,8 +842,8 @@ class NastranIO(object):
         #self.alt_grids['conm'].Set
 
     def set_spc_grid(self, dim_max, model, nid_to_pid_map):
-        case_control = model.case_control_deck
-        for subcase_id, subcase in sorted(iteritems(case_control.subcases)):
+        #case_control = model.case_control_deck
+        for subcase_id, subcase in sorted(iteritems(model.subcases)):
             #print('subcase_id=%s' % subcase_id)
             #print(subcase.params.keys())
 

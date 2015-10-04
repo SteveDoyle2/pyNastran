@@ -16,9 +16,6 @@ class GEOM1(object):
         return len(data)
 
     def _read_geom1_4(self, data):
-        if self.read_mode == 1:
-            return len(data)
-        self.log.info('GEOM1...read_mode=%s' % self.read_mode)
         return self._read_geom_4(self._geom1_map, data)
 
     def __init__(self):
@@ -56,6 +53,9 @@ class GEOM1(object):
             (6201,   62, 389): ['', self._readFake],  # record
             (1427,   14, 465): ['', self._readFake],  # record
             (5678,   71, 475): ['', self._readFake],  # record
+            (1127, 11, 461) : ['', self._readFake],  # record
+            (827, 8, 457) : ['', self._readFake],  # record
+            #(4501, 45, 1120001) : ['', self._readFake],  # record
         }
 
     def _readCord1C(self, data, n):
@@ -111,8 +111,8 @@ class GEOM1(object):
             self.binary_debug.write('  CORD1S=%s\n' % str(out))
             assert three == 3, three
             assert one == 1, one
-            dataIn = [cid, g1, g2, g3]
-            coord = CORD1S(None, dataIn)
+            data_in = [cid, g1, g2, g3]
+            coord = CORD1S(None, None, data_in)
             self.add_coord(coord, allowOverwrites=True)
             n += 24
         self._increase_card_count('CORD1S', nentries)

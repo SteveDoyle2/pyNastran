@@ -469,8 +469,8 @@ class TEMPD(BaseCard):
             self.sid = integer(card, i + 1, 'sid')
             self.temperature = double(card, i + 2, 'temp')
         else:
-            #self.temperatures = {data[0]: data[1]}
-            raise NotImplementedError('TEMPD')
+            self.sid = data[0]
+            self.temperature = data[1]
 
     def add(self, tempd_obj):
         for (lid, tempd) in iteritems(tempd_obj.temperatures):

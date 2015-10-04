@@ -302,7 +302,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                          (default=None; all subcases)
         """
         #: stores the set of all subcases that are in the OP2
-        self.subcases = set()
+        #self.subcases = set([])
         if subcases is None or subcases == []:
             #: stores if the user entered [] for iSubcases
             self.isAllSubcases = True

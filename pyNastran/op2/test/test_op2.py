@@ -11,10 +11,12 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError
 
 try:
-    from pyNastran.op2.op2_geom import OP2Geom_Scalar, OP2Geom
+    from pyNastran.op2.op2_geom import OP2Geom
     is_geom = True
 except ImportError:
     is_geom = False
+    #raise
+
 
 # we need to check the memory usage
 is_linux = None
@@ -223,16 +225,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
     if make_geom and not is_geom:
         raise RuntimeError('make_geom=%s is not supported' % make_geom)
-    if is_vector:
-        if make_geom:
-            op2 = OP2Geom(debug=debug, debug_file=debug_file)
-        else:
-            op2 = OP2(debug=debug, debug_file=debug_file)
+    if make_geom:
+        op2 = OP2Geom(debug=debug, debug_file=debug_file)
     else:
-        if make_geom:
-            op2 = OP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
-        else:
-            op2 = OP2(debug=debug, debug_file=debug_file)
+        op2 = OP2(debug=debug, debug_file=debug_file)
 
     op2.set_subcases(iSubcases)
     op2.remove_results(exclude)
@@ -374,6 +370,7 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg = "Usage:\n"
+    is_release = False
     if is_release:
         msg += "test_op2 [-q] [-b] [-f] [-z] [-t] [-w] [-s <sub>]  [-x <arg>]... OP2_FILENAME\n"
     else:
@@ -390,9 +387,9 @@ def main():
     msg += "Options:\n"
     msg += "  -b, --binarydebug    Dumps the OP2 as a readable text file (default=False)\n"
     msg += "  -q, --quiet          Suppresses debug messages (default=False)\n"
-    if not is_release:
-        msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
-        msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
+    #if not is_release:
+    msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
+    #msg += "  -b, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06      Writes the f06 to fem.test_op2.f06 (default=True)\n"
     if not is_release:
         msg += "  -o, --write_op2      Writes the op2 to fem.test_op2.op2 (default=False)\n"
