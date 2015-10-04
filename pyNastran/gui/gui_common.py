@@ -2528,6 +2528,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'min' : min_clip,
             'max' : max_clip,
             'clicked_ok' : False,
+            'close' : False,
         }
         if not self._clipping_shown:
             self._clipping_window = ClippingPropertiesWindow(data, win_parent=self)
@@ -2537,12 +2538,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._clipping_window.activateWindow()
 
-        if data['clicked_ok']:
+        if data['close']:
             self._apply_clipping(data)
             del self._clipping_window
             self._clipping_shown = False
-        #else:
-            #self._clipping_window.activateWindow()
+        else:
+            self._clipping_window.activateWindow()
 
     def _apply_clipping(self, data):
         min_clip = data['min']
@@ -2598,18 +2599,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             default_scale = obj.get_default_scale(i, res_name)
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
+            default_title = result_type
             scale = 0.0
         elif len(key) == 6:
             (subcase_id, i, result_type, vector_size, location, data_format) = key
+            default_title = result_type
             scale = 0.0
         else:
             (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+            default_title = result_type
             scale = 0.0
+
         if default_format is None:
             default_format = data_format
         if scale == 0.0:
             default_scale = 0.0
-
+        print(key)
 
         data = {
             'name' : result_type,
@@ -2627,6 +2632,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'is_horizontal': False,
             'is_shown' : True,
             'clicked_ok' : False,
+            'close' : False,
         }
         if not self._legend_shown:
             self._legend_window = LegendPropertiesWindow(data, win_parent=self)
@@ -2636,12 +2642,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._legend_window.activateWindow()
 
-        if data['clicked_ok']:
+        if data['close']:
             self._apply_legend(data)
-            del self._legend_window
             self._legend_shown = False
+            del self._legend_window
         else:
             self._legend_window.activateWindow()
+
 
     def _apply_legend(self, data):
         title = data['name']

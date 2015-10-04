@@ -308,6 +308,15 @@ class EditGroupProperties(QtGui.QDialog):
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.close()
+
+    def closeEvent(self, event):
+        self.out_data['close'] = True
+        event.accept()
 
     def on_color(self):
         name = self.active_key
@@ -371,9 +380,6 @@ class EditGroupProperties(QtGui.QDialog):
             field.setStyleSheet("QLineEdit{background: white;}")
         except ValueError:
             field.setStyleSheet("QLineEdit{background: red;}")
-
-    def closeEvent(self, event):
-        event.accept()
 
     #def on_default_name(self):
         #self.name_edit.setText(str(self._default_name))
