@@ -19,7 +19,6 @@ import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from numpy import eye, array, zeros, loadtxt, int32
-from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.bdf.cards.baseCard import deprecated
@@ -598,7 +597,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Add message to log widget trying to choose right color for it.
 
-        :param msg: message to be displayed
+        Parameters
+        ----------
+        msg : str
+            message to be displayed
         """
         if not self.html_logging:
             print(typ, msg)
@@ -704,15 +706,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Creates a coordinate system
 
-        :param label:
-          the coord id or other unique label (default is empty to indicate the global frame)
-        :param origin:
-          the origin as (3,) ndarray/list/tuple
-        :param matrix_3x3:
-          a standard 3x3 Nastran-style coordinate system
-        :param Type:
-          a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
-          that changes the axis names
+        Parameters
+        ----------
+        label : str
+            the coord id or other unique label (default is empty to indicate the global frame)
+        origin : (3, ) ndarray/list/tuple
+            the origin
+        matrix_3x3 : (3, 3) ndarray
+            a standard Nastran-style coordinate system
+        Type : str
+            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
+            that changes the axis names
 
         .. todo::  Type is not supported ('xyz' ONLY)
         .. todo::  Can only set one coordinate system
@@ -1140,21 +1144,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             RuntimeError('No formats...expected=%s' % fmt_order)
         self.fmts = fmts
 
-        #fmts = [
-            ## results
-            #('nastran', 'Nastran', 'Nastran BDF (*.bdf; *.dat; *.nas)', self.load_nastran_geometry, 'Nastran OP2 (*.op2)', self.load_nastran_results),
-            #('cart3d', 'Cart3d', 'Cart3d (*.tri; *.triq)', self.load_cart3d_geometry, 'Cart3d (*.triq)', self.load_cart3d_results),
-            #('panair', 'Panair', 'Panair (*.inp)', self.load_panair_geometry, 'Panair (*.agps);;Panair (*.out)',  self.load_panair_results),
-            #('shabp', 'S/HABP', 'Shabp (*.geo; *.mk5; *.inp)', self.load_shabp_geometry, 'Shabp (*.out)', self.load_shabp_results),
-            #('usm3d', 'Usm3D', 'USM3D (*.cogsg; *.front)', self.load_usm3d_geometry, 'Usm3d (*.flo)', self.load_usm3d_results),
-
-            ## no results
-            #('lawgs', 'LaWGS', 'LaWGS (*.inp; *.wgs)', self.load_lawgs_geometry, None, None),
-            #('tetgen', 'Tetgen', 'Tetgen (*.smesh)', self.load_tetgen_geometry, None, None),
-            #('stl', 'STL', 'STereoLithography (*.STL)', self.load_stl_geometry, None, None),
-            ##('plot3d', 'Plot3D', 'Plot3D (*.p3d; *.p3da)', self.load_plot3d_geometry, None, None),
-        #]
-        #self.fmts = fmts
         self.supported_formats = [fmt[0] for fmt in fmts]
         print('supported_formats = %s' % self.supported_formats)
         if len(fmts) == 0:
@@ -1164,11 +1153,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Loads a baseline geometry
 
-        :param infile_name: path to the filename (default=None -> popup)
-        :param geometry_format: the geometry format for programmatic loading
-        :param plot: Should the baseline geometry have results created and plotted/rendered?
-                     If you're calling the on_load_results method immediately after, set it to False
-                     (default=True)
+        Parameters
+        ----------
+        infile_name : str; default=None -> popup
+            path to the filename
+        geometry_format : str; default=None
+            the geometry format for programmatic loading
+        plot : bool; default=True
+            Should the baseline geometry have results created and plotted/rendered?
+            If you're calling the on_load_results method immediately after, set it to False
+
         """
         wildcard = ''
         is_failed = False
@@ -1345,6 +1339,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
+        Parameters
+        ----------
         out_filename : str / None
             the path to the results file
         """
@@ -1476,6 +1472,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Loads a results file.  Must have called on_load_geometry first.
 
+        Parameters
+        ----------
         out_filename : str / None
             the path to the results file
         """
@@ -1816,7 +1814,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 if self.infile_name is not None:
                     base, ext = os.path.splitext(os.path.basename(self.infile_name))
                     default_filename = self.infile_name
-                    default_filename =  base + '.png'
+                    default_filename = base + '.png'
             else:
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
                 default_filename = title + '_' + base + '.png'
@@ -2105,7 +2103,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         (see http://public.kitware.com/pipermail/vtkusers/2011-November/119996.html)
         therefore we trick VTK to think that a key has been pressed.
 
-        :param key: a key that VTK should be informed about, e.g. 't'
+        Parameters
+        ----------
+        key : str
+            a key that VTK should be informed about, e.g. 't'
         """
         print("key = ", key)
         if key == 'f':  # change focal point
@@ -2426,12 +2427,23 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
                         data_format, is_blue_to_red=True, is_horizontal=True, is_shown=True):
         """
-            :param title:       the scalar bar title
-            :param min_value:   the blue value
-            :param max_value:   the red value
-            :param data_format: '%g','%f','%i', etc.
-            :param is_blue_to_red:  flips the order of the RGB points
-            """
+        Parameters
+        ----------
+        title : str
+            the scalar bar title
+        min_value : float
+            the blue value
+        max_value :
+            the red value
+        data_format : str
+            '%g','%f','%i', etc.
+        is_blue_to_red : bool; default=True
+            flips the order of the RGB points
+        is_horizontal : bool; default=True
+            makes the scalar bar horizontal
+        is_shown : bool
+            show the scalar bar
+        """
         print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value,
                                data_format, is_blue_to_red, is_horizontal,
@@ -2676,6 +2688,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         name_vector = None
         plot_value = self.resultCases[key] # scalar
         vector_size1 = 1
+        update_3d = False
         if isinstance(key, (int, int32)):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.resultCases[key]
@@ -2694,6 +2707,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #obj.set_data_format(i, res_name, data_format)
             subtitle, label = self.get_subtitle_label(subcase_id)
             name_vector = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale)
+            update_3d = True
         elif len(key) == 5:
             (subcase_id, result_type, vector_size1, location, _data_format) = key
         elif len(key) == 6:
@@ -2702,18 +2716,20 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
         assert vector_size1 == 1, vector_size1
 
-        self._set_case(self.result_name, self.iCase,
-                       explicit=False, cycle=False, skip_click_check=True)
+        if update_3d:
+            self.is_horizontal_scalar_bar = is_horizontal
+            self._set_case(self.result_name, self.iCase,
+                           explicit=False, cycle=False, skip_click_check=True)
+            return
 
-        return
         subtitle, label = self.get_subtitle_label(subcase_id)
-        scale1 = 1.0
+        scale1 = 0.0
         name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
         # if vector_size == 3:
 
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
-        grid_result = self.set_grid_values(name, plot_value, vector_size,
+        grid_result = self.set_grid_values(name, plot_value, vector_size1,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)
 
@@ -2747,7 +2763,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                 #1, subcase_id, result_type, location, subtitle, label,
                                 #revert_displaced=revert_displaced)
 
-        self.is_horizontal_scalar_bar = is_horizontal
+        #self.is_horizontal_scalar_bar = is_horizontal
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
                          '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
                          % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))

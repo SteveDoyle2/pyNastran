@@ -5,7 +5,7 @@ from six import iteritems
 from copy import deepcopy
 
 import numpy
-from numpy import ndarray, asarray, hstack, searchsorted, ones, full, int32, float32, issubdtype
+from numpy import ndarray, full, int32, float32, issubdtype
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
@@ -207,7 +207,6 @@ class GuiCommon(object):
 
 
         if 0: # nan testing
-            from numpy import float32, int32
             if case.dtype.name == 'float32':
                 case[50] = float32(1) / float32(0)
             else:
@@ -384,7 +383,7 @@ class GuiCommon(object):
         nnodes = vector_data.shape[0]
         points = self.grid.GetPoints()
         for j in range(nnodes):
-            points.SetPoint(j, *vector_data[j,:])
+            points.SetPoint(j, *vector_data[j, :])
         self.grid.Modified()
 
     def _get_icase(self, result_name):
