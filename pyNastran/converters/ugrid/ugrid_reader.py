@@ -214,11 +214,10 @@ class UGRID(object):
         assert self.n == ugrid_file.tell()
         ugrid_file.close()
 
-    def write_bdf(self, bdf_filename, include_shells=True, include_solids=True, convert_pyram_to_penta=True, encoding=None):
+    def write_bdf(self, bdf_filename, include_shells=True, include_solids=True,
+                  convert_pyram_to_penta=True, encoding=None):
         if encoding is None:
             encoding = sys.getdefaultencoding()
-        else:
-            encoding = self._encoding
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
         if PY2:
@@ -243,18 +242,19 @@ class UGRID(object):
 
         eid = 1
         if include_shells:
-            upids = unique(pids)
-            upids.sort()
+            upids = unique(pids)  # auto-sorts
             for pid in upids:
                 bdf_file.write('PSHELL,%i,%i, 0.1\n' % (pid, mid))
             print('writing CTRIA3')
             for element in self.tris:
-                bdf_file.write('CTRIA3  %-8i%-8i%-8i%-8i%-8i\n' % (eid, pids[eid-1], element[0], element[1], element[2]))
+                bdf_file.write('CTRIA3  %-8i%-8i%-8i%-8i%-8i\n' % (
+                    eid, pids[eid-1], element[0], element[1], element[2]))
                 eid += 1
 
             print('writing CQUAD4')
             for element in self.quads:
-                bdf_file.write('CQUAD4  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (eid, pids[eid-1], element[0], element[1], element[2], element[3]))
+                bdf_file.write('CQUAD4  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                    eid, pids[eid-1], element[0], element[1], element[2], element[3]))
                 eid += 1
         else:
             ntris = self.tris.shape[0]
@@ -303,97 +303,97 @@ class UGRID(object):
         # assert nsolids > 0, 'ntets=%s npyramids=%s npentas=%s nhexas=%s' % (ntets, npyramids, npentas, nhexas)
 
         with open(ugrid_filename_out, 'wb') as f_ugrid:
-            s = Struct(endian + '7i')
-            f_ugrid.write(s.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
+            sfmt = Struct(endian + '7i')
+            f_ugrid.write(sfmt.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
 
             # %3f or %3d
             fmt = endian + '%i%s' % (nnodes * 3, float_fmt) # len(x,y,z) = 3
-            s = Struct(fmt)
-            f_ugrid.write(s.pack(*nodes.ravel()))
+            sfmt = Struct(fmt)
+            f_ugrid.write(sfmt.pack(*nodes.ravel()))
 
             if ntris:
                 # CTRIA3
                 fmt = endian + '%ii' % (ntris * 3)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*tris.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*tris.ravel()))
 
             if nquads:
                 # QUAD4
                 fmt = endian + '%ii' % (nquads * 4)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*quads.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*quads.ravel()))
 
             # PSHELL
             fmt = endian + '%ii' % (nshells)
-            s = Struct(fmt)
-            f_ugrid.write(s.pack(*pids.ravel()))
+            sfmt = Struct(fmt)
+            f_ugrid.write(sfmt.pack(*pids.ravel()))
 
             if ntets:
                 # CTETRA
                 fmt = endian + '%ii' % (ntets * 4)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*tets.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*tets.ravel()))
 
             if npyramids:
                 # CPYRAM
                 fmt = endian + '%ii' % (npyramids * 5)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*pyrams.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*pyrams.ravel()))
 
             if npentas:
                 # CPENTA
                 fmt = endian + '%ii' % (npentas * 6)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*pentas.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*pentas.ravel()))
 
             if nhexas:
                 # CHEXA
                 fmt = endian + '%ii' % (nhexas * 8)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*hexas.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*hexas.ravel()))
 
-    def _write_bdf_solids(self, f, eid, pid, convert_pyram_to_penta=True):
+    def _write_bdf_solids(self, bdf_file, eid, pid, convert_pyram_to_penta=True):
         #pid = 0
-        f.write('PSOLID,%i,1\n' % pid)
+        bdf_file.write('PSOLID,%i,1\n' % pid)
         print('writing CTETRA')
-        f.write('$ CTETRA\n')
+        bdf_file.write('$ CTETRA\n')
         for element in self.tets:
             #card = ['CTETRA', eid, pid] + list(element)
             #f.write(print_int_card(card))
-            f.write('CTETRA  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+            bdf_file.write('CTETRA  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                 eid, pid, element[0], element[1], element[2], element[3]))
             eid += 1
 
         if convert_pyram_to_penta:
             # skipping the penta5s
             print('writing CPYRAM as CPENTA with node6=node5')
-            f.write('$ CPYRAM - CPENTA5\n')
+            bdf_file.write('$ CPYRAM - CPENTA5\n')
             for element in self.penta5s:
-                f.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                bdf_file.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                     eid, pid, element[0], element[1], element[2], element[3], element[4], element[4]))
                 eid += 1
         else:
             print('writing CPYRAM')
-            f.write('$ CPYRAM - CPENTA5\n')
+            bdf_file.write('$ CPYRAM - CPENTA5\n')
             for element in self.penta5s:
-                f.write('CPYRAM  %-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                bdf_file.write('CPYRAM  %-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                     eid, pid, element[0], element[1], element[2], element[3], element[4]))
                 eid += 1
 
         print('writing CPENTA')
-        f.write('$ CPENTA6\n')
+        bdf_file.write('$ CPENTA6\n')
         for element in self.penta6s:
             #card = ['CPENTA', eid, pid] + list(element)
             #f.write(print_int_card(card))
-            f.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+            bdf_file.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                 eid, pid, element[0], element[1], element[2], element[3], element[4], element[5]))
             eid += 1
 
         print('writing CHEXA')
-        f.write('$ CHEXA\n')
+        bdf_file.write('$ CHEXA\n')
         for element in self.hexas:
             #card = ['CHEXA', eid, pid] + list(element)
-            f.write('CHEXA   %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n        %-8i%-8i\n' % (
+            bdf_file.write('CHEXA   %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n        %-8i%-8i\n' % (
                 eid, pid, element[0], element[1], element[2], element[3], element[4], element[5], element[6], element[7]))
             #f.write(print_int_card(card))
             eid += 1
@@ -460,7 +460,7 @@ class UGRID(object):
         points_file.write('\n\n')
         points_file.write('%i\n' % (nnodes))
         points_file.write('(\n')
-        for nid, node in enumerate(self.nodes):
+        for node in enumerate(self.nodes):
             points_file.write(('    (%-12s %-12s %-12s)\n') % (node[0], node[1], node[2]))
         points_file.write(')\n')
         points_file.close()
@@ -516,6 +516,7 @@ class UGRID(object):
         nquad_faces = nhexas * 6 + npenta5s + npenta6s * 3
         ntri_faces = ntets * 4 + npenta5s * 4 + npenta6s * 2
         nfaces = ntri_faces + nquad_faces
+        assert nfaces > 0, nfaces
 
         #tri_face_to_eids = ones((nt, 2), dtype='int32')
         tri_face_to_eids = defaultdict(list)
