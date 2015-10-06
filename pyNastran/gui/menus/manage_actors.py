@@ -315,8 +315,7 @@ class EditGroupProperties(QtGui.QDialog):
             self.close()
 
     def closeEvent(self, event):
-        self.out_data['close'] = True
-        event.accept()
+        self.on_cancel()
 
     def on_color(self):
         name = self.active_key
