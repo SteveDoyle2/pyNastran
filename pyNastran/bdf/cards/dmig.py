@@ -98,7 +98,10 @@ class DEQATN(BaseCard):  # needs work...
         eqs = [line0_eq] + card[1:]
         self.eqs = []
         neqs = len(eqs)
+        is_join = False
         for i, eq in enumerate(eqs):
+            if is_join:
+                eq = eqi.rstrip() + eq.lstrip()
             eqi = eq.strip()
             if i == 0 and eqi == '':
                 #self.eqs.append(eqi)
@@ -106,30 +109,66 @@ class DEQATN(BaseCard):  # needs work...
 
             if i == 0:
                 # first line
+                assert eqi.endswith(';'), eqi
+                eqi = eqi[:-1]
+                assert not eqi.endswith(';'), eq
                 assert len(eqi) <= 56, eqi
             elif i != neqs-1:
                 # mid line
                 assert len(eqi) <= 64, eqi
-                assert eqi.endswith(';'), eqi
-                eqi = eqi[:-1]
-                assert not eqi.endswith(';'), eq
+                if eqi.endswith(';'):
+                    eqi = eqi[:-1]
+                    is_join = False
+                    assert not eqi.endswith(';'), eq
+                else:
+                    is_join = True
+
+
             else:
                 # last line
                 pass
-            self.eqs.append(eqi)
+                is_join = False
+            if not is_join:
+                if '=' not in eqi:
+                    raise SyntaxError('line=%r expected an equal sign' % eqi)
+                self.eqs.append(eqi)
             #print(i, eqi)
-
+        assert not is_join
         #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(self.eqID))
+        self._setup_equation()
 
-    def evaluate(self, args):
-        #eqLow = self.eq.lower()
-        #eval(self.eq)
-        func = eval(fortran_to_python(self.eqs))
-        return func(*args)
+    def _setup_equation(self):
+        func_name, nargs, func_str = fortran_to_python(self.eqs)
+        self.func_name = func_name
+        #print('**************', func_str)
+        exec func_str
+        print(locals().keys())
+        func = locals()[func_name]
+        setattr(self, func_name, func)
+        #print(func)
+        self.func = func
+        self.nargs = nargs
 
+    def cross_reference(self, model):
+        # TODO: get deafults from DTABLE
+        # TODO: get limits from DCONSTR
+        self._setup_equation()
+
+    def uncross_reference(self):
+        del self.func
+        # del getattr(self, self.func_name)
+        del self.func_name
+        del self.nargs
+
+    def evaluate(self, *args):
+        #args2 = args[:self.nargs]
+        #print('args =', args2)
+        assert len(args) <= self.nargs, 'nargs=%s len(args)=%s; func_name=%s' % (self.nargs, len(args), self.func_name)
+        return self.func(*args)
+        #self.func(*args)
 
     def write_card(self, size=8, is_double=False):
-        #self.evaluate([1, 2, 3])
+        self.evaluate(1, 2)
         equation_line0 = self.eqs[0]
         assert len(equation_line0) < 56, equation_line0
         msg = 'DEQATN  %8i%56s' % (self.eqID, equation_line0)
@@ -144,21 +183,64 @@ def fortran_to_python(lines):
     msg = ''
     #line0 = lines[0].lower()
     #print('line0=%r' % line0)
+    nlines = len(lines)
     for i, line in enumerate(lines):
         #print('line=%r' % line)
+        # line = line.upper()
         f, eq = line.split('=')
         f = f.strip()
         eq = eq.strip()
 
         if i == 0:
-            msg += 'def %s:\n' % f
+            #print('eq = %r' % eq)
+            try:
+                float(eq)
+                is_float = True
+            except ValueError:
+                is_float = False
+
+            if is_float:
+                func_name, arguments = f.strip('(,)').split('(')
+                func_name = func_name.strip(' ')
+                variables = arguments.split(',')
+                #print('func_name=%r' % func_name)
+                val = float(eq)
+                vals = ['%s=%s' % (var, val) for var in variables]
+                vals2 = ', '.join(vals)
+                msg += 'def %s(%s):\n' % (func_name, vals2)
+                msg += '    try:\n'
+                for var in variables:
+                    #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
+                    msg += '        i%s = float(%s)\n' % (var, var)
+                    msg += '        %s = float(%s)\n' % (var, var)
+                msg += '    except:\n'
+                msg += '        print(locals())\n'
+                msg += '        raise\n'
+            else:
+                func_name, arguments = f.strip('(,)').split('(')
+                func_name = func_name.strip(' ')
+                variables = arguments.split(',')
+                msg += 'def %s:\n' % f
+                for var in variables:
+                    msg += '    %s = float(%s)\n' % (var, var)
+
+                out = eq
+                # if nlines > 1:
+                    # msg += '    try:\n'
+                    # msg += '        pass\n'
         else:
-            msg += '    %s = %s\n' % (f, eq)
-        print('  i=%s f=%r eq=%r' % (i, f, eq))
-    msg += '    return %s\n' % f
+            out = f
+            msg += '    %s = %s\n' % (out, eq)
+        #print('  i=%s f=%r eq=%r' % (i, f, eq))
+    #if nlines > 1:
+        # msg += '    except:\n'
+        # msg += '        print(locals())\n'
+        # msg += '        raise\n'
+    msg += '    return %s\n' % out
 
     print(msg)
-    return msg
+    nargs = len(variables)
+    return func_name, nargs, msg
 
 
 class NastranMatrix(BaseCard):

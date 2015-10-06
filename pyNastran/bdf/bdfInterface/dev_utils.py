@@ -119,6 +119,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
 
+    .. todo :: node_set stil does work on the all the nodes in the big kdtree loop, which is very inefficient
     .. todo :: remove_collapsed_elements is not supported
     .. todo :: avoid_collapsed_elements is not supported
     """
@@ -162,10 +163,15 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         all_nids = array(model.nodes.keys(), dtype='int32')
 
         # B - A
+        # these are all the nodes that are requested from node_set that are missing
+        #   thus len(diff_nodes) == 0
         diff_nodes = setdiff1d(node_set, all_nids)
         assert len(diff_nodes) == 0, 'The following nodes cannot be found, but are included in the reduced set; nids=%s' % diff_nodes
 
         # A & B
+        # the nodes to analyze are the union of all the nodes and the desired set
+        # which is basically the same as:
+        #   nids = unique(node_set)
         nids = intersect1d(all_nids, node_set, assume_unique=True)  # the new values
 
         if renumber_nodes:
@@ -198,6 +204,9 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     else:
         nodes_xyz = array([model.nodes[nid].xyz
                            for nid in nids], dtype='float32')
+
+    if node_set is not None:
+        assert nodes_xyz.shape[0] == len(nids)
 
     if 0:
         # I forget entirely what this block of code is for, but my general
@@ -258,7 +267,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
-
+    if node_set is not None:
+        assert len(deq) == len(nids)
     nnodes = len(nids)
 
     # get the ids of the duplicate nodes
@@ -271,9 +281,11 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         inid2 = ieq[irow, icol]
         nid1 = nids[irow]
         nid2 = nids[inid2]
-        #if nid1 == nid2:
-            #continue
-
+        if nid1 == nid2:
+            continue
+        if node_set is not None:
+            if nid1 not in node_set and nid2 not in node_set:
+                continue
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
 
@@ -287,17 +299,25 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
             #    nid2, list_print(node2.xyz),
             #    distance))
             continue
-        #print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
-        #    nid1, list_print(node1.xyz),
-        #    nid2, list_print(node2.xyz),
-        #    distance))
 
+        if node_set is not None:
+            assert nid1 in node_set, 'nid1=%s node_set=%s' % (nid1, node_set)
+            assert nid2 in node_set, 'nid2=%s node_set=%s' % (nid2, node_set)
+            print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
+               nid1, str(node1.xyz),
+               nid2, str(node2.xyz),
+               distance))
+
+        # if hasattr(node2, 'new_node_id'):
+
+        # else:
         node2.nid = node1.nid
         node2.xyz = node1.xyz
         node2.cp = node1.cp
         assert node2.cd == node1.cd
         assert node2.ps == node1.ps
         assert node2.seid == node1.seid
+        # node2.new_nid = node1.nid
         skip_nodes.append(nid2)
 
     if bdf_filename_out is not None:
@@ -389,7 +409,10 @@ def _write_nodes(self, outfile, size, is_double):
     """
     Writes the NODE-type cards
 
-    :param self: the BDF object
+    Parameters
+    ----------
+    self : BDF()
+        the BDF object
     """
     if self.spoints:
         msg = []
@@ -571,7 +594,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     is_double : bool
         the field precision to write (default=True)
 
-    ..todo :: bdf_model option for bdf_filename hasn't been tested
+    .. todo :: bdf_model option for bdf_filename hasn't been tested
+    .. todo :: add support for subsets (e.g. renumber only a subset of nodes/elements)
     ..warning :: spoints might be problematic...check
     ..warning :: still in development, but it usually brutally crashes if it's not supported
     ..warning :: be careful of unsupported cards

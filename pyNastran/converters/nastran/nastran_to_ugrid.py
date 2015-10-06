@@ -4,7 +4,8 @@ from pyNastran.converters.ugrid.ugrid_reader import UGRID
 
 from numpy import array, hstack
 
-def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None):
+def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None,
+                     check_shells=True, check_solids=True):
     """
     set xref=False
     """
@@ -27,6 +28,22 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None):
     cpenta = out['CPENTA']
     chexa = out['CHEXA']
 
+    nnodes = len(node_ids)
+    ntris = len(ctria3)
+    nquads = len(cquad4)
+    nshells = ntris + nquads
+    ntetra = len(ctetra)
+    npyram = len(cpyram)
+    npenta = len(cpenta)
+    nhexa = len(chexa)
+    nsolids = ntetra + npyram + npenta + nhexa
+    if nnodes == 0:
+        raise RuntimeError('nnodes=%i nshells=%i nsolids=%i' % (nnodes, nshells, nsolids))
+    if nshells == 0 and check_shells:
+        raise RuntimeError('nnodes=%i nshells=%i nsolids=%i' % (nnodes, nshells, nsolids))
+    if nsolids == 0 and check_solids:
+        raise RuntimeError('nnodes=%i nshells=%i nsolids=%i' % (nnodes, nshells, nsolids))
+
     nodes = bdf_model.nodes
     elements = bdf_model.elements
     xyz_cid0 = array([nodes[nid].xyz for nid in node_ids], dtype='float64')
@@ -34,11 +51,11 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None):
     pids = []
     model = UGRID()
     model.nodes = xyz_cid0
-    if len(ctria3):
+    if ntris:
         model.tris = array([elements[eid].node_ids for eid in ctria3], dtype='int32')
         ptris = array([elements[eid].Pid() for eid in ctria3], dtype='int32')
         pids.append(ptris)
-    if len(cquad4):
+    if nquads:
         model.quads = array([elements[eid].node_ids for eid in cquad4], dtype='int32')
         pquads = array([elements[eid].Pid() for eid in cquad4], dtype='int32')
         pids.append(pquads)
@@ -49,13 +66,13 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None):
     else:
         raise RuntimeError(pids)
 
-    if len(ctetra):
+    if ntetra:
         model.tets = array([elements[eid].node_ids for eid in ctetra], dtype='int32')
-    if len(cpyram):
+    if npyram:
         model.penta5s = array([elements[eid].node_ids for eid in cpyram], dtype='int32')
-    if len(cpenta):
+    if nhexa:
         model.penta6s = array([elements[eid].node_ids for eid in cpenta], dtype='int32')
-    if len(chexa):
+    if nhexa:
         model.hexas = array([elements[eid].node_ids for eid in chexa], dtype='int32')
 
     if ugrid_filename_out is not None:
@@ -63,6 +80,11 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None):
     return model
 
 def merge_ugrids(a_model, b_model):
+    """
+    Merges two UGrid models
+
+    TODO: not implemented
+    """
     a_model
 
 def main():
@@ -119,7 +141,7 @@ def main():
             'mid' : 1,
         }
         bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                    starting_id_dict=starting_id_dict)
+                     starting_id_dict=starting_id_dict)
         bdf_model = BDF()
         bdf_model.read_bdf(bdf_filename_out, xref=False)
     else:

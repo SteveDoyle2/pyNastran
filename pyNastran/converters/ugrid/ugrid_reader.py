@@ -9,13 +9,13 @@ from six import PY2
 
 
 from numpy import zeros, unique, where, argsort, searchsorted, allclose, array
+from numpy import arange, hstack, setdiff1d, union1d
 from collections import defaultdict
 
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.utils.log import get_logger
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
-from pyNastran.converters.tecplot.tecplot import Tecplot
 
 
 class UGRID(object):
@@ -72,153 +72,153 @@ class UGRID(object):
         assert endian in ['<', '>'], ndarray_float
 
 
-        ugrid_file = open(ugrid_filename, 'rb')
-        data = ugrid_file.read(7 * 4)
-        self.n += 7 * 4
+        with open(ugrid_filename, 'rb') as ugrid_file:
+            data = ugrid_file.read(7 * 4)
+            self.n += 7 * 4
 
-        nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas = struct.unpack(endian + '7i', data)
-        npids = nquads + ntris
-        nvol_elements = ntets + npenta5s + npenta6s + nhexas
-        self.log.info('nnodes=%.3fm ntris=%s nquads=%s ntets=%.3fm npenta5s=%.3fm npenta6s=%.3fm nhexas=%.3fm' % (
-            nnodes / 1e6, ntris, nquads,
-            ntets / 1e6, npenta5s / 1e6, npenta6s / 1e6, nhexas / 1e6))
+            nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas = struct.unpack(endian + '7i', data)
+            npids = nquads + ntris
+            nvol_elements = ntets + npenta5s + npenta6s + nhexas
+            self.log.info('nnodes=%.3fm ntris=%s nquads=%s ntets=%.3fm npenta5s=%.3fm npenta6s=%.3fm nhexas=%.3fm' % (
+                nnodes / 1e6, ntris, nquads,
+                ntets / 1e6, npenta5s / 1e6, npenta6s / 1e6, nhexas / 1e6))
 
-        nvolume_elements = ntets + npenta5s + npenta6s + nhexas
-        self.log.info('nsurface_elements=%s nvolume_elements=%.3f Million' % (npids, nvolume_elements / 1e6))
+            nvolume_elements = ntets + npenta5s + npenta6s + nhexas
+            self.log.info('nsurface_elements=%s nvolume_elements=%.3f Million' % (npids, nvolume_elements / 1e6))
 
-        # we know the shapes of nodes (e.g. Nx3), but we want to directly
-        # unpack the data into the array, so we shape it as N*3, load the
-        # data and and then do a reshape
-        self.log.debug('ndarray_float=%s' % (ndarray_float))
-        nodes = zeros(nnodes * 3, dtype=ndarray_float)
-        tris = zeros(ntris * 3, dtype='int32')
-        quads = zeros(nquads * 4, dtype='int32')
-        pids = zeros(npids, dtype='int32')
+            # we know the shapes of nodes (e.g. Nx3), but we want to directly
+            # unpack the data into the array, so we shape it as N*3, load the
+            # data and and then do a reshape
+            self.log.debug('ndarray_float=%s' % (ndarray_float))
+            nodes = zeros(nnodes * 3, dtype=ndarray_float)
+            tris = zeros(ntris * 3, dtype='int32')
+            quads = zeros(nquads * 4, dtype='int32')
+            pids = zeros(npids, dtype='int32')
 
-        tets = zeros(ntets * 4, dtype='int32')
-        penta5s = zeros(npenta5s * 5, dtype='int32')
-        penta6s = zeros(npenta6s * 6, dtype='int32')
-        hexas = zeros(nhexas * 8, dtype='int32')
-
-
-        ## NODES
-        data = ugrid_file.read(nnodes * 3 * nfloat)
-        self.n += nnodes * 3 * nfloat
-        fmt = '%s%i%s' % (endian, nnodes * 3, float_fmt)  # >9f
-        nodes[:] = struct.unpack(fmt, data)
-        nodes = nodes.reshape((nnodes, 3))
-        #print('min xyz value = ' , nodes.min())
-        #print('max xyz value = ' , nodes.max())
-
-        ## CTRIA3
-        data = ugrid_file.read(ntris * 3 * 4)
-        self.n += ntris * 3 * 4
-        fmt = '%s%ii' % (endian, ntris * 3)  # >9i
-        tris[:] = struct.unpack(fmt, data)
-        tris = tris.reshape((ntris, 3))
-        #print('min tris value = ' , tris.min())
-        #print('max tris value = ' , tris.max())
-
-        ## CQUAD4
-        data = ugrid_file.read(nquads * 4 * 4)
-        self.n += nquads * 4 * 4
-        fmt = '%s%ii' % (endian, nquads * 4)  # >12i
-        quads[:] = struct.unpack(fmt, data)
-        quads = quads.reshape((nquads, 4))
-        #print('min quads value = ' , quads.min())
-        #print('max quads value = ' , quads.max())
-
-        data = ugrid_file.read(npids * 4)
-        self.n += npids * 4
-        fmt = '%s%ii' % (endian, npids)  # >12i
-        pids[:] = struct.unpack(fmt, data)
-        #print('min pids value = ' , pids.min())
-        #print('max pids value = ' , pids.max())
-
-        #==========================================
-        # solids
-
-        ## CTETRA
-        data = ugrid_file.read(ntets * 4 * 4)
-        self.n += ntets * 4 * 4
-        fmt = '%s%ii' % (endian, ntets * 4)  # >12i
-        try:
-            tets[:] = struct.unpack(fmt, data)
-        except:
-            self.log.error('fmt=%s len(data)=%s len(data)/4=%s' % (fmt, len(data), len(data)//4))
-            raise
-        tets = tets.reshape((ntets, 4))
-        #print('min tets value = ' , tets.min())
-        #print('max tets value = ' , tets.max())
-
-        ## CPYRAM
-        data = ugrid_file.read(npenta5s * 5 * 4)
-        self.n += npenta5s * 5 * 4
-        fmt = '%s%ii' % (endian, npenta5s * 5)
-        penta5s[:] = struct.unpack(fmt, data)
-        penta5s = penta5s.reshape((npenta5s, 5))
-        #print('min penta5s value = ' , penta5s.min())
-        #print('max penta5s value = ' , penta5s.max())
-
-        ## cPENTA
-        data = ugrid_file.read(npenta6s * 6 * 4)
-        self.n += npenta6s * 6 * 4
-        fmt = '%s%ii' % (endian, npenta6s * 6)
-        penta6s[:] = struct.unpack(fmt, data)
-        penta6s = penta6s.reshape((npenta6s, 6))
-        #print('min penta6s value = ' , penta6s.min())
-        #print('max penta6s value = ' , penta6s.max())
-
-        ## CHEXA
-        data = ugrid_file.read(nhexas * 8 * 4)
-        self.n += nhexas * 8 * 4
-        fmt = '%s%ii' % (endian, nhexas * 8)
-        hexas[:] = struct.unpack(fmt, data)
-        hexas = hexas.reshape((nhexas, 8))
-        #print('min hexas value = ' , hexas.min())
-        #print('max hexas value = ' , hexas.max())
-
-        self.nodes = nodes
-        self.tris = tris
-        self.quads = quads
-        self.pids = pids
-
-        self.tets = tets
-        self.penta5s = penta5s
-        self.penta6s = penta6s
-        self.hexas = hexas
-
-        if 0:
-            #self.show(100, types='i', big_endian=True)
-            if nvol_elements == 0:
-                raise RuntimeError('not a volume grid')
-
-            data = ugrid_file.read(4)
-            nBL_tets = struct.unpack(endian + 'i', data)
-            self.n += 4
-            print('nBL_tets=%s' % (nBL_tets)) # trash
+            tets = zeros(ntets * 4, dtype='int32')
+            penta5s = zeros(npenta5s * 5, dtype='int32')
+            penta6s = zeros(npenta6s * 6, dtype='int32')
+            hexas = zeros(nhexas * 8, dtype='int32')
 
 
-            data = ugrid_file.read(nvol_elements * 4)
-            self.n += nvol_elements * 4
-            print('len(data)=%s len/4=%s nvol_elements=%s' % (len(data), len(data) / 4., nvol_elements))
-            assert len(data) == (nvol_elements * 4)
+            ## NODES
+            data = ugrid_file.read(nnodes * 3 * nfloat)
+            self.n += nnodes * 3 * nfloat
+            fmt = '%s%i%s' % (endian, nnodes * 3, float_fmt)  # >9f
+            nodes[:] = struct.unpack(fmt, data)
+            nodes = nodes.reshape((nnodes, 3))
+            #print('min xyz value = ' , nodes.min())
+            #print('max xyz value = ' , nodes.max())
 
-            fmt = endian + '%ii' % (nvol_elements * 4)
-            volume_ids = zeros(nvol_elements, dtype='int32')
-            volume_ids[:] = struct.unpack(fmt, data)
+            ## CTRIA3
+            data = ugrid_file.read(ntris * 3 * 4)
+            self.n += ntris * 3 * 4
+            fmt = '%s%ii' % (endian, ntris * 3)  # >9i
+            tris[:] = struct.unpack(fmt, data)
+            tris = tris.reshape((ntris, 3))
+            #print('min tris value = ' , tris.min())
+            #print('max tris value = ' , tris.max())
 
-            # some more data we're not reading for now...
+            ## CQUAD4
+            data = ugrid_file.read(nquads * 4 * 4)
+            self.n += nquads * 4 * 4
+            fmt = '%s%ii' % (endian, nquads * 4)  # >12i
+            quads[:] = struct.unpack(fmt, data)
+            quads = quads.reshape((nquads, 4))
+            #print('min quads value = ' , quads.min())
+            #print('max quads value = ' , quads.max())
 
-            #self.show(100, types='i', big_endian=True)
-        assert self.n == ugrid_file.tell()
-        ugrid_file.close()
+            data = ugrid_file.read(npids * 4)
+            self.n += npids * 4
+            fmt = '%s%ii' % (endian, npids)  # >12i
+            pids[:] = struct.unpack(fmt, data)
+            #print('min pids value = ' , pids.min())
+            #print('max pids value = ' , pids.max())
 
-    def write_bdf(self, bdf_filename, include_shells=True, include_solids=True, convert_pyram_to_penta=True, encoding=None):
+            #==========================================
+            # solids
+
+            ## CTETRA
+            data = ugrid_file.read(ntets * 4 * 4)
+            self.n += ntets * 4 * 4
+            fmt = '%s%ii' % (endian, ntets * 4)  # >12i
+            try:
+                tets[:] = struct.unpack(fmt, data)
+            except:
+                self.log.error('fmt=%s len(data)=%s len(data)/4=%s' % (fmt, len(data), len(data)//4))
+                raise
+            tets = tets.reshape((ntets, 4))
+            #print('min tets value = ' , tets.min())
+            #print('max tets value = ' , tets.max())
+
+            ## CPYRAM
+            data = ugrid_file.read(npenta5s * 5 * 4)
+            self.n += npenta5s * 5 * 4
+            fmt = '%s%ii' % (endian, npenta5s * 5)
+            penta5s[:] = struct.unpack(fmt, data)
+            penta5s = penta5s.reshape((npenta5s, 5))
+            #print('min penta5s value = ' , penta5s.min())
+            #print('max penta5s value = ' , penta5s.max())
+
+            ## cPENTA
+            data = ugrid_file.read(npenta6s * 6 * 4)
+            self.n += npenta6s * 6 * 4
+            fmt = '%s%ii' % (endian, npenta6s * 6)
+            penta6s[:] = struct.unpack(fmt, data)
+            penta6s = penta6s.reshape((npenta6s, 6))
+            #print('min penta6s value = ' , penta6s.min())
+            #print('max penta6s value = ' , penta6s.max())
+
+            ## CHEXA
+            data = ugrid_file.read(nhexas * 8 * 4)
+            self.n += nhexas * 8 * 4
+            fmt = '%s%ii' % (endian, nhexas * 8)
+            hexas[:] = struct.unpack(fmt, data)
+            hexas = hexas.reshape((nhexas, 8))
+            #print('min hexas value = ' , hexas.min())
+            #print('max hexas value = ' , hexas.max())
+
+            self.nodes = nodes
+            self.tris = tris
+            self.quads = quads
+            self.pids = pids
+
+            self.tets = tets
+            self.penta5s = penta5s
+            self.penta6s = penta6s
+            self.hexas = hexas
+
+            if 0:
+                #self.show(100, types='i', big_endian=True)
+                if nvol_elements == 0:
+                    raise RuntimeError('not a volume grid')
+
+                data = ugrid_file.read(4)
+                nBL_tets = struct.unpack(endian + 'i', data)
+                self.n += 4
+                print('nBL_tets=%s' % (nBL_tets)) # trash
+
+
+                data = ugrid_file.read(nvol_elements * 4)
+                self.n += nvol_elements * 4
+                print('len(data)=%s len/4=%s nvol_elements=%s' % (len(data), len(data) / 4., nvol_elements))
+                assert len(data) == (nvol_elements * 4)
+
+                fmt = endian + '%ii' % (nvol_elements * 4)
+                volume_ids = zeros(nvol_elements, dtype='int32')
+                volume_ids[:] = struct.unpack(fmt, data)
+
+                # some more data we're not reading for now...
+
+                #self.show(100, types='i', big_endian=True)
+            assert self.n == ugrid_file.tell()
+        #self.check_hanging_nodes()
+
+    def write_bdf(self, bdf_filename, include_shells=True, include_solids=True,
+                  convert_pyram_to_penta=True, encoding=None):
+        self.check_hanging_nodes()
         if encoding is None:
             encoding = sys.getdefaultencoding()
-        else:
-            encoding = self._encoding
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
         if PY2:
@@ -243,18 +243,19 @@ class UGRID(object):
 
         eid = 1
         if include_shells:
-            upids = unique(pids)
-            upids.sort()
+            upids = unique(pids)  # auto-sorts
             for pid in upids:
                 bdf_file.write('PSHELL,%i,%i, 0.1\n' % (pid, mid))
             print('writing CTRIA3')
             for element in self.tris:
-                bdf_file.write('CTRIA3  %-8i%-8i%-8i%-8i%-8i\n' % (eid, pids[eid-1], element[0], element[1], element[2]))
+                bdf_file.write('CTRIA3  %-8i%-8i%-8i%-8i%-8i\n' % (
+                    eid, pids[eid-1], element[0], element[1], element[2]))
                 eid += 1
 
             print('writing CQUAD4')
             for element in self.quads:
-                bdf_file.write('CQUAD4  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (eid, pids[eid-1], element[0], element[1], element[2], element[3]))
+                bdf_file.write('CQUAD4  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                    eid, pids[eid-1], element[0], element[1], element[2], element[3]))
                 eid += 1
         else:
             ntris = self.tris.shape[0]
@@ -271,10 +272,74 @@ class UGRID(object):
         bdf_file.write('ENDDATA\n')
         bdf_file.close()
 
-    def write_tecplot(self, tecplot_filename):
-        tecplot = ugrid_to_tecplot(self)
-        tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
-        tecplot.results = array([], dtype='float32')
+    def check_hanging_nodes(self, stop_on_diff=True):
+        self.log.info('checking hanging nodes')
+        tris = self.tris
+        quads = self.quads
+        pids = self.pids
+        tets = self.tets
+        pyrams = self.penta5s
+        pentas = self.penta6s
+        hexas = self.hexas
+
+        nnodes = self.nodes.shape[0]
+        ntris = tris.shape[0]
+        nquads = quads.shape[0]
+        ntets = tets.shape[0]
+        npyramids = pyrams.shape[0]
+        npentas = pentas.shape[0]
+        nhexas = hexas.shape[0]
+
+        nids = []
+        # if ntris:
+            # nids.append(unique(tris.flatten()))
+        # if nquads:
+            # nids.append(unique(quads.flatten()))
+
+        if ntets:
+            nids.append(unique(tets.flatten()))
+        if npyramids:
+            nids.append(unique(pyrams.flatten()))
+        if npentas:
+            nids.append(unique(pentas.flatten()))
+        if nhexas:
+            nids.append(unique(hexas.flatten()))
+        if len(nids) == 0:
+            raise RuntimeError(nids)
+        elif len(nids) == 1:
+            nids = nids[0]
+        else:
+            nids = unique(hstack(nids))
+
+        diff = []
+        if nnodes != len(nids):
+            expected = arange(1, nnodes + 1, dtype='int32')
+            print(expected)
+
+            diff = setdiff1d(expected, nids)
+            diff2 = setdiff1d(nids, expected)
+            diff = union1d(diff, diff2)
+            msg = 'nnodes=%i len(nids)=%s diff=%s diff2=%s' % (nnodes, len(nids), diff, diff2)
+            if stop_on_diff:
+                raise RuntimeError(msg)
+
+        # check unique node ids
+        for tri in tris:
+            assert len(unique(tri)) == 3, tri
+        for quad in quads:
+            # assert len(unique(quad)) == 4, quad
+            print(quad)
+        for tet in tets:
+            assert len(unique(tet)) == 4, tet
+        for pyram in pyrams:
+            assert len(unique(pyram)) == 5, pyram
+        for penta in pentas:
+            assert len(unique(penta)) == 6, penta
+        for hexa in hexas:
+            assert len(unique(hexa)) == 8, hexa
+
+
+        return diff
 
     def write_ugrid(self, ugrid_filename_out):
         outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename_out)
@@ -299,101 +364,103 @@ class UGRID(object):
         nhexas = hexas.shape[0]
 
         nshells = ntris + nquads
+        nsolids = ntets + npyramids + npentas + nhexas
         assert nshells > 0, 'nquads=%s ntris=%s' % (nquads, ntris)
-        # assert nsolids > 0, 'ntets=%s npyramids=%s npentas=%s nhexas=%s' % (ntets, npyramids, npentas, nhexas)
+        assert nsolids > 0, 'ntets=%s npyramids=%s npentas=%s nhexas=%s' % (ntets, npyramids, npentas, nhexas)
 
         with open(ugrid_filename_out, 'wb') as f_ugrid:
-            s = Struct(endian + '7i')
-            f_ugrid.write(s.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
+            sfmt = Struct(endian + '7i')
+            f_ugrid.write(sfmt.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
 
             # %3f or %3d
             fmt = endian + '%i%s' % (nnodes * 3, float_fmt) # len(x,y,z) = 3
-            s = Struct(fmt)
-            f_ugrid.write(s.pack(*nodes.ravel()))
+            sfmt = Struct(fmt)
+            f_ugrid.write(sfmt.pack(*nodes.ravel()))
 
             if ntris:
                 # CTRIA3
                 fmt = endian + '%ii' % (ntris * 3)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*tris.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*tris.ravel()))
 
             if nquads:
                 # QUAD4
                 fmt = endian + '%ii' % (nquads * 4)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*quads.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*quads.ravel()))
 
             # PSHELL
             fmt = endian + '%ii' % (nshells)
-            s = Struct(fmt)
-            f_ugrid.write(s.pack(*pids.ravel()))
+            sfmt = Struct(fmt)
+            f_ugrid.write(sfmt.pack(*pids.ravel()))
 
             if ntets:
                 # CTETRA
                 fmt = endian + '%ii' % (ntets * 4)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*tets.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*tets.ravel()))
 
             if npyramids:
                 # CPYRAM
                 fmt = endian + '%ii' % (npyramids * 5)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*pyrams.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*pyrams.ravel()))
 
             if npentas:
                 # CPENTA
                 fmt = endian + '%ii' % (npentas * 6)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*pentas.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*pentas.ravel()))
 
             if nhexas:
                 # CHEXA
                 fmt = endian + '%ii' % (nhexas * 8)
-                s = Struct(fmt)
-                f_ugrid.write(s.pack(*hexas.ravel()))
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*hexas.ravel()))
+        self.check_hanging_nodes()
 
-    def _write_bdf_solids(self, f, eid, pid, convert_pyram_to_penta=True):
+    def _write_bdf_solids(self, bdf_file, eid, pid, convert_pyram_to_penta=True):
         #pid = 0
-        f.write('PSOLID,%i,1\n' % pid)
+        bdf_file.write('PSOLID,%i,1\n' % pid)
         print('writing CTETRA')
-        f.write('$ CTETRA\n')
+        bdf_file.write('$ CTETRA\n')
         for element in self.tets:
             #card = ['CTETRA', eid, pid] + list(element)
             #f.write(print_int_card(card))
-            f.write('CTETRA  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+            bdf_file.write('CTETRA  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                 eid, pid, element[0], element[1], element[2], element[3]))
             eid += 1
 
         if convert_pyram_to_penta:
             # skipping the penta5s
             print('writing CPYRAM as CPENTA with node6=node5')
-            f.write('$ CPYRAM - CPENTA5\n')
+            bdf_file.write('$ CPYRAM - CPENTA5\n')
             for element in self.penta5s:
-                f.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                bdf_file.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                     eid, pid, element[0], element[1], element[2], element[3], element[4], element[4]))
                 eid += 1
         else:
             print('writing CPYRAM')
-            f.write('$ CPYRAM - CPENTA5\n')
+            bdf_file.write('$ CPYRAM - CPENTA5\n')
             for element in self.penta5s:
-                f.write('CPYRAM  %-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                bdf_file.write('CPYRAM  %-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                     eid, pid, element[0], element[1], element[2], element[3], element[4]))
                 eid += 1
 
         print('writing CPENTA')
-        f.write('$ CPENTA6\n')
+        bdf_file.write('$ CPENTA6\n')
         for element in self.penta6s:
             #card = ['CPENTA', eid, pid] + list(element)
             #f.write(print_int_card(card))
-            f.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+            bdf_file.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                 eid, pid, element[0], element[1], element[2], element[3], element[4], element[5]))
             eid += 1
 
         print('writing CHEXA')
-        f.write('$ CHEXA\n')
+        bdf_file.write('$ CHEXA\n')
         for element in self.hexas:
             #card = ['CHEXA', eid, pid] + list(element)
-            f.write('CHEXA   %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n        %-8i%-8i\n' % (
+            bdf_file.write('CHEXA   %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n        %-8i%-8i\n' % (
                 eid, pid, element[0], element[1], element[2], element[3], element[4], element[5], element[6], element[7]))
             #f.write(print_int_card(card))
             eid += 1
@@ -436,75 +503,72 @@ class UGRID(object):
         self._write_faces(faces_filename + '2')
 
     def _write_points(self, points_filename):
-        points_file = open(points_filename, 'wb')
-        nnodes = self.nodes.shape[0]
+        with open(points_filename, 'wb') as points_file:
+            nnodes = self.nodes.shape[0]
 
-        points_file.write('/*--------------------------------*- C++ -*----------------------------------*\\\n')
-        points_file.write('| =========                 |                                                 |\n')
-        points_file.write('| \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n')
-        points_file.write('|  \\\\    /   O peration     | Version:  1.7.1                                 |\n')
-        points_file.write('|   \\\\  /    A nd           | Web:      www.OpenFOAM.com                      |\n')
-        points_file.write('|    \\\\/     M anipulation  |                                                 |\n')
-        points_file.write('\\*---------------------------------------------------------------------------*/\n')
-        points_file.write('FoamFile\n')
-        points_file.write('{\n')
-        points_file.write('    version     2.0;\n')
-        points_file.write('    format      ascii;\n')
-        points_file.write('    class       vectorField;\n')
-        points_file.write('    location    "constant/polyMesh";\n')
-        points_file.write('    object      points;\n')
-        points_file.write('}\n')
-        points_file.write('// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /\n')
+            points_file.write('/*--------------------------------*- C++ -*----------------------------------*\\\n')
+            points_file.write('| =========                 |                                                 |\n')
+            points_file.write('| \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n')
+            points_file.write('|  \\\\    /   O peration     | Version:  1.7.1                                 |\n')
+            points_file.write('|   \\\\  /    A nd           | Web:      www.OpenFOAM.com                      |\n')
+            points_file.write('|    \\\\/     M anipulation  |                                                 |\n')
+            points_file.write('\\*---------------------------------------------------------------------------*/\n')
+            points_file.write('FoamFile\n')
+            points_file.write('{\n')
+            points_file.write('    version     2.0;\n')
+            points_file.write('    format      ascii;\n')
+            points_file.write('    class       vectorField;\n')
+            points_file.write('    location    "constant/polyMesh";\n')
+            points_file.write('    object      points;\n')
+            points_file.write('}\n')
+            points_file.write('// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /\n')
 
 
-        points_file.write('\n\n')
-        points_file.write('%i\n' % (nnodes))
-        points_file.write('(\n')
-        for nid, node in enumerate(self.nodes):
-            points_file.write(('    (%-12s %-12s %-12s)\n') % (node[0], node[1], node[2]))
-        points_file.write(')\n')
-        points_file.close()
+            points_file.write('\n\n')
+            points_file.write('%i\n' % (nnodes))
+            points_file.write('(\n')
+            for node in enumerate(self.nodes):
+                points_file.write(('    (%-12s %-12s %-12s)\n') % (node[0], node[1], node[2]))
+            points_file.write(')\n')
 
     def _write_boundary(self, boundary_filename, tag_filename):
-        boundary_file = open(boundary_filename, 'wb')
-        boundary_file.write('\n\n')
-        #f.write('%i\n' % (nnodes))
-        boundary_file.write('(\n')
+        with open(boundary_filename, 'wb') as boundary_file:
+            boundary_file.write('\n\n')
+            #f.write('%i\n' % (nnodes))
+            boundary_file.write('(\n')
 
-        uboundaries = unique(self.pids)
-        nboundaries = len(uboundaries)
-        boundary_file.write('%i\n' % nboundaries)
-        boundary_file.write('(\n')
+            uboundaries = unique(self.pids)
+            nboundaries = len(uboundaries)
+            boundary_file.write('%i\n' % nboundaries)
+            boundary_file.write('(\n')
 
-        tagger = TagReader()
-        tag_data = tagger.read_tag_filename(tag_filename)
+            tagger = TagReader()
+            tag_data = tagger.read_tag_filename(tag_filename)
 
 
-        isort = argsort(self.pids)
-        self.pids.sort()
-        #print(isort)
-        pids = self.pids
-        for iboundary in uboundaries:
-            data = tag_data[iboundary]
-            #name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
-            #is_trans, is_delete, bl_spacing, bl_thickness, nlayers = data
-            name = data[0]
+            isort = argsort(self.pids)
+            self.pids.sort()
+            #print(isort)
+            pids = self.pids
+            for iboundary in uboundaries:
+                data = tag_data[iboundary]
+                #name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
+                #is_trans, is_delete, bl_spacing, bl_thickness, nlayers = data
+                name = data[0]
 
-            i = where(iboundary == pids)[0]
-            nfaces = i.max() - i.min() + 1
-            startface = i.min()
+                i = where(iboundary == pids)[0]
+                nfaces = i.max() - i.min() + 1
+                startface = i.min()
 
-            assert len(i) == nfaces, 'The data is unsorted...len(i)=%s nfaces=%s' % (len(i), nfaces)
-            boundary_file.write('    %s\n' % name)
-            boundary_file.write('    {\n')
-            boundary_file.write('        type patch;\n')
-            #f.write('        type 1(wall);\n')  # create a new group
-            boundary_file.write('        nFaces %i;\n' % nfaces)
-            boundary_file.write('        startFace %i;\n' % startface)
-            boundary_file.write('    }\n')
-        boundary_file.write(')\n')
-        boundary_file.close()
-
+                assert len(i) == nfaces, 'The data is unsorted...len(i)=%s nfaces=%s' % (len(i), nfaces)
+                boundary_file.write('    %s\n' % name)
+                boundary_file.write('    {\n')
+                boundary_file.write('        type patch;\n')
+                #f.write('        type 1(wall);\n')  # create a new group
+                boundary_file.write('        nFaces %i;\n' % nfaces)
+                boundary_file.write('        startFace %i;\n' % startface)
+                boundary_file.write('    }\n')
+            boundary_file.write(')\n')
         self.isort = isort
 
     def _write_faces(self, faces_filename):
@@ -516,6 +580,7 @@ class UGRID(object):
         nquad_faces = nhexas * 6 + npenta5s + npenta6s * 3
         ntri_faces = ntets * 4 + npenta5s * 4 + npenta6s * 2
         nfaces = ntri_faces + nquad_faces
+        assert nfaces > 0, nfaces
 
         #tri_face_to_eids = ones((nt, 2), dtype='int32')
         tri_face_to_eids = defaultdict(list)
@@ -526,268 +591,268 @@ class UGRID(object):
         tri_faces = zeros((ntri_faces, 3), dtype='int32')
         quad_faces = zeros((nquad_faces, 4), dtype='int32')
 
-        faces_file = open(faces_filename, 'wb')
-        faces_file.write('\n\n')
-        #faces_file.write('%i\n' % (nnodes))
-        faces_file.write('(\n')
+        with open(faces_filename, 'wb') as faces_file:
+            faces_file.write('\n\n')
+            #faces_file.write('%i\n' % (nnodes))
+            faces_file.write('(\n')
 
-        it_start = {}
-        iq_start = {}
-        min_eids = {}
-        it = 0
-        iq = 0
-        eid = 1
-        it_start[1] = it
-        iq_start[1] = iq
-        min_eids[eid] = self.tets
-        for element in self.tets - 1:
-            (n1, n2, n3, n4) = element
-            face1 = [n3, n2, n1]
-            face2 = [n1, n2, n4]
-            face3 = [n4, n3, n1]
-            face4 = [n2, n3, n4]
+            it_start = {}
+            iq_start = {}
+            min_eids = {}
+            it = 0
+            iq = 0
+            eid = 1
+            it_start[1] = it
+            iq_start[1] = iq
+            min_eids[eid] = self.tets
+            for element in self.tets - 1:
+                (n1, n2, n3, n4) = element
+                face1 = [n3, n2, n1]
+                face2 = [n1, n2, n4]
+                face3 = [n4, n3, n1]
+                face4 = [n2, n3, n4]
 
-            tri_faces[it, :] = face1
-            tri_faces[it+1, :] = face2
-            tri_faces[it+2, :] = face3
-            tri_faces[it+3, :] = face4
+                tri_faces[it, :] = face1
+                tri_faces[it+1, :] = face2
+                tri_faces[it+2, :] = face3
+                tri_faces[it+3, :] = face4
 
-            face1.sort()
-            face2.sort()
-            face3.sort()
-            face4.sort()
-            tri_face_to_eids[tuple(face1)].append(eid)
-            tri_face_to_eids[tuple(face2)].append(eid)
-            tri_face_to_eids[tuple(face3)].append(eid)
-            tri_face_to_eids[tuple(face4)].append(eid)
-            it += 4
-            eid += 1
+                face1.sort()
+                face2.sort()
+                face3.sort()
+                face4.sort()
+                tri_face_to_eids[tuple(face1)].append(eid)
+                tri_face_to_eids[tuple(face2)].append(eid)
+                tri_face_to_eids[tuple(face3)].append(eid)
+                tri_face_to_eids[tuple(face4)].append(eid)
+                it += 4
+                eid += 1
 
-        it_start[2] = it
-        iq_start[2] = iq
-        min_eids[eid] = self.hexas
-        print('HEXA it=%s iq=%s' % (it, iq))
-        for element in self.hexas-1:
-            (n1, n2, n3, n4, n5, n6, n7, n8) = element
+            it_start[2] = it
+            iq_start[2] = iq
+            min_eids[eid] = self.hexas
+            print('HEXA it=%s iq=%s' % (it, iq))
+            for element in self.hexas-1:
+                (n1, n2, n3, n4, n5, n6, n7, n8) = element
 
-            face1 = [n1, n2, n3, n4]
-            face2 = [n2, n6, n7, n3]
-            face3 = [n6, n5, n8, n7]
-            face4 = [n5, n1, n4, n8]
-            face5 = [n4, n3, n7, n8]
-            face6 = [n5, n6, n2, n1]
+                face1 = [n1, n2, n3, n4]
+                face2 = [n2, n6, n7, n3]
+                face3 = [n6, n5, n8, n7]
+                face4 = [n5, n1, n4, n8]
+                face5 = [n4, n3, n7, n8]
+                face6 = [n5, n6, n2, n1]
 
-            quad_faces[iq, :] = face1
-            quad_faces[iq+1, :] = face2
-            quad_faces[iq+2, :] = face3
-            quad_faces[iq+3, :] = face4
-            quad_faces[iq+4, :] = face5
-            quad_faces[iq+5, :] = face6
+                quad_faces[iq, :] = face1
+                quad_faces[iq+1, :] = face2
+                quad_faces[iq+2, :] = face3
+                quad_faces[iq+3, :] = face4
+                quad_faces[iq+4, :] = face5
+                quad_faces[iq+5, :] = face6
 
-            face1.sort()
-            face2.sort()
-            face3.sort()
-            face4.sort()
-            face5.sort()
-            face6.sort()
+                face1.sort()
+                face2.sort()
+                face3.sort()
+                face4.sort()
+                face5.sort()
+                face6.sort()
 
-            quad_face_to_eids[tuple(face1)].append(eid)
-            quad_face_to_eids[tuple(face2)].append(eid)
-            quad_face_to_eids[tuple(face3)].append(eid)
-            quad_face_to_eids[tuple(face4)].append(eid)
-            quad_face_to_eids[tuple(face5)].append(eid)
-            quad_face_to_eids[tuple(face6)].append(eid)
-            iq += 6
-            eid += 1
+                quad_face_to_eids[tuple(face1)].append(eid)
+                quad_face_to_eids[tuple(face2)].append(eid)
+                quad_face_to_eids[tuple(face3)].append(eid)
+                quad_face_to_eids[tuple(face4)].append(eid)
+                quad_face_to_eids[tuple(face5)].append(eid)
+                quad_face_to_eids[tuple(face6)].append(eid)
+                iq += 6
+                eid += 1
 
-        it_start[3] = it
-        iq_start[3] = iq
-        min_eids[eid] = self.penta5s
-        print('PENTA5 it=%s iq=%s' % (it, iq))
-        for element in self.penta5s-1:
-            (n1, n2, n3, n4, n5) = element
+            it_start[3] = it
+            iq_start[3] = iq
+            min_eids[eid] = self.penta5s
+            print('PENTA5 it=%s iq=%s' % (it, iq))
+            for element in self.penta5s-1:
+                (n1, n2, n3, n4, n5) = element
 
-            face1 = [n2, n3, n5]
-            face2 = [n1, n2, n5]
-            face3 = [n4, n1, n5]
-            face4 = [n5, n3, n4]
-            face5 = [n4, n3, n2, n1]
+                face1 = [n2, n3, n5]
+                face2 = [n1, n2, n5]
+                face3 = [n4, n1, n5]
+                face4 = [n5, n3, n4]
+                face5 = [n4, n3, n2, n1]
 
-            tri_faces[it, :] = face1
-            tri_faces[it+1, :] = face2
-            tri_faces[it+2, :] = face3
-            tri_faces[it+3, :] = face4
-            quad_faces[iq, :] = face5
+                tri_faces[it, :] = face1
+                tri_faces[it+1, :] = face2
+                tri_faces[it+2, :] = face3
+                tri_faces[it+3, :] = face4
+                quad_faces[iq, :] = face5
 
-            face1.sort()
-            face2.sort()
-            face3.sort()
-            face4.sort()
-            face5.sort()
+                face1.sort()
+                face2.sort()
+                face3.sort()
+                face4.sort()
+                face5.sort()
 
-            tri_face_to_eids[tuple(face1)].append(eid)
-            tri_face_to_eids[tuple(face2)].append(eid)
-            tri_face_to_eids[tuple(face3)].append(eid)
-            tri_face_to_eids[tuple(face4)].append(eid)
-            quad_face_to_eids[tuple(face5)].append(eid)
+                tri_face_to_eids[tuple(face1)].append(eid)
+                tri_face_to_eids[tuple(face2)].append(eid)
+                tri_face_to_eids[tuple(face3)].append(eid)
+                tri_face_to_eids[tuple(face4)].append(eid)
+                quad_face_to_eids[tuple(face5)].append(eid)
 
-            it += 4
-            iq += 1
-            eid += 1
+                it += 4
+                iq += 1
+                eid += 1
 
-        it_start[4] = it
-        iq_start[4] = iq
-        min_eids[eid] = self.penta6s
-        print('PENTA6 it=%s iq=%s' % (it, iq))
-        for element in self.penta6s-1:
-            (n1, n2, n3, n4, n5, n6) = element
+            it_start[4] = it
+            iq_start[4] = iq
+            min_eids[eid] = self.penta6s
+            print('PENTA6 it=%s iq=%s' % (it, iq))
+            for element in self.penta6s-1:
+                (n1, n2, n3, n4, n5, n6) = element
 
-            face1 = [n1, n2, n3]
-            face2 = [n5, n4, n6]
-            face3 = [n2, n5, n6, n3]
-            face4 = [n4, n1, n3, n6]
-            face5 = [n4, n5, n2, n1]
+                face1 = [n1, n2, n3]
+                face2 = [n5, n4, n6]
+                face3 = [n2, n5, n6, n3]
+                face4 = [n4, n1, n3, n6]
+                face5 = [n4, n5, n2, n1]
 
-            tri_faces[it, :] = face1
-            tri_faces[it+1, :] = face2
-            quad_faces[iq, :] = face3
-            quad_faces[iq+1, :] = face4
-            quad_faces[iq+2, :] = face5
+                tri_faces[it, :] = face1
+                tri_faces[it+1, :] = face2
+                quad_faces[iq, :] = face3
+                quad_faces[iq+1, :] = face4
+                quad_faces[iq+2, :] = face5
 
-            face1.sort()
-            face2.sort()
-            face3.sort()
-            face4.sort()
-            face5.sort()
+                face1.sort()
+                face2.sort()
+                face3.sort()
+                face4.sort()
+                face5.sort()
 
-            tri_face_to_eids[tuple(face1)].append(eid)
-            tri_face_to_eids[tuple(face2)].append(eid)
-            quad_face_to_eids[tuple(face3)].append(eid)
-            quad_face_to_eids[tuple(face4)].append(eid)
-            quad_face_to_eids[tuple(face5)].append(eid)
-            it += 2
-            iq += 3
-            eid += 1
+                tri_face_to_eids[tuple(face1)].append(eid)
+                tri_face_to_eids[tuple(face2)].append(eid)
+                quad_face_to_eids[tuple(face3)].append(eid)
+                quad_face_to_eids[tuple(face4)].append(eid)
+                quad_face_to_eids[tuple(face5)].append(eid)
+                it += 2
+                iq += 3
+                eid += 1
 
-        # find the unique faces
-        tri_faces_sort = deepcopy(tri_faces)
-        quad_faces_sort = deepcopy(quad_faces)
-        #print('t0', tri_faces_sort[0, :])
-        #print('t1', tri_faces_sort[1, :])
+            # find the unique faces
+            tri_faces_sort = deepcopy(tri_faces)
+            quad_faces_sort = deepcopy(quad_faces)
+            #print('t0', tri_faces_sort[0, :])
+            #print('t1', tri_faces_sort[1, :])
 
-        print('nt=%s nq=%s' % (ntri_faces, nquad_faces))
-        tri_faces_sort.sort(axis=1)
-        #for i, tri in enumerate(tri_faces):
-            #assert tri[2] > tri[0], 'i=%s tri=%s' % (i, tri)
-        #print('*t0', tri_faces_sort[0, :])
-        #print('*t1', tri_faces_sort[1, :])
+            print('nt=%s nq=%s' % (ntri_faces, nquad_faces))
+            tri_faces_sort.sort(axis=1)
+            #for i, tri in enumerate(tri_faces):
+                #assert tri[2] > tri[0], 'i=%s tri=%s' % (i, tri)
+            #print('*t0', tri_faces_sort[0, :])
+            #print('*t1', tri_faces_sort[1, :])
 
-        quad_faces_sort.sort(axis=1)
-        #for i, quad in enumerate(quad_faces):
-            #assert quad[3] > quad[0], 'i=%s quad=%s' % (i, quad)
+            quad_faces_sort.sort(axis=1)
+            #for i, quad in enumerate(quad_faces):
+                #assert quad[3] > quad[0], 'i=%s quad=%s' % (i, quad)
 
 
-        #iq_start_keys = iq_start.keys()
-        #it_start_keys = it_start.keys()
-        #iq_start_keys.sort()
-        #it_start_keys.sort()
+            #iq_start_keys = iq_start.keys()
+            #it_start_keys = it_start.keys()
+            #iq_start_keys.sort()
+            #it_start_keys.sort()
 
-        face_to_eid = []
+            face_to_eid = []
 
-        eid_keys = min_eids.keys()
-        eid_keys.sort()
+            eid_keys = min_eids.keys()
+            eid_keys.sort()
 
-        type_mapper = {
-            1 : 'tets',
-            2 : 'hexas',
-            3 : 'penta5s',
-            4 : 'penta6s',
-        }
-        print("eid_keys =", eid_keys)
-        for face, eids in tri_face_to_eids.iteritems():
-            if len(eids) == 1:
-                #if it's a boundary face, wer're fine, otherwise, error...
-                #print('*face=%s eids=%s' % (face, eids))
-                #pid = lookup from quads/tris
-                eid = eids[0]
-                owner = eid
-                neighbor = -1
-                continue
-                #raise RuntimeError()
+            type_mapper = {
+                1 : 'tets',
+                2 : 'hexas',
+                3 : 'penta5s',
+                4 : 'penta6s',
+            }
+            print("eid_keys =", eid_keys)
+            for face, eids in tri_face_to_eids.iteritems():
+                if len(eids) == 1:
+                    #if it's a boundary face, wer're fine, otherwise, error...
+                    #print('*face=%s eids=%s' % (face, eids))
+                    #pid = lookup from quads/tris
+                    eid = eids[0]
+                    owner = eid
+                    neighbor = -1
+                    continue
+                    #raise RuntimeError()
 
-            e1, e2 = eids
-            i1 = searchsorted(eid_keys, e1)
-            i2 = searchsorted(eid_keys, e2)
+                e1, e2 = eids
+                i1 = searchsorted(eid_keys, e1)
+                i2 = searchsorted(eid_keys, e2)
 
-            if i1 == 1: # tet
-                it1 = (e1-1) * 4
-                it2 = (e1-1) * 4 + 4
-                faces1_sort = tri_faces_sort[it1:it2, :]
-                faces1_unsorted = tri_faces[it1:it2, :]
+                if i1 == 1: # tet
+                    it1 = (e1-1) * 4
+                    it2 = (e1-1) * 4 + 4
+                    faces1_sort = tri_faces_sort[it1:it2, :]
+                    faces1_unsorted = tri_faces[it1:it2, :]
 
-                #print "faces1 = \n", faces1_sort, '\n'
+                    #print "faces1 = \n", faces1_sort, '\n'
 
-                # figure out irow; 3 for the test case
-                face = array(face, dtype='int32')
+                    # figure out irow; 3 for the test case
+                    face = array(face, dtype='int32')
 
-                #print('face  = %s' % face)
-                #print('face3 = %s' % faces1_sort[3, :])
+                    #print('face  = %s' % face)
+                    #print('face3 = %s' % faces1_sort[3, :])
 
-                if allclose(face, faces1_sort[0, :]):
-                    n1 = 0
-                elif allclose(face, faces1_sort[1, :]):
-                    n1 = 1
-                elif allclose(face, faces1_sort[2, :]):
-                    n1 = 2
-                elif allclose(face, faces1_sort[3, :]):
-                    n1 = 3
-                else:
-                    raise RuntimeError('cant find face=%s in faces for eid1=%s' % (face, e1))
+                    if allclose(face, faces1_sort[0, :]):
+                        n1 = 0
+                    elif allclose(face, faces1_sort[1, :]):
+                        n1 = 1
+                    elif allclose(face, faces1_sort[2, :]):
+                        n1 = 2
+                    elif allclose(face, faces1_sort[3, :]):
+                        n1 = 3
+                    else:
+                        raise RuntimeError('cant find face=%s in faces for eid1=%s' % (face, e1))
 
-                if allclose(face, faces1_unsorted[n1, :]):
-                    owner = e1
-                    neighbor = e2
-                else:
-                    owner = e2
-                    neighbor = e1
-                face_new = faces1_unsorted[n1, :]
+                    if allclose(face, faces1_unsorted[n1, :]):
+                        owner = e1
+                        neighbor = e2
+                    else:
+                        owner = e2
+                        neighbor = e1
+                    face_new = faces1_unsorted[n1, :]
 
-            elif i1 == 2:  # CHEXA
-                iq1 = iq_start[2]
-                iq2 = iq1 + 6
+                elif i1 == 2:  # CHEXA
+                    iq1 = iq_start[2]
+                    iq2 = iq1 + 6
 
-            elif i1 == 3:  # CPENTA5
-                #e1_new = e1 - eid_keys[2]
-                iq1 = iq_start[3]
-                iq2 = iq1 + 1
-                it1 = it_start[3]
-                it2 = it1 + 4
-            elif i1 == 4:  # CPENTA6
-                iq1 = iq_start[4]
-                iq2 = iq1 + 3
-                it1 = it_start[4]
-                it2 = it1 + 2
-            else:
-                raise NotImplementedError('This is a %s and is not supported' % type_mapper[i1])
-
-            # do we need to check this???
-            if 0:
-                if i2 == 1: # tet
-
-                    it1 = it_start_keys[i1]
+                elif i1 == 3:  # CPENTA5
+                    #e1_new = e1 - eid_keys[2]
+                    iq1 = iq_start[3]
+                    iq2 = iq1 + 1
+                    it1 = it_start[3]
                     it2 = it1 + 4
-                    faces2 = tri_faces_sort[it1:it2, :]
-                    #print('face=%s eids=%s' % (face, eids))
-                    #print "faces2 = \n", faces2
-                    # spits out 3
+                elif i1 == 4:  # CPENTA6
+                    iq1 = iq_start[4]
+                    iq2 = iq1 + 3
+                    it1 = it_start[4]
+                    it2 = it1 + 2
                 else:
-                    asdf
-            #type1 = type_mapper[i1]
-            #type2 = type_mapper[i2]
-            #if type1:
-            #asdf
-        faces_file.write(')\n')
-        faces_file.close()
+                    raise NotImplementedError('This is a %s and is not supported' % type_mapper[i1])
+
+                # do we need to check this???
+                if 0:
+                    if i2 == 1: # tet
+
+                        it1 = it_start_keys[i1]
+                        it2 = it1 + 4
+                        faces2 = tri_faces_sort[it1:it2, :]
+                        #print('face=%s eids=%s' % (face, eids))
+                        #print "faces2 = \n", faces2
+                        # spits out 3
+                    else:
+                        asdf
+                #type1 = type_mapper[i1]
+                #type2 = type_mapper[i2]
+                #if type1:
+                #asdf
+            faces_file.write(')\n')
+        return
 
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
@@ -820,43 +885,6 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
     return ndarray_float, float_fmt, nfloat, endian
 
 
-def ugrid_to_tecplot(ugrid_model):
-    nnodes = len(ugrid_model.nodes)
-    nodes = zeros((nnodes, 3), dtype='float64')
-    elements = []
-
-    ntets = len(ugrid_model.tets)
-    non_tets = len(ugrid_model.penta5s) + len(ugrid_model.penta6s) + len(ugrid_model.hexas)
-
-    tecplot = Tecplot()
-    tecplot.xyz = ugrid_model.nodes
-
-    if ntets and non_tets == 0:
-        elements = ugrid_model.tets
-        tecplot.tet_elements = elements - 1
-    elif non_tets:
-        for element in ugrid_model.tets:
-            n1, n2, n3, n4 = element
-            elements.append([n1, n2, n3, n4,
-                             n4, n4, n4, n4])
-        for element in ugrid_model.penta5s:
-            n1, n2, n3, n4, n5 = element
-            elements.append([n1, n2, n3, n4,
-                             n5, n5, n5, n5])
-        for element in ugrid_model.penta6s:
-            n1, n2, n3, n4, n5, n6 = element
-            elements.append([n1, n2, n3, n4,
-                             n5, n6, n6, n6])
-        for element in ugrid_model.hexas:
-            n1, n2, n3, n4, n5, n6, n7, n8 = element
-            elements.append([n1, n2, n3, n4,
-                             n5, n6, n7, n8])
-        elements = array(elements, dtype='int32') - 1
-        tecplot.hexa_elements = elements
-    else:
-        raise RuntimeError()
-    return tecplot
-
 def main():
     ugrid_filename = 'bay_steve_recon1_fixed0.b8.ugrid'
     #bdf_filename = 'bay_steve_recon1_fixed0.b8.bdf'
@@ -867,9 +895,6 @@ def main():
     ugrid_model.read_ugrid(ugrid_filename)
     #ugrid_model.write_bdf(bdf_filename)
     ugrid_model.write_foam(foam_filename, tag_filename)
-
-
-
 
 
 if __name__ == '__main__':

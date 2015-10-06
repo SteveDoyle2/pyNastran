@@ -213,6 +213,63 @@ class DevUtils(unittest.TestCase):
         os.remove(bdf_filename)
         os.remove(bdf_filename_out)
 
+    def test_eq4(self):
+        """
+          5
+        6 *-------* 40
+          | \     |
+          |   \   |
+          |     \ |
+          *-------* 3
+          1       20
+        """
+        msg = 'CEND\n'
+        msg += 'BEGIN BULK\n'
+        msg += 'GRID,1, , 0.,   0.,   0.\n'
+        msg += 'GRID,20,, 1.,   0.,   0.\n'
+        msg += 'GRID,3, , 1.01, 0.,   0.\n'
+
+        msg += 'GRID,41,, 1.,   1.,   0.\n'  # eq
+        msg += 'GRID,4,, 1.,   1.,   0.\n'  # eq
+        msg += 'GRID,40,, 1.,   1.,   0.\n'  # eq
+        msg += 'GRID,4,, 1.,   1.,   0.\n'  # eq
+
+        msg += 'GRID,5, , 0.,   1.,   0.\n'
+        msg += 'GRID,6, , 0.,   1.01, 0.\n'
+        msg += 'CTRIA3,1, 100,1,20,6\n'
+        msg += 'CTRIA3,10,100,3,40,5\n'
+        msg += 'PSHELL,100,1000,0.1\n'
+        msg += 'MAT1,1000,3.0,, 0.3\n'
+        msg += 'ENDDATA'
+        bdf_filename = 'nonunique.bdf'
+        bdf_filename_out = 'unique.bdf'
+
+        bdf_file = open(bdf_filename, 'wb')
+        bdf_file.write(msg)
+        bdf_file.close()
+
+        tol = 0.2
+        node_set = [4, 40, 41]
+        # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=node_set, crash_on_collapse=False)
+
+        model = BDF()
+        model.read_bdf(bdf_filename_out)
+        nids = model.nodes.keys()
+        assert len(model.nodes) == 6, 'nnodes=%s nodes=%s' % (len(model.nodes), nids)
+        assert 1 in nids, nids
+        assert 20 in nids, nids
+        assert 3 in nids, nids
+        assert 4 in nids, nids
+        assert 5 in nids, nids
+        assert 6 in nids, nids
+        assert 40 not in nids, nids
+        assert 41 not in nids, nids
+        print(nids)
+        # os.remove(bdf_filename)
+        os.remove(bdf_filename_out)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
