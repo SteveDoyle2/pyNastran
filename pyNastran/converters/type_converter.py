@@ -25,7 +25,8 @@ from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
-from pyNastran.converters.ugrid.ugrid_reader import UGRID, ugrid_to_tecplot
+from pyNastran.converters.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 
 
