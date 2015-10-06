@@ -61,6 +61,13 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
                                             iren=iren, rw=render_window)
         #self.Highlight
 
+def loadtxt_nice(filename, delimiter=','):
+    data = []
+    delim = '\n\r \t' + delimiter
+    with open(filename, 'r') as file_obj:
+        line = file_obj.readline().strip(delim).split(delimiter)
+        data.append(line)
+    return array(data)
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
@@ -281,7 +288,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             print(type(txt))
             raise
         except Exception as e:
-            import traceback
             #traceback.print_stack()
             #traceback.print_exc(file=self.log_error)
             self.log_error(str(e))
@@ -1632,7 +1638,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                         result_name, result_value, xyz = self.get_result_by_cell_id(cell_id, world_position)
                         assert result_name in self.label_actors, result_name
                     else:
-                        cell = self.grid.GetCell(cell_id)
+                        #cell = self.grid.GetCell(cell_id)
                         # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
                         method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
@@ -1964,7 +1970,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         names_old = names_old - set(names_to_ignore)
         #print('names_old1 =', names_old)
 
-        names_to_clear = names_old - names
+        #names_to_clear = names_old - names
         #self._remove_alt_actors(names_to_clear)
         #print('names_old2 =', names_old)
         #print('names =', names)
@@ -2827,7 +2833,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if name in ['clicked_ok', 'clicked_cancel']:
                 continue
 
-            color2 = group.color_float
+            #color2 = group.color_float
             geom_prop = self.geometry_properties[name]
             geom_prop.color = group.color
             geom_prop.line_width = group.line_width
@@ -2917,7 +2923,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                        point_size=1, representation='point')
 
         # read input file
-        user_points = loadtxt(points_filename, delimiter=',')
+        try:
+            user_points = loadtxt(points_filename, delimiter=',')
+        except ValueError:
+            user_points = loadtxt_nice(points_filename, delimiter=',')
+            # can't handle leading spaces?
+            #raise
         npoints = user_points.shape[0]
 
         # allocate grid

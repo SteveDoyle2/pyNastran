@@ -147,6 +147,10 @@ class UGRID_IO(object):
             self._finish_results_io2(form, cases)
 
     def _add_ugrid_nodes_to_grid(self, name, diff_node_ids, nodes):
+        """
+        based on:
+          _add_nastran_nodes_to_grid
+        """
         nnodes = nodes.shape[0]
         assert nnodes > 0, nnodes
         # if nnodes == 0:

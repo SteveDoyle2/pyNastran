@@ -237,6 +237,9 @@ class PBUSH1D(BushingProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
 
     def _read_shock(self, card, istart):
+        """
+        F(u, v) = Cv * S(u) * sign(v) * |v|^ev
+        """
         self.shockType = string_or_blank(card, istart + 1, 'shockType')
         self.shockCVT = double(card, istart + 2, 'shockCVT')
         self.shockCVC = double_or_blank(card, istart + 3, 'shockCVC')
@@ -259,13 +262,20 @@ class PBUSH1D(BushingProperty):
             self.shockIDETSD = integer(card, istart + 11, 'shockIDETSD')
             self.shockIDECSD = integer_or_blank(card, istart + 11,
                                                 'shockIDECSD', self.shockIDETSD)
+
+            #def DEquation(self):
+                #if isinstance(self.dequation, int):
+                    #return self.dequation
+                #return self.dequation.equation_id
         else:
             raise RuntimeError('Invalid shockType=%r on card\n%s' %(self.shockType, card))
-
         istart += 8
         return istart
 
     def _read_spring(self, card, istart):
+        """
+        F(u) = Ft(u)
+        """
         self.springType = string_or_blank(card, istart + 1, 'springType')
         self.springIDT = integer(card, istart + 2, 'springIDT')
 
@@ -285,6 +295,9 @@ class PBUSH1D(BushingProperty):
         self.vars.append('SPRING')
 
     def _read_damper(self, card, istart):
+        """
+        F(v) = Ft(u)
+        """
         self.damperType = string_or_blank(card, istart + 1, 'damperType')
         self.damperIDT = integer(card, istart + 2, 'damperIDT')
         if self.damperType == 'TABLE':
@@ -301,6 +314,9 @@ class PBUSH1D(BushingProperty):
         self.vars.append('DAMPER')
 
     def _read_gener(self, card, istart):
+        """
+        F(u, v) = Ft(u, v)
+        """
         self.generIDT = integer(card, istart + 2, 'generIDT')
         self.generIDC = integer_or_blank(card, istart + 3,
                                          'generIDC', self.generIDT)

@@ -75,7 +75,8 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
 from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    CORD2R, CORD2C, CORD2S, CORD3G,
                                                    GMCORD)
-from pyNastran.bdf.cards.dmig import DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
+from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (DELAY, FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL,
                                          NLPARM, NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD
@@ -108,7 +109,8 @@ from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, 
                                                  PHBDY, CONV, RADM, RADBC)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC)
+                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC,
+                                            DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods import BDFMethods
@@ -355,9 +357,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
-            'DEQATN',
+
 
             # optimization cards
+            'DEQATN', 'DTABLE',
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
             'DVPREL1', 'DVPREL2',
             'DVMREL1',
@@ -384,7 +387,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             #------------------------------------------------------------------
             ## tables
-            #'DTABLE', 'TABLEHT', 'TABRNDG',
+            #'TABLEHT', 'TABRNDG',
             'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
 
@@ -736,7 +739,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.dmijis = {}
         self.dmiks = {}
         self._dmig_temp = defaultdict(list)
-        self.dequations = {}
 
         # ----------------------------------------------------------------
         #: SETy
@@ -776,9 +778,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.ddvals = {}
         self.dlinks = {}
         self.dresps = {}
+
+        self.dtable = None
+        self.dequations = {}
+
         #: stores DVPREL1, DVPREL2...might change to DVxRel
         self.dvprels = {}
         self.dvmrels = {}
+        self.dvcrels = {}
         self.doptprm = None
         self.dscreen = {}
 
@@ -1010,9 +1017,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'dmijis' : ['DMIJI'],
             'dmiks' : ['DMIK'],
             'dmis' : ['DMI'],
-            'dequations' : ['DEQATN'],
 
-            # optimization cards
+            # optimzation
+            'dequations' : ['DEQATN'],
+            'dtable' : ['DTABLE'],
             'dconadds' : ['DCONADD'],
             'dconstrs' : ['DCONSTR'],
             'desvars' : ['DESVAR'],
@@ -1021,6 +1029,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'dresps' : ['DRESP1', 'DRESP2', 'DRESP3',],
             'dvprels' : ['DVPREL1', 'DVPREL2'],
             'dvmrels' : ['DVMREL1', 'DVMREL2'],
+            'dvcrels' : ['DVCREL1', 'DVCREL2'],
             'doptprm' : ['DOPTPRM'],
             'dscreen' : ['DSCREEN'],
 
@@ -1042,7 +1051,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             # SEBSEP
 
             'tables' : [
-                'DTABLE', 'TABLEHT', 'TABRNDG',
+                'TABLEHT', 'TABRNDG',
                 'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
                 'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
                 'TABLES1', 'TABLEST',
@@ -1852,14 +1861,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #'SEUSET' : (SEUSET, self.add_SEUSET),
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
+            'DTABLE' : (DTABLE, self.add_DTABLE),
+
             'DRESP1' : (DRESP1, self.add_DRESP),
-            'DRESP2' : (DRESP2, self.add_DRESP),
+            'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
             'DRESP3' : (DRESP3, self.add_DRESP),
 
             'DVPREL1' : (DVPREL1, self.add_DVPREL),
-            'DVPREL2' : (DVPREL2, self.add_DVPREL),
+            'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
 
             'DVMREL1' : (DVMREL1, self.add_DVMREL),
+            #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
+            #DVCREL1
+            # DVCREL2 - deqatn
 
             'CORD2R' : (CORD2R, self.add_coord),
             'CORD2C' : (CORD2C, self.add_coord),
@@ -1904,6 +1918,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
             'SPOINT' : (SPOINTs, self.add_SPOINT),
             'EPOINT' : (EPOINTs, self.add_EPOINT),
+
     #elif card_name == 'BCTSET':
         #card = BCTSET(card_obj, comment=comment, sol=self.sol)
         #self.add_BCTSET(card)
@@ -1929,6 +1944,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'DMIJ' : self._prepare_dmij,
             'DMIK' : self._prepare_dmik,
             'DMIJI' : self._prepare_dmiji,
+
             'DEQATN' : self._prepare_dequatn,
 
             'PVISC' : self._prepare_pvisc,
@@ -1982,13 +1998,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.doptprm = doptprm
 
     def _prepare_dequatn(self, card, card_obj, comment=''):
-        if comment:
-            self.rejects.append([comment])
-        #print 'DEQATN:  card_obj.card=%s' %(card_obj.card)
-        # should be later moved to loop below
-        if hasattr(self, 'test_deqatn'):
-            self.add_DEQATN(DEQATN(card_obj))
+        if hasattr(self, 'test_deqatn') or 1:
+            self.add_DEQATN(DEQATN(card_obj, comment=comment))
         else:
+            if comment:
+                self.rejects.append([comment])
             self.rejects.append(card)
 
     def _prepare_dmig(self, card, card_obj, comment=''):
@@ -2220,7 +2234,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             except (SyntaxError, AssertionError, KeyError, ValueError) as e:
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
-                #raise
+                raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
                 var = traceback.format_exception_only(type(e), e)
@@ -2284,7 +2298,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # optimization - dict
             'dconadds', 'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
-            'dvprels', 'dvmrels',
+            'dvcrels', 'dvmrels', 'dvprels',
 
             # SESETx - dict
             'suport1',
@@ -2736,7 +2750,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         Cross reference verification method.
         """
-        xref = self._xref
+        try:
+            xref = self._xref
+        except AttributeError:
+            xref = True
         #for key, card in sorted(iteritems(self.params)):
             #card._verify(xref)
         for key, card in sorted(iteritems(self.nodes)):
@@ -2764,6 +2781,31 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 print(str(card))
                 raise
         for key, card in sorted(iteritems(self.materials)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+
+        for key, card in sorted(iteritems(self.dresps)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.dvcrels)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.dvmrels)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.dvprels)):
             try:
                 card._verify(xref)
             except:

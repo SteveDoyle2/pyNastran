@@ -114,11 +114,11 @@ class AddMethods(object):
 
     def add_rigid_element(self, elem, allowOverwrites=False):
         key = elem.eid
+        assert key > 0, 'eid=%s elem=%s' % (key, elem)
         if key in self.rigidElements and not allowOverwrites:
             print('eid=%s\noldElement=\n%snewElement=\n%s' % (
                 key, self.rigidElements[key], elem))
             assert elem.eid not in self.rigidElements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigidElements[elem.eid], elem)
-        assert key > 0, 'eid=%s elem=%s' % (key, elem)
         self.rigidElements[key] = elem
         self._type_to_id_map[elem.type].append(key)
 
@@ -127,17 +127,18 @@ class AddMethods(object):
         self.add_element(elem)
 
     def add_DEQATN(self, deqatn, allowOverwrites=False):
-        key = deqatn.eqID
-        #if not allowOverwrites:
-        #    assert prop.pid not in self.properties, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (prop.pid,self.properties[prop.pid], prop)
+        key = deqatn.equation_id
         assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
+        if key in self.dequations and not allowOverwrites:
+            if not deqatn.write_card() == self.dequations[key].write_card():
+                assert key not in self.dequations, 'id=%s old_eq=\n%snew_eq=\n%s' % (
+                    key, self.dequations[key], deqatn)
         self.dequations[key] = deqatn
         self._type_to_id_map[deqatn.type].append(key)
 
     def add_property(self, prop, allowOverwrites=False):
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
-
         if key in self.properties and not allowOverwrites:
             if not prop._is_same_card(self.properties[key]):
                 self._duplicate_properties.append(prop)
@@ -157,6 +158,15 @@ class AddMethods(object):
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.properties_mass[key] = prop
             self._type_to_id_map[prop.type].append(key)
+
+    def add_DTABLE(self, dtable, allowOverwrites=False):
+        if self.dtable is not None:
+            if not dtable._is_same_card(self.dtable):
+                raise RuntimeError('DTABLE cannot be overwritten\nold:\n%s\nnew:\n%s',
+                                   self.dtable, dtable)
+        else:
+            self.dtable = dtable
+            self._type_to_id_map[dtable.type].append(1)
 
     def add_BCRPARA(self, card, allowOverwrites=False):
         key = card.crid

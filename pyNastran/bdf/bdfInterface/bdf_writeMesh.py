@@ -636,8 +636,6 @@ class WriteMesh(object):
             msg.append(dmiji.write_card(size, is_double))
         for (unused_name, dmik) in sorted(iteritems(self.dmiks)):
             msg.append(dmik.write_card(size, is_double))
-        for unused_name, deqatn in  sorted(iteritems(self.dequations)):
-            msg.append(deqatn.write_card(size, is_double))
         outfile.write(''.join(msg))
 
     def _write_dynamic(self, outfile, size=8, is_double=False):
@@ -941,6 +939,9 @@ class WriteMesh(object):
                 msg.append(dvprel.write_card(size, is_double))
             for (unused_id, equation) in sorted(iteritems(self.dequations)):
                 msg.append(str(equation))
+
+            if self.dtable is not None:
+                msg.append(self.dtable.write_card(size, is_double))
             if self.doptprm is not None:
                 msg.append(self.doptprm.write_card(size, is_double))
             outfile.write(''.join(msg))

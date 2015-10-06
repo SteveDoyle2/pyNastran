@@ -505,14 +505,14 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     model = BDF()
     bdf_filename0 = bdf_filenames[0]
     model.read_bdf(bdf_filename0, encoding=encoding)
-    print('primary=%s' % bdf_filename0)
+    model.log.info('primary=%s' % bdf_filename0)
 
     data_members = [
         'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
         'materials',
     ]
     for bdf_filename in bdf_filenames[1:]:
-        print('model.masses = %s' % model.masses)
+        model.log.info('model.masses = %s' % model.masses)
         starting_id_dict = {
             'cid' : max(model.coords.keys()) + 1,
             'nid' : max(model.nodes.keys()) + 1,
@@ -529,7 +529,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #for param, val in sorted(iteritems(starting_id_dict)):
             #print('  %-3s %s' % (param, val))
 
-        print('secondary=%s' % bdf_filename)
+        model.log.info('secondary=%s' % bdf_filename)
         model2 = BDF()
         bdf_dump = 'bdf_merge_temp.bdf'
         #model2.read_bdf(bdf_filename, xref=False)
@@ -539,12 +539,12 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         model2.read_bdf(bdf_dump)
         os.remove(bdf_dump)
 
-        print('model2.node_ids = %s' % array(model2.node_ids))
+        model.log.info('model2.node_ids = %s' % array(model2.node_ids))
         for data_member in data_members:
             data1 = getattr(model, data_member)
             data2 = getattr(model2, data_member)
             if isinstance(data1, dict):
-                print('  working on %s' % (data_member))
+                model.log.info('  working on %s' % (data_member))
                 for key, value in iteritems(data2):
                     if data_member in 'coords' and key == 0:
                         continue
@@ -560,7 +560,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #model.write_bdf(bdf_filenames_out)
 
     if renumber:
-        print('final renumber...')
+        model.log.info('final renumber...')
         starting_id_dict = {
             'cid' : 1,
             'nid' : 1,

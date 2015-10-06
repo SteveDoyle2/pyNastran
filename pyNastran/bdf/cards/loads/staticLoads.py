@@ -1222,7 +1222,7 @@ class GMLOAD(Load):
                 double_or_blank(card, 5, 'N3', 1.),
             ])
             self.entity = string(card, 6, 'entity')
-            self.gmcurve = integer(card, 7, 'GMCURVE')
+            self.entity_id = integer(card, 7, 'entity_id')
             self.method = string(card, 8, 'method')
 
             self.load_magnitudes = []
@@ -1232,6 +1232,11 @@ class GMLOAD(Load):
                 self.load_magnitudes.append(load_mag)
         else:
             raise NotImplemented()
+
+    #def DEquation(self):
+        #if isinstance(self.dequation, int):
+            #return self.dequation
+        #return self.dequation.equation_id
 
     def cross_reference(self, model):
         """

@@ -144,8 +144,14 @@ def compare_card_content(fem1, fem2):
         assert_fields(card1, card2)
 
     for key in fem1.dequations:
-        card1 = fem1.dequations
-        card2 = fem2.dequations
+        card1 = fem1.dequations[key]
+        card2 = fem2.dequations[key]
+        assert card1.write_card() == card2.write_card()
+        #assert_fields(card1, card2)
+
+    if fem1.dtable:
+        card1 = fem1.dtable
+        card2 = fem2.dtable
         assert_fields(card1, card2)
 
     for key in fem1.frequencies:
@@ -281,6 +287,8 @@ def compare_optimization_content(fem1, fem2):
     assert len(fem1.ddvals) == len(fem2.ddvals)
     assert len(fem1.dresps) == len(fem2.dresps)
     assert len(fem1.dvprels) == len(fem2.dvprels)
+    assert len(fem1.dvmrels) == len(fem2.dvmrels)
+    assert len(fem1.dvcrels) == len(fem2.dvcrels)
 
     for key in fem1.dconstrs:
         card1 = fem1.dconstrs[key]
@@ -300,6 +308,16 @@ def compare_optimization_content(fem1, fem2):
     for key in fem1.dresps:
         card1 = fem1.dresps[key]
         card2 = fem2.dresps[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.dvcrels:
+        card1 = fem1.dvcrels[key]
+        card2 = fem2.dvcrels[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.dvmrels:
+        card1 = fem1.dvmrels[key]
+        card2 = fem2.dvmrels[key]
         assert_fields(card1, card2)
 
     for key in fem1.dvprels:

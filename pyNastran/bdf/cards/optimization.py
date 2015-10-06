@@ -1,12 +1,13 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import iteritems, integer_types, string_types
 from six.moves import zip, range
 #from math import ceil
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
+from pyNastran.bdf.cards.deqatn import fortran_to_python
     #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_or_string, integer_string_or_blank, double, double_or_blank, string,
@@ -274,23 +275,25 @@ class DLINK(OptConstraint):
         """
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'oid')
-        self.ddvid = integer(card, 2, 'ddvid')
-        self.c0 = double_or_blank(card, 3, 'c0', 0.)
-        self.cmult = double_or_blank(card, 4, 'cmult', 1.)
+        if card:
+            self.oid = integer(card, 1, 'oid')
+            self.ddvid = integer(card, 2, 'ddvid')
+            self.c0 = double_or_blank(card, 3, 'c0', 0.)
+            self.cmult = double_or_blank(card, 4, 'cmult', 1.)
 
-        nfields = len(card) - 4
-        n = nfields // 2
-        self.IDv = []
-        self.Ci = []
+            nfields = len(card) - 4
+            n = nfields // 2
+            self.IDv = []
+            self.Ci = []
 
-        for i in range(n):
-            j = 2 * i + 5
-            IDv = integer(card, j, 'IDv' + str(i))
-            Ci = double(card, j + 1, 'Ci' + str(i))
-            self.IDv.append(IDv)
-            self.Ci.append(Ci)
-
+            for i in range(n):
+                j = 2 * i + 5
+                IDv = integer(card, j, 'IDv' + str(i))
+                Ci = double(card, j + 1, 'Ci' + str(i))
+                self.IDv.append(IDv)
+                self.Ci.append(Ci)
+        else:
+            raise RuntimeError(data)
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
         for (idv, ci) in zip(self.IDv, self.Ci):
@@ -325,30 +328,33 @@ class DRESP1(OptConstraint):
         """
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'oid')
-        self.label = string(card, 2, 'label')
-        self.rtype = string(card, 3, 'rtype')
+        if card:
+            self.oid = integer(card, 1, 'oid')
+            self.label = string(card, 2, 'label')
+            self.rtype = string(card, 3, 'rtype')
 
-        # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
-        self.ptype = integer_string_or_blank(card, 4, 'ptype')
-        #if 1:
-            ## incomplete
-            #assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                                  #'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                                  #'PBEAML', 'PSHEAR', 'PTUBE',
-                                  #'PKNL',
-                                  #None], 'DRESP1 ptype=%s' % self.ptype
-        self.region = integer_or_blank(card, 5, 'region')
-        self.atta = integer_double_string_or_blank(card, 6, 'atta')
-        self.attb = integer_double_string_or_blank(card, 7, 'attb')
+            # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
+            self.ptype = integer_string_or_blank(card, 4, 'ptype')
+            #if 1:
+                ## incomplete
+                #assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                                      #'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                                      #'PBEAML', 'PSHEAR', 'PTUBE',
+                                      #'PKNL',
+                                      #None], 'DRESP1 ptype=%s' % self.ptype
+            self.region = integer_or_blank(card, 5, 'region')
+            self.atta = integer_double_string_or_blank(card, 6, 'atta')
+            self.attb = integer_double_string_or_blank(card, 7, 'attb')
 
-        self.atti = []
-        for i in range(8, len(card)):
-            atti = integer_double_string_or_blank(card, i, 'atti_%i' % (i + 1))
-            self.atti.append(atti)
+            self.atti = []
+            for i in range(8, len(card)):
+                atti = integer_double_string_or_blank(card, i, 'atti_%i' % (i + 1))
+                self.atti.append(atti)
+        else:
+            raise RuntimeError(data)
 
     def cross_reference(self, model):
-        return
+        #return
         msg = ', which is required by %s oid=%s' % (self.type, self.oid)
         msg += '\n' + str(self)
         if self.ptype in ['ELEM']:
@@ -369,7 +375,7 @@ class DRESP1(OptConstraint):
             raise NotImplementedError(msg)
 
     def atti_values(self):
-        return self.atti
+        #return self.atti
         #if self.rtype in ['ELEM']:
             #self.atti = model.Elements(self.atti, msg=msg)
             #pass
@@ -425,42 +431,59 @@ class DRESP2(OptConstraint):
         """
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'oid')
-        self.label = string(card, 2, 'label')
-        self.dequation = integer_or_string(card, 3, 'dequation_id')
-        self.region = integer_or_blank(card, 4, 'region')
-        self.method = string_or_blank(card, 5, 'method', 'MIN')
-        self.c1 = double_or_blank(card, 6, 'c1', 100.)
-        self.c2 = double_or_blank(card, 7, 'c2', 0.005)
-        self.c3 = double_or_blank(card, 8, 'c3') #: .. todo:: or blank?
 
-        i = 0
-        fields = [interpret_value(field) for field in card[9:]]
-        key = '$NULL$'  # dummy key
-        self.params = {key: []}
-        value_list = []
-        for (i, field) in enumerate(fields):
-            if i % 8 == 0 and field is not None:
-                self.params[key] = value_list
-                key = field
-                value_list = []
-            elif field is not None:
-                value_list.append(field)
-            #else:
-            #    pass
-        self.params[key] = value_list
-        del self.params['$NULL$']
+        self.func = None
+        self.dequation_str = None
+        if card:
+            self.oid = integer(card, 1, 'oid')
+            self.label = string(card, 2, 'label')
+            self.dequation = integer_or_string(card, 3, 'dequation_id')
+            self.region = integer_or_blank(card, 4, 'region')
+            self.method = string_or_blank(card, 5, 'method', 'MIN')
+            self.c1 = double_or_blank(card, 6, 'c1', 100.)
+            self.c2 = double_or_blank(card, 7, 'c2', 0.005)
+            self.c3 = double_or_blank(card, 8, 'c3') #: .. todo:: or blank?
+
+            i = 0
+            fields = [interpret_value(field) for field in card[9:]]
+            key = '$NULL$'  # dummy key
+            self.params = {key: []}
+            value_list = []
+            for (i, field) in enumerate(fields):
+                if i % 8 == 0 and field is not None:
+                    self.params[key] = value_list
+                    key = field
+                    value_list = []
+                elif field is not None:
+                    value_list.append(field)
+                #else:
+                #    pass
+            self.params[key] = value_list
+            del self.params['$NULL$']
+        else:
+            raise RuntimeError(data)
 
         #print "--Params--"
         #for key, value_list in sorted(iteritems(self.params)):
             #print("  key=%s params=%s" %(key, value_list))
 
-        #print self
-
     def cross_reference(self, model):
         msg = ', which is required by %s ID=%s' % (self.type, self.oid)
-        #TODO: implement xref
-        #self.dequation = model.DEQUATION(self.dequation, msg=msg)
+        if isinstance(self.DEquation(), int):
+            self.dequation = model.DEQATN(self.dequation, msg=msg)
+            self.func = self.dequation.func
+        else:
+            self.dequation_str = fortran_to_python(self.dequation)
+
+    def uncross_reference(self):
+        if hasattr(self, 'func'):
+            del self.func
+            del self.dequation
+
+    def DEquation(self):
+        if isinstance(self.dequation, (int, string_types)):
+            return self.dequation
+        return self.dequation.equation_id
 
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
@@ -490,7 +513,7 @@ class DRESP2(OptConstraint):
         return list_fields
 
     def raw_fields(self):
-        list_fields = ['DRESP2', self.oid, self.label, self.dequation,
+        list_fields = ['DRESP2', self.oid, self.label, self.DEquation(),
                        self.region, self.method, self.c1, self.c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
@@ -500,7 +523,7 @@ class DRESP2(OptConstraint):
         c1 = set_blank_if_default(self.c1, 100.)
         c2 = set_blank_if_default(self.c2, 0.005)
 
-        list_fields = ['DRESP2', self.oid, self.label, self.dequation,
+        list_fields = ['DRESP2', self.oid, self.label, self.DEquation(),
                        self.region, method, c1, c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
@@ -520,28 +543,31 @@ class DRESP3(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'ID')
-        self.label = string(card, 2, 'label')
-        self.group = string(card, 3, 'group')
-        self.Type = string(card, 4, 'Type')
-        self.region = integer(card, 5, 'Type')
+        if card:
+            self.oid = integer(card, 1, 'ID')
+            self.label = string(card, 2, 'label')
+            self.group = string(card, 3, 'group')
+            self.Type = string(card, 4, 'Type')
+            self.region = integer(card, 5, 'Type')
 
-        i = 0
-        fields = [interpret_value(field) for field in card[9:]]
-        key = '$NULL$'  # dummy key
-        self.params = {key: []}
-        value_list = []
-        for (i, field) in enumerate(fields):
-            if i % 8 == 0 and field is not None:
-                self.params[key] = value_list
-                key = field
-                value_list = []
-            elif field is not None:
-                value_list.append(field)
-            #else:
-            #    pass
-        self.params[key] = value_list
-        del self.params['$NULL$']
+            i = 0
+            fields = [interpret_value(field) for field in card[9:]]
+            key = '$NULL$'  # dummy key
+            self.params = {key: []}
+            value_list = []
+            for (i, field) in enumerate(fields):
+                if i % 8 == 0 and field is not None:
+                    self.params[key] = value_list
+                    key = field
+                    value_list = []
+                elif field is not None:
+                    value_list.append(field)
+                #else:
+                #    pass
+            self.params[key] = value_list
+            del self.params['$NULL$']
+        else:
+            raise RuntimeError(data)
 
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
@@ -607,6 +633,8 @@ class DCONADD(OptConstraint):
             for i in range(1, len(card)):
                 dconstr = integer(card, i, 'dconstr_%i' % i)
                 self.dconstrs.append(dconstr)
+        else:
+            raise RuntimeError(data)
 
     def cross_reference(self, model):
         self.dconstrs = [model.dconstrs[dcid] for dcid in self.dconstr_ids]
@@ -635,14 +663,17 @@ class DSCREEN(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        #: Response type for which the screening criteria apply. (Character)
-        self.rType = string(card, 1, 'rType')
-        #: Truncation threshold. (Real; Default = -0.5)
-        self.trs = double_or_blank(card, 2, 'trs', -0.5)
-        #: Maximum number of constraints to be retained per region per load
-        #: case. (Integer > 0; Default = 20)
-        self.nstr = integer_or_blank(card, 3, 'nstr', 20)
-        assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
+        if card:
+            #: Response type for which the screening criteria apply. (Character)
+            self.rType = string(card, 1, 'rType')
+            #: Truncation threshold. (Real; Default = -0.5)
+            self.trs = double_or_blank(card, 2, 'trs', -0.5)
+            #: Maximum number of constraints to be retained per region per load
+            #: case. (Integer > 0; Default = 20)
+            self.nstr = integer_or_blank(card, 3, 'nstr', 20)
+            assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
+        else:
+            raise RuntimeError(data)
 
     def raw_fields(self):
         list_fields = ['DSCREEN', self.rType, self.trs, self.nstr]
@@ -676,37 +707,40 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         """
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'oid')
-        self.Type = string(card, 2, 'Type')
-        self.mid = integer(card, 3, 'mid')
-        self.mpName = string(card, 4, 'mpName')
-        #if self.mpName in ['E', 'RHO', 'NU']:  positive values
-            #self.mpMin = double_or_blank(card, 5, 'mpMin', 1e-15)
-        #else: # negative
-            #self.mpMin = double_or_blank(card, 5, 'mpMin', -1e-35)
-        self.mpMin = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
-        self.mpMax = double_or_blank(card, 6, 'mpMax', 1e20)
-        self.c0 = double_or_blank(card, 7, 'c0', 0.0)
+        if card:
+            self.oid = integer(card, 1, 'oid')
+            self.Type = string(card, 2, 'Type')
+            self.mid = integer(card, 3, 'mid')
+            self.mpName = string(card, 4, 'mpName')
+            #if self.mpName in ['E', 'RHO', 'NU']:  positive values
+                #self.mpMin = double_or_blank(card, 5, 'mpMin', 1e-15)
+            #else: # negative
+                #self.mpMin = double_or_blank(card, 5, 'mpMin', -1e-35)
+            self.mpMin = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
+            self.mpMax = double_or_blank(card, 6, 'mpMax', 1e20)
+            self.c0 = double_or_blank(card, 7, 'c0', 0.0)
 
-        self.dvids = []
-        self.coeffs = []
-        endFields = [interpret_value(field) for field in card[9:]]
-        #print "endFields = ",endFields
-        nfields = len(endFields) - 1
-        if nfields % 2 == 1:
-            endFields.append(None)
-            nfields += 1
+            self.dvids = []
+            self.coeffs = []
+            endFields = [interpret_value(field) for field in card[9:]]
+            #print "endFields = ",endFields
+            nfields = len(endFields) - 1
+            if nfields % 2 == 1:
+                endFields.append(None)
+                nfields += 1
 
-        i = 0
-        for i in range(0, nfields, 2):
-            self.dvids.append(endFields[i])
-            self.coeffs.append(endFields[i + 1])
-        if nfields % 2 == 1:
-            print(card)
-            print("dvids = %s" % (self.dvids))
-            print("coeffs = %s" % (self.coeffs))
-            print(str(self))
-            raise RuntimeError('invalid DVMREL1...')
+            i = 0
+            for i in range(0, nfields, 2):
+                self.dvids.append(endFields[i])
+                self.coeffs.append(endFields[i + 1])
+            if nfields % 2 == 1:
+                print(card)
+                print("dvids = %s" % (self.dvids))
+                print("coeffs = %s" % (self.coeffs))
+                print(str(self))
+                raise RuntimeError('invalid DVMREL1...')
+        else:
+            raise RuntimeError(data)
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
@@ -755,35 +789,38 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         """
         if comment:
             self._comment = comment
-        self.oid = integer(card, 1, 'oid')
-        self.Type = string(card, 2, 'Type')
-        self.pid = integer(card, 3, 'pid')
-        self.pNameFid = integer_or_string(card, 4, 'pName_FID')
+        if card:
+            self.oid = integer(card, 1, 'oid')
+            self.Type = string(card, 2, 'Type')
+            self.pid = integer(card, 3, 'pid')
+            self.pNameFid = integer_or_string(card, 4, 'pName_FID')
 
-        #: Minimum value allowed for this property.
-        #: .. todo:: bad default (see DVMREL1)
-        self.pMin = double_or_blank(card, 5, 'pMin')
-        self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
-        self.c0 = double_or_blank(card, 7, 'c0', 0.0)
+            #: Minimum value allowed for this property.
+            #: .. todo:: bad default (see DVMREL1)
+            self.pMin = double_or_blank(card, 5, 'pMin')
+            self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
+            self.c0 = double_or_blank(card, 7, 'c0', 0.0)
 
-        self.dvids = []
-        self.coeffs = []
-        endFields = [interpret_value(field) for field in card[9:]]
+            self.dvids = []
+            self.coeffs = []
+            endFields = [interpret_value(field) for field in card[9:]]
 
-        nfields = len(endFields) - 1
-        if nfields % 2 == 1:
-            endFields.append(None)
-            nfields += 1
-        i = 0
-        for i in range(0, nfields, 2):
-            self.dvids.append(endFields[i])
-            self.coeffs.append(endFields[i + 1])
-        if nfields % 2 == 1:
-            print(card)
-            print("dvids = %s" % (self.dvids))
-            print("coeffs = %s" % (self.coeffs))
-            print(str(self))
-            raise RuntimeError('invalid DVPREL1...')
+            nfields = len(endFields) - 1
+            if nfields % 2 == 1:
+                endFields.append(None)
+                nfields += 1
+            i = 0
+            for i in range(0, nfields, 2):
+                self.dvids.append(endFields[i])
+                self.coeffs.append(endFields[i + 1])
+            if nfields % 2 == 1:
+                print(card)
+                print("dvids = %s" % (self.dvids))
+                print("coeffs = %s" % (self.coeffs))
+                print(str(self))
+                raise RuntimeError('invalid DVPREL1...')
+        else:
+            raise RuntimeError(data)
 
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)
@@ -838,94 +875,100 @@ class DVPREL2(OptConstraint):
         """
         if comment:
             self._comment = comment
-        #: Unique identification number
-        self.oid = integer(card, 1, 'oid')
+        if card:
+            #: Unique identification number
+            self.oid = integer(card, 1, 'oid')
 
-        #: Name of a property entry, such as PBAR, PBEAM, etc
-        self.Type = string(card, 2, 'Type')
+            #: Name of a property entry, such as PBAR, PBEAM, etc
+            self.Type = string(card, 2, 'Type')
 
-        #: Property entry identification number
-        self.pid = integer(card, 3, 'pid')
-        #: Property name, such as 'T', 'A', or field position of the property
-        #: entry, or word position in the element property table of the
-        #: analysis model. Property names that begin with an integer such as
-        #: 12I/T**3 may only be referred to by field position.
-        #: (Character or Integer 0)
+            #: Property entry identification number
+            self.pid = integer(card, 3, 'pid')
+            #: Property name, such as 'T', 'A', or field position of the property
+            #: entry, or word position in the element property table of the
+            #: analysis model. Property names that begin with an integer such as
+            #: 12I/T**3 may only be referred to by field position.
+            #: (Character or Integer 0)
 
-        self.pNameFid = integer_or_string(card, 4, 'pName_FID')
-        #: Minimum value allowed for this property. If FID references a stress
-        #: recovery location field, then the default value for PMIN is -1.0+35.
-        #: PMIN must be explicitly set to a negative number for properties that
-        #: may be less than zero (for example, field ZO on the PCOMP entry).
-        #: (Real; Default = 1.E-15)
-        #: .. todo:: bad default (see DVMREL1)
-        self.pMin = double_or_blank(card, 5, 'pMin')
-        #: Maximum value allowed for this property. (Real; Default = 1.0E20)
-        self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
-        #: DEQATN entry identification number. (Integer > 0)
-        self.eqID = integer_or_blank(card, 7, 'eqID') #: .. todo:: or blank?
+            self.pNameFid = integer_or_string(card, 4, 'pName_FID')
+            #: Minimum value allowed for this property. If FID references a stress
+            #: recovery location field, then the default value for PMIN is -1.0+35.
+            #: PMIN must be explicitly set to a negative number for properties that
+            #: may be less than zero (for example, field ZO on the PCOMP entry).
+            #: (Real; Default = 1.E-15)
+            #: .. todo:: bad default (see DVMREL1)
+            self.pMin = double_or_blank(card, 5, 'pMin')
+            #: Maximum value allowed for this property. (Real; Default = 1.0E20)
+            self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
+            #: DEQATN entry identification number. (Integer > 0)
+            self.dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
 
-        fields = [interpret_value(field) for field in card[9:]]
-        iOffset = 9
-        iEnd = len(fields) + iOffset
+            fields = [interpret_value(field) for field in card[9:]]
+            iOffset = 9
+            iEnd = len(fields) + iOffset
 
-        try:
-            iDesvar = fields.index('DESVAR') + iOffset
-        except ValueError:
-            iDesvar = None
+            try:
+                iDesvar = fields.index('DESVAR') + iOffset
+            except ValueError:
+                iDesvar = None
 
-        try:
-            iDTable = fields.index('DTABLE') + iOffset
-            #iDesMax  = iDTable # the index to start parsing DESVAR
-            iDesStop = iDTable  # the index to stop  parsing DESVAR
-        except ValueError:
-            iDTable = None
-            iDesStop = iEnd
+            try:
+                iDTable = fields.index('DTABLE') + iOffset
+                #iDesMax  = iDTable # the index to start parsing DESVAR
+                iDesStop = iDTable  # the index to stop  parsing DESVAR
+            except ValueError:
+                iDTable = None
+                iDesStop = iEnd
 
-        self.dvids = []
-        if iDesvar:
-            n = 1
-            for i in range(10, iDesStop):
-                dvid_name = 'DVID' + str(n)
-                dvid = integer_or_blank(card, i, dvid_name)
-                #print("%s = %s" % (dvid_name, dvid))
-                if dvid:
-                    assert dvid is not None
-                    assert dvid is not 'DESVAR'
-                    self.dvids.append(dvid)
-                    n += 1
+            self.dvids = []
+            if iDesvar:
+                n = 1
+                for i in range(10, iDesStop):
+                    dvid_name = 'DVID' + str(n)
+                    dvid = integer_or_blank(card, i, dvid_name)
+                    #print("%s = %s" % (dvid_name, dvid))
+                    if dvid:
+                        assert dvid is not None
+                        assert dvid is not 'DESVAR'
+                        self.dvids.append(dvid)
+                        n += 1
 
-        self.labels = []
-        if iDTable:
-            n = 1
-            for i in range(iDTable + 1, iEnd):
-                label_name = 'Label' + str(n)
-                label = string(card, i, label_name)
-                #print("%s = %s" % (label_name, label))
-                if label:
-                    assert label is not 'DTABLE'
-                    self.labels.append(label)
+            self.labels = []
+            if iDTable:
+                n = 1
+                for i in range(iDTable + 1, iEnd):
+                    label_name = 'Label' + str(n)
+                    label = string(card, i, label_name)
+                    #print("%s = %s" % (label_name, label))
+                    if label:
+                        assert label is not 'DTABLE'
+                        self.labels.append(label)
+        else:
+            raise RuntimeError(data)
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
-    #def EqID(self):
+    def DEquation(self):
+        if isinstance(self.dequation, int):
+            return self.dequation
+        return self.dequation.equation_id
 
     def cross_reference(self, model):
         """
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         self.pid = model.Property(self.pid)
-        #self.eqID = model.DEquation(self.eqID)
+        self.dequation = model.DEQATN(self.dequation)
 
     #def OptValue(self):  #: .. todo:: not implemented
         #self.pid.OptValue(self.pNameFid)
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
-                       self.pNameFid, self.pMin, self.pMax, self.eqID, None]
+                       self.pNameFid, self.pMin, self.pMax, self.DEquation(), None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
             list_fields += build_table_lines(fields2, nstart=1, nend=0)

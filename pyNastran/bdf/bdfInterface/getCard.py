@@ -895,3 +895,12 @@ class GetMethods(GetMethodsDeprecated):
         except KeyError:
             raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
                            % (dname, msg, self.dmig.keys()))
+
+    def DEQATN(self, equation_id, msg=''):
+        """gets a DEQATN"""
+        try:
+            return self.dequations[equation_id]
+        except KeyError:
+            raise KeyError('equation_id=%s not found%s.  Allowed DMIGs=%s'
+                           % (equation_id, msg, self.dequations.keys()))
+

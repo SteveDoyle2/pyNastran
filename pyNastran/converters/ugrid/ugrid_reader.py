@@ -1,3 +1,7 @@
+"""
+Defines the following classes:
+    - UGRID
+"""
 from __future__ import print_function
 import os
 import struct
@@ -19,6 +23,9 @@ from pyNastran.converters.ugrid.surf_reader import TagReader
 
 
 class UGRID(object):
+    """
+    Interface to the AFLR UGrid format.
+    """
     def __init__(self, log=None, debug=False):
         #FortranFormat.__init__(self)
         self.log = get_logger(log, 'debug' if debug else 'info')
@@ -216,6 +223,7 @@ class UGRID(object):
 
     def write_bdf(self, bdf_filename, include_shells=True, include_solids=True,
                   convert_pyram_to_penta=True, encoding=None):
+        """writes a Nastran BDF"""
         self.check_hanging_nodes()
         if encoding is None:
             encoding = sys.getdefaultencoding()
@@ -273,6 +281,7 @@ class UGRID(object):
         bdf_file.close()
 
     def check_hanging_nodes(self, stop_on_diff=True):
+        """verifies that all nodes are used"""
         self.log.info('checking hanging nodes')
         tris = self.tris
         quads = self.quads
@@ -328,7 +337,8 @@ class UGRID(object):
             assert len(unique(tri)) == 3, tri
         for quad in quads:
             # assert len(unique(quad)) == 4, quad
-            print(quad)
+            if len(unique(quad)) != 4:
+                print(quad)
         for tet in tets:
             assert len(unique(tet)) == 4, tet
         for pyram in pyrams:
@@ -337,11 +347,10 @@ class UGRID(object):
             assert len(unique(penta)) == 6, penta
         for hexa in hexas:
             assert len(unique(hexa)) == 8, hexa
-
-
         return diff
 
     def write_ugrid(self, ugrid_filename_out):
+        """writes a UGrid model"""
         outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename_out)
         ndarray_float, float_fmt, nfloat, endian = outi
 
@@ -420,6 +429,7 @@ class UGRID(object):
         self.check_hanging_nodes()
 
     def _write_bdf_solids(self, bdf_file, eid, pid, convert_pyram_to_penta=True):
+        """writes the Nastran BDF solid elements"""
         #pid = 0
         bdf_file.write('PSOLID,%i,1\n' % pid)
         print('writing CTETRA')
@@ -467,6 +477,7 @@ class UGRID(object):
         return eid, pid
 
     def write_foam(self, foam_filename, tag_filename):
+        """writes an OpenFOAM file"""
         dirname = os.path.dirname(foam_filename)
         base = os.path.splitext(foam_filename)[0]
 
@@ -503,6 +514,7 @@ class UGRID(object):
         self._write_faces(faces_filename + '2')
 
     def _write_points(self, points_filename):
+        """writes an OpenFOAM points file"""
         with open(points_filename, 'wb') as points_file:
             nnodes = self.nodes.shape[0]
 
@@ -532,6 +544,7 @@ class UGRID(object):
             points_file.write(')\n')
 
     def _write_boundary(self, boundary_filename, tag_filename):
+        """writes an OpenFOAM boundary file"""
         with open(boundary_filename, 'wb') as boundary_file:
             boundary_file.write('\n\n')
             #f.write('%i\n' % (nnodes))
@@ -571,7 +584,103 @@ class UGRID(object):
             boundary_file.write(')\n')
         self.isort = isort
 
+    def skin_solids(self):
+        """Finds the CTRIA3s and CQUAD4 elements on the surface of the solid"""
+        tris = []
+        quads = []
+        nhexas = self.hexas.shape[0]
+        npenta6s = self.penta6s.shape[0]
+        npenta5s = self.penta5s.shape[0]
+        ntets = self.tets.shape[0]
+
+        nquads = nhexas * 6 + npenta5s + 3 * npenta6s
+        ntris = npenta5s * 4 + npenta6s * 2 + ntetras * 4
+        tris = zeros((ntris, 3), dtype='int32')
+        quads = zeros((nquads, 4), dtype='int32')
+
+        ntri_start = 0
+        nquad_start = 0
+        if ntets:
+            faces1 = self.tets[:, [0, 1, 2]]
+            faces2 = self.tets[:, [0, 1, 3]]
+            faces3 = self.tets[:, [1, 2, 3]]
+            faces4 = self.tets[:, [0, 2, 3]]
+            tris[       :  ntets] = faces1
+            tris[  ntets:2*ntets] = faces2
+            tris[2*ntets:3*ntets] = faces3
+            tris[3*ntets:4*ntets] = faces4
+            ntri_start += 4*ntets
+
+        if nhexas:
+            # btm (1-2-3-4)
+            # top (5-6-7-8)
+            # left (1-4-8-5
+            # right (2-3-7-6)
+            # front (1-2-6-5)
+            # back (4-3-7-8)
+            faces1 = self.hexas[:, [0, 1, 2, 3]] # 1,2,3,4
+            faces2 = self.hexas[:, [4, 5, 6, 7]] # 5,6,7,8
+            faces3 = self.hexas[:, [0, 3, 7, 4]]
+            faces4 = self.hexas[:, [1, 2, 6, 5]]
+            faces5 = self.hexas[:, [0, 1, 5, 4]]
+            faces6 = self.hexas[:, [3, 2, 6, 7]]
+            quads[         : nhexas] = faces1
+            quads[  nhexas:2*nhexas] = faces2
+            quads[2*nhexas:3*nhexas] = faces3
+            quads[3*nhexas:4*nhexas] = faces4
+            quads[4*nhexas:5*nhexas] = faces5
+            quads[5*nhexas:6*nhexas] = faces6
+            nquad_start += 6*nhexas
+
+        if npenta5s:
+            faces1 = self.penta5s[:, [0, 1, 2, 3]] # 1,2,3,4
+            quads[nquad_start:nquad_start+npenta5s] = faces1
+
+            faces2 = self.penta5s[:, [0, 1, 4]]
+            faces3 = self.penta5s[:, [1, 2, 4]]
+            faces4 = self.penta5s[:, [2, 3, 4]]
+            faces5 = self.penta5s[:, [3, 0, 4]]
+            tris[ntri_start           :ntri_start+  npenta5s] = faces2
+            tris[ntri_start+  npenta5s:ntri_start+2*npenta5s] = faces3
+            tris[ntri_start+2*npenta5s:ntri_start+3*npenta5s] = faces4
+            tris[ntri_start+3*npenta5s:ntri_start+4*npenta5s] = faces5
+            ntri_start += 4*npenta5s
+
+        if npenta6s:
+            faces1 = self.penta5s[:, [0, 1, 2]]
+            faces2 = self.penta5s[:, [3, 4, 5]]
+            quads[nquad_start         :nquad_start+  npenta5s] = faces1
+            quads[nquad_start+npenta5s:nquad_start+2*npenta5s] = faces2
+
+            faces3 = self.penta5s[:, [1, 4, 5, 3]]
+            faces4 = self.penta5s[:, [0, 1, 4, 3]]
+            faces5 = self.penta5s[:, [5, 3, 0, 2]]
+            tris[ntri_start           :ntri_start+  npenta6s] = faces3
+            tris[ntri_start+  npenta6s:ntri_start+2*npenta6s] = faces4
+            tris[ntri_start+2*npenta6s:ntri_start+3*npenta6s] = faces5
+        #from numpy.lib.arraysetops import unique
+        #from numpy import lexsort
+        tris = tris.sort()
+        tri_set = set([])
+        tris = tris.sort()
+        for tri in tris:
+            tri_set.add(tri)
+        tri_array = array(list(tri_set))
+
+        quads.sort()
+        quad_set = set([])
+        # if tris:
+            # tris = vstack(tris)
+            # tris.sort(axis=0)
+            # tris = unique_rows(tris)
+        # if quads:
+            # quads = vstack(quads)
+            # quads.sort(axis=0)
+            # quads = unique_rows(tris)
+        return tris, quads
+
     def _write_faces(self, faces_filename):
+        """writes an OpenFOAM faces file"""
         nhexas = self.hexas.shape[0]
         npenta6s = self.penta6s.shape[0]
         npenta5s = self.penta5s.shape[0]
@@ -856,6 +965,7 @@ class UGRID(object):
 
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
+    """figures out what the format of the binary data is based on the filename"""
     base, file_format, ext = os.path.basename(ugrid_filename).split('.')
     assert ext == 'ugrid', 'extension=%r' % ext
 
@@ -886,6 +996,7 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
 
 
 def main():
+    """Tests UGrid"""
     ugrid_filename = 'bay_steve_recon1_fixed0.b8.ugrid'
     #bdf_filename = 'bay_steve_recon1_fixed0.b8.bdf'
     foam_filename = 'bay_steve_recon1_fixed0.b8.foam'
