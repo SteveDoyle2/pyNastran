@@ -2115,6 +2115,43 @@ class NastranIO(object):
         return form, cases, icase
 
     def _fill_nastran_output(self, cases, model, form, icase):
+        """
+        SOL 101 (Static)
+        ----------------
+        Subcase 1
+         - DisplacementXYZ
+         - SPCForceX
+         - ...
+         - Stress
+           - oxx
+         - Strain
+
+        SOL 103 (modal)
+        ---------------
+        Subcase 1
+         - mode 1; eigr=123.4
+          - EigenvectorXYZ
+          - Stress
+        - mode 2: eigr=156.3
+          - EigenvectorXYZ
+          - Stress
+
+        SOL 109 (Freq)
+        --------------
+        Subcase 1
+         - freq=123.4
+          - DisplacementXYZ
+          - Stress
+
+        SOL 105 (Buckling)
+        ------------------
+        Subcase 1
+         - Preload
+          - DisplacementXYZ
+         - mode 1; eigr=123.4
+          - EigenvectorXYZ
+          - Stress
+        """
         keys = self._get_nastran_key_order(model)
         assert keys is not None, keys
         print('keys_order =', keys)
