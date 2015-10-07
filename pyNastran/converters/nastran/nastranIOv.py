@@ -1741,7 +1741,7 @@ class NastranIO(object):
             found_temperature = False
 
             form = []
-            for key in ('LOAD', 'TEMPERATURE(INITIAL)'):
+            for key in ('LOAD', 'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)'):
                 try:
                     load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, key)
                 except KeyError:
@@ -1757,9 +1757,10 @@ class NastranIO(object):
                     p0 = array([0., 0., 0.], dtype='float32')
                     pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
                     found_load = True
-                elif key == 'TEMPERATURE(INITIAL)':
+                elif key in ('TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)'):
                     temperatures = self._get_temperatures_array(model, load_case_id)
                     found_temperature = True
+                    temperature_key = key
                 else:
                     raise NotImplementedError(key)
 
@@ -1808,8 +1809,8 @@ class NastranIO(object):
                     form.append(('SPCD XYZ', icase, []))
                     icase += 1
             if found_temperature:
-                cases[(subcase_id, icase, 'Temperature(Initial)', 1, 'node', '%.3g')] = temperatures
-                form.append(('Temperature(Initial)', icase, []))
+                cases[(subcase_id, icase, temperature_key, 1, 'node', '%.3g')] = temperatures
+                form.append((temperature_key, icase, []))
                 icase += 1
             if form:
                 form0.append(('Load Case=%i' % subcase_id, None, form))
@@ -2982,6 +2983,19 @@ class NastranIO(object):
                     form_time[2].append(form0)
                     is_form_time = True
 
+            # force
+            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_force(
+                cases, model, subcase_id, form, icase, itime, dt,
+                is_real=is_real, is_static=is_static)
+            if ncase:
+                assert ncase > 0, ncase
+                if is_static:
+                    formi.append(form0)
+                else:
+                    #form_time[0] = header
+                    form_time[2].append(form0)
+                    is_form_time = True
+
             #--------------------------
             if is_form_time:
                 form.append(form_time)
@@ -3067,6 +3081,64 @@ class NastranIO(object):
             form0[2].append(('Density', icase, []))
             icase += 1
             ncase += 1
+        return icase, ncase, case, header, form0
+
+    def _get_nastran_time_centroidal_force(self, cases, model,
+                                                   subcase_id, form, icase, itime, dt,
+                                                   is_real=True, is_static=False):
+        """
+        Creates the time accurate strain energy objects for the pyNastranGUI
+        """
+        fx = zeros(self.nElements, dtype='float32') # axial
+        rx = zeros(self.nElements, dtype='float32') # torque
+        is_element_on = zeros(self.nElements, dtype='float32') # torque
+        fmt = '%g'
+        header = ''
+        ncase = 0
+        form0 = ('Force', None, [])
+
+        #op2.strain_energy[1]
+            #type=StrainEnergyObject ntimes=3 nelements=16
+            #energy, percent, density
+            #modes = [1, 2, 3]
+        case = None
+        for res_type in (model.conrod_force, model.crod_force, model.ctube_force):
+            if subcase_id in res_type:
+                force = model.conrod_force[subcase_id]
+                #print(dir(force))
+                data = force.data
+                if force.nonlinear_factor is None:
+                    ntimes = data.shape[:1]
+                    eids = force.element
+                    i = searchsorted(self.element_ids, eids)
+                    #print(data[0, :, 0])
+                    fx[i] = data[0, :, 0]
+                    rx[i] = data[0, :, 1]
+                    is_element_on[i] = 1.
+                else:
+                    continue
+
+        case = force
+        fmt = '%.4f'
+        # header = self._get_nastran_header(case, dt, itime)
+
+        if fx.min() != fx.max() or rx.min() != rx.max():
+            cases[(subcase_id, icase, 'Axial', 1, 'centroid', fmt, header)] = fx
+            form0[2].append(('Axial', icase, []))
+            icase += 1
+            ncase += 1
+
+            cases[(subcase_id, icase, 'Torsion', 1, 'centroid', fmt, header)] = rx
+            form0[2].append(('Torque', icase, []))
+            icase += 1
+            ncase += 1
+
+            if is_element_on.min() == 0.0:
+                cases[(subcase_id, icase, 'IsElementOn', 1, 'centroid', fmt, header)] = is_element_on
+                form0[2].append(('IsElementOn', icase, []))
+                icase += 1
+                ncase += 1
+
         return icase, ncase, case, header, form0
 
     def _get_nastran_time_centroidal_stress(self, cases, model, subcase_id, form, icase, itime, dt,
