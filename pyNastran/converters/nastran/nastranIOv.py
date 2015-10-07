@@ -3102,9 +3102,11 @@ class NastranIO(object):
             #energy, percent, density
             #modes = [1, 2, 3]
         case = None
+        found_force = False
         for res_type in (model.conrod_force, model.crod_force, model.ctube_force):
             if subcase_id in res_type:
-                force = model.conrod_force[subcase_id]
+                found_force = True
+                force = res_type[subcase_id]
                 #print(dir(force))
                 data = force.data
                 if force.nonlinear_factor is None:
@@ -3118,26 +3120,27 @@ class NastranIO(object):
                 else:
                     continue
 
-        case = force
-        fmt = '%.4f'
-        # header = self._get_nastran_header(case, dt, itime)
+        if found_force:
+            case = force
+            fmt = '%.4f'
+            # header = self._get_nastran_header(case, dt, itime)
 
-        if fx.min() != fx.max() or rx.min() != rx.max():
-            cases[(subcase_id, icase, 'Axial', 1, 'centroid', fmt, header)] = fx
-            form0[2].append(('Axial', icase, []))
-            icase += 1
-            ncase += 1
-
-            cases[(subcase_id, icase, 'Torsion', 1, 'centroid', fmt, header)] = rx
-            form0[2].append(('Torque', icase, []))
-            icase += 1
-            ncase += 1
-
-            if is_element_on.min() == 0.0:
-                cases[(subcase_id, icase, 'IsElementOn', 1, 'centroid', fmt, header)] = is_element_on
-                form0[2].append(('IsElementOn', icase, []))
+            if fx.min() != fx.max() or rx.min() != rx.max():
+                cases[(subcase_id, icase, 'Axial', 1, 'centroid', fmt, header)] = fx
+                form0[2].append(('Axial', icase, []))
                 icase += 1
                 ncase += 1
+
+                cases[(subcase_id, icase, 'Torsion', 1, 'centroid', fmt, header)] = rx
+                form0[2].append(('Torque', icase, []))
+                icase += 1
+                ncase += 1
+
+                if is_element_on.min() == 0.0:
+                    cases[(subcase_id, icase, 'IsElementOn', 1, 'centroid', fmt, header)] = is_element_on
+                    form0[2].append(('IsElementOn', icase, []))
+                    icase += 1
+                    ncase += 1
 
         return icase, ncase, case, header, form0
 
