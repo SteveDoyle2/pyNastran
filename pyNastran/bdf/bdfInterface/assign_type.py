@@ -153,7 +153,7 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
 
 def fields(f, card, fieldname, i, j=None):
     """
-    .. todo:: improve fieldname
+    .. todo :: improve fieldname
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(fieldname, string_types), type(fieldname)

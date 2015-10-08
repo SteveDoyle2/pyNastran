@@ -184,12 +184,12 @@ class EditGroupProperties(QtGui.QDialog):
         self.checkbox_hide.setChecked(not show)
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
+        # self.apply_button = QtGui.QPushButton("Apply")
         #if self._default_is_apply:
             #self.apply_button.setDisabled(True)
 
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        # self.ok_button = QtGui.QPushButton("OK")
+        self.cancel_button = QtGui.QPushButton("Close")
 
         self.create_layout()
         self.set_connections()
@@ -247,8 +247,8 @@ class EditGroupProperties(QtGui.QDialog):
 
     def create_layout(self):
         ok_cancel_box = QtGui.QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
+        # ok_cancel_box.addWidget(self.apply_button)
+        # ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
         grid = QtGui.QGridLayout()
@@ -297,16 +297,27 @@ class EditGroupProperties(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
-        self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
-        self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
+        # self.opacity_edit.connect(arg0, QObject, arg1)
+        self.connect(self.opacity_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
+        # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
+        # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
+
+        # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_line_width)
+        # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_point_size)
+        self.connect(self.line_width_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
+        self.connect(self.point_size_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
+
+        # self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
+        # self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
+        # self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
+
         self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
         self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
         self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
         #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
 
-        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+        # self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+        # self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
         self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
 
@@ -332,31 +343,37 @@ class EditGroupProperties(QtGui.QDialog):
                                           "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
+        self.on_apply()
 
     def on_show(self):
         name = self.active_key
         is_checked = self.checkbox_show.isChecked()
         self.out_data[name].is_visible = is_checked
+        self.on_apply()
 
     def on_hide(self):
         name = self.active_key
         is_checked = self.checkbox_hide.isChecked()
         self.out_data[name].is_visible = not is_checked
+        self.on_apply()
 
     def on_line_width(self):
         name = self.active_key
         line_width = self.line_width_edit.value()
         self.out_data[name].line_width = line_width
+        self.on_apply()
 
     def on_point_size(self):
         name = self.active_key
         point_size = self.point_size_edit.value()
         self.out_data[name].point_size = point_size
+        self.on_apply()
 
     def on_opacity(self):
         name = self.active_key
         opacity = self.opacity_edit.value()
         self.out_data[name].opacity = opacity
+        self.on_apply()
 
     #def on_axis(self, text):
         ##print(self.combo_axis.itemText())
@@ -426,16 +443,16 @@ class EditGroupProperties(QtGui.QDialog):
             self.win_parent.on_update_geometry_properties(self.out_data)
         return passed
 
-    def on_ok(self):
+    def on_cancel(self):
         passed = self.on_apply()
         if passed:
             self.close()
             #self.destroy()
 
-    def on_cancel(self):
-        self.out_data['clicked_ok'] = False
-        self.out_data['clicked_cancel'] = True
-        self.close()
+    # def on_cancel(self):
+        # self.out_data['clicked_ok'] = False
+        # self.out_data['clicked_cancel'] = True
+        # self.close()
 
 
 def main():
