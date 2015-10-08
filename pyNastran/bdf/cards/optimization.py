@@ -8,7 +8,7 @@ from numpy import where, searchsorted, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
-from pyNastran.bdf.cards.deqatn import fortran_to_python
+from pyNastran.bdf.cards.deqatn import fortran_to_python, fortran_to_python_short
     #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_or_string, integer_string_or_blank, double, double_or_blank, string,
@@ -408,9 +408,11 @@ class DRESP1(OptConstraint):
             self.atti = model.Properties(self.atti, msg=msg)
         elif self.rtype in ['FRSTRE']:
             self.atti = model.Properties(self.atti, msg=msg)
-        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER']:
+        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN']:
             pass
-        elif self.rtype in ['DISP', 'FRDISP']:
+        elif self.rtype in ['DISP', 'FRDISP', 'TDISP',
+                            'FRVELO', 'TVELO',
+                            'FRACCL', 'PSDACCL']:
             self.atti = model.Nodes(self.atti, msg=msg)
         else:
             msg = 'rtype=%r ptype=%r\n' % (self.rtype, self.ptype)
@@ -422,7 +424,6 @@ class DRESP1(OptConstraint):
         #if self.rtype in ['ELEM']:
             #self.atti = model.Elements(self.atti, msg=msg)
             #pass
-        data = []
         if self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
                             'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                             'PBEAML', 'PSHEAR', 'PTUBE',
@@ -436,12 +437,16 @@ class DRESP1(OptConstraint):
                 print('atti =', value, type(value))
                 assert not isinstance(value, BaseCard), value
         elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'EIGN', 'FREQ']:
-            pass
-        elif self.rtype in ['DISP', 'FRDISP', 'FRVELO', 'FRACCL', 'PSDACCL']:
+            data = self.atti
+        elif self.rtype in ['DISP', 'FRDISP', 'TDISP',
+                            'FRVELO',
+                            'FRACCL', 'PSDACCL']:
             #self.atti = model.Nodes(self.atti, msg=msg)
             data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
-        elif self.rtype in ['VOLUME']:
-            pass
+        elif self.rtype in ['VOLUME', 'CEIG']:
+            data = self.atti
+        elif self.rtype in ['GPFORCP']: # MSC Nastran specific
+            data = self.atti
         else:
             msg = 'rtype=%s ptype=%s\n' % (self.rtype, self.ptype)
             #msg += str(self)
@@ -542,8 +547,7 @@ class DRESP2(OptConstraint):
                     arg = self.dtable[val]
                     argsi.append(arg)
             else:
-                print('  TODO: xref %s' % str(key))
-                asdf
+                raise NotImplementedError('  TODO: xref %s' % str(key))
         print('DRESP2 args = %s' % argsi)
         out = self.func(*argsi)
         print('  deqatn out = %s' % out)
@@ -551,12 +555,7 @@ class DRESP2(OptConstraint):
 
     def cross_reference(self, model):
         msg = ', which is required by %s ID=%s' % (self.type, self.oid)
-        if isinstance(self.DEquation(), int):
-            self.dequation = model.DEQATN(self.dequation, msg=msg)
-            self.func = self.dequation.func
-        else:
-            self.dequation_str = fortran_to_python(self.dequation)
-        aafd
+        default_values = {}
         for key, vals in sorted(iteritems(self.params)):
             j, name = key
             if name in ['DRESP1', 'DRESP2']:
@@ -573,9 +572,18 @@ class DRESP2(OptConstraint):
                     self.params[key][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
                 self.dtable = model.dtable
+                for i, val in enumerate(vals):
+                    default_values[val] = self.dtable[val]
             else:
                 raise NotImplementedError('  TODO: xref %s' % str(key))
 
+        if isinstance(self.DEquation(), int):
+            self.dequation = model.DEQATN(self.dequation, msg=msg)
+            self.func = self.dequation.func
+        elif isinstance(self.dequation, str):
+            self.func = fortran_to_python_short(self.dequation, default_values)
+        else:
+            raise NotImplementedError(self.dequation)
 
     def uncross_reference(self):
         if hasattr(self, 'func'):

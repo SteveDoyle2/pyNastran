@@ -1,58 +1,56 @@
+"""
+Defines the DEQATN class and sub-functions.
+
+The capitalization of the sub-functions is important.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.bdf.cards.baseCard import BaseCard
+from copy import deepcopy
 
+from numpy import cos, sin, tan
+from numpy import arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2
+from numpy import arcsinh as asinh, arccosh as acosh, arctanh as atanh
+# atan2h
+from numpy import mean, exp, sqrt, square, sum
+from numpy import log, log10, mod, abs
+from numpy.linalg import norm
 
+def rss(*args):  # good
+    """2-norm; generalized magnitude of vector for N components"""
+    return norm(args)
 
-def ssq(*listA):
-    """
-    sum of squares
-    .. note:: used for DEQATN
-    """
-    out = 0.
-    for x in listA:
-        out += x * x
-    return out
+def avg(*args):
+    """average"""
+    return mean(args)
 
-
-def sum2(*listA):
-    """
-    sum of listA
-    .. note:: used for DEQATN
-    """
-    return sum(listA)
-
-
-def mod(x, y):
-    """
-    x%y
-    .. note:: used for DEQATN
-    """
-    return x % y
-
+def ssq(*args):
+    """sum of squares"""
+    return square(args).sum()
 
 def logx(x, y):
-    """
-    log base x of y
-    .. note:: used for DEQATN
-    """
-    log(y, x)
-
+    """log base_x(y)"""
+    return log(y**x) / log(x)
 
 def dim(x, y):
-    """
-    .. note:: used for DEQATN
-    """
+    """positive difference"""
     return x - min(x, y)
 
-
 def db(p, pref):
-    """
-    sound pressure in decibels
-    would capitalize it, but you wouldnt be able to call the function...
-    """
+    """sound pressure in decibels"""
     return 20. * log(p / pref)
 
+def atan2h(db, pref):
+    raise NotImplementedError()
+
+def invdb(db, pref):
+    raise NotImplementedError()
+
+def dba(p, pref, f):
+    raise NotImplementedError()
+
+def invdba(dba, pref, f):
+    raise NotImplementedError()
 
 class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
@@ -60,8 +58,9 @@ class DEQATN(BaseCard):  # needs work...
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-
         self.dtable = None
+        self.func = None
+
         new_card = ''
         found_none = False
         #print(card)
@@ -111,8 +110,6 @@ class DEQATN(BaseCard):  # needs work...
                     assert not eqi.endswith(';'), eq
                 else:
                     is_join = True
-
-
             else:
                 # last line
                 pass
@@ -121,11 +118,12 @@ class DEQATN(BaseCard):  # needs work...
                 if '=' not in eqi:
                     raise SyntaxError('line=%r expected an equal sign' % eqi)
                 self.eqs.append(eqi)
-        if is_join:
-            self.eqs.append(eqi)
-        assert len(self.eqs) >= 1, self.eqs
             #print(i, eqi)
         #assert not is_join
+        if is_join:
+            self.eqs.append(eqi)
+        self._raw_eqs = deepcopy(self.eqs)  # TODO: temporary
+        assert len(self.eqs) > 0, self.eqs
         #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(self.eqID))
         #self._setup_equation()
 
@@ -173,12 +171,12 @@ class DEQATN(BaseCard):  # needs work...
         #self.evaluate(1, 2)
         eqs = split_equations(self.eqs)
         equation_line0 = eqs[0]
-        #assert len(equation_line0) < 56, equation_line0
+        #assert len(equation_line0) <= 56, equation_line0
         msg = 'DEQATN  %-8i%-56s\n' % (self.equation_id, equation_line0)
-        assert len(equation_line0) < 56, equation_line0
+        assert len(equation_line0) <= 56, equation_line0
         for eq in eqs[1:]:
-            msg += '        %64s\n' % eq
-            assert len(eq) < 64, eq
+            msg += '        %-64s\n' % eq
+            assert len(eq) <= 64, eq
         print(msg)
         return msg
 
@@ -195,34 +193,48 @@ def split_equations(lines):
     return lines2
 
 def split_equation(lines_out, line, n, isplit=0):
-    print('n=%s line=%r len=%s' % (n, line, len(line)))
+    print('n=%s -> line=%r len=%s' % (n, line, len(line)))
     if len(line) <= n:
-        lines_out.append(line)
+        lines_out.append(line.strip())
         return lines_out
     # equation must be split
-    line0 = line[n:][::-1]
+    line0 = line[:n][::-1].replace('**', '^')
     # fore, aft = line0.split('+-()*', 1)
-    print(str(line0[::-1]))
+    print('line0 = %r; len=%s' % (str(line0[::-1]), len(line0)))
     out = {}
-    for operator in ('+', '*', '-', ')', ',', '='):
+    for operator in ('+', '*', '^', '-', ')', ',', '='):
         if operator in line0:
             i = line0.index(operator)
             out[i] = operator
-    operator = out[min(out)]
 
+    try:
+        imin = min(out)
+    except ValueError:
+        msg = "Couldn't find an operator ()+-/*= in %r\n" % line[n:]
+        msg += 'line = %r' % line
+        raise ValueError(msg)
+
+    operator = out[imin]
+    print('operator = %r' % operator)
     fore, aft = line0.split(operator, 1)
     i = len(aft) + 1
 
     line_out = line[:i]
-    print('appending %r' % line_out)
+    print('appending %r; len=%s' % (line_out, len(line_out)))
     print('fore = %r' % fore[::-1])
     print('aft  = %r' % aft[::-1])
-    lines_out.append(line_out)
+    lines_out.append(line_out.replace('^', '**').strip())
     isplit += 1
     if isplit > 10:
         raise RuntimeError()
     lines_out = split_equation(lines_out, line[i:], n, isplit+1)
     return lines_out
+
+def fortran_to_python_short(line, default_values):
+    func_str = 'def func(args):\n'
+    func_str += '    return %s(args)\n' % line.strip()
+    exec func_str
+    return func
 
 def fortran_to_python(lines, default_values):
     print(lines)
@@ -230,9 +242,11 @@ def fortran_to_python(lines, default_values):
     #line0 = lines[0].lower()
     #print('line0=%r' % line0)
     #nlines = len(lines)
+    assert len(lines) > 0, lines
     for i, line in enumerate(lines):
         print('line=%r' % line)
         # line = line.upper()
+        line = line.lower()
         try:
             f, eq = line.split('=')
         except:

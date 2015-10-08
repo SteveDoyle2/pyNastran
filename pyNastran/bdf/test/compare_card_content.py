@@ -148,7 +148,8 @@ def compare_card_content(fem1, fem2):
     for key in fem1.dequations:
         card1 = fem1.dequations[key]
         card2 = fem2.dequations[key]
-        assert card1.write_card() == card2.write_card()
+        msg = 'card1:\n%s\ncard2:\n%s' % (card1.write_card(), card2.write_card())
+        assert card1.write_card() == card2.write_card(), msg
         #assert_fields(card1, card2)
 
     if fem1.dtable:

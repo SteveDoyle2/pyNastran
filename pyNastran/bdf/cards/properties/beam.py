@@ -300,9 +300,11 @@ class PBEAM(IntegratedLineProperty):
                     assert self.i1[i] >= 0., self.i1
                     assert self.i2[i] >= 0., self.i2
                     assert self.j[i] >= 0., self.j  # we check warping later
-                    if not (self.i1[i] * self.i2[i] - self.i12[i] ** 2 > 0.):
+                    di12 = self.i1[i] * self.i2[i] - self.i12[i] ** 2
+                    if not di12 > 0.:
                         msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
-                        msg = 'xxb=%s i1=%s i2=%s i12=%s'  % (self.xxb[i], self.i1[i], self.i2[i], self.i12[i])
+                        msg += 'xxb=%s i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (
+                            self.xxb[i], self.i1[i], self.i2[i], self.i12[i], di12)
                         raise ValueError(msg)
 
 
