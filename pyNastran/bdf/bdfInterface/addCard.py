@@ -166,7 +166,7 @@ class AddMethods(object):
                                    self.dtable, dtable)
         else:
             self.dtable = dtable
-            self._type_to_id_map[dtable.type].append(1)
+            #self._type_to_id_map[dtable.type].append(1)
 
     def add_BCRPARA(self, card, allowOverwrites=False):
         key = card.crid

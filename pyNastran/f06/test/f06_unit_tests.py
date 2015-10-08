@@ -30,42 +30,46 @@ from pyNastran.op4.op4 import OP4
 test_path = os.path.join(pyNastran.__path__[0], 'f06', 'test', 'tests')
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 
+def run_model(bdf_name=None, op2_name=None, f06_name=None,
+              op4_name=None, dynamic_vars=None, f06_has_weight=True,
+              vectorized=False, encoding=None):
+    outputs = []
+    if bdf_name:
+        bdf = BDF(debug=False, log=None)
+        if dynamic_vars is not None:
+            bdf.set_dynamic_syntax(dynamic_vars)
+        bdf.read_bdf(bdf_name, encoding=encoding)
+        bdf.write_bdf(bdf_name+'.out', interspersed=False)
+        bdf.write_bdf(bdf_name+'.out', interspersed=True)
+        outputs.append(bdf)
+
+    if op2_name:
+        op2 = OP2(debug=False)
+        op2.read_op2(op2_name, vectorized=vectorized)
+        op2.write_f06(op2_name[:-4] + '.test_op2.out')
+        outputs.append(op2)
+
+    if f06_name:
+        af
+        f06 = F06(debug=False, log=None)
+        f06.read_f06(f06_name)
+        f06.write_f06(f06_name[:-4] + '.test_f06.out')
+        outputs.append(f06)
+        if f06_has_weight:
+            assert f06.grid_point_weight.reference_point is not None
+        else:
+            assert f06.grid_point_weight.reference_point is None
+
+    if op4_name:
+        op4 = OP4()
+        op4.read_op4(op4_name, matrixNames=None, precision='default')
+        outputs.append(op4)
+
+    assert len(outputs) > 0
+    if len(outputs) == 1: return outputs[0]
+    return outputs
+
 class TestF06(unittest.TestCase):
-    def run_model(self, bdf_name=None, f06_name=None, op2_name=None,
-                  op4_name=None, dynamic_vars=None, f06_has_weight=True):
-        outputs = []
-        if bdf_name:
-            bdf = BDF(debug=False, log=None)
-            if dynamic_vars is not None:
-                bdf.set_dynamic_syntax(dynamic_vars)
-            bdf.read_bdf(bdf_name)
-            bdf.write_bdf(bdf_name+'.out', interspersed=False)
-            bdf.write_bdf(bdf_name+'.out', interspersed=True)
-            outputs.append(bdf)
-
-        if op2_name:
-            op2 = OP2(debug=False)
-            op2.read_op2(op2_name, vectorized=False)
-            op2.write_f06(op2_name[:-4] + '.test_op2.out')
-            outputs.append(op2)
-
-        if f06_name:
-            f06 = F06(debug=False, log=None)
-            f06.read_f06(f06_name)
-            f06.write_f06(f06_name[:-4] + '.test_f06.out')
-            outputs.append(f06)
-            if f06_has_weight:
-                assert f06.grid_point_weight.reference_point is not None
-            else:
-                assert f06.grid_point_weight.reference_point is None
-
-        if op4_name:
-            op4 = OP4()
-            op4.read_op4(op4_name, matrixNames=None, precision='default')
-
-        assert len(outputs) > 0
-        if len(outputs) == 1: return outputs[0]
-        return outputs
 
     def test_blade2dv_fatal_1(self):
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
@@ -78,7 +82,7 @@ class TestF06(unittest.TestCase):
     def test_blade2dv_fatal_2(self):
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
-        #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+        #bdf2 = run_model(bdfname2, dynamic_vars=dynamic_vars)
         #self.assertEqual(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
 
         f06 = F06(debug=False, log=None)
@@ -144,7 +148,7 @@ class TestF06(unittest.TestCase):
     def test_blade2dv_fatal_3(self):
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
-        #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+        #bdf2 = run_model(bdfname2, dynamic_vars=dynamic_vars)
         #self.assertEqual(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
         f06 = F06(debug=False, log=None)
 
@@ -210,7 +214,7 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'complex', 'tet10', 'simple_example.op2')
 
         f06name2 = os.path.join(model_path, 'complex', 'tet10', 'simple_example.test_f06.f06')
-        bdf, op2, f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
         assert len(f06.spc_forces) == 0, len(f06.spc_forces) # 0 is correct
@@ -226,7 +230,7 @@ class TestF06(unittest.TestCase):
         bdfname = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
         f06name = os.path.join(model_path, 'beam_modes', 'beam_modes.f06')
-        bdf, op2, f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=True)
 
         assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
         assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
@@ -251,7 +255,7 @@ class TestF06(unittest.TestCase):
         bdfname = None
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m2.op2')
         f06name = None
-        op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+        op2 = run_model(bdfname, op2name, f06name, f06_has_weight=True)
 
         assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
         assert len(op2.displacements) == 0, len(op2.displacements)
@@ -271,7 +275,7 @@ class TestF06(unittest.TestCase):
             f06name = os.path.join(model_path, 'bar3truss', f06_filename)
 
             #f06name2 = os.path.join(model_path, 'bar3truss', 'no_subcase.test_f06.f06')
-            f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+            f06 = run_model(bdfname, op2name, f06name, f06_has_weight=True)
 
             assert f06.Title == title, 'i=%i title=%r expected=%r' % (i, f06.Title, title)
             subtitle_label = f06.iSubcaseNameMap[1]
@@ -304,7 +308,7 @@ class TestF06(unittest.TestCase):
         f06name = os.path.join(model_path, 'fsi', 'fsi.f06')
         op2name = os.path.join(model_path, 'fsi', 'fsi.op2')
 
-        bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
         assert len(f06.eigenvectors) == 1, len(f06.eigenvectors)  # 1 is correct
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)  # 1 is correct
 
@@ -314,7 +318,7 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'cbush', 'cbush.op2')
 
         f06name2 = os.path.join(model_path, 'cbush', 'cbush.test_f06.f06')
-        bdf, op2, f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
 
         assert len(f06.displacements) == 1, len(f06.displacements)  # 1 is correct
         assert len(f06.spc_forces) == 1, len(f06.spc_forces)        # 1 is correct
@@ -328,7 +332,7 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
 
         f06name2 = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.test_f06.f06')
-        bdf, op2, f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
         assert len(f06.spc_forces) == 1, len(f06.spc_forces)
@@ -373,7 +377,7 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
 
         f06name2 = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.test_f06.f06')
-        bdf, op2, f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
 
         assert op2.Title == 'MSC.NASTRAN JOB', '%r' % op2.Title
         assert f06.Title == 'MSC.NASTRAN JOB', '%r' % f06.Title
@@ -428,7 +432,7 @@ class TestF06(unittest.TestCase):
         f06name1 = os.path.join(test_path, 'failure_index_test.f06')
         f06name2 = os.path.join(test_path, 'failure_index_test.test_f06.f06')
         op2name = None
-        f06 = self.run_model(bdfname, f06name1, op2name, f06_has_weight=False)
+        f06 = run_model(bdfname, op2name, f06name1, f06_has_weight=False)
 
         #      FREQUENCY =  2.100000E-01
         #                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
@@ -459,7 +463,7 @@ class TestF06(unittest.TestCase):
         f06name = os.path.join(model_path, 'plate', 'plate.f06')
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
         dynamic_vars = {'t' : 42.}
-        bdf, op2, f06 = self.run_model(bdfname, f06name, op2name, dynamic_vars=dynamic_vars, f06_has_weight=False)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, dynamic_vars=dynamic_vars, f06_has_weight=False)
         self.assertEqual(bdf.properties[1].t, 42., 't=%s' % bdf.properties[1].t)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
@@ -490,18 +494,18 @@ class TestF06(unittest.TestCase):
 
         dynamic_vars = {'t' : 42}
         with self.assertRaises(SyntaxError):
-            bdf2 = self.run_model(bdfname, dynamic_vars=dynamic_vars)
+            bdf2 = run_model(bdfname, dynamic_vars=dynamic_vars)
 
         dynamic_vars = {'t' : 'asdddddddf'}
         with self.assertRaises(SyntaxError):
-            bdf3 = self.run_model(bdfname, dynamic_vars=dynamic_vars)
+            bdf3 = run_model(bdfname, dynamic_vars=dynamic_vars)
 
     def test_complex_displacement(self):
         bdfname = None
         f06name1 = os.path.join(test_path, 'complex_displacement.f06')
         f06name2 = os.path.join(test_path, 'complex_displacement.test_f06.f06')
         op2name = None
-        f06 = self.run_model(bdfname, f06name1, op2name, f06_has_weight=False)
+        f06 = run_model(bdfname, op2name, f06name1, f06_has_weight=False)
 
         #      FREQUENCY =  2.100000E-01
         #                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
@@ -523,7 +527,7 @@ class TestF06(unittest.TestCase):
         bdfname = None
         f06name = os.path.join(test_path, 'test_no_rotations.f06')
         op2name = None
-        f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
         subcase = 1
         eig = 1
         nid = 2
@@ -543,7 +547,7 @@ class TestF06(unittest.TestCase):
 
         subcase = 1
         eig = 1
-        f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
         self.assertTrue(array_equal(f06.eigenvectors[subcase].translations[eig][2], array([4., 5., 6.])),
                             msg=str(f06.eigenvectors[subcase].translations[eig][2]))
 
@@ -558,7 +562,7 @@ class TestF06(unittest.TestCase):
         f06name = os.path.join(model_path, 'plate', 'plate.f06')
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
 
-        (bdf, op2, f06) = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
         self.assertEqual(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
 
         self.assertEqual(len(bdf.nodes), 36, bdf.nodes)

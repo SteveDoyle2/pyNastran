@@ -28,6 +28,37 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
 
+    #_opt_map = {
+        #'I1(B)' : 'i1',
+        #'I1(B)',
+    #}
+
+    def set_optimization_value(self, name_str, value):
+        if name_str == 'I1(A)':
+            self.i1[0] = value
+        elif name_str == 'I1(B)':
+            self.i1[-1] = value
+
+        elif name_str == 'I2(A)':
+            self.i1[-1] = value
+        elif name_str == 'I2(B)':
+            self.i2[-1] = value
+        else:
+            raise NotImplementedError(name_str)
+
+    def get_optimization_value(self, name_str):
+        if name_str == 'I1(A)':
+            return self.i1[0]
+        elif name_str == 'I1(B)':
+            return self.i1[-1]
+
+        elif name_str == 'I2(A)':
+            return self.i2[-1]
+        elif name_str == 'I2(B)':
+            return self.i2[-1]
+        else:
+            raise NotImplementedError(name_str)
+
     def __init__(self, card=None, data=None, comment=''):
         """
         .. todo:: fix 0th entry of self.so, self.xxb

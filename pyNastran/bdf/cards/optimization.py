@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems, integer_types, string_types
 from six.moves import zip, range
 #from math import ceil
+from numpy import where, searchsorted, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
@@ -17,7 +18,6 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
-
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -109,6 +109,9 @@ class DESVAR(OptConstraint):
             assert len(card) <= 8, 'len(DESVAR card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
+    def OptID(self):
+        return self.oid
 
     def raw_fields(self):
         list_fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
@@ -322,9 +325,9 @@ class DRESP1(OptConstraint):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          DRESP1         1S1      CSTRAIN PCOMP                  1       1   10000
+        +--------+-----------+------------+-------+------+--------+-------+-----+-------+
+        | DRESP1 |       1S1 |    CSTRAIN | PCOMP |      |        | 1     | 1   | 10000 |
+        +--------+-----------+------------+-------+------+--------+-------+-----+-------+
         """
         if comment:
             self._comment = comment
@@ -353,6 +356,46 @@ class DRESP1(OptConstraint):
         else:
             raise RuntimeError(data)
 
+    def _verify(self, xref=True):
+        pass
+
+    def calculate(self, op2_model, subcase_id):
+        rtype = self.rtype
+        ptype = self.ptype
+        if rtype == 'DISP' and ptype is None:
+            msg = 'fields=%s\n' % (self.raw_fields())
+            msg += 'rtype=%r ptype=%r region=%s A=%r B=%r\n' % (self.rtype, self.ptype, self.region,
+                                                           self.atta, self.attb)
+            assert isinstance(self.atta, int), self.atta
+            assert self.attb is None, self.attb
+            assert len(self.atti) == 1, self.atti
+            #msg += str(self)
+            #raise NotImplementedError(msg)
+            comp = self.atta
+            assert comp < 7, comp
+            case = op2_model.displacements[subcase_id]
+            nids = case.node_gridtype[:, 0]
+            nidsi = array(
+                [node if isinstance(node, integer_types) else node.nid
+                 for node in self.atti], dtype='int32')
+            inid = searchsorted(nids, nidsi)[0]
+            itime = 0 #  TODO:  ???
+            #print('atti = ', self.atti)
+            atti = self.atti[0]
+            out = case.data[itime, inid, comp - 1]
+            print(' DISP[itime=%s, nid=%s, comp=%i] = %s' % (itime, str(nidsi), comp, out))
+        elif ptype == 'ELEM' and 0:
+            pass
+        else:
+            msg = 'fields=%s\n' % (self.raw_fields())
+            msg += 'rtype=%r ptype=%r region=%s\n' % (self.rtype, self.ptype, self.region)
+            msg += str(self)
+            raise NotImplementedError(msg)
+        return out
+
+    def OptID(self):
+        return self.oid
+
     def cross_reference(self, model):
         #return
         msg = ', which is required by %s oid=%s' % (self.type, self.oid)
@@ -370,7 +413,7 @@ class DRESP1(OptConstraint):
         elif self.rtype in ['DISP', 'FRDISP']:
             self.atti = model.Nodes(self.atti, msg=msg)
         else:
-            msg = 'rtype=%s ptype=%s\n' % (self.rtype, self.ptype)
+            msg = 'rtype=%r ptype=%r\n' % (self.rtype, self.ptype)
             msg += str(self)
             raise NotImplementedError(msg)
 
@@ -403,7 +446,6 @@ class DRESP1(OptConstraint):
             msg = 'rtype=%s ptype=%s\n' % (self.rtype, self.ptype)
             #msg += str(self)
             raise NotImplementedError(msg)
-
         return data
 
     def raw_fields(self):
@@ -444,28 +486,68 @@ class DRESP2(OptConstraint):
             self.c2 = double_or_blank(card, 7, 'c2', 0.005)
             self.c3 = double_or_blank(card, 8, 'c3') #: .. todo:: or blank?
 
-            i = 0
+
+            #i = 0
             fields = [interpret_value(field) for field in card[9:]]
-            key = '$NULL$'  # dummy key
-            self.params = {key: []}
+            key = None  # dummy key
+            self.params = {}
             value_list = []
+            j = 0
             for (i, field) in enumerate(fields):
                 if i % 8 == 0 and field is not None:
-                    self.params[key] = value_list
-                    key = field
+                    if i > 0:
+                        assert len(value_list) > 0, 'key=%s values=%s' % (key, value_list)
+                        self.params[key] = value_list
+                        j += 1
+                    key = (j, field)
                     value_list = []
                 elif field is not None:
                     value_list.append(field)
-                #else:
-                #    pass
             self.params[key] = value_list
-            del self.params['$NULL$']
         else:
             raise RuntimeError(data)
 
-        #print "--Params--"
-        #for key, value_list in sorted(iteritems(self.params)):
-            #print("  key=%s params=%s" %(key, value_list))
+        print("--Params--")
+        for key, value_list in sorted(iteritems(self.params)):
+            print("  key=%s params=%s" %(key, value_list))
+
+    def OptID(self):
+        return self.oid
+
+    def _verify(self, xref=True):
+        pass
+        #for (j, name), value_list in sorted(iteritems(self.params)):
+            #print('  DRESP2 verify - key=%s values=%s' % (name,
+                #self._get_values(name, value_list)))
+
+    def calculate(self, op2_model, subcase_id):
+        print(str(self))
+        argsi = []
+        for key, vals in sorted(iteritems(self.params)):
+            j, name = key
+            if name in ['DRESP1', 'DRESP2']:
+                for i, val in enumerate(vals):
+                    arg = val.calculate(op2_model, subcase_id)
+                    argsi.append(arg)
+            elif name in ['DVMREL1', 'DVMREL2']:
+                for i, val in enumerate(vals):
+                    arg = val.calculate(op2_model, subcase_id)
+                    argsi.append(arg)
+            elif name in ['DVPREL1', 'DVPREL2']:
+                for i, val in enumerate(vals):
+                    arg = val.calculate(op2_model, subcase_id)
+                    argsi.append(arg)
+            elif name == 'DTABLE':
+                for i, val in enumerate(vals):
+                    arg = self.dtable[val]
+                    argsi.append(arg)
+            else:
+                print('  TODO: xref %s' % str(key))
+                asdf
+        print('DRESP2 args = %s' % argsi)
+        out = self.func(*argsi)
+        print('  deqatn out = %s' % out)
+        return out
 
     def cross_reference(self, model):
         msg = ', which is required by %s ID=%s' % (self.type, self.oid)
@@ -474,6 +556,26 @@ class DRESP2(OptConstraint):
             self.func = self.dequation.func
         else:
             self.dequation_str = fortran_to_python(self.dequation)
+        aafd
+        for key, vals in sorted(iteritems(self.params)):
+            j, name = key
+            if name in ['DRESP1', 'DRESP2']:
+                for i, val in enumerate(vals):
+                    self.params[key][i] = model.DResp(val, msg)
+            elif name in ['DVMREL1', 'DVMREL2']:
+                for i, val in enumerate(vals):
+                    self.params[key][i] = model.DVmrel(val, msg)
+            elif name in ['DVPREL1', 'DVPREL2']:
+                for i, val in enumerate(vals):
+                    self.params[key][i] = model.DVprel(val, msg)
+            elif name == 'DESVAR':
+                for i, val in enumerate(vals):
+                    self.params[key][i] = model.Desvar(val, msg)
+            elif name == 'DTABLE':
+                self.dtable = model.dtable
+            else:
+                raise NotImplementedError('  TODO: xref %s' % str(key))
+
 
     def uncross_reference(self):
         if hasattr(self, 'func'):
@@ -485,9 +587,62 @@ class DRESP2(OptConstraint):
             return self.dequation
         return self.dequation.equation_id
 
+    def _get_values(self, name, values_list):
+        out = []
+        if name in ['DRESP1', 'DRESP2']:
+            for i, val in enumerate(values_list):
+                #self.params[key][i] = model.DResp(val, msg)
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+
+        elif name in ['DVCREL1', 'DVCREL2']:
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+
+        elif name in ['DVMREL1', 'DVMREL2']:
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+
+        elif name in ['DVPREL1', 'DVPREL2']:
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+        elif name == 'DESVAR':
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+        elif name == 'DNODE':
+            #print(values_list)
+            for i in range(0, len(values_list), 2):
+                val = values_list[i]
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.nid)
+                out.append(values_list[i+1])
+
+        elif name == 'DTABLE':
+            out = values_list
+        else:
+            raise NotImplementedError('  TODO: _get_values %s' % str(name))
+            out = values_list
+        return out
+
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
-        packLength = {
+        pack_length = {
             'DESVAR' : [1, 0],
             'DTABLE' : [1, 0],
             'DFRFNC' : [1, 0],
@@ -502,13 +657,14 @@ class DRESP2(OptConstraint):
             'DRESP2' : [1, 0],
         }
         list_fields = []
-        for key, value_list in sorted(iteritems(self.params)):
-            fields2 = [key] + value_list
-            try:
-                (i, j) = packLength[key]
-            except KeyError:
-                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, value_list, self.oid)
-                raise KeyError(msg)
+        for (j, name), value_list in sorted(iteritems(self.params)):
+            values_list2 = self._get_values(name, value_list)
+            fields2 = [name] + values_list2
+            #try:
+            (i, j) = pack_length[name]
+            #except KeyError:
+                #msg = 'INVALID DRESP2 name=%r fields=%s ID=%s' % (name, value_list, self.oid)
+                #raise KeyError(msg)
             list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
 
@@ -745,6 +901,9 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 
+    def OptID(self):
+        return self.oid
+
     def Mid(self):
         if isinstance(self.mid, integer_types):
             return self.mid
@@ -782,10 +941,11 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        ::
-
-          DVPREL1   200000   PCOMP    2000      T2
-                    200000     1.0
+        +---------+--------+--------+--------+-----+
+        | DVPREL1 | 200000 | PCOMP  | 2000   |  T2 |
+        +---------+--------+--------+--------+-----+
+        |         | 200000 |   1.0  |        |     |
+        +---------+--------+--------+--------+-----+
         """
         if comment:
             self._comment = comment
@@ -822,8 +982,14 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         else:
             raise RuntimeError(data)
 
+    def OptID(self):
+        return self.oid
+
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)
+
+    def calculate(self, op2_model, subcase_id):
+        raise NotImplementedError('\n' + str(self))
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
@@ -946,6 +1112,9 @@ class DVPREL2(OptConstraint):
         else:
             raise RuntimeError(data)
 
+    def OptID(self):
+        return self.oid
+
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
@@ -956,11 +1125,42 @@ class DVPREL2(OptConstraint):
             return self.dequation
         return self.dequation.equation_id
 
+    def calculate(self, op2_model, subcase_id):
+        """
+        this should really make a call the the DEQATN;
+        see the PBEAM for an example of get/set_opt_value
+        """
+        try:
+            get = self.pid.get_optimization_value(self.pNameFid)
+            out = self.pid.set_optimization_value(self.pNameFid, get)
+        except:
+            print('DVPREL2 calculate : %s[%r] = ???' % (self.Type, self.pNameFid))
+            raise
+
+        if self.dvids:
+            for dv in self.dvids: # DESVARS
+                arg = dv.calculate(op2_model, subcase_id)
+                argsi.append(arg)
+        if self.labels:
+            for label in self.labels: # DTABLE
+                arg = self.dtable[label]
+                argsi.append(arg)
+        print('DVPREL2; args = %s' % argsi)
+
+        print('dvids  =', self.dvids)
+        print('labels =', self.labels)
+        print('%s[%r] = %s' % (self.Type, self.pNameFid, out))
+        out = self.func(*argsi)
+        print('  deqatn out = %s' % out)
+        return out
+        #raise NotImplementedError('\n' + str(self))
+
     def cross_reference(self, model):
         """
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         self.pid = model.Property(self.pid)
+        assert self.pid.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
         self.dequation = model.DEQATN(self.dequation)
 
     #def OptValue(self):  #: .. todo:: not implemented

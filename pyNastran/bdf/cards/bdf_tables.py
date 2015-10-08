@@ -140,7 +140,7 @@ class TableObj(object):
         return list_fields
 
 
-class DTABLE(object):
+class DTABLE(BaseCard):
     type = 'DTABLE'
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -157,11 +157,25 @@ class DTABLE(object):
             self.default_values[label] = value
             j += 1
 
+    def __getitem__(self, key):
+        return self.default_values[key]
+
     def raw_fields(self):
         list_fields = ['DTABLE']
         for label, value in sorted(iteritems(self.default_values)):
             list_fields += [label, value]
         return list_fields
+
+    #def repr_fields(self):
+        #return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class TABLED1(Table):

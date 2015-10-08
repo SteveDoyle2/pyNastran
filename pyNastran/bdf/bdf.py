@@ -1109,16 +1109,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._stop_on_parsing_error = stop_on_parsing_error
         self._stop_on_xref_error = stop_on_xref_error
 
-    @property
-    def caseControlDeck(self):
-        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        return self.case_control_deck
-
-    @caseControlDeck.setter
-    def caseControlDeck(self, value):
-        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        self.case_control_deck = value
-
     def read_bdf(self, bdf_filename=None,
                  xref=True, punch=False, encoding=None):
         """
@@ -2482,6 +2472,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     line = bdf_file.readline().rstrip()
                 except UnicodeDecodeError as e:
                     i0 = max([iline - 10, 0])
+                    self.log.error('filename=%s' % self.bdf_filename)
                     for i1, line in enumerate(lines[i0:iline]):
                         self.log.error('lines[%i]=%r' % (i0 + i1, line))
                     msg = "\n%s encoding error on line=%s of %s; not '%s'" % (self._encoding, iline, bdf_filename, self._encoding)
@@ -2635,6 +2626,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             msg += 'include_dir: %r\n' % self.include_dir
             msg += print_bad_path(bdf_filename_inc)
             raise IOError(msg)
+        elif bdf_filename_inc.endswith('.op2'):
+            raise IOError('Invalid filetype: bdf_filename=%r' % bdf_filename_inc)
         bdf_filename = bdf_filename_inc
 
         if bdf_filename in self.active_filenames:
@@ -2788,11 +2781,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 raise
 
         for key, card in sorted(iteritems(self.dresps)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
+            #try:
+            card._verify(xref)
+            #except:
+                #print(str(card))
+                #raise
+
         for key, card in sorted(iteritems(self.dvcrels)):
             try:
                 card._verify(xref)

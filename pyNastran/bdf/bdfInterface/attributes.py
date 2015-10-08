@@ -27,6 +27,16 @@ class BDFAttributes(object):
         return False
 
     @property
+    def caseControlDeck(self):
+        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
+        return self.case_control_deck
+
+    @caseControlDeck.setter
+    def caseControlDeck(self, value):
+        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
+        self.case_control_deck = value
+
+    @property
     def subcases(self):
         if self.case_control_deck is None:
             return {}
