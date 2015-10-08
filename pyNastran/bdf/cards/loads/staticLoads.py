@@ -1270,7 +1270,7 @@ class GMLOAD(Load):
 
     def raw_fields(self):
         list_fields = ['GMLOAD', self.sid, self.Cid()] + list(self.normal) + [
-            self.entity, self.gmcurve, self.method] + self.load_magnitudes
+            self.entity, self.entity_id, self.method] + self.load_magnitudes
         return list_fields
 
     def repr_fields(self):

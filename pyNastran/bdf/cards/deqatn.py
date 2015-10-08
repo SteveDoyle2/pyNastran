@@ -135,7 +135,7 @@ class DEQATN(BaseCard):  # needs work...
         self.func_name = func_name
         #print('**************', func_str)
         exec func_str
-        print(locals().keys())
+        #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
         #print(func)
@@ -177,7 +177,7 @@ class DEQATN(BaseCard):  # needs work...
         for eq in eqs[1:]:
             msg += '        %-64s\n' % eq
             assert len(eq) <= 64, eq
-        print(msg)
+        #print(msg)
         return msg
 
 def split_equations(lines):
@@ -185,22 +185,26 @@ def split_equations(lines):
     # second line may be < 64
     lines2 = []
     for i, line in enumerate(lines):
-        print('-------------------------')
+        #print('-------------------------')
+        # we'll add ; to the end of each line
         if i == 0:
-            lines2 += split_equation([], line, 56)
+            lines2 += split_equation([], line.strip() + ';', 56)
         else:
-            lines2 += split_equation([], line, 64)
+            lines2 += split_equation([], line.strip() + ';', 64)
+
+    # remove the trailing semicolon
+    lines2[-1] = lines2[-1][:-1]
     return lines2
 
 def split_equation(lines_out, line, n, isplit=0):
-    print('n=%s -> line=%r len=%s' % (n, line, len(line)))
+    #print('n=%s -> line=%r len=%s' % (n, line, len(line)))
     if len(line) <= n:
         lines_out.append(line.strip())
         return lines_out
     # equation must be split
     line0 = line[:n][::-1].replace('**', '^')
     # fore, aft = line0.split('+-()*', 1)
-    print('line0 = %r; len=%s' % (str(line0[::-1]), len(line0)))
+    #print('line0 = %r; len=%s' % (str(line0[::-1]), len(line0)))
     out = {}
     for operator in ('+', '*', '^', '-', ')', ',', '='):
         if operator in line0:
@@ -215,14 +219,14 @@ def split_equation(lines_out, line, n, isplit=0):
         raise ValueError(msg)
 
     operator = out[imin]
-    print('operator = %r' % operator)
+    #print('operator = %r' % operator)
     fore, aft = line0.split(operator, 1)
     i = len(aft) + 1
 
     line_out = line[:i]
-    print('appending %r; len=%s' % (line_out, len(line_out)))
-    print('fore = %r' % fore[::-1])
-    print('aft  = %r' % aft[::-1])
+    #print('appending %r; len=%s' % (line_out, len(line_out)))
+    #print('fore = %r' % fore[::-1])
+    #print('aft  = %r' % aft[::-1])
     lines_out.append(line_out.replace('^', '**').strip())
     isplit += 1
     if isplit > 10:
@@ -237,14 +241,15 @@ def fortran_to_python_short(line, default_values):
     return func
 
 def fortran_to_python(lines, default_values):
-    print(lines)
+    #print(lines)
     msg = ''
     #line0 = lines[0].lower()
     #print('line0=%r' % line0)
     #nlines = len(lines)
     assert len(lines) > 0, lines
+    is_eq_defined = False
     for i, line in enumerate(lines):
-        print('line=%r' % line)
+        #print('line=%r' % line)
         # line = line.upper()
         line = line.lower()
         try:
@@ -253,15 +258,17 @@ def fortran_to_python(lines, default_values):
             raise SyntaxError('= not found in %r' % (line))
         f = f.strip()
         eq = eq.strip()
+        #print('f=%r eq=%r' % (f, eq))
 
         if i == 0:
-            print('eq = %r' % eq)
+            #print('eq = %r' % eq)
             try:
                 float(eq)
                 is_float = True
             except ValueError:
                 is_float = False
 
+            #print('is_float =', is_float)
             if is_float:
                 func_name, arguments = f.strip('(,)').split('(')
                 func_name = func_name.strip(' ')
@@ -291,7 +298,8 @@ def fortran_to_python(lines, default_values):
                 msg += 'def %s:\n' % f
                 for var in variables:
                     msg += '    %s = float(%s)\n' % (var, var)
-
+                #print(msg)
+                is_eq_defined = True
                 out = eq
                 # if nlines > 1:
                     # msg += '    try:\n'
@@ -300,12 +308,17 @@ def fortran_to_python(lines, default_values):
             out = f
             msg += '    %s = %s\n' % (out, eq)
         #print('  i=%s f=%r eq=%r' % (i, f, eq))
+    #if is_
     #if nlines > 1:
         # msg += '    except:\n'
         # msg += '        print(locals())\n'
         # msg += '        raise\n'
-    msg += '    return %s\n' % out
+    if is_eq_defined:
+        msg += '    return %s\n' % out
+    else:
+        msg = 'def %s(%s):\n' % (func_name, vals2)
+        msg += '    return %s\n' % float(eq)
 
-    print(msg)
+    #print(msg)
     nargs = len(variables)
     return func_name, nargs, msg

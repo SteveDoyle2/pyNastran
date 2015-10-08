@@ -919,7 +919,8 @@ class WriteMesh(object):
         """Writes the optimization cards sorted by ID"""
         if(self.dconadds or self.dconstrs or self.desvars or self.ddvals or
            self.dresps or self.ddvals or
-           self.dvprels or self.dvmrels or self.doptprm or self.dlinks):
+           self.dvprels or self.dvmrels or self.doptprm or self.dlinks or
+           self.dequations or self.dtable is not None):
             msg = ['$OPTIMIZATION\n']
             for (unused_id, dconadd) in sorted(iteritems(self.dconadds)):
                 msg.append(dconadd.write_card(size, is_double))
