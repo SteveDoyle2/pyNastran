@@ -50,7 +50,6 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
         outputs.append(op2)
 
     if f06_name:
-        af
         f06 = F06(debug=False, log=None)
         f06.read_f06(f06_name)
         f06.write_f06(f06_name[:-4] + '.test_f06.out')

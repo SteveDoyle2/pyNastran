@@ -54,7 +54,7 @@ class AECOMP(BaseCard):
     list_type : str
         {'SET1', 'AELIST', 'CAEROx'}
     lists : list[int]
-        lis of values of AECOMP lists
+        list of values of AECOMP lists
     """
     type = 'AECOMP'
 
@@ -147,12 +147,15 @@ class AEFACT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AEFACT object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AEFACT()
+            the AEFACT object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         fields = ['AEFACT', self.sid] + list(self.Di)
         return fields
@@ -209,12 +212,15 @@ class AELINK(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AELINK object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AELINK()
+            the AELINK object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         fields = ['AELINK', self.id, self.label]
         for (ivar, ival) in zip(self.independentLabels, self.Cis):
@@ -280,12 +286,15 @@ class AELIST(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AELIST object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AELIST()
+            the AELIST object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
@@ -330,12 +339,15 @@ class AEPARM(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AEPARM object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AEPARM()
+            the AEPARM object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         list_fields = ['AEPARM', self.id, self.label, self.units]
         return list_fields
@@ -380,12 +392,15 @@ class AESTAT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AESTAT object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AESTAT()
+            the AESTAT object pointer
+
+        Returns
+        -------
+        fields : List[int/str]
+            the fields that define the card
         """
         list_fields = ['AESTAT', self.id, self.label]
         return list_fields
@@ -499,12 +514,15 @@ class AESURF(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AESURF object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AESURF()
+            the AESURF object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
                        self.Cid2(), self.AELIST_id2(), self.eff, self.ldw,
@@ -516,12 +534,15 @@ class AESURF(BaseCard):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the AESURF object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AESURF()
+            the AESURF object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         eff = set_blank_if_default(self.eff, 1.0)
         ldw = set_blank_if_default(self.ldw, 'LDW')
@@ -581,12 +602,15 @@ class AESURFS(BaseCard):  # not integrated
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AESURFS object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AESURFS()
+            the AESURFS object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         list_fields = ['AESURFS', self.id, self.label, None, self.list1, None,
                        self.list2]
@@ -700,12 +724,15 @@ class AERO(Aero):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AERO object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : AERO()
+            the AERO object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+           the fields that define the card
         """
         list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
                        self.rhoRef, self.symXZ, self.symXY]

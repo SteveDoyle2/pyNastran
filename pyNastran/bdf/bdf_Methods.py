@@ -372,15 +372,19 @@ class BDFMethods(object):
         """
         Sum the forces/moments based on a list of nodes and elements.
 
-        :param eids:  the list of elements to include (e.g. the loads
-                      due to a PLOAD4)
-        :param nids:  the list of nodes to include (e.g. the loads due
-                      to a FORCE card)
-        :param p0:    the point to sum moments about
-                      type = int
-                          sum moments about the specified grid point
-                      type = (3, ) ndarray/list (e.g. [10., 20., 30]):
-                          the x, y, z location in the global frame
+        Parameters
+        ----------
+        eids : List[int]
+            the list of elements to include (e.g. the loads due to a PLOAD4)
+        nids : List[int]
+            the list of nodes to include (e.g. the loads due to a FORCE card)
+        p0 : int; (3,) ndarray
+           the point to sum moments about
+           type = int
+               sum moments about the specified grid point
+           type = (3, ) ndarray/list (e.g. [10., 20., 30]):
+               the x, y, z location in the global frame
+
         Nodal Types  : FORCE, FORCE1, FORCE2,
                        MOMENT, MOMENT1, MOMENT2,
                        PLOAD
@@ -399,7 +403,7 @@ class BDFMethods(object):
 
         For just force:
 
-        .. code-block:: python
+        .. code-block :: python
 
           eids = []
           nids = [5]

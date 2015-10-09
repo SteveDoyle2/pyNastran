@@ -50,6 +50,16 @@ class BDFAttributes(object):
     def node_ids(self):
         return self.nodes.keys()
 
+    @property
+    def point_ids(self):
+        if self.spoints is not None and self.epoints is not None:
+            return set(self.node_ids) + self.spoints.points + self.epoints.points
+        elif self.spoints is not None:
+            return set(self.node_ids) + self.spoints.points
+        elif self.epoints is not None:
+            return set(self.node_ids) + self.epoints.points
+        return set(self.node_ids)
+
     #def get_nodes(self):
         #nodes = []
         #for nid, node in sorted(iteritems(self.nodes)):

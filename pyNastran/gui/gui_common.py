@@ -360,7 +360,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
                 ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
-                ('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
+                #('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
@@ -443,7 +443,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'scshot', '', 'wireframe', 'surface', 'creset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
-            'legend', 'clipping', 'axis', 'edges', 'edges_black',
+            'legend', 'geo_properties', '', 'clipping', 'axis', 'edges', 'edges_black',
         ]
         if self.html_logging:
             self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
@@ -457,7 +457,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
-            (self.toolbar, ('geo_properties', 'flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
+            (self.toolbar, ('reload', 'load_geometry', 'load_results', 'cycle_res',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
@@ -1390,9 +1390,39 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             raise NotImplementedError(Type)
 
-    @property
     def form(self):
-        return self.res_widget.get_form()
+        formi = self.res_widget.get_form()
+        print('formi =', formi)
+        assert 'Alice' not in formi, formi
+        return formi
+
+    def set_form(self, formi):
+        self._form = formi
+        data = []
+        for key in self.caseKeys:
+            print(key)
+            if isinstance(key, int):
+                obj, (i, name) = self.resultCases[key]
+                t = (i, [])
+            else:
+                t = (key[1], [])
+            data.append(t)
+
+        self.res_widget.update_results(formi)
+
+        key = self.caseKeys[0]
+        location = self.get_case_location(key)
+        method = 'centroid' if location else 'nodal'
+
+        data2 = [(method, None, [])]
+        self.res_widget.update_methods(data2)
+
+    def get_form(self):
+        return self._form
+        # formi = self.res_widget.get_form()
+        # print('formi =', formi)
+        # assert 'Alice' not in formi, formi
+        # return formi
 
     def _load_csv(self, Type, out_filename):
         out_filename_short = os.path.basename(out_filename)
@@ -1448,7 +1478,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise NotImplementedError(Type)
 
         formi = []
-        form = self.form
+        form = self.get_form()
         icase = len(self.caseKeys)
         islot = self.caseKeys[0][0]
         for icol in range(ncols):
@@ -2125,7 +2155,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
-    def _finish_results_io2(self, form, cases):
+    def _set_results(self, form, cases):
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):
             self.caseKeys = cases.keys()
@@ -2133,11 +2163,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.caseKeys = sorted(cases.keys())
             assert isinstance(cases, dict), type(cases)
 
-        self.on_update_geometry_properties(self.geometry_properties)
         self.resultCases = cases
-
-        #print("cases =", cases)
-        #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
             self.iCase = -1
@@ -2148,6 +2174,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self.iCase = -1
             self.nCases = 0
+        self.set_form(form)
+
+    def _finish_results_io2(self, form, cases):
+        self._set_results(form, cases)
+        # assert len(cases) > 0, cases
+        # if isinstance(cases, OrderedDict):
+            # self.caseKeys = cases.keys()
+        # else:
+            # self.caseKeys = sorted(cases.keys())
+            # assert isinstance(cases, dict), type(cases)
+
+        self.on_update_geometry_properties(self.geometry_properties)
+        # self.resultCases = cases
+
+        #print("cases =", cases)
+        #print("caseKeys =", self.caseKeys)
 
         self.reset_labels()
         self.cycleResults_explicit()  # start at nCase=0

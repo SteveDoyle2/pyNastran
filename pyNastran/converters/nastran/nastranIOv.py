@@ -712,6 +712,8 @@ class NastranIO(object):
         if plot:
             self.log.info(cases.keys())
             self._finish_results_io2([form], cases)
+        else:
+            self._set_results([form], cases)
 
     def set_caero_grid(self, ncaeros_points, model, j=0):
         """
@@ -1564,7 +1566,7 @@ class NastranIO(object):
             self.grid.Update()
         #self.log_info("updated grid")
 
-        cases = {}
+        cases = OrderedDict()
         #pids = array(pids, 'int32')
         #print('eid_map')
         #for key, value in sorted(iteritems(self.eidMap)):
@@ -2027,12 +2029,21 @@ class NastranIO(object):
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
 
-        cases = OrderedDict()
+        if 0:
+            cases = OrderedDict()
+            self.iSubcaseNameMap = {}
+            form = []
+            icase = 0
+        else:
+            cases = self.resultCases
+            form = self.get_form()
+            icase = len(cases)
+            # form = self.res_widget.get_form()
+
         subcase_ids = model.iSubcaseNameMap.keys()
         #self.iSubcaseNameMap = model.iSubcaseNameMap
         # self.iSubcaseNameMap = model.subcase_key
         #print(self.iSubcaseNameMap)
-        self.iSubcaseNameMap = {}
         for isubcase, values in iteritems(model.iSubcaseNameMap):
             if not isinstance(isubcase, (int, int32)):
                 print('isubcase type =', type(isubcase))
@@ -2054,8 +2065,6 @@ class NastranIO(object):
         # self.iSubcaseNameMap = {subcase_id : label for
                                 # in iteritems(model.iSubcaseNameMap)}
 
-        form = []
-        icase = 0
         self._fill_nastran_output(cases, model, form, icase)
 
         for subcase_id in subcase_ids:

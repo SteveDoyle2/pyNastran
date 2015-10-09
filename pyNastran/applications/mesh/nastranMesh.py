@@ -4,6 +4,7 @@ from numpy import array, dot, norm
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.fieldWriter import print_card
+from scipy import spatial
 
 
 class NastranMesh(BDF):
@@ -318,7 +319,6 @@ class NastranMesh(BDF):
         #print("newElements.keys = ", newElements.keys())
         #print("originalElements.keys = ", originalElements.keys())
 
-        from scipy import spatial
         tree = spatial.KDTree(nodes)
         k = 10
 

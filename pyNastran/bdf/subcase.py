@@ -805,8 +805,11 @@ def update_param_name(param_name):
     Takes an abbreviated name and expands it so the user can type DISP or
     DISPLACEMENT and get the same answer
 
-    :param param_name: the parameter name to be standardized
-                       (e.g. DISP vs. DIPLACEMENT)
+    Parameters
+    ----------
+    param_name : str
+        the parameter name to be standardized (e.g. DISP vs. DIPLACEMENT)
+
     .. todo:: not a complete list
     """
     if   param_name.startswith('ACCE'):

@@ -17,6 +17,8 @@ from numpy import arange, hstack, setdiff1d, union1d
 from collections import defaultdict
 
 from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.log import get_logger
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
@@ -222,8 +224,18 @@ class UGRID(object):
         #self.check_hanging_nodes()
 
     def write_bdf(self, bdf_filename, include_shells=True, include_solids=True,
-                  convert_pyram_to_penta=True, encoding=None):
-        """writes a Nastran BDF"""
+                  convert_pyram_to_penta=True, encoding=None,
+                  size=16, is_double=False):
+        """
+        writes a Nastran BDF
+
+        Parameters
+        ----------
+        size : int; {8, 16}; default=16
+            the bdf write precision
+        is_double : bool; default=False
+            the field precision to write
+        """
         self.check_hanging_nodes()
         if encoding is None:
             encoding = sys.getdefaultencoding()
@@ -240,16 +252,26 @@ class UGRID(object):
         mid = 1
         bdf_file.write('MAT1, %i, 1.0e7,, 0.3\n' % mid)
 
-        pids = self.pids
+        if size == 8:
+            print_card = print_card_8
+        elif size == 16:
+            if is_double:
+                print_card = print_card_double
+            else:
+                print_card = print_card_16
+        else:
+            raise RuntimeError(size)
+
         if 1:
             print('writing GRID')
             for nid, node in enumerate(self.nodes):
                 card = ['GRID', nid + 1, None] + list(node)
-                bdf_file.write(print_card_double(card))
+                bdf_file.write(print_card(card))
         else:
             print('skipping GRID')
 
         eid = 1
+        pids = self.pids
         if include_shells:
             upids = unique(pids)  # auto-sorts
             for pid in upids:
@@ -292,8 +314,8 @@ class UGRID(object):
         hexas = self.hexas
 
         nnodes = self.nodes.shape[0]
-        ntris = tris.shape[0]
-        nquads = quads.shape[0]
+        # ntris = tris.shape[0]
+        # nquads = quads.shape[0]
         ntets = tets.shape[0]
         npyramids = pyrams.shape[0]
         npentas = pentas.shape[0]
@@ -594,7 +616,7 @@ class UGRID(object):
         ntets = self.tets.shape[0]
 
         nquads = nhexas * 6 + npenta5s + 3 * npenta6s
-        ntris = npenta5s * 4 + npenta6s * 2 + ntetras * 4
+        ntris = npenta5s * 4 + npenta6s * 2 + ntets * 4
         tris = zeros((ntris, 3), dtype='int32')
         quads = zeros((nquads, 4), dtype='int32')
 
@@ -677,6 +699,7 @@ class UGRID(object):
             # quads = vstack(quads)
             # quads.sort(axis=0)
             # quads = unique_rows(tris)
+        raise NotImplementedError()
         return tris, quads
 
     def _write_faces(self, faces_filename):
