@@ -625,6 +625,26 @@ class CBEND(LineElement):
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
 
+    @property
+    def node_ids(self):
+        return [self.Ga(), self.Gb()]
+
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
+
+    def Ga(self):
+        if isinstance(self.ga, integer_types):
+            return self.ga
+        else:
+            return self.ga.nid
+
+    def Gb(self):
+        if isinstance(self.gb, integer_types):
+            return self.gb
+        else:
+            return self.gb.nid
+
     def Area(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))

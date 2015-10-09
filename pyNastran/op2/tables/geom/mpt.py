@@ -25,8 +25,6 @@ class MPT(object):
         raise RuntimeError('this should be overwritten')
 
     def _read_mpt_4(self, data):
-        if self.read_mode == 1:
-            return len(data)
         return self._read_geom_4(self._mpt_map, data)
 
     def __init__(self):
@@ -55,10 +53,13 @@ class MPT(object):
             (3003, 30, 286): ['NLPARM',  self._readNLPARM],  # record 27
             (3104, 32, 350): ['NLPCI',   self._readNLPCI],   # record 28
             (3103, 31, 337): ['TSTEPNL', self._readTSTEPNL], # record 29
+            (3303, 33, 988) : ['', self._readFake],
 
-            (903, 9, 336): ['', self._readFake],
-            (8902, 89, 423): ['', self._readFake],
-            (9002, 90, 410): ['', self._readFake],
+            (903, 9, 336) : ['', self._readFake],
+            (8902, 89, 423) : ['', self._readFake],
+            (9002, 90, 410) : ['', self._readFake],
+            (2903, 29, 371) : ['', self._readFake],
+
 
         }
 
@@ -311,7 +312,7 @@ class MPT(object):
         .. todo:: add object
         """
         #print "reading RADM"
-        return
+        return n
         s = Struct(self._endian + b'i', )
         while len(data) >= 4:  # 1*4
             eData = data[:4]

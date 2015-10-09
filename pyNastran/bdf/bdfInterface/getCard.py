@@ -807,6 +807,14 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('oid=%s not found%s.  Allowed DCONSTRs=%s'
                            % (oid, msg, self.dconstrs.keys()))
 
+    def DResp(self, rid, msg=''):
+        """gets a DRESP"""
+        try:
+            return self.dresps[rid]
+        except KeyError:
+            raise KeyError('rid=%s not found%s.  Allowed DRESPx=%s'
+                           % (rid, msg, self.dresps.keys()))
+
     def Desvar(self, oid, msg=''):
         """gets a DESVAR"""
         try:
@@ -822,6 +830,30 @@ class GetMethods(GetMethodsDeprecated):
         except KeyError:
             raise KeyError('oid=%s not found%s.  Allowed DDVALs=%s'
                            % (oid, msg, self.ddvals.keys()))
+
+    def DVcrel(self, dv_id, msg=''):
+        """gets a DVCREL1/DVCREL2"""
+        try:
+            return self.dvcrels[dv_id]
+        except KeyError:
+            raise KeyError('dv_id=%s not found%s.  Allowed DVCRELx=%s'
+                           % (dv_id, msg, self.dvcrels.keys()))
+
+    def DVmrel(self, dv_id, msg=''):
+        """gets a DVMREL1/DVMREL2"""
+        try:
+            return self.dvmrels[dv_id]
+        except KeyError:
+            raise KeyError('dv_id=%s not found%s.  Allowed DVMRELx=%s'
+                           % (dv_id, msg, self.dvmrels.keys()))
+
+    def DVprel(self, dv_id, msg=''):
+        """gets a DVPREL1/DVPREL2"""
+        try:
+            return self.dvprels[dv_id]
+        except KeyError:
+            raise KeyError('dv_id=%s not found%s.  Allowed DVPRELx=%s'
+                           % (dv_id, msg, self.dvprels.keys()))
 
     #--------------------
     # SET CARDS
@@ -895,3 +927,12 @@ class GetMethods(GetMethodsDeprecated):
         except KeyError:
             raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
                            % (dname, msg, self.dmig.keys()))
+
+    def DEQATN(self, equation_id, msg=''):
+        """gets a DEQATN"""
+        try:
+            return self.dequations[equation_id]
+        except KeyError:
+            raise KeyError('equation_id=%s not found%s.  Allowed DMIGs=%s'
+                           % (equation_id, msg, self.dequations.keys()))
+

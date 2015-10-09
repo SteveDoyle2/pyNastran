@@ -813,11 +813,14 @@ class GRID(Node):
         """
         Gets complicated parameters on the GRID card
 
-        :param self:  the GRID object pointer
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        n : int
+            the field number to update
+        value : float
+            the value for the appropriate field
         """
         if n == 3:
             value = self.xyz[0]
@@ -833,11 +836,14 @@ class GRID(Node):
         """
         Updates complicated parameters on the GRID card
 
-        :param self:  the GRID object pointer
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        n : int
+            the field number to update
+        value : float
+            the value for the appropriate field
         """
         if n == 3:
             self.xyz[0] = value

@@ -1222,7 +1222,7 @@ class GMLOAD(Load):
                 double_or_blank(card, 5, 'N3', 1.),
             ])
             self.entity = string(card, 6, 'entity')
-            self.gmcurve = integer(card, 7, 'GMCURVE')
+            self.entity_id = integer(card, 7, 'entity_id')
             self.method = string(card, 8, 'method')
 
             self.load_magnitudes = []
@@ -1232,6 +1232,11 @@ class GMLOAD(Load):
                 self.load_magnitudes.append(load_mag)
         else:
             raise NotImplemented()
+
+    #def DEquation(self):
+        #if isinstance(self.dequation, int):
+            #return self.dequation
+        #return self.dequation.equation_id
 
     def cross_reference(self, model):
         """
@@ -1265,7 +1270,7 @@ class GMLOAD(Load):
 
     def raw_fields(self):
         list_fields = ['GMLOAD', self.sid, self.Cid()] + list(self.normal) + [
-            self.entity, self.gmcurve, self.method] + self.load_magnitudes
+            self.entity, self.entity_id, self.method] + self.load_magnitudes
         return list_fields
 
     def repr_fields(self):
@@ -1360,6 +1365,9 @@ class PLOAD1(Load):
             self.p1 = data[5]
             self.x2 = data[6]
             self.p2 = data[7]
+            self.Type = self.validTypes[self.Type - 1]
+            self.scale = self.validScales[self.scale - 1]
+
         if self.Type not in self.validTypes:
             msg = '%s is an invalid type on the PLOAD1 card; validTypes=[%s]' % (
                 self.Type, ', '.join(self.validTypes).rstrip(', '))
@@ -1671,6 +1679,8 @@ class PLOAD4(Load):
             self.g1 = self.g1
             self.g34 = self.g34
             self.eids = [self.eid]
+            self.sorl = 'SURF'
+            self.ldir = 'NORM'
 
         if self.sorl not in ['SURF', 'LINE']:
             raise RuntimeError(self.sorl)

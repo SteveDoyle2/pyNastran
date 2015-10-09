@@ -12,13 +12,13 @@ import cgi #  html lib
 import inspect
 import traceback
 from copy import deepcopy
+from collections import OrderedDict
 
 from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from numpy import eye, array, zeros, loadtxt, int32
-from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.bdf.cards.baseCard import deprecated
@@ -61,6 +61,13 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
                                             iren=iren, rw=render_window)
         #self.Highlight
 
+def loadtxt_nice(filename, delimiter=','):
+    data = []
+    delim = '\n\r \t' + delimiter
+    with open(filename, 'r') as file_obj:
+        line = file_obj.readline().strip(delim).split(delimiter)
+        data.append(line)
+    return array(data)
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
@@ -68,6 +75,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         GuiCommon.__init__(self)
 
         self.html_logging = html_logging
+        self.is_testing = False
         self._logo = None
         self._script_path = None
         self._icon_path = ''
@@ -280,7 +288,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             print(type(txt))
             raise
         except Exception as e:
-            import traceback
             #traceback.print_stack()
             #traceback.print_exc(file=self.log_error)
             self.log_error(str(e))
@@ -353,7 +360,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
                 ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
-                ('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
+                #('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
@@ -436,7 +443,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'scshot', '', 'wireframe', 'surface', 'creset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
-            'legend', 'clipping', 'axis', 'edges', 'edges_black',
+            'legend', 'geo_properties', '', 'clipping', 'axis', 'edges', 'edges_black',
         ]
         if self.html_logging:
             self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
@@ -450,7 +457,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
-            (self.toolbar, ('geo_properties', 'flip_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
+            (self.toolbar, ('reload', 'load_geometry', 'load_results',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
@@ -596,7 +603,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Add message to log widget trying to choose right color for it.
 
-        :param msg: message to be displayed
+        Parameters
+        ----------
+        msg : str
+            message to be displayed
         """
         if not self.html_logging:
             print(typ, msg)
@@ -702,15 +712,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Creates a coordinate system
 
-        :param label:
-          the coord id or other unique label (default is empty to indicate the global frame)
-        :param origin:
-          the origin as (3,) ndarray/list/tuple
-        :param matrix_3x3:
-          a standard 3x3 Nastran-style coordinate system
-        :param Type:
-          a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
-          that changes the axis names
+        Parameters
+        ----------
+        label : str
+            the coord id or other unique label (default is empty to indicate the global frame)
+        origin : (3, ) ndarray/list/tuple
+            the origin
+        matrix_3x3 : (3, 3) ndarray
+            a standard Nastran-style coordinate system
+        Type : str
+            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
+            that changes the axis names
 
         .. todo::  Type is not supported ('xyz' ONLY)
         .. todo::  Can only set one coordinate system
@@ -1138,21 +1150,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             RuntimeError('No formats...expected=%s' % fmt_order)
         self.fmts = fmts
 
-        #fmts = [
-            ## results
-            #('nastran', 'Nastran', 'Nastran BDF (*.bdf; *.dat; *.nas)', self.load_nastran_geometry, 'Nastran OP2 (*.op2)', self.load_nastran_results),
-            #('cart3d', 'Cart3d', 'Cart3d (*.tri; *.triq)', self.load_cart3d_geometry, 'Cart3d (*.triq)', self.load_cart3d_results),
-            #('panair', 'Panair', 'Panair (*.inp)', self.load_panair_geometry, 'Panair (*.agps);;Panair (*.out)',  self.load_panair_results),
-            #('shabp', 'S/HABP', 'Shabp (*.geo; *.mk5; *.inp)', self.load_shabp_geometry, 'Shabp (*.out)', self.load_shabp_results),
-            #('usm3d', 'Usm3D', 'USM3D (*.cogsg; *.front)', self.load_usm3d_geometry, 'Usm3d (*.flo)', self.load_usm3d_results),
-
-            ## no results
-            #('lawgs', 'LaWGS', 'LaWGS (*.inp; *.wgs)', self.load_lawgs_geometry, None, None),
-            #('tetgen', 'Tetgen', 'Tetgen (*.smesh)', self.load_tetgen_geometry, None, None),
-            #('stl', 'STL', 'STereoLithography (*.STL)', self.load_stl_geometry, None, None),
-            ##('plot3d', 'Plot3D', 'Plot3D (*.p3d; *.p3da)', self.load_plot3d_geometry, None, None),
-        #]
-        #self.fmts = fmts
         self.supported_formats = [fmt[0] for fmt in fmts]
         print('supported_formats = %s' % self.supported_formats)
         if len(fmts) == 0:
@@ -1162,11 +1159,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Loads a baseline geometry
 
-        :param infile_name: path to the filename (default=None -> popup)
-        :param geometry_format: the geometry format for programmatic loading
-        :param plot: Should the baseline geometry have results created and plotted/rendered?
-                     If you're calling the on_load_results method immediately after, set it to False
-                     (default=True)
+        Parameters
+        ----------
+        infile_name : str; default=None -> popup
+            path to the filename
+        geometry_format : str; default=None
+            the geometry format for programmatic loading
+        plot : bool; default=True
+            Should the baseline geometry have results created and plotted/rendered?
+            If you're calling the on_load_results method immediately after, set it to False
+
         """
         wildcard = ''
         is_failed = False
@@ -1343,6 +1345,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
+        Parameters
+        ----------
         out_filename : str / None
             the path to the results file
         """
@@ -1386,9 +1390,39 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             raise NotImplementedError(Type)
 
-    @property
     def form(self):
-        return self.res_widget.get_form()
+        formi = self.res_widget.get_form()
+        print('formi =', formi)
+        assert 'Alice' not in formi, formi
+        return formi
+
+    def set_form(self, formi):
+        self._form = formi
+        data = []
+        for key in self.caseKeys:
+            print(key)
+            if isinstance(key, int):
+                obj, (i, name) = self.resultCases[key]
+                t = (i, [])
+            else:
+                t = (key[1], [])
+            data.append(t)
+
+        self.res_widget.update_results(formi)
+
+        key = self.caseKeys[0]
+        location = self.get_case_location(key)
+        method = 'centroid' if location else 'nodal'
+
+        data2 = [(method, None, [])]
+        self.res_widget.update_methods(data2)
+
+    def get_form(self):
+        return self._form
+        # formi = self.res_widget.get_form()
+        # print('formi =', formi)
+        # assert 'Alice' not in formi, formi
+        # return formi
 
     def _load_csv(self, Type, out_filename):
         out_filename_short = os.path.basename(out_filename)
@@ -1444,7 +1478,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise NotImplementedError(Type)
 
         formi = []
-        form = self.form
+        form = self.get_form()
         icase = len(self.caseKeys)
         islot = self.caseKeys[0][0]
         for icol in range(ncols):
@@ -1474,6 +1508,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         Loads a results file.  Must have called on_load_geometry first.
 
+        Parameters
+        ----------
         out_filename : str / None
             the path to the results file
         """
@@ -1632,7 +1668,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                         result_name, result_value, xyz = self.get_result_by_cell_id(cell_id, world_position)
                         assert result_name in self.label_actors, result_name
                     else:
-                        cell = self.grid.GetCell(cell_id)
+                        #cell = self.grid.GetCell(cell_id)
                         # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
                         method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (self.format, self.pick_state)
                         if hasattr(self, method):
@@ -1814,7 +1850,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 if self.infile_name is not None:
                     base, ext = os.path.splitext(os.path.basename(self.infile_name))
                     default_filename = self.infile_name
-                    default_filename =  base + '.png'
+                    default_filename = base + '.png'
             else:
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
                 default_filename = title + '_' + base + '.png'
@@ -1964,7 +2000,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         names_old = names_old - set(names_to_ignore)
         #print('names_old1 =', names_old)
 
-        names_to_clear = names_old - names
+        #names_to_clear = names_old - names
         #self._remove_alt_actors(names_to_clear)
         #print('names_old2 =', names_old)
         #print('names =', names)
@@ -2103,7 +2139,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         (see http://public.kitware.com/pipermail/vtkusers/2011-November/119996.html)
         therefore we trick VTK to think that a key has been pressed.
 
-        :param key: a key that VTK should be informed about, e.g. 't'
+        Parameters
+        ----------
+        key : str
+            a key that VTK should be informed about, e.g. 't'
         """
         print("key = ", key)
         if key == 'f':  # change focal point
@@ -2116,13 +2155,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
-    def _finish_results_io2(self, form, cases):
+    def _set_results(self, form, cases):
         assert len(cases) > 0, cases
-        self.on_update_geometry_properties(self.geometry_properties)
+        if isinstance(cases, OrderedDict):
+            self.caseKeys = cases.keys()
+        else:
+            self.caseKeys = sorted(cases.keys())
+            assert isinstance(cases, dict), type(cases)
+
         self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        #print("cases =", cases)
-        #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
             self.iCase = -1
@@ -2133,6 +2174,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self.iCase = -1
             self.nCases = 0
+        self.set_form(form)
+
+    def _finish_results_io2(self, form, cases):
+        self._set_results(form, cases)
+        # assert len(cases) > 0, cases
+        # if isinstance(cases, OrderedDict):
+            # self.caseKeys = cases.keys()
+        # else:
+            # self.caseKeys = sorted(cases.keys())
+            # assert isinstance(cases, dict), type(cases)
+
+        self.on_update_geometry_properties(self.geometry_properties)
+        # self.resultCases = cases
+
+        #print("cases =", cases)
+        #print("caseKeys =", self.caseKeys)
 
         self.reset_labels()
         self.cycleResults_explicit()  # start at nCase=0
@@ -2418,12 +2475,23 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
                         data_format, is_blue_to_red=True, is_horizontal=True, is_shown=True):
         """
-            :param title:       the scalar bar title
-            :param min_value:   the blue value
-            :param max_value:   the red value
-            :param data_format: '%g','%f','%i', etc.
-            :param is_blue_to_red:  flips the order of the RGB points
-            """
+        Parameters
+        ----------
+        title : str
+            the scalar bar title
+        min_value : float
+            the blue value
+        max_value :
+            the red value
+        data_format : str
+            '%g','%f','%i', etc.
+        is_blue_to_red : bool; default=True
+            flips the order of the RGB points
+        is_horizontal : bool; default=True
+            makes the scalar bar horizontal
+        is_shown : bool
+            show the scalar bar
+        """
         print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value,
                                data_format, is_blue_to_red, is_horizontal,
@@ -2520,6 +2588,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'min' : min_clip,
             'max' : max_clip,
             'clicked_ok' : False,
+            'close' : False,
         }
         if not self._clipping_shown:
             self._clipping_window = ClippingPropertiesWindow(data, win_parent=self)
@@ -2529,12 +2598,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._clipping_window.activateWindow()
 
-        if data['clicked_ok']:
+        if data['close']:
             self._apply_clipping(data)
             del self._clipping_window
             self._clipping_shown = False
-        #else:
-            #self._clipping_window.activateWindow()
+        else:
+            self._clipping_window.activateWindow()
 
     def _apply_clipping(self, data):
         min_clip = data['min']
@@ -2590,18 +2659,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             default_scale = obj.get_default_scale(i, res_name)
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
+            default_title = result_type
             scale = 0.0
         elif len(key) == 6:
             (subcase_id, i, result_type, vector_size, location, data_format) = key
+            default_title = result_type
             scale = 0.0
         else:
             (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+            default_title = result_type
             scale = 0.0
+
         if default_format is None:
             default_format = data_format
         if scale == 0.0:
             default_scale = 0.0
-
+        print(key)
 
         data = {
             'name' : result_type,
@@ -2619,6 +2692,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'is_horizontal': False,
             'is_shown' : True,
             'clicked_ok' : False,
+            'close' : False,
         }
         if not self._legend_shown:
             self._legend_window = LegendPropertiesWindow(data, win_parent=self)
@@ -2628,12 +2702,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._legend_window.activateWindow()
 
-        if data['clicked_ok']:
+        if data['close']:
             self._apply_legend(data)
-            del self._legend_window
             self._legend_shown = False
+            del self._legend_window
         else:
             self._legend_window.activateWindow()
+
 
     def _apply_legend(self, data):
         title = data['name']
@@ -2661,6 +2736,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         name_vector = None
         plot_value = self.resultCases[key] # scalar
         vector_size1 = 1
+        update_3d = False
         if isinstance(key, (int, int32)):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.resultCases[key]
@@ -2679,6 +2755,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #obj.set_data_format(i, res_name, data_format)
             subtitle, label = self.get_subtitle_label(subcase_id)
             name_vector = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale)
+            update_3d = True
         elif len(key) == 5:
             (subcase_id, result_type, vector_size1, location, _data_format) = key
         elif len(key) == 6:
@@ -2687,18 +2764,20 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
         assert vector_size1 == 1, vector_size1
 
-        self._set_case(self.result_name, self.iCase,
-                       explicit=False, cycle=False, skip_click_check=True)
+        if update_3d:
+            self.is_horizontal_scalar_bar = is_horizontal
+            self._set_case(self.result_name, self.iCase,
+                           explicit=False, cycle=False, skip_click_check=True)
+            return
 
-        return
         subtitle, label = self.get_subtitle_label(subcase_id)
-        scale1 = 1.0
+        scale1 = 0.0
         name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
         # if vector_size == 3:
 
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
-        grid_result = self.set_grid_values(name, plot_value, vector_size,
+        grid_result = self.set_grid_values(name, plot_value, vector_size1,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)
 
@@ -2732,7 +2811,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                 #1, subcase_id, result_type, location, subtitle, label,
                                 #revert_displaced=revert_displaced)
 
-        self.is_horizontal_scalar_bar = is_horizontal
+        #self.is_horizontal_scalar_bar = is_horizontal
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
                          '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
                          % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
@@ -2796,7 +2875,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if name in ['clicked_ok', 'clicked_cancel']:
                 continue
 
-            color2 = group.color_float
+            #color2 = group.color_float
             geom_prop = self.geometry_properties[name]
             geom_prop.color = group.color
             geom_prop.line_width = group.line_width
@@ -2886,7 +2965,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                        point_size=1, representation='point')
 
         # read input file
-        user_points = loadtxt(points_filename, delimiter=',')
+        try:
+            user_points = loadtxt(points_filename, delimiter=',')
+        except ValueError:
+            user_points = loadtxt_nice(points_filename, delimiter=',')
+            # can't handle leading spaces?
+            #raise
         npoints = user_points.shape[0]
 
         # allocate grid

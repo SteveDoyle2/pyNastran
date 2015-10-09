@@ -23,8 +23,6 @@ from pyNastran.bdf.cards.nodes import SPOINTs
 class GEOM2(object):
 
     def _read_geom2_4(self, data):
-        if self.read_mode == 1:
-            return len(data)
         return self._read_geom_4(self._geom2_map, data)
 
     def __init__(self):
@@ -176,9 +174,34 @@ class GEOM2(object):
             (17100, 171, 9979): ['', self._readFake],  # record
             (2901, 29, 9601): ['', self._readFake],  # record
             (4508, 45, 228): ['', self._readFake],  # record
-            (16600, 166, 9985): ['', self._readFake],  # record
-            (16200, 162, 9982): ['', self._readFake],  # record
-            (16900, 169, 9977): ['', self._readFake],  # record
+            (16600, 166, 9985) : ['', self._readFake],  # record
+            (16200, 162, 9982) : ['', self._readFake],  # record
+            (16900, 169, 9977) : ['', self._readFake],  # record
+
+            (1701, 17, 980) : ['', self._readFake],  # record
+            (1801, 18, 986) : ['', self._readFake],  # record
+            (8801, 88, 984) : ['', self._readFake],  # record
+            (8401, 84, 985) : ['', self._readFake],  # record
+            (17200, 172, 1000) : ['', self._readFake],  # record
+            (23500, 235, 6662) : ['', self._readFake],  # record
+            (23800, 238, 6665) : ['', self._readFake],  # record
+            (23900, 239, 6666) : ['', self._readFake],  # record
+            (1976, 1, 1996) : ['', self._readFake],  # record
+            (6120, 1, 60434) : ['', self._readFake],  # record
+            (2024, 1001, 2024) : ['', self._readFake],  # record
+            (801, 1, 572) : ['', self._readFake],  # record
+
+            (5701, 57, 981) : ['', self._readFake],  # record
+            (5801, 58, 982) : ['', self._readFake],  # record
+            (6111, 61, 996) : ['', self._readFake],  # record
+            (6112, 61, 997) : ['', self._readFake],  # record
+            (6113, 61, 998) : ['', self._readFake],  # record
+            (6114, 61, 999) : ['', self._readFake],  # record
+            (3501, 35, 1) : ['', self._readFake],  # record
+            (1001, 100, 10000) : ['', self._readFake],  # record
+            (1118, 1, 1874) : ['', self._readFake],  # record
+            (1801, 18, 986) : ['', self._readFake],  # record
+            (7909, 79, 9946) : ['', self._readFake],  # record
         }
 
     def add_element(self, elem, allowOverwrites=True):
@@ -541,6 +564,7 @@ class GEOM2(object):
             elem = CHBDYG(None, dataIn)
             self.addOp2Element(elem)
             n += ntotal
+        return n
 
     def _readCHBDYP(self, data, n):
         self.binary_debug.write('skipping CHBDYP in GEOM2\n')
@@ -639,7 +663,7 @@ class GEOM2(object):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             #(eid, m,s 1, s2) = out
-            elem = CMASS4(None, out)
+            elem = CMASS4(None, 0, out)
             self.addOp2Element(elem)
             n += 16
         self.card_count['CMASS4'] = nelements
@@ -717,10 +741,10 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+80]
             out = s.unpack(eData)
-            self.binary_debug.write('  CONV=%s\n' % str(out))
+            self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
             (eid, pconID, flmnd, cntrlnd,
-             ta1, ta2, ta3, ta5, ta6, ta7, ta8,
-             wt1, wt2, wt3, wt5, wt6, wt7, wt8) = out
+             ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8,
+             wt1, wt2, wt3, wt4, wt5, wt6, wt7, wt8) = out
             dataIn = [eid, pconID, flmnd, cntrlnd,
                       [ta1, ta2, ta3, ta5, ta6, ta7, ta8],
                       [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
@@ -845,7 +869,7 @@ class GEOM2(object):
         CQUAD8(4701,47,326)  - the marker for Record 71
         .. warning:: inconsistent with dmap manual
         """
-        return
+        #return n
         nelements = (len(data) - n) // 64  # 17*4
         s = Struct(self._endian + b'10i5fi')
         for i in range(nelements):

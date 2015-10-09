@@ -90,6 +90,14 @@ class UGRID_IO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
+        diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
+        if len(diff_node_ids):
+            red = (1., 0., 0.)
+            self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1., point_size=10, representation='point')
+            self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
+            self._add_alt_actors(self.alt_grids)
+
+
         for inode, node in enumerate(nodes):
             points.InsertPoint(inode, node)
 
@@ -137,6 +145,36 @@ class UGRID_IO(object):
 
         if plot:
             self._finish_results_io2(form, cases)
+
+    def _add_ugrid_nodes_to_grid(self, name, diff_node_ids, nodes):
+        """
+        based on:
+          _add_nastran_nodes_to_grid
+        """
+        nnodes = nodes.shape[0]
+        assert nnodes > 0, nnodes
+        # if nnodes == 0:
+            # return
+        nnodes = len(diff_node_ids)
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nnodes)
+
+        for nid in diff_node_ids:
+            node = nodes[nid, :]
+            print('nid=%s node=%s' % (nid, node))
+            points.InsertPoint(nid, *node)
+
+            if 1:
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, nid)
+            else:
+                elem = vtk.vtkSphere()
+                sphere_size = self._get_sphere_size(dim_max)
+                elem.SetRadius(sphere_size)
+                elem.SetCenter(points.GetPoint(nid))
+
+            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        self.alt_grids[name].SetPoints(points)
 
     def clear_surf(self):
         pass

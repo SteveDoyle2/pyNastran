@@ -394,13 +394,16 @@ class TEMP(ThermalLoad):
             #: Load set identification number. (Integer > 0)
             self.sid = integer(card, 1, 'sid')
 
-            nfields = len(card) - 2
-            assert nfields % 2 == 0
+            nfields = len(card)
+            assert nfields <= 8, 'len(card)=%i card=%s' % (len(card), card)
+
+            ntemps = (nfields -2) // 2
+            assert nfields % 2 == 0, card
 
             #: dictionary of temperatures where the key is the grid ID (Gi)
             #: and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in range(nfields // 2):
+            for i in range(ntemps):
                 n = i * 2 + 2
                 gi = integer(card, n, 'g' + str(i))
                 Ti = double(card, n + 1, 'T' + str(i))
@@ -469,8 +472,8 @@ class TEMPD(BaseCard):
             self.sid = integer(card, i + 1, 'sid')
             self.temperature = double(card, i + 2, 'temp')
         else:
-            #self.temperatures = {data[0]: data[1]}
-            raise NotImplementedError('TEMPD')
+            self.sid = data[0]
+            self.temperature = data[1]
 
     def add(self, tempd_obj):
         for (lid, tempd) in iteritems(tempd_obj.temperatures):

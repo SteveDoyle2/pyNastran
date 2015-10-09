@@ -11,23 +11,28 @@ from pyNastran.op2.tables.geom.dynamics import DYNAMICS
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.op2_vectorized import OP2_Vectorized
 
-class OP2Geom(BDF,
-              GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
-              OP2):
+
+class OP2Geom(OP2, BDF,
+              GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
     def __init__(self, make_geom=True,
                  debug=False, log=None, debug_file=None):
         """
         Initializes the OP2 object
 
-        :param make_geom: reads the BDF tables (default=False)
-        :param debug: enables the debug log and sets the debug in the logger (default=False)
-        :param log: a logging object to write debug messages to
-         (.. seealso:: import logging)
-        :param debug_file: sets the filename that will be written to (default=None -> no debug)
+        Parameters
+        ----------
+        make_geom : bool; default=False
+            reads the BDF tables
+        debug : bool; default=False
+            enables the debug log and sets the debug in the logger
+        log: log()
+            a logging object to write debug messages to
+            (.. seealso:: import logging)
+        debug_file : default=None -> no debug
+            sets the filename that will be written to
         """
-        assert make_geom == True, make_geom
+        # make_geom=False, debug=True, log=None, debug_file=None
 
         BDF.__init__(self, debug=debug, log=log)
         GEOM1.__init__(self)
@@ -41,7 +46,7 @@ class OP2Geom(BDF,
         DYNAMICS.__init__(self)
 
         OP2.__init__(self, debug, log=log, debug_file=debug_file)
-        self.make_geom = make_geom
+        self.make_geom = True
 
     def _get_table_mapper(self):
         table_mapper = OP2._get_table_mapper(self)
@@ -78,20 +83,4 @@ class OP2Geom(BDF,
         table_mapper['DYNAMIC']  = [self._read_dynamics_4, self._read_dynamics_4]
         table_mapper['DYNAMICS'] = [self._read_dynamics_4, self._read_dynamics_4]
         table_mapper['DIT']      = [self._read_dit_4, self._read_dit_4]   # table objects (e.g. TABLED1)
-
-
-class OP2Geom_Vectorized(OP2Geom, OP2_Vectorized):
-    def __init__(self, debug=False, log=None, debug_file=None):
-        """
-        Initializes the OP2 object
-
-        :param make_geom: reads the BDF tables (default=False)
-        :param debug: enables the debug log and sets the debug in the logger (default=False)
-        :param log: a logging object to write debug messages to
-         (.. seealso:: import logging)
-        :param debug_file: sets the filename that will be written to (default=None -> no debug)
-        """
-        # make_geom=False, debug=True, log=None, debug_file=None
-        OP2_Vectorized.__init__(self, debug=debug, log=log, debug_file=debug_file)
-        OP2Geom.__init__(self, debug=debug, log=log, debug_file=debug_file)
-        self.make_geom = True
+        return table_mapper

@@ -3,11 +3,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
 from six.moves import zip, range
-from math import log, sin, cos, radians, atan2, sqrt, degrees
+from math import sin, cos, radians, atan2, sqrt, degrees
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
 
-from numpy import array, zeros, abs  # average
+from numpy import array, zeros
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -18,98 +18,6 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, string, interpret_value)
-
-
-def ssq(*listA):
-    """
-    sum of squares
-    .. note:: used for DEQATN
-    """
-    out = 0.
-    for x in listA:
-        out += x * x
-    return out
-
-
-def sum2(*listA):
-    """
-    sum of listA
-    .. note:: used for DEQATN
-    """
-    return sum(listA)
-
-
-def mod(x, y):
-    """
-    x%y
-    .. note:: used for DEQATN
-    """
-    return x % y
-
-
-def logx(x, y):
-    """
-    log base x of y
-    .. note:: used for DEQATN
-    """
-    log(y, x)
-
-
-def dim(x, y):
-    """
-    .. note:: used for DEQATN
-    """
-    return x - min(x, y)
-
-
-def db(p, pref):
-    """
-    sound pressure in decibels
-    would capitalize it, but you wouldnt be able to call the function...
-    """
-    return 20. * log(p / pref)
-
-
-class DEQATN(BaseCard):  # needs work...
-    type = 'DEQATN'
-
-    def __init__(self, card=None, data=None, comment=''):
-        if comment:
-            self._comment = comment
-        new_card = ''
-        found_none = False
-        for field in card.card:
-            if found_none is False and field is not None:
-                new_card += field + ','
-                found_none = True
-            elif found_none is True and field is not None:
-                new_card += field
-
-        line0 = new_card
-        self.eqID = line0[8:16]
-
-        assert len(self.eqID) == 8, 'len(eqID)==%s' % (len(self.eqID))
-        eq = line0[16:]
-        eq = eq.replace(' ', '').lower()
-        (self.name, self.eq) = eq.split('=')
-        #print("EQ = %s" %(self.eq))
-
-    def evaluate(self, args):
-        #eqLow = self.eq.lower()
-        #eval(self.eq)
-        pass
-
-    def __repr__(self):
-        eq = self.name + '=' + self.eq
-        equation_line = eq[0:56]
-        eq = eq[56:]
-        list_fields = ['DEQATN  ', '%8s' % (self.eqID), equation_line]
-
-        if len(eq):
-            equation_line = eq[0:72]
-            eq = eq[72:]
-            list_fields += ['        ' + equation_line]
-        return ''.join(list_fields)
 
 
 class NastranMatrix(BaseCard):

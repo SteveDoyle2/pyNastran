@@ -25,7 +25,10 @@ PyQt4 unique (PySide is broken)
    - usm3d volume (postgrid) and results (.flo)
    - tetgen input
    - S/HABP input
-   - OpenVSP adb input/output
+   - OpenVSP adb input/output (remove this...)
+   - fast
+   - ugrid
+   - surf
    - csv/txt elemental/nodal results for all formats
    - csv point loading with -u for all formats (multiple files allowed)
 
@@ -111,8 +114,11 @@ Nastran
    - SOL 101
      - (nodal/centroidal) stress
      - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
+     - displacement shown as displaced model
    - Stress
      - rodStress, barStress, beamStress, plateStress, solidStress, compositePlateStress (centroidal only)
+   - Force
+     - rodForce
  - transient-style results (no complex data)
 
  - TODO: rotate loads based on local coordinate system
@@ -215,6 +221,25 @@ Usm3d
    - specific results file can be loaded with load results
  - TODO: Coordinate System (???)
 
+Fast
+====
+ - load geometry
+
+UGrid
+=====
+ - AFLR format
+ - load geometry -> model.b8.ugrid
+  - b8, l8, etc. required
+  - nodes/elements of surface mesh
+ - auto-loads a tags file to plot boundary conditons
+
+Surf
+====
+ - AFLR format
+ - load geometry -> model.surf
+  - nodes/elements of surface mesh
+ - auto-loads a tags file to plot boundary conditons
+
 #-------------------------
 #BUGS
 
@@ -252,12 +277,23 @@ plot3d
 =======
 - doesn't work at all
 
+tecplot
+=======
+- likely issue with various solid elements (inside out)
+
+fast
+====
+
+ugrid
+=====
+
+surf
+====
 
 ----------------------------------------------------
 ---NOT DONE---
  - make vector results work
  - marker plots (arrows) & scale
- - displacement plots & scale
  - usm3d surface/boundary layer/incomplete volume
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys

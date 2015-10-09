@@ -121,7 +121,6 @@ class ComplexBarArray(OES_Object):
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
         # write the f06
-        ntimes = self.data.shape[0]
 
         if is_mag_phase:
             mag_phase = '                                                          (MAGNITUDE/PHASE)'
@@ -137,7 +136,7 @@ class ComplexBarArray(OES_Object):
             #'   FREQUENCY       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE',
         #]
         name = self.data_code['name']
-        if is_sort1:
+        if self.is_sort1():
             line1 = '            ELEMENT                    LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n'
             line2 = '              ID.                          1              2              3              4             AXIAL STRESS\n'
         else:
@@ -145,7 +144,8 @@ class ComplexBarArray(OES_Object):
             if name == 'freq':
                 line2 = '           FREQUENCY                       1              2              3              4             AXIAL STRESS\n'
             else:
-                raise RuntimeError(name)
+                msg = 'name=%r\n\n%s' % (name, self.code_information())
+                raise RuntimeError(msg)
 
         if self.is_stress():
             stress_strain = '                             C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )'
@@ -159,7 +159,16 @@ class ComplexBarArray(OES_Object):
             line1,
             line2,
         ]
+        if self.is_sort1():
+            self._write_sort1_as_sort1(f, name, header, page_stamp, msg_temp, page_num,
+                                       is_mag_phase=is_mag_phase)
+        else:
+            raise NotImplementedError()
+        return page_num - 1
 
+    def _write_sort1_as_sort1(self, f, name, header, page_stamp, msg_temp, page_num,
+                              is_mag_phase=False):
+        ntimes = self.data.shape[0]
         for itime in range(ntimes):
             dt = self._times[itime]
 
@@ -197,8 +206,7 @@ class ComplexBarArray(OES_Object):
                 msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
             f.write(page_stamp % page_num)
             page_num += 1
-        return page_num - 1
-
+        return page_num
 
 class ComplexBarStressArray(ComplexBarArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

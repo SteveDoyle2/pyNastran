@@ -21,7 +21,7 @@ All tables have a self.table parameter that is a TableObj
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, iteritems
 from six.moves import range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -138,6 +138,44 @@ class TableObj(object):
         for pack in self.table:
             list_fields += pack
         return list_fields
+
+
+class DTABLE(BaseCard):
+    type = 'DTABLE'
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        nfields = len(card) - 1
+        assert nfields % 2 == 0, nfields
+
+        self.default_values = {}
+        j = 1
+        for i in range(1, nfields + 1, 2):
+            label = string(card, i, 'label_%i' % j)
+            value = double(card, i + 1, 'value_%i' % j)
+            assert label not in self.default_values, 'label_%i=%r is not unique' % (j, label)
+            self.default_values[label] = value
+            j += 1
+
+    def __getitem__(self, key):
+        return self.default_values[key]
+
+    def raw_fields(self):
+        list_fields = ['DTABLE']
+        for label, value in sorted(iteritems(self.default_values)):
+            list_fields += [label, value]
+        return list_fields
+
+    #def repr_fields(self):
+        #return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class TABLED1(Table):

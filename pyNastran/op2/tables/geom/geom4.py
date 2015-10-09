@@ -4,7 +4,8 @@ from struct import unpack, Struct
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elements.rigid import RBE2
-from pyNastran.bdf.cards.constraints import SUPORT, SPCD, SPC, SPC1
+from pyNastran.bdf.cards.constraints import SUPORT, SPC, SPC1
+from pyNastran.bdf.cards.loads.loads import SPCD
 
 
 class GEOM4(object):
@@ -16,8 +17,6 @@ class GEOM4(object):
         raise RuntimeError('this should be overwritten')
 
     def _read_geom4_4(self, data):
-        if self.read_mode == 1:
-            return len(data)
         return self._read_geom_4(self._geom4_map, data)
 
     def __init__(self):
@@ -70,6 +69,9 @@ class GEOM4(object):
             (9901, 99, 80): ['', self._readFake],  # record
             (1010, 10, 320): ['', self._readFake],  # record
             (9801, 98, 79): ['', self._readFake],  # record
+            (12001, 120, 601) : ['', self._readFake],  # record
+            (2110, 21, 194) : ['', self._readFake],  # record
+            (310, 3, 586) : ['', self._readFake],  # record
         }
 
     def _readASET(self, data, n):

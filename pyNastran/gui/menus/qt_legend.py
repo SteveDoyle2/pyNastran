@@ -2,6 +2,7 @@ from six import string_types
 from PyQt4 import QtCore, QtGui
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
+
 class LegendPropertiesWindow(QtGui.QDialog):
 
     def __init__(self, data, win_parent=None):
@@ -150,7 +151,6 @@ class LegendPropertiesWindow(QtGui.QDialog):
             checkboxes.addLayout(vbox1)
             checkboxes.addLayout(vbox2)
             checkboxes.addLayout(vbox3)
-
         else:
             grid2 = QtGui.QGridLayout()
 
@@ -189,8 +189,14 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.close()
 
     def closeEvent(self, event):
+        self.out_data['close'] = True
         event.accept()
 
     def on_default_name(self):
@@ -287,6 +293,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()
             self.out_data['is_shown'] = self.checkbox_show.isChecked()
             self.out_data['clicked_ok'] = True
+            self.out_data['close'] = True
 
             #print("name = %r" % self.name_edit.text())
             #print("min = %r" % self.min_edit.text())
@@ -308,6 +315,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             #self.destroy()
 
     def on_cancel(self):
+        self.out_data['close'] = True
         self.close()
 
 
@@ -327,6 +335,10 @@ def main():
         'name' : 'asdf',
         'min' : 0.,
         'max' : 10,
+        'scale' : 1e-12,
+        'default_scale' : 1.0,
+
+        'default_format' : '%s',
         'format' : '%g',
         'is_blue_to_red': True,
         'is_discrete' : False,

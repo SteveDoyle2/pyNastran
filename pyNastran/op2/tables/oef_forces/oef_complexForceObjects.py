@@ -907,8 +907,8 @@ class ComplexCBarForceArray(ScalarObject):
         name = self.data_code['name']
         if name == 'freq':
             name = 'FREQUENCY'
-        else:
-            raise RuntimeError(name)
+        #else: # mode
+            #raise RuntimeError(name)
 
         if is_sort1:
             line1 = '0    ELEMENT         BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'

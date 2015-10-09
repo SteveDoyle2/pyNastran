@@ -563,7 +563,16 @@ class XrefMesh(object):
             set_obj.cross_reference(self)
 
     def _cross_reference_optimization(self):
+        for key, deqatn in iteritems(self.dequations):
+            deqatn.cross_reference(self)
         for key, dresp in iteritems(self.dresps):
             dresp.cross_reference(self)
         for key, dconstr in iteritems(self.dconstrs):
             dconstr.cross_reference(self)
+
+        for key, dvcrel in iteritems(self.dvcrels):
+            dvprel.cross_reference(self)
+        for key, dvmrel in iteritems(self.dvmrels):
+            dvprel.cross_reference(self)
+        for key, dvprel in iteritems(self.dvprels):
+            dvprel.cross_reference(self)

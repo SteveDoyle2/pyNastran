@@ -8,17 +8,34 @@ from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    CORD3G)
 
 class GEOM1(object):
-    def add_node(self, node, allowOverwrites=True):
-        raise RuntimeError('this should be overwritten')
+    def _is_same_fields(self, fields1, fields2):
+        for (field1, field2) in zip(fields1, fields2):
+            if not is_same(field1, field2):
+                return False
+        return True
+
+    def add_node(self, node, allowOverwrites=False):
+        """GRDSET creates duplicate nodes...what about duplicate nodes?"""
+        key = node.nid
+        assert key > 0, 'nid=%s node=%s' % (key, node)
+        if key in self.nodes:
+            fields1 = self.nodes[key].raw_fields()
+            fields2 = node.raw_fields()
+            #grid, nid, cp, x1, x2, x3, cd, ps, seid
+            for i, (v1, v2) in enumerate(zip(fields1, fields2)):
+                if v1 != v2:
+                    print('i=%s v1=%r v2=%r fields1=%s\nfields2=%s' % (
+                          i, v1, v2, fields1, fields2))
+        else:
+            self._type_to_id_map[node.type].append(key)
+        self.nodes[key] = node
+
     def add_coord(self, coord, allowOverwrites=True):
         raise RuntimeError('this should be overwritten')
     def _readFake(self, data, n):
         return len(data)
 
     def _read_geom1_4(self, data):
-        if self.read_mode == 1:
-            return len(data)
-        self.log.info('GEOM1...read_mode=%s' % self.read_mode)
         return self._read_geom_4(self._geom1_map, data)
 
     def __init__(self):
@@ -31,6 +48,7 @@ class GEOM1(object):
             (2101,  21,  8): ['CORD2R', self._readCord2R],  # record 5
             (2201,  22, 10): ['CORD2S', self._readCord2S],  # record 6
             (14301,143,651): ['CORD3G', self._readCord3G],  # record 7
+
             (4501,  45,  1): ['GRID',   self._readGrid],    # record 17
             (5301,  53,  4): ['SEQGP',  self._readSEQGP],   # record 27 - not done
 
@@ -43,19 +61,33 @@ class GEOM1(object):
             (6001,  60, 377): ['POINT',   self._readFake],  # record 14
             (10101,101, 394): ['GMSURF',  self._readFake],  # record 15
             (6401,  64, 402): ['GMCORD',  self._readFake],  # record 16
+            # 17 - GRID  (above)
+            (1527, 15, 466): ['SEBNDRY', self._readFake],  # record 18
+            (1427, 14, 465): ['SEBULK',  self._readFake],  # record 19
+            (427,   4, 453): ['SECONCT', self._readFake],  # record 20
 
-            (427, 4, 453): ['', self._readFake],  # record
+            (7902, 79, 302): ['SEELT',   self._readFake],  # record 21
+            (527,  72, 454): ['SEEXCLD', self._readFake],  # record 22
+            (1027, 10, 459): ['SELABEL', self._readFake],  # record 23
+            (827,   8, 457): ['SELOC',   self._readFake],  # record 24
+            (927,   9, 458): ['SEMPLN',  self._readFake],  # record 25
+            (1327, 13, 464): ['SENQSET', self._readFake],  # record 26
+            # 27 - SEQGP (above)
+            (5401, 54, 305): ['SEQSEP',  self._readFake],  # record 28
+            (5601, 56, 296): ['SESET',   self._readFake],  # record 29
+            (1227, 12, 462): ['SETREE',  self._readFake],  # record 30
+            (5678, 71, 475): ['SNORM',   self._readFake],  # record 31
+            (5701, 57, 323): ['CSUPER1', self._readFake],  # record 32
+
+            (5801,   58, 324): ['SUPUP', self._readFake],  # record 33 - CSUPUP in NX; SUPUP in MSC
+            (14101, 141, 403): ['SWLDPRM', self._readFake],  # record 34
 
             (1101,   11,  66): ['', self._readFake],  # record
             (2201,   22,  10): ['', self._readFake],  # record
             (3901,   39,  50): ['', self._readFake],  # record
-            (5601,   56, 296): ['', self._readFake],  # record
-            (7902,   79, 302): ['', self._readFake],  # record
             (13301, 133, 509): ['', self._readFake],  # record
-            (1227,   12, 462): ['', self._readFake],  # record
-            (6201,   62, 389): ['', self._readFake],  # record
-            (1427,   14, 465): ['', self._readFake],  # record
-            (5678,   71, 475): ['', self._readFake],  # record
+            (1127,   11, 461) : ['SELOAD', self._readFake],  # record NX
+            #(4501, 45, 1120001) : ['', self._readFake],  # record
         }
 
     def _readCord1C(self, data, n):
@@ -111,8 +143,8 @@ class GEOM1(object):
             self.binary_debug.write('  CORD1S=%s\n' % str(out))
             assert three == 3, three
             assert one == 1, one
-            dataIn = [cid, g1, g2, g3]
-            coord = CORD1S(None, dataIn)
+            data_in = [cid, g1, g2, g3]
+            coord = CORD1S(None, None, data_in)
             self.add_coord(coord, allowOverwrites=True)
             n += 24
         self._increase_card_count('CORD1S', nentries)

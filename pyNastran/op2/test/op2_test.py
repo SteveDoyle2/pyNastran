@@ -69,7 +69,7 @@ def main():
     write_op2 = False
     is_vector = [True, False] # is this vectorized
     vector_stop = [True, True]  # corresponds to is_vector; stop if case fails=True
-    binary_debug = False  # catch any errors
+    binary_debug = True  # catch any errors
 
     delete_f06 = True
     saveCases = True

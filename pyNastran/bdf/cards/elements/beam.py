@@ -128,13 +128,9 @@ class CBEAM(CBAR):
             self.pa = main[6]
             self.pb = main[7]
 
-            self.w1a = main[8]
-            self.w2a = main[9]
-            self.w3a = main[10]
+            self.wa = array([main[8], main[9], main[10]], 'float64')
+            self.wb = array([main[11], main[12], main[13]], 'float64')
 
-            self.w1b = main[11]
-            self.w2b = main[12]
-            self.w3b = main[13]
 
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)

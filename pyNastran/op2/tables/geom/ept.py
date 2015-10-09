@@ -63,8 +63,11 @@ class EPT(object):
             (8702, 87, 412): ['', self._readFake],
             (2902, 29, 420): ['', self._readFake],
             (1502, 15, 36): ['', self._readFake],
+            (3201, 32, 991) : ['', self._readFake],  # record
+            (3301, 33, 992) : ['', self._readFake],  # record
             (3301, 33, 56): ['', self._readFake],
-            (3401, 34, 57): ['', self._readFake],    # record
+            (3401, 34, 57) : ['', self._readFake],    # record
+            (3701, 37, 995) : ['', self._readFake],    # record
             (1202, 12, 33): ['', self._readFake],  # record
             (12001, 120, 480): ['', self._readFake],  # record
             (12101, 121, 484): ['', self._readFake],  # record
@@ -72,6 +75,7 @@ class EPT(object):
             (3601, 36, 62): ['', self._readFake],  # record
             (8300, 83, 382): ['', self._readFake],  # record
             (8500, 85, 384): ['', self._readFake],  # record
+            (15006, 150, 604): ['', self._readFake],  # record
         }
 
     def addOp2Property(self, prop):
@@ -486,6 +490,7 @@ class EPT(object):
             self.addOp2Property(prop)
             n += 20
         self.card_count['PTUBE'] = nproperties
+        return n
 
     def _readPSET(self, data, n):
         return len(data)

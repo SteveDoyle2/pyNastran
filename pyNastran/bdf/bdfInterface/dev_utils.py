@@ -21,13 +21,16 @@ if PY2:
     _name_re = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*$")
     def isidentifier(string, dotted=False):
         """Is the string a valid Python variable name?"""
+        assert dotted is False, dotted
         return bool(_name_re.match(string))
 else:
     def isidentifier(string, dotted=False):
         """Is the string a valid Python variable name?"""
+        assert dotted is False, dotted
         return string.isidentifier()
 
-def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
+def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False,
+                              size=8, is_double=False):
     """
     Removes nodes from a model that are not referenced.
 
@@ -39,6 +42,10 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
         the path to the bdf output file
     renumber : bool
         should the model be renumbered
+    size : int; {8, 16}; default=8
+        the bdf write precision
+    is_double : bool; default=False
+        the field precision to write
 
     .. warning only considers elements
     .. renumber=False is not supported
@@ -64,15 +71,16 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
             'pid' : 1,
             'mid' : 1,
         }
-        bdf_renumber(model, bdf_filename_out, size=8, is_double=False,
+        bdf_renumber(model, bdf_filename_out, size=size, is_double=is_double,
                      starting_id_dict=starting_id_dict)
     else:
-        model.write_bdf(bdf_filename_out)
+        model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
 
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                           renumber_nodes=False, neq_max=4, xref=True,
                           node_set=None,
+                          size=8, is_double=False,
                           remove_collapsed_elements=False, avoid_collapsed_elements=False,
                           crash_on_collapse=False):
     """
@@ -96,6 +104,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         (default=True; only applies to model option)
     node_set : List[int] / (n, ) ndarray
         the list/array of nodes to consider (not supported with renumber_nodes=True)
+    size : int; {8, 16}; default=8
+        the bdf write precision
+    is_double : bool; default=False
+        the field precision to write
     crash_on_collapse : bool; default=False
         stop if nodes have been collapsed
            False: blindly move on
@@ -119,6 +131,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
 
+    .. todo :: node_set stil does work on the all the nodes in the big
+               kdtree loop, which is very inefficient
     .. todo :: remove_collapsed_elements is not supported
     .. todo :: avoid_collapsed_elements is not supported
     """
@@ -162,10 +176,15 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         all_nids = array(model.nodes.keys(), dtype='int32')
 
         # B - A
+        # these are all the nodes that are requested from node_set that are missing
+        #   thus len(diff_nodes) == 0
         diff_nodes = setdiff1d(node_set, all_nids)
         assert len(diff_nodes) == 0, 'The following nodes cannot be found, but are included in the reduced set; nids=%s' % diff_nodes
 
         # A & B
+        # the nodes to analyze are the union of all the nodes and the desired set
+        # which is basically the same as:
+        #   nids = unique(node_set)
         nids = intersect1d(all_nids, node_set, assume_unique=True)  # the new values
 
         if renumber_nodes:
@@ -198,6 +217,9 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     else:
         nodes_xyz = array([model.nodes[nid].xyz
                            for nid in nids], dtype='float32')
+
+    if node_set is not None:
+        assert nodes_xyz.shape[0] == len(nids)
 
     if 0:
         # I forget entirely what this block of code is for, but my general
@@ -258,7 +280,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
-
+    if node_set is not None:
+        assert len(deq) == len(nids)
     nnodes = len(nids)
 
     # get the ids of the duplicate nodes
@@ -271,9 +294,11 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         inid2 = ieq[irow, icol]
         nid1 = nids[irow]
         nid2 = nids[inid2]
-        #if nid1 == nid2:
-            #continue
-
+        if nid1 == nid2:
+            continue
+        if node_set is not None:
+            if nid1 not in node_set and nid2 not in node_set:
+                continue
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
 
@@ -287,21 +312,29 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
             #    nid2, list_print(node2.xyz),
             #    distance))
             continue
-        #print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
-        #    nid1, list_print(node1.xyz),
-        #    nid2, list_print(node2.xyz),
-        #    distance))
 
+        if node_set is not None:
+            assert nid1 in node_set, 'nid1=%s node_set=%s' % (nid1, node_set)
+            assert nid2 in node_set, 'nid2=%s node_set=%s' % (nid2, node_set)
+            print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
+                nid1, str(node1.xyz),
+                nid2, str(node2.xyz),
+                distance))
+
+        # if hasattr(node2, 'new_node_id'):
+
+        # else:
         node2.nid = node1.nid
         node2.xyz = node1.xyz
         node2.cp = node1.cp
         assert node2.cd == node1.cd
         assert node2.ps == node1.ps
         assert node2.seid == node1.seid
+        # node2.new_nid = node1.nid
         skip_nodes.append(nid2)
 
     if bdf_filename_out is not None:
-        model.write_bdf(bdf_filename_out)
+        model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
     if crash_on_collapse:
         # lazy way to make sure there aren't any collapsed nodes
         model2 = BDF()
@@ -389,7 +422,10 @@ def _write_nodes(self, outfile, size, is_double):
     """
     Writes the NODE-type cards
 
-    :param self: the BDF object
+    Parameters
+    ----------
+    self : BDF()
+        the BDF object
     """
     if self.spoints:
         msg = []
@@ -408,7 +444,7 @@ def _write_nodes(self, outfile, size, is_double):
         outfile.write(''.join(msg))
 
 
-def _roundup(value, n=100):
+def _roundup(value, round_increment=100):
     """
     Rounds up to the next N.
 
@@ -416,7 +452,7 @@ def _roundup(value, n=100):
     ----------
     value : int
         the value to round up
-    n : int
+    round_increment : int
         the increment to round by
 
     .. python
@@ -424,14 +460,18 @@ def _roundup(value, n=100):
       >>> 100 = _roundup(10)
       >>> 200 = _roundup(105)
       >>> 300 = _roundup(200)
+      >>> 1000 = _roundup(200, 1000)
+      >>> 2000 = _roundup(1000, 1000)
+      >>> 2000 = _roundup(1001, 1000)
 
     .. note :: this function is used to ensure that renumbering is more
                obvious when testing
     """
-    return int(ceil(value / float(n))) * n
+    return int(ceil(value / float(round_increment))) * round_increment
 
 
-def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
+def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None,
+              size=8, is_double=False):
     """
     Merges multiple BDF into one file
 
@@ -443,6 +483,10 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
         the output bdf filename (default=None; None -> no writing)
     renumber : bool
         should the bdf be renumbered (default=True)
+    size : int; {8, 16}; default=8
+        the bdf write precision
+    is_double : bool; default=False
+        the field precision to write
 
     Supports
     --------
@@ -481,15 +525,15 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
     #}
     model = BDF()
     bdf_filename0 = bdf_filenames[0]
-    model.read_bdf(bdf_filename0)
-    print('primary=%s' % bdf_filename0)
+    model.read_bdf(bdf_filename0, encoding=encoding)
+    model.log.info('primary=%s' % bdf_filename0)
 
     data_members = [
         'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
         'materials',
     ]
     for bdf_filename in bdf_filenames[1:]:
-        print('model.masses = %s' % model.masses)
+        model.log.info('model.masses = %s' % model.masses)
         starting_id_dict = {
             'cid' : max(model.coords.keys()) + 1,
             'nid' : max(model.nodes.keys()) + 1,
@@ -506,22 +550,23 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
         #for param, val in sorted(iteritems(starting_id_dict)):
             #print('  %-3s %s' % (param, val))
 
-        print('secondary=%s' % bdf_filename)
+        model.log.info('secondary=%s' % bdf_filename)
         model2 = BDF()
         bdf_dump = 'bdf_merge_temp.bdf'
         #model2.read_bdf(bdf_filename, xref=False)
 
-        bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict)
+        bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict,
+                     size=size, is_double=is_double)
         model2 = BDF()
         model2.read_bdf(bdf_dump)
         os.remove(bdf_dump)
 
-        print('model2.node_ids = %s' % array(model2.node_ids))
+        model.log.info('model2.node_ids = %s' % array(model2.node_ids))
         for data_member in data_members:
             data1 = getattr(model, data_member)
             data2 = getattr(model2, data_member)
             if isinstance(data1, dict):
-                print('  working on %s' % (data_member))
+                model.log.info('  working on %s' % (data_member))
                 for key, value in iteritems(data2):
                     if data_member in 'coords' and key == 0:
                         continue
@@ -534,10 +579,10 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
             else:
                 raise NotImplementedError(type(data1))
     #if bdf_filenames_out:
-        #model.write_bdf(bdf_filenames_out)
+        #model.write_bdf(bdf_filenames_out, size=size)
 
     if renumber:
-        print('final renumber...')
+        model.log.info('final renumber...')
         starting_id_dict = {
             'cid' : 1,
             'nid' : 1,
@@ -545,10 +590,11 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True):
             'pid' : 1,
             'mid' : 1,
         }
-        bdf_renumber(model, bdf_filename_out, starting_id_dict=starting_id_dict)
+        bdf_renumber(model, bdf_filename_out, starting_id_dict=starting_id_dict,
+                     size=size, is_double=is_double)
     elif bdf_filename_out:
-        model.write_bdf(out_filename=bdf_filename_out, encoding=None, size=8,
-                        is_double=False,
+        model.write_bdf(out_filename=bdf_filename_out, encoding=None,
+                        size=size, is_double=is_double,
                         interspersed=True,
                         enddata=None)
     return model
@@ -566,12 +612,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         that has been cross referenced and is fully valid (a equivalenced deck is not valid)
     bdf_filename_out : str
         a bdf_filename to write
-    size : int
-        the field size to write (default=8; 8 or 16)
-    is_double : bool
-        the field precision to write (default=True)
+    size : int; {8, 16}; default=8
+        the bdf write precision
+    is_double : bool; default=False
+        the field precision to write
 
-    ..todo :: bdf_model option for bdf_filename hasn't been tested
+    .. todo :: bdf_model option for bdf_filename hasn't been tested
+    .. todo :: add support for subsets (e.g. renumber only a subset of nodes/elements)
     ..warning :: spoints might be problematic...check
     ..warning :: still in development, but it usually brutally crashes if it's not supported
     ..warning :: be careful of unsupported cards
@@ -1022,7 +1069,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #print('****dresp_map', dresp_map)
     _update_case_control(model, mapper)
     if bdf_filename_out is not None:
-        model.write_bdf(bdf_filename_out, size=8, is_double=False,
+        model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False)
     return model
 
@@ -1121,7 +1168,7 @@ def _update_case_control(model, mapper):
                             if seti_key in sets_analyzed:
                                 continue
                             sets_analyzed.add(seti_key)
-                            msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  %(seti_key, type(seti_key))
+                            msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  % (seti_key, type(seti_key))
                             msgi += '  key=%r value=%r options=%r param_type=%r\n' % (key, value, options, param_type)
                             msgi += '  seti=%r\n' % seti
                             #print(msgi)
@@ -1165,28 +1212,34 @@ def _update_case_control(model, mapper):
                             #print('gset', gset)
                             #print('lset', lset)
                             if gset != lset:
-                                raise NotImplementedError('gset=%s lset=%s' % (str(gset), str(lset)))
+                                msg = 'gset=%s lset=%s' % (str(gset), str(lset))
+                                raise NotImplementedError(msg)
                                 #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
                             else:
-                                global_subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                                global_subcase.update_parameter_in_subcase(
+                                    seti, values2, seti_key, param_type)
                             #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
                         elif not global_subcase.has_parameter(key):
-                            subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                            subcase.update_parameter_in_subcase(
+                                seti, values2, seti_key, param_type)
                         else:
                             global_subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
                     else:
                         #pass
                         #print('key=%s seti2=%s' % (key, seti2))
-                        print('key=%r options=%r param_type=%r value=%r' % (key, options, param_type, value))
+                        print('key=%r options=%r param_type=%r value=%r' % (
+                            key, options, param_type, value))
                         raise RuntimeError(key)
                 elif value in ['NONE', 'ALL']:
-                    #print('*ALL -> key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                    # print('*ALL -> key=%s options=%s param_type=%s value=%s' % (
+                        # key, options, param_type, value))
                     #print('*all')
                     pass
                 elif key == '':
                     pass
                 else:
-                    msg = 'key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value)
+                    msg = 'key=%s options=%s param_type=%s value=%s' % (
+                        key, options, param_type, value)
                     raise RuntimeError(msg)
 
             else:

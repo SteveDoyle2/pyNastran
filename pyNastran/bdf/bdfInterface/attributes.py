@@ -27,7 +27,19 @@ class BDFAttributes(object):
         return False
 
     @property
+    def caseControlDeck(self):
+        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
+        return self.case_control_deck
+
+    @caseControlDeck.setter
+    def caseControlDeck(self, value):
+        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
+        self.case_control_deck = value
+
+    @property
     def subcases(self):
+        if self.case_control_deck is None:
+            return {}
         return self.case_control_deck.subcases
 
     @property
@@ -37,6 +49,16 @@ class BDFAttributes(object):
     @property
     def node_ids(self):
         return self.nodes.keys()
+
+    @property
+    def point_ids(self):
+        if self.spoints is not None and self.epoints is not None:
+            return set(self.node_ids) + self.spoints.points + self.epoints.points
+        elif self.spoints is not None:
+            return set(self.node_ids) + self.spoints.points
+        elif self.epoints is not None:
+            return set(self.node_ids) + self.epoints.points
+        return set(self.node_ids)
 
     #def get_nodes(self):
         #nodes = []

@@ -65,8 +65,14 @@ class ClippingPropertiesWindow(QtGui.QDialog):
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.close()
 
     def closeEvent(self, event):
+        self.out_data['close'] = True
         event.accept()
 
     def on_default_min(self):

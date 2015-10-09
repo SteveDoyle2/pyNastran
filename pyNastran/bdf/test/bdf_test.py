@@ -46,7 +46,7 @@ def main():
     debug = False
 
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
     nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
     nastran = ''
@@ -62,7 +62,8 @@ def main():
 
     files = remove_marc_files(files2)
     files = [fname for fname in files
-             if not os.path.basename(fname).startswith('out_')]  # removing test output files
+             if not os.path.basename(fname).startswith('out_')
+                and '.test_op2.' not in fname]  # removing test output files
 
     skipFiles = []  # giant
 

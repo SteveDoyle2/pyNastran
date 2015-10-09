@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 from numpy import unique
+from six import iteritems
 
 import pyNastran
 test_path = pyNastran.__path__[0]
@@ -13,10 +14,10 @@ from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForce, RealPlateForceArray, RealPlateForce
 
 class TestOP2(Tester):
-    def _spike(self):
-        op2 = OP2()
-        op2.set_results('solidStress.oxx')
-        op2.read_op2(op2_filename, vectorized=False)
+    #def _spike(self):
+        #op2 = OP2()
+        #op2.set_results('solidStress.oxx')
+        #op2.read_op2(op2_filename, vectorized=False)
 
     def test_set_results(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
@@ -24,36 +25,36 @@ class TestOP2(Tester):
         op2 = OP2(debug=False)
         op2.set_results('stress')
         op2.read_op2(op2_filename, vectorized=False)
-        self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
-        self.assertEqual(len(op2.chexa_stress), 0), len(op2.chexa_stress)
-        self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
-        self.assertEqual(len(op2.displacements), 0), len(op2.displacements)
+        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
+        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
+        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        self.assertEqual(len(op2.displacements), 0, len(op2.displacements))
 
         op2 = OP2(debug=False)
         op2.set_results(['stress', 'displacements'])
         op2.read_op2(op2_filename, vectorized=False)
-        self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
-        self.assertEqual(len(op2.chexa_stress), 0), len(op2.chexa_stress)
-        self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
-        self.assertEqual(len(op2.displacements), 1), len(op2.displacements)
+        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
+        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
+        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
 
         op2 = OP2(debug=False)
         op2.set_results('stress')
         op2.read_op2(op2_filename, vectorized=True)
-        self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
-        self.assertEqual(len(op2.chexa_stress), 0), len(op2.chexa_stress)
-        self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
-        self.assertEqual(len(op2.displacements), 0), len(op2.displacements)
+        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
+        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
+        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        self.assertEqual(len(op2.displacements), 0, len(op2.displacements))
 
         op2 = OP2(debug=False)
         op2.set_results(['stress', 'displacements'])
         op2.read_op2(op2_filename, vectorized=True)
-        self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
-        self.assertEqual(len(op2.chexa_stress), 0), len(op2.chexa_stress)
-        self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
-        self.assertEqual(len(op2.displacements), 1), len(op2.displacements)
+        self.assertEqual(len(op2.cpenta_stress), 0, len(op2.cpenta_stress))
+        self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
+        self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
+        self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
 
-    def test_op2_01(self):
+    def test_op2_solid_bending_01(self):
         op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
         op2_filename = os.path.join(folder, op2_filename)
@@ -82,7 +83,7 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_02(self):
+    def test_op2_plate_py_01(self):
         op2_filename = os.path.join('plate_py', 'plate_py.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         make_geom = False
@@ -101,7 +102,7 @@ class TestOP2(Tester):
                 write_f06=write_f06, is_vector=True,
                 debug=debug, stopOnFailure=True)
 
-    def test_op2_03(self):
+    def test_op2_good_sine_01(self):
         op2_filename = os.path.join('freq_sine', 'good_sine.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         make_geom = False
@@ -137,7 +138,31 @@ class TestOP2(Tester):
                 #write_f06=write_f06, is_vector=True,
                 #debug=debug, stopOnFailure=True)
 
-    def test_op2_eids_01(self):
+    def test_op2_good_sine_02(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        bdf_filename = os.path.join(folder, 'freq_sine', 'good_sine.dat')
+        op2_filename = os.path.join(folder, 'freq_sine', 'good_sine.op2')
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        op2file = os.path.join(folder, op2_filename)
+        bdf = BDF(debug=False)
+        bdf.read_bdf(bdf_filename)
+
+        debug = False
+        debug_file = 'debug.out'
+        op2v = OP2(debug=debug, debug_file=debug_file)
+        op2v.read_op2(op2_filename, vectorized=True)
+
+        op2 = OP2(debug=debug, debug_file=debug_file)
+        op2.read_op2(op2_filename, vectorized=False)
+        assert os.path.exists(debug_file), os.listdir('.')
+
+        self._verify_ids(bdf, op2, vectorized=False, isubcase=1)
+        self._verify_ids(bdf, op2v, vectorized=True, isubcase=1)
+
+    def test_op2_static_solid_comp_bar_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         bdf_filename = os.path.join(folder, 'sol_101_elements', 'static_solid_comp_bar.bdf')
         op2_filename = os.path.join(folder, 'sol_101_elements', 'static_solid_comp_bar.op2')
@@ -160,6 +185,46 @@ class TestOP2(Tester):
 
         self._verify_ids(bdf, op2, vectorized=False, isubcase=1)
         self._verify_ids(bdf, op2v, vectorized=True, isubcase=1)
+
+    def test_op2_bcell_01(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        bdf_filename = os.path.join(folder, 'other', 'bcell9p0.bdf')
+        op2_filename = os.path.join(folder, 'other', 'bcell9p0.op2')
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        op2file = os.path.join(folder, op2_filename)
+        bdf = BDF(debug=False)
+        bdf.read_bdf(bdf_filename, xref=False)
+
+        debug = False
+        debug_file = 'debug.out'
+        op2v = OP2(debug=debug, debug_file=debug_file)
+        op2v.read_op2(op2_filename, vectorized=True)
+
+        op2 = OP2(debug=debug, debug_file=debug_file)
+        op2.read_op2(op2_filename, vectorized=False)
+        assert os.path.exists(debug_file), os.listdir('.')
+
+        self._verify_ids(bdf, op2, vectorized=False, isubcase=1)
+        self._verify_ids(bdf, op2v, vectorized=True, isubcase=1)
+
+        msg = ''
+        for isubcase, keys in sorted(iteritems(op2v.subcase_key)):
+            if len(keys) != 1:
+                msg += 'isubcase=%s keys=%s len(keys) != 1\n' % (isubcase, keys)
+                if len(keys) == 0:
+                    continue
+            if isubcase != keys[0]:
+                msg += 'isubcase=%s != key0=%s keys=%s\n' % (isubcase, keys[0], keys)
+        if msg:
+            assert msg == '', msg
+        op2v.write_f06('junk.f06')
+        os.remove('junk.f06')
+        op2.write_f06('junk.f06')
+        os.remove('junk.f06')
+
 
     def _verify_ids(self, bdf, op2, vectorized=True, isubcase=1):
         types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
@@ -276,7 +341,6 @@ class TestOP2(Tester):
             'BTA' : False,
             'MYDOF' : True,
         }
-        from pyNastran.bdf.bdf import BDF
         model = BDF()
         model.read_bdf(bdf_filename)
 

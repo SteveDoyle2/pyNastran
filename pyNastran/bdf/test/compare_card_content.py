@@ -23,9 +23,11 @@ def assert_fields(card1, card2):
                   print_card_8(fields1), print_card_8(fields2)))
         raise RuntimeError(msg)
 
+    msg_end = ''
     for (i, field1, field2) in zip(count(), fields1, fields2):
         value1a = print_field(field1)
         value2a = print_field(field2)
+        msg_end += '%-2s: %-8s %-8s\n' % (i, field1, field2)
         if value1a != value2a:
             value1 = print_field(interpret_value(value1a))
             value2 = print_field(interpret_value(value2a))
@@ -33,10 +35,10 @@ def assert_fields(card1, card2):
             if value1 != value2:
                 msg = 'value1 != value2\n'
                 msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r '
-                        'value2=%r\n%r\n%r' % (fields1[0], fields1[1], i,
-                                               field1, field2, value1, value2,
-                                               fields1, fields2))
-                raise RuntimeError(msg)
+                        'value2=%r\n%r\n%r\n' % (fields1[0], fields1[1], i,
+                                                 field1, field2, value1, value2,
+                                                 fields1, fields2))
+                raise RuntimeError(msg + msg_end)
 
 def check_length(fem1, fem2, name):
     obj1 = getattr(fem1, name)
@@ -144,8 +146,15 @@ def compare_card_content(fem1, fem2):
         assert_fields(card1, card2)
 
     for key in fem1.dequations:
-        card1 = fem1.dequations
-        card2 = fem2.dequations
+        card1 = fem1.dequations[key]
+        card2 = fem2.dequations[key]
+        msg = 'card1:\n%s\ncard2:\n%s' % (card1.write_card(), card2.write_card())
+        assert card1.write_card() == card2.write_card(), msg
+        #assert_fields(card1, card2)
+
+    if fem1.dtable:
+        card1 = fem1.dtable
+        card2 = fem2.dtable
         assert_fields(card1, card2)
 
     for key in fem1.frequencies:
@@ -281,6 +290,8 @@ def compare_optimization_content(fem1, fem2):
     assert len(fem1.ddvals) == len(fem2.ddvals)
     assert len(fem1.dresps) == len(fem2.dresps)
     assert len(fem1.dvprels) == len(fem2.dvprels)
+    assert len(fem1.dvmrels) == len(fem2.dvmrels)
+    assert len(fem1.dvcrels) == len(fem2.dvcrels)
 
     for key in fem1.dconstrs:
         card1 = fem1.dconstrs[key]
@@ -300,6 +311,16 @@ def compare_optimization_content(fem1, fem2):
     for key in fem1.dresps:
         card1 = fem1.dresps[key]
         card2 = fem2.dresps[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.dvcrels:
+        card1 = fem1.dvcrels[key]
+        card2 = fem2.dvcrels[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.dvmrels:
+        card1 = fem1.dvmrels[key]
+        card2 = fem2.dvmrels[key]
         assert_fields(card1, card2)
 
     for key in fem1.dvprels:

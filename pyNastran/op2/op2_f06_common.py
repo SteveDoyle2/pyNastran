@@ -620,6 +620,8 @@ class OP2_F06_Common(object):
                   and table not in ['card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
                   'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key']]
         for table in tables:
+            if self.make_geom:
+                break
             assert table in table_types, table
         return table_types
 
