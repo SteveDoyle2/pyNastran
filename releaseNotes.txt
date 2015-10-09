@@ -51,10 +51,10 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.0 released 2015/04/25-----------------------
+-----------------------v0.8.0 released 2015/10/25-----------------------
 Major changes:
  - BDF supports unicode
- - 22 new cards
+ - 24 new cards
 
 BDF:
  - unicode is now supported
@@ -86,6 +86,8 @@ BDF:
      - se_bsets: SEBSET/SEBSET1
      - se_csets: SECSET/SECSET1
      - se_qsets: SEQSET/SEQSET1
+     - dtable : DTABLE
+     - dequations : DEQATN
 
    - more xref
      - attempting to xref every card
@@ -127,15 +129,19 @@ OP2:
  - added subtable_name to objects
  - improved catching of SORT1 vs. SORT2
  - improved catching of REAL vs. IMAG
+ - better SOL200 support
 
 OP2 Issues:
- - How to request results:
-    - Good : STRESS(PLOT,REAL)=ALL
-    - Bad  : STRESS = ALL
-    - IDs will be wrong with the later method due to a Nastran bug
- - preload (e.g. SPCD) for a frequency/buckling/transient solution
-   is not supported
+ - not all NX tables supported; some still cause crashes
+ - PLOTEL support is likely still buggy
 
+GUI:
+ - added displacement deflection results
+ - improved legend control
+ - added sub-grids (e.g. SPCs) & sub-grid control menu
+ - added label support with 'p'
+ - csv result loading
+ 
 F06:
  - reworked subcase/label parsing
  - still bad
