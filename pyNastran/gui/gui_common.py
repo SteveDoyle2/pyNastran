@@ -458,10 +458,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
-            (self.toolbar, ('reload', 'load_geometry', 'load_results',
+            (self.toolbar, ('cycle_res', 'reload', 'load_geometry', 'load_results',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
+            # (self.menu_scripts, ('cycle_res',)),
             #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
         ]
         return menu_items

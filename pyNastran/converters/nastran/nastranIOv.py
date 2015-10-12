@@ -626,7 +626,7 @@ class NastranIO(object):
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         j = 0
-        nid_to_pid_map, cases, form = self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+        nid_to_pid_map, icase, cases, form = self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
         if 0:
             nsprings = 0
@@ -651,7 +651,7 @@ class NastranIO(object):
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
-        self._fill_bar_yz(dim_max, model)
+        self._fill_bar_yz(dim_max, model, icase, cases, form)
 
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
@@ -1020,7 +1020,7 @@ class NastranIO(object):
                 continue
         return lines
 
-    def _fill_bar_yz(self, dim_max, model):
+    def _fill_bar_yz(self, dim_max, model, icase, cases, form):
         """
         plots the y, z vectors for CBAR & CBEAM elements
         """
@@ -1033,16 +1033,56 @@ class NastranIO(object):
         if len(bar_beam_eids) == 0:
             return
 
-        scale = 1.0
-        self.create_alternate_vtk_grid('bar_y', color=green, line_width=5, opacity=1.,
-                                       point_size=5, representation='wire', bar_scale=1.0)
-        self.create_alternate_vtk_grid('bar_z', color=blue, line_width=5, opacity=1.,
-                                       point_size=5, representation='wire', bar_scale=scale)
-
+        scale = 0.15
         lines_bar_y = []
         lines_bar_z = []
+
+        bar_types = {
+            'bar' : [],
+            "ROD": [],
+            "TUBE": [],
+            "I": [],
+            "CHAN": [],
+            "T": [],
+            "BOX": [],
+            "BAR": [],
+            "CROSS": [],
+            "H": [],
+            "T1": [],
+            "I1": [],
+            "CHAN1": [],
+            "Z": [],
+            "CHAN2": [],
+            "T2": [],
+            "BOX1": [],
+            "HEXA": [],
+            "HAT": [],
+            "HAT1": [],
+            "DBOX": [],  # was 12
+        }  # for GROUP="MSCBML0"
+        print('***icase =', icase)
+        found_bar_types = set([])
+        neids = len(self.element_ids)
+        for Type, data in iteritems(bar_types):
+            eids = []
+            lines_bar_y = []
+            lines_bar_z = []
+            bar_types[Type] = (eids, lines_bar_y, lines_bar_z)
+
+
         for eid in bar_beam_eids:
+            # if eid < 30000:
+                # continue
             elem = model.elements[eid]
+            pid = elem.pid
+            if pid.type == 'PBAR':
+                Type = 'bar'
+            elif pid.type == 'PBARL':
+                Type = pid.Type
+            else:
+                raise NotImplementedError(pid)
+            found_bar_types.add(Type)
+
             (nid1, nid2) = elem.node_ids
             node1 = model.nodes[nid1]
             node2 = model.nodes[nid2]
@@ -1127,11 +1167,42 @@ class NastranIO(object):
             elif not allclose(norm(yhat), 1.0) or not allclose(norm(zhat), 1.0) or Li == 0.0:
                 print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                     eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
-            lines_bar_y.append((c, c + yhat * scale))
-            lines_bar_z.append((c, c + zhat * scale))
+            bar_types[Type][0].append(eid)
+            bar_types[Type][1].append((c, c + yhat * Li * scale))
+            bar_types[Type][2].append((c, c + zhat * Li * scale))
 
-        self._add_nastran_lines_xyz_to_grid('bar_y', lines_bar_y, model)
-        self._add_nastran_lines_xyz_to_grid('bar_z', lines_bar_z, model)
+        print('found_bar_types =', found_bar_types)
+
+        geo_form = form[2]
+        print('geo_form =', geo_form)
+        for Type, data in sorted(iteritems(bar_types)):
+            eids, lines_bar_y, lines_bar_z = data
+            if len(lines_bar_y):
+                print('-----------')
+                print(Type)
+                # if Type not in ['ROD', 'TUBE']:
+                bar_y = Type + '_y'
+                bar_z = Type + '_z'
+                self.create_alternate_vtk_grid(bar_y, color=green, line_width=5, opacity=1.,
+                                               point_size=5, representation='wire', bar_scale=scale)
+                self.create_alternate_vtk_grid(bar_z, color=blue, line_width=5, opacity=1.,
+                                               point_size=5, representation='wire', bar_scale=scale)
+
+                self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
+                self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
+
+                # form = ['Geometry', None, []]
+
+                # print('eids =', eids)
+                i = searchsorted(self.element_ids, eids)
+                is_type = zeros(self.element_ids.shape, dtype='int32')
+                is_type[i] = 1.
+                # print('is-type =', is_type.max())
+                geo_form.append(['is_%s' % Type, icase, []])
+                cases[(0, icase, 'is_%s' % Type, 1, 'centroid', '%i')] = is_type
+                icase += 1
+        # print(geo_form)
+        return icase
 
     def _add_nastran_lines_xyz_to_grid(self, name, lines, model):
         nlines = len(lines)
@@ -1165,7 +1236,7 @@ class NastranIO(object):
         Ly = norm(dy, axis=1)
         # v = dy / Ly *  bar_scale
         # n2 = n1 + v
-        print(Ly)
+        # print(Ly)
 
         self.alt_grids[name].SetPoints(points)
 
@@ -1804,7 +1875,7 @@ class NastranIO(object):
             form0.append(('Normalz', icase, []))
             icase += 1
 
-        return nid_to_pid_map, cases, form
+        return nid_to_pid_map, icase, cases, form
 
     def _plot_pressures(self, model, cases, form0, icase, xref_loads):
         """
@@ -1939,7 +2010,7 @@ class NastranIO(object):
                     form.append(('Total Load FX', icase, []))
                     form.append(('Total Load FY', icase + 1, []))
                     form.append(('Total Load FZ', icase + 2, []))
-                    icase += 2
+                    icase += 3
 
                 if abs(spcd).max():
                     cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
