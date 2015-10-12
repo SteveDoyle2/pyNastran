@@ -3,19 +3,21 @@ from copy import deepcopy
 class AltGeometry(object):
 
     def __init__(self, parent, name, color=None, line_width=1, opacity=0.0,
-                 point_size=1, representation='main', is_visible=True):
+                 point_size=1, bar_scale=1.0, representation='main', is_visible=True):
         """
         Parameters
         ----------
         line_width : int
             the width of the line for 'surface' and 'main'
-        point_size : int
-            the point size for 'point'
         color : [int, int, int]
             the RGB colors
         opacity : float
             0.0 -> solid
             1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
         representation : str
             main - change with main mesh
             wire - always wireframe
@@ -37,6 +39,7 @@ class AltGeometry(object):
         self.line_width = line_width
         self.point_size = point_size
         self._opacity = opacity
+        self.bar_scale = bar_scale
 
         assert isinstance(is_visible, bool), is_visible
         self.is_visible = is_visible
@@ -46,7 +49,7 @@ class AltGeometry(object):
 
     def __deepcopy__(self, memo):
         keys = ['name', '_color', 'line_width', 'point_size', '_opacity',
-                '_representation', 'is_visible']
+                '_representation', 'is_visible', 'bar_scale']
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result

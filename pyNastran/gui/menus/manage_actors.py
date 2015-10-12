@@ -85,6 +85,7 @@ class EditGroupProperties(QtGui.QDialog):
         |  Color          box     |
         |  Line_Width     2       |
         |  Point_Size     2       |
+        |  Bar_Scale      2       |
         |  Opacity        0.5     |
         |  Show/Hide              |
         |                         |
@@ -116,6 +117,7 @@ class EditGroupProperties(QtGui.QDialog):
         name = actor_obj.name
         line_width = actor_obj.line_width
         point_size = actor_obj.point_size
+        bar_scale = actor_obj.bar_scale
         opacity = actor_obj.opacity
         color = actor_obj.color
         show = actor_obj.is_visible
@@ -177,6 +179,16 @@ class EditGroupProperties(QtGui.QDialog):
             self.point_size.setEnabled(False)
             self.point_size_edit.setEnabled(False)
 
+        self.bar_scale = QtGui.QLabel("Bar Scale:")
+        self.bar_scale_edit = QtGui.QDoubleSpinBox(self)
+        #self.bar_scale_edit.setRange(0.1, 1.0)
+        self.bar_scale_edit.setDecimals(2)
+        self.bar_scale_edit.setSingleStep(bar_scale / 10.)
+        self.bar_scale_edit.setValue(bar_scale)
+        if bar_scale == 0.0:
+            self.bar_scale.setEnabled(False)
+            self.bar_scale_edit.setEnabled(False)
+
         # show/hide
         self.checkbox_show = QtGui.QCheckBox("Show")
         self.checkbox_hide = QtGui.QCheckBox("Hide")
@@ -198,6 +210,7 @@ class EditGroupProperties(QtGui.QDialog):
         old_obj = self.out_data[self.active_key]
         old_obj.line_width = self.line_width_edit.value()
         old_obj.point_size = self.point_size_edit.value()
+        old_obj.bar_scale = self.bar_scale_edit.value()
         old_obj.opacity = self.opacity_edit.value()
         old_obj.is_visible = self.checkbox_show.isChecked()
 
@@ -209,6 +222,7 @@ class EditGroupProperties(QtGui.QDialog):
         obj = self.out_data[name]
         line_width = obj.line_width
         point_size = obj.point_size
+        bar_scale = obj.bar_scale
         opacity = obj.opacity
         representation = obj.representation
         is_visible = obj.is_visible
@@ -219,6 +233,7 @@ class EditGroupProperties(QtGui.QDialog):
                                       "}")
         self.line_width_edit.setValue(line_width)
         self.point_size_edit.setValue(point_size)
+        self.bar_scale_edit.setValue(bar_scale)
         if self.representation != representation:
             self.representation = representation
 
@@ -235,6 +250,14 @@ class EditGroupProperties(QtGui.QDialog):
             else:
                 self.line_width.setEnabled(False)
                 self.line_width_edit.setEnabled(False)
+
+            if bar_scale == 0.0:
+                self.bar_scale.setEnabled(False)
+                self.bar_scale_edit.setEnabled(False)
+            else:
+                self.bar_scale.setEnabled(True)
+                self.bar_scale_edit.setEnabled(True)
+
             #if self.representation in ['wire', 'surface']:
 
         self.opacity_edit.setValue(opacity)
@@ -274,6 +297,10 @@ class EditGroupProperties(QtGui.QDialog):
         grid.addWidget(self.point_size_edit, irow, 1)
         irow += 1
 
+        grid.addWidget(self.bar_scale, irow, 0)
+        grid.addWidget(self.bar_scale_edit, irow, 1)
+        irow += 1
+
         checkboxs = QtGui.QButtonGroup(self)
         checkboxs.addButton(self.checkbox_show)
         checkboxs.addButton(self.checkbox_hide)
@@ -306,6 +333,7 @@ class EditGroupProperties(QtGui.QDialog):
         # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_point_size)
         self.connect(self.line_width_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
         self.connect(self.point_size_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
+        self.connect(self.bar_scale_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_bar_scale)
 
         # self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
         # self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
@@ -369,6 +397,12 @@ class EditGroupProperties(QtGui.QDialog):
         self.out_data[name].point_size = point_size
         self.on_apply()
 
+    def on_bar_scale(self):
+        name = self.active_key
+        bar_scale = self.bar_scale_edit.value()
+        self.out_data[name].bar_scale = bar_scale
+        self.on_apply()
+
     def on_opacity(self):
         name = self.active_key
         opacity = self.opacity_edit.value()
@@ -427,6 +461,7 @@ class EditGroupProperties(QtGui.QDialog):
         old_obj = self.out_data[self.active_key]
         old_obj.line_width = self.line_width_edit.value()
         old_obj.point_size = self.point_size_edit.value()
+        old_obj.bar_scale = self.bar_scale_edit.value()
         old_obj.opacity = self.opacity_edit.value()
         old_obj.is_visible = self.checkbox_show.isChecked()
         return True

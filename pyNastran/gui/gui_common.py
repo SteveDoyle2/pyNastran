@@ -19,6 +19,7 @@ import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from numpy import eye, array, zeros, loadtxt, int32
+from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.bdf.cards.baseCard import deprecated
@@ -838,11 +839,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.create_global_axes()
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
-                                  representation=None):
+                                  bar_scale=0.0, representation=None):
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         self.geometry_properties[name] = AltGeometry(self, name, color=color,
                                                      line_width=line_width, opacity=opacity,
-                                                     point_size=point_size, representation=representation)
+                                                     point_size=point_size, bar_scale=bar_scale,
+                                                     representation=representation)
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -2918,6 +2920,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             is_visible2 = group.is_visible
             #print('is_visible1=%s is_visible2=%s'  % (is_visible1, is_visible2))
 
+            bar_scale1 = alt_prop.bar_scale
+            bar_scale2 = group.bar_scale
+            # bar_scale2 = max(0.0, bar_scale2)
+
             if color1 != color2:
                 #print('color_2662[%s] = %s' % (name, str(color1)))
                 assert isinstance(color1[0], float), color1
@@ -2933,6 +2939,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if point_size1 != point_size2:
                 prop.SetPointSize(point_size2)
                 changed = True
+            if bar_scale1 != bar_scale2 and bar_scale1 > 0.0:
+                print('name=%s bar_scale1=%s bar_scale2=%s' % (name, bar_scale1, bar_scale2))
+                self.set_bar_scale(name, bar_scale2)
             if is_visible1 != is_visible2:
                 actor.SetVisibility(is_visible2)
                 alt_prop.is_visible = is_visible2
@@ -2951,6 +2960,31 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             msg += '}\n'
             msg += 'self.on_update_geometry_properties(out_data)'
             self.log_command(msg)
+
+    def set_bar_scale(self, name, bar_scale):
+        print('set_bar_scale; name=%s scale=%s' % (name, bar_scale))
+        bar_y = self.bar_lines[name]
+        #dy = c - yaxis
+        #dz = c - zaxis
+        n1 = bar_y[:, :3]
+        n2 = bar_y[:, 3:]
+        dy = n2 - n1
+        # for
+        Ly = norm(dy, axis=1)
+        # v = dy / Ly *  bar_scale
+        # n2 = n1 + v
+        print(Ly)
+        nnodes = len(Ly)
+        points = self.alt_grids[name].GetPoints()
+        for i in range(nnodes):
+            node = n1[i, :] + Ly[i] * bar_scale * dy[i, :]
+            points.SetPoint(2 * i + 1, *node)
+        self.alt_grids[name].Update()
+        # bar_z = self.bar_lines[(name)]
+        # dz = bar_z[:, :3] - bar_z[:, 3:]
+        # Lz = norm(dz, axis=1)
+        # bar_z[:, 3:] = bar_z[:, :3] + Lz * bar_scale
+
 
     def add_user_points(self, points_filename, name, color=None):
         if name in self.geometry_actors:
