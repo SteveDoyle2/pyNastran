@@ -53,7 +53,7 @@ class BDFMethods(object):
         ---------------
         self : BDF
             The BDF object.
-        element_ids : ndarray, optional
+        element_ids : list[int]; (n, ) ndarray, optional
             An array of element ids.
         reference_point : ndarray, optional
             An array that defines the origin of the frame.
