@@ -18,7 +18,6 @@ class RealBarArray(OES_Object):
         #self.ntotal = 0
         self.ielement = 0
         self.nelements = 0  # result specific
-        self.nnodes = None
 
         if is_sort1:
             if dt is not None:
@@ -49,24 +48,20 @@ class RealBarArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
-        #print("self.ielement =", self.ielement)
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
+        #print("self.ielement =", self.ielement)
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-        #self.names = []
+
         if self.element_type == 34:
             nnodes_per_element = 1
         else:
             raise NotImplementedError(self.element_type)
 
-        self.nnodes = nnodes_per_element
-        self.nelements //= self.ntimes
-        self.ntotal = self.nelements  #* 2  # for A/B
-        #self.nelements //= nnodes_per_element
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -80,7 +75,7 @@ class RealBarArray(OES_Object):
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros(self.ntotal, dtype='int32')
+        self.elements = zeros(self.ntotal, dtype='int32')
 
         #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
         # s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression]
@@ -98,7 +93,7 @@ class RealBarArray(OES_Object):
 
         assert isinstance(eid, int)
         self._times[self.itime] = dt
-        self.element_node[self.itotal] = eid
+        self.elements[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                                  s1b, s2b, s3b, s4b,        smaxb, sminb, MSc]
         self.itotal += 1
@@ -123,21 +118,19 @@ class RealBarArray(OES_Object):
                     '  ntotal: %i\n' % self.ntotal,
                     ]
 
-        nelements = self.nelements
+        nelements = self.ntotal
         ntimes = self.ntimes
-        nnodes = self.nnodes
         ntotal = self.ntotal
-        #nlayers = 2
-        nelements = self.ntotal // self.nnodes  # // 2
+        nelements = self.ntotal
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n'
-                       % (self.__class__.__name__, nelements, nnodes, ntotal))
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
             ntimes_word = 1
         headers = self.get_headers()
 
@@ -151,11 +144,11 @@ class RealBarArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        itot = searchsorted(eids, self.elements)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        ind = ravel([searchsorted(self.elements == eid) for eid in eids])
         #ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -164,7 +157,7 @@ class RealBarArray(OES_Object):
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
-        eids = self.element_node
+        eids = self.elements
         #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):
             dt = self._times[itime]
