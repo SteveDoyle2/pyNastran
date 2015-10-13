@@ -68,7 +68,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=False,
                 debug=debug, stopOnFailure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
@@ -77,7 +77,7 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=True,
                 debug=debug, stopOnFailure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
@@ -91,14 +91,14 @@ class TestOP2(Tester):
         write_f06 = False
         debug = False
         op2file = os.path.join(folder, op2_filename)
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=False,
                 debug=debug, stopOnFailure=True)
 
         make_geom = False
         write_bdf = False
         write_f06 = True
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=True,
                 debug=debug, stopOnFailure=True)
 
@@ -110,7 +110,7 @@ class TestOP2(Tester):
         write_f06 = False
         debug = False
         op2file = os.path.join(folder, op2_filename)
-        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                   write_f06=write_f06, is_vector=True,
                                   debug=debug, stopOnFailure=True,
                                   quiet=True)

@@ -37,6 +37,7 @@ from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import ApplicationLogDockWidget
 from pyNastran.gui.menus.manage_actors import EditGroupProperties
 from pyNastran.gui.menus.multidialog import MultiFileDialog
+from pyNastran.gui.testing_methods import TestGuiCommon
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -70,10 +71,11 @@ def loadtxt_nice(filename, delimiter=','):
         data.append(line)
     return array(data)
 
-class GuiCommon2(QtGui.QMainWindow, GuiCommon):
+class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self)
+        TestGuiCommon.__init__(self, res_widget=None)
 
         self.html_logging = html_logging
         self.is_testing = False
@@ -420,6 +422,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.menu_window = self.menubar.addMenu('&Window')
         self.menu_help = self.menubar.addMenu('&Help')
 
+        self.menu_hidden = self.menubar.addMenu('&Hidden')
+        self.menu_hidden.setVisible(False)
+
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script]
         else:
@@ -458,11 +463,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (self.menu_window, tuple(menu_window)),
             (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
-            (self.toolbar, ('cycle_res', 'reload', 'load_geometry', 'load_results',
+            (self.toolbar, ('reload', 'load_geometry', 'load_results',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
-            # (self.menu_scripts, ('cycle_res',)),
+            (self.menu_hidden, ('cycle_res',)),
+            # (self.menu_scripts, ()),
             #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
         ]
         return menu_items
@@ -1392,40 +1398,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command("on_load_elemental_results(%r)" % out_filename)
         else:
             raise NotImplementedError(Type)
-
-    def form(self):
-        formi = self.res_widget.get_form()
-        print('formi =', formi)
-        assert 'Alice' not in formi, formi
-        return formi
-
-    def set_form(self, formi):
-        self._form = formi
-        data = []
-        for key in self.caseKeys:
-            print(key)
-            if isinstance(key, int):
-                obj, (i, name) = self.resultCases[key]
-                t = (i, [])
-            else:
-                t = (key[1], [])
-            data.append(t)
-
-        self.res_widget.update_results(formi)
-
-        key = self.caseKeys[0]
-        location = self.get_case_location(key)
-        method = 'centroid' if location else 'nodal'
-
-        data2 = [(method, None, [])]
-        self.res_widget.update_methods(data2)
-
-    def get_form(self):
-        return self._form
-        # formi = self.res_widget.get_form()
-        # print('formi =', formi)
-        # assert 'Alice' not in formi, formi
-        # return formi
 
     def _load_csv(self, Type, out_filename):
         out_filename_short = os.path.basename(out_filename)

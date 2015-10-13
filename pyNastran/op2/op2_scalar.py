@@ -52,6 +52,10 @@ class TrashWriter(object):
     def close(self, *args, **kwargs):
         """does nothing"""
         pass
+    def flush(self, *args, **kwargs):
+        """does nothing"""
+        pass
+
 
 GEOM_TABLES = [
     # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
