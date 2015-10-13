@@ -201,7 +201,7 @@ class LOAD(LoadCombination):
                     loads += reduced_loads
                     scale_factors += [scale * j_scale
                                       for j_scale in reduced_scale_factors]
-                elif load.type in ['PLOAD']:
+                elif load.type in ['PLOAD', 'PLOAD1']:
                     loads.append(load)
                     scale_factors.append(scale)
                 else:

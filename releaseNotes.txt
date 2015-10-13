@@ -130,6 +130,7 @@ OP2:
  - improved catching of SORT1 vs. SORT2
  - improved catching of REAL vs. IMAG
  - better SOL200 support
+ - read_op2 is ~4x faster
 
 OP2 Issues:
  - not all NX tables supported; some still cause crashes

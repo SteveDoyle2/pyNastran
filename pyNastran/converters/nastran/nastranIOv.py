@@ -82,7 +82,7 @@ class NastranComplexDisplacementResults(object):
         # calculate deflections
         eigvs = model.eigenvectors[1000].data[6, :, :]
         defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
-                        np.imag(eigvs[:, :3]) * sin(theta))
+                        np.imag(eigvs[:, :3]) * np.sin(theta))
 
 class NastranDisplacementResults(object):
     def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
@@ -226,6 +226,7 @@ class NastranIO(object):
         self.modelType = None
         self.iSubcaseNameMap = None
         self.has_caero = False
+        self.dependents_nodes = set([])
 
     def get_nastran_wildcard_geometry_results_functions(self):
         if is_geom:
@@ -652,8 +653,38 @@ class NastranIO(object):
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
-        self._fill_bar_yz(dim_max, model, icase, cases, form)
+        # self._fill_bar_yz(dim_max, model, icase, cases, form)
 
+
+        #------------------------------------------------------------
+        # loads
+        try:
+            subcase_ids = model.case_control_deck.get_subcase_list()
+        except AttributeError:
+            return nid_to_pid_map, icase, cases, form
+
+        print('dependent_nodes =', self.dependents_nodes)
+        form0 = form[2]
+        for subcase_id in subcase_ids:
+            if subcase_id == 0:
+                continue
+            print('NastranIOv subcase_id = %s' % subcase_id)
+            subcase = model.case_control_deck.subcases[subcase_id]
+
+            subtitle = ''
+            if subcase.has_parameter('SUBTITLE'):
+                subtitle, options = subcase.get_parameter('SUBTITLE')
+                del options
+
+            load_str = 'Load Case=%i' % subcase_id if subtitle == '' else 'Load Case=%i; %s' % (subcase_id, subtitle)
+            formi = (load_str, None, [])
+            formii = formi[2]
+            icase = self._plot_pressures(model, cases, formii, icase, subcase_id, subcase)
+            icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
+            if len(formii):
+                form0.append(formi)
+
+        #------------------------------------------------------------
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
 
@@ -866,6 +897,8 @@ class NastranIO(object):
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
                         self._fill_mpc(mpc_id, dim_max, model, nid_to_pid_map)
+            else:
+                self._fill_rigid(dim_max, model, nid_to_pid_map)
 
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
                 # print('suport in subcase %s' % subcase_id)
@@ -994,6 +1027,7 @@ class NastranIO(object):
           \   /
         I---D---I
         """
+        lines = []
         try:
             mpcs = model.mpcs[mpc_id]
         except:
@@ -1001,7 +1035,6 @@ class NastranIO(object):
             return []
 
         # dependent, independent
-        lines = []
         for card in sorted(mpcs):
             if card.type == 'MPC':
                 nids = card.node_ids
@@ -1243,14 +1276,49 @@ class NastranIO(object):
 
         self.alt_grids[name].SetPoints(points)
 
+
+    def _get_rigid(self, dim_max, model):
+        lines_rigid = []
+        for eid, elem in iteritems(model.rigidElements):
+            if elem.type == 'RBE3':
+                assert elem.Gmi == [], 'UM is not supported; RBE3 eid=%s Gmi=%s' % (elem.eid, elem.Gmi)
+                # list_fields = ['RBE3', elem.eid, None, elem.ref_grid_id, elem.refc]
+                n1 = elem.ref_grid_id
+                assert isinstance(n1, int), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
+                for (wt, ci, Gij) in elem.WtCG_groups:
+                    Giji = elem._nodeIDs(nodes=Gij, allowEmptyNodes=True)
+                    # list_fields += [wt, ci] + Giji
+                    for n2 in Giji:
+                        assert isinstance(n2, int), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)
+                        lines_rigid.append([n1, n2])
+            elif elem.type == 'RBE2':
+                # list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm] + elem.Gmi_node_ids + [elem.alpha]
+                n2 = elem.Gn() # independent
+                nids1 = elem.Gmi_node_ids # dependent
+                for n1 in nids1:
+                    lines_rigid.append([n1, n2])
+            else:
+                print(str(elem))
+        return lines_rigid
+
     def _fill_mpc(self, mpc_id, dim_max, model, nid_to_pid_map):
+        lines = self.get_MPCx_node_ids_c1(model, mpc_id, exclude_mpcadd=False)
+        lines += self._get_rigid(dim_max, model)
+        self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
+
+    def _fill_rigid(self, dim_max, model, nid_to_pid_map):
+        lines = self._get_rigid(dim_max, model)
+        self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
+
+    def _fill_dependent_independent(self, dim_max, model, lines, nid_to_pid_map):
+        if not lines:
+            return
         green = (0., 1., 0.)
         dunno = (0.5, 1., 0.5)
         self.create_alternate_vtk_grid('mpc_dependent', color=green, line_width=5, opacity=1., point_size=5, representation='point')
         self.create_alternate_vtk_grid('mpc_independent', color=dunno, line_width=5, opacity=1., point_size=5, representation='point')
         self.create_alternate_vtk_grid('mpc_lines', color=dunno, line_width=5, opacity=1., point_size=5, representation='wire')
 
-        lines = self.get_MPCx_node_ids_c1(model, mpc_id, exclude_mpcadd=False)
         lines2 = []
         for line in lines:
             if line not in lines2:
@@ -1258,9 +1326,8 @@ class NastranIO(object):
         lines = array(lines2, dtype='int32')
         dependent = (lines[:, 0])
         independent = unique(lines[:, 1])
-
+        self.dependents_nodes.update(dependent)
         node_ids = unique(lines.ravel())
-
         self._add_nastran_nodes_to_grid('mpc_dependent', dependent, model, nid_to_pid_map)
         self._add_nastran_nodes_to_grid('mpc_independent', independent, model, nid_to_pid_map)
         self._add_nastran_lines_to_grid('mpc_lines', lines, model, nid_to_pid_map)
@@ -1845,202 +1912,205 @@ class NastranIO(object):
             form0.append(('PropertyID', icase, []))
             icase += 1
 
-        icase = self._plot_pressures(model, cases, form0, icase, xref_loads)
-        icase = self._plot_applied_loads(model, cases, form0, icase)
-
-        if 0:
-            nxs = []
-            nys = []
-            nzs = []
+        if 1:
             i = 0
-
+            nelements = self.element_ids.shape[0]
+            normals = zeros((nelements, 3), dtype='float32')
+            xoffset = zeros(nelements, dtype='float32')
+            yoffset = zeros(nelements, dtype='float32')
+            zoffset = zeros(nelements, dtype='float32')
             for eid, element in sorted(iteritems(model.elements)):
                 if isinstance(element, ShellElement):
-                    (nx, ny, nz) = element.Normal()
+                    normali = element.Normal()
+                    #pid = element.pid
+                    zi = element.zOffset + element.pid.z1
+                    i += 1
                 else:
-                    nx = ny = nz = 0.0
-                nxs.append(nx)
-                nys.append(ny)
-                nzs.append(nz)
+                    i += 1
+                    continue
+                normals[i, :] = normali
+                xoffset[i] = zi * normali[0]
+                yoffset[i] = zi * normali[1]
+                zoffset[i] = zi * normali[2]
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
             # subcase_id, resultType, vector_size, location, dataFormat
-            cases[(0, icase, 'Normalx', 1, 'centroid', '%.1f')] = nxs
-            form0.append(('Normalx', icase, []))
+            cases[(0, icase, 'NormalX', 1, 'centroid', '%.1f')] = normals[:, 0]
+            form0.append(('NormalX', icase, []))
             icase += 1
 
-            cases[(0, icase, 'Normaly', 1, 'centroid', '%.1f')] = nys
-            form0.append(('Normaly', icase, []))
+            cases[(0, icase, 'NormalY', 1, 'centroid', '%.1f')] = normals[:, 1]
+            form0.append(('NormalY', icase, []))
             icase += 1
 
-            cases[(0, icase, 'Normalz', 1, 'centroid', '%.1f')] = nzs
-            form0.append(('Normalz', icase, []))
+            cases[(0, icase, 'NormalZ', 1, 'centroid', '%.1f')] = normals[:, 2]
+            form0.append(('NormalZ', icase, []))
             icase += 1
+
+            # offsets
+            cases[(0, icase, 'OffsetX', 1, 'centroid', '%.1f')] = xoffset
+            form0.append(('OffsetX', icase, []))
+            icase += 1
+
+            cases[(0, icase, 'OffsetY', 1, 'centroid', '%.1f')] = yoffset
+            form0.append(('OffsetY', icase, []))
+            icase += 1
+
+            cases[(0, icase, 'OffsetZ', 1, 'centroid', '%.1f')] = zoffset
+            form0.append(('OffsetZ', icase, []))
+            icase += 1
+
+            self.normals = normals
 
         return nid_to_pid_map, icase, cases, form
 
-    def _plot_pressures(self, model, cases, form0, icase, xref_loads):
+    def _plot_pressures(self, model, cases, form0, icase, subcase_id, subcase):
         """
         pressure act normal to the face (as opposed to anti-normal)
         """
-        assert xref_loads is True, 'xref_loads must be set to True; change it above near the read_bdf'
+        # print('NastranIOv _plot_pressures')
+        eids = self.element_ids
+
         try:
-            sucaseIDs = model.case_control_deck.get_subcase_list()
-        except AttributeError:
+            load_case_id, options = subcase.get_parameter('LOAD')
+        except KeyError:
+            print('no LOAD for isubcase=%s' % subcase_id)
             return icase
 
-        print('_plot_pressures')
-        for subcase_id in sucaseIDs:
-            if subcase_id == 0:
-                continue
+        try:
+            loadCase = model.loads[load_case_id]
+        except KeyError:
+            self.log.warning('LOAD=%s not found' % load_case_id)
+            return icase
+
+        # account for scale factors
+        loads2 = []
+        scale_factors2 = []
+        for load in loadCase:
+            if isinstance(load, LOAD):
+                scale_factors, loads = load.get_reduced_loads()
+                scale_factors2 += scale_factors
+                loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+
+        pressures = zeros(len(model.elements), dtype='float32')
+
+        iload = 0
+        nloads = len(loads2)
+        # loop thru scaled loads and plot the pressure
+        for load, scale in zip(loads2, scale_factors2):
+            if iload % 5000 == 0:
+                print('  NastranIOv iload=%s/%s' % (iload, nloads))
+            if load.type == 'PLOAD4':
+                elem = load.eid
+                if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                 'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                    p = load.pressures[0] * scale
+
+                    # single element per PLOAD
+                    #eid = elem.eid
+                    #pressures[eids.index(eid)] = p
+
+                    # multiple elements
+                    for el in load.eids:
+                        ie = searchsorted(eids, el.eid)
+                        #pressures[ie] += p  # correct; we can't assume model orientation
+                        pressures[ie] += p * self.normals[ie, 2]  # considers normal of shell
+
+                #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                    #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                    #r = centroid - p
+            iload += 1
+        # if there is no applied pressure, don't make a plot
+        if abs(pressures).max():
+            case_name = 'Pressure'
+            # print('iload=%s' % iload)
+            # print(case_name)
+            # subcase_id, resultType, vector_size, location, dataFormat
+            cases[(0, icase, case_name, 1, 'centroid', '%.1f')] = pressures
+            form0.append((case_name, icase, []))
+            icase += 1
+        return icase
+
+    def _plot_applied_loads(self, model, cases, form0, icase, subcase_id, subcase):
+        # print('_plot_applied_loads')
+
+        found_load = False
+        found_temperature = False
+
+        form = []
+        for key in ('LOAD', 'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)'):
             try:
-                load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
+                load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, key)
             except KeyError:
+                # print('no %s for isubcase=%s' % (key, subcase_id))
                 continue
             try:
-                loadCase = model.loads[load_case_id]
+                load_case = model.loads[load_case_id]
             except KeyError:
                 self.log.warning('LOAD=%s not found' % load_case_id)
                 continue
 
-            # account for scale factors
-            loads2 = []
-            scale_factors2 = []
-            for load in loadCase:
-                if isinstance(load, LOAD):
-                    scale_factors, loads = load.get_reduced_loads()
-                    scale_factors2 += scale_factors
-                    loads2 += loads
-                else:
-                    scale_factors2.append(1.)
-                    loads2.append(load)
+            if key == 'LOAD':
+                p0 = array([0., 0., 0.], dtype='float32')
+                pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
+                found_load = True
+            elif key in ('TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)'):
+                temperatures = self._get_temperatures_array(model, load_case_id)
+                found_temperature = True
+                temperature_key = key
+            else:
+                raise NotImplementedError(key)
 
-            eids = sorted(model.elements.keys())
-            pressures = zeros(len(model.elements), dtype='float32')
-
-            iload = 0
-            # loop thru scaled loads and plot the pressure
-            for load, scale in zip(loads2, scale_factors2):
-                if iload % 5000 == 0:
-                    print('NastranIOv iload=%s' % iload)
-                if load.type == 'PLOAD4':
-                    elem = load.eid
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
-                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                        p = load.pressures[0] * scale
-
-                        # single element per PLOAD
-                        #eid = elem.eid
-                        #pressures[eids.index(eid)] = p
-
-                        # multiple elements
-                        for el in load.eids:
-                            pressures[eids.index(el.eid)] += p
-                    #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
-                        #r = centroid - p
-                iload += 1
-            # if there is no applied pressure, don't make a plot
+        if found_load:
             if abs(pressures).max():
-                case_name = 'Pressure Case=%i' % subcase_id
                 # print('iload=%s' % iload)
                 # print(case_name)
                 # subcase_id, resultType, vector_size, location, dataFormat
-                cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
-                form0.append((case_name, icase, []))
+                cases[(0, 'Pressure', 1, 'centroid', '%.1f')] = pressures
+                form0.append(('Pressure', icase, []))
                 icase += 1
-        return icase
 
-    def _plot_applied_loads(self, model, cases, form0, icase):
-        print('_plot_applied_loads')
-        try:
-            sucase_ids = model.case_control_deck.get_subcase_list()
-        except AttributeError:
-            print('no subcases....')
-            return icase
+            if abs(forces.max() - forces.min()) > 0.0:
+                # if forces[:, 0].min() != forces[:, 0].max():
+                cases[(subcase_id, icase, 'LoadX', 1, 'node', '%.1f')] = forces[:, 0]
+                # if forces[:, 1].min() != forces[:, 1].max():
+                cases[(subcase_id, icase + 1, 'LoadY', 1, 'node', '%.1f')] = forces[:, 1]
+                # if forces[:, 2].min() != forces[:, 2].max():
+                cases[(subcase_id, icase + 2, 'LoadZ', 1, 'node', '%.1f')] = forces[:, 2]
 
-        for subcase_id in sucase_ids:
-            if subcase_id == 0:
-                continue
+                form0.append(('Total Load FX', icase, []))
+                form0.append(('Total Load FY', icase + 1, []))
+                form0.append(('Total Load FZ', icase + 2, []))
+                icase += 3
 
-            found_load = False
-            found_temperature = False
-
-            form = []
-            for key in ('LOAD', 'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)'):
-                try:
-                    load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, key)
-                except KeyError:
-                    print('no load for isubcase=%s' % subcase_id)
-                    continue
-                try:
-                    load_case = model.loads[load_case_id]
-                except KeyError:
-                    self.log.warning('LOAD=%s not found' % load_case_id)
-                    continue
-
-                if key == 'LOAD':
-                    p0 = array([0., 0., 0.], dtype='float32')
-                    pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
-                    found_load = True
-                elif key in ('TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)'):
-                    temperatures = self._get_temperatures_array(model, load_case_id)
-                    found_temperature = True
-                    temperature_key = key
-                else:
-                    raise NotImplementedError(key)
-
-            if found_load:
-                if abs(pressures).max():
-                    case_name = 'Pressure Case=%i' % subcase_id
-                    # print('iload=%s' % iload)
-                    # print(case_name)
-                    # subcase_id, resultType, vector_size, location, dataFormat
-                    cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
-                    form.append((case_name, icase, []))
-                    icase += 1
-
-                if abs(forces.max() - forces.min()) > 0.0:
-                    print('plot applied loads loadcase =', load_case_id)
-                    # if forces[:, 0].min() != forces[:, 0].max():
-                    cases[(subcase_id, icase, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 0]
-                    # if forces[:, 1].min() != forces[:, 1].max():
-                    cases[(subcase_id, icase + 1, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 1]
-                    # if forces[:, 2].min() != forces[:, 2].max():
-                    cases[(subcase_id, icase + 2, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = forces[:, 2]
-
-                    form.append(('Total Load FX', icase, []))
-                    form.append(('Total Load FY', icase + 1, []))
-                    form.append(('Total Load FZ', icase + 2, []))
-                    icase += 3
-
-                if abs(spcd).max():
-                    cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
-                    form.append(('SPCDx', icase, []))
-                    icase += 1
-
-                    cases[(subcase_id, icase, 'SPCDy', 1, 'node', '%.3g')] = spcd[:, 1]
-                    form.append(('SPCDy', icase, []))
-                    icase += 1
-
-                    #cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                    cases[(subcase_id, icase, 'SPCDz', 1, 'node', '%.3g')] = spcd[:, 2]
-                    form.append(('SPCDz', icase, []))
-                    icase += 1
-
-                    t123 = spcd[:, :3]
-                    tnorm = norm(t123, axis=1)
-                    assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
-                    cases[(subcase_id, icase, 'SPCD XYZ', 1, 'node', '%.3g')] = tnorm
-                    form.append(('SPCD XYZ', icase, []))
-                    icase += 1
-            if found_temperature:
-                cases[(subcase_id, icase, temperature_key, 1, 'node', '%.3g')] = temperatures
-                form.append((temperature_key, icase, []))
+            if abs(spcd.max() - spcd.min()) > 0.0:
+                cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
+                form0.append(('SPCDx', icase, []))
                 icase += 1
-            if form:
-                form0.append(('Load Case=%i' % subcase_id, None, form))
+
+                cases[(subcase_id, icase, 'SPCDy', 1, 'node', '%.3g')] = spcd[:, 1]
+                form0.append(('SPCDy', icase, []))
+                icase += 1
+
+                #cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                cases[(subcase_id, icase, 'SPCDz', 1, 'node', '%.3g')] = spcd[:, 2]
+                form0.append(('SPCDz', icase, []))
+                icase += 1
+
+                t123 = spcd[:, :3]
+                tnorm = norm(t123, axis=1)
+                assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
+                cases[(subcase_id, icase, 'SPCD XYZ', 1, 'node', '%.3g')] = tnorm
+                form0.append(('SPCD XYZ', icase, []))
+                icase += 1
+        if found_temperature:
+            cases[(subcase_id, icase, temperature_key, 1, 'node', '%.3g')] = temperatures
+            form.append((temperature_key, icase, []))
+            icase += 1
         return icase
 
     def _get_loads_and_scale_factors(self, load_case):
@@ -2058,7 +2128,7 @@ class NastranIO(object):
         return loads2, scale_factors2
 
     def _get_temperatures_array(self, model, load_case_id):
-        print('_get_forces_moments_array')
+        print('  _get_forces_moments_array')
         nids = sorted(model.nodes.keys())
         nnodes = len(nids)
 
@@ -2078,7 +2148,7 @@ class NastranIO(object):
         return temperatures
 
     def _get_forces_moments_array(self, model, p0, load_case_id, include_grav=False):
-        print('_get_forces_moments_array')
+        print('  NastranIOv _get_forces_moments_array')
         nids = sorted(model.nodes.keys())
         nnodes = len(nids)
 
@@ -2096,6 +2166,8 @@ class NastranIO(object):
             if load.type == 'FORCE':
                 scale2 = load.mag * scale  # does this need a magnitude?
                 nid = load.node
+                if nid in self.dependents_nodes:
+                    print('    nid=%s is a dependent node and has an FORCE applied\n%s' % (nid, str(load)))
                 forces[nids.index(nid)] += load.xyz * scale2
 
             elif load.type == 'PLOAD2':
@@ -2112,12 +2184,14 @@ class NastranIO(object):
                         # r = elem.Centroid() - p0
                         # m = cross(r, f)
                         for nid in node_ids:
+                            if nid in self.dependents_nodes:
+                                print('    nid=%s is a dependent node and has an PLOAD2 applied\n%s' % (nid, str(load)))
                             forces[nids.index(nid)] += f
                         forces += f
                         # F += f
                         # M += m
                     else:
-                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (load_case_id, elem.type, load.type))
+                        self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (load_case_id, elem.type, load.type))
 
             elif load.type == 'PLOAD4':
                 continue  ## TODO: should be removed
@@ -2137,7 +2211,11 @@ class NastranIO(object):
                         k = load.pressures[0] * scale / 4.
                         # TODO: doesn't consider load.eids for distributed pressures???
                         for nid in node_ids[4:]:
-                            pressures[eids.index(nid)] += k
+                            if nid in self.dependents_nodes:
+                                print('    nid=%s is a dependent node and has an PLOAD4 applied\n%s' % (nid, str(load)))
+                            pressures[nids.index(nid)] += k
+                    else:
+                        print('    PLOAD4 is unhandled\n%s' % str(load))
 
                 else:
                     # single element per PLOAD
@@ -2152,6 +2230,8 @@ class NastranIO(object):
                         A = el.get_area()
                         F = p * A * scale
                         for nid in el.node_ids:
+                            if nid in self.dependents_nodes:
+                                print('    nid=%s is a dependent node and has an PLOAD4 applied\n%s' % (nid, str(load)))
                             forces[nids.index(nid)] += F
                 #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
             elif load.type == 'SPCD':
@@ -2162,11 +2242,13 @@ class NastranIO(object):
                     c1 = int(c1)
                     assert c1 in [1, 2, 3, 4, 5, 6], c1
                     if c1 < 4:
+                        if nid in self.dependents_nodes:
+                            print('    nid=%s is a dependent node and has an SPCD applied\n%s' % (nid, str(load)))
                         spcd[nids.index(nid), c1 - 1] = d1
             else:
                 if load.type not in cards_ignored:
                     cards_ignored[load.type] = True
-                    print('  _get_forces_moment_array - load.type = %s' % load.type)
+                    print('  NastranIOv _get_forces_moments_array - unsupported load.type = %s' % load.type)
 
         return pressures, forces, spcd
 
@@ -3275,8 +3357,8 @@ class NastranIO(object):
         return icase, ncase, case, header, form0
 
     def _get_nastran_time_centroidal_force(self, cases, model,
-                                                   subcase_id, form, icase, itime, dt,
-                                                   is_real=True, is_static=False):
+                                           subcase_id, form, icase, itime, dt,
+                                           is_real=True, is_static=False):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -3440,7 +3522,7 @@ class NastranIO(object):
             assert len(samax) == len(i), len(samax)
             assert len(samin) == len(i)
             savm = amax(abs([smina, sminb,
-                            smaxa, smaxb, axial]), axis=0)
+                             smaxa, smaxb, axial]), axis=0)
 
             max_principal[i] = samax
             min_principal[i] = samin

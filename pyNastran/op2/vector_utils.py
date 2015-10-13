@@ -16,14 +16,19 @@ def abs_max_min_global(values):
     This is useful for figuring out absolute max or min principal stresses
     across single/multiple elements and finding a global max/min value.
 
-    :param values: an ND-array of values
-    :type values:  common NDARRAY/list/tuple shapes:
-                      1. [nprincipal_stresses]
-                      2. [nelements, nprincipal_stresses]
+    Parameters
+    ----------
+    values: ndarray/listtuple
+        an ND-array of values;
+        common NDARRAY/list/tuple shapes:
+            1. [nprincipal_stresses]
+            2. [nelements, nprincipal_stresses]
 
-    :returns abs_max_mins: an array of the max or min principal stress
-    :type abs_max_mins:    int/float depending on input type
-                           (don't input mixed types...)
+    Returns
+    -------
+    abs_max_mins: int/float
+        an array of the max or min principal stress
+        don't input mixed types
 
     nvalues >= 1
       >>> element1 = [0.0, -1.0, 2.0]  # 2.0
@@ -72,12 +77,21 @@ def abs_max_min_vector(values):
     This is useful for figuring out principal stresses across multiple
     elements.
 
-    :param values: an array of values, where the rows are interated over
-                   and the columns are going to be compressed
-    :type values:  NDARRAY shape=[nelements, nprincipal_stresses]
+    Parameters
+    ----------
+    values: ndarray/listtuple
+        an array of values, where the rows are interated over
+        and the columns are going to be compressed
 
-    :returns abs_max_mins: an array of the max or min principal stress
-    :type abs_max_mins:    NDARRAY shape=[nelements] with dtype=values.dtype
+        common NDARRAY/list/tuple shapes:
+            1. [nprincipal_stresses]
+            2. [nelements, nprincipal_stresses]
+
+    Returns
+    -------
+    abs_max_mins: NDARRAY shape=[nelements] with dtype=values.dtype
+        an array of the max or min principal stress
+        don't input mixed types
 
     ::
        >>> element1 = [0.0,  1.0, 2.0]  # 2.0
