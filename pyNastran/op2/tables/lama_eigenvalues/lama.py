@@ -68,7 +68,7 @@ class LAMA(OP2Common):
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.debug4():
+            if self.is_debug_file:
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
             (imode, order, eigr, eigc, freq, damping) = out # CLAMA
             #print('imode=%s order=%s eigr=%s eigc=%s freq=%s damping=%s' %
@@ -97,7 +97,7 @@ class LAMA(OP2Common):
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.debug4():
+            if self.is_debug_file:
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
             (imode, order, eigen, omega, freq, mass, stiff) = out # BLAMA??
             #(modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = line  # LAMA
@@ -154,7 +154,7 @@ class LAMA(OP2Common):
         for i in range(nModes):
             edata = data[n:n+28]
             out = s.unpack(edata)
-            if self.debug4():
+            if self.is_debug_file:
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
             #(imode, order, eigen, omega, freq, mass, stiff) = out
             (imode, extractOrder, eigenvalue, radian, cycle, genM, genK) = out

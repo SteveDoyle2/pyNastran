@@ -673,9 +673,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.log.debug('debug_file = %s' % self.debug_file)
             self.binary_debug = open(self.debug_file, wb)
             self.binary_debug.write(self.op2_filename + '\n')
+            self.is_debug_file = True
         else:
             self.binary_debug = open(os.devnull, wb)  #TemporaryFile()
             self.binary_debug = TrashWriter('debug.out', wb)
+            self.is_debug_file = False
 
     def read_op2(self, op2_filename=None):
         """
@@ -806,7 +808,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             raise FatalError('no tables exists...')
 
         table_names = self._read_tables(table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
         self.binary_debug.close()
@@ -859,7 +861,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         while table_name is not None:
             table_names.append(table_name)
 
-            if self.debug:
+            if self.is_debug_file:
                 self.binary_debug.write('-' * 80 + '\n')
                 self.binary_debug.write('table_name = %r\n' % (table_name))
 
@@ -1369,7 +1371,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Other tables don't follow this format.
         """
         self.table_name = self.read_table_name(rewind=False)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('skipping table...%r\n' % self.table_name)
         self.read_markers([-1])
         data = self._skip_record()
@@ -1393,7 +1395,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
         if len(data) == 28:
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
-            if self.debug:
+            if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
@@ -1417,7 +1419,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
         if len(data) == 12:
             subtable_name, double = unpack(self._endian + b'8sf', data)
-            if self.debug:
+            if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %f]\n'  % (subtable_name, double))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         else:
@@ -1435,10 +1437,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
 
@@ -1447,7 +1449,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         n = -2
         while markers[0] != 0:
             self.read_markers([n, 1, 0])
-            if self.debug:
+            if self.is_debug_file:
                 self.binary_debug.write('---markers = [%i, 1, 0]---\n' % n)
 
             markers = self.get_nmarkers(1, rewind=True)
@@ -1468,10 +1470,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
 
@@ -1516,10 +1518,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
 
@@ -1559,10 +1561,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return self._read_bhh()
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
 
@@ -1605,10 +1607,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
 
@@ -1631,10 +1633,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """reads the INTMOD table"""
         self.table_name = self.read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % self.table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
         #print('intmod data1')
@@ -1667,10 +1669,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """preliminary reader for the HISADD table"""
         self.table_name = self.read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % self.table_name)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
         #print('hisadd data1')
@@ -1760,7 +1762,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
         data = self._read_record()
@@ -1806,7 +1808,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
         if len(data) == 16:
             subtable_name, dummy_a, dummy_b = unpack(self._endian + b'8sii', data)
-            if self.debug:
+            if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (subtable_name, dummy_a, dummy_b))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
                 assert dummy_a == 170, dummy_a
@@ -1837,27 +1839,27 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self : OP2
             the OP2 object pointer
         """
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('read_results_table - %s\n' % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
             #self.binary_debug.write('marker = [4, -1, 4]\n')
         data = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data = self._read_record()
         if len(data) == 8:
             subtable_name = unpack(self._endian + b'8s', data)
-            if self.debug:
+            if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif len(data) == 28:
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
-            if self.debug:
+            if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
@@ -1895,7 +1897,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         month, day, year = self._set_op2_date(month, day, year)
 
         #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
-        #if self.debug:
+        #if self.is_debug_file:
         self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one == 1, one  # 0, 50

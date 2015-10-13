@@ -28,7 +28,7 @@ class OGPWG(OP2Common):
         self.parse_approach_code(data)
         self.reference_point = self.add_data_parameter(data, 'reference_point', 'i', 3, add_to_dict=False)
 
-        if self.debug3():
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)

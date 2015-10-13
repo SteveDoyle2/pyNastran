@@ -560,10 +560,10 @@ class FortranFormat(object):
         """
         self.istream = 0
         markers0 = self.get_nmarkers(1, rewind=False)
-        if self.debug and debug:
+        if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
         record = self.read_block()
-        if self.debug and debug:
+        if self.is_debug_file and debug:
             nrecord = len(record)
             self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
         if(markers0[0]*4) != len(record):
@@ -573,7 +573,7 @@ class FortranFormat(object):
         self.istream += 1
 
         markers1 = self.get_nmarkers(1, rewind=True)
-        if self.debug and debug:
+        if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
 
         # handling continuation blocks
@@ -581,7 +581,7 @@ class FortranFormat(object):
             nloop = 0
             while markers1[0] > 0:
                 markers1 = self.get_nmarkers(1, rewind=False)
-                if self.debug and debug:
+                if self.is_debug_file and debug:
                     self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
                 record = self.read_block()
                 yield record
@@ -598,11 +598,11 @@ class FortranFormat(object):
             the OP2 object pointer
         """
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
-        if self.debug and debug:
+        if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
         record = self.read_block()
 
-        if self.debug and debug:
+        if self.is_debug_file and debug:
             nrecord = len(record)
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
         if markers0[0]*4 != len(record):
@@ -619,12 +619,12 @@ class FortranFormat(object):
             records = [record]
             while markers1[0] > 0:
                 markers1 = self.get_nmarkers(1, rewind=False)
-                if self.debug and debug:
+                if self.is_debug_file and debug:
                     self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
                 record = self.read_block()
                 records.append(record)
                 markers1 = self.get_nmarkers(1, rewind=True)
-                if self.debug and debug:
+                if self.is_debug_file and debug:
                     self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
                 nloop += 1
 

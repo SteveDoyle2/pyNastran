@@ -117,7 +117,7 @@ class ONR(OP2Common):
                                self.analysis_code)
 
         self.fix_format_code()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
@@ -149,7 +149,7 @@ class ONR(OP2Common):
             return len(data)
         self._results._found_result(result_name)
 
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('cvalares = %s\n' % self.cvalres)
         if self.num_wide == 4:
             assert self.cvalres in [0, 1], self.cvalres

@@ -118,7 +118,7 @@ class OQG(OP2Common):
 
         self.fix_format_code()
         self._parse_thermal_code()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
@@ -228,7 +228,7 @@ class OQG(OP2Common):
 
         self.fix_format_code()
         self._parse_thermal_code()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
