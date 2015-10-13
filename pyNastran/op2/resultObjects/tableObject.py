@@ -111,6 +111,8 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal = 0
 
     def build(self):
+        #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1(),
+                                                                          #self.ntotal, self._nnodes // self.ntimes))
         if self.is_built:
             #print("resetting...")
             #self.itotal = 0
@@ -146,16 +148,17 @@ class TableArray(ScalarObject):  # displacement style table
     def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         self.add_sort1(None, node_id, grid_type, v1, v2, v3, v4, v5, v6)
 
+    #@autojit
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         #print "dt=%s out=%s" %(dt, out)
         #if dt not in self.translations:
         #    self.add_new_transient(dt)
         #print(msg)
-        if not 0 < node_id < 1000000000:
-            msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
-            msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-            raise RuntimeError(msg)
-        assert isinstance(node_id, int), node_id
+        #if not 0 < node_id < 1000000000:
+            #msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
+            #msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
+            #raise RuntimeError(msg)
+        #assert isinstance(node_id, int), node_id
         #assert isinstance(node_id, int), msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
 
@@ -168,7 +171,13 @@ class TableArray(ScalarObject):  # displacement style table
 
         # the times/freqs
         self._times[self.itime] = dt
+        #try:
         self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+        #except IndexError:
+            #print('self.node_gridtype.shape =', self.node_gridtype.shape)
+            #print('self.data[self.itime, self.itotal, :] =', self.data.shape)
+            #print(self)
+            #raise
         self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
         self.itotal += 1
 
@@ -180,11 +189,11 @@ class TableArray(ScalarObject):  # displacement style table
         #print(msg)
         msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
         msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        if not 0 < node_id < 1000000000:
+        #if not 0 < node_id < 1000000000:
             #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
             #msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
-            raise RuntimeError(msg)
-        assert isinstance(node_id, int), node_id
+            #raise RuntimeError(msg)
+        #assert isinstance(node_id, int), node_id
         #print(msg)
         #assert isinstance(node_id, int), msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'

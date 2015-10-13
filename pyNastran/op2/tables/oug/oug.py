@@ -142,7 +142,7 @@ class OUG(OP2Common):
         #print self.code_information()
         self.fix_format_code()
         self._parse_thermal_code()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
@@ -250,7 +250,7 @@ class OUG(OP2Common):
 
         self.fix_format_code()
         self._parse_thermal_code()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', self.approach_code,
                                                            self.approach_code_str(self.approach_code)))
             self.binary_debug.write('  %-14s = %r\n' % ('tCode', self.tCode))

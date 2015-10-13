@@ -118,7 +118,7 @@ class OQG(OP2Common):
 
         self.fix_format_code()
         self._parse_thermal_code()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
@@ -228,7 +228,7 @@ class OQG(OP2Common):
 
         self.fix_format_code()
         self._parse_thermal_code()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
@@ -290,8 +290,8 @@ class OQG(OP2Common):
                                  RealTemperatureGradientAndFlux, None,
                                  RealTemperatureGradientAndFluxArray, None, 'node', random_code=self.random_code)
         elif self.thermal == 8:  # 4 ?
-            result_name = 'displacement_scaled_response_spectra_NRL'
-            storage_obj = self.displacement_scaled_response_spectra_NRL
+            result_name = 'spc_forces_scaled_response_spectra_NRL'
+            storage_obj = self.spc_forces_scaled_response_spectra_NRL
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)

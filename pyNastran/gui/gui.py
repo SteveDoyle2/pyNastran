@@ -195,8 +195,12 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             'p      - pick node/element',
             's      - view model as a surface',
             'w      - view model as a wireframe',
+            'f      - set rotation center (zoom out when picking',
+            '         to disable clipping)',
+            'e      - view model edges',
+            'b      - change edge color from scalar/black',
             '',
-            'Reload Model:  using the same filename reload the model',
+            'Reload Model:  using the same filename, reload the model',
         ]
         QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 

@@ -480,7 +480,7 @@ class F06Writer(OP2_F06_Common):
             # alphabetical order...
             # bars
             self.cbar_force,
-            self.cbar100_force,
+            self.cbar_force_10nodes,
 
             # beam
             self.cbend_force,
@@ -542,6 +542,7 @@ class F06Writer(OP2_F06_Common):
 
             # bars/beams
             self.cbar_strain,
+            self.cbar_strain_10nodes,
             self.cbeam_strain,
 
             # plates
@@ -582,6 +583,7 @@ class F06Writer(OP2_F06_Common):
             #------------------------------------------
             # cbars/cbeams
             self.cbar_stress,
+            self.cbar_stress_10nodes,
             self.nonlinear_cbeam_stress,
             self.cbeam_stress,
 

@@ -1,10 +1,9 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+# pylint: disable=C0103,E1101
 """
 Defines the GUI IO file for Nastran.
 """
-# pylint: disable=C0103,E1101
-from __future__ import print_function
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 from six import iteritems, itervalues
 from six.moves import zip, range
 from copy import deepcopy
@@ -30,6 +29,7 @@ from collections import defaultdict, OrderedDict
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle
 from numpy.linalg import norm
+import numpy as np
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
@@ -81,7 +81,8 @@ class NastranComplexDisplacementResults(object):
 
         # calculate deflections
         eigvs = model.eigenvectors[1000].data[6, :, :]
-        defl = scale * (np.real(eigvs[:,:3]) * np.cos(theta) + np.imag(eigvs[:,:3]) * sin(theta))
+        defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
+                        np.imag(eigvs[:, :3]) * sin(theta))
 
 class NastranDisplacementResults(object):
     def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
@@ -628,7 +629,7 @@ class NastranIO(object):
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         j = 0
-        nid_to_pid_map, cases, form = self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+        nid_to_pid_map, icase, cases, form = self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
         if 0:
             nsprings = 0
@@ -653,6 +654,7 @@ class NastranIO(object):
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
+        self._fill_bar_yz(dim_max, model, icase, cases, form)
 
         # add alternate actors
         self._add_alt_actors(self.alt_grids)
@@ -951,7 +953,8 @@ class NastranIO(object):
 
     def _fill_spc(self, spc_id, nspcs, nspc1s, nspcds, dim_max, model, nid_to_pid_map):
         purple = (1., 0., 1.)
-        self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1., point_size=5, representation='point')
+        self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.,
+                                       point_size=5, representation='point')
 
         # node_ids = self.get_SPCx_node_ids(model, spc_id, exclude_spcadd=False)
         node_ids_c1 = self.get_SPCx_node_ids_c1(model, spc_id, exclude_spcadd=False)
@@ -1019,6 +1022,228 @@ class NastranIO(object):
                 self.log.warning('get_MPCx_node_ids_c1 doesnt supprt %r' % card.type)
                 continue
         return lines
+
+    def _fill_bar_yz(self, dim_max, model, icase, cases, form):
+        """
+        plots the y, z vectors for CBAR & CBEAM elements
+        """
+        green = (0., 1., 0.)
+        blue = (0., 0., 1.)
+        card_types = ['CBAR', 'CBEAM']
+        out = model.get_card_ids_by_card_types(card_types=card_types)
+        bar_beam_eids = out['CBAR'] + out['CBEAM']
+        self.bar_lines = {}
+        if len(bar_beam_eids) == 0:
+            return
+
+        scale = 0.15
+        lines_bar_y = []
+        lines_bar_z = []
+
+        bar_types = {
+            'bar' : [],
+            "ROD": [],
+            "TUBE": [],
+            "I": [],
+            "CHAN": [],
+            "T": [],
+            "BOX": [],
+            "BAR": [],
+            "CROSS": [],
+            "H": [],
+            "T1": [],
+            "I1": [],
+            "CHAN1": [],
+            "Z": [],
+            "CHAN2": [],
+            "T2": [],
+            "BOX1": [],
+            "HEXA": [],
+            "HAT": [],
+            "HAT1": [],
+            "DBOX": [],  # was 12
+        }  # for GROUP="MSCBML0"
+
+        found_bar_types = set([])
+        neids = len(self.element_ids)
+        for Type, data in iteritems(bar_types):
+            eids = []
+            lines_bar_y = []
+            lines_bar_z = []
+            bar_types[Type] = (eids, lines_bar_y, lines_bar_z)
+
+
+        for eid in bar_beam_eids:
+            # if eid < 30000:
+                # continue
+            elem = model.elements[eid]
+            pid = elem.pid
+            if pid.type in ['PBAR', 'PBEAM']:
+                Type = 'bar'
+            elif pid.type in ['PBARL', 'PBEAML']:
+                Type = pid.Type
+            else:
+                raise NotImplementedError(pid)
+            found_bar_types.add(Type)
+
+            (nid1, nid2) = elem.node_ids
+            node1 = model.nodes[nid1]
+            node2 = model.nodes[nid2]
+            n1 = node1.get_position()
+            n2 = node2.get_position()
+            c = (n1 + n2) / 2.
+            i = n2 - n1
+            Li = norm(i)
+            ihat = i / Li
+
+            if elem.g0:
+                n0 = model.nodes[elem.g0].get_position()
+                v = n0 - n1
+            else:
+                v = elem.x
+
+            offt_vector, offt_end_a, offt_end_b = elem.offt
+            # if offt_end_a == 'G' or (offt_end_a == 'O' and offt_vector == 'G'):
+
+            if offt_vector == 'G':
+                # end A
+                # global - cid != 0
+                if node1.Cp() != 0:
+                    v = node1.cp.transform_node_to_global(v)
+                    if node1.cp.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node1.cp)
+            elif offt_vector == 'B':
+                # basic - cid = 0
+                pass
+            else:
+                raise NotImplementedError(elem.offt)
+
+            # rotate wa
+            wa = elem.wa
+            if offt_end_a == 'G':
+                if node1.Cp() != 0:
+                    wa = node1.cp.transform_node_to_global(wa)
+                    if node1.cp.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node1.cp)
+            elif offt_end_a == 'B':
+                pass
+            elif offt_end_a == 'O':
+                wa = node1.cp.transform_node_to_global(n1 - wa)
+            else:
+                raise NotImplementedError(elem.offt)
+
+            # rotate wb
+            wb = elem.wb
+            if offt_end_b == 'G':
+                if node2.Cp() != 0:
+                    wb = node2.cp.transform_node_to_global(wb)
+                    if node2.cp.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node2.cp)
+            elif offt_end_b == 'B':
+                pass
+            elif offt_end_b == 'O':
+                wb = node1.cp.transform_node_to_global(n2 - wb)
+            else:
+                raise NotImplementedError(elem.offt)
+
+            assert elem.offt in ['GGG', 'BGG'], elem.offt
+            vhat = v / norm(v) # i
+            try:
+                z = cross(ihat, vhat) # k
+            except ValueError:
+                msg = 'Invalid vector length\n'
+                msg += 'n1  =%s\n' % str(n1)
+                msg += 'n2  =%s\n' % str(n2)
+                msg += 'nid1=%s\n' % str(nid1)
+                msg += 'nid2=%s\n' % str(nid2)
+                msg += 'i   =%s\n' % str(i)
+                msg += 'Li  =%s\n' % str(Li)
+                msg += 'ihat=%s\n' % str(ihat)
+                msg += 'v   =%s\n' % str(v)
+                msg += 'vhat=%s\n' % str(vhat)
+                msg += 'z=cross(ihat, vhat)'
+                raise ValueError(msg)
+
+            zhat = z / norm(z)
+            yhat = cross(zhat, ihat) # j
+            # if eid == 5570:
+                # print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+
+            if norm(yhat) == 0.0 or norm(z) == 0.0:
+                print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+            elif not allclose(norm(yhat), 1.0) or not allclose(norm(zhat), 1.0) or Li == 0.0:
+                print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+                    eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+            bar_types[Type][0].append(eid)
+            bar_types[Type][1].append((c, c + yhat * Li * scale))
+            bar_types[Type][2].append((c, c + zhat * Li * scale))
+
+        #print('found_bar_types =', found_bar_types)
+
+        geo_form = form[2]
+        bar_form = ('CBAR / CBEAM', None, [])
+        #print('geo_form =', geo_form)
+        for Type, data in sorted(iteritems(bar_types)):
+            eids, lines_bar_y, lines_bar_z = data
+            if len(eids):
+                # if Type not in ['ROD', 'TUBE']:
+                bar_y = Type + '_y'
+                bar_z = Type + '_z'
+                self.create_alternate_vtk_grid(bar_y, color=green, line_width=5, opacity=1.,
+                                               point_size=5, representation='wire', bar_scale=scale)
+                self.create_alternate_vtk_grid(bar_z, color=blue, line_width=5, opacity=1.,
+                                               point_size=5, representation='wire', bar_scale=scale)
+
+                self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
+                self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
+
+                # form = ['Geometry', None, []]
+                i = searchsorted(self.element_ids, eids)
+                is_type = zeros(self.element_ids.shape, dtype='int32')
+                is_type[i] = 1.
+                # print('is-type =', is_type.max())
+                bar_form[2].append(['is_%s' % Type, icase, []])
+                cases[(0, icase, 'is_%s' % Type, 1, 'centroid', '%i')] = is_type
+                icase += 1
+        # print(geo_form)
+        geo_form.append(bar_form)
+        return icase
+
+    def _add_nastran_lines_xyz_to_grid(self, name, lines, model):
+        nlines = len(lines)
+        nnodes = nlines * 2
+        if nnodes == 0:
+            return
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nnodes)
+
+        bar_lines = zeros((nnodes, 6))
+        self.bar_lines[name] = bar_lines
+
+        j = 0
+        for i, (node1, node2) in enumerate(lines):
+            bar_lines[i, :3] = node1
+            bar_lines[i, 3:] = node2
+
+            points.InsertPoint(j, *node1)
+            points.InsertPoint(j + 1, *node2)
+            # print('adding %s %s' % (str(node1), str(node2)))
+
+            elem = vtk.vtkLine()
+            elem.GetPointIds().SetId(0, j)
+            elem.GetPointIds().SetId(1, j + 1)
+            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            j += 2
+
+        n1 = bar_lines[:, :3]
+        n2 = bar_lines[:, 3:]
+        dy = n2 - n1
+        Ly = norm(dy, axis=1)
+        # v = dy / Ly *  bar_scale
+        # n2 = n1 + v
+        # print(Ly)
+
+        self.alt_grids[name].SetPoints(points)
 
     def _fill_mpc(self, mpc_id, dim_max, model, nid_to_pid_map):
         green = (0., 1., 0.)
@@ -1666,7 +1891,7 @@ class NastranIO(object):
             form0.append(('Normalz', icase, []))
             icase += 1
 
-        return nid_to_pid_map, cases, form
+        return nid_to_pid_map, icase, cases, form
 
     def _plot_pressures(self, model, cases, form0, icase, xref_loads):
         """
@@ -1801,7 +2026,7 @@ class NastranIO(object):
                     form.append(('Total Load FX', icase, []))
                     form.append(('Total Load FY', icase + 1, []))
                     form.append(('Total Load FZ', icase + 2, []))
-                    icase += 2
+                    icase += 3
 
                 if abs(spcd).max():
                     cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
@@ -2093,49 +2318,6 @@ class NastranIO(object):
                 form.append(form0)
 
         self._finish_results_io2(form, cases)
-
-    def __fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
-        print('_fill_cart3d_case2')
-        nelements = elements.shape[0]
-        nnodes = nodes.shape[0]
-
-        eids = arange(1, nelements + 1)
-        nids = arange(1, nnodes + 1)
-        cnormals = model.get_normals(shift_nodes=False)
-        cnnodes = cnormals.shape[0]
-        assert cnnodes == nelements, len(cnnodes)
-
-        #print('nnodes =', nnodes)
-        #print('nelements =', nelements)
-        #print('regions.shape =', regions.shape)
-        subcase_id = 0
-        labels = ['NodeID', 'ElementID', 'Region',
-                  'Normal X', 'Normal Y', 'Normal Z']
-        cart3d_geo = Cart3dGeometry(subcase_id, labels,
-                                    nids, eids, regions, cnormals,
-                                    uname='Cart3dGeometry')
-
-        cases = {
-            0 : (cart3d_geo, (0, 'NodeID')),
-            1 : (cart3d_geo, (0, 'ElementID')),
-            2 : (cart3d_geo, (0, 'Region')),
-            3 : (cart3d_geo, (0, 'NormalX')),
-            4 : (cart3d_geo, (0, 'NormalY')),
-            5 : (cart3d_geo, (0, 'NormalZ')),
-        }
-        geometry_form = [
-            ('NodeID', 0, []),
-            ('ElementID', 1, []),
-            ('Region', 2, []),
-            ('Normal X', 3, []),
-            ('Normal Y', 4, []),
-            ('Normal Z', 5, []),
-        ]
-        form = [
-            ('Geometry', None, geometry_form),
-        ]
-        icase = 6
-        return form, cases, icase
 
     def _fill_nastran_output(self, cases, model, form, icase):
         """

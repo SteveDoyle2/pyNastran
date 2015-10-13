@@ -131,7 +131,11 @@ class RealRodArray(OES_Object):
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
 
-        # write the f06
+        if self.is_sort1():
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
+        return page_num
+
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -346,9 +350,6 @@ class RealRodStress(StressObject):
             self.MS_axial[dt][eid] = MSa
             self.torsion[dt][eid] = torsion
             self.MS_torsion[dt][eid] = MSt
-
-    def getLength(self):
-        return (20, '4f')
 
     def delete_transient(self, dt):
         del self.axial[dt]

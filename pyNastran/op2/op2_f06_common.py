@@ -84,6 +84,10 @@ class OP2_F06_Common(object):
         self.cbar_stress = {}
         self.cbar_strain = {}
 
+        self.cbar_force_10nodes = {}
+        self.cbar_stress_10nodes = {}
+        self.cbar_strain_10nodes = {}
+
         self.cbeam_force = {}
         self.cbeam_stress = {}
         self.cbeam_strain = {}
@@ -219,7 +223,6 @@ class OP2_F06_Common(object):
 
         # OEF - Forces - tCode=4 thermal=0
 
-        self.cbar100_force = {}
         self.cbend_force = {}
         self.cbush_force = {}
         self.coneax_force = {}
@@ -295,6 +298,8 @@ class OP2_F06_Common(object):
 
         # OQG - spc/mpc forces
         self.spc_forces = {}  # tCode=3?
+        self.spc_forces_scaled_response_spectra_NRL = {}
+
         self.mpc_forces = {}  # tCode=39
 
         # OQG - thermal forces
@@ -395,6 +400,7 @@ class OP2_F06_Common(object):
 
             # OQG - spc/mpc forces
             'spc_forces',
+            'spc_forces_scaled_response_spectra_NRL',
             'mpc_forces',
             'thermal_gradient_and_flux',
 
@@ -434,7 +440,10 @@ class OP2_F06_Common(object):
             'cbar_stress',
             'cbar_strain',
             'cbar_force',
-            'cbar100_force',
+
+            'cbar_stress_10nodes',
+            'cbar_strain_10nodes',
+            'cbar_force_10nodes',
 
             # OES - isotropic CBEAM stress/strain
             'cbeam_stress',

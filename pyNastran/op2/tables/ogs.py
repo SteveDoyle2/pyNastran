@@ -84,7 +84,7 @@ class OGS(OP2Common):
         #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
 
         #print self.code_information()
-        if self.debug:
+        if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
@@ -95,17 +95,22 @@ class OGS(OP2Common):
         if self.read_mode == 1:
             return len(data)
 
-        if self.table_code == 26:  # OGS1 - grid point stresses - surface
+        if self.table_code == 26:
+            # OGS1 - grid point stresses - surface
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table26(data)
-        elif self.table_code == 27:  # OGS1 - grid point stresses - volume direct
+        elif self.table_code == 27:
+            # OGS1 - grid point stresses - volume direct
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table27(data)
-        elif self.table_code == 28:  # OGS1- grid point stresses - principal
+        elif self.table_code == 28:
+            # OGS1- grid point stresses - principal
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table28(data)
-        #elif self.table_code == 35:  # OGS - Grid point stress discontinuities (plane strain)
-            #n = self._not_implemented_or_skip(data, msg)
+        elif self.table_code == 35:
+            # OGS - Grid point stress discontinuities (plane strain)
+            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_ogs1_table35(data)
         else:
             raise NotImplementedError('table_code=%s table_name=%s' % (self.table_code, self.table_name))
         return n
@@ -127,7 +132,8 @@ class OGS(OP2Common):
             raise RuntimeError(msg)
         return n
 
-    def _readOGS1_table26_numWide11(self, data):  # surface stresses
+    def _readOGS1_table26_numWide11(self, data):
+        """surface stresses"""
         #dt = self.nonlinear_factor
         s = Struct(b'2i4s8f')
 
@@ -143,9 +149,11 @@ class OGS(OP2Common):
             assert nid > 0, nid
             #self.obj.add(dt, nid, eid, fiber, nx, ny, txy,
             #             angle, major, minor, tmax, ovm)
+            n += 44
         return n
 
-    def _read_ogs1_table27(self, data):  # OGS1 - grid point stresses - volume direct
+    def _read_ogs1_table27(self, data):
+        """OGS1 - grid point stresses - volume direct"""
         #is_sort1 = self.is_sort1()
         if self.num_wide == 9:  # real/random
             resultName = 'gridPointVolumeStresses'
@@ -156,9 +164,9 @@ class OGS(OP2Common):
             raise RuntimeError(msg)
         return n
 
-    def _readOGS1_table27_numWide9(self, data):  # surface stresses
+    def _readOGS1_table27_numWide9(self, data):
+        """surface stresses"""
         s = Struct(self._endian + b'2i7f')
-
         n = 0
         nelements = len(data) // 36  # 9*4
         for i in range(nelements):
@@ -169,4 +177,32 @@ class OGS(OP2Common):
             assert nid > 0, nid
             #check_nid
             #self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+            n += 36
+        return n
+
+    def _read_ogs1_table35(self, data):
+        """grid point stress discontinuities (plane stress/strain)"""
+        resultName = 'gridPointStresses'
+        if self.num_wide == 6:
+            #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
+            n = self._readOGS1_table35_numWide6(data)
+        else:
+            msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
+            raise RuntimeError(msg)
+        return n
+
+    def _readOGS1_table35_numWide6(self, data):
+        """grid point stress discontinuities (plane stress/strain)"""
+        s = Struct(self._endian + b'i5f')
+        n = 0
+        nelements = len(data) // 24  # 6*4
+        for i in range(nelements):
+            edata = data[n:n+24]
+            out = s.unpack(edata)
+            (ekey, nx, ny, nz, txy, pressure) = out
+            nid = (ekey - self.device_code) // 10
+            assert nid > 0, nid
+            #check_nid
+            #self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+            n += 24
         return n

@@ -212,7 +212,7 @@ class PanairIO(object):
         #self.result_cases[key] = Cp_array2
         icase = len(self.result_cases)
 
-        form = self.form
+        form = self.get_form()
         results_form = [
             ('Cp', icase, []),
             ('Cp_centroidal', icase + 1, [],),

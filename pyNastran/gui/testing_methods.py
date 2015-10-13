@@ -3,6 +3,42 @@ from six import iteritems
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
+class TestGuiCommon(object):
+    def __init__(self, res_widget):
+        self.res_widget = res_widget
+        print('init')
+
+    def form(self):
+        formi = self.res_widget.get_form()
+        return formi
+
+    def get_form(self):
+        return self._form
+
+    def set_form(self, formi):
+        self._form = formi
+        data = []
+        for key in self.caseKeys:
+            print(key)
+            if isinstance(key, int):
+                obj, (i, name) = self.resultCases[key]
+                t = (i, [])
+            else:
+                t = (key[1], [])
+            data.append(t)
+
+        self.res_widget.update_results(formi)
+
+        key = self.caseKeys[0]
+        location = self.get_case_location(key)
+        method = 'centroid' if location else 'nodal'
+
+        data2 = [(method, None, [])]
+        self.res_widget.update_methods(data2)
+
+
+
+
 
 class GeometryProperty(object):
     def __init__(self):
@@ -49,12 +85,16 @@ class ScalarBar(object):
     def Modified(self):
         pass
 
-
-class GUIMethods(object):
+class MockResWidget(object):
     def __init__(self):
+        pass
+class GUIMethods(TestGuiCommon):
+    def __init__(self):
+        res_widget = MockResWidget()
+        TestGuiCommon.__init__(self, res_widget)
         self.is_testing = True
         self.debug = False
-        self.form = []
+        self._form = []
         self.result_cases = {}
         self._finish_results_io = self.passer1
         self._finish_results_io2 = self.passer2
@@ -97,10 +137,12 @@ class GUIMethods(object):
     @property
     def displacement_scale_factor(self):
         return 1 * self.dim_max
-    def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None, point_size=None, representation=None):
+    def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None,
+                                  point_size=None, bar_scale=None,
+                                  representation=None):
         self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
-                           point_size=point_size,
+                           point_size=point_size, bar_scale=bar_scale,
                            opacity=opacity, representation=representation)
         self.geometry_properties[name] = geom
 

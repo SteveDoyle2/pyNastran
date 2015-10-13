@@ -133,7 +133,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
         is_vector = [is_vector]
         vector_stop = [vector_stop]
 
-    iSubcases = []
+    isubcases = []
     failed_cases = []
     nfailed = 0
     ntotal = 0
@@ -158,7 +158,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                       is_mag_phase=False,
                                       is_vector=vectori,
                                       delete_f06=delete_f06,
-                                      iSubcases=iSubcases, debug=debug,
+                                      isubcases=isubcases, debug=debug,
                                       stopOnFailure=stopOnFailure,
                                       binary_debug=binary_debug) # True/False
                 if not is_passed_i and vector_stopi:
@@ -197,11 +197,11 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False, is_sort1=True,
             is_vector=False, delete_f06=False,
-            iSubcases=None, exclude=None, debug=False, binary_debug=False,
+            isubcases=None, exclude=None, debug=False, binary_debug=False,
             quiet=False, stopOnFailure=True):
     op2 = None
-    if iSubcases is None:
-        iSubcases = []
+    if isubcases is None:
+        isubcases = []
     if exclude is None:
         exclude = []
     assert '.op2' in op2_filename.lower(), 'op2FileName=%s is not an OP2' % op2_filename
@@ -210,12 +210,12 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     fname_base, ext = os.path.splitext(op2_filename)
     bdf_filename = fname_base + '.test_op2.bdf'
 
-    if isinstance(iSubcases, string_types):
-        if '_' in iSubcases:
-            iSubcases = [int(i) for i in iSubcases.split('_')]
+    if isinstance(isubcases, string_types):
+        if '_' in isubcases:
+            isubcases = [int(i) for i in isubcases.split('_')]
         else:
-            iSubcases = [int(iSubcases)]
-    print('iSubcases = %s' % iSubcases)
+            isubcases = [int(isubcases)]
+    print('isubcases = %s' % isubcases)
 
     debug_file = None
     model, ext = os.path.splitext(op2_filename)
@@ -230,7 +230,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     else:
         op2 = OP2(debug=debug, debug_file=debug_file)
 
-    op2.set_subcases(iSubcases)
+    op2.set_subcases(isubcases)
     op2.remove_results(exclude)
 
     if is_memory:
@@ -255,10 +255,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print(op2.print_subcase_key())
         if write_bdf:
             op2.write_bdf(bdf_filename)
-        if write_bdf and 0:
-            op2.write_bdf('fem.test_op2.bdf', interspersed=True)
-        #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
-        #tableNamesOP2 = op2.getTableNamesFromOP2()
+            os.remove(bdf_filename)
 
         if is_memory:
             if is_linux: # linux
@@ -297,9 +294,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print("Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb))
 
 
+        #table_names_f06 = parse_table_names_from_F06(op2.f06FileName)
+        #table_names_op2 = op2.getTableNamesFromOP2()
         #print("subcases = ", op2.subcases)
 
-        #assert tableNamesF06==tableNamesOP2, 'tableNamesF06=%s tableNamesOP2=%s' % (tableNamesF06, tableNamesOP2)
+        #assert table_names_f06==table_names_op2, 'table_names_f06=%s table_names_op2=%s' % (table_names_f06, table_names_op2)
         #op2.caseControlDeck.sol = op2.sol
         #print(op2.caseControlDeck.get_op2_data())
         #print(op2.caseControlDeck.get_op2_data())
@@ -429,7 +428,7 @@ def main():
             write_op2=data['--write_op2'],
             is_mag_phase=data['--is_mag_phase'],
             is_vector=data['--vector'],
-            iSubcases=data['--subcase'],
+            isubcases=data['--subcase'],
             exclude=data['--exclude'],
             debug=not(data['--quiet']),
             binary_debug=data['--binarydebug'],
