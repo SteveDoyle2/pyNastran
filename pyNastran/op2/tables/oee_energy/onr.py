@@ -17,10 +17,10 @@ class ONR(OP2Common):
         """
         self.words = [
             'aCode',       'tCode',    'eTotal',        'isubcase',
-             '???',         '???',      '???',          'load_set'
-             'format_code', 'num_wide', 'cvalres',      '???',
-             'setID',       '???',      '???',          '???',
-             '???',         '???',      '???',          '???',
+             '???',         '???',      'element_name', 'load_set'
+             'format_code', 'num_wide', 'cvalres',      'setID',
+             'setID',       'eigenReal','eigenImag',     '???',
+             'etotpos',     'etotneg',  '???',          '???',
              '???',         '???',      '???',      '???',
              '???', 'Title', 'subtitle', 'label']
 
@@ -28,17 +28,20 @@ class ONR(OP2Common):
 
         ## total energy of all elements in isubcase/mode
         self.eTotal = self.parse_approach_code(data)
+        self.binary_debug.flush()
 
         element_name, = unpack(self._endian + b'8s', data[24:32])
-        #print("element_name = %s" %(element_name))
+        print("element_name = %s" %(element_name))
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
         except UnicodeDecodeError:
             print("element_name = ", str(element_name))
-            raise
+            #raise
         #print("element_name = %s" %(element_name))
         if element_name.isalpha():
             self.data_code['element_name'] = element_name
+        else:
+            self.data_code['element_name'] = 'UnicodeDecodeError???'
 
         #: Load set or zero
         self.load_set = self.add_data_parameter(data, 'load_set', 'i', 8, False)
@@ -146,7 +149,10 @@ class ONR(OP2Common):
             return len(data)
         self._results._found_result(result_name)
 
+        if self.debug:
+            self.binary_debug.write('cvalares = %s\n' % self.cvalres)
         if self.num_wide == 4:
+            assert self.cvalres in [0, 1], self.cvalres
             self.create_transient_object(self.strain_energy, RealStrainEnergy)
             s = Struct(self._endian + b'i3f')
 
@@ -165,6 +171,7 @@ class ONR(OP2Common):
                 self.obj.add(dt, data_in)
                 n += ntotal
         elif self.num_wide == 5:
+            assert self.cvalres in [1, 2], self.cvalres
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             s = Struct(self._endian + b'8s3f')

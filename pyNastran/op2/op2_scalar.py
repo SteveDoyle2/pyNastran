@@ -360,7 +360,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # spc forces
             # OQG1/OQGV1 - spc forces in the nodal frame
             # OQP1 - scaled response spectra - spc forces
-
             b'OQG1' : [self._read_oqg1_3, self._read_oqg_4],
             b'OQG2' : [self._read_oqg2_3, self._read_oqg_4],
 
@@ -631,8 +630,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Pops a GUI if the op2_filename hasn't been set.
 
-        :param op2_filename:  the filename to check (None -> gui)
-        :returns op2_filename:  a valid file string
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        op2_filename : str
+            the filename to check (None -> gui)
+
+        Returns
+        -------
+        op2_filename : str
+            a valid file string
         """
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
@@ -669,7 +677,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Starts the OP2 file reading
 
-        :param op2_filename: the op2 file
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        op2_filename : str
+            the op2 file
+
         +--------------+-----------------------+
         | op2_filename | Description           |
         +--------------+-----------------------+
@@ -866,9 +880,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._skip_table(self.table_name)
                 elif table_name == b'EXTDB':
                     self._read_extdb()
-                elif table_name in [b'BHH', b'KHH']:
+                elif table_name == b'BHH':
                     self._read_bhh()
-
+                elif table_name == b'KHH':
+                    self._read_bhh()
                 elif table_name == b'OMM2':
                     self._read_omm2()
                 elif table_name == b'DIT':  # tables
@@ -1071,7 +1086,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_dit(self):
         """
         Reads the DIT table (poorly).
-        The DIT table stores information about table cards (e.g. TABLED1, TABLEM1).
+        The DIT table stores information about table cards
+        (e.g. TABLED1, TABLEM1).
         """
         table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1330,8 +1346,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def set_additional_matrices_to_read(self, matrices):
         """
-        :param matrices: a dictionary of key=name, value=True/False,
-                         where True/False indicates the matrix should be read
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        matrices : Dict[str] = bool
+            a dictionary of key=name, value=True/False,
+            where True/False indicates the matrix should be read
 
         .. note:: If you use an already defined table (e.g. OUGV1), it will be ignored.
                   If the table you requested doesn't exist, there will be no effect.
@@ -1354,7 +1375,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_omm2(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
@@ -1375,7 +1399,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_fol(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
@@ -1518,6 +1545,53 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert n > nmin, 'infinite loop in BHH/KHH reader'
         self.read_markers([0])
 
+    def _read_khh(self):
+        """
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        """
+        return self._read_bhh()
+        self.table_name = self.read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+
+        n = -3
+        markers = self.get_nmarkers(3, rewind=True)
+        nmin = -1000
+        while nmin < n:
+        #for n in [-3, -4, -5, -6, -7, -8, -9, -10, -11]:
+            print('---------------------------')
+            self.show_ndata(200, types='ifs')
+            data = self._read_record()
+            if 0:
+                markers = self.get_nmarkers(3, rewind=False)
+                if markers[-1] == 0:
+                    break
+                if markers[-1] != 1:
+                    msg = 'expected marker=1; marker=%s; table_name=%r' % (markers[-1], self.table_name)
+                    raise FortranMarkerError(msg)
+                #self.read_markers([n, 1, 1])
+                markers = self.get_nmarkers(1, rewind=False)
+                #print('markers =', markers)
+                nbytes = markers[0]*4 + 12
+                data = self.f.read(nbytes)
+                self.n += nbytes
+            n -= 1
+        assert n > nmin, 'infinite loop in BHH/KHH reader'
+        self.read_markers([0])
+
     def _read_meff(self):
         """
         Parameters
@@ -1652,8 +1726,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         A marker is a flag that is used.  It's a series of 3 ints (4, n, 4)
         where n changes from marker to marker.
 
-        :param nmarkers:  the number of markers to read
-        :returns markers:  a list of nmarker integers
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        nmarkers : int
+            the number of markers to read
+
+        Returns
+        -------
+        markers : List[int, int, int]
+            a list of nmarker integers
         """
         markers = []
         s = Struct('3i')
@@ -1667,7 +1750,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Reads a geometry table
 
-        :param self:  the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
         if self.debug:
@@ -1741,6 +1827,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_results_table(self):
         """
         Reads a results table
+
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         if self.debug:
             self.binary_debug.write('read_results_table - %s\n' % self.table_name)
@@ -1782,11 +1873,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Creates the self.date attribute from the 2-digit year.
 
-        :param month: the month (integer <= 12)
-        :param day:  the day (integer <= 31)
-        :param year: the day (integer <= 99)
-        :param zero: a dummy integer (???)
-        :param one:  a dummy integer (???)
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        month : int
+            the month (integer <= 12)
+        day :  int
+            the day (integer <= 31)
+        year : int
+            the day (integer <= 99)
+        zero : int
+            a dummy integer (???)
+        one : int
+            a dummy integer (???)
         """
         month, day, year = self._set_op2_date(month, day, year)
 

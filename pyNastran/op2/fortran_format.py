@@ -592,7 +592,10 @@ class FortranFormat(object):
 
     def _read_record(self, stream=False, debug=True, macro_rewind=False):
         """
-        :param self:  the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2()
+            the OP2 object pointer
         """
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.debug and debug:
@@ -607,7 +610,9 @@ class FortranFormat(object):
             raise FortranMarkerError(msg)
 
         markers1 = self.get_nmarkers(1, rewind=True)
+        #return self._read_continuation_record(record, markers1, debug)
 
+    #def _read_continuation_record(self, record, markers1, debug):
         # handling continuation blocks
         if markers1[0] > 0:
             nloop = 0

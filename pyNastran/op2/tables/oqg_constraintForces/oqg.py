@@ -290,8 +290,8 @@ class OQG(OP2Common):
                                  RealTemperatureGradientAndFlux, None,
                                  RealTemperatureGradientAndFluxArray, None, 'node', random_code=self.random_code)
         elif self.thermal == 8:  # 4 ?
-            result_name = 'displacement_scaled_response_spectra_NRL'
-            storage_obj = self.displacement_scaled_response_spectra_NRL
+            result_name = 'spc_forces_scaled_response_spectra_NRL'
+            storage_obj = self.spc_forces_scaled_response_spectra_NRL
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)

@@ -815,12 +815,14 @@ class Op2Codes(object):
             thermal_word = 'isHeatTransfer = True'
         elif thermal == 2:
             thermal_word = 'Scaled response spectra ABS'
-        elif thermal == 3:
-            thermal_word = 'Scaled response spectra SRSS'
+        #elif thermal == 3:
+            #thermal_word = 'Scaled response spectra SRSS'
         elif thermal == 4:
-            thermal_word = 'Scaled response spectra NRL'
+            thermal_word = 'Scaled response spectra SRSS' # NRL???
         elif thermal == 5:
             thermal_word = 'Scaled response spectra NRLO'
+        elif thermal == 8:
+            thermal_word = 'Scaled response spectra NRL'
         else:
             thermal_word = '???'
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)

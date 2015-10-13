@@ -208,7 +208,12 @@ class OP2(OP2_Scalar):
                 continue
             for isubcase in unique_isubcases:
                 keys = self.subcase_key[isubcase]
+                #print('keys = %s' % keys)
                 key0 = tuple([isubcase] + list(keys[0]))
+
+                isubcase, analysis_code, sort_code, count, subtitle = key0
+                key1 = (isubcase, analysis_code, 1, count, subtitle)
+                key2 = (isubcase, analysis_code, 2, count, subtitle)
                 if len(keys) == 1:
                     if key0 not in result:
                         continue
@@ -216,24 +221,24 @@ class OP2(OP2_Scalar):
                     # key0 = tuple([isubcase] + list(key0))
                     result[isubcase] = result[key0]
                     del result[key0]
-                elif len(keys) == 2:
+                elif len(keys) == 2 and key1 in keys and key2 in keys:
                     # continue
                     #print('key0 =', result_type, key0)
                     # res0 = result[key0]
 
                     isubcase, analysis_code, sort_code, count, subtitle = key0
-                    key1 = (isubcase, analysis_code, 1, count, subtitle)
-                    key2 = (isubcase, analysis_code, 2, count, subtitle)
                     if not (key1 in result and key2 in result):
                         if key1 in result:
                             res1 = result[key1]
                             self.log.info("res=%s has a single case; trivial" % res1.__class__.__name__)
                             result[isubcase] = result[key1]
+                            #print('del key1=%s' % str(key1))
                             del result[key1]
                         elif key2 in result:
                             res2 = result[key2]
                             self.log.info("res=%s has a single case; trivial" % res2.__class__.__name__)
                             result[isubcase] = result[key2]
+                            #print('del key2=%s' % str(key2))
                             del result[key2]
                         continue
 

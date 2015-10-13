@@ -1,10 +1,9 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+# pylint: disable=C0103,E1101
 """
 Defines the GUI IO file for Nastran.
 """
-# pylint: disable=C0103,E1101
-from __future__ import print_function
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 from six import iteritems, itervalues
 from six.moves import zip, range
 from copy import deepcopy
@@ -30,6 +29,7 @@ from collections import defaultdict, OrderedDict
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle
 from numpy.linalg import norm
+import numpy as np
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
@@ -81,7 +81,8 @@ class NastranComplexDisplacementResults(object):
 
         # calculate deflections
         eigvs = model.eigenvectors[1000].data[6, :, :]
-        defl = scale * (np.real(eigvs[:,:3]) * np.cos(theta) + np.imag(eigvs[:,:3]) * sin(theta))
+        defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
+                        np.imag(eigvs[:, :3]) * sin(theta))
 
 class NastranDisplacementResults(object):
     def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
@@ -1060,7 +1061,7 @@ class NastranIO(object):
             "HAT1": [],
             "DBOX": [],  # was 12
         }  # for GROUP="MSCBML0"
-        print('***icase =', icase)
+
         found_bar_types = set([])
         neids = len(self.element_ids)
         for Type, data in iteritems(bar_types):
@@ -1075,9 +1076,9 @@ class NastranIO(object):
                 # continue
             elem = model.elements[eid]
             pid = elem.pid
-            if pid.type == 'PBAR':
+            if pid.type in ['PBAR', 'PBEAM']:
                 Type = 'bar'
-            elif pid.type == 'PBARL':
+            elif pid.type in ['PBARL', 'PBEAML']:
                 Type = pid.Type
             else:
                 raise NotImplementedError(pid)
@@ -1095,8 +1096,7 @@ class NastranIO(object):
 
             if elem.g0:
                 n0 = model.nodes[elem.g0].get_position()
-                na = model.nodes[elem.Ga()].get_position()
-                v = n0 - na
+                v = n0 - n1
             else:
                 v = elem.x
 
@@ -1108,17 +1108,21 @@ class NastranIO(object):
                 # global - cid != 0
                 if node1.Cp() != 0:
                     v = node1.cp.transform_node_to_global(v)
+                    if node1.cp.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node1.cp)
             elif offt_vector == 'B':
                 # basic - cid = 0
                 pass
             else:
                 raise NotImplementedError(elem.offt)
 
-            # rotate w1a
+            # rotate wa
             wa = elem.wa
             if offt_end_a == 'G':
                 if node1.Cp() != 0:
                     wa = node1.cp.transform_node_to_global(wa)
+                    if node1.cp.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node1.cp)
             elif offt_end_a == 'B':
                 pass
             elif offt_end_a == 'O':
@@ -1126,11 +1130,13 @@ class NastranIO(object):
             else:
                 raise NotImplementedError(elem.offt)
 
-            # rotate w1b
+            # rotate wb
             wb = elem.wb
             if offt_end_b == 'G':
                 if node2.Cp() != 0:
                     wb = node2.cp.transform_node_to_global(wb)
+                    if node2.cp.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node2.cp)
             elif offt_end_b == 'B':
                 pass
             elif offt_end_b == 'O':
@@ -1140,7 +1146,6 @@ class NastranIO(object):
 
             assert elem.offt in ['GGG', 'BGG'], elem.offt
             vhat = v / norm(v) # i
-            # print('  len(vhat)=%s' % norm(vhat))
             try:
                 z = cross(ihat, vhat) # k
             except ValueError:
@@ -1171,15 +1176,14 @@ class NastranIO(object):
             bar_types[Type][1].append((c, c + yhat * Li * scale))
             bar_types[Type][2].append((c, c + zhat * Li * scale))
 
-        print('found_bar_types =', found_bar_types)
+        #print('found_bar_types =', found_bar_types)
 
         geo_form = form[2]
-        print('geo_form =', geo_form)
+        bar_form = ('CBAR / CBEAM', None, [])
+        #print('geo_form =', geo_form)
         for Type, data in sorted(iteritems(bar_types)):
             eids, lines_bar_y, lines_bar_z = data
-            if len(lines_bar_y):
-                print('-----------')
-                print(Type)
+            if len(eids):
                 # if Type not in ['ROD', 'TUBE']:
                 bar_y = Type + '_y'
                 bar_z = Type + '_z'
@@ -1192,16 +1196,15 @@ class NastranIO(object):
                 self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
 
                 # form = ['Geometry', None, []]
-
-                # print('eids =', eids)
                 i = searchsorted(self.element_ids, eids)
                 is_type = zeros(self.element_ids.shape, dtype='int32')
                 is_type[i] = 1.
                 # print('is-type =', is_type.max())
-                geo_form.append(['is_%s' % Type, icase, []])
+                bar_form[2].append(['is_%s' % Type, icase, []])
                 cases[(0, icase, 'is_%s' % Type, 1, 'centroid', '%i')] = is_type
                 icase += 1
         # print(geo_form)
+        geo_form.append(bar_form)
         return icase
 
     def _add_nastran_lines_xyz_to_grid(self, name, lines, model):
@@ -2302,49 +2305,6 @@ class NastranIO(object):
                 form.append(form0)
 
         self._finish_results_io2(form, cases)
-
-    def __fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
-        print('_fill_cart3d_case2')
-        nelements = elements.shape[0]
-        nnodes = nodes.shape[0]
-
-        eids = arange(1, nelements + 1)
-        nids = arange(1, nnodes + 1)
-        cnormals = model.get_normals(shift_nodes=False)
-        cnnodes = cnormals.shape[0]
-        assert cnnodes == nelements, len(cnnodes)
-
-        #print('nnodes =', nnodes)
-        #print('nelements =', nelements)
-        #print('regions.shape =', regions.shape)
-        subcase_id = 0
-        labels = ['NodeID', 'ElementID', 'Region',
-                  'Normal X', 'Normal Y', 'Normal Z']
-        cart3d_geo = Cart3dGeometry(subcase_id, labels,
-                                    nids, eids, regions, cnormals,
-                                    uname='Cart3dGeometry')
-
-        cases = {
-            0 : (cart3d_geo, (0, 'NodeID')),
-            1 : (cart3d_geo, (0, 'ElementID')),
-            2 : (cart3d_geo, (0, 'Region')),
-            3 : (cart3d_geo, (0, 'NormalX')),
-            4 : (cart3d_geo, (0, 'NormalY')),
-            5 : (cart3d_geo, (0, 'NormalZ')),
-        }
-        geometry_form = [
-            ('NodeID', 0, []),
-            ('ElementID', 1, []),
-            ('Region', 2, []),
-            ('Normal X', 3, []),
-            ('Normal Y', 4, []),
-            ('Normal Z', 5, []),
-        ]
-        form = [
-            ('Geometry', None, geometry_form),
-        ]
-        icase = 6
-        return form, cases, icase
 
     def _fill_nastran_output(self, cases, model, form, icase):
         """
