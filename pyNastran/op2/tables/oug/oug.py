@@ -335,6 +335,15 @@ class OUG(OP2Common):
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
                                  RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
+        elif self.thermal == 4:
+            result_name = 'displacement_scaled_response_spectra_SRSS'
+            storage_obj = self.displacement_scaled_response_spectra_SRSS
+            if self._results.is_not_saved(result_name):
+                return len(data)
+            self._results._found_result(result_name)
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealDisplacement, ComplexDisplacement,
+                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
         elif self.thermal == 8:  # 4 ?
             result_name = 'displacement_scaled_response_spectra_NRL'
             storage_obj = self.displacement_scaled_response_spectra_NRL

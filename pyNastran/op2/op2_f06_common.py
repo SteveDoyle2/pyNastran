@@ -184,8 +184,9 @@ class OP2_F06_Common(object):
 
         #: OUP
 
-        self.displacement_scaled_response_spectra_NRL = {}
-        self.displacement_scaled_response_spectra_ABS = {}
+        self.displacement_scaled_response_spectra_NRL = {}  # thermal=8
+        self.displacement_scaled_response_spectra_ABS = {}  # thermal=2
+        self.displacement_scaled_response_spectra_SRSS = {} # thermal=4
         #self.displacement_scaled_response_spectra_PSD = {}
         #self.displacement_scaled_response_spectra_ATO = {}
         #self.displacement_scaled_response_spectra_RMS = {}
@@ -610,6 +611,7 @@ class OP2_F06_Common(object):
             # unused?
             'displacement_scaled_response_spectra_NRL',
             'displacement_scaled_response_spectra_ABS',
+            'displacement_scaled_response_spectra_SRSS',
             'velocity_scaled_response_spectra_ABS',
             'acceleration_scaled_response_spectra_NRL',
             'acceleration_scaled_response_spectra_ABS',

@@ -395,7 +395,7 @@ class OP2Common(Op2Codes, F06Writer):
                     else:
                         n = self._read_real_table_static(data, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
-                    if self.is_debug_file or self.read_mode == 0:
+                    if self.is_debug_file or self.read_mode == 0 or real_vector is None:
                         n = self._read_real_table_sort1_debug(data, nnodes, result_name, node_elem, is_cid=is_cid)
                     else:
                         #print('is_debug_file=%s read_mode=%s' % (self.is_debug_file, self.read_mode))

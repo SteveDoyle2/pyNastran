@@ -12,7 +12,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import (RealBarStress, RealBarStrain,
                                                                  RealBarStressArray, RealBarStrainArray)
-# from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import (RealBar10NodesStressArray, RealBar10NodesStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import (RealBar10NodesStressArray, RealBar10NodesStrainArray)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress, RealBeamStrain,
                                                                   RealBeamStressArray, RealBeamStrainArray,
@@ -1764,7 +1764,7 @@ class OES(OP2Common):
                     (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
                     if self.is_debug_file:
                         self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
-                        eid = self._check_id(eid_device, flag, stress_name, out)
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                     n += 36
