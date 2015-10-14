@@ -307,11 +307,14 @@ class RBE2(RigidElement):
         """
         Updates complicated parameters on the GRID card
 
-        :param self:  the GRID object pointer
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        self : RBE2()
+            the RBE2 object pointer
+        n : int
+            the field number to update
+        value : int/float/str
+            the value for the appropriate field
         """
         if n > 3 and n <= 3 + len(self.Gmi):
             self.Gmi[n - 4] = value

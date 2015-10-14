@@ -653,7 +653,7 @@ class NastranIO(object):
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
-        # self._fill_bar_yz(dim_max, model, icase, cases, form)
+        self._fill_bar_yz(dim_max, model, icase, cases, form)
 
 
         #------------------------------------------------------------
@@ -2168,7 +2168,7 @@ class NastranIO(object):
                 nid = load.node
                 if nid in self.dependents_nodes:
                     print('    nid=%s is a dependent node and has an FORCE applied\n%s' % (nid, str(load)))
-                forces[nids.index(nid)] += load.xyz * scale2
+                forces[self.nidMap[nid]] += load.xyz * scale2
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
@@ -2186,7 +2186,7 @@ class NastranIO(object):
                         for nid in node_ids:
                             if nid in self.dependents_nodes:
                                 print('    nid=%s is a dependent node and has an PLOAD2 applied\n%s' % (nid, str(load)))
-                            forces[nids.index(nid)] += f
+                            forces[self.nidMap[nid]] += f
                         forces += f
                         # F += f
                         # M += m
@@ -2194,7 +2194,7 @@ class NastranIO(object):
                         self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (load_case_id, elem.type, load.type))
 
             elif load.type == 'PLOAD4':
-                continue  ## TODO: should be removed
+                # continue  ## TODO: should be removed
                 # elem = load.eid
                 # A = elem.get_area()
                 if 0:
@@ -2204,7 +2204,7 @@ class NastranIO(object):
                         k = load.pressures[0] * scale / 3.
                         # TODO: doesn't consider load.eids for distributed pressures???
                         for nid in node_ids[3:]:
-                            pressures[eids.index(nid)] += k
+                            pressures[self.nidMap[nid]] += k
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         eid = elem.eid
                         node_ids = elem.node_ids
@@ -2213,7 +2213,7 @@ class NastranIO(object):
                         for nid in node_ids[4:]:
                             if nid in self.dependents_nodes:
                                 print('    nid=%s is a dependent node and has an PLOAD4 applied\n%s' % (nid, str(load)))
-                            pressures[nids.index(nid)] += k
+                            pressures[self.nidMap[nid]] += k
                     else:
                         print('    PLOAD4 is unhandled\n%s' % str(load))
 
@@ -2228,23 +2228,27 @@ class NastranIO(object):
                     for el in load.eids:
                         # pressures[eids.index(el.eid)] += p
                         A = el.get_area()
-                        F = p * A * scale
-                        for nid in el.node_ids:
+                        elem_node_ids = el.node_ids
+                        elem_nnodes = len(elem_node_ids)
+                        F = p * A / elem_nnodes
+                        for nid in elem_node_ids:
                             if nid in self.dependents_nodes:
                                 print('    nid=%s is a dependent node and has an PLOAD4 applied\n%s' % (nid, str(load)))
-                            forces[nids.index(nid)] += F
+                            #forces[nids.index(nid)] += F
+                            i = self.nidMap[nid]
+                            forces[i, :] += F * self.normals[i, :]
                 #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
             elif load.type == 'SPCD':
                 #self.gids = [integer(card, 2, 'G1'),]
                 #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
                 for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
+                    if nid in self.dependents_nodes:
+                        print('    nid=%s is a dependent node and has an SPCD applied\n%s' % (nid, str(load)))
                     c1 = int(c1)
                     assert c1 in [1, 2, 3, 4, 5, 6], c1
                     if c1 < 4:
-                        if nid in self.dependents_nodes:
-                            print('    nid=%s is a dependent node and has an SPCD applied\n%s' % (nid, str(load)))
-                        spcd[nids.index(nid), c1 - 1] = d1
+                        spcd[self.nidMap[nid], c1 - 1] = d1
             else:
                 if load.type not in cards_ignored:
                     cards_ignored[load.type] = True

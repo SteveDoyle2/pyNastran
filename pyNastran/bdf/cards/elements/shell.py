@@ -1058,6 +1058,9 @@ class QuadShell(ShellElement):
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
+    def get_area(self):
+        return self.Area()
+
     def Area(self):
         """
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
