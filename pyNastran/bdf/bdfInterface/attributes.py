@@ -53,11 +53,11 @@ class BDFAttributes(object):
     @property
     def point_ids(self):
         if self.spoints is not None and self.epoints is not None:
-            return set(self.node_ids) + self.spoints.points + self.epoints.points
+            return set(self.node_ids) | self.spoints.points | self.epoints.points
         elif self.spoints is not None:
-            return set(self.node_ids) + self.spoints.points
+            return set(self.node_ids) | self.spoints.points
         elif self.epoints is not None:
-            return set(self.node_ids) + self.epoints.points
+            return set(self.node_ids) | self.epoints.points
         return set(self.node_ids)
 
     #def get_nodes(self):
