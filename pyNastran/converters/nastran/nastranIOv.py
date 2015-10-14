@@ -490,6 +490,9 @@ class NastranIO(object):
             model.cross_reference(xref=True, xref_loads=xref_loads,
                                   xref_constraints=False)
 
+        # get indicies and transformations for displacements
+        self.i_transform, self.transforms = model.get_displcement_index_transforms()
+
         n = len(model.nodes)
         nnodes = n
         nspoints = 0
@@ -2360,6 +2363,15 @@ class NastranIO(object):
 
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
+
+        # tansform displacements into global coordinates
+        try:
+            i_transform = self.i_transform
+            transforms = self.transforms
+        except AttributeError:
+            print('Skipping displacment transformation')
+        else:
+            model.transform_displacements_to_global(i_transform, transforms)
 
         if 0:
             cases = OrderedDict()
