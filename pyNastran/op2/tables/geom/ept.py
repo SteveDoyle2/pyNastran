@@ -226,8 +226,8 @@ class EPT(object):
             dataIn = list(s3.unpack(eData))
             #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
 
-            prop = PBEAM(None, dataIn)
-            self.addOp2Property(prop)
+            # prop = PBEAM(None, dataIn)
+            # self.addOp2Property(prop)
             #sys.exit('ept-PBEAM')
         self.card_count['PBEAM'] = nproperties
         return n
