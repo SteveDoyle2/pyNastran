@@ -5,6 +5,8 @@ import sys
 from struct import unpack
 from copy import deepcopy
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
+from pyNastran.utils import object_attributes
+from numpy import fromfile
 
 class FortranFormat(object):
     def __init__(self):
@@ -354,13 +356,18 @@ class FortranFormat(object):
         if self.read_mode in [0, 2]:
             self.ntotal = 0
 
-            # we stream the record because we get it in partial blocks
-            for data in self._stream_record():
-                data = datai + data
+            if 1:
+                # we stream the record because we get it in partial blocks
+                for data in self._stream_record():
+                    data = datai + data
 
+                    n = table4_parser(data)
+                    assert isinstance(n, int), self.table_name
+                    datai = data[n:]
+            else:
+                data = self._read_record()
                 n = table4_parser(data)
                 assert isinstance(n, int), self.table_name
-                datai = data[n:]
 
             # PCOMPs are stupid, so we need an element flag
             if hasattr(self, 'eid_old'):
@@ -448,7 +455,6 @@ class FortranFormat(object):
                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         else:
             raise RuntimeError(self.read_mode)
-        from pyNastran.utils import object_attributes
         del_words = [
             'words',
             #'Title',
@@ -556,7 +562,10 @@ class FortranFormat(object):
         """
         Creates a "for" loop that keeps giving us records until we're done.
 
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2()
+            the OP2 object pointer
         """
         self.istream = 0
         markers0 = self.get_nmarkers(1, rewind=False)

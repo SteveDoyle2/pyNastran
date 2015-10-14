@@ -2647,6 +2647,7 @@ class OES(OP2Common):
         """
         auto_return = False
         is_vectorized = self._is_vectorized(obj_vector, slot_vector)
+        #print('is_vectorized=%s result_name=%r' % (is_vectorized, result_name))
         if is_vectorized:
             #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name))
             if self.read_mode == 1:

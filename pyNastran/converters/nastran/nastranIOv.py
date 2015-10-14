@@ -663,7 +663,7 @@ class NastranIO(object):
         except AttributeError:
             return nid_to_pid_map, icase, cases, form
 
-        print('dependent_nodes =', self.dependents_nodes)
+        #print('dependent_nodes =', self.dependents_nodes)
         form0 = form[2]
         for subcase_id in subcase_ids:
             if subcase_id == 0:
@@ -1923,7 +1923,14 @@ class NastranIO(object):
                 if isinstance(element, ShellElement):
                     normali = element.Normal()
                     #pid = element.pid
-                    zi = element.zOffset + element.pid.z1
+                    pid = element.pid
+                    pid_type = pid.type
+                    if pid_type == 'PSHELL':
+                        zi = element.zOffset + element.pid.z1
+                    elif pid_type == 'PCOMP':
+                        zi = element.zOffset + element.pid.z0
+                    else:
+                        raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
                     i += 1
                 else:
                     i += 1
@@ -1948,18 +1955,19 @@ class NastranIO(object):
             form0.append(('NormalZ', icase, []))
             icase += 1
 
-            # offsets
-            cases[(0, icase, 'OffsetX', 1, 'centroid', '%.1f')] = xoffset
-            form0.append(('OffsetX', icase, []))
-            icase += 1
+            if abs(xoffset).max() > 0.0 or abs(yoffset).max() > 0.0 or abs(zoffset).max() > 0.0:
+                # offsets
+                cases[(0, icase, 'OffsetX', 1, 'centroid', '%.1f')] = xoffset
+                form0.append(('OffsetX', icase, []))
+                icase += 1
 
-            cases[(0, icase, 'OffsetY', 1, 'centroid', '%.1f')] = yoffset
-            form0.append(('OffsetY', icase, []))
-            icase += 1
+                cases[(0, icase, 'OffsetY', 1, 'centroid', '%.1f')] = yoffset
+                form0.append(('OffsetY', icase, []))
+                icase += 1
 
-            cases[(0, icase, 'OffsetZ', 1, 'centroid', '%.1f')] = zoffset
-            form0.append(('OffsetZ', icase, []))
-            icase += 1
+                cases[(0, icase, 'OffsetZ', 1, 'centroid', '%.1f')] = zoffset
+                form0.append(('OffsetZ', icase, []))
+                icase += 1
 
             self.normals = normals
 
@@ -2799,13 +2807,14 @@ class NastranIO(object):
         for (result, name) in temperature_like:
             if subcase_id in result:
                 case = result[subcase_id]
-                subcase_idi = case.subcase_id
+                subcase_idi = case.isubcase
                 if not hasattr(case, 'data'):
                     continue
-                temperatures = case.data[0, :, 0]
-                cases[(subcase_idi, name, 1, 'node', '%g')] = temperatures
-                formi.append((name, icase, []))
-                icase += 1
+                if case.nonlinear_factor is not None: # transient
+                    temperatures = case.data[0, :, 0]
+                    cases[(subcase_idi, name, 1, 'node', '%g')] = temperatures
+                    formi.append((name, icase, []))
+                    icase += 1
         return icase
 
     def clear_nastran(self):
@@ -3508,7 +3517,7 @@ class NastranIO(object):
             sminb = case.data[itime, :, 13]
             #MSc   = case.data[itime, :, 14]
 
-            eidsi = case.element_node # [:, 0]
+            eidsi = case.elements # [:, 0]
 
             i = searchsorted(eids, eidsi)
             if len(i) != len(unique(i)):

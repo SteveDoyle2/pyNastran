@@ -7,9 +7,10 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
+    HeatFlux_2D_3D, HeatFlux_2D_3DArray,
     # not vectorized
-    # TODO: vectorize 7
-    HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D, HeatFlux_VU,
+    # TODO: vectorize 6
+    HeatFlux_CHBDYx, HeatFlux_1D, HeatFlux_VU,
     HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # vectorized
@@ -299,8 +300,6 @@ class OEF(OP2Common):
 
     def _read_oef1_thermal(self, data):
         """Table 4 parser for OEF1 thermal table"""
-        if self.read_mode == 1:
-            return len(data)
         if self._results.is_not_saved('element_forces'):
             return len(data)
         n = 0
@@ -309,6 +308,8 @@ class OEF(OP2Common):
 
         flag = 'element_id'
         if self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
+            if self.read_mode == 1:
+                return len(data)
             # 1-CROD
             # 2-CBEAM
             # 3-CTUBE
@@ -349,12 +350,34 @@ class OEF(OP2Common):
             # 39-TETRA
             # 67-HEXA
             # 68-PENTA
+
+            obj_real = HeatFlux_2D_3D
+            obj_vector_real = HeatFlux_2D_3DArray
+            obj_vector_real = None
+            #if self.element_type == 1: # CROD
+            result_vector_name = 'thermalLoad_2D_3D'
+
+            result_name = result_vector_name
+            if self._results.is_not_saved(result_name):
+                return len(data)
+            self._results._found_result(result_name)
+
+            slot_vector = getattr(self, result_vector_name)
+            slot = slot_vector
+
             if self.format_code == 1 and self.num_wide == 9:  # real - 2D
                 # [33, 53, 64, 74, 75]
-                self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
-                # no zed on this element for some reason...
                 ntotal = 36
                 nelements = len(data) // ntotal
+                auto_return = self._create_oes_object2(nelements,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_real, obj_vector_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
+                #self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
+                # no zed on this element for some reason...
 
                 s = Struct(self._endian + b'i8s6f')
                 for i in range(nelements):
@@ -370,9 +393,14 @@ class OEF(OP2Common):
 
             elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
                 # [39, 67, 68]:  # HEXA,PENTA
-                self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
                 ntotal = 40
                 nelements = len(data) // ntotal
+                auto_return = self._create_oes_object2(nelements,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_real, obj_vector_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4
 
                 s = Struct(self._endian + b'i8s6fi')
                 for i in range(nelements):
@@ -380,7 +408,6 @@ class OEF(OP2Common):
                     n += ntotal
                     out = s.unpack(edata)
                     (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed) = out
-                    #eid = (eid_device - self.device_code) // 10
                     eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                     self.obj.add(dt, data_in)
@@ -391,6 +418,8 @@ class OEF(OP2Common):
             # 107-CHBDYE
             # 108-CHBDYG
             # 109-CHBDYP
+            if self.read_mode == 1:
+                return len(data)
             if self.format_code == 1 and self.num_wide == 8:  # real
                 self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
 
@@ -402,7 +431,6 @@ class OEF(OP2Common):
                     n += ntotal
                     out = s1.unpack(edata)
                     (eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal) = out
-                    #eid = (eid_device - self.device_code) // 10
                     eid = self._check_id(eid_device, flag, 'FORCE', out)
 
                     data_in = [eid, etype, fapplied, free_conv, force_conv, frad, ftotal]
@@ -417,6 +445,8 @@ class OEF(OP2Common):
 
         elif self.element_type == 110:
             # 110-CONV
+            if self.read_mode == 1:
+                return len(data)
             if self.format_code == 1 and self.num_wide == 4:
                 self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
                 s1 = Struct(self._endian + b'ifif')
@@ -440,6 +470,8 @@ class OEF(OP2Common):
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
+            if self.read_mode == 1:
+                return len(data)
             self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
             if self.element_type == 147:  # VUTETRA
                 nnodes = 4
@@ -462,7 +494,6 @@ class OEF(OP2Common):
                     n += 8
                     out = s1.unpack(edata)
                     (eid_device, parent) = out
-                    #eid = (eid_device - self.device_code) // 10
                     #eid = self._check_id(eid_device, flag, 'FORCE', out)
                     eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, parent]
@@ -483,6 +514,8 @@ class OEF(OP2Common):
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
             # 189-VUQUAD
             # 190-VUTRIA
+            if self.read_mode == 1:
+                return len(data)
             if self.format_code == 1 and self.num_wide == 27:  # real
                 self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
                 if self.element_type == 189:
@@ -523,6 +556,8 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 191:  # VUBEAM
+            if self.read_mode == 1:
+                return len(data)
             #assert self.num_wide==27,self.code_information()
             self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
             nnodes = 2
@@ -539,8 +574,6 @@ class OEF(OP2Common):
 
                     out = s1.unpack(edata)
                     (eid_device, parent, coord, icord) = out
-
-                    #eid = (eid_device - self.device_code) // 10
                     eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, parent, coord, icord]
 

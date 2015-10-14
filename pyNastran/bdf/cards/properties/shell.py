@@ -829,7 +829,10 @@ class PSHEAR(ShellProperty):
     def __init__(self, card=None, data=None, comment=''):
         """
         Defines the properties of a shear panel (CSHEAR entry).
-        PSHEAR PID MID T NSM F1 F2
+
+        +--------+-----+-----+---+-----+----+----+
+        | PSHEAR | PID | MID | T | NSM | F1 | F2 |
+        +--------+-----+-----+---+-----+----+----+
         """
         ShellProperty.__init__(self, card, data)
         if comment:

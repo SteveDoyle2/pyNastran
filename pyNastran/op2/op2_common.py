@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals
 from six import string_types
-from six.moves import range
+from six.moves import range, zip
 import copy
 from struct import Struct, unpack
 
@@ -11,6 +11,7 @@ from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.op2.op2Codes import Op2Codes
 
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, MultipleSolutionNotImplementedError
+import numpy as np
 
 
 class OP2Common(Op2Codes, F06Writer):
@@ -390,13 +391,14 @@ class OP2Common(Op2Codes, F06Writer):
             if self.is_sort1():
                 if self.nonlinear_factor is None:
                     if self.is_debug_file:
-                        n = self._read_real_table_static_debug(data, result_name, node_elem, is_cid=is_cid)
+                        n = self._read_real_table_static_debug(data, nnodes, result_name, node_elem, is_cid=is_cid)
                     else:
                         n = self._read_real_table_static(data, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
-                    if self.is_debug_file:
+                    if self.is_debug_file or self.read_mode == 0:
                         n = self._read_real_table_sort1_debug(data, nnodes, result_name, node_elem, is_cid=is_cid)
                     else:
+                        #print('is_debug_file=%s read_mode=%s' % (self.is_debug_file, self.read_mode))
                         n = self._read_real_table_sort1(data, nnodes, result_name, node_elem, is_cid=is_cid)
             else:
                 if self.is_debug_file:
@@ -515,6 +517,30 @@ class OP2Common(Op2Codes, F06Writer):
 
         obj = self.obj
         #nnodes = len(data) // 32
+        #dt = np.dtype([('time', [('min', int), ('sec', int)]),
+                       #('temp', float)])
+        if 1:
+            n = nnodes * 4 * 8
+            #print('len(data)-n*4 = ', len(data), len(data[:n]))
+            int_fmt = b'%s%ii' % (self._endian, nnodes * 8)
+            #print(int_fmt)
+            float_fmt = b'%s%if' % (self._endian, nnodes * 8)
+            #print(float_fmt)
+            ints = np.array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nnodes, 8)
+            ints[:, 0] // 10
+            floats = np.array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nnodes, 8)
+            itotal2 = obj.itotal + nnodes
+
+            obj._times[obj.itime] = dt
+            #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+            #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+            #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
+            obj.node_gridtype[obj.itotal:itotal2, 0] = ints[:, 0]
+            obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
+            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
+            self.itotal = itotal2
+            return nnodes * 4 * 8
+
         assert nnodes > 0, nnodes
         s = Struct(self._endian + b'2i6f')
         for inode in range(nnodes):
