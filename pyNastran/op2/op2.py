@@ -42,6 +42,33 @@ class OP2(OP2_Scalar):
                      debug=debug, log=log, debug_file=debug_file)
         self.ask = False
 
+    def __eq__(self, op2_model):
+        if not self.read_mode == op2_model.read_mode:
+            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (self.read_mode, op2_model.read_mode))
+            return True
+        table_types = self.get_table_types()
+        for table_type in table_types:
+            adict = getattr(self, table_type)
+            bdict = getattr(op2_model, table_type)
+            # print('table_type=%s' % table_type)
+            if len(adict) != len(bdict):
+                print('len(self.%s)=%s len(op2_model.%s)=%s' % (table_type, len(adict), table_type, len(bdict)))
+                return False
+            for key, avalue in iteritems(adict):
+                bvalue = bdict[key]
+                aname = avalue.__class__.__name__
+                bname = bvalue.__class__.__name__
+                if not aname == bname:
+                    print('type(a)=%s type(b)=%s' % (aname, bname))
+                    return False
+                if 'Array' not in aname:
+                    print('%s is not an Array ... assume equal' % aname)
+                    continue
+                if avalue != bvalue:
+                    print('key=%s table_type=%r is different; class_name=%r' % (key, table_type, aname))
+                    return False
+        return True
+
     def set_mode(self, mode):
         if mode.lower() == 'msc':
             self.set_as_msc()

@@ -30,6 +30,11 @@ class BaseScalarObject(Op2Codes):
         self.device_code = None
         self.table_name = None
 
+    def __eq__(self, table):
+        return True
+
+    def __ne__(self, table):
+        return not self == table
 
     def name(self):
         return self.__class__.__name__

@@ -335,6 +335,15 @@ class OUG(OP2Common):
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
                                  RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
+        elif self.thermal == 4:
+            result_name = 'displacement_scaled_response_spectra_SRSS'
+            storage_obj = self.displacement_scaled_response_spectra_SRSS
+            if self._results.is_not_saved(result_name):
+                return len(data)
+            self._results._found_result(result_name)
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealDisplacement, ComplexDisplacement,
+                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
         elif self.thermal == 8:  # 4 ?
             result_name = 'displacement_scaled_response_spectra_NRL'
             storage_obj = self.displacement_scaled_response_spectra_NRL
@@ -478,7 +487,7 @@ class OUG(OP2Common):
                     real_obj = Eigenvector
                     #assert real_obj is not None
                     nnodes = len(data) // 32  # 8*4
-                    auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
+                    auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
                     if auto_return:
                         return len(data)
                     n = self._read_real_table_sort1(data, result_name, node_elem)
@@ -486,7 +495,7 @@ class OUG(OP2Common):
                     complex_obj = ComplexEigenvector
                     #assert complex_obj is not None
                     nnodes = len(data) // 56  # 14*4
-                    auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
+                    auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
                     if auto_return:
                         return len(data)
                     n = self._read_complex_table_sort1(data, result_name, node_elem)

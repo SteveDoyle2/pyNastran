@@ -66,9 +66,15 @@ class Subcase(object):
         Gets the format code that will be used by the op2 based on
         the options.
 
-        :param self:     the Subcase object
-        :param options:  the options for a parameter
-        :param value:    the value of the parameter
+        Parameters
+        ----------
+        self : Subcase()
+            the Subcase object
+        options : list[int/float/str]
+            the options for a parameter
+        value : int/float/str
+            the value of the parameter
+
         .. todo::  not done...only supports REAL, IMAG, PHASE, not RANDOM
         """
         format_code = 0
@@ -107,9 +113,14 @@ class Subcase(object):
         """
         Gets the device code of a given set of options and value
 
-        :param self:    the Subcase object
-        :param options: the options for a parameter
-        :param value:   the value of the parameter
+        Parameters
+        ----------
+        self : Subcase()
+            the Subcase object
+        options : list[int/float/str]
+            the options for a parameter
+        value : int/float/str
+            the value of the parameter
         """
         device_code = 0
         if 'PRINT' in options:
@@ -169,9 +180,14 @@ class Subcase(object):
         modal solution, in which case it makes an OUGV1 table of eigenvectors
         and has a table code of 7.
 
-        :param self:    the Subcase object
-        :param options: the options for a parameter
-        :param value:   the value of the parameter
+        Parameters
+        ----------
+        self : Subcase()
+            the Subcase object
+        options : list[int/float/str]
+            the options for a parameter
+        value : int/float/str
+            the value of the parameter
         """
         if table_name in ['VECTOR', 'PRESSURE']:
             table_name = 'DISPLACEMENT'  # equivalent tables...

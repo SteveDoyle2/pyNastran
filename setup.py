@@ -50,14 +50,15 @@ setup(name='pyNastran',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
+
           # -*- Extra requirements: -*-
-          'numpy >= 1.8.0',
-          'scipy >= 0.13.0',
+          'numpy >= 1.9.0',
+          'scipy >= 0.15.0',
           'docopt == 0.6.2',
           #'matplotlib >= 1.3.0',
           #'vtk >= 5.10.0',   # should be installed, but not for the docs
-          'pillow >= 2.0.0',
-          'six >= 1.7.2',
+          'pillow >= 2.7.0',
+          'six >= 1.8.0',
           #'wx >= 2.8.12.0',
           #'cython',
       ],#{'': ['license.txt']}

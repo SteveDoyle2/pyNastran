@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0
+from pyNastran.op2.resultObjects.tableObject import RealTableArray
 
 class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -306,6 +307,25 @@ class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
+
+class HeatFlux_2D_3DArray(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        #words = ['                                             D I S P L A C E M E N T   V E C T O R\n', ]
+                 ##' \n',
+                 ##'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        ##words += self.get_table_marker()
+        #write_words = True
+        #if self.nonlinear_factor is not None:
+            #return self._write_f06_transient_block(words, header, page_stamp, page_num, f, write_words,
+                                                   #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
+                                         #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+
+    def _get_headers(self):
+        return ['grad1', 'grad2', 'grad3', 'flux1', 'flux2', 'flux3']
 
 
 class HeatFlux_2D_3D(ScalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6

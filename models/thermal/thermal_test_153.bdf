@@ -1,0 +1,63 @@
+SOL 153
+$ Direct Text Input for Executive Control
+CEND
+ANALYSIS = HEAT
+TITLE = MSC.Nastran job
+ECHO = NONE
+TEMPERATURE(INITIAL) = 1
+$ Direct Text Input for Global Case Control Data
+SUBCASE 1
+$ Subcase name : Default
+    SUBTITLE=Default
+    NLPARM = 1
+    SPC = 1
+    THERMAL(SORT1,PRINT)=ALL
+    FLUX(SORT1,PRINT)=ALL
+BEGIN BULK
+PARAM    POST    -1
+PARAM    SIGMA  1.714-9
+NLPARM   1       0               AUTO    5       25      PW      NO
+                .001    1.-7
+$ Direct Text Input for Bulk Data
+$ Elements and Element Properties for region : solid01
+PSOLID   1       1       0
+$ Pset: "solid01" will be imported as: "psolid.1"
+CHEXA          1       1       1       2       4       3       5       6
+               8       7
+CHEXA          2       1       5       6       8       7       9      10
+              12      11
+$ Referenced Material Records
+$ Material Record : m1
+$ Description of Material : Date: 19-Sep-07           Time: 11:00:57
+MAT4     1      1.24    200.    30.
+$ Nodes of the Entire Model
+GRID           1              0.      0.      0.
+GRID           2              1.      0.      0.
+GRID           3              0.      1.      0.
+GRID           4              1.      1.      0.
+GRID           5              0.      0.      1.
+GRID           6              1.      0.      1.
+GRID           7              0.      1.      1.
+GRID           8              1.      1.      1.
+GRID           9              0.      0.      2.
+GRID          10              1.      0.      2.
+GRID          11              0.      1.      2.
+GRID          12              1.      1.      2.
+$ Loads for Load Case : Default
+$ Fixed Temperatures of Load Set : set1
+SPC            1       9       1    300.      10       1    300.
+SPC            1      11       1    300.      12       1    300.
+$ Fixed Temperatures of Load Set : set2
+SPC            1       1       1   1300.       2       1   1300.
+SPC            1       3       1   1300.       4       1   1300.
+$ Initial Temperatures from Temperature Load Sets
+TEMP           1       1    300.       2    300.       3    300.
+TEMP           1       4    300.       9   1300.      10   1300.
+TEMP           1      11   1300.      12   1300.
+$ Initial Temperatures of Load Set : set3
+TEMP           1       5   1300.       6   1300.       7   1300.
+TEMP           1       8   1300.
+$ Default Initial Temperature
+TEMPD    1       0.
+$ Referenced Coordinate Frames
+ENDDATA 877c5f9f

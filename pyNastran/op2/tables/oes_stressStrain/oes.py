@@ -6,16 +6,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 from struct import Struct
-try:
-    from numba import autojit
-except ImportError:
-    pass
+
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import (RealBarStress, RealBarStrain,
                                                                  RealBarStressArray, RealBarStrainArray)
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import (RealBar10NodesStressArray, RealBar10NodesStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import (RealBar10NodesStressArray, RealBar10NodesStrainArray)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress, RealBeamStrain,
                                                                   RealBeamStressArray, RealBeamStrainArray,
@@ -1767,7 +1764,7 @@ class OES(OP2Common):
                     (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
                     if self.is_debug_file:
                         self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
-                        eid = self._check_id(eid_device, flag, stress_name, out)
+                    eid = self._check_id(eid_device, flag, stress_name, out)
 
                     self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                     n += 36
@@ -2650,6 +2647,7 @@ class OES(OP2Common):
         """
         auto_return = False
         is_vectorized = self._is_vectorized(obj_vector, slot_vector)
+        #print('is_vectorized=%s result_name=%r' % (is_vectorized, result_name))
         if is_vectorized:
             #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name))
             if self.read_mode == 1:
