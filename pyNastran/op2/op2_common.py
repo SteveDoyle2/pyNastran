@@ -317,7 +317,7 @@ class OP2Common(Op2Codes, F06Writer):
         if not self.make_geom:
             return len(data)
         n = 0
-        keys = unpack('3i', data[n:n+12])
+        keys = unpack(b'3i', data[n:n+12])
         n += 12
         if len(data) == 12:
             #print('*self.istream = %s' % self.istream)
