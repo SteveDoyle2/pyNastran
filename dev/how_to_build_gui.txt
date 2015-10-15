@@ -13,4 +13,11 @@ Windows
 
 Linux/Mac
 ---------
+Update:
+if sys.platform == 'win32':
+    binaries = [('msvcp100.dll', 'C:\\Windows\\System32\\msvcp100.dll', 'BINARY'),
+                ('msvcr100.dll', 'C:\\Windows\\System32\\msvcr100.dll', 'BINARY')]
+
+python_path = 'C:\\Python27_x86'
+
 Do the same thing and cross your fingers.
