@@ -1,0 +1,16 @@
+Windows
+-------
+1.  Use 32-bit or 64-bit Python 2.7
+2.  Verify the gui works by typing:
+    >>> pyNastranGUI
+3.  Download pyInstaller -> http://www.pyinstaller.org/
+    - latest Windows version tested https://github.com/pyinstaller/pyinstaller/releases/download/3.0/PyInstaller-3.0.zip
+4.  Extract pyInstaller
+5.  Go into the pyInstaller directory and run setup.py
+6.  Go into pyNastran/dev and run:
+    >>> pyinstaller pyNastranGUI.spec
+
+
+Linux/Mac
+---------
+Do the same thing and cross your fingers.
