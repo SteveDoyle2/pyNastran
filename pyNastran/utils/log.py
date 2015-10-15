@@ -14,7 +14,7 @@ if sys.stdout.isatty():
 else:
     # You're being piped or redirected
     is_terminal = False
-is_terminal = False
+#is_terminal = False
 
 
 def make_log(display=False):

@@ -325,7 +325,57 @@ class OP2(OP2_Scalar):
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
+    def transform_displacements_to_global(self, i_transform, transforms):
+        """
+        Transforms the ``data`` of displacement-like results into the
+        global coordinate system for those nodes with different output
+        coordinate systems. Takes indicies and transformation matricies
+        for nodes with their output in coordinate systems other than the
+        global.
 
+        Used in combination with ``BDF.get_displcement_index_transforms``
+
+        Parameters
+        ----------
+        self : OP2
+            OP2 object.
+        i_transform : dict{float:ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``BDF.point_ids`` that their output (`CD`) in that
+            coordinate system.
+        transforms : dict{float:ndarray}
+            Dictionary from coordinate id to 3 x 3 transformation
+            matrix for that coordinate system.
+        """
+        output = {}
+        disp_like_dicts = [self.displacements,
+                           self.displacementsATO,
+                           self.displacementsCRM,
+                           self.displacementsPSD,
+                           self.displacementsRMS,
+                           self.displacements_scaled,
+                           self.displacement_scaled_response_spectra_ABS,
+                           self.displacement_scaled_response_spectra_NRL,
+
+                           self.velocities,
+                           self.velocity_scaled_response_spectra_ABS,
+
+                           self.accelerations,
+                           self.acceleration_scaled_response_spectra_ABS,
+                           self.acceleration_scaled_response_spectra_NRL,
+
+                           self.eigenvectors]
+
+        for disp_like_dict in disp_like_dicts:
+            if disp_like_dict:
+                for subcase, result in iteritems(disp_like_dict):
+                    data = result.data
+                    for cid, transform in iteritems(transforms):
+                        it = i_transform[cid]
+                        t = data[:, it, :3]
+                        r = data[:, it, 3:]
+                        data[:, it, :3] = t.dot(transform)
+                        data[:, it, 3:] = r.dot(transform)
 def main():
     import pyNastran
     pkg_path = pyNastran.__path__[0]

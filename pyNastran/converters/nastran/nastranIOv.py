@@ -490,8 +490,18 @@ class NastranIO(object):
             model.cross_reference(xref=True, xref_loads=xref_loads,
                                   xref_constraints=False)
 
-        nnodes = model.nnodes
-        assert nnodes > 0
+        # get indicies and transformations for displacements
+        self.i_transform, self.transforms = model.get_displcement_index_transforms()
+
+        n = len(model.nodes)
+        nnodes = n
+        nspoints = 0
+        spoints = None
+        if model.spoints:
+            spoints = model.spoints.points
+            nspoints = len(spoints)
+
+        assert nnodes + nspoints > 0
         nelements = model.nelements
         assert nelements > 0
 
@@ -543,7 +553,7 @@ class NastranIO(object):
                     ncaeros_cs += len(aelist.elements)
                     cs_box_ids.extend(aelist.elements)
 
-        self.nNodes = nnodes
+        self.nNodes = nnodes + nspoints
         self.nElements = nelements  # approximate...
 
         self.log_info("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
@@ -565,9 +575,9 @@ class NastranIO(object):
         if self.has_caero:
             yellow = (1., 1., 0.)
             if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='surface')
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='toggle')
             if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='surface')
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='toggle')
 
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
             self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
@@ -583,42 +593,37 @@ class NastranIO(object):
         #vectorReselt.SetNumberOfComponents(3)
         #elem.SetNumberOfPoints(nNodes)
 
-
-        # add the nodes
-        node0 = get_key0(model.nodes)
-        position0 = model.nodes[node0].get_position()
-        xmin = position0[0]
-        xmax = position0[0]
-
-        ymin = position0[1]
-        ymax = position0[1]
-
-        zmin = position0[2]
-        zmax = position0[2]
         if self.save_data:
             self.model = model
 
-        n = len(model.nodes)
-        xyz_cid0 = zeros((n, 3), dtype='float32')
-        for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-            xyz = node.get_position()
-            xyz_cid0[i, :] = xyz
+
+        xyz_cid0 = zeros((nnodes + nspoints, 3), dtype='float32')
+        if nspoints:
+            nids = model.nodes.keys()
+            newpoints = nids + list(spoints)
+            newpoints.sort()
+            for i, nid in enumerate(newpoints):
+                if nid in spoints:
+                    self.nidMap[nid] = i
+                else:
+                    node = model.nodes[nid]
+                    xyz_cid0[i, :] = node.get_position()
+                    self.nidMap[nid] = i
+                points.InsertPoint(i, *xyz_cid0[i, :])
+        else:
+            for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+                xyz = node.get_position()
+                xyz_cid0[i, :] = xyz
+                points.InsertPoint(i, *xyz)
+                self.nidMap[nid] = i
         self.xyz_cid0 = xyz_cid0
 
+        maxi = xyz_cid0.max(axis=0)
+        mini = xyz_cid0.min(axis=0)
+        assert len(maxi) == 3, len(maxi)
+        xmax, ymax, zmax = maxi
+        xmin, ymin, zmin = mini
         self._create_nastran_coords(model)
-
-        for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-            point = node.get_position()
-            xmin = min(xmin, point[0])
-            xmax = max(xmax, point[0])
-
-            ymin = min(ymin, point[1])
-            ymax = max(ymax, point[1])
-
-            zmin = min(zmin, point[2])
-            zmax = max(zmax, point[2])
-            points.InsertPoint(i, *point)
-            self.nidMap[nid] = i
 
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
         self.update_axes_length(dim_max)
@@ -893,7 +898,7 @@ class NastranIO(object):
 
             if 'MPC' in subcase:
                 mpc_id, options = subcase.get_parameter('MPC')
-                if spc_id is not None:
+                if mpc_id is not None:
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
                         self._fill_mpc(mpc_id, dim_max, model, nid_to_pid_map)
@@ -1347,6 +1352,8 @@ class NastranIO(object):
                 model.log.warning('nid=%s does not exist' % nid)
                 continue
 
+            if nid not in model.nodes:
+                continue
             # point = self.grid.GetPoint(i)
             # points.InsertPoint(j, *point)
 
@@ -1391,6 +1398,10 @@ class NastranIO(object):
                 model.log.warning('nid=%s does not exist' % nid2)
                 continue
 
+            if nid1 not in model.nodes:
+                continue
+            if nid2 not in model.nodes:
+                continue
             node = model.nodes[nid1]
             point = node.get_position()
             points.InsertPoint(j, *point)
@@ -1458,8 +1469,13 @@ class NastranIO(object):
             #node_ids += suport.IDs
 
         # dict
-        suport1 = model.suport1[suport_id]
-        node_ids += suport1.IDs
+        if suport_id in model.suport1:
+            suport1 = model.suport1[suport_id]
+            node_ids += suport1.IDs
+        else:
+            for suport in model.suport:
+                if suport_id in suport.IDs:
+                    node_ids.append(suport_id)
 
         node_ids = unique(node_ids)
         self._add_nastran_nodes_to_grid('suport', node_ids, model)
@@ -2347,6 +2363,15 @@ class NastranIO(object):
 
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
+
+        # tansform displacements into global coordinates
+        try:
+            i_transform = self.i_transform
+            transforms = self.transforms
+        except AttributeError:
+            print('Skipping displacment transformation')
+        else:
+            model.transform_displacements_to_global(i_transform, transforms)
 
         if 0:
             cases = OrderedDict()
