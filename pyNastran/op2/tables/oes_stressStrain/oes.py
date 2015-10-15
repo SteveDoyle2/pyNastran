@@ -1213,7 +1213,6 @@ class OES(OP2Common):
                     self._data_factor = 2
                     return nelements * ntotal
 
-                s = Struct(self._endian + b'i16f')
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -1222,25 +1221,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 cen = 0 # 'CEN/3'
-                if self.is_debug_file or self.read_mode == 0 and 0:
-                    for i in range(nelements):
-                        edata = data[n:n + ntotal]
-                        out = s.unpack(edata)
-
-                        (eid_device,
-                         fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                         fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                        eid = self._check_id(eid_device, flag, stress_name, out)
-
-                        if self.is_debug_file:
-                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
-
-                        self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
-                                             txy1, angle1, major1, minor1, vm1)
-                        self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
-                                     angle2, major2, minor2, vm2)
-                        n += ntotal
-                else:
+                if self.read_mode == 2 and 0:
                     obj = self.obj
                     nfields = 17 * nelements
                     nbytes = nfields * 4
@@ -1261,7 +1242,24 @@ class OES(OP2Common):
                     obj.data[obj.itime, istart:iend, :] = floats
                     obj.itotal += nlayers
                     n = nbytes
+                else:
+                    s = Struct(self._endian + b'i16f')
+                    for i in range(nelements):
+                        edata = data[n:n + ntotal]
+                        out = s.unpack(edata)
+                        (eid_device,
+                         fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                         fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
 
+                        if self.is_debug_file:
+                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+
+                        self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
+                                             txy1, angle1, major1, minor1, vm1)
+                        self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
+                                     angle2, major2, minor2, vm2)
+                        n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 ntotal = 60  # 4*15
@@ -1398,68 +1396,100 @@ class OES(OP2Common):
                 ntotal = 4 * (2 + 17 * (nnodes + 1))
                 nelements = len(data) // ntotal
                 nlayers = 2 * nelements * (nnodes + 1)  # 2 layers per node
+                nnodes_all = nnodes + 1
 
                 self._data_factor = 10
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object3(nlayers,
+                                                                      result_name, result_vector_name,
+                                                                      slot, slot_vector,
+                                                                      obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                #assert ntotal == 348, ntotal
-                center_format = b'i4si16f'
-                node_format = b'i16f'
-                cs = Struct(center_format)
-                ns = Struct(node_format)
+                obj = self.obj
+                if self.use_vector and is_vectorized and 0:
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nelements * self.num_wide * 4
 
-                if self.is_debug_file:
-                    self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                    self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
-                    self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                    self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                    self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                    self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                    self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
+                    istart = obj.itotal
+                    iend = istart + nlayers
+                    obj._times[obj.itime] = dt
 
-                for i in range(nelements):
-                    edata = data[n:n+76]
+                    int_fmt = b'%s%ii' % (self._endian, nelements * numwide_real)
+                    float_fmt = b'%s%if' % (self._endian, nelements * numwide_real)
+                    # print(int_fmt, )
+                    print('len(data)/4', len(data)/4.)
+                    # [eid, j, grid]
+                    ints = np.array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nelements, numwide_real)
+                    floats = np.array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nelements, numwide_real)
+                    print('ne*nwide=%s nlayers*8=%s' % (nelements * (numwide_real-3) - 1, nlayers * 8))
+                    #2 + 17*nnodes_all
+                    floats = floats[:, 2:].reshape(nlayers, 9)
+                    eids = ints[:, 0] // 10
+                    for inode in range(nnodes_all):
+                        # obj.element_node[istart+inode:iend+inode, 0] = eids
+                        obj.element_node[istart+inode:iend+inode:nnodes_all, 1] = ints[:, 2 + 17*inode]
 
-                    out = cs.unpack(edata)  # len=17*4
-                    # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
-                    (eid_device, j, grid,
-                     fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                    #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+                    obj.data[obj.itime, istart:iend, :] = floats
+                else:
+                    center_format = b'i4si16f'
+                    node_format = b'i16f'
+                    cs = Struct(center_format)
+                    ns = Struct(node_format)
 
                     if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                        self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                        self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
+                        self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                        self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                        self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                        self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                        self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
 
-                    self.obj.add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1,
-                                         txy1, angle1, major1, minor1, vm1)
-                    self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2,
-                                 angle2, major2, minor2, vm2)
-                    n += 76
-                    for inode in range(nnodes):
-                        out = ns.unpack(data[n:n + 68])
-                        (grid,
+                    for i in range(nelements):
+                        edata = data[n:n+76]
+
+                        out = cs.unpack(edata)  # len=17*4
+                        # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
+                        (eid_device, j,
+                         grid,
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
 
                         if self.is_debug_file:
-                            d = tuple([grid,
-                                       fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
-                            self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
-                        assert isinstance(grid, int), grid
-                        assert grid > 0, grid
+                            self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                        self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
-                                            txy1, angle1, major1, minor1, vm1)
-                        self.obj.add(dt, eid, grid, fd2, sx2, sy2,
-                                     txy2, angle2, major2, minor2, vm2)
-                        n += 68
+                        self.obj.add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1,
+                                             txy1, angle1, major1, minor1, vm1)
+                        self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2,
+                                     angle2, major2, minor2, vm2)
+                        n += 76
+                        for inode in range(nnodes):
+                            out = ns.unpack(data[n:n + 68])
+                            (grid,
+                             fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                             fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+
+                            if self.is_debug_file:
+                                d = tuple([grid,
+                                           fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
+                                self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
+                            assert isinstance(grid, int), grid
+                            assert grid > 0, grid
+
+                            self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
+                                                txy1, angle1, major1, minor1, vm1)
+                            self.obj.add(dt, eid, grid, fd2, sx2, sy2,
+                                         txy2, angle2, major2, minor2, vm2)
+                            n += 68
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
@@ -2314,8 +2344,9 @@ class OES(OP2Common):
             slot = slot_vector
 
             if self.format_code == 1 and self.num_wide == 10:  # real
-                RealBar10NodesStress = None
-                RealBar10NodesStrain = None
+                # if this isn't vectorized, it will be messed up...
+                RealBar10NodesStress = RealBar10NodesStressArray
+                RealBar10NodesStrain = RealBar10NodesStrainArray
                 if self.is_stress():
                     obj_real = RealBar10NodesStress
                     obj_vector_real = RealBar10NodesStressArray
@@ -2348,6 +2379,7 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
                     n += ntotal
+                    # continue
                     self.obj.add_new_eid(self.element_name, dt, eid,
                                          sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
             else:
@@ -2591,7 +2623,7 @@ class OES(OP2Common):
         #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
         assert self.thermal == 0, "thermal = %%s" % self.thermal
-        assert n > 0, "n = %s" % n
+        assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
 
     def OESRT_CQUAD4_95(self, data):
@@ -2616,7 +2648,7 @@ class OES(OP2Common):
             #self.obj.add_new_eid(element_name, dt, eid, force, stress)
             n += ntotal
 
-    def _create_oes_object2(self, nelements,
+    def _create_oes_object3(self, nelements,
                             result_name, result_vector_name,
                             slot, slot_vector,
                             obj, obj_vector):
@@ -2710,6 +2742,15 @@ class OES(OP2Common):
 
         if auto_return and self.read_mode == 2:
             raise RuntimeError('this should never happen...auto_return=True read_mode=2')
+        return auto_return, is_vectorized
+
+    def _create_oes_object2(self, nelements,
+                            result_name, result_vector_name,
+                            slot, slot_vector,
+                            obj, obj_vector):
+        auto_return, is_vectorized = self._create_oes_object3(nelements, result_name, result_vector_name,
+                                                              slot, slot_vector,
+                                                              obj, obj_vector)
         return auto_return
 
     def _is_vectorized(self, obj_vector, slot_vector):

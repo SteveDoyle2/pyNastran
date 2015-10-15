@@ -1,10 +1,10 @@
 #pylint disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import iteritems
 from six.moves import zip, range
 from itertools import count
-from numpy import zeros, searchsorted, ravel
+from numpy import zeros, searchsorted, ravel, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F, _eigenvalue_header, get_key0
@@ -94,6 +94,32 @@ class RealPlateArray(OES_Object):
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for (eid, nid), (fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm), (fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2) in zip(self.element_node, self.data, table.data):
+                msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                    eid, nid,
+                    fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm,
+                    fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2)
+            print(msg)
+            raise ValueError(msg)
+        return True
 
     def add_new_eid(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         self.add_new_eid_sort1(etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
