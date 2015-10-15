@@ -5,7 +5,8 @@ Contains the OES class that is used to read stress/strain data
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
-from struct import Struct
+from struct import Struct, unpack
+from numpy import array
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -1221,23 +1222,47 @@ class OES(OP2Common):
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 cen = 0 # 'CEN/3'
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)
+                if self.is_debug_file or self.read_mode == 0 and 0:
+                    for i in range(nelements):
+                        edata = data[n:n + ntotal]
+                        out = s.unpack(edata)
 
-                    (eid_device,
-                     fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                        (eid_device,
+                         fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                         fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
 
-                    if self.is_debug_file:
-                        self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                        if self.is_debug_file:
+                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                    self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
-                                         txy1, angle1, major1, minor1, vm1)
-                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
-                                 angle2, major2, minor2, vm2)
-                    n += ntotal
+                        self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
+                                             txy1, angle1, major1, minor1, vm1)
+                        self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
+                                     angle2, major2, minor2, vm2)
+                        n += ntotal
+                else:
+                    obj = self.obj
+                    nfields = 17 * nelements
+                    nbytes = nfields * 4
+                    istart = obj.itotal
+                    iend = obj.itotal + nlayers
+                    int_fmt = b'%s%si' % (self._endian, nfields)
+                    float_fmt = b'%s%sf' % (self._endian, nfields)
+                    #print('int_fmt=%s' % int_fmt, nbytes, nbytes/4.)
+                    ints = array(unpack(int_fmt, data[:nbytes]), dtype='int32').reshape(nelements, 17)
+                    floats = array(unpack(float_fmt, data[:nbytes]), dtype='float32').reshape(nelements, 17)
+                    floats = floats[:, 1:].reshape(nlayers, 8)
+                    eids = ints[:, 0] // 10
+                    obj._times[obj.itime] = dt
+                    obj.element_node[istart:iend:2, 0] = eids
+                    obj.element_node[istart+1:iend+1:2, 0] = eids
+                    #obj.element_node[istart:iend, 1] = ints[:, 1]
+
+                    obj.data[obj.itime, istart:iend, :] = floats
+                    obj.itotal += nlayers
+                    n = nbytes
+
+
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 ntotal = 60  # 4*15
                 nelements = len(data) // ntotal
