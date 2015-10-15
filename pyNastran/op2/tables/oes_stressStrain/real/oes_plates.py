@@ -112,11 +112,17 @@ class RealPlateArray(OES_Object):
         if not array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
+            i = 0
             for (eid, nid), (fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm), (fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2) in zip(self.element_node, self.data, table.data):
                 msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                     eid, nid,
                     fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm,
                     fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2)
+                i += 1
+                if i > 10:
+                    print(msg)
+                    raise ValueError(mgs)
+
             print(msg)
             raise ValueError(msg)
         return True
