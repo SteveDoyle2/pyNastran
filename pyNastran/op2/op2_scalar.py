@@ -786,7 +786,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
                 self.set_as_nx()
                 self.set_table_type()
-            elif version.startswith('AEROFREQ'):
+            elif version.startswith(b'AEROFREQ'):
                 # TODO: why is this separate?
                 # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
                 self.set_as_msc()
