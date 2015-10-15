@@ -972,7 +972,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             for name, actor in iteritems(self.geometry_actors):
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
-                if name == 'main' or self.geometry_properties[name].representation == 'main':
+                if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
                     prop.SetRepresentationToSurface()
             self.is_wireframe = False
@@ -984,7 +984,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             for name, actor in iteritems(self.geometry_actors):
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
-                if name == 'main' or self.geometry_properties[name].representation == 'main':
+                if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
                     prop.SetRepresentationToWireframe()
                 #prop.SetRepresentationToPoints()
