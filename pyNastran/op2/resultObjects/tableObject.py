@@ -3,7 +3,7 @@ from six import iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, abs, angle, float32, ndarray, searchsorted, asarray, vstack, swapaxes, hstack
+from numpy import array, zeros, abs, angle, float32, ndarray, searchsorted, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, write_float_12E
@@ -51,6 +51,24 @@ class TableArray(ScalarObject):  # displacement style table
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
         self._nnodes = 0  # result specific
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.node_gridtype, table.node_gridtype):
+            assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
+            for (nid, grid_type), (nid2, grid_type2) in zip(self.node_gridtype, table.node_gridtype):
+                msg = '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            for (nid, grid_type), (tx, ty, tz, rx, ry, rz), (tx2, ty2, tz2, rx2, ry2, rz2) in zip(self.node_gridtype, self.data, table.data):
+                msg = '(%s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (nid, grid_type, tx, ty, tz, rx, ry, rz,
+                                                                                            tx2, ty2, tz2, rx2, ry2, rz2)
+            raise ValueError(msg)
+        return True
 
     def combine(self, result, is_sort1=True):
         #print("combine; result=%s" % result)

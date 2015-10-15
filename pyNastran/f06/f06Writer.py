@@ -651,7 +651,7 @@ class F06Writer(OP2_F06_Common):
                 res_format = ' %%-%is SUBCASE=%%i%%s' % res_length
                 res_format_vectorized = '*%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
 
-                for res_type in sorted(res_types):
+                for res_type in res_types:
                     if res_key not in res_type:
                         continue
 

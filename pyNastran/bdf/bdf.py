@@ -2426,6 +2426,45 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         else:
             return msg
 
+    def get_displcement_index_transforms(self):
+        """
+        Get index and transformation matricies for nodes with
+        their output in coordinate systems other than the global.
+        Used in combination with ``OP2.transform_displacements_to_global``
+
+        Parameters
+        ----------
+        self : BDF
+            BDF object.
+
+        Returns
+        ----------
+        i_transform : dict{float:ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their output (`CD`) in that
+            coordinate system.
+        transforms : dict{float:ndarray}
+            Dictionary from coordinate id to 3 x 3 transformation
+            matrix for that coordinate system.
+        """
+        nids_transform = {}
+        i_transform = {}
+        transforms = {}
+        if len(self.coords) < 2:
+            return i_transform, transforms
+        for nid, node in sorted(iteritems(self.nodes)):
+            cid_d = node.Cd()
+            if cid_d:
+                if cid_d not in nids_transform:
+                    nids_transform[cid_d] = []
+                nids_transform[cid_d].append(nid)
+
+        nids_all = np.array(sorted(self.point_ids))
+        for cid in sorted(nids_transform.keys()):
+            nids = np.array(nids_transform[cid])
+            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
+            transforms[cid] = self.coords[cid].beta()
+        return i_transform, transforms
 
     def _get_card_name(self, lines):
         """
