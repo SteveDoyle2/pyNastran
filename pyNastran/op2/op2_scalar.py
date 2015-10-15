@@ -623,6 +623,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """auto-table skipper"""
         return len(data)
 
+    def _table_crash(self, data):
+        sys.exit('asdf')
+
     def _table_passer_r1tabrg(self, data):
         """auto-table skipper"""
         if self._table4_count == 0:

@@ -60,13 +60,41 @@ class TableArray(ScalarObject):  # displacement style table
         assert self.approach_code == table.approach_code
         if not array_equal(self.node_gridtype, table.node_gridtype):
             assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
             for (nid, grid_type), (nid2, grid_type2) in zip(self.node_gridtype, table.node_gridtype):
-                msg = '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
+                msg += '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
+            print(msg)
             raise ValueError(msg)
         if not array_equal(self.data, table.data):
-            for (nid, grid_type), (tx, ty, tz, rx, ry, rz), (tx2, ty2, tz2, rx2, ry2, rz2) in zip(self.node_gridtype, self.data, table.data):
-                msg = '(%s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (nid, grid_type, tx, ty, tz, rx, ry, rz,
-                                                                                            tx2, ty2, tz2, rx2, ry2, rz2)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+            try:
+                for itime in range(ntimes):
+                    for inid, nid_gridtype, in enumerate(self.node_gridtype):
+                        (nid, grid_type) = nid_gridtype
+                        t1 = self.data[itime, inid, :]
+                        t2 = table.data[itime, inid, :]
+                        # print(nid_gridtype)
+                        # print(t1)
+                        # print(t2)
+                        (tx, ty, tz, rx, ry, rz) = t1
+                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        if not array_equal(t1, t2):
+                            msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
+                                nid, grid_type,
+                                tx, ty, tz, rx, ry, rz,
+                                tx2, ty2, tz2, rx2, ry2, rz2)
+            except:
+                # print(self.node_gridtype)
+                # print(table.node_gridtype)
+                # print('--------------')
+                # print(self.data)
+                # print('--------------')
+                # print(table.data)
+                raise
+            print(msg)
             raise ValueError(msg)
         return True
 

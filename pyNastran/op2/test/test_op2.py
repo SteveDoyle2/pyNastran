@@ -229,10 +229,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         raise RuntimeError('make_geom=%s is not supported' % make_geom)
     if make_geom:
         op2a = OP2Geom(debug=debug, debug_file=debug_file)
-        op2b = OP2Geom(debug=debug, debug_file=debug_file)
+        op2b = OP2Geom()
     else:
         op2a = OP2(debug=debug, debug_file=debug_file)
-        op2b = OP2(debug=debug, debug_file=debug_file)
+        op2b = OP2()
     op2b.use_vector = False
     if not is_vector:
         compare = False

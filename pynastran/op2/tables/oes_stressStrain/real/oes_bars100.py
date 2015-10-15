@@ -50,7 +50,8 @@ class RealBar10NodesArray(OES_Object):
 
     def build(self):
         #print("self.ielement =", self.ielement)
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
+            self.isubcase, self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
@@ -65,7 +66,7 @@ class RealBar10NodesArray(OES_Object):
 
         self.nnodes = nnodes_per_element
         self.nelements //= self.ntimes
-        self.ntotal = self.nelements  #* 2  # for A/B
+        #self.ntotal = self.nelements  #* 2  # for A/B
         #self.nelements //= nnodes_per_element
         self.itime = 0
         self.ielement = 0
@@ -80,7 +81,7 @@ class RealBar10NodesArray(OES_Object):
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros(self.ntotal, dtype='int32')
+        self.elements = zeros(self.ntotal, dtype='int32')
 
         #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
         self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
@@ -91,10 +92,9 @@ class RealBar10NodesArray(OES_Object):
 
     def add_new_eid_sort1(self, eType, dt, eid,
                           sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
-
-        assert isinstance(eid, int)
         self._times[self.itime] = dt
-        self.element_node[self.itotal] = eid
+        # print('isubcase=%s itotal=%s ieid=%s eid=%s' % (self.isubcase, self.itotal, self.ielement, eid))
+        self.elements[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
         self.itotal += 1
         self.ielement += 1
@@ -155,7 +155,7 @@ class RealBar10NodesArray(OES_Object):
 
     def _write_sort1_as_sort1(self, f06_file, header, page_stamp, msg, page_num):
         (ntimes, ntotal) = self.data.shape[:2]
-        eids = self.element_node
+        eids = self.elements
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)

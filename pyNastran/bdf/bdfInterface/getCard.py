@@ -47,7 +47,7 @@ class GetMethods(GetMethodsDeprecated):
         out = {}
         for key in card_types:
             if key in self.card_count:
-                out[key] = self._type_to_id_map[key]
+                out[key] = sorted(self._type_to_id_map[key])
             else:
                 if stop_on_missing_card:
                     raise RuntimeError('%r is not in the card_count; keys=%s' %

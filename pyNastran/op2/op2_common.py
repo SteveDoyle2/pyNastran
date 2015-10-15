@@ -12,7 +12,8 @@ from pyNastran.op2.op2Codes import Op2Codes
 
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, MultipleSolutionNotImplementedError
 import numpy as np
-
+from numpy import radians, sin, cos
+from pyNastran.op2.op2_helper import polar_to_real_imag
 
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
@@ -430,11 +431,11 @@ class OP2Common(Op2Codes, F06Writer):
                 return len(data)
             if self.is_sort1():
                 if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort1_mag(data, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
                 else:
-                    n = self._read_complex_table_sort1_complex(data, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort1_complex(data, is_vectorized, nnodes, result_name, node_elem)
             else:
-                n = self._read_complex_table_sort2(data, result_name, node_elem)
+                n = self._read_complex_table_sort2(data, is_vectorized, result_name, node_elem)
                 #msg = self.code_information()
                 #n = self._not_implemented_or_skip(data, msg)
         else:
@@ -492,7 +493,6 @@ class OP2Common(Op2Codes, F06Writer):
             int_fmt = b'%s%ii' % (self._endian, nnodes * 8)
             float_fmt = b'%s%if' % (self._endian, nnodes * 8)
             ints = np.array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nnodes, 8)
-            ints[:, 0] // 10
             floats = np.array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nnodes, 8)
             itotal2 = obj.itotal + nnodes
 
@@ -500,10 +500,12 @@ class OP2Common(Op2Codes, F06Writer):
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
             #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
-            obj.node_gridtype[obj.itotal:itotal2, 0] = ints[:, 0] // 10
+            nids = ints[:, 0] // 10
+            assert nids.min() > 0, nids.min()
+            obj.node_gridtype[obj.itotal:itotal2, 0] = nids
             obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
-            self.itotal = itotal2
+            obj.itotal = itotal2
         else:
             n = 0
             s = Struct(self._endian + b'2i6f')
@@ -556,10 +558,12 @@ class OP2Common(Op2Codes, F06Writer):
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
             #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
-            obj.node_gridtype[obj.itotal:itotal2, 0] = ints[:, 0] // 10
+            nids = ints[:, 0] // 10
+            assert nids.min() > 0, nids.min()
+            obj.node_gridtype[obj.itotal:itotal2, 0] = nids
             obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
-            self.itotal = itotal2
+            obj.itotal = itotal2
         else:
             assert nnodes > 0, nnodes
             s = Struct(self._endian + b'2i6f')
@@ -574,7 +578,7 @@ class OP2Common(Op2Codes, F06Writer):
         return n
 
     #@autojit
-    def _read_real_table_sort2(self, data, nnodes, result_name, flag, is_cid=False):
+    def _read_real_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort2\n')
         assert flag in ['node', 'elem'], flag
@@ -599,7 +603,7 @@ class OP2Common(Op2Codes, F06Writer):
             n += 32
         return n
 
-    def _read_complex_table_sort1_mag(self, data, nnodes, result_name, flag):
+    def _read_complex_table_sort1_mag(self, data, is_vectorized, nnodes, result_name, flag):
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_mag\n')
         assert flag in ['node', 'elem'], flag
@@ -610,26 +614,51 @@ class OP2Common(Op2Codes, F06Writer):
         #nnodes = len(data) // 56
         s = Struct(self._endian + b'2i12f')
 
-        assert self.obj is not None
-        assert nnodes > 0
-        for inode in range(nnodes):
-            out = s.unpack(data[n:n+56])
-            (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
-             txi, tyi, tzi, rxi, ryi, rzi) = out
-            eid = eid_device // 10
-            if self.is_debug_file:
-                self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
-            tx = polar_to_real_imag(txr, txi)
-            ty = polar_to_real_imag(tyr, tyi)
-            tz = polar_to_real_imag(tzr, tzi)
-            rx = polar_to_real_imag(rxr, rxi)
-            ry = polar_to_real_imag(ryr, ryi)
-            rz = polar_to_real_imag(rzr, rzi)
-            obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-            n += 56
+        if self.use_vector and is_vectorized and 0:
+            n = nnodes * 4 * 14
+            int_fmt = b'%s%ii' % (self._endian, nnodes * 14)
+            float_fmt = b'%s%if' % (self._endian, nnodes * 14)
+            # print(int_fmt, nnodes * 14, n/4.)
+            ints = np.array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nnodes, 14)
+            floats = np.array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nnodes, 14)
+            mag = floats[:, 2:8]
+            phase = floats[:, 8:]
+            rtheta = radians(phase)
+            real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+            assert mag.shape == phase.shape, 'mag.shape=%s phase.shape=%s' % (str(mag.shape), str(phase.shape))
+            itotal2 = obj.itotal + nnodes
+            #abs(real_imag), angle(real_imag, deg=True)
+
+
+            obj._times[obj.itime] = dt
+            #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+            #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+            #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
+            nids = ints[:, 0] // 10
+            assert nids.min() > 0, nids.min()
+            obj.node_gridtype[obj.itotal:itotal2, 0] = nids
+            obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
+            obj.data[obj.itime, obj.itotal:itotal2, :] = real_imag
+            obj.itotal = itotal2
+        else:
+            for inode in range(nnodes):
+                out = s.unpack(data[n:n+56])
+                (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
+                 txi, tyi, tzi, rxi, ryi, rzi) = out
+                eid = eid_device // 10
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
+                tx = polar_to_real_imag(txr, txi)
+                ty = polar_to_real_imag(tyr, tyi)
+                tz = polar_to_real_imag(tzr, tzi)
+                rx = polar_to_real_imag(rxr, rxi)
+                ry = polar_to_real_imag(ryr, ryi)
+                rz = polar_to_real_imag(rzr, rzi)
+                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                n += 56
         return n
 
-    def _read_complex_table_sort1_complex(self, data, nnodes, result_name, flag):
+    def _read_complex_table_sort1_complex(self, data, is_vectorized, nnodes, result_name, flag):
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_complex\n')
         assert flag in ['node', 'elem'], flag
@@ -816,6 +845,9 @@ class OP2Common(Op2Codes, F06Writer):
         A simple pass loop for unsupported tables that can be hacked on
         to crash the program everywhere that uses it.
         """
+        msg = 'table_name=%s table_code=%s %s\n%s' % (
+            self.table_name, self.table_code, msg, self.code_information())
+        raise NotImplementedError(msg)
         if is_release:
             if msg != self._last_comment:
                 #print(self.code_information())

@@ -653,7 +653,7 @@ class NastranIO(object):
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
-        self._fill_bar_yz(dim_max, model, icase, cases, form)
+        # self._fill_bar_yz(dim_max, model, icase, cases, form)
 
 
         #------------------------------------------------------------
@@ -1931,7 +1931,6 @@ class NastranIO(object):
                         zi = element.zOffset + element.pid.z0
                     else:
                         raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
-                    i += 1
                 else:
                     i += 1
                     continue
@@ -1939,6 +1938,7 @@ class NastranIO(object):
                 xoffset[i] = zi * normali[0]
                 yoffset[i] = zi * normali[1]
                 zoffset[i] = zi * normali[2]
+                i += 1
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:

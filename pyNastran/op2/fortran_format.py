@@ -356,7 +356,7 @@ class FortranFormat(object):
         if self.read_mode in [0, 2]:
             self.ntotal = 0
 
-            if 1:
+            if 0:
                 # we stream the record because we get it in partial blocks
                 for data in self._stream_record():
                     data = datai + data
