@@ -4,6 +4,7 @@ Contains the OES class that is used to read stress/strain data
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import b
 from six.moves import range
 from struct import Struct, unpack
 from numpy import array
@@ -409,7 +410,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i4f')
+                s = Struct(b(self._endian + 'i4f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -429,7 +430,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i4f')
+                s = Struct(b(self._endian + 'i4f'))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
@@ -447,7 +448,7 @@ class OES(OP2Common):
                     n += ntotal
             #elif self.format_code in [2, 3] and self.num_wide == 8:  # is this imag ???
                 #ntotal = 32
-                #s = Struct(self._endian + b'i')
+                #s = Struct(b(self._endian + 'i'))
                 #nelements = len(data) // ntotal
                 #for i in range(nelements):
                     #edata = data[n:n + 4]
@@ -497,13 +498,13 @@ class OES(OP2Common):
                     self._data_factor = 11
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i')
+                s = Struct(b(self._endian + 'i'))
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
                 n2 = 40
-                s1 = Struct(self._endian + b'ii9f')
-                s2 = Struct(self._endian + b'i9f')
+                s1 = Struct(b(self._endian + 'ii9f'))
+                s2 = Struct(b(self._endian + 'i9f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+n1]
@@ -535,14 +536,14 @@ class OES(OP2Common):
                     #self.create_transient_object(self.beamStrain, RealBeamStrain)
 
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i')
+                s = Struct(b(self._endian + 'i'))
 
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
                 n2 = 40
-                s1 = Struct(self._endian + b'ii9f')
-                s2 = Struct(self._endian + b'i9f')
+                s1 = Struct(b(self._endian + 'ii9f'))
+                s2 = Struct(b(self._endian + 'i9f'))
 
                 nelements = len(data) // ntotal
                 for i in range(nelements):
@@ -606,7 +607,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i3f')
+                s = Struct(b(self._endian + 'i3f'))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=5
@@ -628,7 +629,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i4f')
+                s = Struct(b(self._endian + 'i4f'))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=5
@@ -696,7 +697,7 @@ class OES(OP2Common):
 
                 ntotal = 8 # 2 * 4
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'if')
+                s = Struct(b(self._endian + 'if'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -714,7 +715,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, ComplexCelasStrain)
 
                 ntotal = 12
-                s = Struct(self._endian + b'i2f')
+                s = Struct(b(self._endian + 'i2f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -775,7 +776,7 @@ class OES(OP2Common):
                     self.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i15f')
+                s = Struct(b(self._endian + 'i15f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -813,7 +814,7 @@ class OES(OP2Common):
                     self.binary_debug.write('                           s1b, s2b, s3b, s4b]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i18f')
+                s = Struct(b(self._endian + 'i18f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
@@ -930,8 +931,8 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                struct1 = Struct(self._endian + b'ii4si')
-                struct2 = Struct(self._endian + b'i20f')
+                struct1 = Struct(b(self._endian + 'ii4si'))
+                struct2 = Struct(b(self._endian + 'i20f'))
                 if self.is_debug_file:
                     msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
                         self.element_name, self.element_type, nelements, nnodes_expected)
@@ -995,8 +996,8 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s1 = Struct(self._endian + b'2i4si')
-                s2 = Struct(self._endian + b'i12f')
+                s1 = Struct(b(self._endian + '2i4si'))
+                s2 = Struct(b(self._endian + 'i12f'))
                 for i in range(nelements):
                     edata = data[n:n+16]
                     n += 16
@@ -1081,7 +1082,7 @@ class OES(OP2Common):
                     self._data_factor = 2
                     return nelements * ntotal
 
-                s = Struct(self._endian + b'i16f')
+                s = Struct(b(self._endian + 'i16f'))
                 cen = 0 # CEN/4
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -1109,8 +1110,8 @@ class OES(OP2Common):
                     self.create_transient_object(slot, ComplexPlateStress)
                 else:
                     self.create_transient_object(slot, ComplexPlateStrain)
-                s1 = Struct(self._endian + b'i14f')
-                s2 = Struct(self._endian + b'i14f')
+                s1 = Struct(b(self._endian + 'i14f'))
+                s2 = Struct(b(self._endian + 'i14f'))
                 nnodes = 0  # centroid + 4 corner points
 
                 ntotal = 4 * (15 * (nnodes + 1))
@@ -1243,7 +1244,7 @@ class OES(OP2Common):
                     obj.itotal += nlayers
                     n = nbytes
                 else:
-                    s = Struct(self._endian + b'i16f')
+                    s = Struct(b(self._endian + 'i16f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = s.unpack(edata)
@@ -1271,7 +1272,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i14f')
+                s = Struct(b(self._endian + 'i14f'))
                 cen = 0 # CEN/3
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1502,8 +1503,8 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * ntotal
 
-                s1 = Struct(self._endian + b'ii')  # 2
-                s2 = Struct(self._endian + b'i14f') # 15
+                s1 = Struct(b(self._endian + 'ii'))  # 2
+                s2 = Struct(b(self._endian + 'i14f')) # 15
                 for i in range(nelements):
                     (eid_device, _) = s1.unpack(data[n:n+8])
                     n += 8
@@ -1604,7 +1605,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, NonlinearQuad)
 
                 ntotal = 52  # 4*13
-                s = Struct(self._endian + b'i12f')  # 1+12=13
+                s = Struct(b(self._endian + 'i12f'))  # 1+12=13
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1630,7 +1631,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, NonlinearQuad)
 
                 ntotal = 100  # 4*25
-                s = Struct(self._endian + b'i24f') # 1+24=25
+                s = Struct(b(self._endian + 'i24f')) # 1+24=25
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1724,7 +1725,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'ii9f')
+                s = Struct(b(self._endian + 'ii9f'))
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -1768,9 +1769,9 @@ class OES(OP2Common):
                 #    'i8si4f4s', not 'i8si3fi4s'
                 ntotal = 36
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i')
-                s2 = Struct(self._endian + b'8si3fi4s')
-                s3 = Struct(self._endian + b'8si4f4s')
+                s = Struct(b(self._endian + 'i'))
+                s2 = Struct(b(self._endian + '8si3fi4s'))
+                s3 = Struct(b(self._endian + '8si4f4s'))
                 for i in range(nelements):
                     #out = s.unpack(data[n:n + ntotal])
                     eid_device, = s.unpack(data[n:n+4])
@@ -1812,8 +1813,8 @@ class OES(OP2Common):
                 ntotal = 132  # (1+8*4)*4 = 33*4 = 132
                 nelements = len(data) // ntotal
 
-                s1 = Struct(self._endian + b'2i7f')  # 36
-                s2 = Struct(self._endian + b'i7f')
+                s1 = Struct(b(self._endian + '2i7f'))  # 36
+                s2 = Struct(b(self._endian + 'i7f'))
                 for i in range(nelements):
                     out = s1.unpack(data[n:n + 36])
                     (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
@@ -1841,8 +1842,8 @@ class OES(OP2Common):
                 #else:
                     #self.create_transient_object(self.ctriax_strain, ComplexTriaxStrain)  # undefined
                     #raise NotImplementedError('ComplexTriaxStrain')
-                s1 = Struct(self._endian + b'ii8f')
-                s2 = Struct(self._endian + b'i8f')
+                s1 = Struct(b(self._endian + 'ii8f'))
+                s2 = Struct(b(self._endian + 'i8f'))
 
                 num_wide = 1 + 4 * 9
                 ntotal = num_wide * 4
@@ -1909,7 +1910,7 @@ class OES(OP2Common):
                 ntotal = 28  # 4*7
 
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i6f')
+                s = Struct(b(self._endian + 'i6f'))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
@@ -1929,7 +1930,7 @@ class OES(OP2Common):
                 ntotal = 52  # 4*13
 
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i12f')
+                s = Struct(b(self._endian + 'i12f'))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
@@ -1979,7 +1980,7 @@ class OES(OP2Common):
                     raise NotImplementedError('cbush1d_stress_strain; numwide=8')
 
                 ntotal = 32  # 4*8
-                s = Struct(self._endian + b'i6fi')
+                s = Struct(b(self._endian + 'i6fi'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -2000,7 +2001,7 @@ class OES(OP2Common):
                     raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 
                 ntotal = 36  # 4*9
-                s = Struct(self._endian + b'i8f')
+                s = Struct(b(self._endian + 'i8f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -2063,7 +2064,7 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == 7:  # real
                 self.create_transient_object(slot, NonlinearRod)
-                s = Struct(self._endian + b'i6f')  # 1+6=7
+                s = Struct(b(self._endian + 'i6f'))  # 1+6=7
                 ntotal = 28  #  7*4 = 28
                 nelements = len(data) // ntotal
                 for i in range(nelements):
@@ -2111,7 +2112,7 @@ class OES(OP2Common):
                 assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
                 ntotal = 12  # 4*3
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i2f')
+                s = Struct(b(self._endian + 'i2f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)  # num_wide=3
@@ -2151,7 +2152,7 @@ class OES(OP2Common):
                     #self.create_transient_object(self.nonlinear_cgap_strain, NonlinearGapStrain)  # undefined
                     raise NotImplementedError('NonlinearGapStrain')
                 ntotal = 44  # 4*11
-                s = Struct(self._endian + b'i8f4s4s')
+                s = Struct(b(self._endian + 'i8f4s4s'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -2214,7 +2215,7 @@ class OES(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
 
-                s = Struct(self._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
+                s = Struct(b(self._endian + '2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f'))  # 2 + 6*8 + 1 = 51
                 for i in range(nelements):  # num_wide=51
                     edata = data[n:n + 204]
                     out = s.unpack(edata)
@@ -2299,8 +2300,8 @@ class OES(OP2Common):
                     #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
 
                 n = 0
-                s1 = Struct(self._endian + b'i4s')
-                s2 = Struct(self._endian + b'i15f')
+                s1 = Struct(b(self._endian + 'i4s'))
+                s2 = Struct(b(self._endian + 'i15f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
                     edata = data[n:n+8]
@@ -2370,7 +2371,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #elementi = [eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i9f')
+                s = Struct(b(self._endian + 'i9f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -2418,8 +2419,8 @@ class OES(OP2Common):
             numwideC = 2 + 13 * nnodes  # 54
             if self.num_wide == numwideA:
                 ntotal = numwideA * 4
-                s1 = Struct(self._endian + b'ii')
-                s2 = Struct(self._endian + b'i11f')
+                s1 = Struct(b(self._endian + 'ii'))
+                s2 = Struct(b(self._endian + 'i11f'))
                 nelements = len(data) // ntotal  # 2+16*9 = 146 -> 146*4 = 584
                 for i in range(nelements):
                     edata = data[n:n+8]
@@ -2464,8 +2465,8 @@ class OES(OP2Common):
                 self._results._found_result(result_name)
                 n = 0
                 ntotal = 120  # 36+28*3
-                s1 = Struct(self._endian + b'i4si6f')  # 1 + 4+1+6 = 12
-                s2 = Struct(self._endian + b'i6f')
+                s1 = Struct(b(self._endian + 'i4si6f'))  # 1 + 4+1+6 = 12
+                s2 = Struct(b(self._endian + 'i6f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+36]  # 4*9
@@ -2524,8 +2525,8 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real???
                 ntotal = numwide_real * 4
-                s2 = Struct(self._endian + b'3i4s2i')
-                s3 = Struct(self._endian + b'i16f')
+                s2 = Struct(b(self._endian + '3i4s2i'))
+                s3 = Struct(b(self._endian + 'i16f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     out = s2.unpack(data[n:n + 24])
@@ -2631,7 +2632,7 @@ class OES(OP2Common):
         ntotal = 36  # 4*9
 
         n = 0
-        s = Struct(self._endian + b'i8si3fi4s')
+        s = Struct(b(self._endian + 'i8si3fi4s'))
         nelements = len(data) // ntotal
         for i in range(nelements):
             eData = data[n:n + ntotal]

@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, string_types, binary_type
 from collections import defaultdict
 from numpy import unique, int32
 
@@ -333,7 +333,7 @@ class OP2_F06_Common(object):
         for res_type in res_types:
             if not res_type:
                 continue
-            key0 = res_type.keys()[0]
+            key0 = list(res_type.keys())[0]
             if not isinstance(key0, (int, int32)) and not isinstance(res_key, (int, int32)):
                 if not type(key0) == type(res_key):
                     raise RuntimeError('bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
@@ -646,9 +646,10 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key, value = key_value
-            if isinstance(key, (int, int32, str)):
+            if isinstance(key, (int, int32, binary_type)):
                 return key
             else:
+                print(type(key))
                 return key[0]
 
         table_types = self._get_table_types_testing()
@@ -672,4 +673,4 @@ class OP2_F06_Common(object):
         except TypeError:
             for msgi in msg:
                 print(msgi.rstrip())
-                assert isinstance(msgi, str), msgi
+                assert isinstance(msgi, string_types), msgi

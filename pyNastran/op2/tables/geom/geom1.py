@@ -1,4 +1,5 @@
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
+from six import b
 from six.moves import range
 from struct import unpack, Struct
 
@@ -94,7 +95,7 @@ class GEOM1(object):
         """
         (1701,17,6) - the marker for Record 1
         """
-        s = Struct(self._endian + b'6i')
+        s = Struct(b(self._endian + '6i'))
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             eData = data[n:n + 24]  # 6*4
@@ -114,7 +115,7 @@ class GEOM1(object):
         """
         (1801,18,5) - the marker for Record 2
         """
-        s = Struct(self._endian + b'6i')
+        s = Struct(b(self._endian + '6i'))
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             eData = data[n:n + 24]  # 6*4
@@ -134,7 +135,7 @@ class GEOM1(object):
         """
         (1901,19,7) - the marker for Record 3
         """
-        s = Struct(self._endian + b'6i')
+        s = Struct(b(self._endian + '6i'))
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             edata = data[n:n + 24]  # 6*4
@@ -154,7 +155,7 @@ class GEOM1(object):
         """
         (2001,20,9) - the marker for Record 4
         """
-        s = Struct(self._endian + b'4i9f')
+        s = Struct(b(self._endian + '4i9f'))
         nentries = (len(data) - n) // 52
         for i in range(nentries):
             eData = data[n:n + 52]  # 13*4
@@ -178,7 +179,7 @@ class GEOM1(object):
         for i in range(nentries):
             eData = data[n:n + 52]  # 13*4
             (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
-                c2, c3) = unpack(self._endian + b'4i9f', eData)
+                c2, c3) = unpack(b(self._endian + '4i9f'), eData)
             assert one == 1, one
             assert two == 2, two
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
@@ -194,7 +195,7 @@ class GEOM1(object):
         """
         (2201,22,10) - the marker for Record 6
         """
-        s = Struct(self._endian + b'4i9f')
+        s = Struct(b(self._endian + '4i9f'))
         nentries = (len(data) - n) // 52
         for i in range(nentries):
             eData = data[n:n + 52]  # 13*4
@@ -213,7 +214,7 @@ class GEOM1(object):
         (14301,143,651) - the marker for Record 7
         .. todo:: isnt this a CORD3G, not a CORD3R ???
         """
-        s = Struct(self._endian + b'4i')
+        s = Struct(b(self._endian + '4i'))
         nentries = (len(data) - n) // 16
         for i in range(nentries):
             eData = data[n:n + 16]  # 4*4
@@ -228,7 +229,7 @@ class GEOM1(object):
 
     def _readGrid(self, data, n):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        s = Struct(self._endian + b'ii3f3i')
+        s = Struct(b(self._endian + 'ii3f3i'))
         ntotal = 32
         nentries = (len(data) - n) // ntotal
         self._increase_card_count('GRID', nentries)

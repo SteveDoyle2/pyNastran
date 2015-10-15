@@ -1,6 +1,7 @@
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914,C0326
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import b
 from six.moves import range
 from struct import unpack, Struct
 
@@ -90,7 +91,7 @@ class EPT(object):
         .. todo:: this isnt a property...
         """
         return n
-        s = Struct(self._endian + b'i4sif')
+        s = Struct(b(self._endian + 'i4sif'))
         while len(data) >= 16:  # 4*4
             eData = data[:16]
             data = data[16:]
@@ -115,7 +116,7 @@ class EPT(object):
         .. warning:: this makes a funny property...
         """
         ntotal = 76  # 19*4
-        s = Struct(self._endian + b'2i17f')
+        s = Struct(b(self._endian + '2i17f'))
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             eData = data[n:n+76]
@@ -158,7 +159,7 @@ class EPT(object):
         }  # for GROUP="MSCBML0"
 
         ntotal = 28  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
-        s = Struct(self._endian + b'2i8s8sf')
+        s = Struct(b(self._endian + '2i8s8sf'))
         #nentries = (len(data) - n) // ntotal
         #print(self.show_ndata(80))
         ndata = len(data)
@@ -201,9 +202,9 @@ class EPT(object):
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
         """
-        s1 = Struct(self._endian + b'4if')
-        s2 = Struct(self._endian + b'16f')
-        s3 = Struct(self._endian + b'11f')
+        s1 = Struct(b(self._endian + '4if'))
+        s2 = Struct(b(self._endian + '16f'))
+        s3 = Struct(b(self._endian + '11f'))
         ntotal = 1072  # 44+12*84+20
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
@@ -261,8 +262,8 @@ class EPT(object):
         """
         nproperties = 0
         n2 = n
-        s1 = Struct(self._endian + b'2i3fi2f')
-        s2 = Struct(self._endian + b'i2fi')
+        s1 = Struct(b(self._endian + '2i3fi2f'))
+        s2 = Struct(b(self._endian + 'i2fi'))
         while n2 < n:  #len(data) >= 32:  # 8*4 - dynamic
             #print("len(data) = %s" % len(data))
             #print(self.print_block(data[0:200]))
@@ -329,7 +330,7 @@ class EPT(object):
 
     def _readPELAS(self, data, n):
         """PELAS(302,3,46) - the marker for Record 39"""
-        s = Struct(self._endian + b'i3f')
+        s = Struct(b(self._endian + 'i3f'))
         ntotal = 16  # 4*4
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
@@ -350,7 +351,7 @@ class EPT(object):
         """
         PGAP(3201,32,55) - the marker for Record 42
         """
-        s = Struct(self._endian + b'i10f')
+        s = Struct(b(self._endian + 'i10f'))
         nproperties = (len(data) - n) // 44
         for i in range(nproperties):
             eData = data[n:n+44]
@@ -377,7 +378,7 @@ class EPT(object):
         PMASS(402,4,44) - the marker for Record 48
         """
         n = 0
-        s = Struct(self._endian + b'ii')
+        s = Struct(b(self._endian + 'ii'))
         nEntries = (len(data) - n) // 8  # 2*4
         for i in range(nEntries):
             eData = data[n:n + 8]
@@ -394,7 +395,7 @@ class EPT(object):
         PROD(902,9,29) - the marker for Record 49
         """
         ntotal = 24  # 6*4
-        s = Struct(self._endian + b'2i4f')
+        s = Struct(b(self._endian + '2i4f'))
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             eData = data[n:n+24]
@@ -411,7 +412,7 @@ class EPT(object):
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
-        s = Struct(self._endian + b'2i4f')
+        s = Struct(b(self._endian + '2i4f'))
         nproperties = (len(data) - n) // 24
         for i in range(nproperties):
             eData = data[n:n+24]
@@ -429,7 +430,7 @@ class EPT(object):
         PSHELL(2302,23,283) - the marker for Record 51
         """
         ntotal = 44  # 11*4
-        s = Struct(self._endian + b'iififi4fi')
+        s = Struct(b(self._endian + 'iififi4fi'))
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             eData = data[n:n+44]
@@ -453,7 +454,7 @@ class EPT(object):
         """
         #print("reading PSOLID")
         ntotal = 28  # 7*4
-        s = Struct(self._endian + b'6i4s')
+        s = Struct(b(self._endian + '6i4s'))
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             eData = data[n:n+28]
@@ -478,7 +479,7 @@ class EPT(object):
         .. todo:: I could store all the tubes and add them later, but what about themal/non-thermal subcases
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
-        s = Struct(self._endian + b'2i3f')
+        s = Struct(b(self._endian + '2i3f'))
         nproperties = (len(data) - n) // 20
         for i in range(nproperties):
             eData = data[n:n+20]  # or 24???
@@ -499,7 +500,7 @@ class EPT(object):
 
     def _readPVISC(self, data, n):
         """PVISC(1802,18,31) - the marker for Record 39"""
-        s = Struct(self._endian + b'i2f')
+        s = Struct(b(self._endian + 'i2f'))
         nproperties = (len(data) - n) // 12
         for i in range(nproperties):
             eData = data[n:n+12]

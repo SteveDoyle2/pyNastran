@@ -1,3 +1,4 @@
+from six import b
 from six.moves import range
 from struct import Struct
 
@@ -36,7 +37,7 @@ class OGPF(OP2Common):
             self._results._found_result(result_name)
             if self.num_wide == 10:
                 self.create_transient_object(self.grid_point_forces, RealGridPointForces)
-                s = Struct(self._endian + b'ii8s6f')
+                s = Struct(b(self._endian + 'ii8s6f'))
                 ntotal = 40
                 nnodes = len(data) // ntotal
 

@@ -5,8 +5,10 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.bdf.cards.baseCard import BaseCard
+from six import exec_
 from copy import deepcopy
+
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 from numpy import cos, sin, tan
 from numpy import arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2
@@ -134,7 +136,7 @@ class DEQATN(BaseCard):  # needs work...
         func_name, nargs, func_str = fortran_to_python(self.eqs, default_values)
         self.func_name = func_name
         #print('**************', func_str)
-        exec func_str
+        exec_(func_str)
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
@@ -237,7 +239,7 @@ def split_equation(lines_out, line, n, isplit=0):
 def fortran_to_python_short(line, default_values):
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
-    exec func_str
+    exec_(func_str)
     return func
 
 def fortran_to_python(lines, default_values):

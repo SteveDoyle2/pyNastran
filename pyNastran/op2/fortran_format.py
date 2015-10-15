@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, b
 from six.moves import range
 import sys
 from struct import unpack
@@ -111,7 +111,7 @@ class FortranFormat(object):
                       indicates something bad happened.
         """
         data = self.f.read(4)
-        ndata, = unpack(self._endian + b'i', data)
+        ndata, = unpack(b(self._endian + 'i'), data)
         self.n += 8 + ndata
         self.goto(self.n)
         return None
@@ -123,7 +123,7 @@ class FortranFormat(object):
         :retval data: the data in binary
         """
         data = self.f.read(4)
-        ndata, = unpack(self._endian + b'i', data)
+        ndata, = unpack(b(self._endian + 'i'), data)
 
         data_out = self.f.read(ndata)
         data = self.f.read(4)
@@ -147,7 +147,7 @@ class FortranFormat(object):
         """
         for i, marker in enumerate(markers):
             data = self.read_block()
-            imarker, = unpack(self._endian + b'i', data)
+            imarker, = unpack(b(self._endian + 'i'), data)
             if marker != imarker:
                 msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (marker, imarker, markers, i, self.table_name)
                 raise FortranMarkerError(msg)
@@ -175,7 +175,7 @@ class FortranFormat(object):
         markers = []
         for i in range(n):
             data = self.read_block()
-            marker, = unpack(self._endian + b'i', data)
+            marker, = unpack(b(self._endian + 'i'), data)
             markers.append(marker)
         if rewind:
             self.n = ni

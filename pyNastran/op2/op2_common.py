@@ -1,5 +1,5 @@
 from __future__ import print_function, unicode_literals
-from six import string_types
+from six import string_types, b
 from six.moves import range, zip
 import copy
 from struct import Struct, unpack
@@ -223,7 +223,7 @@ class OP2Common(Op2Codes, F06Writer):
                            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
         datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)
-        value, = unpack(self._endian + Type, datai)
+        value, = unpack(b(self._endian + Type), datai)
         if fixDeviceCode:
             value = (value - self.device_code) // 10
         if self.is_debug_file:
@@ -257,7 +257,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
-        Title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
+        Title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
 
         self.Title = Title.strip()
 
@@ -490,8 +490,9 @@ class OP2Common(Op2Codes, F06Writer):
 
         if self.use_vector and is_vectorized:
             n = nnodes * 4 * 8
-            int_fmt = b'%s%ii' % (self._endian, nnodes * 8)
-            float_fmt = b'%s%if' % (self._endian, nnodes * 8)
+            b(self._endian + '%ii' % (nnodes * 8))
+            int_fmt = b('%s%ii' % (self._endian, nnodes * 8))
+            float_fmt = b('%s%if' % (self._endian, nnodes * 8))
             ints = np.array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nnodes, 8)
             floats = np.array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nnodes, 8)
             itotal2 = obj.itotal + nnodes
@@ -508,7 +509,7 @@ class OP2Common(Op2Codes, F06Writer):
             obj.itotal = itotal2
         else:
             n = 0
-            s = Struct(self._endian + b'2i6f')
+            s = Struct(b(self._endian + '2i6f'))
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
@@ -548,8 +549,8 @@ class OP2Common(Op2Codes, F06Writer):
             # n = self._read_real_table_sort1_debug(data, nnodes, result_name, node_elem, is_cid=is_cid)
         if self.use_vector and is_vectorized:
             n = nnodes * 4 * 8
-            int_fmt = b'%s%ii' % (self._endian, nnodes * 8)
-            float_fmt = b'%s%if' % (self._endian, nnodes * 8)
+            int_fmt = b('%s%ii' % (self._endian, nnodes * 8))
+            float_fmt = b('%s%if' % (self._endian, nnodes * 8))
             ints = np.array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nnodes, 8)
             floats = np.array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nnodes, 8)
             itotal2 = obj.itotal + nnodes
@@ -566,7 +567,7 @@ class OP2Common(Op2Codes, F06Writer):
             obj.itotal = itotal2
         else:
             assert nnodes > 0, nnodes
-            s = Struct(self._endian + b'2i6f')
+            s = Struct(b(self._endian + '2i6f'))
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
@@ -612,7 +613,7 @@ class OP2Common(Op2Codes, F06Writer):
         n = 0
         obj = self.obj
         #nnodes = len(data) // 56
-        s = Struct(self._endian + b'2i12f')
+        s = Struct(b(self._endian + '2i12f'))
 
         if self.use_vector and is_vectorized and 0:
             n = nnodes * 4 * 14
@@ -667,7 +668,7 @@ class OP2Common(Op2Codes, F06Writer):
         n = 0
         obj = self.obj
         #nnodes = len(data) // 56
-        s = Struct(self._endian + b'2i12f')
+        s = Struct(b(self._endian + '2i12f'))
 
         assert self.obj is not None
         assert nnodes > 0
@@ -860,7 +861,7 @@ class OP2Common(Op2Codes, F06Writer):
             raise NotImplementedError(msg)
 
     def parse_approach_code(self, data):
-        (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4i', data[:16])
+        (approach_code, tCode, int3, isubcase) = unpack(b(self._endian + '4i'), data[:16])
         self.approach_code = approach_code
         self.tCode = tCode
         self.int3 = int3

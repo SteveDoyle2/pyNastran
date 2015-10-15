@@ -258,7 +258,7 @@ class TestOP2(Tester):
             if vectorized:
                 eids = unique(case.element_layer[:, 0])
             else:
-                eids = unique(case.angle.keys())
+                eids = unique(list(case.angle.keys()))
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_stress:
@@ -271,7 +271,7 @@ class TestOP2(Tester):
             if vectorized:
                 eids = unique(case.element_layer[:, 0])
             else:
-                eids = unique(case.angle.keys())
+                eids = unique(list(case.angle.keys()))
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_force:
@@ -282,7 +282,7 @@ class TestOP2(Tester):
                     isubcase, op2.cquad4_force.keys()))
 
             if isinstance(case, RealPlateBilinearForce):
-                eids = unique(case.tx.keys())
+                eids = unique(list(case.tx.keys()))
             else:
                 assert isinstance(case, RealPlateBilinearForce), 'update this...'
 
@@ -306,7 +306,7 @@ class TestOP2(Tester):
             if vectorized:
                 eids = unique(case.element_layer[:, 0])
             else:
-                eids = unique(case.angle.keys())
+                eids = unique(list(case.angle.keys()))
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_composite_stress:
@@ -314,7 +314,7 @@ class TestOP2(Tester):
             if vectorized:
                 eids = unique(case.element_layer[:, 0])
             else:
-                eids = unique(case.angle.keys())
+                eids = unique(list(case.angle.keys()))
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_force:
@@ -323,7 +323,7 @@ class TestOP2(Tester):
                 eids = unique(case.element)
             else:
                 assert isinstance(case, RealPlateForce), case
-                eids = unique(case.tx.keys())
+                eids = unique(list(case.tx.keys()))
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 

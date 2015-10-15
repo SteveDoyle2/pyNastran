@@ -1439,7 +1439,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         nrows, ncols = A.shape
         if ncols != len(headers):
             msg = 'Error loading csv/txt file\n'
-            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n'
+            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n' % (ncols, len(headers))
             msg += 'headers = %s' % headers
             raise SyntaxError(msg)
 

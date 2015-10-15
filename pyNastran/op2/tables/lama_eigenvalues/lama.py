@@ -64,7 +64,7 @@ class LAMA(OP2Common):
         clama = ComplexEigenvalues(11)
         self.eigenvalues[self.Title] = clama
         #self.eigenvalues[self.isubcase] = lama
-        s = Struct(self._endian + b'ii4f')
+        s = Struct(b(self._endian + 'ii4f'))
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -93,7 +93,7 @@ class LAMA(OP2Common):
         blama = BucklingEigenvalues(11)
         self.eigenvalues[self.Title] = blama
         #self.eigenvalues[self.isubcase] = lama
-        s = Struct(self._endian + b'ii5f')
+        s = Struct(b(self._endian + 'ii5f'))
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)

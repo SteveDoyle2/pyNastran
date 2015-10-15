@@ -485,7 +485,7 @@ def test_get_cards_by_card_types(model):
     Verifies the ``model.get_cards_by_card_types`` method works
     """
     # setup to remove hackish cards
-    card_types = model.card_count.keys()
+    card_types = list(model.card_count.keys())
     removed_cards = []
     for card_type in ['ENDDATA', 'INCLUDE', 'JUNK']:
         if card_type in model.card_count:
