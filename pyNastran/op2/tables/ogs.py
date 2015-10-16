@@ -1,3 +1,4 @@
+from six import b
 from six.moves import range
 from struct import Struct
 from pyNastran.op2.op2_common import OP2Common
@@ -166,7 +167,7 @@ class OGS(OP2Common):
 
     def _readOGS1_table27_numWide9(self, data):
         """surface stresses"""
-        s = Struct(self._endian + b'2i7f')
+        s = Struct(b(self._endian + '2i7f'))
         n = 0
         nelements = len(data) // 36  # 9*4
         for i in range(nelements):
@@ -193,7 +194,7 @@ class OGS(OP2Common):
 
     def _readOGS1_table35_numWide6(self, data):
         """grid point stress discontinuities (plane stress/strain)"""
-        s = Struct(self._endian + b'i5f')
+        s = Struct(b(self._endian + 'i5f'))
         n = 0
         nelements = len(data) // 24  # 6*4
         for i in range(nelements):

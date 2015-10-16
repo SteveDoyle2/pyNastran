@@ -1,4 +1,5 @@
 #pylint: disable=C0326,C0301,C0103
+from six import b
 from six.moves import range
 from struct import Struct, unpack
 
@@ -30,7 +31,7 @@ class ONR(OP2Common):
         self.eTotal = self.parse_approach_code(data)
         self.binary_debug.flush()
 
-        element_name, = unpack(self._endian + b'8s', data[24:32])
+        element_name, = unpack(b(self._endian + '8s'), data[24:32])
         print("element_name = %s" %(element_name))
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
@@ -154,7 +155,7 @@ class ONR(OP2Common):
         if self.num_wide == 4:
             assert self.cvalres in [0, 1], self.cvalres
             self.create_transient_object(self.strain_energy, RealStrainEnergy)
-            s = Struct(self._endian + b'i3f')
+            s = Struct(b(self._endian + 'i3f'))
 
             ntotal = 16
             nnodes = len(data) // ntotal
@@ -174,7 +175,7 @@ class ONR(OP2Common):
             assert self.cvalres in [1, 2], self.cvalres
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
             ntotal = 20
-            s = Struct(self._endian + b'8s3f')
+            s = Struct(b(self._endian + '8s3f'))
             nnodes = len(data) // ntotal
             for i in range(nnodes):
                 edata = data[n:n+20]
@@ -192,7 +193,7 @@ class ONR(OP2Common):
         elif self.num_wide == 6:  ## TODO: figure this out...
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
-            s = Struct(self._endian + b'i8s3f')
+            s = Struct(b(self._endian + 'i8s3f'))
             nnodes = len(data) // ntotal
             for i in range(nnodes):
                 edata = data[n:n+24]

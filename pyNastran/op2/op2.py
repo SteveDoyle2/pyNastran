@@ -4,7 +4,7 @@ Main OP2 class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, string_types
 import os
 
 from numpy import unique, int32
@@ -225,7 +225,7 @@ class OP2(OP2_Scalar):
         if not combine:
             return
         del result, case_keys
-        isubcases = unique(self.subcase_key.keys())
+        isubcases = unique(list(self.subcase_key.keys()))
         unique_isubcases = unique(isubcases)
 
         self.log.info('combine_results')
@@ -234,7 +234,14 @@ class OP2(OP2_Scalar):
             if len(result) == 0:
                 continue
             for isubcase in unique_isubcases:
-                keys = self.subcase_key[isubcase]
+                try:
+                    keys = self.subcase_key[isubcase]
+                except TypeError:
+                    print('isubcase =', isubcase)
+                    print('isubcases =', isubcases)
+                    print('self.subcase_key =', self.subcase_key)
+                    raise
+
                 #print('keys = %s' % keys)
                 key0 = tuple([isubcase] + list(keys[0]))
 
@@ -302,7 +309,7 @@ class OP2(OP2_Scalar):
             for isubcase in unique_isubcases:
                 for case_key in case_keys:
                     #print('isubcase=%s case_key=%s' % (isubcase, case_key))
-                    assert not isinstance(case_key, str), result_type
+                    assert not isinstance(case_key, string_types), result_type
                     if isinstance(case_key, (int, int32)):
                         if isubcase == case_key and case_key not in subcase_key2[isubcase]:
                             subcase_key2[isubcase] = [isubcase]

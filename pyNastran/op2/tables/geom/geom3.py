@@ -1,4 +1,5 @@
 #pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326,R0201
+from six import b
 from six.moves import range
 from struct import unpack, Struct
 
@@ -77,7 +78,7 @@ class GEOM3(object):
         #print("reading FORCE")
         ntotal = 28  # 7*4
         nEntries = (len(data) - n) // ntotal
-        s = Struct(self._endian + b'iiiffff')
+        s = Struct(b(self._endian + 'iiiffff'))
         for i in range(nEntries):
             out = s.unpack(data[n:n + 28])
             (sid, g, cid, f, n1, n2, n3) = out
@@ -93,7 +94,7 @@ class GEOM3(object):
         """
         #print("reading FORCE1")
         ntotal = 20  # 5*4
-        s = Struct('iifii')
+        s = Struct(b(self._endian + 'iifii'))
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             eData = data[n:n + 20]
@@ -112,7 +113,7 @@ class GEOM3(object):
         """
         #print("reading FORCE2")
         ntotal = 28  # 7*4
-        s = Struct(self._endian + b'iif4i')
+        s = Struct(b(self._endian + 'iif4i'))
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             out = s.unpack(data[n:n + 28])
@@ -132,7 +133,7 @@ class GEOM3(object):
         """
         #print("reading GRAV")
         ntotal = 28  # 7*4
-        s = Struct(self._endian + b'ii4fi')
+        s = Struct(b(self._endian + 'ii4fi'))
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             eData = data[n:n + 28]
@@ -203,7 +204,7 @@ class GEOM3(object):
         """
         #print("reading MOMENT")
         ntotal = 28
-        s = Struct(self._endian + b'3i4f')
+        s = Struct(b(self._endian + '3i4f'))
         nEntries = (len(data) - n) // 28  # 7*4
         for i in range(nEntries):
             eData = data[n:n + 28]
@@ -225,7 +226,7 @@ class GEOM3(object):
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             eData = data[n:n + 20]
-            out = unpack('iifii', eData)
+            out = unpack(b(self._endian + 'iifii'), eData)
             self.binary_debug.write('  MOMENT1=%s\n' % str(out))
             (sid, g, m, n1, n2) = out
             load = MOMENT1(None, out)
@@ -243,7 +244,7 @@ class GEOM3(object):
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             eData = data[n:n + 28]
-            out = unpack('iif4i', eData)
+            out = unpack(b(self._endian + 'iif4i'), eData)
             self.binary_debug.write('  MOMENT2=%s\n' % str(out))
             (sid, g, m, n1, n2, n3, n4) = out
 
@@ -262,7 +263,7 @@ class GEOM3(object):
         """
         #print("reading PLOAD1")
         ntotal = 32  # 8*4
-        s = Struct(self._endian + b'4i4f')
+        s = Struct(b(self._endian + '4i4f'))
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             eData = data[n:n + 32]

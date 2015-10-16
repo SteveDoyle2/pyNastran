@@ -423,7 +423,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.menu_help = self.menubar.addMenu('&Help')
 
         self.menu_hidden = self.menubar.addMenu('&Hidden')
-        self.menu_hidden.setVisible(False)
+        self.menu_hidden.menuAction().setVisible(False)
 
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script]
@@ -1439,7 +1439,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         nrows, ncols = A.shape
         if ncols != len(headers):
             msg = 'Error loading csv/txt file\n'
-            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n'
+            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n' % (ncols, len(headers))
             msg += 'headers = %s' % headers
             raise SyntaxError(msg)
 
