@@ -179,9 +179,11 @@ class GuiCommon(object):
                                name_vector, grid_result_vector,
                                key, subtitle, label)
 
+        is_blue_to_red = True
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
-                               data_format, is_blue_to_red=True, is_horizontal=self.is_horizontal_scalar_bar)
-
+                               data_format, is_blue_to_red=is_blue_to_red, is_horizontal=self.is_horizontal_scalar_bar)
+        self.update_legend(result_type, min_value, max_value, data_format,
+                           is_blue_to_red, self.is_horizontal_scalar_bar, scale)
         location = self.get_case_location(key)
         self.res_widget.update_method(location)
         if explicit:

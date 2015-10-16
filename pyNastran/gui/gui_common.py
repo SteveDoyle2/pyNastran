@@ -2678,11 +2678,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self._legend_window.activateWindow()
 
         if data['close']:
-            self._apply_legend(data)
+            if not self._legend_window._updated_legend:
+                self._apply_legend(data)
             self._legend_shown = False
             del self._legend_window
         else:
             self._legend_window.activateWindow()
+
+    def update_legend(self, name, min_value, max_value, data_format,
+                      is_blue_to_red, is_horizontal_scalar_bar, scale):
+        if self._legend_shown:
+            self._legend_window._updated_legend = True
+            self._legend_window.update_legend(name,
+                    min_value, max_value, data_format,
+                    is_blue_to_red, is_horizontal_scalar_bar, scale)
+
+
 
 
     def _apply_legend(self, data):
