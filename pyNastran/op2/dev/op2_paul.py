@@ -7,15 +7,13 @@ Can read files in big or little endian format.
 
 @author: Tim Widrick
 """
-from __future__ import print_function
-from six import PY2
+
 import numpy as np
 import sys
+import n2y
 import struct
 import itertools as it
 import warnings
-
-import n2y
 
 #  Notes on the op2 format.
 #
@@ -127,7 +125,7 @@ def expanddof(ids, pvgrids):
     return np.vstack((expids[V], dof[V])).T
 
 
-class OP2(object):
+class OP2():
     """Class for reading Nastran op2 files and nas2cam data files."""
 
     def __init__(self, filename=None):
@@ -239,7 +237,6 @@ class OP2(object):
 
         File is positioned after the header label (at `postheaderpos`).
         """
-        print(filename)
         self._fileh = open(filename, 'rb')
         self.dbnames = []
         self.dblist = []
@@ -276,7 +273,6 @@ class OP2(object):
             self._intstru = self._endian + '%dq'
             self._ibytes = 8
             self._Str = struct.Struct(self._endian + 'q')
-        # print('bit64 = ', self._bit64)
 
         self._rowsCutoff = 3000
         self._int32str = self._endian + 'i4'
@@ -329,11 +325,8 @@ class OP2(object):
         """
         Returns a valid variable name from the byte string `bstr`.
         """
-        if PY2:
-            return bstr.strip()
-        else:
-            return ''.join(chr(c) for c in bstr if (
-                47 < c < 58 or 64 < c < 91 or c == 95 or 96 < c < 123))
+        return ''.join(chr(c) for c in bstr if (
+              47 < c < 58 or 64 < c < 91 or c == 95 or 96 < c < 123))
 
     def _rdop2eot(self):
         """Read Nastran output2 end-of-table marker.
@@ -373,25 +366,18 @@ class OP2(object):
         """
         eot, key = self._rdop2eot()
         if key == 0:
-            # print('return None, None, None')
             return None, None, None
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
-        db_binary_name = self._fileh.read(reclen)
-        # print('db_binary_name = %r' % db_binary_name)
-        db_name = self._validname(db_binary_name)
+        db_name = self._validname(self._fileh.read(reclen))
         self._fileh.read(4)  # endrec
         self._getkey()
         key = self._getkey()
 
         self._fileh.read(4)  # reclen
         frm = self._intstru % key
-        nbytes = self._ibytes * key
-
-        # prevents a giant read
-        assert nbytes > 0, nbytes
-        # print('bytes =', nbytes)
-        trailer = struct.unpack(frm, self._fileh.read(nbytes))
+        bytes = self._ibytes*key
+        trailer = struct.unpack(frm, self._fileh.read(bytes))
         # trailer = np.fromfile(self._fileh, self._intstr, key)
         self._fileh.read(4)  # endrec
         self._skipkey(4)
@@ -433,11 +419,12 @@ class OP2(object):
                 r = self._Str.unpack(self._fileh.read(self._ibytes))[0]-1
                 n = (reclen - intsize) // 8
                 if n < self._rowsCutoff:
-                    matrix[r:r+n, col] = struct.unpack(
-                        frm % n, self._fileh.read(n*8))
+                    matrix[r:r+n,
+                           col] = struct.unpack(frm % n,
+                                                self._fileh.read(n*8))
                 else:
-                    matrix[r:r+n, col] = np.fromfile(
-                        self._fileh, np.float64, n)
+                    matrix[r:r+n, col] = np.fromfile(self._fileh,
+                                                     np.float64, n)
                 self._fileh.read(4)  # endrec
                 key = self._getkey()
             col += 1
@@ -615,7 +602,6 @@ class OP2(object):
             hbytes = 24
 
         eot = 0
-        print('self._intstr =', self._intstr)
         data = np.zeros(0, dtype=self._intstr)
         while not eot:
             while key > 0:
@@ -743,7 +729,6 @@ class OP2(object):
             raise ValueError("form must be one of:  None, 'int', "
                              "'uint', 'double', 'single' or 'bytes'")
         if N:
-            print('frm=%r' % frm)
             data = np.zeros(N, dtype=frm)
             i = 0
             while key > 0:
@@ -752,7 +737,6 @@ class OP2(object):
                 n = reclen // bytes_per
                 if n < self._rowsCutoff:
                     b = n * bytes_per
-                    print('frmu=%r' % frmu)
                     data[i:i+n] = struct.unpack(frmu % n, f.read(b))
                 else:
                     data[i:i+n] = np.fromfile(f, frm, n)
@@ -919,79 +903,76 @@ class OP2(object):
         else:
             i4_Str = struct.Struct(self._endian + 'qqqq')
             i4_bytes = 32
-        pos = self._fileh.tell()
-        key = self._getkey()
-        lam = np.zeros(1, float)
-        ougv1 = None
-        J = 0
-        eot = 0
-        while not eot:
-            if J == 1:
+        pos = self._fileh.tell()                                   # Return current file position
+        key = self._getkey()                                       # Return current key value
+        lam = np.zeros(1, float)                                   # initialize lambda array to 0.0
+        ougv1 = None                                               # initialize mode shape matrix to none
+        J = 0                                                      # initialize counter for mode number
+        eot = 0                                                    # initialize end of table boolean to true
+        while not eot:                                             # loop until end of table
+            if J == 1:                                             # if just completed reading 1st mode
                 # compute number of modes by files bytes:
-                startpos = pos + 8 + self._ibytes
-                bytes_per_mode = self._fileh.tell() - startpos
-                dbdir = self.dbnames[name]
-                for i in range(len(dbdir)):
-                    if dbdir[i][0][0] < startpos < dbdir[i][0][1]:
-                        endpos = dbdir[i][0][1]
-                        break
-                nmodes = (endpos - startpos) // bytes_per_mode
+                startpos = pos + 8 + self._ibytes                  # initial position of ougv1 data
+                bytes_per_mode = self._fileh.tell() - startpos     # number of bytes read for previous mode
+                dbdir = self.dbnames[name]                         # return location of ougv1 datablocks
+                for i in range(len(dbdir)):                        # loop over ougv1 datablocks
+                    if dbdir[i][0][0] < startpos < dbdir[i][0][1]: # if startpos is inside current ougv1 datablock
+                        endpos = dbdir[i][0][1]                    # end position of current ougv1 datablock
+                        break                                      # break out of loop after finding end
+                nmodes = (endpos - startpos) // bytes_per_mode     # calculate number of modes
                 print('Number of modes in OUGV1 is {0:d}'.format(nmodes))
-                keep = lam
-                lam = np.zeros(nmodes, float)
-                lam[0] = keep
-                keep = ougv1
+                keep = lam                                         # Temporarily store previous version of lam
+                lam = np.zeros(nmodes, float)                      # Intialize lambda array
+                lam[0] = keep                                      # Place first lambda value in array
+                keep = ougv1                                       # temporarily first mode
                 ougv1 = np.zeros((keep.shape[0], nmodes), float,
-                                 order='F')
-                ougv1[:, 0] = keep[:, 0]
+                                 order='F')                        # Initialize mode shape array
+                ougv1[:, 0] = keep[:, 0]                           # Place first mode in ougv1 (not sure where this was read)
             # IDENT record:
-            reclen = self._Str4.unpack(self._fileh.read(4))[0]
-            header = i4_Str.unpack(self._fileh.read(i4_bytes))
+            reclen = self._Str4.unpack(self._fileh.read(4))[0]     # length of current record
+            header = i4_Str.unpack(self._fileh.read(i4_bytes))     # Read i4_bytes and return an integer
             # header = (ACODE, TCODE, ...)
-            achk = self._check_code(header[0], [4], [[2]], 'ACODE')
+            achk = self._check_code(header[0], [4], [[2]], 'ACODE') # Check value of ACODE
             tchk = self._check_code(header[1], [1, 2, 7],
-                                    [[1], [7], [0, 2]], 'TCODE')
-            if not (achk and tchk):
-                self._fileh.seek(pos)
-                self.skipop2table()
+                                    [[1], [7], [0, 2]], 'TCODE')   # Check value of TCODE
+            if not (achk and tchk):                                # If either ACODE or TCODE fail check
+                self._fileh.seek(pos)                              # Go back to pos
+                self.skipop2table()                                # Skip the current table if ACODE or TCODE fail check
                 return
-            self._fileh.read(self._ibytes)  # mode bytes
-            lam[J] = float2_Str.unpack(self._fileh.read(8))[0]
+            self._fileh.read(self._ibytes)  # mode bytes           # Skip _ibytes data from file
+            lam[J] = float2_Str.unpack(self._fileh.read(8))[0]     # Read 8 bytes of data as 2 element float array and return store 1st element as lambda
             # ttl bytes = reclen + 4 + 3*(4+ibytes+4)
             #           = reclen + 28 - 3*ibytes
             # read bytes = 4*ibytes + ibytes + 8 = 8 + 5*ibytes
             # self._fileh.seek(reclen-2*self._ibytes+20, 1)  # ... or:
-            self._fileh.read(reclen-2*self._ibytes+20)
+            self._fileh.read(reclen-2*self._ibytes+20)             # Skip reclen-2*_ibytes + 20 bytes of data
 
             # DATA record:
-            if ougv1 is None:
-                print('masking')
+            if ougv1 is None:                                      # ougv1 is None on first mode
                 # - process DOF information on first column only
                 # - there are 8 elements per node:
                 #   id*10, type, x, y, z, rx, ry, rz
-                data = self.rdop2record('bytes')  # 1st column
-                n = len(data) // iif6_bytes
-                print('iif6_int =', iif6_int)
-                data = np.fromstring(data, iif6_int)
-                data1 = (data.reshape(n, 8))[:, :2]
-                pvgrids = data1[:, 1] == 1
-                dof = expanddof(data1[:, 0] // 10, pvgrids)
+                data = self.rdop2record('bytes')  # 1st column     # read a record into data array as raw bytes
+                n = len(data) // iif6_bytes                        # number of elements in array
+                data = np.fromstring(data, iif6_int)               # turn data into integer array
+                data1 = (data.reshape(n, 8))[:, :2]                # reshape data into n x 8 array and take first 2 columns
+                pvgrids = data1[:, 1] == 1                         # return boolean array (True for grid, False otherwise)
+                dof = expanddof(data1[:, 0] // 10, pvgrids)        # work out the complete 2 column dof matrix
                 # form partition vector for modeshape data:
-                V = np.zeros((n, 8), bool)
-                V[:, 2] = True          # all nodes have 'x'
-                V[pvgrids, 3:] = True   # only grids have all 6
-                print('V =\n', V)
-                V = V.flatten()
+                V = np.zeros((n, 8), bool)                         # Initialize a boolean n x 8 partition matrix
+                V[:, 2] = True          # all nodes have 'x'       # Set 2nd column of partition vector to True
+                V[pvgrids, 3:] = True   # only grids have all 6    # Set 3-8th column of V to true for first entry on each node
+                V = V.flatten()                                    # Boolean array that picks out mode shape coefficients
                 # initialize ougv1 with first mode shape:
-                data.dtype = np.float32  # reinterpret as floats
-                ougv1 = data[V].reshape(-1, 1)
+                data.dtype = np.float32  # reinterpret as floats   # cast data array as float32
+                ougv1 = data[V].reshape(-1, 1)                     # pull out mode shape data and reshape to column array
             else:
-                data = self.rdop2record('single', V.shape[0])
-                ougv1[:, J] = data[V]
-            J += 1
+                data = self.rdop2record('single', V.shape[0])      # on subsequent modes just read record
+                ougv1[:, J] = data[V]                              # store mode shape data
+            J += 1                                                 # increment mode number
             print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(J, np.sqrt(lam[J-1])/(2*np.pi)))
-            eot, key = self._rdop2eot()
-        return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}
+            eot, key = self._rdop2eot()                            # check for end of table
+        return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}         # return mode shape matrix, eigenvalues and DOF list
 
     def _rdop2emap(self, nas, nse, trailer):
         """
@@ -1780,19 +1761,18 @@ class OP2(object):
         """
         self._fileh.seek(self._postheaderpos)
         drmkeys = {}
-        self.verbose = verbose
         while 1:
             name, trailer, rectype = self._rdop2nt()
             if name is None:
                 break
             if rectype > 0:
                 if verbose:
-                    print("Skipping matrix %r..." % name)
+                    print("Skipping matrix {}...".format(name))
                 self.skipop2matrix(trailer)
                 # matrix = self.rdop2matrix(trailer)
             elif len(name) > 2 and name.find('TO') == 0:
                 if verbose:
-                    print("Reading %r..." % name)
+                    print("Reading {}...".format(name))
                 # self.skipop2table()
                 # skip record 1
                 self.rdop2record()
@@ -1803,7 +1783,7 @@ class OP2(object):
                 self._rdop2eot()
             elif len(name) > 4 and name[:4] == 'XYCD':
                 if verbose:
-                    print("Reading %r..." % name)
+                    print("Reading {}...".format(name))
                 # record 1 contains order of request info
                 drmkeys['dr'] = self.rdop2record()
                 # record 2 contains sorted list
@@ -1811,7 +1791,7 @@ class OP2(object):
                 self._rdop2eot()
             else:
                 if verbose:
-                    print("Skipping table %r..." % name)
+                    print("Skipping table {}...".format(name))
                 self.skipop2table()
         return drmkeys
 
@@ -2106,8 +2086,7 @@ def rdnas2cam(op2file='nas2cam', op4file=None):
     # read op4 file:
     import op4
     o4 = op4.OP4()
-    #op4names, op4vars, *_ = o4.listload(op4file)
-    op4names, op4vars = o4.listload(op4file)[:1]
+    op4names, op4vars, *_ = o4.listload(op4file)
 
     # loop over superelements:
     j = 0
@@ -2176,8 +2155,8 @@ def get_dof_descs():
                          ...]
     """
     #   Acceleration, Velocity, Displacement Recovery Items:
-    accedesc = ["T1", "T2", "T3", "R1", "R2", "R3"]
-    spcfdesc = ["Fx", "Fy", "Fz", "Mx", "My", "Mz"]
+    accedesc = ["T1", "T2", "T3",  "R1", "R2", "R3"]
+    spcfdesc = ["Fx", "Fy", "Fz",  "Mx", "My", "Mz"]
     stress = {}
     force = {}
 
@@ -2889,8 +2868,8 @@ def procdrm12(op2file, op4file=None, dosort=True):
                 get_drm(drminfo[drtype], otm, drms,
                         drmkeys, DR[:, pv], desc)
             else:
-                print('Skipping %r requests.  Needs to be added '
-                      'to procdrm12().' % Vreq[drtype-1])
+                print('Skipping "{}" requests.  Needs to be added '
+                      'to procdrm12().'.format(Vreq[drtype-1]))
     return otm
 
 
@@ -2935,29 +2914,20 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
             mats['ougv1'] = []
         o2._fileh.seek(o2._postheaderpos)
 
-        eqexin1 = None
-        dof = None
-        Uset = None
-        cstm = None
         while 1:
             name, trailer, dbtype = o2._rdop2nt()
-            # print('name = %r' % name)
-            # print('trailer = %s' % str(trailer))
-            # print('dbtype = %r' % dbtype)
             if name is None:
                 break
-            if name == '':
-                asdf
             if dbtype > 0:
                 if verbose:
-                    print("Reading matrix {0}...".format(name))
+                    print("Reading matrix {}...".format(name))
                 if name not in mats:
                     mats[name] = []
                 mats[name] += [o2.rdop2matrix(trailer)]
             else:
                 if name.find('BGPDT') == 0:
                     if verbose:
-                        print("Reading table {0}...".format(name))
+                        print("Reading table {}...".format(name))
                     bgpdt_rec1 = o2._rdop2bgpdt68()
                     o2.skipop2table()
                     continue
@@ -2969,44 +2939,44 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                 #     cstm = np.vstack((bc, cstm))
                 #     continue
 
-                elif name.find('GEOM1') == 0:
+                if name.find('GEOM1') == 0:
                     if verbose:
-                        print("Reading table {0}...".format(name))
+                        print("Reading table {}...".format(name))
                     cords, sebulk, selist = o2._rdop2geom1cord2()
                     if 0 not in cords:
-                        cords[0] = np.array([[0., 1., 0.],
-                                             [0., 0., 0.],
-                                             [1., 0., 0.],
-                                             [0., 1., 0.],
-                                             [0., 0., 1.]])
+                        cords[0] = np.array([[0.,  1.,  0.],
+                                             [0.,  0.,  0.],
+                                             [1.,  0.,  0.],
+                                             [0.,  1.,  0.],
+                                             [0.,  0.,  1.]])
                     if -1 not in cords:
                         cords[-1] = np.zeros((5, 3))  # dummy for spoints
                         cords[-1][0, 0] = -1
                     cstm2 = cords
                     continue
 
-                elif name.find('DYNAMIC') == 0:
+                if name.find('DYNAMIC') == 0:
                     if verbose:
-                        print("Reading DYNAMIC table {0}...".format(name))
+                        print("Reading table {}...".format(name))
                     mats['tload'] = o2.rdop2dynamics()
                     continue
 
-                elif name.find('EQEXIN') == 0:
+                if name.find('EQEXIN') == 0:
                     if verbose:
-                        print("BReading EQEXIN table {0}...".format(name))
+                        print("Reading table {}...".format(name))
                     eqexin1, eqexin = o2._rdop2eqexin()
                     continue
 
-                elif name.find('USET') == 0:
+                if name.find('USET') == 0:
                     if verbose:
-                        print("CReading USET table {0}...".format(name))
+                        print("Reading table {}...".format(name))
                     uset = o2._rdop2uset()
                     continue
 
-                elif getougv1 and (name.find('OUGV1') == 0 or
+                if getougv1 and (name.find('OUGV1') == 0 or
                                  name.find('BOPHIG') == 0):
                     if verbose:
-                        print("Reading OUG table {0}...".format(name))
+                        print("Reading table {}...".format(name))
                     mats['ougv1'] += [o2._rdop2ougv1(name)]
                     continue
 
@@ -3016,17 +2986,15 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                 #     mats['oef1x'] = o2._rdop2drm()
                 #     continue
 
-                elif verbose:
-                    print("Skipping table %r..." % name)
+                if verbose:
+                    print("Skipping table {}...".format(name))
                 o2.skipop2table()
 
-        if not(eqexin1 is None):
-            (bgpdt, dof,
-             doftype, nid, upids) = o2._proc_bgpdt(eqexin1, eqexin,
-                                                   True, bgpdt_rec1)
-        if dof is not None:
-            Uset, cstm, cstm2 = o2._buildUset(se, dof, doftype, nid,
-                                              uset, bgpdt, None, cstm2)
+        (bgpdt, dof,
+         doftype, nid, upids) = o2._proc_bgpdt(eqexin1, eqexin,
+                                               True, bgpdt_rec1)
+        Uset, cstm, cstm2 = o2._buildUset(se, dof, doftype, nid,
+                                          uset, bgpdt, None, cstm2)
     return {'uset': Uset,
             'cstm': cstm,
             'cstm2': cstm2,

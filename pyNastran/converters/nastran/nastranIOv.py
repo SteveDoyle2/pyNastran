@@ -658,7 +658,7 @@ class NastranIO(object):
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
-        # self._fill_bar_yz(dim_max, model, icase, cases, form)
+        icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
 
 
         #------------------------------------------------------------
@@ -1113,6 +1113,13 @@ class NastranIO(object):
         no_torsion = zeros(self.element_ids.shape, dtype='int32')
         no_bending = zeros(self.element_ids.shape, dtype='int32')
         no_bending_bad = zeros(self.element_ids.shape, dtype='int32')
+
+        no_6_16 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_56 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_456 = zeros(self.element_ids.shape, dtype='int32')
+        no_56_456 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_6 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_16 = zeros(self.element_ids.shape, dtype='int32')
         for eid in bar_beam_eids:
             # if eid < 30000:
                 # continue
@@ -1139,23 +1146,29 @@ class NastranIO(object):
 
             if elem.pa == 0 and elem.pb == 0:
                 pass
-            elif elem.pa == 16 and elem.pb == 6:
+            elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
                 no_axial[ieid] = 1
+                no_6_16[ieid] = 1
             elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
                 no_bending[ieid] = 1
+                no_0_56[ieid] = 1
             elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
                 no_bending[ieid] = 1
                 no_torsion[ieid] = 1
+                no_0_456[ieid] = 1
             elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
                 no_torsion[ieid] = 1
+                no_56_456[ieid] = 1
             elif (elem.pa == 6 and elem.pb == 0):
                 no_bending_bad[ieid] = 1
+                no_0_6[ieid] = 1
             elif (elem.pa == 0 and elem.pb == 16):
                 no_axial[ieid] = 1
                 no_bending_bad[ieid] = 1
-            elif (elem.pa == 6 and elem.pb == 16):
-                no_axial[ieid] = 1
-                no_bending_bad[ieid] = 1
+                no_0_16[ieid] = 1
+            # elif (elem.pa == 6 and elem.pb == 16):
+                # no_axial[ieid] = 1
+                # no_bending_bad[ieid] = 1
             else:
                 msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
                 raise NotImplementedError(msg)
@@ -1253,13 +1266,14 @@ class NastranIO(object):
                 # if Type not in ['ROD', 'TUBE']:
                 bar_y = Type + '_y'
                 bar_z = Type + '_z'
-                self.create_alternate_vtk_grid(bar_y, color=green, line_width=5, opacity=1.,
-                                               point_size=5, representation='wire', bar_scale=scale)
-                self.create_alternate_vtk_grid(bar_z, color=blue, line_width=5, opacity=1.,
-                                               point_size=5, representation='wire', bar_scale=scale)
+                if 0:
+                    self.create_alternate_vtk_grid(bar_y, color=green, line_width=5, opacity=1.,
+                                                   point_size=5, representation='wire', bar_scale=scale)
+                    self.create_alternate_vtk_grid(bar_z, color=blue, line_width=5, opacity=1.,
+                                                   point_size=5, representation='wire', bar_scale=scale)
 
-                self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
-                self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
+                    self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
+                    self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
 
                 # form = ['Geometry', None, []]
                 i = searchsorted(self.element_ids, eids)
@@ -1285,6 +1299,32 @@ class NastranIO(object):
         if no_bending_bad.max() == 1:
             bar_form[2].append(['No Bending (Bad)', icase, []])
             cases[(0, icase, 'No Bending (Bad)', 1, 'centroid', '%i')] = no_bending_bad
+            icase += 1
+
+
+        if no_6_16.max() == 1:
+            bar_form[2].append(['no_6_16', icase, []])
+            cases[(0, icase, 'no_6_16', 1, 'centroid', '%i')] = no_6_16
+            icase += 1
+        if no_0_56.max() == 1:
+            bar_form[2].append(['no_0_56', icase, []])
+            cases[(0, icase, 'no_0_56', 1, 'centroid', '%i')] = no_0_56
+            icase += 1
+        if no_0_456.max() == 1:
+            bar_form[2].append(['no_0_456', icase, []])
+            cases[(0, icase, 'no_0_456', 1, 'centroid', '%i')] = no_0_456
+            icase += 1
+        if no_56_456.max() == 1:
+            bar_form[2].append(['no_56_456', icase, []])
+            cases[(0, icase, 'no_56_456', 1, 'centroid', '%i')] = no_56_456
+            icase += 1
+        if no_0_6.max() == 1:
+            bar_form[2].append(['no_0_6', icase, []])
+            cases[(0, icase, 'no_0_6', 1, 'centroid', '%i')] = no_0_6
+            icase += 1
+        if no_0_16.max() == 1:
+            bar_form[2].append(['no_0_16)', icase, []])
+            cases[(0, icase, 'no_0_16', 1, 'centroid', '%i')] = no_0_16
             icase += 1
 
         # print(geo_form)
