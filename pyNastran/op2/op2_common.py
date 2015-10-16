@@ -560,6 +560,23 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = obj.itotal + nnodes
 
             obj._times[obj.itime] = dt
+            #fmt = np.dtype(b(self._endian + 'ii6f'))
+            #dtype_data = [
+                #('a',np.int32), ('b', np.int32),
+                #('t1',np.float32), ('t2',np.float32), ('t3',np.float32),
+                #('r1',np.float32), ('r2',np.float32),('r3',np.float32)
+            #]
+            #dtype_data = [
+                #('a','<f4'), ('b', '<f4'),
+                #('t1','<f4'), ('t2','<f4'), ('t3','<f4'),
+                #('r1','<f4'), ('r2','<f4'),('r3','<f4')
+            #]
+            #dtype_data = unicode(self._endian+'2i4f')
+            #dtype_data = unicode('<i <i <d')
+            #print(dtype_data)
+            #fmt = np.dtype(dtype_data)
+            #data = np.fromstring(data, fmt)
+
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
             #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
@@ -568,6 +585,8 @@ class OP2Common(Op2Codes, F06Writer):
             obj.node_gridtype[obj.itotal:itotal2, 0] = nids
             obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
+            #obj.node_gridtype[obj.itotal:itotal2, 1] = data[:, :1]
+            #obj.data[obj.itime, obj.itotal:itotal2, 1] = data[:, 2:]
             obj.itotal = itotal2
         else:
             assert nnodes > 0, nnodes
