@@ -1109,9 +1109,14 @@ class NastranIO(object):
             bar_types[Type] = (eids, lines_bar_y, lines_bar_z)
 
 
+        no_axial = zeros(self.element_ids.shape, dtype='int32')
+        no_torsion = zeros(self.element_ids.shape, dtype='int32')
+        no_bending = zeros(self.element_ids.shape, dtype='int32')
+        no_bending_bad = zeros(self.element_ids.shape, dtype='int32')
         for eid in bar_beam_eids:
             # if eid < 30000:
                 # continue
+            ieid = self.eidMap[eid]
             elem = model.elements[eid]
             pid = elem.pid
             if pid.type in ['PBAR', 'PBEAM']:
@@ -1131,6 +1136,29 @@ class NastranIO(object):
             i = n2 - n1
             Li = norm(i)
             ihat = i / Li
+
+            if elem.pa == 0 and elem.pb == 0:
+                pass
+            elif elem.pa == 16 and elem.pb == 6:
+                no_axial[ieid] = 1
+            elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
+                no_bending[ieid] = 1
+            elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
+                no_bending[ieid] = 1
+                no_torsion[ieid] = 1
+            elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
+                no_torsion[ieid] = 1
+            elif (elem.pa == 6 and elem.pb == 0):
+                no_bending_bad[ieid] = 1
+            elif (elem.pa == 0 and elem.pb == 16):
+                no_axial[ieid] = 1
+                no_bending_bad[ieid] = 1
+            elif (elem.pa == 6 and elem.pb == 16):
+                no_axial[ieid] = 1
+                no_bending_bad[ieid] = 1
+            else:
+                msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
+                raise NotImplementedError(msg)
 
             if elem.g0:
                 n0 = model.nodes[elem.g0].get_position()
@@ -1241,6 +1269,24 @@ class NastranIO(object):
                 bar_form[2].append(['is_%s' % Type, icase, []])
                 cases[(0, icase, 'is_%s' % Type, 1, 'centroid', '%i')] = is_type
                 icase += 1
+
+        if no_axial.max() == 1:
+            bar_form[2].append(['No Axial', icase, []])
+            cases[(0, icase, 'No Axial', 1, 'centroid', '%i')] = no_axial
+            icase += 1
+        if no_torsion.max() == 1:
+            bar_form[2].append(['No Torsion', icase, []])
+            cases[(0, icase, 'No Torsion', 1, 'centroid', '%i')] = no_torsion
+            icase += 1
+        if no_bending.max() == 1:
+            bar_form[2].append(['No Bending', icase, []])
+            cases[(0, icase, 'No Bending', 1, 'centroid', '%i')] = no_bending
+            icase += 1
+        if no_bending_bad.max() == 1:
+            bar_form[2].append(['No Bending (Bad)', icase, []])
+            cases[(0, icase, 'No Bending (Bad)', 1, 'centroid', '%i')] = no_bending_bad
+            icase += 1
+
         # print(geo_form)
         geo_form.append(bar_form)
         return icase

@@ -2,7 +2,7 @@ from __future__ import print_function
 import sys
 import platform
 import os
-from six import PY2
+from six import PY2, string_types
 
 if sys.stdout.isatty() and PY2:
     # You're running in a real terminal
@@ -117,7 +117,7 @@ class SimpleLogger(object):
         self.level = level
         self.log_func = log_func
         self.encoding = encoding
-        assert isinstance(encoding, str), type(encoding)
+        assert isinstance(encoding, string_types), type(encoding)
 
     def properties(self):
         """Return tuple: line number and filename"""

@@ -50,8 +50,8 @@ class RealBar10NodesArray(OES_Object):
 
     def build(self):
         #print("self.ielement =", self.ielement)
-        print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
-            self.isubcase, self.ntimes, self.nelements, self.ntotal))
+        # print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
+            # self.isubcase, self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
