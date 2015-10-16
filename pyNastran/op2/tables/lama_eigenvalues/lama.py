@@ -1,3 +1,4 @@
+from six import b
 from six.moves import range
 from struct import Struct
 

@@ -193,6 +193,10 @@ class OP2_F06_Common(object):
         #self.displacement_scaled_response_spectra_CRM = {}
         #self.displacement_scaled_response_spectra_NO = {}
 
+
+        #: OUG - velocity
+        self.velocities = {}              # tCode=10 thermal=0
+        self.velocitiesPSD = {}
         #self.velocity_scaled_response_spectra_NRL = {}
         self.velocity_scaled_response_spectra_ABS = {}
         #self.velocity_scaled_response_spectra_PSD = {}
@@ -201,6 +205,9 @@ class OP2_F06_Common(object):
         #self.velocity_scaled_response_spectra_CRM = {}
         #self.velocity_scaled_response_spectra_NO = {}
 
+        #: OUG - acceleration
+        self.accelerations = {}            # tCode=11 thermal=0
+        self.accelerationsPSD = {}
         self.acceleration_scaled_response_spectra_NRL = {}
         self.acceleration_scaled_response_spectra_ABS = {}
         #self.acceleration_scaled_response_spectra_PSD = {}
@@ -215,12 +222,6 @@ class OP2_F06_Common(object):
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
-
-        #: OUG - velocity
-        self.velocities = {}              # tCode=10 thermal=0
-
-        #: OUG - acceleration
-        self.accelerations = {}            # tCode=11 thermal=0
 
         # OEF - Forces - tCode=4 thermal=0
 
@@ -395,9 +396,11 @@ class OP2_F06_Common(object):
 
             # OUG - velocity
             'velocities',
+            'velocitiesPSD',
 
             # OUG - acceleration
             'accelerations',
+            'accelerationsPSD',
 
             # OQG - spc/mpc forces
             'spc_forces',

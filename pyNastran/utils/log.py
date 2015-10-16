@@ -92,7 +92,8 @@ class SimpleLogger(object):
             elif typ == 'DEBUG':
                 sys.stdout.write((Fore.YELLOW + name + msg).encode(self.encoding))
             elif typ == 'WARNING':
-                sys.stdout.write((Fore.ORANGE + name + msg).encode(self.encoding))
+                # no ORANGE?
+                sys.stdout.write((Fore.RED + name + msg).encode(self.encoding))
             else: # error / other
                 sys.stdout.write((Fore.RED + name + msg).encode(self.encoding))
         sys.stdout.flush()

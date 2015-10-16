@@ -286,7 +286,7 @@ class OES(OP2Common):
             return n
         return new_func
 
-    @print_obj_name_on_crash
+    #@print_obj_name_on_crash
     def _read_oes1_4_sort1(self, data):
         """
         Reads OES1 subtable 4
@@ -304,7 +304,7 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, msg)
         return n
 
-    @print_obj_name_on_crash
+    #@print_obj_name_on_crash
     def _read_ostr1_4_sort1(self, data):
         """
         Reads OSTR1 subtable 4
@@ -1408,12 +1408,13 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized and 0:
+                if self.use_vector and is_vectorized and self.element_type in []: # , 64
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
                     #self.ntimes = 0
                     #self.nelements = 0
+                    print('nelements =', nelements)
                     n = nelements * self.num_wide * 4
 
                     istart = obj.itotal
@@ -1423,21 +1424,47 @@ class OES(OP2Common):
                     int_fmt = b'%s%ii' % (self._endian, nelements * numwide_real)
                     float_fmt = b'%s%if' % (self._endian, nelements * numwide_real)
                     # print(int_fmt, )
+                    print(self.element_name, self.element_type)
+                    print('nnodes_all = ', nnodes_all)
+                    print('numwide_real = ', numwide_real)
                     print('len(data)/4', len(data)/4.)
                     # [eid, j, grid]
-                    ints = np.array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nelements, numwide_real)
-                    floats = np.array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nelements, numwide_real)
+                    ints = array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nelements, numwide_real)
+                    print('ints0 =', ints[:, 0])
+                    floats = array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nelements, numwide_real)
                     print('ne*nwide=%s nlayers*8=%s' % (nelements * (numwide_real-3) - 1, nlayers * 8))
                     #2 + 17*nnodes_all
-                    floats = floats[:, 2:].reshape(nlayers, 9)
+                    floats1 = floats[:, 2:].reshape(nlayers//2, 17)
+                    ints1 = ints[:, 2:].reshape(nlayers//2, 17)[:, 0].reshape(nelements, nnodes_all)
+                    ints1[:, 0] = 0.
+                    nids = ints1.ravel()
+
                     eids = ints[:, 0] // 10
-                    for inode in range(nnodes_all):
-                        # obj.element_node[istart+inode:iend+inode, 0] = eids
-                        obj.element_node[istart+inode:iend+inode:nnodes_all, 1] = ints[:, 2 + 17*inode]
+                    results = floats1[:, 1:].reshape(nlayers, 8)
+                    from numpy import vstack
+                    eids2 = vstack([eids]*(nnodes_all*2)).T.ravel()
+                    nids2 = vstack([nids, nids]).T.ravel()
+
+                    print('floats1.shape = ', floats1.shape)
+                    print('nlayers=%s nlayers/5=%s; total=%s' % (nlayers, nlayers/5., nlayers * nlayers/5))
+                    print('nlayers=%s nlayers/5=%s; total=%s' % (nlayers, 8, nlayers*8))
+                    print('nids', nids)
+                    print('eids  =', eids)
+                    print('eids2 =', eids2)
+                    print('nids  =', nids)
+                    #for ilayer in range(2):
+                        #for inode in range(nnodes_all):
+                            ##print(obj.element_node[istart+inode:iend+inode:nnodes_all, 0].shape, len(nids2))
+                            #break
+                    obj.element_node[istart:iend, 1] = eids2
+                    obj.element_node[istart:iend, 1] = nids2
+
 
                     #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-                    obj.data[obj.itime, istart:iend, :] = floats
+                    obj.data[obj.itime, istart:iend, :] = results
+                #if 1:
                 else:
+                    n = 0
                     center_format = b'i4si16f'
                     node_format = b'i16f'
                     cs = Struct(center_format)
@@ -1463,7 +1490,7 @@ class OES(OP2Common):
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
                         eid = self._check_id(eid_device, flag, stress_name, out)
-
+                        #print(out[:3])
                         if self.is_debug_file:
                             self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
@@ -1478,6 +1505,7 @@ class OES(OP2Common):
                              fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
+                            #print(grid)
                             if self.is_debug_file:
                                 d = tuple([grid,
                                            fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
@@ -1491,6 +1519,7 @@ class OES(OP2Common):
                             self.obj.add(dt, eid, grid, fd2, sx2, sy2,
                                          txy2, angle2, major2, minor2, vm2)
                             n += 68
+                #aaa
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)

@@ -153,39 +153,42 @@ class OP2Common(Op2Codes, F06Writer):
                 raise RuntimeError(self.code_information())
             #return
 
-        if self.analysis_code == 1:   # statics / displacement / heat flux
-            assert self.format_code in [1, 3], self.format_code
-            self.format_code = 1
-        elif self.analysis_code == 2:  # real eigenvalues
-            assert self.format_code in [1, 3], self.format_code
-            self.format_code = 1
-        #elif self.analysis_code==3: # differential stiffness
-        #elif self.analysis_code==4: # differential stiffness
-        elif self.analysis_code == 5:   # frequency
-            assert self.format_code in [1, 2, 3], self.format_code
-            if self.format_code == 1:
-                self.format_code = 2
-        elif self.analysis_code == 6:  # transient
-            assert self.format_code in [1, 2, 3], self.format_code
-            self.format_code = 1
-        elif self.analysis_code == 7:  # pre-buckling
-            assert self.format_code in [1], self.format_code
-        elif self.analysis_code == 8:  # post-buckling
-            assert self.format_code in [1, 2], self.format_code
-        elif self.analysis_code == 9:  # complex eigenvalues
-            assert self.format_code in [1, 2, 3], self.format_code
-            if self.format_code == 1:
-                self.format_code = 2
-        elif self.analysis_code == 10:  # nonlinear statics
-            assert self.format_code in [1], self.format_code
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
-            assert self.format_code in [1], self.format_code
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            assert self.format_code in [4], self.format_code # invalid value
-        else:
-            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
-            raise RuntimeError(msg)
-        self.data_code['format_code'] = self.format_code
+        random_code = self.random_code if hasattr(self, 'random_code') else 0
+        if random_code == 0:
+            if self.analysis_code == 1:   # statics / displacement / heat flux
+                assert self.format_code in [1, 3], self.code_information()
+                self.format_code = 1
+            elif self.analysis_code == 2:  # real eigenvalues
+                assert self.format_code in [1, 3], self.code_information()
+                self.format_code = 1
+            #elif self.analysis_code==3: # differential stiffness
+            #elif self.analysis_code==4: # differential stiffness
+            elif self.analysis_code == 5:   # frequency
+                assert self.format_code in [1, 2, 3], self.code_information()
+                if self.format_code == 1:
+                    self.format_code = 2
+            elif self.analysis_code == 6:  # transient
+                assert self.format_code in [1, 2, 3], self.code_information()
+                self.format_code = 1
+            elif self.analysis_code == 7:  # pre-buckling
+                assert self.format_code in [1], self.code_information()
+            elif self.analysis_code == 8:  # post-buckling
+                assert self.format_code in [1, 2], self.code_information()
+            elif self.analysis_code == 9:  # complex eigenvalues
+                assert self.format_code in [1, 2, 3], self.code_information()
+                if self.format_code == 1:
+                    self.format_code = 2
+            elif self.analysis_code == 10:  # nonlinear statics
+                assert self.format_code in [1], self.code_information()
+            elif self.analysis_code == 11:  # old geometric nonlinear statics
+                assert self.format_code in [1], self.code_information()
+            elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+                assert self.format_code in [4], self.code_information() # invalid value
+            else:
+                msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+                raise RuntimeError(msg)
+            self.data_code['format_code'] = self.code_information()
+        #assert self.format_code == 1, self.code_information()
         #if self.format_code != self.format_code_original:
             #print('self.format_code=%s orig=%s' % (self.format_code,
                                                    #self.format_code_original))
@@ -796,12 +799,12 @@ class OP2Common(Op2Codes, F06Writer):
         ntotal = 56  # 14 * 4
         nnodes = len(data) // ntotal
         s = Struct(self._endian + self._analysis_code_fmt + 'i12f')
-
         assert self.obj is not None
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
         binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
+
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -901,6 +904,7 @@ class OP2Common(Op2Codes, F06Writer):
             if msg != self._last_comment:
                 #print(self.code_information())
                 self.log.warning(msg)
+                #self.log.warning(self.code_information())
                 self._last_comment = msg
             return len(data)
         else:

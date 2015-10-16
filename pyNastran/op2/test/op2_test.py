@@ -55,7 +55,7 @@ def get_all_files(folders_file, file_type):
     return files2
 
 
-def main():
+def main(regenerate=True):
     # works
     files = get_files_of_type('tests', '.op2')
 
@@ -73,7 +73,6 @@ def main():
 
     delete_f06 = True
     saveCases = True
-    regenerate = False
     stopOnFailure = False
     getSkipCards = False
 
@@ -109,4 +108,29 @@ def main():
     sys.exit('final stop...')
 
 if __name__ == '__main__':
-    main()
+    """the interface for op2_test"""
+    from docopt import docopt
+    ver = str(pyNastran.__version__)
+
+    msg = "Usage:\n"
+    is_release = False
+    msg += "op2_test [-r]\n"
+    msg += "  op2_test -h | --help\n"
+    msg += "  op2_test -v | --version\n"
+    msg += "\n"
+    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
+    msg += "\n"
+    #msg += "Positional Arguments:\n"
+    #msg += "  OP2_FILENAME         Path to OP2 file\n"
+    #msg += "\n"
+    msg += "Options:\n"
+    msg += "  -r, --regenerate     Dumps the OP2 as a readable text file\n"
+    msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
+    msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
+    msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
+    if len(sys.argv) == 0:
+        sys.exit(msg)
+
+    data = docopt(msg, version=ver)
+    regenerate = data['--regenerate']
+    main(regenerate=regenerate)

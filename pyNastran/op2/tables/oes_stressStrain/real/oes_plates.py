@@ -105,6 +105,7 @@ class RealPlateArray(OES_Object):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
+            msg += '(Eid, Nid)\n'
             for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
                 msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
             print(msg)

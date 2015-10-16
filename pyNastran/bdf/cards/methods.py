@@ -139,9 +139,13 @@ class EIGC(Method):
             #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
             #: Method of complex eigenvalue extraction
+            #:   MSC 2014 = [INV, HESS, CLAN, IRAM]
+            #:   NX 8.5 = [INV, HESS, CLAN, ISRR]
+            #:   Autodesk 2015 = [ARNO, HESS, CLAN]
             self.method = string(card, 2, 'method')
-            assert self.method in ['INV', 'HESS', 'CLAN', 'ISRR'], (
-                'method=%s is not INV, HESS, CLAN, ISRR' % self.method)
+            assert self.method in ['ARNO', 'INV', 'HESS', 'CLAN', 'ISRR', 'IRAM'], (
+                'method=%s is not ARNO, INV, HESS, CLAN, ISRR, IRAM' % self.method)
+
             #: Method for normalizing eigenvectors
             self.norm = string_or_blank(card, 3, 'norm')
             if self.norm == 'POINT':

@@ -528,11 +528,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================
-            b'OUGATO2' : [self._table_passer, self._table_passer],
-            b'OUGCRM2' : [self._table_passer, self._table_passer],
-            b'OUGNO2' : [self._table_passer, self._table_passer],
-            b'OUGPSD2' : [self._table_passer, self._table_passer],  # psd
-            b'OUGRMS2' : [self._table_passer, self._table_passer],  # rms
+            # works
+            #b'OUGATO2' : [self._table_passer, self._table_passer],
+            #b'OUGCRM2' : [self._table_passer, self._table_passer],
+            #b'OUGNO2' : [self._table_passer, self._table_passer],
+            ##b'OUGPSD2' : [self._table_passer, self._table_passer],
+            #b'OUGRMS2' : [self._table_passer, self._table_passer],  # rms
+            # new
+            b'OUGATO2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGCRM2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGNO2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
+            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_4],
 
             b'OQGATO2' : [self._table_passer, self._table_passer],
             b'OQGCRM2' : [self._table_passer, self._table_passer],
