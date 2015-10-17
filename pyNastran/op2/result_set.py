@@ -34,7 +34,7 @@ class ResultSet(object):
                 raise RuntimeError('%r is not a valid result to remove; allowed=%s' % (result, self.allowed))
 
         for result in results:
-            if result in self._saved:
+            if result in self.saved:
                 self.saved.remove(result)
         #disable_set = set(results)
         #self.saved.difference(disable_set)

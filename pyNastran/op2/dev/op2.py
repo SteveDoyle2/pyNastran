@@ -189,9 +189,11 @@ class OP2(object):
             def funcbig(func_code, item_code):
                 return item_code & (func_code & 65535)
 
-            self._CodeFuncs = {1: func1, 2: func2, 3: func3, 4: func4,
-                               5: func5, 6: func6, 7: func7,
-                               'big': funcbig}
+            self._CodeFuncs = {
+                1: func1, 2: func2, 3: func3, 4: func4,
+                5: func5, 6: func6, 7: func7,
+                'big': funcbig,
+            }
         return self._CodeFuncs
 
     def _op2open(self, filename):
@@ -872,8 +874,8 @@ class OP2(object):
         for func, val in zip(funcs, vals):
             if 1 <= func <= 7:
                 if self.CodeFuncs[func](item_code) not in val:
-                    warnings.warn('{} value {} not acceptable'.
-                                  format(name, item_code),
+                    warnings.warn('{} value {} not acceptable; func={}; allowed={}'.
+                                  format(name, item_code, func, val),
                                   RuntimeWarning)
                     return False
             elif func > 65535:
@@ -949,6 +951,8 @@ class OP2(object):
             header = i4_Str.unpack(self._fileh.read(i4_bytes))
             # header = (ACODE, TCODE, ...)
             achk = self._check_code(header[0], [4], [[2]], 'ACODE')
+
+            # item_code, funcs, vals, name
             tchk = self._check_code(header[1], [1, 2, 7],
                                     [[1], [7], [0, 2]], 'TCODE')
             if not (achk and tchk):
@@ -971,7 +975,7 @@ class OP2(object):
                 #   id*10, type, x, y, z, rx, ry, rz
                 data = self.rdop2record('bytes')  # 1st column
                 n = len(data) // iif6_bytes
-                # print('iif6_int =', iif6_int)
+                print('iif6_int =', iif6_int)  # int32
                 data = np.fromstring(data, iif6_int)
                 data1 = (data.reshape(n, 8))[:, :2]
                 pvgrids = data1[:, 1] == 1
@@ -1728,12 +1732,10 @@ class OP2(object):
                     # dataint = ir_Str.unpack(fp.read(ir_bytes))
                     fp.read(ir_bytes)
                     if L < self._rowsCutoff:
-                        drm[drmrow:drmrow+L,
-                            drmcol] = struct.unpack(rfrmu % L,
-                                                    fp.read(rsize*L))
+                        drm[drmrow:drmrow+L, drmcol] = struct.unpack(
+                            rfrmu % L, fp.read(rsize*L))
                     else:
-                        drm[drmrow:drmrow+L,
-                            drmcol] = np.fromfile(fp, rfrm, L)
+                        drm[drmrow:drmrow+L, drmcol] = np.fromfile(fp, rfrm, L)
                     drmrow += L
                 fp.seek(block, 1)
                 key = self._getkey()
@@ -1992,8 +1994,7 @@ class OP2(object):
                 name, trailer, dbtype = self._rdop2nt()
             else:
                 cstm = bc
-            bgpdt, dof, doftype, nid, upids = self._proc_bgpdt(eqexin1,
-                                                               eqexin)
+            bgpdt, dof, doftype, nid, upids = self._proc_bgpdt(eqexin1, eqexin)
             nas['upids'][se] = upids
             Uset, cstm, cstm2 = self._buildUset(se, dof, doftype, nid,
                                                 uset, bgpdt, cstm, None)
@@ -2096,8 +2097,8 @@ def rdnas2cam(op2file='nas2cam', op4file=None):
     See also the Nastran DMAP NAS2CAM.
     """
     if not op4file:
-        op4file = op2file+'.op4'
-        op2file = op2file+'.op2'
+        op4file = op2file + '.op4'
+        op2file = op2file + '.op2'
 
     # read op2 file:
     with OP2(op2file) as o2:
@@ -2267,10 +2268,10 @@ def get_dof_descs():
                "M.S. Torsional Stress"]     # 5
     force1 = ["Axial Force",        # 2
               "Torque"]             # 3
-    stress[1] = ['CROD '+i+'  ' for i in stress1]
-    force[1] = ['CROD '+i+'  ' for i in force1]
-    stress[10] = ['CONROD '+i for i in stress1]
-    force[10] = ['CONROD '+i for i in force1]
+    stress[1] = ['CROD '+ i + '  ' for i in stress1]
+    force[1] = ['CROD '+ i + '  ' for i in force1]
+    stress[10] = ['CONROD ' + i for i in stress1]
+    force[10] = ['CONROD ' + i for i in force1]
 
     #   CELAS1, 2, 3 Recovery Items (elements 11, 12, 13):
     stress[11] = 'CELAS1 Stress'
@@ -2790,8 +2791,8 @@ def procdrm12(op2file, op4file=None, dosort=True):
 
     """
     if not op4file:
-        op4file = op2file+'.op4'
-        op2file = op2file+'.op2'
+        op4file = op2file + '.op4'
+        op2file = op2file + '.op2'
     # read op4 file:
     import op4
     o4 = op4.OP4()
@@ -2861,7 +2862,7 @@ def procdrm12(op2file, op4file=None, dosort=True):
         DR = np.zeros((3, N), dtype=int)  # [type; id; dof]
         R = 0  # index into DR columns
         for j in range(n):  # loop over XYPEAK cards
-            curtype = dr[r[j]+5]
+            curtype = dr[r[j] + 5]
             J = r[j] + 9  # index to first id
             while J < r[j+1]:
                 while dr[J] != -1:
@@ -2873,19 +2874,20 @@ def procdrm12(op2file, op4file=None, dosort=True):
         DR = drmkeys['drs'][1:4]  # use sorted version
 
     desc = get_dof_descs()
-    drminfo = {1: ('DTM', 'oug', 'acce'),
-               3: ('ATM', 'ougv1', 'acce'),
-               4: ('SPCF', 'oqg', 'spcf'),
-               6: ('STM', 'oes', 'stress'),
-               7: ('LTM', 'oef', 'force')}
+    drminfo = {
+        1: ('DTM', 'oug', 'acce'),
+        3: ('ATM', 'ougv1', 'acce'),
+        4: ('SPCF', 'oqg', 'spcf'),
+        6: ('STM', 'oes', 'stress'),
+        7: ('LTM', 'oef', 'force'),
+    }
     otm = {}
     types = np.array([1, 3, 4, 6, 7])
     for drtype in range(1, 13):
         pv = np.nonzero(DR[0] == drtype)[0]
         if pv.size > 0:
             if np.any(drtype == types):
-                print('Processing "{}" requests...'.
-                      format(Vreq[drtype-1]))
+                print('Processing "{}" requests...'.format(Vreq[drtype-1]))
                 get_drm(drminfo[drtype], otm, drms,
                         drmkeys, DR[:, pv], desc)
             else:
@@ -2947,7 +2949,7 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
             if name is None:
                 break
             if name == '':
-                asdf
+                raise RuntimeError('name=%r' % name)
             if dbtype > 0:
                 if verbose:
                     print("Reading matrix {0}...".format(name))
@@ -3004,7 +3006,7 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                     continue
 
                 elif getougv1 and (name.find('OUGV1') == 0 or
-                                 name.find('BOPHIG') == 0):
+                                   name.find('BOPHIG') == 0):
                     if verbose:
                         print("Reading OUG table {0}...".format(name))
                     mats['ougv1'] += [o2._rdop2ougv1(name)]

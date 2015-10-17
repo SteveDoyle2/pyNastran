@@ -303,8 +303,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Allows you to read only the subcases in the list of iSubcases
 
-        :param subcases: list of [subcase1_ID,subcase2_ID]
-                         (default=None; all subcases)
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        subcases : List[int, ...]; default=None->all subcases
+            list of [subcase1_ID,subcase2_ID]
         """
         #: stores the set of all subcases that are in the OP2
         #self.subcases = set([])
@@ -686,8 +690,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write(self.op2_filename + '\n')
             self.is_debug_file = True
         else:
-            self.binary_debug = open(os.devnull, wb)  #TemporaryFile()
-            self.binary_debug = TrashWriter('debug.out', wb)
+            #self.binary_debug = open(os.devnull, wb)  #TemporaryFile()
+            #self.binary_debug = TrashWriter('debug.out', wb)
             self.is_debug_file = False
 
     def read_op2(self, op2_filename=None):
@@ -767,15 +771,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #except:
                 #raise FatalError("The OP2 is empty.")
             #raise
-        if self.read_mode == 0:
-            self.binary_debug.write('read_mode = %s (not vectorized)\n' % self.read_mode)
-        elif self.read_mode == 1:
-            self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % self.read_mode)
-        elif self.read_mode == 2:
-            self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % self.read_mode)
+        if self.is_debug_file:
+            if self.read_mode == 0:
+                self.binary_debug.write('read_mode = %s (not vectorized)\n' % self.read_mode)
+            elif self.read_mode == 1:
+                self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % self.read_mode)
+            elif self.read_mode == 2:
+                self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % self.read_mode)
 
         if markers == [3,]:  # PARAM, POST, -1
-            self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
+            if self.is_debug_file:
+                self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
             self.post = -1
             self.read_markers([3])
             data = self.read_block()
@@ -783,10 +789,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.read_markers([7])
             data = self.read_block()
             assert data == b'NASTRAN FORT TAPE ID CODE - ', '%r' % data
-            self.binary_debug.write('%r\n' % data)
+            if self.is_debug_file:
+                self.binary_debug.write('%r\n' % data)
 
             data = self._read_record()
-            self.binary_debug.write('%r\n' % data)
+            if self.is_debug_file:
+                self.binary_debug.write('%r\n' % data)
             version = data.strip()
             if version.startswith(b'NX'):
                 self.set_as_nx()
@@ -807,10 +815,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             else:
                 raise RuntimeError('unknown version=%r' % version)
 
-            self.binary_debug.write(data.decode(self._encoding) + '\n')
+            if self.is_debug_file:
+                self.binary_debug.write(data.decode(self._encoding) + '\n')
             self.read_markers([-1, 0])
         elif markers == [2,]:  # PARAM, POST, -2
-            self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
+            if self.is_debug_file:
+                self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
             self.post = -2
         else:
             raise NotImplementedError(markers)
@@ -824,7 +834,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
-        self.binary_debug.close()
+            self.binary_debug.close()
         if self._close_op2:
             self.f.close()
             del self.binary_debug
@@ -1329,12 +1339,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
         table_name = None
         data = None
-        self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
+        if self.is_debug_file:
+            self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
         ni = self.n
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
             table_name, = unpack(b(self._endian + '8s'), data)
-            if self.debug and not rewind:
+            if self.is_debug_file and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
             table_name = table_name.strip()
@@ -1447,7 +1458,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_gpl(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
@@ -1710,7 +1724,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         datai = data[:-4]
 
         irec = data[:32]
-        design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value = unpack(b(self._endian + '3i3fif'), irec)
+        (design_iter, iconvergence, conv_result, obj_intial, obj_final,
+         constraint_max, row_constraint_max, desvar_value) = unpack(b(self._endian + '3i3fif'), irec)
         if iconvergence == 1:
             iconvergence = 'soft'
         elif iconvergence == 2:
@@ -1811,7 +1826,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_sdf(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
@@ -1912,7 +1930,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
         #if self.is_debug_file:
-        self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
+        if self.is_debug_file:
+            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one == 1, one  # 0, 50
 
