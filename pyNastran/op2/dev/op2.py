@@ -743,7 +743,7 @@ class OP2(object):
             raise ValueError("form must be one of:  None, 'int', "
                              "'uint', 'double', 'single' or 'bytes'")
         if N:
-            print('frm=%r' % frm)
+            # print('frm=%r' % frm)
             data = np.zeros(N, dtype=frm)
             i = 0
             while key > 0:
@@ -752,7 +752,7 @@ class OP2(object):
                 n = reclen // bytes_per
                 if n < self._rowsCutoff:
                     b = n * bytes_per
-                    print('frmu=%r' % frmu)
+                    # print('frmu=%r' % frmu)
                     data[i:i+n] = struct.unpack(frmu % n, f.read(b))
                 else:
                     data[i:i+n] = np.fromfile(f, frm, n)
@@ -971,7 +971,7 @@ class OP2(object):
                 #   id*10, type, x, y, z, rx, ry, rz
                 data = self.rdop2record('bytes')  # 1st column
                 n = len(data) // iif6_bytes
-                print('iif6_int =', iif6_int)
+                # print('iif6_int =', iif6_int)
                 data = np.fromstring(data, iif6_int)
                 data1 = (data.reshape(n, 8))[:, :2]
                 pvgrids = data1[:, 1] == 1
@@ -980,7 +980,7 @@ class OP2(object):
                 V = np.zeros((n, 8), bool)
                 V[:, 2] = True          # all nodes have 'x'
                 V[pvgrids, 3:] = True   # only grids have all 6
-                print('V =\n', V)
+                # print('V =\n', V)
                 V = V.flatten()
                 # initialize ougv1 with first mode shape:
                 data.dtype = np.float32  # reinterpret as floats
@@ -989,7 +989,7 @@ class OP2(object):
                 data = self.rdop2record('single', V.shape[0])
                 ougv1[:, J] = data[V]
             J += 1
-            print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(J, np.sqrt(lam[J-1])/(2*np.pi)))
+            # print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(J, np.sqrt(lam[J-1])/(2*np.pi)))
             eot, key = self._rdop2eot()
         return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}
 
@@ -2993,13 +2993,13 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
 
                 elif name.find('EQEXIN') == 0:
                     if verbose:
-                        print("BReading EQEXIN table {0}...".format(name))
+                        print("Reading EQEXIN table {0}...".format(name))
                     eqexin1, eqexin = o2._rdop2eqexin()
                     continue
 
                 elif name.find('USET') == 0:
                     if verbose:
-                        print("CReading USET table {0}...".format(name))
+                        print("Reading USET table {0}...".format(name))
                     uset = o2._rdop2uset()
                     continue
 
