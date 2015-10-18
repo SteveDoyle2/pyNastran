@@ -1,4 +1,5 @@
 import sys
+from six import iteritems
 
 import pyNastran
 from docopt import docopt
@@ -6,11 +7,11 @@ from docopt import docopt
 
 def run_arg_parse():
     msg  = "Usage:\n"
-    msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
+    msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
     msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '                  [-u POINTS_FNAME...]\n'
-    msg += '                  [-q] [-e]\n'
+    msg += '                  [-q]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -31,7 +32,6 @@ def run_arg_parse():
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
     #if mode != 'qt':
-    msg += "  -e, --edges                 shows element edges as black lines (default=False)\n"
     msg += "  -v, --version               show program's version number and exit\n"
 
 
@@ -43,10 +43,6 @@ def run_arg_parse():
     input = data['--input']
     output = data['--output']
     debug = not(data['--quiet'])
-
-    edges = False
-    if '--edges' in data:
-        edges = data['--edges']
 
     shots = []
     if '--shots' in data:
@@ -70,12 +66,14 @@ def run_arg_parse():
 
     user_points = data['--user_points']
 
+    for key, value in sorted(iteritems(data)):
+        print(key, value)
     #print("shots", shots)
     if shots:
         #shots = shots[1]
         #print("shots2 = %r" % shots, type(shots))
         shots = shots.split(';')[0]
-    return (edges, format, input, output, shots,
+    return (format, input, output, shots,
             magnify, rotation, geom_script, post_script, debug, user_points)
 
 
@@ -97,11 +95,10 @@ def get_inputs():
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (is_edges, format, input, output, shots, magnify,
+            (format, input, output, shots, magnify,
              rotation, geom_script, post_script, debug, user_points) = run_arg_parse()
 
     inputs = {
-        'is_edges' : is_edges,
         'format' : format,
         'input' : input,
         'output' : output,

@@ -692,7 +692,7 @@ class Op2Codes(object):
             64 : 'OSPDSI - Contact Separation Distance - Initial',
             65 : 'OSPDS - Contact Separation Distance',
             66 : 'OBG - Glue force results (normal and in-plane tractions)',
-            67 : 'OQG - GLue force resutls',
+            67 : 'OQG - Glue force resutls',
             68 : '??? - Tosca normalized material properties',
         }
         if self.is_msc:

@@ -659,6 +659,7 @@ class NastranIO(object):
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
         icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
+        assert icase is not None
 
 
         #------------------------------------------------------------
@@ -670,6 +671,7 @@ class NastranIO(object):
 
         #print('dependent_nodes =', self.dependents_nodes)
         form0 = form[2]
+        assert icase is not None
         for subcase_id in subcase_ids:
             if subcase_id == 0:
                 continue
@@ -685,6 +687,7 @@ class NastranIO(object):
             formi = (load_str, None, [])
             formii = formi[2]
             icase = self._plot_pressures(model, cases, formii, icase, subcase_id, subcase)
+            assert icase is not None
             icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
             if len(formii):
                 form0.append(formi)
@@ -1070,7 +1073,7 @@ class NastranIO(object):
         bar_beam_eids = out['CBAR'] + out['CBEAM']
         self.bar_lines = {}
         if len(bar_beam_eids) == 0:
-            return
+            return icase
 
         scale = 0.15
         lines_bar_y = []

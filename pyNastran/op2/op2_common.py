@@ -4,7 +4,7 @@ from six.moves import range, zip
 import copy
 from struct import Struct, unpack
 
-from numpy import radians, sin, cos, fromstring
+from numpy import radians, sin, cos, fromstring, ones, int32, float32
 #from numba import autojit
 
 from pyNastran import is_release
@@ -497,8 +497,8 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * 4 * 8
             itotal2 = obj.itotal + nnodes
 
-            ints = fromstring(data[:n], dtype='int32').reshape(nnodes, 8)
-            floats = fromstring(data[:n], dtype='float32').reshape(nnodes, 8)
+            ints = fromstring(data, dtype=int32).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=float32).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -529,11 +529,10 @@ class OP2Common(Op2Codes, F06Writer):
     #@autojit
     def _read_real_table_sort1(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         """
-        With a real transient result (e.g. SOL 109/159), reads a complex OUG-style
-        table created by:
-            Reads a real OUG-style table created by:
+        With a real transient result (e.g. SOL 109/159), reads a
+        real OUG-style table created by:
               DISP(PLOT,SORT1,REAL) = ALL
-            """
+        """
         # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort1\n')
@@ -544,21 +543,27 @@ class OP2Common(Op2Codes, F06Writer):
         if self.use_vector and is_vectorized:
             itime = obj.itime
             n = nnodes * 4 * 8
-            itotal2 = obj.itotal + nnodes
-            floats = fromstring(data[:n], dtype='float32').reshape(nnodes, 8)
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+            floats = fromstring(data, dtype=float32).reshape(nnodes, 8)
             if obj.itime == 0:
-                ints = fromstring(data[:n], dtype='int32').reshape(nnodes, 8)
-                #intsB = floats.view('int32')
+                ints = fromstring(data, dtype=int32).reshape(nnodes, 8)
+                #ints = floats[:, :2].view('int32')
                 #from numpy import array_equal
                 #assert array_equal(ints, intsB)
 
-                nids = ints[:, 0] // 10
-                assert nids.min() > 0, nids.min()
-                obj.node_gridtype[obj.itotal:itotal2, 0] = nids
-                obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
+                #nids = ints[:, 0] // 10
+                #assert nids.min() > 0, nids.min()
+                obj.node_gridtype[itotal:itotal2, 0] = ints[:, 0] // 10
+                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
+                #obj.Vn = ones(floats.shape, dtype=bool)
+                #obj.Vn[itotal:itotal2, :2] = False
+                #print(obj.Vn)
 
             obj._times[itime] = dt
+            #obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
+            #obj.data[obj.itime, obj.itotal:itotal2, :] = floats[obj.Vn]
             obj.itotal = itotal2
         else:
             n = 0
@@ -576,6 +581,11 @@ class OP2Common(Op2Codes, F06Writer):
 
     #@autojit
     def _read_real_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+        """
+        With a real transient result (e.g. SOL 109/159), reads a
+        real OUG-style table created by:
+              DISP(PLOT,SORT2,REAL) = ALL
+        """
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort2\n')
         assert flag in ['node', 'elem'], flag
@@ -586,17 +596,18 @@ class OP2Common(Op2Codes, F06Writer):
         if self.use_vector and is_vectorized and 0:  # TODO: not done....
             itime = obj.itime
             n = nnodes * 4 * 8
-            itotal2 = obj.itotal + nnodes
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
             if obj.itime == 0:
-                ints = fromstring(data[:n], dtype='int32').reshape(nnodes, 8)
+                ints = fromstring(data, dtype=int32).reshape(nnodes, 8)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
-                obj.node_gridtype[obj.itotal:itotal2, 0] = nids
-                obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
+                obj.node_gridtype[itotal:itotal2, 0] = nids
+                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = fromstring(data[:n], dtype='float32').reshape(nnodes, 8)
+            floats = fromstring(data, dtype=float32).reshape(nnodes, 8)
             obj._times[itime] = dt
-            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
+            obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:
             n = 0
@@ -631,13 +642,13 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = obj.itotal + nnodes
 
             if obj.itime == 0:
-                ints = fromstring(data[:n], dtype='int32').reshape(nnodes, 14)
+                ints = fromstring(data, dtype=int32).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[obj.itotal:itotal2, 0] = nids
                 obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
 
-            floats = fromstring(data[:n], dtype='float32').reshape(nnodes, 14)
+            floats = fromstring(data, dtype=float32).reshape(nnodes, 14)
             mag = floats[:, 2:8]
             phase = floats[:, 8:]
             rtheta = radians(phase)
@@ -675,22 +686,23 @@ class OP2Common(Op2Codes, F06Writer):
 
         if self.use_vector and is_vectorized:
             n = nnodes * 4 * 14
-            itotal2 = obj.itotal + nnodes
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = fromstring(data[:n], dtype='int32').reshape(nnodes, 14)
+                ints = fromstring(data, dtype=int32).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
-                obj.node_gridtype[obj.itotal:itotal2, 0] = nids
-                obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
+                obj.node_gridtype[itotal:itotal2, 0] = nids
+                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = fromstring(data[:n], dtype='float32').reshape(nnodes, 14)
+            floats = fromstring(data, dtype=float32).reshape(nnodes, 14)
             real = floats[:, 2:8]
             imag = floats[:, 8:]
             #assert real.shape == imag.shape, 'real.shape=%s imag.shape=%s' % (str(real.shape), str(imag.shape))
 
             obj._times[obj.itime] = dt
-            obj.data[obj.itime, obj.itotal:itotal2, :] = real + 1.j * imag
+            obj.data[obj.itime, itotal:itotal2, :] = real + 1.j * imag
             obj.itotal = itotal2
         else:
             n = 0
