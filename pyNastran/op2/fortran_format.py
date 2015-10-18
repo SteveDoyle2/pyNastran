@@ -49,7 +49,10 @@ class FortranFormat(object):
         """
         Useful function for seeing what's going on locally when debugging.
 
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         n = len(data)
         nints = n // 4
@@ -421,8 +424,8 @@ class FortranFormat(object):
                         self.obj.words = self.words
                         self.obj.itime += 1
                     else:
-                        print('self.obj.name=%r has itime' % self.obj.__class__.__name__)
-                        print('ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
+                        self.log.debug('self.obj.name=%r has itime' % self.obj.__class__.__name__)
+                        self.log.debug('ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
                             self.obj.ntotal, str(self.obj.data.shape),
                             self.obj.data.shape[1], self._data_factor))
                 #else:

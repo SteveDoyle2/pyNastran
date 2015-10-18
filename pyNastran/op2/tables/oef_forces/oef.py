@@ -356,23 +356,20 @@ class OEF(OP2Common):
             obj_vector_real = HeatFlux_2D_3DArray
             obj_vector_real = None
             #if self.element_type == 1: # CROD
-            result_vector_name = 'thermalLoad_2D_3D'
+            result_name = 'thermalLoad_2D_3D'
 
-            result_name = result_vector_name
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 9:  # real - 2D
                 # [33, 53, 64, 74, 75]
                 ntotal = 36
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -396,9 +393,8 @@ class OEF(OP2Common):
                 # [39, 67, 68]:  # HEXA,PENTA
                 ntotal = 40
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -658,29 +654,26 @@ class OEF(OP2Common):
             obj_vector_real = RealRodForceArray
             obj_vector_complex = None  #ComplexRodForceArray
             if self.element_type == 1: # CROD
-                result_vector_name = 'crod_force'
-                slot_vector = self.crod_force
+                result_name = 'crod_force'
+                slot = self.crod_force
                 obj_real = RealCRodForce
             elif self.element_type == 3:  # CTUBE
-                result_vector_name = 'ctube_force'
-                slot_vector = self.ctube_force
+                result_name = 'ctube_force'
+                slot = self.ctube_force
                 obj_real = RealCTubeForce
             elif self.element_type == 10:  # CONROD
-                result_vector_name = 'conrod_force'
-                slot_vector = self.conrod_force
+                result_name = 'conrod_force'
+                slot = self.conrod_force
                 obj_real = RealConrodForce
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
-            result_name = result_vector_name
-            slot = slot_vector
 
             if self.format_code == 1 and self.num_wide == 3: # real
                 ntotal = 12 # 3 * 4
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -982,9 +975,7 @@ class OEF(OP2Common):
         elif self.element_type == 34:  # cbar
             # 34-CBAR
             slot = self.cbar_force
-            slot_vector = self.cbar_force
             result_name = 'cbar_force'
-            result_vector_name = result_name
 
             obj_real = RealCBarForce
             obj_vector_real = RealCBarForceArray
@@ -994,9 +985,8 @@ class OEF(OP2Common):
             if self.format_code == 1 and self.num_wide == 9: # real
                 ntotal = 36  # 9*4
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -1018,9 +1008,8 @@ class OEF(OP2Common):
                 ntotal = 68  # 17*4
                 nelements = len(data) // ntotal
                 if 1:
-                    auto_return = self._create_oes_object2(nelements,
-                                                           result_name, result_vector_name,
-                                                           slot, slot_vector,
+                    auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                           result_name, slot,
                                                            obj_complex, obj_vector_complex)
                     if auto_return:
                         return nelements * self.num_wide * 4
@@ -1106,8 +1095,6 @@ class OEF(OP2Common):
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
-            slot_vector = slot
-            result_vector_name = result_name
 
             obj_real = RealPlateForce
             obj_complex = ComplexPlateForce
@@ -1119,9 +1106,8 @@ class OEF(OP2Common):
             if self.format_code == 1 and self.num_wide == 9:  # real
                 ntotal = 36 # 9*4
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -1206,8 +1192,6 @@ class OEF(OP2Common):
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
-            slot_vector = slot
-            result_vector_name = result_name
 
             if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
                 nnodes = 3
@@ -1240,9 +1224,8 @@ class OEF(OP2Common):
                 ntotal = 8 + (nnodes + 1) * 36 # centroidal node is the + 1
                 assert ntotal == self.num_wide * 4, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
                 nelements = len(data) // ntotal
-                #auto_return = self._create_oes_object2(nelements,
-                                                       #result_name, result_vector_name,
-                                                       #slot, slot_vector,
+                #auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       #result_name, slot,
                                                        #obj_real, obj_vector_real)
                 #if auto_return:
                     #return nelements * self.num_wide * 4
@@ -1739,8 +1722,7 @@ class OEF(OP2Common):
             # 102-CBUSH
             self._results._found_result('cbush_force')
             result_name = 'cbush_force'
-            slot_vector = getattr(self, result_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 7:  # real
                 if self.read_mode == 1:
                     return len(data)
@@ -1764,10 +1746,8 @@ class OEF(OP2Common):
                 obj_complex = ComplexCBushForce
                 obj_vector_complex = ComplexCBushForceArray
                 result_name = 'cbush_force'
-                result_vector_name = result_name
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4

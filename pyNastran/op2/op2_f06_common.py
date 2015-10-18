@@ -301,6 +301,7 @@ class OP2_F06_Common(object):
         # OQG - spc/mpc forces
         self.spc_forces = {}  # tCode=3?
         self.spc_forces_scaled_response_spectra_NRL = {}
+        self.spc_forcesPSD = {}
 
         self.mpc_forces = {}  # tCode=39
 
@@ -404,6 +405,7 @@ class OP2_F06_Common(object):
 
             # OQG - spc/mpc forces
             'spc_forces',
+            'spc_forcesPSD',
             'spc_forces_scaled_response_spectra_NRL',
             'mpc_forces',
             'thermal_gradient_and_flux',
@@ -652,7 +654,7 @@ class OP2_F06_Common(object):
             if isinstance(key, (int, int32, binary_type)):
                 return key
             else:
-                print(type(key))
+                #self.log.debug(type(key))
                 return key[0]
 
         table_types = self._get_table_types_testing()

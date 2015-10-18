@@ -162,10 +162,9 @@ class OPG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealLoadVector, ComplexLoadVector,
-                                 RealLoadVectorArray, ComplexLoadVectorArray,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealLoadVectorArray, ComplexLoadVectorArray,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermal_load_vectors'
             storage_obj = self.thermal_load_vectors

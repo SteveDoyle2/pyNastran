@@ -29,7 +29,8 @@ class ONR(OP2Common):
 
         ## total energy of all elements in isubcase/mode
         self.eTotal = self.parse_approach_code(data)
-        self.binary_debug.flush()
+        if self.is_debug_file:
+            self.binary_debug.flush()
 
         element_name, = unpack(b(self._endian + '8s'), data[24:32])
         print("element_name = %s" %(element_name))
@@ -172,7 +173,7 @@ class ONR(OP2Common):
                 self.obj.add(dt, data_in)
                 n += ntotal
         elif self.num_wide == 5:
-            assert self.cvalres in [1, 2], self.cvalres
+            assert self.cvalres in [0, 1, 2], self.cvalres # 0??
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             s = Struct(b(self._endian + '8s3f'))

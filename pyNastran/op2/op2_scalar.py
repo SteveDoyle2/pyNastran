@@ -10,6 +10,7 @@ import os
 from struct import unpack, Struct
 
 from numpy import array
+import numpy as np
 from scipy.sparse import coo_matrix
 
 from pyNastran import is_release
@@ -90,7 +91,10 @@ GEOM_TABLES = [
 
     # other
     b'CONTACT', b'VIEWTB',
-    b'KDICT', b'MONITOR', b'PERF',
+    b'KDICT', b'PERF',
+
+    # aero?
+    #b'MONITOR',
 ]
 
 RESULT_TABLES = [
@@ -525,7 +529,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'EDTS' : [self._table_passer, self._table_passer],
             b'FOL' : [self._table_passer, self._table_passer],
-            b'MONITOR' : [self._table_passer, self._table_passer],  # monitor points
+            #b'MONITOR' : [self._table_passer, self._table_passer],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
@@ -549,7 +553,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQGCRM2' : [self._table_passer, self._table_passer],
 
             b'OQGNO2' : [self._table_passer, self._table_passer],
-            b'OQGPSD2' : [self._table_passer, self._table_passer],
+            b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGRMS2' : [self._table_passer, self._table_passer],
 
             b'OFMPF2M' : [self._table_passer, self._table_passer],
@@ -824,6 +828,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.post = -2
         else:
             raise NotImplementedError(markers)
+
+        if self.read_mode == 1:
+            self.fdtype = np.dtype(self._endian + 'f4')
+            self.idtype = np.dtype(self._endian + 'i4')
 
         #=================
         table_name = self.read_table_name(rewind=True, stop_on_failure=False)
@@ -1473,7 +1481,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         n = -2
         while markers[0] != 0:
             self.read_markers([n, 1, 0])
@@ -1506,7 +1515,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 
@@ -1554,7 +1564,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 
@@ -1597,7 +1608,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 
@@ -1671,7 +1683,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show_data(data)
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         #print('intmod data2')
@@ -1707,7 +1720,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.show_data(data)
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         print('hisadd data2')
@@ -1738,7 +1752,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         elif conv_result == 2:
             conv_result = 'hard'
 
-        print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
+        print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (
+            design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
         self.show_data(datai[32:])
         raise NotImplementedError()
         #for n in [-3, -4, -5, -6, -7, -8,]:

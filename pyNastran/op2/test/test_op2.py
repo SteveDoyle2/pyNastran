@@ -129,11 +129,12 @@ def get_failed_files(filename):
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, write_op2=False,
                       is_vector=False, vector_stop=True,
-                      debug=True, saveCases=True, skipFiles=None,
-                      stopOnFailure=False, nStart=0, nStop=1000000000, binary_debug=False):
+                      debug=True, saveCases=True, skip_files=None,
+                      stopOnFailure=False, nstart=0, nstop=1000000000, binary_debug=False,
+                      compare=True):
     """used by op2_test.py to run thousands of files"""
-    if skipFiles is None:
-        skipFiles = []
+    if skip_files is None:
+        skip_files = []
     n = ''
     assert make_geom in [True, False]
     assert write_bdf in [True, False]
@@ -148,10 +149,10 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     ntotal = 0
     npassed = 0
     t0 = time.time()
-    for i, op2file in enumerate(files[nStart:nStop], nStart):  # 149
+    for i, op2file in enumerate(files[nstart:nstop], nstart):  # 149
         basename = os.path.basename(op2file)
-        #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
-        if basename not in skipFiles and '#' not in op2file:
+        #if baseName not in skip_files and not baseName.startswith('acms') and i not in nSkip:
+        if basename not in skip_files and '#' not in op2file:
             print("%" * 80)
             print('file=%s\n' % op2file)
             n = '%s ' % i
@@ -464,7 +465,7 @@ def main():
     msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
-    msg += "  -t, --vector          Vectorizes the results\n"
+    msg += "  -t, --unvector        Unvectorizes the results\n"
     msg += "  -w, --is_sort2        Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude   Exclude specific results\n"
     msg += "  -h, --help            Show this help message and exit\n"
@@ -496,7 +497,7 @@ def main():
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
             is_mag_phase=data['--is_mag_phase'],
-            is_vector=data['--vector'],
+            is_vector=not data['--unvector'],
             isubcases=data['--subcase'],
             exclude=data['--exclude'],
             debug=not data['--quiet'],

@@ -59,7 +59,7 @@ def main(regenerate=True):
     # works
     files = get_files_of_type('tests', '.op2')
 
-    foldersFile = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
+    folders_file = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
     iSubcases = []
     debug = False
@@ -67,29 +67,33 @@ def main(regenerate=True):
     write_bdf = False
     write_f06 = True
     write_op2 = False
-    is_vector = [True, False] # is this vectorized
-    vector_stop = [True, True]  # corresponds to is_vector; stop if case fails=True
+    if data['--disableunvec']:
+        is_vector = [True]
+        vector_stop = [True]
+    else:
+        is_vector = [True, False] # is this vectorized
+        vector_stop = [True, True]  # corresponds to is_vector; stop if case fails=True
     binary_debug = False  # catch any errors
 
     delete_f06 = True
     saveCases = True
-    stopOnFailure = False
-    getSkipCards = False
+    stop_on_failure = False
+    get_skip_cards = False
 
-    if getSkipCards:
+    if get_skip_cards:
         files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
-        files2 = get_all_files(foldersFile, '.op2')
+        files2 = get_all_files(folders_file, '.op2')
         files2 += files
         files2.sort()
     else:
         files2 = get_failed_files('failedCases.in')
     files = files2
 
-    skipFiles = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant
+    skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant
 
-    nStart = 0
-    nStop = 10000
+    nstart = 0
+    nstop = 10000
     try:
         os.remove('skippedCards.out')
     except:
@@ -100,10 +104,11 @@ def main(regenerate=True):
     t0 = time.time()
     run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                    write_f06=write_f06, delete_f06=delete_f06,
-                   write_op2=write_op2, debug=debug, saveCases=saveCases, skipFiles=skipFiles,
-                   stopOnFailure=stopOnFailure,
+                   write_op2=write_op2, debug=debug, saveCases=saveCases, skip_files=skip_files,
+                   stopOnFailure=stop_on_failure,
                    is_vector=is_vector, vector_stop=vector_stop,
-                   nStart=nStart, nStop=nStop, binary_debug=binary_debug)
+                   nstart=nstart, nstop=nstop, binary_debug=binary_debug,
+                   compare=not data['--disablecompare'])
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 
@@ -114,7 +119,7 @@ if __name__ == '__main__':
 
     msg = "Usage:\n"
     is_release = False
-    msg += "op2_test [-r]\n"
+    msg += "op2_test [-r] [-c] [-u]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -124,10 +129,12 @@ if __name__ == '__main__':
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"
     msg += "Options:\n"
-    msg += "  -r, --regenerate     Dumps the OP2 as a readable text file\n"
-    msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
-    msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
-    msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
+    msg += "  -r, --regenerate      Dumps the OP2 as a readable text file\n"
+    msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
+    msg += "  -u, --disableunvec    Disables the non-vectorized result\n"
+    #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
+    #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
+    #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
     if len(sys.argv) == 0:
         sys.exit(msg)
 

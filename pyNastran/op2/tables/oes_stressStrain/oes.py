@@ -363,11 +363,11 @@ class OES(OP2Common):
                 obj_vector_real = RealRodStressArray
                 obj_vector_complex = ComplexRodStressArray
                 if self.element_type == 1: # CROD
-                    result_vector_name = 'crod_stress'
+                    result_name = 'crod_stress'
                 elif self.element_type == 3:  # CTUBE
-                    result_vector_name = 'ctube_stress'
+                    result_name = 'ctube_stress'
                 elif self.element_type == 10:  # CONROD
-                    result_vector_name = 'conrod_stress'
+                    result_name = 'conrod_stress'
                 else:
                     msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
@@ -377,29 +377,26 @@ class OES(OP2Common):
                 obj_vector_real = RealRodStrainArray
                 obj_vector_complex = ComplexRodStrainArray
                 if self.element_type == 1: # CROD
-                    result_vector_name = 'crod_strain'
+                    result_name = 'crod_strain'
                 elif self.element_type == 3:  # CTUBE
-                    result_vector_name = 'ctube_strain'
+                    result_name = 'ctube_strain'
                 elif self.element_type == 10:  # CONROD
-                    result_vector_name = 'conrod_strain'
+                    result_name = 'conrod_strain'
                 else:
                     msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
 
-            result_name = result_vector_name
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 5:  # real
                 ntotal = 5 * 4
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -423,9 +420,8 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 5: # imag
                 ntotal = 20
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -467,16 +463,14 @@ class OES(OP2Common):
             ## TODO: fix method to follow correct pattern...regarding???
 
             if self.is_stress():
-                result_vector_name = 'cbeam_stress'
+                result_name = 'cbeam_stress'
             else:
-                result_vector_name = 'cbeam_strain'
-            result_name = result_vector_name
+                result_name = 'cbeam_strain'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 111:  # real
                 ntotal = 444 # 44 + 10*40  (11 nodes)
@@ -490,9 +484,8 @@ class OES(OP2Common):
 
                 nelements = len(data) // ntotal
                 nlayers = nelements * 11
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nlayers,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     self._data_factor = 11
@@ -581,7 +574,7 @@ class OES(OP2Common):
                 ComplexShearStressArray = None
                 obj_vector_real = RealShearStressArray
                 obj_vector_complex = ComplexShearStressArray
-                result_vector_name = 'cshear_stress'
+                result_name = 'cshear_stress'
             else:
                 obj_real = RealShearStrain
                 obj_complex = ComplexShearStrain
@@ -589,20 +582,18 @@ class OES(OP2Common):
                 ComplexShearStrainArray = None
                 obj_vector_real = RealShearStrainArray
                 obj_vector_complex = ComplexShearStrainArray
-                result_vector_name = 'cshear_strain'
+                result_name = 'cshear_strain'
 
-            if self._results.is_not_saved(result_name) and self._results.is_not_saved(result_vector_name):
+            if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 4:  # real
                 ntotal = 16  # 4*4
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -622,9 +613,8 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 5:  # imag
                 ntotal = 20  # 4*5
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -740,16 +730,15 @@ class OES(OP2Common):
 
         elif self.element_type == 34: # CBAR
             if self.is_stress():
-                result_vector_name = 'cbar_stress'
+                result_name = 'cbar_stress'
             else:
-                result_vector_name = 'cbar_strain'
+                result_name = 'cbar_strain'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
-            result_name = result_vector_name
             self._results._found_result(result_name)
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
+            slot_vector = slot
 
             if self.format_code == 1 and self.num_wide == 16:  # real
                 if self.is_stress():
@@ -762,9 +751,8 @@ class OES(OP2Common):
                 ntotal = 16 * 4
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return len(data)
@@ -800,9 +788,8 @@ class OES(OP2Common):
 
                 ntotal = 76
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return len(data)
@@ -870,15 +857,15 @@ class OES(OP2Common):
                 obj_vector_complex = ComplexSolidStressArray
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
-                    result_vector_name = 'ctetra_stress'
+                    result_name = 'ctetra_stress'
                     element_name = 'CTETRA4'
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
-                    result_vector_name = 'chexa_stress'
+                    result_name = 'chexa_stress'
                     element_name = 'CHEXA8'
                 elif self.element_type == 68:  # CPENTA
                     nnodes_expected = 7
-                    result_vector_name = 'cpenta_stress'
+                    result_name = 'cpenta_stress'
                     element_name = 'CPENTA6'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
@@ -892,27 +879,25 @@ class OES(OP2Common):
 
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
-                    result_vector_name = 'ctetra_strain'
+                    result_name = 'ctetra_strain'
                     element_name = 'CTETRA4'
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
-                    result_vector_name = 'chexa_strain'
+                    result_name = 'chexa_strain'
                     element_name = 'CHEXA8'
                 elif self.element_type == 68:  # CPENTA
                     nnodes_expected = 7
-                    result_vector_name = 'cpenta_strain'
+                    result_name = 'cpenta_strain'
                     element_name = 'CPENTA6'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            result_name = result_vector_name
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             numwide_real = 4 + 21 * nnodes_expected
             numwide_imag = 4 + (17 - 4) * nnodes_expected
@@ -924,9 +909,8 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 84 * nnodes_expected
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -989,9 +973,8 @@ class OES(OP2Common):
                 ntotal = numwide_imag * 4
                 nelements = len(data) // ntotal
                 self.ntotal += nelements * nnodes_expected
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -1053,30 +1036,27 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
-                result_vector_name = 'cquad4_stress'
+                result_name = 'cquad4_stress'
             else:
                 obj_real = RealPlateStrain
                 obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
-                result_vector_name = 'cquad4_strain'
+                result_name = 'cquad4_strain'
 
-            result_name = result_vector_name
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
                 nelements = len(data) // ntotal
                 nlayers = nelements * 2
 
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nlayers,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     self._data_factor = 2
@@ -1186,29 +1166,26 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
-                result_vector_name = 'ctria3_stress'
+                result_name = 'ctria3_stress'
             else:
                 obj_real = RealPlateStrain
                 obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
-                result_vector_name = 'ctria3_strain'
-            result_name = result_vector_name
+                result_name = 'ctria3_strain'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
                 nelements = len(data) // ntotal
                 nlayers = nelements * 2  # 2 layers per node
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nlayers,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     self._data_factor = 2
@@ -1265,9 +1242,8 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 ntotal = 60  # 4*15
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -1325,21 +1301,21 @@ class OES(OP2Common):
                 # 82-CQUADR
                 # 144-CQUAD4-bilinear
                 if self.element_type == 64: # CQUAD8
-                    result_vector_name = 'cquad8_stress'
+                    result_name = 'cquad8_stress'
                     #gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
-                    result_vector_name = 'ctriar_stress'
+                    result_name = 'ctriar_stress'
                     #gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
-                    result_vector_name = 'ctria6_stress'
+                    result_name = 'ctria6_stress'
                     #gridC = 'CEN/6'
                 elif self.element_type == 82:  # CTRIA6
-                    result_vector_name = 'cquadr_stress'
+                    result_name = 'cquadr_stress'
                     #gridC = 'CEN/4'
                 elif self.element_type == 144:  # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
-                    result_vector_name = 'cquad4_stress'
+                    result_name = 'cquad4_stress'
                     #gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
@@ -1351,29 +1327,27 @@ class OES(OP2Common):
                 obj_vector_complex = ComplexPlateStrainArray
 
                 if self.element_type == 64: # CQUAD8
-                    result_vector_name = 'cquad8_strain'
+                    result_name = 'cquad8_strain'
                     #gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
-                    result_vector_name = 'ctriar_strain'
+                    result_name = 'ctriar_strain'
                     #gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
-                    result_vector_name = 'ctria6_strain'
+                    result_name = 'ctria6_strain'
                     #gridC = 'CEN/6'
                 elif self.element_type == 82: # CQUADR
-                    result_vector_name = 'cquadr_strain'
+                    result_name = 'cquadr_strain'
                     #gridC = 'CEN/4'
                 elif self.element_type == 144: # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
-                    result_vector_name = 'cquad4_strain'
+                    result_name = 'cquad4_strain'
                     #gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
             gridC = 0
-            slot_vector = getattr(self, result_vector_name)
-            result_name = result_vector_name
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self._results.is_not_saved(result_name):
                 return len(data)
@@ -1401,8 +1375,7 @@ class OES(OP2Common):
 
                 self._data_factor = 10
                 auto_return, is_vectorized = self._create_oes_object3(nlayers,
-                                                                      result_name, result_vector_name,
-                                                                      slot, slot_vector,
+                                                                      result_name, slot,
                                                                       obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -1525,9 +1498,8 @@ class OES(OP2Common):
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * ntotal
@@ -1698,15 +1670,15 @@ class OES(OP2Common):
                 obj_vector_real = RealCompositePlateStressArray
                 obj_vector_complex = ComplexCompositePlateStressArray
                 if self.element_type == 95: # CQUAD4
-                    result_vector_name = 'cquad4_composite_stress'
+                    result_name = 'cquad4_composite_stress'
                 elif self.element_type == 96:  # CQUAD8
-                    result_vector_name = 'cquad8_composite_stress'
+                    result_name = 'cquad8_composite_stress'
                 elif self.element_type == 97:  # CTRIA3
-                    result_vector_name = 'ctria3_composite_stress'
+                    result_name = 'ctria3_composite_stress'
                 elif self.element_type == 98:  # CTRIA6
-                    result_vector_name = 'ctria6_composite_stress'
+                    result_name = 'ctria6_composite_stress'
                 #elif self.element_type == ???:  # CTRIA6
-                    #result_vector_name = 'ctriar_composite_stress'
+                    #result_name = 'ctriar_composite_stress'
                 #elif self.element_type == 10:  # CTRIA6
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
@@ -1721,35 +1693,32 @@ class OES(OP2Common):
                 obj_vector_real = RealCompositePlateStrainArray
                 obj_vector_complex = ComplexCompositePlateStrainArray
                 if self.element_type == 95: # CQUAD4
-                    result_vector_name = 'cquad4_composite_strain'
+                    result_name = 'cquad4_composite_strain'
                 elif self.element_type == 96:  # CQUAD8
-                    result_vector_name = 'cquad8_composite_strain'
+                    result_name = 'cquad8_composite_strain'
                 elif self.element_type == 97:  # CTRIA3
-                    result_vector_name = 'ctria3_composite_strain'
+                    result_name = 'ctria3_composite_strain'
                 elif self.element_type == 98:  # CTRIA6
-                    result_vector_name = 'ctria6_composite_strain'
+                    result_name = 'ctria6_composite_strain'
                 #elif self.element_type == ???:  # CTRIA6
-                    #result_vector_name = 'ctriar_composite_strain'
+                    #result_name = 'ctriar_composite_strain'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     raise RuntimeError(self.code_information())
                     #return self._not_implemented_or_skip(data, msg)
-            result_name = result_vector_name
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             etype = self.element_name
             if self.format_code == 1 and self.num_wide == 11:  # real
                 ntotal = 44
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -1785,9 +1754,8 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
                 msg = self.code_information()
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
@@ -2211,10 +2179,7 @@ class OES(OP2Common):
             else:
                 result_name = 'nonlinear_cbeam_strain'
                 slot = self.nonlinear_cbeam_strain
-            result_vector_name = result_name
-            slot_vector = slot
             self._results._found_result(result_name)
-
 
             if self.format_code == 1 and self.num_wide == numwide_real:
                 msg = result_name
@@ -2228,9 +2193,8 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
 
                 nlayers = nelements * 8
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nlayers,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     self._data_factor = 8
@@ -2362,16 +2326,14 @@ class OES(OP2Common):
             if self.read_mode == 0:
                 return len(data)
             if self.is_stress():
-                result_vector_name = 'cbar_stress_10nodes'
+                result_name = 'cbar_stress_10nodes'
             else:
-                result_vector_name = 'cbar_strain_10nodes'
+                result_name = 'cbar_strain_10nodes'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
-            result_name = result_vector_name
             self._results._found_result(result_name)
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 10:  # real
                 # if this isn't vectorized, it will be messed up...
@@ -2387,9 +2349,8 @@ class OES(OP2Common):
                 ntotal = 10 * 4
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return len(data)
@@ -2678,10 +2639,7 @@ class OES(OP2Common):
             #self.obj.add_new_eid(element_name, dt, eid, force, stress)
             n += ntotal
 
-    def _create_oes_object3(self, nelements,
-                            result_name, result_vector_name,
-                            slot, slot_vector,
-                            obj, obj_vector):
+    def _create_oes_object3(self, nelements, result_name, slot, obj, obj_vector):
         """
         Creates the self.obj parameter based on if this is vectorized or not.
 
@@ -2693,14 +2651,9 @@ class OES(OP2Common):
             the number of elements to preallocate for vectorization
         result_name : str
             unused
-        result_vector_name : str
-            unused
         slot : dict[(int, int, str)=obj
             the self dictionary that will be filled with a
             non-vectorized result
-        slot_vector : dict[(int, int, str)=obj
-            the self dictionary that will be filled with a
-            vectorized result
         obj : OES
             a pointer to the non-vectorized class
         obj_vector : OESArray
@@ -2710,8 +2663,8 @@ class OES(OP2Common):
         -------
         auto_return : bool
             a flag indicating a return n should be called
-        result_name : str
-            string of result_name or result_vector_name
+        is_vectorized : bool
+            True/False
 
         Since that's confusing, let's say we have real CTETRA stress data.
         We're going to fill self.solidStress with the class
@@ -2725,22 +2678,21 @@ class OES(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
 
-        auto_return = self._create_oes_object2(self, nelements,
-                            'solidStress', 'ctetra_stress',
-                            self.solidStress, self.ctetra_stress,
+        auto_return, is_vectorized = self._create_oes_object3(self, nelements,
+                            'ctetra_stress', self.ctetra_stress,
                             RealSolidStress, RealSolidStressArray)
         if auto_return:
             return nelements * ntotal
         """
         auto_return = False
-        is_vectorized = self._is_vectorized(obj_vector, slot_vector)
+        is_vectorized = self._is_vectorized(obj_vector, slot)
         #print('is_vectorized=%s result_name=%r' % (is_vectorized, result_name))
         if is_vectorized:
-            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name))
+            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
             if self.read_mode == 1:
-                self.create_transient_object(slot_vector, obj_vector)
+                self.create_transient_object(slot, obj_vector)
                 #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
-                self.result_names.add(result_vector_name)
+                self.result_names.add(result_name)
                 #print('self.obj =', self.obj)
                 self.obj.nelements += nelements
                 auto_return = True
@@ -2750,7 +2702,7 @@ class OES(OP2Common):
 
                 # if this is failing, you probably set obj_vector to None...
                 try:
-                    self.obj = slot_vector[self.code]
+                    self.obj = slot[self.code]
                 except KeyError:
                     msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
                     msg += "There's probably an extra check for read_mode=1..."
@@ -2778,9 +2730,8 @@ class OES(OP2Common):
                             result_name, result_vector_name,
                             slot, slot_vector,
                             obj, obj_vector):
-        auto_return, is_vectorized = self._create_oes_object3(nelements, result_name, result_vector_name,
-                                                              slot, slot_vector,
-                                                              obj, obj_vector)
+        auto_return, is_vectorized = self._create_oes_object3(nelements, result_name,
+                                                              slot, obj, obj_vector)
         return auto_return
 
     def _is_vectorized(self, obj_vector, slot_vector):

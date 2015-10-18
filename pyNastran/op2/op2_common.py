@@ -145,7 +145,8 @@ class OP2Common(Op2Codes, F06Writer):
         self._set_times_dtype()
         self.format_code_original = self.format_code
         if self.format_code == -1:
-            self.write_ndata(self.binary_debug, 100)
+            if self.is_debug_file:
+                self.write_ndata(self.binary_debug, 100)
             if self.table_name in ['OESNLXR', 'OESNLBR', 'OESNLXD', 'OESNL1X']:
                 assert self.format_code == -1, self.format_code
                 self.format_code = 1
@@ -427,8 +428,70 @@ class OP2Common(Op2Codes, F06Writer):
             # complex_obj
             assert complex_obj is not None
             nnodes = len(data) // 56  # 14*4
-            self.binary_debug.write('nnodes=%s' % nnodes)
+            if self.is_debug_file:
+                self.binary_debug.write('nnodes=%s' % nnodes)
             auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
+            if auto_return:
+                return len(data)
+            if self.is_sort1():
+                if self.is_magnitude_phase():
+                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
+            else:
+                if self.is_magnitude_phase():
+                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, msg)
+        else:
+            #msg = 'COMPLEX/PHASE is included in:\n'
+            #msg += '  DISP(PLOT)=ALL\n'
+            #msg += '  but the result type is REAL\n'
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, msg)
+        #else:
+        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
+        #n = self._not_implemented_or_skip(data, msg)
+        return n
+
+    def _read_table_vectorized(self, data, result_name, storage_obj,
+                               real_vector, complex_vector,
+                               node_elem, random_code=None, is_cid=False):
+
+        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
+        assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
+        #print('self.num_wide =', self.num_wide)
+        #print('random...%s' % self.isRandomResponse())
+        #if not self.isRandomResponse():
+        is_vectorized = True
+        if self.format_code == 1 and self.num_wide == 8:  # real/random
+            # real
+            nnodes = len(data) // 32  # 8*4
+            auto_return = self._create_table_vector(
+                result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+            if auto_return:
+                return len(data)
+
+            self._fix_format_code(format_code=1)
+            if self.is_sort1():
+                if self.nonlinear_factor is None:
+                    n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                else:
+                    n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            else:
+                n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                #n = len(data)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, msg)
+        elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
+            # complex
+            nnodes = len(data) // 56  # 14*4
+            if self.is_debug_file:
+                self.binary_debug.write('nnodes=%s' % nnodes)
+            auto_return = self._create_table_vector(
+                result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
                 return len(data)
             if self.is_sort1():
@@ -496,9 +559,9 @@ class OP2Common(Op2Codes, F06Writer):
         if self.use_vector and is_vectorized:
             n = nnodes * 4 * 8
             itotal2 = obj.itotal + nnodes
-
-            ints = fromstring(data, dtype=int32).reshape(nnodes, 8)
-            floats = fromstring(data, dtype=float32).reshape(nnodes, 8)
+            #print('len(data)=%s n=%s nnodes=%s' % (len(data), n, nnodes))
+            ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -510,6 +573,7 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:
+        #if 1:
             n = 0
             s = Struct(b(self._endian + '2i6f'))
             for inode in range(nnodes):
@@ -518,6 +582,7 @@ class OP2Common(Op2Codes, F06Writer):
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                #print(out)
                 obj.add(eid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 32
         return n
@@ -545,16 +610,16 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * 4 * 8
             itotal = obj.itotal
             itotal2 = itotal + nnodes
-            floats = fromstring(data, dtype=float32).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             if obj.itime == 0:
-                ints = fromstring(data, dtype=int32).reshape(nnodes, 8)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
                 #ints = floats[:, :2].view('int32')
                 #from numpy import array_equal
                 #assert array_equal(ints, intsB)
 
-                #nids = ints[:, 0] // 10
-                #assert nids.min() > 0, nids.min()
-                obj.node_gridtype[itotal:itotal2, 0] = ints[:, 0] // 10
+                nids = ints[:, 0] // 10
+                assert nids.min() > 0, nids.min()
+                obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
                 #obj.Vn = ones(floats.shape, dtype=bool)
                 #obj.Vn[itotal:itotal2, :2] = False
@@ -599,13 +664,13 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
             if obj.itime == 0:
-                ints = fromstring(data, dtype=int32).reshape(nnodes, 8)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = fromstring(data, dtype=float32).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[itime] = dt
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
             obj.itotal = itotal2
@@ -642,13 +707,13 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = obj.itotal + nnodes
 
             if obj.itime == 0:
-                ints = fromstring(data, dtype=int32).reshape(nnodes, 14)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[obj.itotal:itotal2, 0] = nids
                 obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
 
-            floats = fromstring(data, dtype=float32).reshape(nnodes, 14)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 14)
             mag = floats[:, 2:8]
             phase = floats[:, 8:]
             rtheta = radians(phase)
@@ -690,13 +755,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = fromstring(data, dtype=int32).reshape(nnodes, 14)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 14)
+                #print(ints[:, :2])
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = fromstring(data, dtype=float32).reshape(nnodes, 14)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 14)
             real = floats[:, 2:8]
             imag = floats[:, 8:]
             #assert real.shape == imag.shape, 'real.shape=%s imag.shape=%s' % (str(real.shape), str(imag.shape))
@@ -705,6 +771,7 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, itotal:itotal2, :] = real + 1.j * imag
             obj.itotal = itotal2
         else:
+        #if 1:
             n = 0
             s = Struct(b(self._endian + '2i12f'))
 
@@ -1217,3 +1284,24 @@ class OP2Common(Op2Codes, F06Writer):
             # pass = 0/2
             self.create_transient_object(slot, slot_object)
         return auto_return, is_vectorized
+
+    def _create_table_vector(self, result_name, nnodes,
+                             slot, slot_vector, is_cid=False):
+        assert isinstance(result_name, string_types), result_name
+        assert isinstance(slot, dict), slot
+        auto_return = False
+        #print('%s nnodes=%s' % (result_name, nnodes))
+        self.result_names.add(result_name)
+        if self.read_mode == 1:
+            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
+            self.result_names.add(result_name)
+            self.obj._nnodes += nnodes
+            auto_return = True
+        elif self.read_mode == 2:
+            self.code = self._get_code()
+            self.obj = slot[self.code]
+            #self.obj.update_data_code(self.data_code)
+            self.obj.build()
+        else:
+            auto_return = True
+        return auto_return
