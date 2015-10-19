@@ -11,6 +11,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
 from six.moves import zip, range
+from scipy.interpolate import interp1d
+from numpy import array, exp, pi
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 #from pyNastran.bdf.cards.baseCard import BaseCard
@@ -134,6 +136,39 @@ class RLOAD1(TabularLoad):
             return self.delay
         return self.delay.sid
 
+    def get_load_at_freq(self, freq, scale=1.):
+        # A = 1. # points to DAREA or SPCD
+        cxy = array(self.tb.table.table)
+        fc = cxy[:, 0]
+        yc = cxy[:, 1]
+        assert fc.shape == yc.shape, 'fc.shape=%s yc.shape=%s' % (str(fc.shape), str(yc.shape))
+        c = interp1d(fc, yc)(freq)
+
+        dxy = array(self.td.table.table)
+        fd = dxy[:, 0]
+        yd = dxy[:, 1]
+        assert fd.shape == yd.shape, 'fd.shape=%s yd.shape=%s' % (str(fd.shape), str(yd.shape))
+        d = interp1d(fd, yd)(freq)
+
+        if isinstance(self.dphase, float):
+            dphase = self.dphase
+        else:
+            if self.dphase == 0:
+                dphase = 0.0
+            else:
+                print('DPHASE is not supported')
+                #dphase = self.dphase.get_dphase_at_freq(freq)
+
+        if isinstance(self.delay, float):
+            tau = self.delay
+        else:
+            if self.delay == 0:
+                tau = 0.0
+            else:
+                print('DELAY is not supported')
+                # tau = self.delay.get_delay_at_freq(freq)
+        return (c + 1.j * d) * exp(dphase - 2 * pi * freq * tau)
+
     def raw_fields(self):
         list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay_id, self.dphase,
                        self.Tc(), self.Td(), self.Type]
@@ -197,6 +232,42 @@ class RLOAD2(TabularLoad):
             assert len(card) <= 8, 'len(RLOAD2 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
+    def get_load_at_freq(self, freq, scale=1.):
+        # A = 1. # points to DAREA or SPCD
+        bxy = array(self.tb.table.table)
+        fb = bxy[:, 0]
+        yb = bxy[:, 1]
+        assert fb.shape == yb.shape, 'fb.shape=%s yb.shape=%s' % (str(fb.shape), str(yb.shape))
+        b = interp1d(fb, yb)(freq)
+
+        pxy = array(self.tp.table.table)
+        fp = pxy[:, 0]
+        yp = pxy[:, 1]
+        assert fp.shape == yp.shape, 'fp.shape=%s yp.shape=%s' % (str(fp.shape), str(yp.shape))
+        p = interp1d(fp, yp)(freq)
+
+        if isinstance(self.dphase, float):
+            dphase = self.dphase
+        else:
+            if self.dphase == 0:
+                dphase = 0.0
+            else:
+                raise NotImplementedError('DPHASE is not supported')
+                #dphase = self.dphase.get_dphase_at_freq(freq)
+
+        if isinstance(self.delay, float):
+            # ndarray
+            tau = self.delay
+        else:
+            if self.delay == 0:
+                tau = 0.0
+            else:
+                raise NotImplementedError('DELAY is not supported')
+                # tau = self.delay.get_delay_at_freq(freq)
+
+        return b * exp(1.j * p + dphase - 2 * pi * freq * tau)
+
 
     def cross_reference(self, model):
         msg = ' which is required by RLOAD2=%s' % (self.sid)
@@ -341,6 +412,32 @@ class TLOAD1(TabularLoad):
             return self.delay
         return self.delay.sid
 
+    def get_load_at_time(self, time, scale=1.):
+        # A = 1. # points to DAREA or SPCD
+        xy = array(self.tid.table.table)
+        x = xy[:, 0]
+        y = xy[:, 1]
+        assert x.shape == y.shape, 'x.shape=%s y.shape=%s' % (str(x.shape), str(y.shape))
+        f = interp1d(x, y)
+
+        if isinstance(self.delay, float):
+            # ndarray
+            tau = self.delay
+        else:
+            if self.delay == 0:
+                tau = 0.0
+            else:
+                raise NotImplementedError('DELAY is not supported')
+                # tau = self.delay.get_delay_at_freq(freq)
+
+        resp = f(time - tau)
+        is_spcd = False
+        if self.Type == 'VELO' and is_spcd:
+            resp[0] = self.us0
+        if self.Type == 'ACCE' and is_spcd:
+            resp[0] = self.vs0
+        return resp
+
     def raw_fields(self):
         list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay_id, self.Type,
                        self.Tid(), self.us0, self.vs0]
@@ -431,6 +528,42 @@ class TLOAD2(TabularLoad):
             assert len(card) <= 13, 'len(TLOAD2 card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
+    def get_load_at_time(self, time, scale=1.):
+        # A = 1. # points to DAREA or SPCD
+        xy = array(self.tid.table.table)
+        x = xy[:, 0]
+        y = xy[:, 1]
+        assert x.shape == y.shape, 'x.shape=%s y.shape=%s' % (str(x.shape), str(y.shape))
+        f = interp1d(x, y)
+
+        if isinstance(self.delay, float):
+            # ndarray
+            tau = self.delay
+        else:
+            if self.delay == 0:
+                tau = 0.0
+            else:
+                raise NotImplementedError('DELAY is not supported')
+                # tau = self.delay.get_delay_at_time(time)
+        # return f(time - tau)
+
+        t1 = self.T1 + tau
+        t2 = self.T2 + tau
+        f = self.frequency
+        p = self.phase
+        f = zeros(time.shape, dtype=time.dtype)
+
+        i = where(t1 <= time & time <= t2)[0]
+        f[i] = time[i] ** b * exp(c * time[i]) * cos(2 * pi * f * time[i] + p)
+
+        is_spcd = False
+        resp = f
+        if self.Type == 'VELO' and is_spcd:
+            f[0] = self.us0
+        if self.Type == 'ACCE' and is_spcd:
+            f[0] = self.vs0
+        return f
 
     def getLoads(self):
         return [self]

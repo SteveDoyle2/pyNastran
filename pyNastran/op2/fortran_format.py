@@ -463,6 +463,7 @@ class FortranFormat(object):
                     self.obj._reset_indices()
                     self.obj.ntimes += 1
                     self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                    assert isinstance(self.obj.ntotal, int), type(self.obj.ntotal)
                 else:
                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         else:

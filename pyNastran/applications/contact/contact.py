@@ -125,7 +125,7 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
     # ------------------------------------------------------------------------
     # update the case control deck
 
-    cc = model_main.caseControlDeck
+    cc = model_main.case_control_deck
     subcase_ids = cc.get_subcase_list()
     subcase_ids.pop(0)
     subcase0_id = subcase_ids[0]

@@ -68,6 +68,86 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
+    def test_op2_solid_shell_bar_01(self):
+        op2_filename = os.path.join('static_solid_shell_bar.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, op2_filename)
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                write_f06=write_f06, is_vector=True,
+                debug=debug, stop_on_failure=True, binary_debug=True)
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_02(self):
+        op2_filename = os.path.join('mode_solid_shell_bar.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, op2_filename)
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                write_f06=write_f06, is_vector=True,
+                debug=debug, stop_on_failure=True, binary_debug=True)
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_03(self):
+        op2_filename = os.path.join('buckling_solid_shell_bar.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, op2_filename)
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                write_f06=write_f06, is_vector=True,
+                debug=debug, stop_on_failure=True, binary_debug=True)
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_04(self):
+        op2_filename = os.path.join('freq_solid_shell_bar.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, op2_filename)
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                write_f06=write_f06, is_vector=True,
+                debug=debug, stop_on_failure=True, binary_debug=True)
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
+
     def test_op2_plate_py_01(self):
         op2_filename = os.path.join('plate_py', 'plate_py.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
@@ -137,29 +217,6 @@ class TestOP2(Tester):
 
         debug = False
         debug_file = 'debug.out'
-
-        op2 = OP2(debug=debug, debug_file=debug_file)
-        op2.read_op2(op2_filename)
-        assert os.path.exists(debug_file), os.listdir('.')
-
-        self._verify_ids(bdf, op2, isubcase=1)
-
-    def test_op2_static_solid_comp_bar_01(self):
-        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        bdf_filename = os.path.join(folder, 'sol_101_elements', 'static_solid_comp_bar.bdf')
-        op2_filename = os.path.join(folder, 'sol_101_elements', 'static_solid_comp_bar.op2')
-        make_geom = False
-        write_bdf = False
-        write_f06 = True
-        debug = False
-        op2file = os.path.join(folder, op2_filename)
-        bdf = BDF(debug=False)
-        bdf.read_bdf(bdf_filename)
-
-        debug = False
-        debug_file = 'debug.out'
-        op2 = OP2(debug=debug, debug_file=debug_file)
-        op2.read_op2(op2_filename)
 
         op2 = OP2(debug=debug, debug_file=debug_file)
         op2.read_op2(op2_filename)

@@ -297,7 +297,7 @@ class CodeAsterConverter(BDF):
             comm += '# LOADS\n'
             #loadKeys = self.loads.keys()
 
-            key = self.caseControlDeck.get_subcase_parameter(isubcase, paramName)[0]
+            key = self.case_control_deck.get_subcase_parameter(isubcase, paramName)[0]
             loadcase = self.loads[key]
             #print(loadcase)
             for i, load in enumerate(loadcase):

@@ -1710,8 +1710,7 @@ class OES(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.is_stress():
-                obj_complex = ComplexCompositePlateStress
-
+                # obj_complex = ComplexCompositePlateStress
                 ComplexCompositePlateStressArray = None
                 obj_vector_real = RealCompositePlateStressArray
                 obj_vector_complex = ComplexCompositePlateStressArray
@@ -1752,7 +1751,6 @@ class OES(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-
             slot = getattr(self, result_name)
 
             etype = self.element_name
@@ -1764,35 +1762,60 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b(self._endian + 'ii9f'))
+                obj = self.obj
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
                     self.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                eid_old = 0
-                if hasattr(self, 'eid_old'):
-                    eid_old = self.eid_old
+                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nelements * self.num_wide * 4
 
-                for i in range(nelements):
-                    edata = data[n:n+44]  # 4*11
-                    out = s.unpack(edata)
-                    (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
-                    # TODO: this is a hack that I think is composite specific
-                    eid = (eid_device) // 10
+                    istart = obj.itotal
+                    iend = istart + nelements
+                    obj._times[obj.itime] = dt
 
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 11)
+                        eids = ints[:, 0] // 10
+                        nids = ints[:, 1]
+                        obj.element_layer[istart:iend, 0] = eids
+                        obj.element_layer[istart:iend, 1] = nids
 
-                    if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                        self.obj.add_new_eid(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                    else:
-                        self.obj.add(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                    eid_old = eid
-                    n += 44
-                self.eid_old = eid_old
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 11)
+                    #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
+                    obj.data[obj.itime, istart:iend, :] = floats[:, 2:]
+                else:
+                    s = Struct(b(self._endian + 'ii9f')) # 11
+                    eid_old = 0
+                    if hasattr(self, 'eid_old'):
+                        eid_old = self.eid_old
+
+                    for i in range(nelements):
+                        edata = data[n:n+44]  # 4*11
+                        out = s.unpack(edata)
+                        (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
+                        # TODO: this is a hack that I think is composite specific
+                        eid = (eid_device) // 10
+
+                        if self.is_debug_file:
+                            self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
+
+                        if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                            self.obj.add_new_eid(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                        else:
+                            self.obj.add(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                        eid_old = eid
+                        n += 44
+                    self.eid_old = eid_old
             elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
+                aaa
                 msg = self.code_information()
                 nelements = len(data) // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(

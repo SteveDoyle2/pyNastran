@@ -543,7 +543,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.solMethod = None
         #: the line with SOL on it, marks ???
         self.iSolLine = None
-        self.caseControlDeck = None
+        self.case_control_deck = None
 
         #: store the PARAM cards
         self.params = {}
@@ -1218,9 +1218,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #for line in self.case_control_lines:
             #print("** line=%r" % line)
 
-        self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
-        self.caseControlDeck.solmap_toValue = self._solmap_to_value
-        self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
+        self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
+        self.case_control_deck.solmap_toValue = self._solmap_to_value
+        self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
 
     def is_reject(self, card_name):
         """

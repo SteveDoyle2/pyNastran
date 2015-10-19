@@ -364,9 +364,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #print("subcases = ", op2.subcases)
 
         #assert table_names_f06==table_names_op2, 'table_names_f06=%s table_names_op2=%s' % (table_names_f06, table_names_op2)
-        #op2.caseControlDeck.sol = op2.sol
-        #print(op2.caseControlDeck.get_op2_data())
-        #print(op2.caseControlDeck.get_op2_data())
+        #op2.case_control_deck.sol = op2.sol
+        #print(op2.case_control_deck.get_op2_data())
+        #print(op2.case_control_deck.get_op2_data())
         is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
