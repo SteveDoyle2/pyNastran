@@ -130,7 +130,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, write_op2=False,
                       is_vector=False, vector_stop=True,
                       debug=True, saveCases=True, skip_files=None,
-                      stopOnFailure=False, nstart=0, nstop=1000000000, binary_debug=False,
+                      stop_on_failure=False, nstart=0, nstop=1000000000, binary_debug=False,
                       compare=True):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
@@ -169,7 +169,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                       is_vector=vectori,
                                       delete_f06=delete_f06,
                                       isubcases=isubcases, debug=debug,
-                                      stopOnFailure=stopOnFailure,
+                                      stop_on_failure=stop_on_failure,
                                       binary_debug=binary_debug,
                                       compare=True)[1]
                 if not is_passed_i and vector_stopi:
@@ -209,7 +209,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False, is_sort2=False,
             is_vector=False, delete_f06=False,
             isubcases=None, exclude=None, compare=True, debug=False, binary_debug=False,
-            quiet=False, stopOnFailure=True):
+            quiet=False, stop_on_failure=True):
     """
     Runs an OP2
 
@@ -339,7 +339,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                     pass
 
         if write_op2:
-            model, ext = os.path.splitext(op2_filename)
+            model = os.path.splitext(op2_filename)[0]
             op2a.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
@@ -420,7 +420,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #is_passed = True
     except:
         #print e
-        if stopOnFailure:
+        if stop_on_failure:
             raise
         else:
             print_exc(file=sys.stdout)

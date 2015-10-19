@@ -7,7 +7,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import b
 from six.moves import range
 from struct import Struct, unpack
-from numpy import array, fromstring, radians, sin, cos
+from numpy import array, fromstring, radians, sin, cos, vstack
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -21,15 +21,12 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress
                                                                   RealNonlinearBeamStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStress, RealBushStrain     # TODO: vectorize 2
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
-from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import (RealCompositePlateStress, RealCompositePlateStrain,
-                                                                            RealCompositePlateStressArray, RealCompositePlateStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStress   # TODO: vectorize 1
-from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import (RealPlateStress, RealPlateStrain,
-                                                                   RealPlateStressArray, RealPlateStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import (RealSolidStress, RealSolidStrain,
-                                                                   RealSolidStrainArray, RealSolidStressArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain, NonlinearSpringStress # TODO: vectorize 3
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress, RealTriaxStrain # TODO: vectorize 2
 
@@ -43,8 +40,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (ComplexPla
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import (ComplexRodStress, ComplexRodStrain)       # TODO: vectorize 2
                                                                     #ComplexRodStressArray, ComplexRodStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStress, ComplexShearStrain    # TODO: vectorize 2
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import (ComplexSolidStress, ComplexSolidStrain,
-                                                                      ComplexSolidStressArray, ComplexSolidStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStress, ComplexCelasStrain   # TODO: vectorize 2
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRod, NonlinearQuad, HyperelasticQuad  # TODO: vectorize 3
@@ -946,9 +942,6 @@ class OES(OP2Common):
             # 67-CHEXA
             # 68-CPENTA
             if self.is_stress():
-                obj_real = RealSolidStress
-                obj_complex = ComplexSolidStress
-
                 obj_vector_real = RealSolidStressArray
                 obj_vector_complex = ComplexSolidStressArray
                 if self.element_type == 39: # CTETRA
@@ -967,9 +960,6 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
             else:
-                obj_real = RealSolidStrain
-                obj_complex = ComplexSolidStrain
-
                 obj_vector_real = RealSolidStrainArray
                 obj_vector_complex = ComplexSolidStrainArray
 
@@ -1005,9 +995,8 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 84 * nnodes_expected
                 nelements = len(data) // ntotal
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -1069,9 +1058,8 @@ class OES(OP2Common):
                 ntotal = numwide_imag * 4
                 nelements = len(data) // ntotal
                 self.ntotal += nelements * nnodes_expected
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -1128,14 +1116,10 @@ class OES(OP2Common):
         elif self.element_type == 33:  # CQUAD4-centroidal
             # 33-QUAD4-centroidal
             if self.is_stress():
-                obj_real = RealPlateStress
-                obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
                 result_name = 'cquad4_stress'
             else:
-                obj_real = RealPlateStrain
-                obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
                 result_name = 'cquad4_strain'
@@ -1151,9 +1135,8 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
                 nlayers = nelements * 2
 
-                auto_return, is_vectorized = self._create_oes_object3(nlayers,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     self._data_factor = 2
                     return nelements * ntotal
@@ -1258,13 +1241,13 @@ class OES(OP2Common):
 
         elif self.element_type == 74:  # TRIA3
             if self.is_stress():
-                obj_real = RealPlateStress
+                #obj_real = RealPlateStress
                 obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
                 result_name = 'ctria3_stress'
             else:
-                obj_real = RealPlateStrain
+                #obj_real = RealPlateStrain
                 obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
@@ -1275,14 +1258,12 @@ class OES(OP2Common):
             self._results._found_result(result_name)
 
             slot = getattr(self, result_name)
-
             if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
                 nelements = len(data) // ntotal
                 nlayers = nelements * 2  # 2 layers per node
-                auto_return, is_vectorized = self._create_oes_object3(nlayers,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     self._data_factor = 2
                     return nelements * ntotal
@@ -1294,29 +1275,34 @@ class OES(OP2Common):
                     self.binary_debug.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                cen = 0 # 'CEN/3'
-                if self.read_mode == 2 and 0:
+                if self.use_vector and is_vectorized:
                     obj = self.obj
                     nfields = 17 * nelements
                     nbytes = nfields * 4
                     istart = obj.itotal
                     iend = obj.itotal + nlayers
-                    int_fmt = b'%s%si' % (self._endian, nfields)
-                    float_fmt = b'%s%sf' % (self._endian, nfields)
-                    #print('int_fmt=%s' % int_fmt, nbytes, nbytes/4.)
-                    ints = array(unpack(int_fmt, data[:nbytes]), dtype='int32').reshape(nelements, 17)
-                    floats = array(unpack(float_fmt, data[:nbytes]), dtype='float32').reshape(nelements, 17)
-                    floats = floats[:, 1:].reshape(nlayers, 8)
-                    eids = ints[:, 0] // 10
-                    obj._times[obj.itime] = dt
-                    obj.element_node[istart:iend:2, 0] = eids
-                    obj.element_node[istart+1:iend+1:2, 0] = eids
-                    #obj.element_node[istart:iend, 1] = ints[:, 1]
 
-                    obj.data[obj.itime, istart:iend, :] = floats
+                    itime = obj.itime
+                    if itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 17)
+                        eids = ints[:, 0] // 10
+                        ilayers = ints[:, 1]
+                        ints2 = ints[:, 1:].reshape(nlayers, 8)
+                        assert eids.min() > 0, eids
+                        obj._times[obj.itime] = dt
+                        obj.element_node[istart:iend:2, 0] = eids
+                        obj.element_node[istart+1:iend+1:2, 0] = eids
+                        #obj.element_node[istart:iend, 1] = 0
+                        #print('obj.element_node\n', obj.element_node)
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 17)
+                    floats1 = floats[:, 1:].reshape(nlayers, 8)
+                    obj.data[obj.itime, istart:iend, :] = floats1
                     obj.itotal += nlayers
                     n = nbytes
                 else:
+                #if 1:
+                    cen = 0 # 'CEN/3'
                     s = Struct(b(self._endian + 'i16f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
@@ -1325,7 +1311,6 @@ class OES(OP2Common):
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
                         eid = self._check_id(eid_device, flag, stress_name, out)
-
                         if self.is_debug_file:
                             self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
@@ -1334,13 +1319,12 @@ class OES(OP2Common):
                         self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
                                      angle2, major2, minor2, vm2)
                         n += ntotal
-
+                #ass
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 ntotal = 60  # 4*15
                 nelements = len(data) // ntotal
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -1387,8 +1371,6 @@ class OES(OP2Common):
             # 82-CQUADR
             # 144-CQUAD4-bilinear
             if self.is_stress():
-                obj_real = RealPlateStress
-                obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
                 # 64-CQUAD8
@@ -1417,8 +1399,6 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
             else:
-                obj_real = RealPlateStrain
-                obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
 
@@ -1442,8 +1422,6 @@ class OES(OP2Common):
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
-            gridC = 0
-            slot = getattr(self, result_name)
 
             if self._results.is_not_saved(result_name):
                 return len(data)
@@ -1457,6 +1435,8 @@ class OES(OP2Common):
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
 
+            gridC = 0
+            slot = getattr(self, result_name)
             numwide_real = 2 + 17 * (nnodes + 1)
             numwide_imag = 2 + 15 * (nnodes + 1)
             numwide_random = 2 + 9 * (nnodes + 1)
@@ -1469,66 +1449,41 @@ class OES(OP2Common):
                 nlayers = 2 * nelements * (nnodes + 1)  # 2 layers per node
                 nnodes_all = nnodes + 1
 
-                self._data_factor = 10
-                auto_return, is_vectorized = self._create_oes_object3(nlayers,
-                                                                      result_name, slot,
-                                                                      obj_real, obj_vector_real)
+                self._data_factor = 10  # TODO: why is this 10?
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized and self.element_type in []: # , 64
+                if self.use_vector and is_vectorized: #  and self.element_type in [144]
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
                     #self.ntimes = 0
                     #self.nelements = 0
-                    print('nelements =', nelements)
                     n = nelements * self.num_wide * 4
 
                     istart = obj.itotal
                     iend = istart + nlayers
                     obj._times[obj.itime] = dt
 
-                    int_fmt = b'%s%ii' % (self._endian, nelements * numwide_real)
-                    float_fmt = b'%s%if' % (self._endian, nelements * numwide_real)
-                    # print(int_fmt, )
-                    print(self.element_name, self.element_type)
-                    print('nnodes_all = ', nnodes_all)
-                    print('numwide_real = ', numwide_real)
-                    print('len(data)/4', len(data)/4.)
-                    # [eid, j, grid]
-                    ints = array(unpack(int_fmt, data[:n]), dtype='int32').reshape(nelements, numwide_real)
-                    print('ints0 =', ints[:, 0])
-                    floats = array(unpack(float_fmt, data[:n]), dtype='float32').reshape(nelements, numwide_real)
-                    print('ne*nwide=%s nlayers*8=%s' % (nelements * (numwide_real-3) - 1, nlayers * 8))
-                    #2 + 17*nnodes_all
-                    floats1 = floats[:, 2:].reshape(nlayers//2, 17)
-                    ints1 = ints[:, 2:].reshape(nlayers//2, 17)[:, 0].reshape(nelements, nnodes_all)
-                    ints1[:, 0] = 0.
-                    nids = ints1.ravel()
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                        ints1 = ints[:, 2:].reshape(nlayers//2, 17)[:, 0].reshape(nelements, nnodes_all)
+                        ints1[:, 0] = 0.
+                        nids = ints1.ravel()
 
-                    eids = ints[:, 0] // 10
+                        eids = ints[:, 0] // 10
+                        eids2 = vstack([eids] * (nnodes_all * 2)).T.ravel()
+                        nids2 = vstack([nids, nids]).T.ravel()
+                        obj.element_node[istart:iend, 0] = eids2
+                        obj.element_node[istart:iend, 1] = nids2
+                        #assert obj.element_node[:iend, 0].min() > 0, eids2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    floats1 = floats[:, 2:].reshape(nlayers // 2, 17)
                     results = floats1[:, 1:].reshape(nlayers, 8)
-                    from numpy import vstack
-                    eids2 = vstack([eids]*(nnodes_all*2)).T.ravel()
-                    nids2 = vstack([nids, nids]).T.ravel()
-
-                    print('floats1.shape = ', floats1.shape)
-                    print('nlayers=%s nlayers/5=%s; total=%s' % (nlayers, nlayers/5., nlayers * nlayers/5))
-                    print('nlayers=%s nlayers/5=%s; total=%s' % (nlayers, 8, nlayers*8))
-                    print('nids', nids)
-                    print('eids  =', eids)
-                    print('eids2 =', eids2)
-                    print('nids  =', nids)
-                    #for ilayer in range(2):
-                        #for inode in range(nnodes_all):
-                            ##print(obj.element_node[istart+inode:iend+inode:nnodes_all, 0].shape, len(nids2))
-                            #break
-                    obj.element_node[istart:iend, 1] = eids2
-                    obj.element_node[istart:iend, 1] = nids2
-
-
                     #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
                     obj.data[obj.itime, istart:iend, :] = results
                 #if 1:
@@ -1574,7 +1529,6 @@ class OES(OP2Common):
                              fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
-                            #print(grid)
                             if self.is_debug_file:
                                 d = tuple([grid,
                                            fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
@@ -1588,15 +1542,13 @@ class OES(OP2Common):
                             self.obj.add(dt, eid, grid, fd2, sx2, sy2,
                                          txy2, angle2, major2, minor2, vm2)
                             n += 68
-                #aaa
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
                 nelements = len(data) // ntotal
 
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * ntotal
 
@@ -1758,8 +1710,6 @@ class OES(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.is_stress():
-                ComplexCompositePlateStress = None
-                obj_real = RealCompositePlateStress
                 obj_complex = ComplexCompositePlateStress
 
                 ComplexCompositePlateStressArray = None
@@ -1781,10 +1731,6 @@ class OES(OP2Common):
                     raise RuntimeError(self.code_information())
                     #return self._not_implemented_or_skip(data, msg)
             else:
-                ComplexCompositePlateStrain = None
-                obj_real = RealCompositePlateStrain
-                obj_complex = ComplexCompositePlateStrain
-
                 ComplexCompositePlateStrainArray = None
                 obj_vector_real = RealCompositePlateStrainArray
                 obj_vector_complex = ComplexCompositePlateStrainArray
@@ -1813,9 +1759,8 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == 11:  # real
                 ntotal = 44
                 nelements = len(data) // ntotal
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -1850,9 +1795,8 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
                 msg = self.code_information()
                 nelements = len(data) // ntotal
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
                 #return self._not_implemented_or_skip(data, msg)

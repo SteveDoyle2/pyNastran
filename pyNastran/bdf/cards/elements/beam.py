@@ -82,8 +82,8 @@ class CBEAM(CBAR):
 
             self.initX_G0(card)
             self.initOfftBit(card)
-            self.pa = integer_or_blank(card, 9, 'pa')
-            self.pb = integer_or_blank(card, 10, 'pb')
+            self.pa = integer_or_blank(card, 9, 'pa', 0)
+            self.pb = integer_or_blank(card, 10, 'pb', 0)
 
             self.wa = array([double_or_blank(card, 11, 'w1a', 0.0),
                              double_or_blank(card, 12, 'w2a', 0.0),

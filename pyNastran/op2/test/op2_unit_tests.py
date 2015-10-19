@@ -55,7 +55,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=False,
-                debug=debug, stopOnFailure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         #os.remove(debug_file)
 
@@ -64,7 +64,7 @@ class TestOP2(Tester):
         write_f06 = True
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=True,
-                debug=debug, stopOnFailure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -78,14 +78,14 @@ class TestOP2(Tester):
         op2file = os.path.join(folder, op2_filename)
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=False,
-                debug=debug, stopOnFailure=True)
+                debug=debug, stop_on_failure=True)
 
         make_geom = False
         write_bdf = False
         write_f06 = True
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06, is_vector=True,
-                debug=debug, stopOnFailure=True)
+                debug=debug, stop_on_failure=True)
 
     def test_op2_good_sine_01(self):
         op2_filename = os.path.join('freq_sine', 'good_sine.op2')
@@ -97,7 +97,7 @@ class TestOP2(Tester):
         op2file = os.path.join(folder, op2_filename)
         op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                   write_f06=write_f06, is_vector=True,
-                                  debug=debug, stopOnFailure=True,
+                                  debug=debug, stop_on_failure=True,
                                   quiet=True)
 
         nids = [5]
