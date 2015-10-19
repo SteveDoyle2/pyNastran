@@ -304,9 +304,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
-        op2a.read_op2(op2_filename, vectorized=is_vector)
+        op2a.read_op2(op2_filename)
         if compare:
-            op2b.read_op2(op2_filename, vectorized=is_vector)
+            op2b.read_op2(op2_filename)
 
         #op2a.get_op2_stats()
         if quiet:

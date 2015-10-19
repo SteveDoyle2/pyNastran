@@ -77,7 +77,7 @@ class OP2(OP2_Scalar):
         else:
             raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
 
-    def set_as_vectorized(self, ask=False):
+    def _set_ask_vectorized(self, ask=False):
         """
         Enables vectorization
 
@@ -141,7 +141,7 @@ class OP2(OP2_Scalar):
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None, vectorized=True, combine=True):
+    def read_op2(self, op2_filename=None, combine=True):
         """
         Starts the OP2 file reading
 
@@ -149,35 +149,28 @@ class OP2(OP2_Scalar):
         ----------
         op2_filename : str (default=None -> popup)
             the op2_filename
-        vectorized : bool; default=True
-            should the vectorized objects be used
         combine : bool; default=True
             True : objects are isubcase based
             False : objects are (isubcase, subtitle) based;
                     will be used for superelements regardless of the option
         """
-        self.log.debug('vectorized=%s combine=%s' % (vectorized, combine))
         assert self.ask in [True, False], self.ask
-        self.is_vectorized = vectorized
-        if self.is_vectorized:
-            self.log.debug('-------- reading op2 with read_mode=1 --------')
-            self.read_mode = 1
-            self._close_op2 = False
+        self.is_vectorized = True
+        self.log.debug('combine=%s' % combine)
+        self.log.debug('-------- reading op2 with read_mode=1 --------')
+        self.read_mode = 1
+        self._close_op2 = False
 
-            # get GUI object names, build objects, but don't read data
-            OP2_Scalar.read_op2(self, op2_filename=op2_filename)
+        # get GUI object names, build objects, but don't read data
+        OP2_Scalar.read_op2(self, op2_filename=op2_filename)
 
-            # TODO: stuff to figure out objects
-            # TODO: stuff to show gui of table names
-            # TODO: clear out objects the user doesn't want
-            self.read_mode = 2
-            self._close_op2 = True
-            self.log.debug('-------- reading op2 with read_mode=2 --------')
-            OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
-        else:
-            self.read_mode = 0
-            self._close_op2 = True
-            OP2_Scalar.read_op2(self, op2_filename=op2_filename)
+        # TODO: stuff to figure out objects
+        # TODO: stuff to show gui of table names
+        # TODO: clear out objects the user doesn't want
+        self.read_mode = 2
+        self._close_op2 = True
+        self.log.debug('-------- reading op2 with read_mode=2 --------')
+        OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
         self.combine_results(combine=combine)
         self.log.info('finished reading op2')
