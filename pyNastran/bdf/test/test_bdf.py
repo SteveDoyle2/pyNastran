@@ -35,7 +35,7 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, nastran='',
-                      size=None, is_double=None, post=None):
+                      size=None, is_double=None, post=None, sum_load=True):
     """
     Runs multiple BDFs
 
@@ -67,6 +67,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         the path to nastran (default=''; no analysis)
     post : int / List[int], optional
         the PARAM,POST,value to run
+    sum_load : bool; default=True
+        should the loads be summed
 
     Usage
     -----
@@ -125,7 +127,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                 fem1, fem2, diff_cards2 = run_bdf(folder, filename, debug=debug,
                                                   xref=xref, check=check, punch=punch,
                                                   cid=cid, isFolder=True, dynamic_vars={},
-                                                  nastran=nastran, size=size, is_double=is_double, post=post)
+                                                  nastran=nastran, size=size, is_double=is_double,
+                                                  post=post, sum_load=sum_load)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -269,12 +272,10 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         sys.exit('KeyboardInterrupt...sys.exit()')
     except IOError:  # only temporarily uncomment this when running lots of tests
         pass
-    #except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
-        #print('failed test because CardParseSyntaxError...ignoring')
-        #pass
-    #except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
-        #print('failed test because DuplicateIDsError...ignoring')
-        #pass
+    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because CardParseSyntaxError...ignoring')
+    except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because DuplicateIDsError...ignoring')
     except RuntimeError:  # only temporarily uncomment this when running lots of tests
         if 'GRIDG' not in fem1.card_count:
             print('failed test because mesh adaption (GRIDG)...ignoring')
@@ -458,27 +459,47 @@ def run_fem2(bdfModel, outModel, xref, punch,
         subcase_keys = fem2.case_control_deck.get_subcase_list()
         subcases = fem2.subcases
 
-        sol = fem2.sol
+        sol_200_map = fem2.case_control_deck.sol_200_map
+        sol_base = fem2.sol
         for isubcase in subcase_keys[1:]:  # drop isubcase = 0
             subcase = subcases[isubcase]
+            if sol_base == 200:
+                analysis = subcase.get_parameter('ANALYSIS')[0]
+                sol = sol_200_map[analysis]
+            else:
+                sol = sol_base
+
+            if subcase.has_parameter('METHOD'):
+                method_id = subcase.get_parameter('METHOD')[0]
+                method = fem2.methods[method_id]
+                assert sol in [5, 76, 101, 103, 105, 106, 108, 110, 111, 112, 145, 187], 'sol=%s METHOD' % sol
+            if subcase.has_parameter('CMETHOD'):
+                method_id = subcase.get_parameter('CMETHOD')[0]
+                method = fem2.cMethods[method_id]
+                assert sol in [110], 'sol=%s CMETHOD' % sol
+
             if subcase.has_parameter('LOAD'):
-                print('found load....')
                 loadcase_id = fem2.case_control_deck.get_subcase_parameter(isubcase, 'LOAD')[0]
                 F, M = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
                 print('  isubcase=%i F=%s M=%s' % (isubcase, F, M))
+                assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 108, 144, 145, 153, 400], 'sol=%s LOAD' % sol
             else:
-                print('is_load =', subcase.has_parameter('LOAD'))
+                # print('is_load =', subcase.has_parameter('LOAD'))
+                pass
 
             if subcase.has_parameter('FREQUENCY'):
                 freq_id = subcase.get_parameter('FREQUENCY')[0]
                 freq = fem2.frequencies[freq_id]
+                assert sol in [26, 68, 76, 78, 88, 108, 111, 112, 118], 'sol=%s FREQUENCY' % sol
                 # print(freq)
 
-            if subcase.has_parameter('LSEQ'):
-                lseq_id = subcase.get_parameter('LSEQ')[0]
-                lseq = fem2.loads[lseq_id]
-                print(lseq)
+            # if subcase.has_parameter('LSEQ'):
+                # lseq_id = subcase.get_parameter('LSEQ')[0]
+                # lseq = fem2.loads[lseq_id]
+                # assert sol in [], sol
+                # print(lseq)
             if subcase.has_parameter('DLOAD'):
+                assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 153, 159, 400], 'sol=%s DLOAD' % sol
                 if subcase.has_parameter('LOADSET'):
                     raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
                 if subcase.has_parameter('IC'):
@@ -496,7 +517,10 @@ def run_fem2(bdfModel, outModel, xref, punch,
                 #  - no LOADSET -> SPCD
                 #  -    LOADSET -> SPCDs as specified by LSEQ
                 dload_id = subcase.get_parameter('DLOAD')[0]
-                dload = fem2.dloads[dload_id]
+                if dload_id in fem2.dloads:
+                    dload = fem2.dloads[dload_id]
+                else:
+                    dload = fem2.dload_entries[dload_id]
                 # dload = DLOAD()
                 # print(dload)
                 # for
@@ -804,7 +828,7 @@ def main():
     msg += '                 card is fully not supported (default=False)\n'
     msg += '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
     msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
-    msg += '  -L, --loads    sums the forces/moments on the model for the different subcases (default=False)\n'
+    msg += '  -L, --loads    Disables forces/moments summation for the different subcases (default=False)\n'
     msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
     msg += '  -f, --profile  Profiles the code (default=False)\n'
     msg += '  -s, --stop     Stop after first read/write (default=False)\n'
@@ -855,7 +879,7 @@ def main():
                 reject=data['--reject'],
                 size=size,
                 is_double=is_double,
-                sum_load=data['--loads'],
+                sum_load=not data['--loads'],
                 stop=data['--stop'],
             )
         prof.dump_stats('bdf.profile')
@@ -889,7 +913,7 @@ def main():
             reject=data['--reject'],
             size=size,
             is_double=is_double,
-            sum_load=data['--loads'],
+            sum_load=not data['--loads'],
             stop=data['--stop'],
         )
     print("total time:  %.2f sec" % (time.time() - t0))

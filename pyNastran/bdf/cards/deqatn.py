@@ -67,6 +67,9 @@ class DEQATN(BaseCard):  # needs work...
         found_none = False
         #print(card)
         line0 = card[0]
+        if '\t' in line0:
+            line0 = line0.expandtabs()
+
         name_eqid = line0[:16]
         #print('name_eqid = %r' % name_eqid)
         assert ',' not in name_eqid, name_eqid
@@ -239,8 +242,10 @@ def split_equation(lines_out, line, n, isplit=0):
 def fortran_to_python_short(line, default_values):
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
-    exec_(func_str)
-    return func
+    d = {}
+    print(func_str)
+    exec_(func_str, globals(), d)
+    return d['func']
 
 def fortran_to_python(lines, default_values):
     #print(lines)
@@ -319,7 +324,11 @@ def fortran_to_python(lines, default_values):
         msg += '    return %s\n' % out
     else:
         msg = 'def %s(%s):\n' % (func_name, vals2)
-        msg += '    return %s\n' % float(eq)
+        try:
+            msg += '    return %s\n' % float(eq)
+        except ValueError:
+            msg += '    return %s\n' % str(eq)
+            raise NotImplementedError(msg)
 
     #print(msg)
     nargs = len(variables)

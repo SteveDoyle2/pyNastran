@@ -571,8 +571,8 @@ class XrefMesh(object):
             dconstr.cross_reference(self)
 
         for key, dvcrel in iteritems(self.dvcrels):
-            dvprel.cross_reference(self)
+            dvcrel.cross_reference(self)
         for key, dvmrel in iteritems(self.dvmrels):
-            dvprel.cross_reference(self)
+            dvmrel.cross_reference(self)
         for key, dvprel in iteritems(self.dvprels):
             dvprel.cross_reference(self)

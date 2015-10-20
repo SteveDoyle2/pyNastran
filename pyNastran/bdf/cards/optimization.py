@@ -408,12 +408,21 @@ class DRESP1(OptConstraint):
             self.atti = model.Properties(self.atti, msg=msg)
         elif self.rtype in ['FRSTRE']:
             self.atti = model.Properties(self.atti, msg=msg)
-        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN']:
+        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
             pass
         elif self.rtype in ['DISP', 'FRDISP', 'TDISP',
                             'FRVELO', 'TVELO',
                             'FRACCL', 'PSDACCL']:
             self.atti = model.Nodes(self.atti, msg=msg)
+        elif self.rtype in ['VOLUME', 'LAMA', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
+                            'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
+                            'TACCL', 'RMSACCL',
+                            'RMSVELO',
+                            'PSDDISP', 'RMSDISP',
+                            'TFORC', 'FRFORC',
+                            'TSPCF',
+                            ]:
+            pass
         else:
             msg = 'rtype=%r ptype=%r\n' % (self.rtype, self.ptype)
             msg += str(self)
@@ -443,7 +452,14 @@ class DRESP1(OptConstraint):
                             'FRACCL', 'PSDACCL']:
             #self.atti = model.Nodes(self.atti, msg=msg)
             data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
-        elif self.rtype in ['VOLUME', 'CEIG']:
+        elif self.rtype in ['VOLUME', 'CEIG', 'LAMA', 'FREQ', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
+                            'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
+                            'TACCL', 'RMSACCL',
+                            'PSDDISP', 'RMSDISP',
+                            'TVELO', 'RMSVELO',
+                            'TFORC', 'FRFORC',
+                            'TSPCF',
+                            ]:
             data = self.atti
         elif self.rtype in ['GPFORCP']: # MSC Nastran specific
             data = self.atti
