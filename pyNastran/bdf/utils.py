@@ -63,7 +63,6 @@ class CardParseSyntaxError(SyntaxError):
 
 
 def _to_fields_mntpnt1(card_lines, card_name):
-    print('_to_fields_mntpnt1', card_lines)
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 

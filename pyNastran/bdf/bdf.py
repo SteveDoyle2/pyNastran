@@ -16,6 +16,7 @@ import os
 import sys
 import traceback
 
+import numpy as np
 from numpy import unique
 
 from pyNastran.bdf.utils import _parse_pynastran_header, deprecated

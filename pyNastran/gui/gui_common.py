@@ -846,12 +846,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.create_global_axes()
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
-                                  bar_scale=0.0, representation=None):
+                                  bar_scale=0.0, representation=None, is_visible=True):
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         self.geometry_properties[name] = AltGeometry(self, name, color=color,
                                                      line_width=line_width, opacity=opacity,
                                                      point_size=point_size, bar_scale=bar_scale,
-                                                     representation=representation)
+                                                     representation=representation, is_visible=is_visible)
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -2045,6 +2045,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
         self.rend.AddActor(alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
+
+        if geom.is_visible:
+            alt_geometry_actor.VisibilityOn()
+        else:
+            alt_geometry_actor.VisibilityOff()
 
         #print('current_actors = ', self.geometry_actors.keys())
         if hasattr(grid, 'Update'):

@@ -276,29 +276,6 @@ class NastranIO(object):
         ]
         return tools, menu_items
 
-    def show_caero_mesh(self, is_shown=None):
-        """
-        :param is_shown: should the mesh be shown/hidden
-                         (default=None -> flip between shown/not shown)
-        """
-        msg = 'self.show_alt_actor=True/False and self.is_sub_panels=True/False may be used'
-        self.log.info(msg)
-        if is_shown is None:
-            is_shown = not self.show_caero_actor
-
-        self.show_caero_actor = is_shown
-        if is_shown:
-            if not self.show_caero_actor:
-                return
-            self.geometry_actors['caero'].VisibilityOn()
-            if self.show_caero_sub_panels:
-                self.geometry_actors['caero_sub'].VisibilityOn()
-        else:
-            if self.show_caero_actor:
-                return
-            self.geometry_actors['caero'].VisibilityOff()
-            self.geometry_actors['caero_sub'].VisibilityOff()
-
     def toggle_caero_panels(self):
         """
         Toggle the visibility of the CAERO panels. The visibility of the sub panels
@@ -310,11 +287,15 @@ class NastranIO(object):
         if self.show_caero_actor:
             if self.show_caero_sub_panels:
                 self.geometry_actors['caero_sub'].VisibilityOn()
+                self.geometry_properties['caero_sub'].is_visble = True
             else:
                 self.geometry_actors['caero'].VisibilityOn()
+                self.geometry_properties['caero'].is_visble = True
         else:
             self.geometry_actors['caero'].VisibilityOff()
+            self.geometry_properties['caero'].is_visble = False
             self.geometry_actors['caero_sub'].VisibilityOff()
+            self.geometry_properties['caero_sub'].is_visble = False
         self.vtk_interactor.Render()
 
     def toggle_caero_sub_panels(self):
@@ -327,10 +308,16 @@ class NastranIO(object):
         if self.show_caero_actor:
             if self.show_caero_sub_panels:
                 self.geometry_actors['caero'].VisibilityOff()
+                self.geometry_properties['caero'].is_visble = False
+
                 self.geometry_actors['caero_sub'].VisibilityOn()
+                self.geometry_properties['caero_sub'].is_visble = True
             else:
                 self.geometry_actors['caero'].VisibilityOn()
+                self.geometry_properties['caero'].is_visble = True
+
                 self.geometry_actors['caero_sub'].VisibilityOff()
+                self.geometry_properties['caero_sub'].is_visble = False
         self.vtk_interactor.Render()
 
     def toggle_conms(self):
@@ -341,8 +328,10 @@ class NastranIO(object):
         if 'conm' in self.geometry_actors:
             if self.show_conm:
                 self.geometry_actors['conm'].VisibilityOn()
+                self.geometry_properties['conm'].is_visble = True
             else:
                 self.geometry_actors['conm'].VisibilityOff()
+                self.geometry_properties['conm'].is_visble = False
         self.vtk_interactor.Render()
 
     def _create_coord(self, cid, coord, Type):
@@ -575,9 +564,9 @@ class NastranIO(object):
         if self.has_caero:
             yellow = (1., 1., 0.)
             if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='toggle')
+                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='toggle', is_visible=True)
             if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='toggle')
+                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='toggle', is_visible=False)
 
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
             self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
@@ -660,7 +649,6 @@ class NastranIO(object):
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
         self._fill_bar_yz(dim_max, model, icase, cases, form)
 
-
         #------------------------------------------------------------
         # loads
         try:
@@ -697,34 +685,6 @@ class NastranIO(object):
         if 'caero_cs' in self.geometry_actors:
             self.geometry_properties['caero_cs'].opacity = 0.5
 
-        #for (name, size) in [('conm', 4), ('spc', 4), ('suport', 4)]:
-            #if size == 0:
-                #continue
-            #if name in self.geometry_actors:
-                #actor = self.geometry_actors[name]
-                #prop = actor.GetProperty()
-                #prop.SetRepresentationToPoints()
-                #prop.SetPointSize(size)
-
-        # set initial caero visibility
-        if 'caero' in self.alt_grids:
-            if self.show_caero_actor:
-                if self.show_caero_sub_panels:
-                    self.geometry_actors['caero'].VisibilityOff()
-                    self.geometry_actors['caero_sub'].VisibilityOn()
-                else:
-                    self.geometry_actors['caero'].VisibilityOn()
-                    self.geometry_actors['caero_sub'].VisibilityOff()
-            else:
-                self.geometry_actors['caero'].VisibilityOff()
-                self.geometry_actors['caero_sub'].VisibilityOff()
-
-            if has_control_surface:
-                if self.show_control_surfaces:
-                    self.geometry_actors['caero_cs'].VisibilityOn()
-                else:
-                    self.geometry_actors['caero_cs'].VisibilityOn()
-
             self.geometry_actors['caero'].Modified()
             self.geometry_actors['caero_sub'].Modified()
             if has_control_surface:
@@ -735,13 +695,6 @@ class NastranIO(object):
                 self.geometry_actors['caero_sub'].Update()
             if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
                     self.geometry_actors['caero_cs'].Update()
-
-        if 'conm' in self.geometry_actors:
-            if nCONM2 > 0:
-                self.geometry_actors['conm'].VisibilityOn()
-            else:
-                self.geometry_actors['conm'].VisibilityOff()
-            self.geometry_actors['conm'].Modified()
 
         for name in ['suport', 'spc', 'mpc', 'mpc_dependent', 'mpc_independent']:
             if name in self.geometry_actors:
@@ -990,7 +943,7 @@ class NastranIO(object):
     def _fill_spc(self, spc_id, nspcs, nspc1s, nspcds, dim_max, model, nid_to_pid_map):
         purple = (1., 0., 1.)
         self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.,
-                                       point_size=5, representation='point')
+                                       point_size=5, representation='point', is_visible=False)
 
         # node_ids = self.get_SPCx_node_ids(model, spc_id, exclude_spcadd=False)
         node_ids_c1 = self.get_SPCx_node_ids_c1(model, spc_id, exclude_spcadd=False)
@@ -1226,9 +1179,9 @@ class NastranIO(object):
                 bar_y = Type + '_y'
                 bar_z = Type + '_z'
                 self.create_alternate_vtk_grid(bar_y, color=green, line_width=5, opacity=1.,
-                                               point_size=5, representation='wire', bar_scale=scale)
+                                               point_size=5, representation='wire', bar_scale=scale, is_visible=False)
                 self.create_alternate_vtk_grid(bar_z, color=blue, line_width=5, opacity=1.,
-                                               point_size=5, representation='wire', bar_scale=scale)
+                                               point_size=5, representation='wire', bar_scale=scale, is_visible=False)
 
                 self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
                 self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
@@ -1320,9 +1273,9 @@ class NastranIO(object):
             return
         green = (0., 1., 0.)
         dunno = (0.5, 1., 0.5)
-        self.create_alternate_vtk_grid('mpc_dependent', color=green, line_width=5, opacity=1., point_size=5, representation='point')
-        self.create_alternate_vtk_grid('mpc_independent', color=dunno, line_width=5, opacity=1., point_size=5, representation='point')
-        self.create_alternate_vtk_grid('mpc_lines', color=dunno, line_width=5, opacity=1., point_size=5, representation='wire')
+        self.create_alternate_vtk_grid('mpc_dependent', color=green, line_width=5, opacity=1., point_size=5, representation='point', is_visible=False)
+        self.create_alternate_vtk_grid('mpc_independent', color=dunno, line_width=5, opacity=1., point_size=5, representation='point', is_visible=False)
+        self.create_alternate_vtk_grid('mpc_lines', color=dunno, line_width=5, opacity=1., point_size=5, representation='wire', is_visible=False)
 
         lines2 = []
         for line in lines:
@@ -1460,7 +1413,7 @@ class NastranIO(object):
     def _fill_suport(self, suport_id, dim_max, model):
         #pink = (0.98, 0.4, 0.93)
         red = (1.0, 0., 0.)
-        self.create_alternate_vtk_grid('suport', color=red, line_width=5, opacity=1., point_size=4, representation='point')
+        self.create_alternate_vtk_grid('suport', color=red, line_width=5, opacity=1., point_size=4, representation='point', is_visible=False)
 
         node_ids = []
 
