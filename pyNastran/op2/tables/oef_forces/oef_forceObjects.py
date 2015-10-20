@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
-from numpy import array, zeros, searchsorted
+from numpy import array, zeros, searchsorted, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
@@ -70,7 +70,7 @@ class RealRodForceArray(ScalarObject):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
         #[axial_force, torque]
@@ -80,7 +80,7 @@ class RealRodForceArray(ScalarObject):
         self.add_sort1(dt, eid, axial, torque)
 
     def add_sort1(self, dt, eid, axial, torque):
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
@@ -153,7 +153,7 @@ class RealRodForceArray(ScalarObject):
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
@@ -1201,14 +1201,14 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     #def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
-        #self.times[self.itime] = dt
+        #self._times[self.itime] = dt
         #self.element[self.ielement] = eid
         #self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         #self.ielement += 1
@@ -1217,7 +1217,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
@@ -1299,7 +1299,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         eids = self.element
         cen_word = 'CEN/%i' % nnodes
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
@@ -1550,126 +1550,126 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         return page_num
 
 
-class RealCBarForce(ScalarObject):  # 34-CBAR
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.bendingMomentA = {}
-        self.bendingMomentB = {}
-        self.shear = {}
-        self.axial = {}
-        self.torque = {}
+# class RealCBarForce(ScalarObject):  # 34-CBAR
+    # def __init__(self, data_code, is_sort1, isubcase, dt):
+        # self.element_type = None
+        # self.element_name = None
+        # ScalarObject.__init__(self, data_code, isubcase)
+        # self.bendingMomentA = {}
+        # self.bendingMomentB = {}
+        # self.shear = {}
+        # self.axial = {}
+        # self.torque = {}
 
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
+        # self.dt = dt
+        # if is_sort1:
+            # if dt is not None:
+                # self.add = self.add_sort1
+        # else:
+            # assert dt is not None
+            # self.add = self.add_sort2
 
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.torque)
-            time0 = get_key0(self.torque)
-            nelements = len(self.torque[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.torque)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  bendingMomentA, bendingMomentB, shear, axial, torque\n')
-        return msg
+    # def get_stats(self):
+        # msg = ['  '] + self.get_data_code()
+        # if self.dt is not None:  # transient
+            # ntimes = len(self.torque)
+            # time0 = get_key0(self.torque)
+            # nelements = len(self.torque[time0])
+            # msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       # % (self.__class__.__name__, ntimes, nelements))
+        # else:
+            # nelements = len(self.torque)
+            # msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     # nelements))
+        # msg.append('  bendingMomentA, bendingMomentB, shear, axial, torque\n')
+        # return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.bendingMomentA[dt] = {}
-        self.bendingMomentB[dt] = {}
-        self.shear[dt] = {}
-        self.axial[dt] = {}
-        self.torque[dt] = {}
+    # def add_new_transient(self, dt):
+        # self.dt = dt
+        # self.bendingMomentA[dt] = {}
+        # self.bendingMomentB[dt] = {}
+        # self.shear[dt] = {}
+        # self.axial[dt] = {}
+        # self.torque[dt] = {}
 
-    def add(self, dt, data):
-        [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-        self.bendingMomentA[eid] = [bm1a, bm2a]
-        self.bendingMomentB[eid] = [bm1b, bm2b]
-        self.shear[eid] = [ts1, ts2]
-        self.axial[eid] = af
-        self.torque[eid] = trq
+    # def add(self, dt, data):
+        # [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+        # self.bendingMomentA[eid] = [bm1a, bm2a]
+        # self.bendingMomentB[eid] = [bm1b, bm2b]
+        # self.shear[eid] = [ts1, ts2]
+        # self.axial[eid] = af
+        # self.torque[eid] = trq
 
-    def add_sort1(self, dt, data):
-        [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-        if dt not in self.axial:
-            self.add_new_transient(dt)
+    # def add_sort1(self, dt, data):
+        # [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+        # if dt not in self.axial:
+            # self.add_new_transient(dt)
 
-        self.bendingMomentA[dt][eid] = [bm1a, bm2a]
-        self.bendingMomentB[dt][eid] = [bm1b, bm2b]
-        self.shear[dt][eid] = [ts1, ts2]
-        self.axial[dt][eid] = af
-        self.torque[dt][eid] = trq
+        # self.bendingMomentA[dt][eid] = [bm1a, bm2a]
+        # self.bendingMomentB[dt][eid] = [bm1b, bm2b]
+        # self.shear[dt][eid] = [ts1, ts2]
+        # self.axial[dt][eid] = af
+        # self.torque[dt][eid] = trq
 
-    def add_sort2(self, eid, data):
-        [dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-        if dt not in self.axial:
-            self.add_new_transient(dt)
+    # def add_sort2(self, eid, data):
+        # [dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+        # if dt not in self.axial:
+            # self.add_new_transient(dt)
 
-        self.bendingMomentA[dt][eid] = [bm1a, bm2a]
-        self.bendingMomentB[dt][eid] = [bm1b, bm2b]
-        self.shear[dt][eid] = [ts1, ts2]
-        self.axial[dt][eid] = af
-        self.torque[dt][eid] = trq
+        # self.bendingMomentA[dt][eid] = [bm1a, bm2a]
+        # self.bendingMomentB[dt][eid] = [bm1b, bm2b]
+        # self.shear[dt][eid] = [ts1, ts2]
+        # self.axial[dt][eid] = af
+        # self.torque[dt][eid] = trq
 
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=is_sort1)
+    # def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        # if self.nonlinear_factor is not None:
+            # return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=is_sort1)
 
-        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
-                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
-        msg = []
-        #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-        f.write(''.join(words))
-        for eid in sorted(self.bendingMomentA):
-            bm1a, bm2a = self.bendingMomentA[eid]
-            bm1b, bm2b = self.bendingMomentB[eid]
-            ts1, ts2 = self.shear[eid]
-            af = self.axial[eid]
-            trq = self.torque[eid]
-            (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
-            [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
-            f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
-#            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
+        # words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 # '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 # '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+        # msg = []
+        # #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+        # f.write(''.join(words))
+        # for eid in sorted(self.bendingMomentA):
+            # bm1a, bm2a = self.bendingMomentA[eid]
+            # bm1b, bm2b = self.bendingMomentB[eid]
+            # ts1, ts2 = self.shear[eid]
+            # af = self.axial[eid]
+            # trq = self.torque[eid]
+            # (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+            # [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
+            # f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+# #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
 
-            f.write(page_stamp % page_num)
-        return page_num
+            # f.write(page_stamp % page_num)
+        # return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=True):
-        assert f is not None
-        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
-                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+    # def _write_f06_transient(self, header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=True):
+        # assert f is not None
+        # words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 # '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 # '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
 
-        for dt, bm in sorted(iteritems(self.bendingMomentA)):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
-            for eid in sorted(bm):
-                bm1a, bm2a = self.bendingMomentA[dt][eid]
-                bm1b, bm2b = self.bendingMomentB[dt][eid]
-                ts1, ts2 = self.shear[dt][eid]
-                af = self.axial[dt][eid]
-                trq = self.torque[dt][eid]
-                (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
-                [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
-                f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
-#            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
+        # for dt, bm in sorted(iteritems(self.bendingMomentA)):
+            # header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            # f.write(''.join(header + words))
+            # for eid in sorted(bm):
+                # bm1a, bm2a = self.bendingMomentA[dt][eid]
+                # bm1b, bm2b = self.bendingMomentB[dt][eid]
+                # ts1, ts2 = self.shear[dt][eid]
+                # af = self.axial[dt][eid]
+                # trq = self.torque[dt][eid]
+                # (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+                # [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
+                # f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+# #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
 
-            f.write(page_stamp % page_num)
-            page_num += 1
-        return page_num - 1
+            # f.write(page_stamp % page_num)
+            # page_num += 1
+        # return page_num - 1
 
 class RealCBarForceArray(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1725,7 +1725,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
         #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
@@ -1737,7 +1737,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
     def add_sort1(self, dt, data):
         data = [eid, bending_moment_a1, bending_moment_a2,
                 bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
             bending_moment_a1, bending_moment_a2,
@@ -1811,7 +1811,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + words))
 
@@ -1830,6 +1830,46 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
             f.write(page_stamp % page_num)
         return page_num
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid\n'
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element):
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (bm1a1, bm2a1, bm1b1, bm2b1, ts11, ts21, af1, trq1) = t1
+                    (bm1a2, bm2a2, bm1b2, bm2b2, ts12, ts22, af2, trq2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += '(%s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid,
+                            bm1a1, bm2a1, bm1b1, bm2b1, ts11, ts21, af1, trq1,
+                            bm1a2, bm2a2, bm1b2, bm2b2, ts12, ts22, af2, trq2)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(mgs)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
 
 
 class RealCBar100Force(ScalarObject):  # 100-CBAR
