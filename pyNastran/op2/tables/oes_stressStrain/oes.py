@@ -16,8 +16,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import (RealBarStress, 
                                                                  RealBarStressArray, RealBarStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import (RealBar10NodesStressArray, RealBar10NodesStrainArray)
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress, RealBeamStrain,
-                                                                  RealBeamStressArray, RealBeamStrainArray,
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStressArray, RealBeamStrainArray,
                                                                   RealNonlinearBeamStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStress, RealBushStrain     # TODO: vectorize 2
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
@@ -31,12 +30,11 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStre
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress, RealTriaxStrain # TODO: vectorize 2
 
 
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import (ComplexBarStress, ComplexBarStrain,
-                                                                    ComplexBarStressArray, ComplexBarStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushStress, ComplexBushStrain    # TODO: vectorize 2
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress                   # TODO: vectorize 1
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (ComplexPlateStress, ComplexPlateStrain,
-                                                                      ComplexPlateStressArray, ComplexPlateStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_compositePlates import ComplexCompositePlateStressArray, ComplexCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import (ComplexRodStress, ComplexRodStrain)       # TODO: vectorize 2
                                                                     #ComplexRodStressArray, ComplexRodStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStress, ComplexShearStrain    # TODO: vectorize 2
@@ -519,17 +517,14 @@ class OES(OP2Common):
                 ntotal = 444 # 44 + 10*40  (11 nodes)
 
                 if self.is_stress():
-                    obj_real = RealBeamStress
                     obj_vector_real = RealBeamStressArray
                 else:
-                    obj_real = RealBeamStrain
                     obj_vector_real = RealBeamStrainArray
 
                 nelements = len(data) // ntotal
                 nlayers = nelements * 11
-                auto_return, is_vectorized = self._create_oes_object3(nlayers,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     self._data_factor = 11
                     return nelements * self.num_wide * 4
@@ -611,7 +606,6 @@ class OES(OP2Common):
         elif self.element_type == 4: # CSHEAR
             # 4-CSHEAR
             if self.is_stress():
-                #obj_real = RealShearStress
                 obj_complex = ComplexShearStress
 
                 ComplexShearStressArray = None
@@ -619,7 +613,6 @@ class OES(OP2Common):
                 obj_vector_complex = ComplexShearStressArray
                 result_name = 'cshear_stress'
             else:
-                #obj_real = RealShearStrain
                 obj_complex = ComplexShearStrain
 
                 ComplexShearStrainArray = None
@@ -635,9 +628,8 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == 4:  # real
                 ntotal = 16  # 4*4
                 nelements = len(data) // ntotal
-                auto_return, is_vectorized = self._create_oes_object4(nelements,
-                                                       result_name, slot,
-                                                       obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -834,18 +826,15 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == 16:  # real
                 if self.is_stress():
-                    obj_real = RealBarStress
                     obj_vector_real = RealBarStressArray
                 else:
-                    obj_real = RealBarStrain
                     obj_vector_real = RealBarStrainArray
 
                 ntotal = 16 * 4
                 nelements = len(data) // ntotal
 
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return len(data)
 
@@ -872,17 +861,14 @@ class OES(OP2Common):
                                          s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
             elif self.format_code in [2, 3] and self.num_wide == 19:  # imag
                 if self.is_stress():
-                    obj_complex = ComplexBarStress
                     obj_vector_complex = ComplexBarStressArray
                 else:
-                    obj_complex = ComplexBarStrain
                     obj_vector_complex = ComplexBarStrainArray
 
                 ntotal = 76
                 nelements = len(data) // ntotal
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return len(data)
 
@@ -1162,13 +1148,17 @@ class OES(OP2Common):
                                  angle2, major2, minor2, max_shear2)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
-                if self.read_mode == 1:
-                    return len(data)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_complex)
 
-                if self.is_stress():
-                    self.create_transient_object(slot, ComplexPlateStress)
-                else:
-                    self.create_transient_object(slot, ComplexPlateStrain)
+                #if self.is_stress():
+                    #self.create_transient_object(slot, ComplexPlateStress)
+                #else:
+                    #self.create_transient_object(slot, ComplexPlateStrain)
+                if auto_return:
+                    self._data_factor = 2
+                    return nelements * ntotal
+
                 s1 = Struct(b(self._endian + 'i14f'))
                 s2 = Struct(b(self._endian + 'i14f'))
                 nnodes = 0  # centroid + 4 corner points
@@ -1242,13 +1232,13 @@ class OES(OP2Common):
         elif self.element_type == 74:  # TRIA3
             if self.is_stress():
                 #obj_real = RealPlateStress
-                obj_complex = ComplexPlateStress
+                #obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
                 result_name = 'ctria3_stress'
             else:
                 #obj_real = RealPlateStrain
-                obj_complex = ComplexPlateStrain
+                #obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
                 result_name = 'ctria3_strain'
@@ -1710,11 +1700,8 @@ class OES(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.is_stress():
-                obj_complex = ComplexCompositePlateStress
-
-                ComplexCompositePlateStressArray = None
                 obj_vector_real = RealCompositePlateStressArray
-                obj_vector_complex = ComplexCompositePlateStressArray
+                #obj_vector_complex = ComplexCompositePlateStressArray
                 if self.element_type == 95: # CQUAD4
                     result_name = 'cquad4_composite_stress'
                 elif self.element_type == 96:  # CQUAD8
