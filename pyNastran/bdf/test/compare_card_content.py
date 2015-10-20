@@ -51,7 +51,7 @@ def compare_card_content(fem1, fem2):
         'params', 'nodes', 'elements', 'rigidElements',
         'properties', 'materials', 'creepMaterials',
         'loads', 'coords',
-        'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas',
+        'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas', 'dphases',
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
@@ -128,6 +128,11 @@ def compare_card_content(fem1, fem2):
     for key in fem1.dareas:
         card1 = fem1.dareas[key]
         card2 = fem2.dareas[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.dphases:
+        card1 = fem1.dphases[key]
+        card2 = fem2.dphases[key]
         assert_fields(card1, card2)
 
     for key in fem1.nlparms:

@@ -227,6 +227,8 @@ class NastranIO(object):
         self.iSubcaseNameMap = None
         self.has_caero = False
         self.dependents_nodes = set([])
+        self.i_transform = {}
+        self.transforms = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
         if is_geom:
@@ -445,6 +447,8 @@ class NastranIO(object):
     def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
         self.eidMap = {}
         self.nidMap = {}
+        self.i_transform = {}
+        self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
@@ -1162,10 +1166,10 @@ class NastranIO(object):
             elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
                 no_torsion[ieid] = 1
                 no_56_456[ieid] = 1
-            elif (elem.pa == 6 and elem.pb == 0):
+            elif elem.pa == 6 and elem.pb == 0:
                 no_bending_bad[ieid] = 1
                 no_0_6[ieid] = 1
-            elif (elem.pa == 0 and elem.pb == 16):
+            elif elem.pa == 0 and elem.pb == 16:
                 no_axial[ieid] = 1
                 no_bending_bad[ieid] = 1
                 no_0_16[ieid] = 1
@@ -3584,6 +3588,8 @@ class NastranIO(object):
         for result in rods:
             if subcase_id not in result:
                 continue
+            if result.is_complex():
+                continue
 
             case = result[subcase_id]
             eidsi = case.element
@@ -3612,50 +3618,109 @@ class NastranIO(object):
 
         if subcase_id in bars:  # vectorized....
             case = bars[subcase_id]
-            #s1a = case.data[itime, :, 0]
-            #s2a = case.data[itime, :, 1]
-            #s3a = case.data[itime, :, 2]
-            #s4a = case.data[itime, :, 3]
+            if case.is_complex():
+                pass
+            else:
+                #s1a = case.data[itime, :, 0]
+                #s2a = case.data[itime, :, 1]
+                #s3a = case.data[itime, :, 2]
+                #s4a = case.data[itime, :, 3]
 
-            axial = case.data[itime, :, 4]
-            smaxa = case.data[itime, :, 5]
-            smina = case.data[itime, :, 6]
-            #MSt = case.data[itime, :, 7]
+                axial = case.data[itime, :, 4]
+                smaxa = case.data[itime, :, 5]
+                smina = case.data[itime, :, 6]
+                #MSt = case.data[itime, :, 7]
 
-            #s1b = case.data[itime, :, 8]
-            #s2b = case.data[itime, :, 9]
-            #s3b = case.data[itime, :, 10]
-            #s4b = case.data[itime, :, 11]
+                #s1b = case.data[itime, :, 8]
+                #s2b = case.data[itime, :, 9]
+                #s3b = case.data[itime, :, 10]
+                #s4b = case.data[itime, :, 11]
 
-            smaxb = case.data[itime, :, 12]
-            sminb = case.data[itime, :, 13]
-            #MSc   = case.data[itime, :, 14]
+                smaxb = case.data[itime, :, 12]
+                sminb = case.data[itime, :, 13]
+                #MSc   = case.data[itime, :, 14]
 
-            eidsi = case.elements # [:, 0]
+                eidsi = case.elements # [:, 0]
 
-            i = searchsorted(eids, eidsi)
-            if len(i) != len(unique(i)):
-                print('ibar = %s' % i)
-                print('eids = %s' % eids)
-                msg = 'ibar=%s is not unique' % str(i)
-                raise RuntimeError(msg)
+                i = searchsorted(eids, eidsi)
+                if len(i) != len(unique(i)):
+                    print('ibar = %s' % i)
+                    print('eids = %s' % eids)
+                    msg = 'ibar=%s is not unique' % str(i)
+                    raise RuntimeError(msg)
 
-            isElementOn[i] = 1.
-            oxx[i] = axial
+                isElementOn[i] = 1.
+                oxx[i] = axial
 
-            ## TODO :not sure if this block is general for multiple CBAR elements
-            samax = amax([smaxa, smaxb], axis=0)
-            samin = amin([smaxa, smaxb], axis=0)
-            assert len(samax) == len(i), len(samax)
-            assert len(samin) == len(i)
-            savm = amax(abs([smina, sminb,
-                             smaxa, smaxb, axial]), axis=0)
+                ## TODO :not sure if this block is general for multiple CBAR elements
+                samax = amax([smaxa, smaxb], axis=0)
+                samin = amin([smaxa, smaxb], axis=0)
+                assert len(samax) == len(i), len(samax)
+                assert len(samin) == len(i)
+                savm = amax(abs([smina, sminb,
+                                 smaxa, smaxb, axial]), axis=0)
 
-            max_principal[i] = samax
-            min_principal[i] = samin
-            ovm[i] = savm
-            del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
+                max_principal[i] = samax
+                min_principal[i] = samin
+                ovm[i] = savm
+                del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
         del bars
+
+
+        if is_stress:
+            bars2 = model.cbar_stress_10nodes
+        else:
+            bars2 = model.cbar_strain_10nodes
+
+        if subcase_id in bars2 and 0:  # vectorized....
+            case = bars[subcase_id]
+            if case.is_complex():
+                pass
+            else:
+                #s1a = case.data[itime, :, 0]
+                #s2a = case.data[itime, :, 1]
+                #s3a = case.data[itime, :, 2]
+                #s4a = case.data[itime, :, 3]
+
+                axial = case.data[itime, :, 4]
+                smaxa = case.data[itime, :, 5]
+                smina = case.data[itime, :, 6]
+                #MSt = case.data[itime, :, 7]
+
+                #s1b = case.data[itime, :, 8]
+                #s2b = case.data[itime, :, 9]
+                #s3b = case.data[itime, :, 10]
+                #s4b = case.data[itime, :, 11]
+
+                smaxb = case.data[itime, :, 12]
+                sminb = case.data[itime, :, 13]
+                #MSc   = case.data[itime, :, 14]
+
+                eidsi = case.elements # [:, 0]
+
+                i = searchsorted(eids, eidsi)
+                if len(i) != len(unique(i)):
+                    print('ibar = %s' % i)
+                    print('eids = %s' % eids)
+                    msg = 'ibar=%s is not unique' % str(i)
+                    raise RuntimeError(msg)
+
+                isElementOn[i] = 1.
+                oxx[i] = axial
+
+                ## TODO :not sure if this block is general for multiple CBAR elements
+                samax = amax([smaxa, smaxb], axis=0)
+                samin = amin([smaxa, smaxb], axis=0)
+                assert len(samax) == len(i), len(samax)
+                assert len(samin) == len(i)
+                savm = amax(abs([smina, sminb,
+                                 smaxa, smaxb, axial]), axis=0)
+
+                max_principal[i] = samax
+                min_principal[i] = samin
+                ovm[i] = savm
+                #del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
+        del bars2
 
 
         if is_stress:
@@ -3665,36 +3730,39 @@ class NastranIO(object):
 
         if subcase_id in beams:  # vectorized
             case = beams[subcase_id]
-            eidsi = case.element_node[:, 0]
-            ueids = unique(eidsi)
-            #neids = len(ueids)
+            if case.is_complex():
+                pass
+            else:
+                eidsi = case.element_node[:, 0]
+                ueids = unique(eidsi)
+                #neids = len(ueids)
 
-            j = 0
-            # sxc, sxd, sxe, sxf
-            # smax, smin, MSt, MSc
-            sxc = case.data[itime, :, 0]
-            sxd = case.data[itime, :, 1]
-            sxe = case.data[itime, :, 2]
-            sxf = case.data[itime, :, 3]
-            smax = case.data[itime, :, 4]
-            smin = case.data[itime, :, 5]
-            for ieid, eid in enumerate(ueids):
-                oxxi = 0.
-                smaxi = 0.
-                smini = 0.
-                eid2 = self.eidMap[eid]
-                isElementOn[eid2] = 1.
-                for i in range(11):
-                    oxxi = max(sxc[j], sxd[j], sxe[j], sxf[j], oxxi)
-                    smaxi = max(smax[j], smaxi)
-                    smini = min(smin[j], smini)
-                    j += 1
-                ovmi = max(abs(smaxi), abs(smini))
-                oxxi = oxx[eid2]
-                max_principal[eid2] = smaxi
-                min_principal[eid2] = smini
-                ovm[eid2] = ovmi
-            del j, eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
+                j = 0
+                # sxc, sxd, sxe, sxf
+                # smax, smin, MSt, MSc
+                sxc = case.data[itime, :, 0]
+                sxd = case.data[itime, :, 1]
+                sxe = case.data[itime, :, 2]
+                sxf = case.data[itime, :, 3]
+                smax = case.data[itime, :, 4]
+                smin = case.data[itime, :, 5]
+                for ieid, eid in enumerate(ueids):
+                    oxxi = 0.
+                    smaxi = 0.
+                    smini = 0.
+                    eid2 = self.eidMap[eid]
+                    isElementOn[eid2] = 1.
+                    for i in range(11):
+                        oxxi = max(sxc[j], sxd[j], sxe[j], sxf[j], oxxi)
+                        smaxi = max(smax[j], smaxi)
+                        smini = min(smin[j], smini)
+                        j += 1
+                    ovmi = max(abs(smaxi), abs(smini))
+                    oxxi = oxx[eid2]
+                    max_principal[eid2] = smaxi
+                    min_principal[eid2] = smini
+                    ovm[eid2] = ovmi
+                del j, eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
         del beams
 
 
@@ -3715,8 +3783,10 @@ class NastranIO(object):
             ## TODO: is tria6, quad8, bilinear quad handled?
             if subcase_id not in result:
                 continue
-
             case = result[subcase_id]
+            if case.is_complex():
+                continue
+
             if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
@@ -3788,8 +3858,10 @@ class NastranIO(object):
         for cell_type, result in cplates:
             if subcase_id not in result:
                 continue
-
             case = result[subcase_id]
+            if case.is_complex():
+                continue
+
             if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
@@ -3862,6 +3934,8 @@ class NastranIO(object):
 
         for result in solids:
             if subcase_id not in result:
+                continue
+            if result.is_complex():
                 continue
 
             case = result[subcase_id]

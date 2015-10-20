@@ -196,6 +196,8 @@ class DAREA(BaseCard):
     analysis, DAREA is used in conjunction with ACSRCE, RLOADi and TLOADi
     entries.
 
+    RLOAD1 -> DAREA by SID
+
      +-------+-----+----+----+-----+----+----+------+
      | DAREA | SID | P1 | C1 |A1   | P2 | C2 | A2   |
      +-------+-----+----+----+-----+----+----+------+
@@ -220,8 +222,21 @@ class DAREA(BaseCard):
             self.scale = data[3]
             assert len(data) == 4, 'data = %s' % data
 
+    def cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        self.p = model.Node(self.p, allowEmptyNodes=False, msg=msg)
+
+    def uncross_reference(self):
+        self.p = self.node_id
+
+    @property
+    def node_id(self):
+        if isinstance(self.p, int):
+            return self.p
+        return self.p.nid
+
     def raw_fields(self):
-        list_fields = ['DAREA', self.sid, self.p, self.c, self.scale]
+        list_fields = ['DAREA', self.sid, self.node_id, self.c, self.scale]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

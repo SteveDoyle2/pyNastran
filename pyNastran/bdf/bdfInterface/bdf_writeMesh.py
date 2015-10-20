@@ -641,7 +641,7 @@ class WriteMesh(object):
 
     def _write_dynamic(self, outfile, size=8, is_double=False):
         """Writes the dynamic cards sorted by ID"""
-        if(self.dareas or self.nlparms or self.frequencies or self.methods or
+        if(self.dareas or self.dphases or self.nlparms or self.frequencies or self.methods or
            self.cMethods or self.tsteps or self.tstepnls or self.transfer_functions or
            self.delays):
             msg = ['$DYNAMIC\n']
@@ -651,6 +651,8 @@ class WriteMesh(object):
                 msg.append(cmethod.write_card(size, is_double))
             for (unused_id, darea) in sorted(iteritems(self.dareas)):
                 msg.append(darea.write_card(size, is_double))
+            for (unused_id, dphase) in sorted(iteritems(self.dphases)):
+                msg.append(dphase.write_card(size, is_double))
             for (unused_id, nlparm) in sorted(iteritems(self.nlparms)):
                 msg.append(nlparm.write_card(size, is_double))
             for (unused_id, nlpci) in sorted(iteritems(self.nlpcis)):

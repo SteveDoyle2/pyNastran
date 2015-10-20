@@ -472,17 +472,18 @@ def run_fem2(bdfModel, outModel, xref, punch,
             if subcase.has_parameter('METHOD'):
                 method_id = subcase.get_parameter('METHOD')[0]
                 method = fem2.methods[method_id]
-                assert sol in [5, 76, 101, 103, 105, 106, 108, 110, 111, 112, 145, 187], 'sol=%s METHOD' % sol
+                assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111, 112, 144, 145, 187], 'sol=%s METHOD' % sol
             if subcase.has_parameter('CMETHOD'):
                 method_id = subcase.get_parameter('CMETHOD')[0]
                 method = fem2.cMethods[method_id]
-                assert sol in [110], 'sol=%s CMETHOD' % sol
+                assert sol in [107, 110, 145], 'sol=%s CMETHOD' % sol
 
             if subcase.has_parameter('LOAD'):
                 loadcase_id = fem2.case_control_deck.get_subcase_parameter(isubcase, 'LOAD')[0]
                 F, M = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
                 print('  isubcase=%i F=%s M=%s' % (isubcase, F, M))
-                assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 108, 144, 145, 153, 400], 'sol=%s LOAD' % sol
+                assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107, 108, 110,  112,
+                               144, 145, 153, 400, 601], 'sol=%s LOAD' % sol
             else:
                 # print('is_load =', subcase.has_parameter('LOAD'))
                 pass
@@ -499,7 +500,8 @@ def run_fem2(bdfModel, outModel, xref, punch,
                 # assert sol in [], sol
                 # print(lseq)
             if subcase.has_parameter('DLOAD'):
-                assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 153, 159, 400], 'sol=%s DLOAD' % sol
+                assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129,
+                               153, 159, 400, 601], 'sol=%s DLOAD' % sol
                 if subcase.has_parameter('LOADSET'):
                     raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
                 if subcase.has_parameter('IC'):
@@ -550,18 +552,19 @@ def run_fem2(bdfModel, outModel, xref, punch,
                         scale_factors2.append(1.)
                         loads2.append(load)
 
-                if sol == 108:  # frequency
+                if sol in [108, 111]:  # direct frequency, modal frequency
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for
                         #print(load2)
                         load2.get_load_at_freq(100.) * scale_factor
-                elif sol in [109, 129]:  # time nonlinear
+                elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for
                         #print(load2)
                         load2.get_load_at_time(0.) * scale_factor
+                ### 111
                 else:
-                    raise NotImplementedError('solution=%s' % sol)
+                    fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
 
                 # print(loads)
 

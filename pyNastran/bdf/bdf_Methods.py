@@ -122,7 +122,7 @@ class BDFMethods(object):
         # precompute the CG location and make it the reference point
         I = array([0., 0., 0., 0., 0., 0., ])
         cg = array([0., 0., 0.])
-        if reference_point == 'cg':
+        if reference_point is 'cg':
             mass = 0.
             for pack in [elements, masses]:
                 for element in pack:
@@ -832,14 +832,21 @@ class BDFMethods(object):
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
-            if isinstance(load, Force):  # FORCE, FORCE1, FORCE2
+            if load.type in ['FORCE', 'FORCE1']:
                 f = load.mag * load.xyz
-                node = self.Node(load.node)
+                node = self.Node(load.node_id)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
                 F += f * scale
                 M += m * scale
-            elif isinstance(load, Moment):  # MOMENT, MOMENT1, MOMENT2
+            elif load.type == 'FORCE2':
+                f = load.mag * load.xyz
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f * scale
+                M += m * scale
+            elif load.type in ['MOMENT', 'MOMENT1', 'MOMENT2']:
                 m = load.mag * load.xyz
                 M += m * scale
             elif load.type == 'PLOAD':
@@ -1045,7 +1052,7 @@ class BDFMethods(object):
                         raise NotImplementedError('Type=%r is not supported.  Use "FX", "FXE".' % load.Type)
 
             elif load.type == 'PLOAD2':
-                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
                     elem = self.elements[eid]
                     if elem.type in ['CTRIA3',

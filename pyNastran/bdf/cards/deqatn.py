@@ -108,7 +108,7 @@ class DEQATN(BaseCard):  # needs work...
                 assert len(eqi) <= 56, eqi
             elif i != neqs-1:
                 # mid line
-                assert len(eqi) <= 64, eqi
+                assert len(eqi) <= 64, 'len(eqi)=%s eq=%r' % (len(eqi), eqi)
                 if eqi.endswith(';'):
                     eqi = eqi[:-1]
                     is_join = False

@@ -57,6 +57,8 @@ class CaseControlDeck(object):
             'MODE' : 103,
 
             'BUCK' : 105,
+            'BUCKLING' : 105,
+
             'DFREQ' : 108,
             'MFREQ' : 111,
             'SAERO' : 144,

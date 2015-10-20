@@ -83,11 +83,12 @@ class RLOAD1(TabularLoad):
             self.exciteID = integer(card, 2, 'exciteID')
             self.delay = integer_double_or_blank(card, 3, 'delay', 0)
             self.dphase = integer_double_or_blank(card, 4, 'dphase')
-            self.tc = integer_or_blank(card, 5, 'tc', 0)
-            self.td = integer_or_blank(card, 6, 'td', 0)
+            self.tc = integer_double_or_blank(card, 5, 'tc', 0)
+            self.td = integer_double_or_blank(card, 6, 'td', 0)
             self.Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
+            assert self.tc > 0 or self.td > 0, 'either RLOAD TC or TD > 0; tc=%s td=%s' % (tc, td)
 
-            if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+            if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
                 self.Type = 'LOAD'
             elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
                 self.Type = 'DISP'
@@ -115,14 +116,14 @@ class RLOAD1(TabularLoad):
         return [self]
 
     def Tc(self):
-        if self.tc == 0:
+        if self.tc in [0, 0.0]:
             return None
         elif isinstance(self.tc, integer_types):
             return self.tc
         return self.tc.tid
 
     def Td(self):
-        if self.td == 0:
+        if self.td in [0, 0.0]:
             return None
         elif isinstance(self.td, integer_types):
             return self.td
@@ -130,7 +131,7 @@ class RLOAD1(TabularLoad):
 
     @property
     def delay_id(self):
-        if self.delay == 0:
+        if self.delay in [0, 0.0]:
             return None
         elif isinstance(self.delay, (integer_types, float)):
             return self.delay
@@ -138,35 +139,43 @@ class RLOAD1(TabularLoad):
 
     def get_load_at_freq(self, freq, scale=1.):
         # A = 1. # points to DAREA or SPCD
-        cxy = array(self.tb.table.table)
-        fc = cxy[:, 0]
-        yc = cxy[:, 1]
-        assert fc.shape == yc.shape, 'fc.shape=%s yc.shape=%s' % (str(fc.shape), str(yc.shape))
-        c = interp1d(fc, yc)(freq)
+        if isinstance(self.tc, float):
+            c = float(self.tc)
+        elif self.tc == 0 or self.tc is None:
+            c = 0.
+        else:
+            cxy = array(self.tc.table.table)
+            fc = cxy[:, 0]
+            yc = cxy[:, 1]
+            assert fc.shape == yc.shape, 'fc.shape=%s yc.shape=%s' % (str(fc.shape), str(yc.shape))
+            c = interp1d(fc, yc)(freq)
 
-        dxy = array(self.td.table.table)
-        fd = dxy[:, 0]
-        yd = dxy[:, 1]
-        assert fd.shape == yd.shape, 'fd.shape=%s yd.shape=%s' % (str(fd.shape), str(yd.shape))
-        d = interp1d(fd, yd)(freq)
+        if isinstance(self.td, float):
+            d = float(self.td)
+        elif self.td == 0 or self.td is None:
+            d = 0.
+        else:
+            dxy = array(self.td.table.table)
+            fd = dxy[:, 0]
+            yd = dxy[:, 1]
+            assert fd.shape == yd.shape, 'fd.shape=%s yd.shape=%s' % (str(fd.shape), str(yd.shape))
+            d = interp1d(fd, yd)(freq)
 
         if isinstance(self.dphase, float):
             dphase = self.dphase
+        elif self.dphase == 0 or self.dphase is None:
+            dphase = 0.0
         else:
-            if self.dphase == 0:
-                dphase = 0.0
-            else:
-                print('DPHASE is not supported')
-                #dphase = self.dphase.get_dphase_at_freq(freq)
+            #print('DPHASE is not supported')
+            dphase = self.dphase.get_dphase_at_freq(freq)
 
         if isinstance(self.delay, float):
             tau = self.delay
+        elif self.delay == 0 or self.dphase is None:
+            tau = 0.0
         else:
-            if self.delay == 0:
-                tau = 0.0
-            else:
-                print('DELAY is not supported')
-                # tau = self.delay.get_delay_at_freq(freq)
+            #print('DELAY is not supported')
+            tau = self.delay.get_delay_at_freq(freq)
         return (c + 1.j * d) * exp(dphase - 2 * pi * freq * tau)
 
     def raw_fields(self):
@@ -235,36 +244,43 @@ class RLOAD2(TabularLoad):
 
     def get_load_at_freq(self, freq, scale=1.):
         # A = 1. # points to DAREA or SPCD
-        bxy = array(self.tb.table.table)
-        fb = bxy[:, 0]
-        yb = bxy[:, 1]
-        assert fb.shape == yb.shape, 'fb.shape=%s yb.shape=%s' % (str(fb.shape), str(yb.shape))
-        b = interp1d(fb, yb)(freq)
+        if isinstance(self.tb, float):
+            b = self.tb
+        elif self.tb == 0:
+            b = 0.0
+        else:
+            bxy = array(self.tb.table.table)
+            fb = bxy[:, 0]
+            yb = bxy[:, 1]
+            assert fb.shape == yb.shape, 'fb.shape=%s yb.shape=%s' % (str(fb.shape), str(yb.shape))
+            b = interp1d(fb, yb)(freq)
 
-        pxy = array(self.tp.table.table)
-        fp = pxy[:, 0]
-        yp = pxy[:, 1]
-        assert fp.shape == yp.shape, 'fp.shape=%s yp.shape=%s' % (str(fp.shape), str(yp.shape))
-        p = interp1d(fp, yp)(freq)
+        if isinstance(self.tp, float):
+            p = self.tp
+        elif self.tp == 0 or self.tp is None:
+            p = 0.0
+        else:
+            pxy = array(self.tp.table.table)
+            fp = pxy[:, 0]
+            yp = pxy[:, 1]
+            assert fp.shape == yp.shape, 'fp.shape=%s yp.shape=%s' % (str(fp.shape), str(yp.shape))
+            p = interp1d(fp, yp)(freq)
 
         if isinstance(self.dphase, float):
             dphase = self.dphase
+        elif self.dphase == 0 or self.dphase is None:
+            dphase = 0.0
         else:
-            if self.dphase == 0:
-                dphase = 0.0
-            else:
-                raise NotImplementedError('DPHASE is not supported')
-                #dphase = self.dphase.get_dphase_at_freq(freq)
+            #raise NotImplementedError('DPHASE is not supported')
+            dphase = self.dphase.get_dphase_at_freq(freq)
 
         if isinstance(self.delay, float):
-            # ndarray
             tau = self.delay
+        elif self.delay == 0 or self.delay is None:
+            tau = 0.0
         else:
-            if self.delay == 0:
-                tau = 0.0
-            else:
-                raise NotImplementedError('DELAY is not supported')
-                # tau = self.delay.get_delay_at_freq(freq)
+            #raise NotImplementedError('DELAY is not supported')
+            tau = self.delay.get_delay_at_freq(freq)
 
         return b * exp(1.j * p + dphase - 2 * pi * freq * tau)
 
@@ -421,14 +437,12 @@ class TLOAD1(TabularLoad):
         f = interp1d(x, y)
 
         if isinstance(self.delay, float):
-            # ndarray
             tau = self.delay
+        elif self.delay == 0 or self.delay is None:
+            tau = 0.0
         else:
-            if self.delay == 0:
-                tau = 0.0
-            else:
-                raise NotImplementedError('DELAY is not supported')
-                # tau = self.delay.get_delay_at_freq(freq)
+            #raise NotImplementedError('DELAY is not supported')
+            tau = self.delay.get_delay_at_freq(freq)
 
         resp = f(time - tau)
         is_spcd = False
@@ -538,14 +552,12 @@ class TLOAD2(TabularLoad):
         f = interp1d(x, y)
 
         if isinstance(self.delay, float):
-            # ndarray
             tau = self.delay
+        elif self.delay == 0 or self.delay is None:
+            tau = 0.0
         else:
-            if self.delay == 0:
-                tau = 0.0
-            else:
-                raise NotImplementedError('DELAY is not supported')
-                # tau = self.delay.get_delay_at_time(time)
+            #raise NotImplementedError('DELAY is not supported')
+            tau = self.delay.get_delay_at_time(time)
         # return f(time - tau)
 
         t1 = self.T1 + tau

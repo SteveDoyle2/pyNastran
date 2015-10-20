@@ -537,6 +537,26 @@ class XrefMesh(object):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
+        for key, darea in iteritems(self.dareas):
+            try:
+                darea.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((load, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
+        for key, dphase in iteritems(self.dphases):
+            try:
+                dphase.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((load, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
     def _cross_reference_sets(self):
         for set_obj in self.asets:
             set_obj.cross_reference(self)
