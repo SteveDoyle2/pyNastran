@@ -470,6 +470,17 @@ class AddMethods(object):
             self.dareas[key] = darea
             self._type_to_id_map[darea.type].append(key)
 
+    def add_DPHASE(self, dphase, allowOverwrites=False):
+        key = (dphase.sid, dphase.p, dphase.c)
+        if key in self.dphases and not allowOverwrites:
+            if not dphase._is_same_card(self.dphase[key]):
+                assert key not in self.dphase, '\ndphase=\n%s old_DPHASE=\n%s' % (
+                    dphase, self.dphases[key])
+        else:
+            assert darea.sid > 0
+            self.dareas[key] = darea
+            self._type_to_id_map[darea.type].append(key)
+
     def add_AERO(self, aero):
         key = aero.acsid
         assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (aero, self.aero[key])

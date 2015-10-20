@@ -17,7 +17,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, string, interpret_value)
+    double, string, blank, interpret_value)
 
 
 class NastranMatrix(BaseCard):
@@ -42,11 +42,16 @@ class NastranMatrix(BaseCard):
             #: Input format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
             #: Integer > 0 indicates amplitude, phase format.)
             self.polar = integer_or_blank(card, 6, 'polar', 0)
-            if self.ifo in [6, 9]:
-                self.ncol = integer(card, 8, 'ncol')
-            else:  # technically right, but nulling this will fix bad decks
-                self.ncol = None
-                #self.ncol = blank(card, 8, 'ncol')
+            if self.ifo == 1: # square
+                self.ncol = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
+            elif self.ifo == 6: # symmetric
+                self.ncol = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
+            elif self.ifo in [2, 9]: # rectangular
+                self.ncol = integer(card, 8, 'ifo=%s; ncol' % (self.ifo))
+            else:
+                # technically right, but nulling this will fix bad decks
+                #self.ncol = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
+                raise NotImplementedError('self.ifo=%s is not supported' % self.ifo)
         else:
             raise NotImplementedError(data)
 
@@ -353,15 +358,26 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     """
     Builds the Matrix
 
-    :param self:     the object pointer
-    :param is_sparse: should the matrix be returned as a sparse matrix (default=True).
-                      Slower for dense matrices.
-    :param apply_symmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
-                           Supported as there are symmetric matrix routines.
+    Parameters
+    ----------
+    self : DMIG
+        the object pointer
+    is_sparse : bool
+        should the matrix be returned as a sparse matrix (default=True).
+        Slower for dense matrices.
+    apply_symmetry: bool
+        If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+        Supported as there are symmetric matrix routines.
 
-    :returns M:    the matrix
-    :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
-    :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
+    Returns
+    -------
+    M : ndarray
+        the matrix
+    rows : Dict[(nid, nid)] = float
+        dictionary of keys=rowID,    values=(Grid,Component) for the matrix
+    cols : Dict[](int, int)] = float
+        dictionary of keys=columnID, values=(Grid,Component) for the matrix
+
     .. warning:: is_sparse=True WILL fail
     """
     i = 0

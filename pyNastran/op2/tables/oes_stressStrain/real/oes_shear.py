@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from six.moves import zip, range
-from numpy import zeros, searchsorted
+from numpy import zeros, searchsorted, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import _eigenvalue_header, get_key0
@@ -56,11 +56,55 @@ class RealShearArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
         # [max_shear, avg_shear, margin]
         self.data = zeros((self.ntimes, self.ntotal, 3), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (max_shear, avg_shear, margin) = t1
+                        (max_shear2, avg_shear2, margin2) = t2
+                        if not allclose(t1, t2):
+                        #if not array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s)\n  (%s, %s, %s)\n' % (
+                                eid,
+                                max_shear, avg_shear, margin,
+                                max_shear2, avg_shear2, margin2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_new_eid_sort1(self, dt, eid, max_shear, avg_shear, margin):
         """
@@ -68,7 +112,7 @@ class RealShearArray(OES_Object):
           ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
             328        1.721350E+03   1.570314E+03   7.2E+01
         """
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [max_shear, avg_shear, margin]
         self.ielement += 1
@@ -121,7 +165,7 @@ class RealShearArray(OES_Object):
         msg_temp = self.get_f06_header()
 
         # write the f06
-        (ntimes, ntotal, three) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element
         is_odd = False
@@ -131,7 +175,7 @@ class RealShearArray(OES_Object):
             is_odd = True
 
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
@@ -195,224 +239,3 @@ class RealShearStrainArray(RealShearArray, StrainObject):
            #'          328        1.721350E+03   1.570314E+03   7.2E+01'
             ]
         return msg
-
-
-class RealShearStress(StressObject):
-    """
-    ::
-
-      # format_code=1 sort_code=0 stressCode=0
-                                     S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )
-      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
-        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
-          328        1.721350E+03   1.570314E+03   7.2E+01
-    """
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        StressObject.__init__(self, data_code, isubcase)
-        self.eType = 'CSHEAR'
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.maxShear = {}
-        self.avgShear = {}
-        self.margin = {}
-
-        self.getLength = self.getLength
-        self.isImaginary = False
-        #if dt is not None:
-        #    self.add_new_transient = self.add_new_transient
-        #    self.add_new_eid       = self.addNewEidTransient
-        #else:
-        #    self.add_new_eid = self.add_new_eid
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.maxShear)
-            s0 = get_key0(self.maxShear)
-            nelements = len(self.maxShear[s0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.maxShear)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, maxShear, avgShear, margin\n')
-        return msg
-
-    def delete_transient(self, dt):
-        del self.maxShear[dt]
-        del self.avgShear[dt]
-        del self.margin[dt]
-
-    def get_transients(self):
-        k = self.maxShear.keys()
-        k.sort()
-        return k
-
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        """
-        self.dt = dt
-        self.maxShear[dt] = {}
-        self.avgShear[dt] = {}
-        self.margin[dt] = {}
-
-    def getLength(self):
-        return (16, 'fff')
-
-    def add_f06_data(self, data, dt):
-        if dt:
-            if dt not in self.maxShear:
-                self.maxShear[dt] = {}
-                self.avgShear[dt] = {}
-                self.margin[dt] = {}
-            for datai in data:
-                (eid, max_shear, avg_shear, margin) = datai
-                self.maxShear[dt][eid] = max_shear
-                self.avgShear[dt][eid] = avg_shear
-                self.margin[dt][eid] = margin
-                return
-
-        for datai in data:
-            (eid, max_shear, avg_shear, margin) = datai
-            self.maxShear[eid] = max_shear
-            self.avgShear[eid] = avg_shear
-            self.margin[eid] = margin
-
-    def add_new_eid(self, dt, eid, maxShear, avgShear, margin):
-        #print "Rod Stress add..."
-        assert isinstance(eid, int)
-        self.maxShear = {}
-        self.avgShear = {}
-        self.margin = {}
-        self.maxShear[eid] = maxShear
-        self.avgShear[eid] = avgShear
-        self.margin[eid] = margin
-
-    def add_new_eid_sort1(self, dt, eid, maxShear, avgShear, margin):
-        if dt not in self.maxShear:
-            self.add_new_transient(dt)
-        assert isinstance(eid, int)
-        assert eid >= 0, eid
-        self.maxShear[dt][eid] = maxShear
-        self.avgShear[dt][eid] = avgShear
-        self.margin[dt][eid] = margin
-
-
-class RealShearStrain(StrainObject):
-
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        StrainObject.__init__(self, data_code, isubcase)
-        self.eType = 'CSHEAR'
-        #raise Exception('not supported...CSHEAR strain')
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.maxShear = {}
-        self.avgShear = {}
-        self.margin = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.maxShear)
-            s0 = get_key0(self.maxShear)
-            nelements = len(self.maxShear[s0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.maxShear)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, maxShear, avgShear, margin\n')
-        return msg
-
-    def delete_transient(self, dt):
-        del self.maxShear[dt]
-        del self.avgShear[dt]
-        del self.margin[dt]
-
-    def get_transients(self):
-        k = self.maxShear.keys()
-        k.sort()
-        return k
-
-    def add_new_transient(self, dt):
-        """
-        initializes the transient variables
-        .. note:: make sure you set self.dt first
-        """
-        self.dt = dt
-        self.maxShear[dt] = {}
-        self.avgShear[dt] = {}
-        self.margin[dt] = {}
-
-    def add_f06_data(self, data, dt):
-        if dt:
-            if dt not in self.maxShear:
-                self.maxShear[dt] = {}
-                self.avgShear[dt] = {}
-                self.margin[dt] = {}
-            for datai in data:
-                (eid, max_shear, avg_shear, margin) = datai
-                self.maxShear[dt][eid] = max_shear
-                self.avgShear[dt][eid] = avg_shear
-                self.margin[dt][eid] = margin
-                return
-
-        for datai in data:
-            (eid, max_shear, avg_shear, margin) = datai
-            self.maxShear[eid] = max_shear
-            self.avgShear[eid] = avg_shear
-            self.margin[eid] = margin
-
-    #def add_new_eid(self, dt, eid, axial, SMa, torsion, SMt):
-        #raise NotImplementedError()
-        ##(axial, SMa, torsion, SMt) = out
-        #print "Rod Strain add..."
-        #assert eid >= 0, eid
-        #self.eType = self.eType
-        #self.maxShear[eid] = axial
-        #self.avgShear[eid] = SMa
-        #self.margin[eid] = torsion
-
-    def add_new_eid_sort1(self, dt, eid, maxShear, avgShear, margin):
-        #(maxShear, avgShear, margin) = out
-        if dt not in self.maxShear:
-            self.add_new_transient(dt)
-        assert eid >= 0, eid
-
-        #self.eType[eid] = self.element_type
-        self.maxShear[dt][eid] = maxShear
-        self.avgShear[dt][eid] = avgShear
-        self.margin[dt][eid] = margin
-
-    def add_new_eid_sort2(self, eid, dt, maxShear, avgShear, margin):
-        #(maxShear, avgShear, margin) = out
-        if dt not in self.maxShear:
-            self.add_new_transient(dt)
-        assert eid >= 0, eid
-
-        #self.eType[eid] = self.element_type
-        self.maxShear[dt][eid] = maxShear
-        self.avgShear[dt][eid] = avgShear
-        self.margin[dt][eid] = margin

@@ -4,12 +4,13 @@ Defines the OP2 class.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, PY2
+from six import string_types, iteritems, PY2, b
 from six.moves import range
 import os
 from struct import unpack, Struct
 
 from numpy import array
+import numpy as np
 from scipy.sparse import coo_matrix
 
 from pyNastran import is_release
@@ -90,7 +91,10 @@ GEOM_TABLES = [
 
     # other
     b'CONTACT', b'VIEWTB',
-    b'KDICT', b'MONITOR', b'PERF',
+    b'KDICT', b'PERF',
+
+    # aero?
+    #b'MONITOR',
 ]
 
 RESULT_TABLES = [
@@ -253,6 +257,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.op2_filename = None
         self.bdf_filename = None
         self.f06_filename = None
+        self._encoding = 'utf8'
 
         LAMA.__init__(self)
         ONR.__init__(self)
@@ -302,8 +307,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Allows you to read only the subcases in the list of iSubcases
 
-        :param subcases: list of [subcase1_ID,subcase2_ID]
-                         (default=None; all subcases)
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        subcases : List[int, ...]; default=None->all subcases
+            list of [subcase1_ID,subcase2_ID]
         """
         #: stores the set of all subcases that are in the OP2
         #self.subcases = set([])
@@ -520,24 +529,31 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'EDTS' : [self._table_passer, self._table_passer],
             b'FOL' : [self._table_passer, self._table_passer],
-            b'MONITOR' : [self._table_passer, self._table_passer],  # monitor points
+            #b'MONITOR' : [self._table_passer, self._table_passer],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================
-            b'OUGATO2' : [self._table_passer, self._table_passer],
-            b'OUGCRM2' : [self._table_passer, self._table_passer],
-            b'OUGNO2' : [self._table_passer, self._table_passer],
-            b'OUGPSD2' : [self._table_passer, self._table_passer],  # psd
-            b'OUGRMS2' : [self._table_passer, self._table_passer],  # rms
+            # works
+            #b'OUGATO2' : [self._table_passer, self._table_passer],
+            #b'OUGCRM2' : [self._table_passer, self._table_passer],
+            #b'OUGNO2' : [self._table_passer, self._table_passer],
+            ##b'OUGPSD2' : [self._table_passer, self._table_passer],
+            #b'OUGRMS2' : [self._table_passer, self._table_passer],  # rms
+            # new
+            b'OUGATO2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGCRM2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGNO2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
+            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_4],
 
             b'OQGATO2' : [self._table_passer, self._table_passer],
             b'OQGCRM2' : [self._table_passer, self._table_passer],
 
             b'OQGNO2' : [self._table_passer, self._table_passer],
-            b'OQGPSD2' : [self._table_passer, self._table_passer],
+            b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGRMS2' : [self._table_passer, self._table_passer],
 
             b'OFMPF2M' : [self._table_passer, self._table_passer],
@@ -623,6 +639,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """auto-table skipper"""
         return len(data)
 
+    def _table_crash(self, data):
+        sys.exit('asdf')
+
     def _table_passer_r1tabrg(self, data):
         """auto-table skipper"""
         if self._table4_count == 0:
@@ -675,8 +694,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write(self.op2_filename + '\n')
             self.is_debug_file = True
         else:
-            self.binary_debug = open(os.devnull, wb)  #TemporaryFile()
-            self.binary_debug = TrashWriter('debug.out', wb)
+            #self.binary_debug = open(os.devnull, wb)  #TemporaryFile()
+            #self.binary_debug = TrashWriter('debug.out', wb)
             self.is_debug_file = False
 
     def read_op2(self, op2_filename=None):
@@ -736,11 +755,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.f.seek(0)
 
             if unpack(b'>i', flag_data)[0] == 4:
-                self._endian = b'>'
+                self._endian = '>'
             elif unpack(b'<i', flag_data)[0] == 4:
-                self._endian = b'<'
+                self._endian = '<'
             else:
                 raise FatalError('cannot determine endian')
+            if PY2:
+                self._endian = b(self._endian)
         else:
             self.goto(self.n)
 
@@ -754,15 +775,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #except:
                 #raise FatalError("The OP2 is empty.")
             #raise
-        if self.read_mode == 0:
-            self.binary_debug.write('read_mode = %s (not vectorized)\n' % self.read_mode)
-        elif self.read_mode == 1:
-            self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % self.read_mode)
-        elif self.read_mode == 2:
-            self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % self.read_mode)
+        if self.is_debug_file:
+            if self.read_mode == 0:
+                self.binary_debug.write('read_mode = %s (not vectorized)\n' % self.read_mode)
+            elif self.read_mode == 1:
+                self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % self.read_mode)
+            elif self.read_mode == 2:
+                self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % self.read_mode)
 
         if markers == [3,]:  # PARAM, POST, -1
-            self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
+            if self.is_debug_file:
+                self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
             self.post = -1
             self.read_markers([3])
             data = self.read_block()
@@ -770,10 +793,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.read_markers([7])
             data = self.read_block()
             assert data == b'NASTRAN FORT TAPE ID CODE - ', '%r' % data
-            self.binary_debug.write('%r\n' % data)
+            if self.is_debug_file:
+                self.binary_debug.write('%r\n' % data)
 
             data = self._read_record()
-            self.binary_debug.write('%r\n' % data)
+            if self.is_debug_file:
+                self.binary_debug.write('%r\n' % data)
             version = data.strip()
             if version.startswith(b'NX'):
                 self.set_as_nx()
@@ -783,7 +808,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
                 self.set_as_nx()
                 self.set_table_type()
-            elif version.startswith('AEROFREQ'):
+            elif version.startswith(b'AEROFREQ'):
                 # TODO: why is this separate?
                 # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
                 self.set_as_msc()
@@ -794,13 +819,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             else:
                 raise RuntimeError('unknown version=%r' % version)
 
-            self.binary_debug.write(data + '\n')
+            if self.is_debug_file:
+                self.binary_debug.write(data.decode(self._encoding) + '\n')
             self.read_markers([-1, 0])
         elif markers == [2,]:  # PARAM, POST, -2
-            self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
+            if self.is_debug_file:
+                self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
             self.post = -2
         else:
             raise NotImplementedError(markers)
+
+        if self.read_mode == 1:
+            self.fdtype = np.dtype(self._endian + 'f4')
+            self.idtype = np.dtype(self._endian + 'i4')
 
         #=================
         table_name = self.read_table_name(rewind=True, stop_on_failure=False)
@@ -811,7 +842,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
-        self.binary_debug.close()
+            self.binary_debug.close()
         if self._close_op2:
             self.f.close()
             del self.binary_debug
@@ -1024,7 +1055,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     data = self.read_block()
                     #self.show_data(data)
 
-                    fmt = self._endian + b'i %if' % nvalues
+                    print(type(self._endian), self._endian)
+                    fmt = self._endian + 'i %if' % nvalues
                     #print('***itable=%s nvalues=%s fmt=%r' % (itable, nvalues, fmt))
 
                     #print(len(data))
@@ -1101,7 +1133,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        table_name, = unpack(self._endian + b'8s', data)
+        table_name, = unpack(b(self._endian + '8s'), data)
 
         self.read_markers([-3, 1, 0])
         data = self._read_record()
@@ -1147,7 +1179,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 16:  # KELM
-            table_name, dummy_a, dummy_b = unpack(self._endian + b'8sii', data)
+            table_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
             assert dummy_a == 170, dummy_a
             assert dummy_b == 170, dummy_b
         else:
@@ -1251,7 +1283,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.read_markers([-2, 1, 0])
         data = self._skip_record()
-        #table_name, = unpack(self._endian + b'8s', data)
+        #table_name, = unpack(b(self._endian + '8s'), data)
 
         self.read_markers([-3, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
@@ -1289,7 +1321,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #self.read_markers([-2, 1, 0])
         #data = self._read_record()
-        #table_name, = unpack(self._endian + b'8s', data)
+        #table_name, = unpack(b(self._endian + '8s'), data)
         ##print "table_name = %r" % table_name
 
         #self.read_markers([-3, 1, 0])
@@ -1315,19 +1347,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
         table_name = None
         data = None
-        self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
+        if self.is_debug_file:
+            self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
         ni = self.n
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
-            table_name, = unpack(self._endian + b'8s', data)
-            if self.debug and not rewind:
+            table_name, = unpack(b(self._endian + '8s'), data)
+            if self.is_debug_file and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
             table_name = table_name.strip()
         else:
             try:
                 data = self._read_record(macro_rewind=rewind)
-                table_name, = unpack(self._endian + b'8s', data)
+                table_name, = unpack(b(self._endian + '8s'), data)
                 table_name = table_name.strip()
             except:
                 # we're done reading
@@ -1394,7 +1427,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 28:
-            subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
+            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
@@ -1418,7 +1451,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 12:
-            subtable_name, double = unpack(self._endian + b'8sf', data)
+            subtable_name, double = unpack(b(self._endian + '8sf'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %f]\n'  % (subtable_name, double))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
@@ -1433,7 +1466,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_gpl(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
@@ -1445,7 +1481,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         n = -2
         while markers[0] != 0:
             self.read_markers([n, 1, 0])
@@ -1478,7 +1515,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 
@@ -1526,7 +1564,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 
@@ -1569,7 +1608,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 
@@ -1643,7 +1683,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show_data(data)
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         #print('intmod data2')
@@ -1679,7 +1720,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.show_data(data)
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         print('hisadd data2')
@@ -1696,7 +1738,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         datai = data[:-4]
 
         irec = data[:32]
-        design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value = unpack(self._endian + b'3i3fif', irec)
+        (design_iter, iconvergence, conv_result, obj_intial, obj_final,
+         constraint_max, row_constraint_max, desvar_value) = unpack(b(self._endian + '3i3fif'), irec)
         if iconvergence == 1:
             iconvergence = 'soft'
         elif iconvergence == 2:
@@ -1709,7 +1752,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         elif conv_result == 2:
             conv_result = 'hard'
 
-        print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
+        print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (
+            design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
         self.show_data(datai[32:])
         raise NotImplementedError()
         #for n in [-3, -4, -5, -6, -7, -8,]:
@@ -1770,7 +1814,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 8:
-            subtable_name, = unpack(self._endian + b'8s', data)
+            subtable_name, = unpack(b(self._endian + '8s'), data)
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'Unhandled table length error\n'
@@ -1797,7 +1841,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_sdf(self):
         """
-        :param self:    the OP2 object pointer
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
         """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
@@ -1807,7 +1854,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 16:
-            subtable_name, dummy_a, dummy_b = unpack(self._endian + b'8sii', data)
+            subtable_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (subtable_name, dummy_a, dummy_b))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
@@ -1853,12 +1900,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data = self._read_record()
         if len(data) == 8:
-            subtable_name = unpack(self._endian + b'8s', data)
+            subtable_name = unpack(b(self._endian + '8s'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif len(data) == 28:
-            subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
+            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
@@ -1898,9 +1945,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
         #if self.is_debug_file:
-        self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
+        if self.is_debug_file:
+            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
         #assert zero == 0, zero  # is this the RTABLE indicator???
-        assert one == 1, one  # 0, 50
+        assert one in [0, 1], one  # 0, 50
 
     def finish(self):
         """

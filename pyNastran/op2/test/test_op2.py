@@ -1,3 +1,6 @@
+"""
+Defines the command line tool `test_op2`
+"""
 from __future__ import print_function
 from six import string_types, iteritems, PY2
 import os
@@ -11,7 +14,7 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError
 
 try:
-    from pyNastran.op2.op2_geom import OP2Geom
+    #from pyNastran.op2.op2_geom import OP2Geom
     is_geom = True
 except ImportError:
     is_geom = False
@@ -42,6 +45,10 @@ try:
         SIZE_T = ctypes.c_size_t
 
         class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
+            """
+            Windows memory tool that has the same interface as
+            `resource` on Linux/Mac.
+            """
             _fields_ = [
                 ('cb', wintypes.DWORD),
                 ('PageFaultCount', wintypes.DWORD),
@@ -94,9 +101,9 @@ except:
     is_memory = False
 
 
-def parse_table_names_from_F06(f06Name):
+def parse_table_names_from_F06(f06_filename):
     """gets the op2 names from the f06"""
-    infile = open(f06Name, 'r')
+    infile = open(f06_filename, 'r')
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
     names = []
     for line in infile:
@@ -108,6 +115,7 @@ def parse_table_names_from_F06(f06Name):
 
 
 def get_failed_files(filename):
+    """Gets the list of failed files"""
     infile = open(filename, 'r')
     lines = infile.readlines()
     infile.close()
@@ -121,11 +129,12 @@ def get_failed_files(filename):
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, write_op2=False,
                       is_vector=False, vector_stop=True,
-                      debug=True, saveCases=True, skipFiles=None,
-                      stopOnFailure=False, nStart=0, nStop=1000000000, binary_debug=False):
+                      debug=True, saveCases=True, skip_files=None,
+                      stop_on_failure=False, nstart=0, nstop=1000000000, binary_debug=False,
+                      compare=True):
     """used by op2_test.py to run thousands of files"""
-    if skipFiles is None:
-        skipFiles = []
+    if skip_files is None:
+        skip_files = []
     n = ''
     assert make_geom in [True, False]
     assert write_bdf in [True, False]
@@ -140,10 +149,10 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     ntotal = 0
     npassed = 0
     t0 = time.time()
-    for i, op2file in enumerate(files[nStart:nStop], nStart):  # 149
+    for i, op2file in enumerate(files[nstart:nstop], nstart):  # 149
         basename = os.path.basename(op2file)
-        #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
-        if basename not in skipFiles and '#' not in op2file:
+        #if baseName not in skip_files and not baseName.startswith('acms') and i not in nSkip:
+        if basename not in skip_files and '#' not in op2file:
             print("%" * 80)
             print('file=%s\n' % op2file)
             n = '%s ' % i
@@ -154,14 +163,15 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             is_vector_failed = []
             for vectori, vector_stopi in zip(is_vector, vector_stop):
                 print('------running is_vector=%s------' % vectori)
-                op2i, is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                                            write_f06=write_f06, write_op2=write_op2,
-                                            is_mag_phase=False,
-                                            is_vector=vectori,
-                                            delete_f06=delete_f06,
-                                            isubcases=isubcases, debug=debug,
-                                            stopOnFailure=stopOnFailure,
-                                            binary_debug=binary_debug) # True/False
+                is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
+                                      write_f06=write_f06, write_op2=write_op2,
+                                      is_mag_phase=False,
+                                      is_vector=vectori,
+                                      delete_f06=delete_f06,
+                                      isubcases=isubcases, debug=debug,
+                                      stop_on_failure=stop_on_failure,
+                                      binary_debug=binary_debug,
+                                      compare=True)[1]
                 if not is_passed_i and vector_stopi:
                     is_passed = False
                 if not is_passed_i:
@@ -199,7 +209,48 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False, is_sort2=False,
             is_vector=False, delete_f06=False,
             isubcases=None, exclude=None, compare=True, debug=False, binary_debug=False,
-            quiet=False, stopOnFailure=True):
+            quiet=False, stop_on_failure=True):
+    """
+    Runs an OP2
+
+    Parameters
+    ----------
+    op2_filename : str
+        path of file to test
+    make_geom : bool; default=False
+        should the GEOMx, EPT, MPT, DYNAMIC, DIT, etc. tables be read
+    write_bdf : bool; default=False
+        should a BDF be written based on the geometry tables
+    write_f06 : bool; default=True
+        should an F06 be written based on the results
+    is_mag_phase : bool; default=False
+        False : write real/imag results
+        True : write mag/phase results
+        For static results, does nothing
+    is_sort2 : bool; default=False
+        False : writes "transient" data is SORT1
+        True : writes "transient" data is SORT2
+    is_vector : bool; default=False
+        False : non-vectorized version of OP2
+        True : vectorized version of OP2
+    delete_f06 : bool; default=False
+        deletes the F06 (assumes write_f06 is True)
+    isubcases : List[int, ...]; default=None
+        limits subcases to specified values; default=None -> no limiting
+    exclude : List[str, ...]; default=None
+        limits result types; (remove what's listed)
+    compare : bool
+        True : compares vectorized result (requires is_vector=True) to non-vectorized result
+        False : doesn't run non-vectorized result
+    debug : bool; default=False
+        dunno???
+    binary_debug : bool; default=False
+        creates a very cryptic developer debug file showing exactly what was parsed
+    quiet : bool; default=False
+        dunno???
+    stopOnFailure : bool; default=True
+        is this used???
+    """
     op2a = None
     op2b = None
     if isubcases is None:
@@ -209,7 +260,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     assert '.op2' in op2_filename.lower(), 'op2_filename=%s is not an OP2' % op2_filename
     is_passed = False
 
-    fname_base, ext = os.path.splitext(op2_filename)
+    fname_base = os.path.splitext(op2_filename)[0]
     bdf_filename = fname_base + '.test_op2.bdf'
 
     if isinstance(isubcases, string_types):
@@ -220,7 +271,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     print('isubcases = %s' % isubcases)
 
     debug_file = None
-    model, ext = os.path.splitext(op2_filename)
+    model = os.path.splitext(op2_filename)[0]
     if binary_debug or write_op2:
         debug_file = model + '.debug.out'
     #print('debug_file = %r' % debug_file, os.getcwd())
@@ -229,10 +280,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         raise RuntimeError('make_geom=%s is not supported' % make_geom)
     if make_geom:
         op2a = OP2Geom(debug=debug, debug_file=debug_file)
-        op2b = OP2Geom(debug=debug, debug_file=debug_file)
+        op2b = OP2Geom()
     else:
         op2a = OP2(debug=debug, debug_file=debug_file)
-        op2b = OP2(debug=debug, debug_file=debug_file)
+        op2b = OP2()
     op2b.use_vector = False
     if not is_vector:
         compare = False
@@ -253,9 +304,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
-        op2a.read_op2(op2_filename, vectorized=is_vector)
+        op2a.read_op2(op2_filename)
         if compare:
-            op2b.read_op2(op2_filename, vectorized=is_vector)
+            op2b.read_op2(op2_filename)
 
         #op2a.get_op2_stats()
         if quiet:
@@ -288,7 +339,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                     pass
 
         if write_op2:
-            model, ext = os.path.splitext(op2_filename)
+            model = os.path.splitext(op2_filename)[0]
             op2a.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
@@ -313,9 +364,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #print("subcases = ", op2.subcases)
 
         #assert table_names_f06==table_names_op2, 'table_names_f06=%s table_names_op2=%s' % (table_names_f06, table_names_op2)
-        #op2.caseControlDeck.sol = op2.sol
-        #print(op2.caseControlDeck.get_op2_data())
-        #print(op2.caseControlDeck.get_op2_data())
+        #op2.case_control_deck.sol = op2.sol
+        #print(op2.case_control_deck.get_op2_data())
+        #print(op2.case_control_deck.get_op2_data())
         is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
@@ -369,7 +420,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #is_passed = True
     except:
         #print e
-        if stopOnFailure:
+        if stop_on_failure:
             raise
         else:
             print_exc(file=sys.stdout)
@@ -414,7 +465,7 @@ def main():
     msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
-    msg += "  -t, --vector          Vectorizes the results\n"
+    msg += "  -t, --unvector        Unvectorizes the results\n"
     msg += "  -w, --is_sort2        Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude   Exclude specific results\n"
     msg += "  -h, --help            Show this help message and exit\n"
@@ -446,7 +497,7 @@ def main():
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
             is_mag_phase=data['--is_mag_phase'],
-            is_vector=data['--vector'],
+            is_vector=not data['--unvector'],
             isubcases=data['--subcase'],
             exclude=data['--exclude'],
             debug=not data['--quiet'],

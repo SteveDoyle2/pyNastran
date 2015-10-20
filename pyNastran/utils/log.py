@@ -2,8 +2,9 @@ from __future__ import print_function
 import sys
 import platform
 import os
+from six import PY2, string_types
 
-if sys.stdout.isatty():
+if sys.stdout.isatty() and PY2:
     # You're running in a real terminal
     try:
         from colorama import init as colorinit, Fore, Style
@@ -74,7 +75,16 @@ class SimpleLogger(object):
         """
         name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
         if not is_terminal or not typ:
-            sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
+            out = name + msg
+            if PY2:
+                sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
+            else:
+                sys.stdout.write((name + msg) if typ else msg)
+            # try:
+                # sys.stdout.write((name + msg).encode(self.encoding))# if typ else msg.encode(self.encoding))
+            # except TypeError:
+                # print(msg, type(msg))
+                # raise
         else:
             if typ == 'INFO':
                 '\033[ 1 m; 34 m'
@@ -82,7 +92,8 @@ class SimpleLogger(object):
             elif typ == 'DEBUG':
                 sys.stdout.write((Fore.YELLOW + name + msg).encode(self.encoding))
             elif typ == 'WARNING':
-                sys.stdout.write((Fore.ORANGE + name + msg).encode(self.encoding))
+                # no ORANGE?
+                sys.stdout.write((Fore.RED + name + msg).encode(self.encoding))
             else: # error / other
                 sys.stdout.write((Fore.RED + name + msg).encode(self.encoding))
         sys.stdout.flush()
@@ -107,6 +118,7 @@ class SimpleLogger(object):
         self.level = level
         self.log_func = log_func
         self.encoding = encoding
+        assert isinstance(encoding, string_types), type(encoding)
 
     def properties(self):
         """Return tuple: line number and filename"""

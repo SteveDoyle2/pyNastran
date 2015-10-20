@@ -717,13 +717,19 @@ class FORCE(Force):
             assert len(xyz) == 3, 'xyz=%s' % str(xyz)
             self.xyz = array(xyz)
 
+    @property
+    def node_id(self):
+        if isinstance(self.node, int):
+            return self.node
+        return self.node.nid
+
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
     def F(self):
-        return {self.node: self.mag * self.xyz}
+        return {self.node_id : self.mag * self.xyz}
 
     #def nodeID(self):
         #return self.node
@@ -900,10 +906,15 @@ class FORCE2(Force):
         self.xyz = cross(v12, v34)
         self.normalize()
 
-    def NodeID(self):
+    @property
+    def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
         return self.node.nid
+
+    def NodeID(self):
+        self.deprecated('node_id', 'NodeID()', '0.8')
+        return self.node_id
 
     def G1(self):
         if isinstance(self.g1, integer_types):
@@ -1575,7 +1586,7 @@ class PLOAD2(Load):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
-            self.p = double(card, 2, 'p')
+            self.pressure = double(card, 2, 'p')
 
             if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
                 e1 = integer(card, 3, 'Element1')
@@ -1587,7 +1598,7 @@ class PLOAD2(Load):
             self.eids = eids
         else:
             self.sid = data[0]
-            self.p = data[1]
+            self.pressure = data[1]
             self.eids = list(data[2:])
 
     def cross_reference(self, model):
@@ -1600,7 +1611,7 @@ class PLOAD2(Load):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['PLOAD2', self.sid, self.p]
+        list_fields = ['PLOAD2', self.sid, self.pressure]
         if len(self.eids) > 6:
             list_fields += [self.eids[0], 'THRU', self.eids[-1]]
         else:

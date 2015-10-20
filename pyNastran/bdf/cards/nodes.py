@@ -24,7 +24,11 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array
-from six import integer_types, string_types
+from six import integer_types, string_types, PY2
+if PY2:
+    u = unicode
+else:
+    u = str
 
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
@@ -896,7 +900,7 @@ class GRID(Node):
                 self.cd = integer_or_blank(card, 6, 'cd', 0)
 
                 #: SPC constraint
-                self.ps = unicode(integer_or_blank(card, 7, 'ps', ''))
+                self.ps = u(integer_or_blank(card, 7, 'ps', ''))
 
                 #: Superelement ID
                 self.seid = integer_or_blank(card, 8, 'seid', 0)

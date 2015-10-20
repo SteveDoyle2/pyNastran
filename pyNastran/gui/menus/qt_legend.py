@@ -8,6 +8,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def __init__(self, data, win_parent=None):
         self.win_parent = win_parent
         #Init the base class
+        self._updated_legend = False
         self._default_name = data['name']
         self._default_min = data['min']
         self._default_max = data['max']
@@ -30,6 +31,33 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.create_layout()
         self.set_connections()
         #self.show()
+
+    def update_legend(self, name,
+                      min_value, max_value, data_format,
+                      is_blue_to_red, is_horizontal_scalar_bar, scale):
+        self._default_name = name
+        self._default_min = min_value
+        self._default_max = max_value
+        self._default_format = data_format
+        self._default_is_blue_to_red = is_blue_to_red
+        self._default_is_discrete = True
+        self._default_is_horizontal = is_horizontal_scalar_bar
+        self._default_is_shown = True
+        self._default_scale = scale
+        if self._default_scale == 0.0:
+            self.scale_edit.setEnabled(False)
+            self.scale_button.setEnabled(False)
+        else:
+            self.scale_edit.setEnabled(True)
+            self.scale_button.setEnabled(True)
+
+        self.on_default_name()
+        self.on_default_min()
+        self.on_default_max()
+        self.on_default_format()
+        self.on_default_scale()
+
+
 
     def create_widgets(self):
         # Name

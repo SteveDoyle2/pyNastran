@@ -99,6 +99,7 @@ class TestUtils(unittest.TestCase):
 
     def test_object_attributes_introspection_3(self):
         attributes = object_attributes(self.b, "all")
+        version_info = sys.version_info
         if sys.version_info < (3,0):
             self.assertEqual(attributes, [
                 '__class__', '__delattr__', '__dict__',
@@ -107,13 +108,16 @@ class TestUtils(unittest.TestCase):
                 '__repr__', '__setattr__', '__sizeof__', '__str__',
                 '__subclasshook__', '__weakref__', '_a', '_b', 'a', 'b', 'c'])
         else:
-            self.assertEqual(attributes, [
+            expected = [
                 '__class__', '__delattr__', '__dict__',
                 '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__',
                 '__gt__', '__hash__', '__le__', '__lt__', '__module__',
                 '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__',
                 '__setattr__', '__sizeof__', '__str__', '__subclasshook__',
-                '__weakref__', '_a', '_b', 'a', 'b', 'c'])
+                '__weakref__', '_a', '_b', 'a', 'b', 'c']
+            if sys.version_info > (3, 3):
+                expected.append('__dir__')
+            self.assertEqual(sorted(attributes), sorted(expected))
 
 if __name__ == "__main__":
     unittest.main()

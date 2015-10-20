@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, b
 from six.moves import zip, range
 import sys
 from struct import Struct, pack, unpack
@@ -231,10 +231,10 @@ class Cart3dIO(object):
 
         so4 = size // 4  # size over 4
         if so4 == 3:
-            (npoints, nelements, nresults) = unpack(self._endian + b'iii', data)
+            (npoints, nelements, nresults) = unpack(b(self._endian + 'iii'), data)
             self.log.info("npoints=%s nelements=%s nresults=%s" % (npoints, nelements, nresults))
         elif so4 == 2:
-            (npoints, nelements) = unpack(self._endian + b'ii', data)
+            (npoints, nelements) = unpack(b(self._endian + 'ii'), data)
             nresults = 0
             self.log.info("npoints=%s nelements=%s" % (npoints, nelements))
         else:
@@ -249,7 +249,7 @@ class Cart3dIO(object):
 
         n = 0
         points = zeros(npoints * 3, dtype='float32')
-        s = Struct(self._endian + b'3000f') # 3000 floats; 1000 points
+        s = Struct(b(self._endian + '3000f')) # 3000 floats; 1000 points
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             data = self.infile.read(4 * 3000)
 
@@ -262,7 +262,7 @@ class Cart3dIO(object):
 
         if size > 0:
             data = self.infile.read(size)
-            bin_format = self._endian + b'%if' % (size // 4)
+            bin_format = b(self._endian + '%if' % (size // 4))
 
             node_xyzs = unpack(bin_format, data)
             points[n:] = node_xyzs
@@ -278,7 +278,7 @@ class Cart3dIO(object):
         elements = zeros(nelements * 3, dtype='int32')
 
         n = 0
-        s = Struct(self._endian + b'3000i')
+        s = Struct(b(self._endian + '3000i'))
         while size > 12000:  # 4k is 1000 elements
             data = self.infile.read(4 * 3000)
             nodes = s.unpack(data)
@@ -289,7 +289,7 @@ class Cart3dIO(object):
         assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            bin_format = self._endian + b'%ii' % (size // 4)
+            bin_format = b(self._endian + '%ii' % (size // 4))
 
             nodes = unpack(bin_format, data)
             elements[n:] = nodes
@@ -300,7 +300,7 @@ class Cart3dIO(object):
 
     def _read_regions_binary(self, nelements):
         size = nelements * 4  # 12=3*4 all the elements
-        s = Struct(self._endian + b'3000i')
+        s = Struct(b(self._endian + '3000i'))
 
         regions = zeros(nelements, dtype='int32')
 
@@ -321,7 +321,7 @@ class Cart3dIO(object):
         assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            bin_format = self._endian + b'%ii' % (size // 4)
+            bin_format = b(self._endian + '%ii') % (size // 4)
             try:
                 region_data = unpack(bin_format, data)
             except:

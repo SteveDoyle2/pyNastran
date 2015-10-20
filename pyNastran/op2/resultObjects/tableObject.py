@@ -3,7 +3,8 @@ from six import iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, abs, angle, float32, ndarray, searchsorted, asarray, vstack, swapaxes, hstack, array_equal
+from numpy import array, zeros, abs, angle, float32, searchsorted
+from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, write_float_12E
@@ -13,7 +14,6 @@ def append_sort1_sort2(data1, data2, to_sort1=True):
     """
     data1 : (ntimes, nnids, 6)
     data2 : (nnids, ntimes, 6)
-
     """
     assert len(data1.shape) == 3, data1.shape
     assert len(data2.shape) == 3, data2.shape
@@ -60,14 +60,41 @@ class TableArray(ScalarObject):  # displacement style table
         assert self.approach_code == table.approach_code
         if not array_equal(self.node_gridtype, table.node_gridtype):
             assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
             for (nid, grid_type), (nid2, grid_type2) in zip(self.node_gridtype, table.node_gridtype):
-                msg = '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
+                msg += '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
+            print(msg)
             raise ValueError(msg)
         if not array_equal(self.data, table.data):
-            for (nid, grid_type), (tx, ty, tz, rx, ry, rz), (tx2, ty2, tz2, rx2, ry2, rz2) in zip(self.node_gridtype, self.data, table.data):
-                msg = '(%s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (nid, grid_type, tx, ty, tz, rx, ry, rz,
-                                                                                            tx2, ty2, tz2, rx2, ry2, rz2)
-            raise ValueError(msg)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for inid, nid_gridtype, in enumerate(self.node_gridtype):
+                        (nid, grid_type) = nid_gridtype
+                        t1 = self.data[itime, inid, :]
+                        t2 = table.data[itime, inid, :]
+                        (tx, ty, tz, rx, ry, rz) = t1
+                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        if not allclose(t1, t2):
+                        #if not array_equal(t1, t2):
+                            msg += '(%s, %s)\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                nid, grid_type,
+                                tx, ty, tz, rx, ry, rz,
+                                tx2, ty2, tz2, rx2, ry2, rz2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
         return True
 
     def combine(self, result, is_sort1=True):
@@ -339,8 +366,8 @@ class RealTableArray(TableArray):  # displacement style table
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        #format_table4_1 = Struct(self._endian + b'15i')
-        #format_table4_2 = Struct(self._endian + b'3i')
+        #format_table4_1 = Struct(b(self._endian + '15i'))
+        #format_table4_2 = Struct(b(self._endian + '3i'))
 
         # table 4 info
         #ntimes = self.data.shape[0]

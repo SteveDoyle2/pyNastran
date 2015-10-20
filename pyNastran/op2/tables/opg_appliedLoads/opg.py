@@ -121,6 +121,16 @@ class OPG(OP2Common):
         #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
 
         self.fix_format_code()
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        else:
+            #self.fix_format_code()
+            if self.format_code == 1:
+                self.format_code = 2
+                self.data_code['format_code'] = 2
+            assert self.format_code in [2, 3], self.code_information()
+
         self._parse_thermal_code()
         if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
@@ -152,10 +162,9 @@ class OPG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealLoadVector, ComplexLoadVector,
-                                 RealLoadVectorArray, ComplexLoadVectorArray,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealLoadVectorArray, ComplexLoadVectorArray,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermal_load_vectors'
             storage_obj = self.thermal_load_vectors

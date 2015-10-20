@@ -16,8 +16,7 @@ import os
 import sys
 import traceback
 
-import numpy as np
-from numpy import unique
+from numpy import unique, array, where, in1d
 
 from pyNastran.bdf.utils import _parse_pynastran_header, deprecated
 from pyNastran.utils import object_attributes, print_bad_path
@@ -78,8 +77,8 @@ from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                    GMCORD)
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
 from pyNastran.bdf.cards.deqatn import DEQATN
-from pyNastran.bdf.cards.dynamic import (DELAY, FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL,
-                                         NLPARM, NLPCI, TF)
+from pyNastran.bdf.cards.dynamic import (DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4, TSTEP,
+                                         TSTEPNL, NLPARM, NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD
 from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -345,7 +344,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'RADBC', 'CONV',  # 'RADM',
 
             # ---- dynamic cards ---- #
-            'DAREA',
+            'DAREA',  ## dareas
+            'PHASE',  ## dphases
             'DELAY',  ## delays
             'NLPARM',  ## nlparms
             'NLPCI',  ## nlpcis
@@ -724,6 +724,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
         self.dareas = {}
+        self.dphases = {}
 
         self.pbusht = {}
         self.pdampt = {}
@@ -1003,6 +1004,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # dynamic cards
             'dareas' : ['DAREA'],
+            'dphases' : ['DPHASE'],
             'nlparms' : ['NLPARM'],
             'nlpcis' : ['NLPCI'],
             'tsteps' : ['TSTEP'],
@@ -1926,6 +1928,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #'CORD3G' : self._prepare_CORD3G,
 
             'DAREA' : self._prepare_darea,
+            'DPHASE' : self._prepare_dphase,
             'PMASS' : self._prepare_pmass,
             'CMASS4' : self._prepare_cmass4,
             'CDAMP4' : self._prepare_cdamp4,
@@ -2090,6 +2093,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         if card_obj.field(5):
             class_instance = DAREA(card_obj, icard=1, comment=comment)
             self.add_DAREA(class_instance)
+
+    def _prepare_dphase(self, card, card_obj, comment=''):
+        """adds a DPHASE"""
+        class_instance = DPHASE(card_obj, comment=comment)
+        self.add_DPHASE(class_instance)
+        if card_obj.field(5):
+            class_instance = DPHASE(card_obj, icard=1, comment=comment)
+            self.add_DPHASE(class_instance)
 
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
@@ -2278,7 +2289,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'coords', 'mpcs', 'mpcadds',
 
             # dynamic cards
-            'dareas', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
+            'dareas', 'dphases', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
 
             # direct matrix input - DMIG - dict
             'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
@@ -2460,10 +2471,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     nids_transform[cid_d] = []
                 nids_transform[cid_d].append(nid)
 
-        nids_all = np.array(sorted(self.point_ids))
+        nids_all = array(sorted(self.point_ids))
         for cid in sorted(nids_transform.keys()):
-            nids = np.array(nids_transform[cid])
-            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
+            nids = array(nids_transform[cid])
+            i_transform[cid] = where(in1d(nids_all, nids))[0]
             transforms[cid] = self.coords[cid].beta()
         return i_transform, transforms
 

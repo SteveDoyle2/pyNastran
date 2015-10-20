@@ -4,7 +4,7 @@ Main OP2 class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, string_types
 import os
 
 from numpy import unique, int32
@@ -77,7 +77,7 @@ class OP2(OP2_Scalar):
         else:
             raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
 
-    def set_as_vectorized(self, ask=False):
+    def _set_ask_vectorized(self, ask=False):
         """
         Enables vectorization
 
@@ -141,7 +141,7 @@ class OP2(OP2_Scalar):
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None, vectorized=True, combine=True):
+    def read_op2(self, op2_filename=None, combine=True):
         """
         Starts the OP2 file reading
 
@@ -149,35 +149,28 @@ class OP2(OP2_Scalar):
         ----------
         op2_filename : str (default=None -> popup)
             the op2_filename
-        vectorized : bool; default=True
-            should the vectorized objects be used
         combine : bool; default=True
             True : objects are isubcase based
             False : objects are (isubcase, subtitle) based;
                     will be used for superelements regardless of the option
         """
-        self.log.debug('vectorized=%s combine=%s' % (vectorized, combine))
         assert self.ask in [True, False], self.ask
-        self.is_vectorized = vectorized
-        if self.is_vectorized:
-            self.log.debug('-------- reading op2 with read_mode=1 --------')
-            self.read_mode = 1
-            self._close_op2 = False
+        self.is_vectorized = True
+        self.log.debug('combine=%s' % combine)
+        self.log.debug('-------- reading op2 with read_mode=1 --------')
+        self.read_mode = 1
+        self._close_op2 = False
 
-            # get GUI object names, build objects, but don't read data
-            OP2_Scalar.read_op2(self, op2_filename=op2_filename)
+        # get GUI object names, build objects, but don't read data
+        OP2_Scalar.read_op2(self, op2_filename=op2_filename)
 
-            # TODO: stuff to figure out objects
-            # TODO: stuff to show gui of table names
-            # TODO: clear out objects the user doesn't want
-            self.read_mode = 2
-            self._close_op2 = True
-            self.log.debug('-------- reading op2 with read_mode=2 --------')
-            OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
-        else:
-            self.read_mode = 0
-            self._close_op2 = True
-            OP2_Scalar.read_op2(self, op2_filename=op2_filename)
+        # TODO: stuff to figure out objects
+        # TODO: stuff to show gui of table names
+        # TODO: clear out objects the user doesn't want
+        self.read_mode = 2
+        self._close_op2 = True
+        self.log.debug('-------- reading op2 with read_mode=2 --------')
+        OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
         self.combine_results(combine=combine)
         self.log.info('finished reading op2')
@@ -225,7 +218,7 @@ class OP2(OP2_Scalar):
         if not combine:
             return
         del result, case_keys
-        isubcases = unique(self.subcase_key.keys())
+        isubcases = unique(list(self.subcase_key.keys()))
         unique_isubcases = unique(isubcases)
 
         self.log.info('combine_results')
@@ -234,7 +227,14 @@ class OP2(OP2_Scalar):
             if len(result) == 0:
                 continue
             for isubcase in unique_isubcases:
-                keys = self.subcase_key[isubcase]
+                try:
+                    keys = self.subcase_key[isubcase]
+                except TypeError:
+                    print('isubcase =', isubcase)
+                    print('isubcases =', isubcases)
+                    print('self.subcase_key =', self.subcase_key)
+                    raise
+
                 #print('keys = %s' % keys)
                 key0 = tuple([isubcase] + list(keys[0]))
 
@@ -302,7 +302,7 @@ class OP2(OP2_Scalar):
             for isubcase in unique_isubcases:
                 for case_key in case_keys:
                     #print('isubcase=%s case_key=%s' % (isubcase, case_key))
-                    assert not isinstance(case_key, str), result_type
+                    assert not isinstance(case_key, string_types), result_type
                     if isinstance(case_key, (int, int32)):
                         if isubcase == case_key and case_key not in subcase_key2[isubcase]:
                             subcase_key2[isubcase] = [isubcase]

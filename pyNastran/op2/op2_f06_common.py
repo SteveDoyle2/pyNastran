@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, string_types, binary_type
 from collections import defaultdict
 from numpy import unique, int32
 
@@ -193,6 +193,10 @@ class OP2_F06_Common(object):
         #self.displacement_scaled_response_spectra_CRM = {}
         #self.displacement_scaled_response_spectra_NO = {}
 
+
+        #: OUG - velocity
+        self.velocities = {}              # tCode=10 thermal=0
+        self.velocitiesPSD = {}
         #self.velocity_scaled_response_spectra_NRL = {}
         self.velocity_scaled_response_spectra_ABS = {}
         #self.velocity_scaled_response_spectra_PSD = {}
@@ -201,6 +205,9 @@ class OP2_F06_Common(object):
         #self.velocity_scaled_response_spectra_CRM = {}
         #self.velocity_scaled_response_spectra_NO = {}
 
+        #: OUG - acceleration
+        self.accelerations = {}            # tCode=11 thermal=0
+        self.accelerationsPSD = {}
         self.acceleration_scaled_response_spectra_NRL = {}
         self.acceleration_scaled_response_spectra_ABS = {}
         #self.acceleration_scaled_response_spectra_PSD = {}
@@ -215,12 +222,6 @@ class OP2_F06_Common(object):
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
-
-        #: OUG - velocity
-        self.velocities = {}              # tCode=10 thermal=0
-
-        #: OUG - acceleration
-        self.accelerations = {}            # tCode=11 thermal=0
 
         # OEF - Forces - tCode=4 thermal=0
 
@@ -300,6 +301,7 @@ class OP2_F06_Common(object):
         # OQG - spc/mpc forces
         self.spc_forces = {}  # tCode=3?
         self.spc_forces_scaled_response_spectra_NRL = {}
+        self.spc_forcesPSD = {}
 
         self.mpc_forces = {}  # tCode=39
 
@@ -333,7 +335,7 @@ class OP2_F06_Common(object):
         for res_type in res_types:
             if not res_type:
                 continue
-            key0 = res_type.keys()[0]
+            key0 = list(res_type.keys())[0]
             if not isinstance(key0, (int, int32)) and not isinstance(res_key, (int, int32)):
                 if not type(key0) == type(res_key):
                     raise RuntimeError('bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
@@ -395,12 +397,15 @@ class OP2_F06_Common(object):
 
             # OUG - velocity
             'velocities',
+            'velocitiesPSD',
 
             # OUG - acceleration
             'accelerations',
+            'accelerationsPSD',
 
             # OQG - spc/mpc forces
             'spc_forces',
+            'spc_forcesPSD',
             'spc_forces_scaled_response_spectra_NRL',
             'mpc_forces',
             'thermal_gradient_and_flux',
@@ -646,9 +651,10 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key, value = key_value
-            if isinstance(key, (int, int32, str)):
+            if isinstance(key, (int, int32, binary_type)):
                 return key
             else:
+                #self.log.debug(type(key))
                 return key[0]
 
         table_types = self._get_table_types_testing()
@@ -672,4 +678,4 @@ class OP2_F06_Common(object):
         except TypeError:
             for msgi in msg:
                 print(msgi.rstrip())
-                assert isinstance(msgi, str), msgi
+                assert isinstance(msgi, string_types), msgi

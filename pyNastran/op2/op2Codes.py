@@ -692,7 +692,7 @@ class Op2Codes(object):
             64 : 'OSPDSI - Contact Separation Distance - Initial',
             65 : 'OSPDS - Contact Separation Distance',
             66 : 'OBG - Glue force results (normal and in-plane tractions)',
-            67 : 'OQG - GLue force resutls',
+            67 : 'OQG - Glue force resutls',
             68 : '??? - Tosca normalized material properties',
         }
         if self.is_msc:
@@ -885,85 +885,88 @@ class Op2Codes(object):
             DispTemp = 'Displacement/Temperature; thermal=%r' % thermal
 
         table = '???'
-        if self.table_code == 1:
+        table_code = self.table_code
+        if table_code in [601, 610, 611]:
+            table_code -= 600
+        if table_code == 1:
             table = "OUG - %s vector/scalar" % DispTemp
-        elif self.table_code == 2:
+        elif table_code == 2:
             table = "OPG - Load vector"
-        elif self.table_code == 3:
+        elif table_code == 3:
             table = "OQG - SPC Force vector"
-        elif self.table_code == 4:
+        elif table_code == 4:
             table = "OEF - Element %s" % ForceFlux
-        elif self.table_code == 5:
+        elif table_code == 5:
             table = "OES - Element %s" % stressWord
-        elif self.table_code == 6:
+        elif table_code == 6:
             table = "LAMA - Eigenvalue summary"
-        elif self.table_code == 7:
+        elif table_code == 7:
             table = "OUG - Eigenvector"
-        elif self.table_code == 8:
+        elif table_code == 8:
             table = "none - Grid point singularity table (obsolete)"
-        elif self.table_code == 9:
+        elif table_code == 9:
             table = "OEIGS - Eigenvalue analysis summary"
-        elif self.table_code == 10:
+        elif table_code == 10:
             table = "OUG - Velocity vector"
-        elif self.table_code == 11:
+        elif table_code == 11:
             table = "OUG - Acceleration vector"
-        elif self.table_code == 12:
+        elif table_code == 12:
             table = "OPG - Nonlinear force vector"
-        elif self.table_code == 13:
+        elif table_code == 13:
             table = "OGPWG - Grid point weight generator"
-        elif self.table_code == 14:
+        elif table_code == 14:
             table = "OUG - Eigenvector (solution set)"
-        elif self.table_code == 15:
+        elif table_code == 15:
             table = "OUG - Displacement vector (solution set)"
-        elif self.table_code == 16:
+        elif table_code == 16:
             table = "OUG - Velocity vector (solution set)"
-        elif self.table_code == 17:
+        elif table_code == 17:
             table = "OUG - Acceleration vector (solution set)"
-        elif self.table_code == 18:
+        elif table_code == 18:
             table = "OEE - Element strain energy"
-        elif self.table_code == 19:
+        elif table_code == 19:
             table = "OGF - Grid point force balance"
-        elif self.table_code == 20:
+        elif table_code == 20:
             table = "OES - Stresses at grid points (from the CURV module)"
-        elif self.table_code == 21:
+        elif table_code == 21:
             table = "OES - Strain/curvature at grid points"
-        elif self.table_code == 22:
+        elif table_code == 22:
             table = "OELOF1 - Element internal forces and moments"
-        elif self.table_code == 23:
+        elif table_code == 23:
             table = "OELOP1 - Summation of element oriented forces on adjacent elements"
-        elif self.table_code == 24:
+        elif table_code == 24:
             table = "OEP - Element pressures"
-        elif self.table_code == 25:
+        elif table_code == 25:
             table = "OEF - Composite failure indicies"
-        elif self.table_code == 26:
+        elif table_code == 26:
             table = "OGS - Grid point stresses (surface)"
-        elif self.table_code == 27:
+        elif table_code == 27:
             table = "OGS - Grid point stresses (volume -- direct)"
-        elif self.table_code == 28:
+        elif table_code == 28:
             table = "OGS - Grid point stresses (volume -- principal)"
-        elif self.table_code == 29:
+        elif table_code == 29:
             table = "OGS - Element stress discontinuities (surface)"
-        elif self.table_code == 30:
+        elif table_code == 30:
             table = "OGS - Element stress discontinuities (volume -- direct)"
-        elif self.table_code == 31:
+        elif table_code == 31:
             table = "OGS - Element stress discontinuities (volume -- principal)"
-        elif self.table_code == 32:
+        elif table_code == 32:
             table = "OGS - Grid point stress discontinuities (surface)"
-        elif self.table_code == 33:
+        elif table_code == 33:
             table = "OGS - Grid point stress discontinuities (volume -- direct)"
-        elif self.table_code == 34:
+        elif table_code == 34:
             table = "OGS - Grid point stress discontinuities (volume -- principal)"
-        elif self.table_code == 35:
+        elif table_code == 35:
             table = "OGS - Grid point stress discontinuities (plane strain)"
-        elif self.table_code == 36:
+        elif table_code == 36:
             table = "OEE - Element kinetic energy"
-        elif self.table_code == 37:
+        elif table_code == 37:
             table = "OEE - Element energy loss"
-        elif self.table_code == 38:
+        elif table_code == 38:
             table = "OMM - Max/Min summary"
-        elif self.table_code == 39:
+        elif table_code == 39:
             table = "OQG - MPC Forces"
-        elif self.table_code == 40:
+        elif table_code == 40:
             table = "OGPKE - Grip point kinetic energy"
 
         msg = '--Table3Data--\n\n'
@@ -975,6 +978,8 @@ class Op2Codes(object):
         msg += "  dataFormat    = %-3s %s\n" % (self.sort_bits[0], sortWord1)
         msg += "  sortType      = %-3s %s\n" % (self.sort_bits[1], sortWord2)
         msg += "  isRandom      = %-3s %s\n" % (self.sort_bits[2], sortWord3)
+        random_code = self.random_code if hasattr(self, 'random_code') else 0
+        msg += "  random_code   = %-3s\n" % (random_code)
 
         if element_type is not None:
             msg += "  element_type  = %-3s %s\n" % (element_type, self.get_element_type(element_type))
@@ -982,8 +987,8 @@ class Op2Codes(object):
             msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
         if thermal is not None:
             msg += "  thermal       = %-3s %s\n" % (thermal, thermal_word)
-            #if hasattr(self, 'thermal_bits'):
-            msg += "  thermal_bits  = %s\n" % str(self.thermal_bits)
+            if hasattr(self, 'thermal_bits'):
+                msg += "  thermal_bits  = %s\n" % str(self.thermal_bits)
 
         if hasattr(self, 'num_wide'):
             msg += "  num_wide      = %-3s\n" % self.num_wide
@@ -1058,12 +1063,12 @@ class Op2Codes(object):
         sort_method = 1
         is_real = True
         is_random = False
-        assert tcode in [0, 1, 2, 3, 4, 5], tcode
-        if tcode in [2, 3, 5]:
+        assert tcode in [0, 1, 2, 3, 4, 5, 6], tcode
+        if tcode in [2, 3, 5, 6]:
             sort_method = 2
         if tcode in [1, 3]:
             is_real = False
-        if tcode in [4, 5]:
+        if tcode in [4, 5, 6]:
             is_random = True
 
         if is_random:

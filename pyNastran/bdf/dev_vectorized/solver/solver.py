@@ -340,7 +340,7 @@ class Solver(F06, OP2):
             }
             self.model.set_dynamic_syntax(data)
         self.model.read_bdf(bdf_filename)
-        cc = self.model.caseControlDeck
+        cc = self.model.case_control_deck
         #print(cc.subcases)
         analysisCases = []
         for (isub, subcase) in sorted(iteritems(cc.subcases)):
@@ -1947,7 +1947,7 @@ class Solver(F06, OP2):
         self.log.info('assemble forces')
         Fg = zeros(ndofs, 'float64')
         #print(model.loads)
-        (load_id, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
+        (load_id, junk) = model.case_control_deck.get_subcase_parameter(case.id, 'LOAD')
         self.log.info("load_id = %s" % load_id)
         loads = model.loadcase.resolve(int(load_id))
 

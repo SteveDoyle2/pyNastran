@@ -55,15 +55,19 @@ class DELAY(BaseCard):
 
     def add(self, delay):
         assert self.sid == delay.sid, 'sid=%s delay.sid=%s' % (self.sid, delay.sid)
-        self._comment += delay.comment
+        if delay.comment:
+            if hasattr('_comment'):
+                self._comment += delay.comment
+            else:
+                self._comment = delay.comment
         self.nodes += delay.nodes
         self.components += delay.components
         self.delays += delay.delays
 
     def cross_reference(self, model):
         msg = ', which is required by DELAY sid=%s' % self.sid
-        for nid in self.nodes:
-            self.node = model.Node(self.node_id)
+        for i, nid in enumerate(self.nodes):
+            self.nodes[i] = model.Node(self.node_id)
 
     @property
     def node_id1(self):
@@ -100,6 +104,81 @@ class DELAY(BaseCard):
         return msg
 
 
+class DPHASE(BaseCard):
+    type = 'DPHASE'
+
+    def __init__(self, card=None, data=None, comment=''):
+        """
+        +--------+-----+-----------+-----+------+------+-----+-----+-----+
+        |   1    |  2  |     3     |  4  |  5   |  6   |  7  |  8  |  9  |
+        +========+=====+===========+=====+======+======+=====+=====+=====+
+        | DPHASE | SID | POINT ID1 | C1  | TH1  |  P2  | C2  | TH2 |     |
+        +--------+-----+-----------+-----+------+------+-----+-----+-----+
+        """
+        if comment:
+            self._comment = comment
+        self.sid = integer(card, 1, 'sid')
+        self.nodes = [integer(card, 2, 'node')]
+        self.components = [integer(card, 3, 'components')]
+        self.phase_leads = [double_or_blank(card, 4, 'phase_lead')]
+        assert self.components[0] in [0, 1, 2, 3, 4, 5, 6], self.components
+        if card.field(5):
+            self.nodes.append(integer(card, 5, 'node'))
+            self.components.append(integer(card, 6, 'components'))
+            self.phase_leads.append(double_or_blank(card, 7, 'phase_lead'))
+            assert self.components[1] in [0, 1, 2, 3, 4, 5, 6], self.components
+
+    def add(self, delay):
+        assert self.sid == delay.sid, 'sid=%s delay.sid=%s' % (self.sid, delay.sid)
+        if delay.comment:
+            if hasattr('_comment'):
+                self._comment += delay.comment
+            else:
+                self._comment = delay.comment
+        self.nodes += delay.nodes
+        self.components += delay.components
+        self.delays += delay.delays
+
+    def cross_reference(self, model):
+        msg = ', which is required by DPHASE sid=%s' % self.sid
+        for i, nid in enumerate(self.nodes):
+            self.nodes[i] = model.Node(self.node_id)
+
+    @property
+    def node_id1(self):
+        if isinstance(self.nodes[0], integer_types):
+            return self.nodes[0]
+        return self.nodes[0].nid
+
+    @property
+    def node_id2(self):
+        if isinstance(self.nodes[1], integer_types):
+            return self.nodes[1]
+        return self.nodes[1].nid
+
+    #def raw_fields(self):
+        #list_fields = ['DPHASE', self.sid]
+        #for nid, comp, delay in zip(self.nodes, self.components, self.delays):
+            #if isinstance(nid, integer_types):
+                #nidi = nid
+            #else:
+                #nidi = nid.nid
+            #list_fields += [nidi, comp, delay]
+        #return list_fields
+
+    #def write_card(self, size=8, is_double=False):
+        #msg = self.comment
+        #node_ids = self.nodes
+        #if size == 8:
+            #for nid, comp, delay in zip(node_ids, self.components, self.delays):
+                #msg += print_card_8(['DELAY', self.sid, nid, comp, delay])
+        #else:
+            #for nid, comp, delay in zip(node_ids, self.components, self.delays):
+                #msg += print_card_16(['DPHASE', self.sid, nid, comp, delay])
+        #print(msg)
+        #return msg
+
+
 class FREQ(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
@@ -133,8 +212,12 @@ class FREQ(BaseCard):
         All FREQi entries with the same frequency set identification numbers
         will be used. Duplicate frequencies will be ignored.
 
-        :param self:  the object pointer
-        :param freqs: the frequencies for a FREQx object
+        Parameters
+        ----------
+        self : FREQ()
+            the object pointer
+        freqs : ???
+            the frequencies for a FREQx object
         """
         #print("self.freqs = ",self.freqs)
         #print("freqs = ",freqs)

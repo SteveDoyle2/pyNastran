@@ -66,7 +66,8 @@ class WriteMesh(object):
             title = 'Save BDF/DAT/PCH'
             out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
             assert out_filename is not None, out_filename
-        if isinstance(out_filename, (file, StringIO)):
+
+        if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')):
             return out_filename
         elif not isinstance(out_filename, string_types):
             raise TypeError('out_filename=%r must be a string' % out_filename)
@@ -189,7 +190,7 @@ class WriteMesh(object):
             encoding = self._encoding
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
-        if isinstance(out_filename, (file, StringIO)):
+        if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
             outfile = out_filename
         else:
             if PY2:
@@ -640,7 +641,7 @@ class WriteMesh(object):
 
     def _write_dynamic(self, outfile, size=8, is_double=False):
         """Writes the dynamic cards sorted by ID"""
-        if(self.dareas or self.nlparms or self.frequencies or self.methods or
+        if(self.dareas or self.dphases or self.nlparms or self.frequencies or self.methods or
            self.cMethods or self.tsteps or self.tstepnls or self.transfer_functions or
            self.delays):
             msg = ['$DYNAMIC\n']
@@ -650,6 +651,8 @@ class WriteMesh(object):
                 msg.append(cmethod.write_card(size, is_double))
             for (unused_id, darea) in sorted(iteritems(self.dareas)):
                 msg.append(darea.write_card(size, is_double))
+            for (unused_id, dphase) in sorted(iteritems(self.dphases)):
+                msg.append(dphase.write_card(size, is_double))
             for (unused_id, nlparm) in sorted(iteritems(self.nlparms)):
                 msg.append(nlparm.write_card(size, is_double))
             for (unused_id, nlpci) in sorted(iteritems(self.nlpcis)):

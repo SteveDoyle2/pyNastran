@@ -253,7 +253,7 @@ class XrefMesh(object):
                 self._cross_reference_optimization()
             if xref_nodes_with_elements:
                 self._cross_reference_nodes_with_elements()
-            #self.caseControlDeck.cross_reference(self)
+            #self.case_control_deck.cross_reference(self)
 
     def _cross_reference_constraints(self):
         """
@@ -537,6 +537,26 @@ class XrefMesh(object):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
+        for key, darea in iteritems(self.dareas):
+            try:
+                darea.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((load, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
+        for key, dphase in iteritems(self.dphases):
+            try:
+                dphase.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((load, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
     def _cross_reference_sets(self):
         for set_obj in self.asets:
             set_obj.cross_reference(self)
@@ -571,8 +591,8 @@ class XrefMesh(object):
             dconstr.cross_reference(self)
 
         for key, dvcrel in iteritems(self.dvcrels):
-            dvprel.cross_reference(self)
+            dvcrel.cross_reference(self)
         for key, dvmrel in iteritems(self.dvmrels):
-            dvprel.cross_reference(self)
+            dvmrel.cross_reference(self)
         for key, dvprel in iteritems(self.dvprels):
             dvprel.cross_reference(self)

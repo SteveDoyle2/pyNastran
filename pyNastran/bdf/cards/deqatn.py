@@ -5,8 +5,10 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.bdf.cards.baseCard import BaseCard
+from six import exec_
 from copy import deepcopy
+
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 from numpy import cos, sin, tan
 from numpy import arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2
@@ -65,6 +67,9 @@ class DEQATN(BaseCard):  # needs work...
         found_none = False
         #print(card)
         line0 = card[0]
+        if '\t' in line0:
+            line0 = line0.expandtabs()
+
         name_eqid = line0[:16]
         #print('name_eqid = %r' % name_eqid)
         assert ',' not in name_eqid, name_eqid
@@ -103,7 +108,7 @@ class DEQATN(BaseCard):  # needs work...
                 assert len(eqi) <= 56, eqi
             elif i != neqs-1:
                 # mid line
-                assert len(eqi) <= 64, eqi
+                assert len(eqi) <= 64, 'len(eqi)=%s eq=%r' % (len(eqi), eqi)
                 if eqi.endswith(';'):
                     eqi = eqi[:-1]
                     is_join = False
@@ -134,7 +139,7 @@ class DEQATN(BaseCard):  # needs work...
         func_name, nargs, func_str = fortran_to_python(self.eqs, default_values)
         self.func_name = func_name
         #print('**************', func_str)
-        exec func_str
+        exec_(func_str)
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
@@ -237,8 +242,10 @@ def split_equation(lines_out, line, n, isplit=0):
 def fortran_to_python_short(line, default_values):
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
-    exec func_str
-    return func
+    d = {}
+    print(func_str)
+    exec_(func_str, globals(), d)
+    return d['func']
 
 def fortran_to_python(lines, default_values):
     #print(lines)
@@ -317,7 +324,11 @@ def fortran_to_python(lines, default_values):
         msg += '    return %s\n' % out
     else:
         msg = 'def %s(%s):\n' % (func_name, vals2)
-        msg += '    return %s\n' % float(eq)
+        try:
+            msg += '    return %s\n' % float(eq)
+        except ValueError:
+            msg += '    return %s\n' % str(eq)
+            raise NotImplementedError(msg)
 
     #print(msg)
     nargs = len(variables)

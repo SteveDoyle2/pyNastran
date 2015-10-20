@@ -1,4 +1,5 @@
 #pylint: disable=C0301,C0111,C0103,W0613
+from six import b
 from six.moves import range
 from struct import unpack, Struct
 
@@ -151,14 +152,14 @@ class GEOM4(object):
         #nData = len(data)  # 5*4
         if 1:
             eData = data[:12]
-            (eid, gn, cm, gm) = unpack(self._endian + b'iiii', eData)
+            (eid, gn, cm, gm) = unpack(b(self._endian + '4i'), eData)
 
             eData = data[12:-4]
             nGm = len(eData) // 4
             iFormat = 'i' * nGm
             iFormat = bytes(iFormat)
             Gm = list(unpack(iFormat, eData))
-            alpha, = unpack(self._endian + b'f', data[-4:])
+            alpha, = unpack(b(self._endian + 'f'), data[-4:])
         elem = RBE2(None, [eid, gn, cm, Gm, alpha])
         self.add_rigid_element(elem)
         data = data[-1:]
@@ -211,7 +212,7 @@ class GEOM4(object):
         nEntries = len(data) // 20  # 5*4
         for i in range(nEntries):
             eData = data[n:n + 20]
-            (sid, ID, c, xxx, dx) = unpack(self._endian + b'iiiif', eData)
+            (sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), eData)
 
             constraint = SPC(None, [sid, ID, c, dx])
             self.add_constraint_SPC(constraint)
@@ -236,11 +237,11 @@ class GEOM4(object):
             nids = [n1]
             if thru_flag == 0:  # repeat 4 to end
                 nnodes = (len(data) - n) // 4
-                nodes = unpack(self._endian + b'%ii' % nnodes, data[n:])
+                nodes = unpack(b(self._endian + '%ii' % nnodes), data[n:])
                 nids += list(nodes)
                 n += 4 * nentries
             else:
-                n2 = unpack(self._endian + b'i', data[n:n+4])
+                n2 = unpack(b(self._endian + 'i'), data[n:n+4])
                 n += 4
                 nids.append(n2)
             self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
@@ -259,7 +260,7 @@ class GEOM4(object):
         """SPCD(5110,51,256) - Record 47"""
         #self.log.debug('skipping SPCD in GEOM4\n')
         n = 0
-        s = Struct(self._endian + b'4if')
+        s = Struct(b(self._endian + '4if'))
         nEntries = len(data) // 20  # 5*4
         for i in range(nEntries):
             eData = data[n:n + 20]
@@ -314,7 +315,7 @@ class GEOM4(object):
         #self.log.debug('skipping SUPORT in GEOM4\n')
         n = 0
         nEntries = len(data) // 8  # 2*4
-        s = Struct(self._endian + b'2i')
+        s = Struct(b(self._endian + '2i'))
         for i in range(nEntries):
             self.add_suport(SUPORT(None, list(s.unpack(data[n:n + 8])))) # extracts [sid, c]
             n += 8

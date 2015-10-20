@@ -7,8 +7,6 @@ This file defines the OUG Table, which contains:
  * Real/Complex Eigenvectors
  * Real Temperature
 """
-from struct import unpack
-
 from pyNastran import is_release
 from pyNastran.op2.op2_common import OP2Common
 
@@ -51,6 +49,7 @@ class OUG(OP2Common):
         OP2Common.__init__(self)
 
     def _read_oug1_3(self, data):
+        #self._set_times_dtype()
         self.nonlinear_factor = None
         self.is_table_1 = True
         self.is_table_2 = False
@@ -140,7 +139,18 @@ class OUG(OP2Common):
             raise RuntimeError(msg)
 
         #print self.code_information()
+        #
         self.fix_format_code()
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        else:
+            #self.fix_format_code()
+            if self.format_code == 1:
+                self.format_code = 2
+                self.data_code['format_code'] = 2
+            assert self.format_code in [2, 3], self.code_information()
+
         self._parse_thermal_code()
         if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
@@ -151,6 +161,7 @@ class OUG(OP2Common):
 
 
     def _read_oug2_3(self, data):
+        #self._set_times_dtype()
         #return self._read_oug1_3(data)
         self.nonlinear_factor = None
 
@@ -249,6 +260,16 @@ class OUG(OP2Common):
             raise RuntimeError(msg)
 
         self.fix_format_code()
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        else:
+            #self.fix_format_code()
+            if self.format_code == 1:
+                self.format_code = 2
+                self.data_code['format_code'] = 2
+            assert self.format_code in [2, 3], self.code_information()
+
         self._parse_thermal_code()
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', self.approach_code,
@@ -260,8 +281,13 @@ class OUG(OP2Common):
         assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
 
     def _read_oug_4(self, data):
-        if self.table_code == 1:   # Displacements
-            if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUGV1PAT', 'TOUGV1',
+        if self.table_name == b'OUGPSD2':
+            if self.table_code not in [1, 601, 610, 611]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oug_psd(data)
+        elif self.table_code == 1:   # Displacements
+            if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUGV1PAT', b'TOUGV1',
                                        b'OUGV2',
                                        b'OUPV1']:
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
@@ -277,7 +303,7 @@ class OUG(OP2Common):
         elif self.table_code == 11:
             n = self._read_acceleration(data)
         else:
-            raise NotImplementedError(self.table_code)
+            raise NotImplementedError(self.code_information())
         #else:
             #self._not_implemented_or_skip(data, 'bad OUG table')
         return n
@@ -313,10 +339,10 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code,
-                                 is_cid=is_cid)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                           RealDisplacementArray, ComplexDisplacementArray,
+                                           'node', random_code=self.random_code,
+                                           is_cid=is_cid)
         elif self.thermal == 1:
             result_name = 'temperatures'
             storage_obj = self.temperatures
@@ -332,27 +358,27 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealDisplacementArray, ComplexDisplacementArray,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 4:
             result_name = 'displacement_scaled_response_spectra_SRSS'
             storage_obj = self.displacement_scaled_response_spectra_SRSS
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealDisplacementArray, ComplexDisplacementArray,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 8:  # 4 ?
             result_name = 'displacement_scaled_response_spectra_NRL'
             storage_obj = self.displacement_scaled_response_spectra_NRL
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealDisplacementArray, ComplexDisplacementArray,
+                                            'node', random_code=self.random_code)
             #return self._not_implemented_or_skip(data, msg='thermal=4')
         else:
             raise RuntimeError(self.code_information())
@@ -368,15 +394,14 @@ class OUG(OP2Common):
         result_name = 'velocities'
         storage_obj = self.velocities
         if self.thermal == 0:
-            real_obj = RealVelocity
-            complex_obj = ComplexVelocity
+            result_name = 'velocities'
+            storage_obj = self.velocities
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealVelocity, ComplexVelocity,
-                                 RealVelocityArray, ComplexVelocityArray,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealVelocityArray, ComplexVelocityArray,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 1:
             real_obj = RealThermalVelocityVector
             complex_obj = None
@@ -385,17 +410,17 @@ class OUG(OP2Common):
             self._results._found_result(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealThermalVelocityVector, None,
-                                 None, None, 'node', random_code=self.random_code)
+                                 None, None,
+                                 'node', random_code=self.random_code)
         elif self.thermal == 2:
             result_name = 'velocity_scaled_response_spectra_ABS'
             storage_obj = self.velocity_scaled_response_spectra_ABS
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealVelocity, ComplexVelocity,
-                                 RealVelocityArray, ComplexVelocityArray,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealVelocityArray, ComplexVelocityArray,
+                                            'node', random_code=self.random_code)
             #n = self._not_implemented_or_skip(data, msg='thermal=2')
         else:
             raise NotImplementedError(self.thermal)
@@ -410,10 +435,10 @@ class OUG(OP2Common):
             storage_obj = self.accelerations
             if self._results.is_not_saved(result_name):
                 return len(data)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationArray, ComplexAccelerationArray,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealAccelerationArray,
+                                            ComplexAccelerationArray,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'accelerations'
             storage_obj = self.accelerations
@@ -429,10 +454,9 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationArray, ComplexAccelerationArray,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealAccelerationArray, ComplexAccelerationArray,
+                                            'node', random_code=self.random_code)
             #n = self._not_implemented_or_skip(data, msg='thermal=2')
         elif self.thermal == 4:
             result_name = 'acceleration_scaled_response_spectra_NRL'
@@ -440,10 +464,9 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
-                                 RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationArray, ComplexAccelerationArray,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, result_name, storage_obj,
+                                            RealAccelerationArray, ComplexAccelerationArray,
+                                            'node', random_code=self.random_code)
             #n = self._not_implemented_or_skip(data, msg='thermal=4')
         else:
             raise NotImplementedError(self.thermal)
@@ -487,7 +510,8 @@ class OUG(OP2Common):
                     real_obj = Eigenvector
                     #assert real_obj is not None
                     nnodes = len(data) // 32  # 8*4
-                    auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
+                    auto_return, is_vectorized = self._create_table_object(
+                        result_name, nnodes, storage_obj, real_obj, real_vector)
                     if auto_return:
                         return len(data)
                     n = self._read_real_table_sort1(data, result_name, node_elem)
@@ -515,6 +539,86 @@ class OUG(OP2Common):
             #n = self._read_table(data, result_name, storage_obj,
             #                     None, None,
             #                     None, None, 'node', random_code=self.random_code)
+        else:
+            raise NotImplementedError(self.thermal)
+        return n
+
+    def _read_oug_psd(self, data):
+        """
+        table_code = 601/610/611
+        """
+        if self.thermal == 0:
+            if self.table_code in [601]:
+                result_name = 'displacementsPSD'
+                storage_obj = self.displacementsPSD
+                if self._results.is_not_saved(result_name):
+                    return len(data)
+                self._results._found_result(result_name)
+                n = self._read_table_vectorized(data, result_name, storage_obj,
+                                     RealDisplacementArray, ComplexDisplacementArray,
+                                     'node', random_code=self.random_code)
+            elif self.table_code == 610:
+                result_name = 'velocitiesPSD'
+                storage_obj = self.velocitiesPSD
+                if self._results.is_not_saved(result_name):
+                    return len(data)
+                self._results._found_result(result_name)
+                n = self._read_table_vectorized(data, result_name, storage_obj,
+                                                RealVelocityArray, ComplexVelocityArray,
+                                                'node', random_code=self.random_code)
+            elif self.table_code == 611:
+                result_name = 'accelerationsPSD'
+                storage_obj = self.accelerationsPSD
+                if self._results.is_not_saved(result_name):
+                    return len(data)
+                n = self._read_table_vectorized(data, result_name, storage_obj,
+                                                RealAccelerationArray, ComplexAccelerationArray,
+                                                'node', random_code=self.random_code)
+            #elif self.table_code in [1]:
+                #if self.format_code == 2:
+                    #self.format_code = 1
+                    #self.data['format_code'] = 1
+                #result_name = 'displacements'
+                #storage_obj = self.displacements
+                #if self._results.is_not_saved(result_name):
+                    #return len(data)
+                #self._results._found_result(result_name)
+                #n = self._read_table_vectorized(data, result_name, storage_obj,
+                                     #RealDisplacementArray, ComplexDisplacementArray,
+                                     #'node', random_code=self.random_code)
+            else:
+                raise RuntimeError(self.code_information())
+        #elif self.thermal == 1:
+            #result_name = 'accelerations'
+            #storage_obj = self.accelerations
+            #if self._results.is_not_saved(result_name):
+                #return len(data)
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, result_name, storage_obj,
+                                 #None, None,
+                                 #None, None, 'node', random_code=self.random_code)
+        #elif self.thermal == 2:
+            #result_name = 'acceleration_scaled_response_spectra_ABS'
+            #storage_obj = self.acceleration_scaled_response_spectra_ABS
+            #if self._results.is_not_saved(result_name):
+                #return len(data)
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, msg='thermal=2')
+        #elif self.thermal == 4:
+            #result_name = 'acceleration_scaled_response_spectra_NRL'
+            #storage_obj = self.acceleration_scaled_response_spectra_NRL
+            #if self._results.is_not_saved(result_name):
+                #return len(data)
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, msg='thermal=4')
         else:
             raise NotImplementedError(self.thermal)
         return n

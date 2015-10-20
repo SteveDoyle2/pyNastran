@@ -4,47 +4,39 @@ Contains the OES class that is used to read stress/strain data
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import b
 from six.moves import range
 from struct import Struct
+from numpy import fromstring, radians, sin, cos, vstack
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import (RealBarStress, RealBarStrain,
-                                                                 RealBarStressArray, RealBarStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import (RealBar10NodesStressArray, RealBar10NodesStrainArray)
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress, RealBeamStrain,
-                                                                  RealBeamStressArray, RealBeamStrainArray,
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStressArray, RealBeamStrainArray,
                                                                   RealNonlinearBeamStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStress, RealBushStrain     # TODO: vectorize 2
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
-from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import (RealCompositePlateStress, RealCompositePlateStrain,
-                                                                            RealCompositePlateStressArray, RealCompositePlateStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStress   # TODO: vectorize 1
-from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import (RealPlateStress, RealPlateStrain,
-                                                                   RealPlateStressArray, RealPlateStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import (RealRodStress, RealRodStrain,
-                                                                 RealRodStressArray, RealRodStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import (RealShearStress, RealShearStrain,
-                                                                  RealShearStrainArray, RealShearStressArray)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import (RealSolidStress, RealSolidStrain,
-                                                                   RealSolidStrainArray, RealSolidStressArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain, NonlinearSpringStress # TODO: vectorize 3
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress, RealTriaxStrain # TODO: vectorize 2
 
 
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import (ComplexBarStress, ComplexBarStrain,
-                                                                    ComplexBarStressArray, ComplexBarStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushStress, ComplexBushStrain    # TODO: vectorize 2
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress                   # TODO: vectorize 1
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (ComplexPlateStress, ComplexPlateStrain,
-                                                                      ComplexPlateStressArray, ComplexPlateStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import (ComplexRodStress, ComplexRodStrain)       # TODO: vectorize 2
                                                                     #ComplexRodStressArray, ComplexRodStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStress, ComplexShearStrain    # TODO: vectorize 2
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import (ComplexSolidStress, ComplexSolidStrain,
-                                                                      ComplexSolidStressArray, ComplexSolidStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStress, ComplexCelasStrain   # TODO: vectorize 2
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRod, NonlinearQuad, HyperelasticQuad  # TODO: vectorize 3
@@ -284,7 +276,7 @@ class OES(OP2Common):
             return n
         return new_func
 
-    @print_obj_name_on_crash
+    #@print_obj_name_on_crash
     def _read_oes1_4_sort1(self, data):
         """
         Reads OES1 subtable 4
@@ -302,7 +294,7 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, msg)
         return n
 
-    @print_obj_name_on_crash
+    #@print_obj_name_on_crash
     def _read_ostr1_4_sort1(self, data):
         """
         Reads OSTR1 subtable 4
@@ -356,97 +348,142 @@ class OES(OP2Common):
             # 3-CTUBE
             # 10-CONROD
             if self.is_stress():
-                obj_real = RealRodStress
-                obj_complex = ComplexRodStress
+                #obj_real = RealRodStress
+                #obj_complex = ComplexRodStress
                 obj_vector_real = RealRodStressArray
                 obj_vector_complex = ComplexRodStressArray
                 if self.element_type == 1: # CROD
-                    result_vector_name = 'crod_stress'
+                    result_name = 'crod_stress'
                 elif self.element_type == 3:  # CTUBE
-                    result_vector_name = 'ctube_stress'
+                    result_name = 'ctube_stress'
                 elif self.element_type == 10:  # CONROD
-                    result_vector_name = 'conrod_stress'
+                    result_name = 'conrod_stress'
                 else:
                     msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
             else:
-                obj_real = RealRodStrain
-                obj_complex = ComplexRodStrain
+                #obj_real = RealRodStrain
+                #obj_complex = ComplexRodStrain
                 obj_vector_real = RealRodStrainArray
                 obj_vector_complex = ComplexRodStrainArray
                 if self.element_type == 1: # CROD
-                    result_vector_name = 'crod_strain'
+                    result_name = 'crod_strain'
                 elif self.element_type == 3:  # CTUBE
-                    result_vector_name = 'ctube_strain'
+                    result_name = 'ctube_strain'
                 elif self.element_type == 10:  # CONROD
-                    result_vector_name = 'conrod_strain'
+                    result_name = 'conrod_strain'
                 else:
                     msg = self.code_information()
                     return self._not_implemented_or_skip(data, msg)
 
-            result_name = result_vector_name
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 5:  # real
                 ntotal = 5 * 4
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(nelements,
+                                                        result_name, slot,
+                                                        obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
+                obj = self.obj
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
                     self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i4f')
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    (eid_device, axial, axial_margin, torsion, torsion_margin) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
-                    self.obj.add_new_eid(dt, eid, axial, axial_margin, torsion, torsion_margin)
-                    n += ntotal
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #[axial, torsion, SMa, SMt]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s = Struct(b(self._endian + 'i4f'))
+                    for i in range(nelements):
+                        edata = data[n:n+ntotal]
+                        out = s.unpack(edata)
+                        (eid_device, axial, axial_margin, torsion, torsion_margin) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        if self.is_debug_file:
+                            self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                        self.obj.add_new_eid(dt, eid, axial, axial_margin, torsion, torsion_margin)
+                        n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 5: # imag
                 ntotal = 20
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(nelements,
+                                                       result_name, slot,
+                                                       obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i4f')
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)
-                    (eid_device, axialReal, axial_imag, torsion_real, torsionImag) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                s = Struct(b(self._endian + 'i4f'))
+
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
 
                     if is_magnitude_phase:
-                        axial = polar_to_real_imag(axialReal, axial_imag)
-                        torsion = polar_to_real_imag(torsion_real, torsionImag)
+                        real = floats[:, [1, 3]]
+                        imag = floats[:, [2, 4]]
+                        real_imag = real + 1.j * imag
                     else:
-                        axial = complex(axialReal, axial_imag)
-                        torsion = complex(torsion_real, torsionImag)
+                        mag = floats[:, [1, 3]]
+                        phase = floats[:, [2, 4]]
+                        rtheta = radians(phase)
+                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+                    obj.data[obj.itime, itotal:itotal2, :] = real_imag
 
-                    self.obj.add_new_eid(dt, eid, axial, torsion)
-                    n += ntotal
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    for i in range(nelements):
+                        edata = data[n:n + ntotal]
+                        out = s.unpack(edata)
+                        (eid_device, axialReal, axial_imag, torsion_real, torsionImag) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+
+                        if is_magnitude_phase:
+                            axial = polar_to_real_imag(axialReal, axial_imag)
+                            torsion = polar_to_real_imag(torsion_real, torsionImag)
+                        else:
+                            axial = complex(axialReal, axial_imag)
+                            torsion = complex(torsion_real, torsionImag)
+
+                        self.obj.add_new_eid(dt, eid, axial, torsion)
+                        n += ntotal
             #elif self.format_code in [2, 3] and self.num_wide == 8:  # is this imag ???
                 #ntotal = 32
-                #s = Struct(self._endian + b'i')
+                #s = Struct(b(self._endian + 'i'))
                 #nelements = len(data) // ntotal
                 #for i in range(nelements):
                     #edata = data[n:n + 4]
@@ -465,44 +502,38 @@ class OES(OP2Common):
             ## TODO: fix method to follow correct pattern...regarding???
 
             if self.is_stress():
-                result_vector_name = 'cbeam_stress'
+                result_name = 'cbeam_stress'
             else:
-                result_vector_name = 'cbeam_strain'
-            result_name = result_vector_name
+                result_name = 'cbeam_strain'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 111:  # real
                 ntotal = 444 # 44 + 10*40  (11 nodes)
 
                 if self.is_stress():
-                    obj_real = RealBeamStress
                     obj_vector_real = RealBeamStressArray
                 else:
-                    obj_real = RealBeamStrain
                     obj_vector_real = RealBeamStrainArray
 
                 nelements = len(data) // ntotal
                 nlayers = nelements * 11
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     self._data_factor = 11
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i')
+                s = Struct(b(self._endian + 'i'))
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
                 n2 = 40
-                s1 = Struct(self._endian + b'ii9f')
-                s2 = Struct(self._endian + b'i9f')
+                s1 = Struct(b(self._endian + 'ii9f'))
+                s2 = Struct(b(self._endian + 'i9f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+n1]
@@ -534,14 +565,14 @@ class OES(OP2Common):
                     #self.create_transient_object(self.beamStrain, RealBeamStrain)
 
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i')
+                s = Struct(b(self._endian + 'i'))
 
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
                 n2 = 40
-                s1 = Struct(self._endian + b'ii9f')
-                s2 = Struct(self._endian + b'i9f')
+                s1 = Struct(b(self._endian + 'ii9f'))
+                s2 = Struct(b(self._endian + 'i9f'))
 
                 nelements = len(data) // ntotal
                 for i in range(nelements):
@@ -573,78 +604,124 @@ class OES(OP2Common):
         elif self.element_type == 4: # CSHEAR
             # 4-CSHEAR
             if self.is_stress():
-                obj_real = RealShearStress
+                #obj_real = RealShearStress
                 obj_complex = ComplexShearStress
 
                 ComplexShearStressArray = None
                 obj_vector_real = RealShearStressArray
                 obj_vector_complex = ComplexShearStressArray
-                result_vector_name = 'cshear_stress'
+                result_name = 'cshear_stress'
             else:
-                obj_real = RealShearStrain
+                #obj_real = RealShearStrain
                 obj_complex = ComplexShearStrain
 
                 ComplexShearStrainArray = None
                 obj_vector_real = RealShearStrainArray
                 obj_vector_complex = ComplexShearStrainArray
-                result_vector_name = 'cshear_strain'
+                result_name = 'cshear_strain'
 
-            if self._results.is_not_saved(result_name) and self._results.is_not_saved(result_vector_name):
+            if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 4:  # real
                 ntotal = 16  # 4*4
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(nelements,
+                                                       result_name, slot,
+                                                       obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i3f')
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)  # num_wide=5
-                    if self.is_debug_file:
-                        self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+                obj = self.obj
+                assert obj is not None
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
 
-                    (eid_device, max_strain, avg_strain, margin) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
-                    self.obj.add_new_eid(dt, eid, max_strain, avg_strain, margin)
-                    n += ntotal
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
+                    itime = obj.itime
+                    obj._times[itime] = dt
+                    if itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #[max_strain, avg_strain, margin]
+                    obj.data[itime, itotal:itotal2, :] = floats[:, 1:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s = Struct(b(self._endian + 'i3f'))
+                    for i in range(nelements):
+                        edata = data[n:n + ntotal]
+                        out = s.unpack(edata)  # num_wide=5
+                        if self.is_debug_file:
+                            self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+
+                        (eid_device, max_strain, avg_strain, margin) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        obj.add_new_eid(dt, eid, max_strain, avg_strain, margin)
+                        n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 5:  # imag
                 ntotal = 20  # 4*5
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i4f')
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)  # num_wide=5
-                    if self.is_debug_file:
-                        self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
-                    (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
-                    #eid = (eid_device - self.device_code) // 10
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
 
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #(eid_device, etmaxr, etmaxi, etavgr, etavgi)
                     if is_magnitude_phase:
-                        etmax = polar_to_real_imag(etmaxr, etmaxi)
-                        etavg = polar_to_real_imag(etavgr, etavgi)
+                        real = floats[:, [1, 3]]
+                        imag = floats[:, [2, 4]]
+                        real_imag = real + 1.j * imag
                     else:
-                        etmax = complex(etmaxr, etmaxi)
-                        etavg = complex(etavgr, etavgi)
-                    self.obj.add_new_eid_sort1(dt, eid, (etmax, etavg))
-                    n += ntotal
+                        mag = floats[:, [1, 3]]
+                        phase = floats[:, [2, 4]]
+                        rtheta = radians(phase)
+                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+                    obj.data[obj.itime, itotal:itotal2, :] = real_imag
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s = Struct(b(self._endian + 'i4f'))
+                    for i in range(nelements):
+                        edata = data[n:n + ntotal]
+                        out = s.unpack(edata)  # num_wide=5
+                        if self.is_debug_file:
+                            self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+                        (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+
+                        if is_magnitude_phase:
+                            etmax = polar_to_real_imag(etmaxr, etmaxi)
+                            etavg = polar_to_real_imag(etavgr, etavgi)
+                        else:
+                            etmax = complex(etmaxr, etmaxi)
+                            etavg = complex(etavgr, etavgi)
+                        self.obj.add_new_eid_sort1(dt, eid, (etmax, etavg))
+                        n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, msg)
@@ -681,11 +758,11 @@ class OES(OP2Common):
                     result_name = 'celas4_strain'
                 else:
                     raise RuntimeError(self.element_type)
-            slot = getattr(self, result_name)
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 2:  # real
                 if self.is_stress():
@@ -695,7 +772,7 @@ class OES(OP2Common):
 
                 ntotal = 8 # 2 * 4
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'if')
+                s = Struct(b(self._endian + 'if'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -713,7 +790,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, ComplexCelasStrain)
 
                 ntotal = 12
-                s = Struct(self._endian + b'i2f')
+                s = Struct(b(self._endian + 'i2f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -738,32 +815,27 @@ class OES(OP2Common):
 
         elif self.element_type == 34: # CBAR
             if self.is_stress():
-                result_vector_name = 'cbar_stress'
+                result_name = 'cbar_stress'
             else:
-                result_vector_name = 'cbar_strain'
+                result_name = 'cbar_strain'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
-            result_name = result_vector_name
             self._results._found_result(result_name)
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
+            slot_vector = slot
 
             if self.format_code == 1 and self.num_wide == 16:  # real
                 if self.is_stress():
-                    obj_real = RealBarStress
                     obj_vector_real = RealBarStressArray
                 else:
-                    obj_real = RealBarStrain
                     obj_vector_real = RealBarStrainArray
 
                 ntotal = 16 * 4
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return len(data)
 
@@ -774,7 +846,7 @@ class OES(OP2Common):
                     self.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i15f')
+                s = Struct(b(self._endian + 'i15f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -790,18 +862,14 @@ class OES(OP2Common):
                                          s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
             elif self.format_code in [2, 3] and self.num_wide == 19:  # imag
                 if self.is_stress():
-                    obj_complex = ComplexBarStress
                     obj_vector_complex = ComplexBarStressArray
                 else:
-                    obj_complex = ComplexBarStrain
                     obj_vector_complex = ComplexBarStrainArray
 
                 ntotal = 76
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return len(data)
 
@@ -812,7 +880,7 @@ class OES(OP2Common):
                     self.binary_debug.write('                           s1b, s2b, s3b, s4b]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i18f')
+                s = Struct(b(self._endian + 'i18f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
@@ -861,56 +929,48 @@ class OES(OP2Common):
             # 67-CHEXA
             # 68-CPENTA
             if self.is_stress():
-                obj_real = RealSolidStress
-                obj_complex = ComplexSolidStress
-
                 obj_vector_real = RealSolidStressArray
                 obj_vector_complex = ComplexSolidStressArray
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
-                    result_vector_name = 'ctetra_stress'
+                    result_name = 'ctetra_stress'
                     element_name = 'CTETRA4'
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
-                    result_vector_name = 'chexa_stress'
+                    result_name = 'chexa_stress'
                     element_name = 'CHEXA8'
                 elif self.element_type == 68:  # CPENTA
                     nnodes_expected = 7
-                    result_vector_name = 'cpenta_stress'
+                    result_name = 'cpenta_stress'
                     element_name = 'CPENTA6'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
             else:
-                obj_real = RealSolidStrain
-                obj_complex = ComplexSolidStrain
-
                 obj_vector_real = RealSolidStrainArray
                 obj_vector_complex = ComplexSolidStrainArray
 
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
-                    result_vector_name = 'ctetra_strain'
+                    result_name = 'ctetra_strain'
                     element_name = 'CTETRA4'
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
-                    result_vector_name = 'chexa_strain'
+                    result_name = 'chexa_strain'
                     element_name = 'CHEXA8'
                 elif self.element_type == 68:  # CPENTA
                     nnodes_expected = 7
-                    result_vector_name = 'cpenta_strain'
+                    result_name = 'cpenta_strain'
                     element_name = 'CPENTA6'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            result_name = result_vector_name
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             numwide_real = 4 + 21 * nnodes_expected
             numwide_imag = 4 + (17 - 4) * nnodes_expected
@@ -922,80 +982,103 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 84 * nnodes_expected
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                struct1 = Struct(self._endian + b'ii4si')
-                struct2 = Struct(self._endian + b'i20f')
-                if self.is_debug_file:
-                    msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
-                        self.element_name, self.element_type, nelements, nnodes_expected)
-                    msg += '                                 syy, syz, s2, b1, b2, b3,\n'
-                    msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
-                    self.binary_debug.write(msg)
+                if self.use_vector and is_vectorized and 0:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
 
-                for i in range(nelements):
-                    edata = data[n:n+16]
-                    out = struct1.unpack(edata)
-                    (eid_device, cid, abcd, nnodes) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[4:]
+                    #(grid_device,
+                     #sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                     #syy, syz, s2, b1, b2, b3,
+                     #szz, sxz, s3, c1, c2, c3)
+                    floats1 = floats[:4].reshape(nelements * nnodes_expected, 21)[:, 1:] # drop grid_device
 
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        # (eid_device, cid, abcd, nnodes)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                        eids = ints[:, 0] // 10
+                        ints1 = ints[:4].reshape(nelements * nnodes_expected, 21)
+                        grid_device = ints1[:, 0]
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    obj.data[obj.itime, itotal:itotal2, :] = floats1
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    struct1 = Struct(b(self._endian + 'ii4si'))
+                    struct2 = Struct(b(self._endian + 'i20f'))
                     if self.is_debug_file:
-                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+                        msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
+                            self.element_name, self.element_type, nelements, nnodes_expected)
+                        msg += '                                 syy, syz, s2, b1, b2, b3,\n'
+                        msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
+                        self.binary_debug.write(msg)
 
-                    assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
-
-                    n += 16
-                    for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
-                        out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-                        (grid_device,
-                         sxx, sxy, s1, a1, a2, a3, pressure, svm,
-                         syy, syz, s2, b1, b2, b3,
-                         szz, sxz, s3, c1, c2, c3) = out
+                    for i in range(nelements):
+                        edata = data[n:n+16]
+                        out = struct1.unpack(edata)
+                        (eid_device, cid, abcd, nnodes) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
 
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, grid_device, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
 
-                        #if grid_device == 0:
-                            #grid = 'CENTER'
-                        #else:
-                            ##grid = (grid_device - device_code) // 10
-                            #grid = grid_device
+                        assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
-                        grid = grid_device
-                        aCos = [a1, a2, a3]
-                        bCos = [b1, b2, b3]
-                        cCos = [c1, c2, c3]
-                        if inode == 0:
-                            #element_name = self.element_name + str(nnodes) #  this is correct, but fails
-                            self.obj.add_eid(element_name, cid, dt, eid, grid,
-                                             sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                             aCos, bCos, cCos, pressure, svm)
-                        else:
-                            self.obj.add_node(dt, eid, inode, grid,
-                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                              aCos, bCos, cCos, pressure, svm)
-                        n += 84
+                        n += 16
+                        for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                            out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
+                            if self.is_debug_file:
+                                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+                            (grid_device,
+                             sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                             syy, syz, s2, b1, b2, b3,
+                             szz, sxz, s3, c1, c2, c3) = out
+
+                            if self.is_debug_file:
+                                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+                            #if grid_device == 0:
+                                #grid = 'CENTER'
+                            #else:
+                                ##grid = (grid_device - device_code) // 10
+                                #grid = grid_device
+
+                            grid = grid_device
+                            aCos = [a1, a2, a3]
+                            bCos = [b1, b2, b3]
+                            cCos = [c1, c2, c3]
+                            if inode == 0:
+                                #element_name = self.element_name + str(nnodes) #  this is correct, but fails
+                                self.obj.add_eid(element_name, cid, dt, eid, grid,
+                                                 sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                                 aCos, bCos, cCos, pressure, svm)
+                            else:
+                                self.obj.add_node(dt, eid, inode, grid,
+                                                  sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                                  aCos, bCos, cCos, pressure, svm)
+                            n += 84
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
                 ntotal = numwide_imag * 4
                 nelements = len(data) // ntotal
                 self.ntotal += nelements * nnodes_expected
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s1 = Struct(self._endian + b'2i4si')
-                s2 = Struct(self._endian + b'i12f')
+                s1 = Struct(b(self._endian + '2i4si'))
+                s2 = Struct(b(self._endian + 'i12f'))
                 for i in range(nelements):
                     edata = data[n:n+16]
                     n += 16
@@ -1047,40 +1130,32 @@ class OES(OP2Common):
         elif self.element_type == 33:  # CQUAD4-centroidal
             # 33-QUAD4-centroidal
             if self.is_stress():
-                obj_real = RealPlateStress
-                obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
-                result_vector_name = 'cquad4_stress'
+                result_name = 'cquad4_stress'
             else:
-                obj_real = RealPlateStrain
-                obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
-                result_vector_name = 'cquad4_strain'
+                result_name = 'cquad4_strain'
 
-            result_name = result_vector_name
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
                 nelements = len(data) // ntotal
                 nlayers = nelements * 2
 
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     self._data_factor = 2
                     return nelements * ntotal
 
-                s = Struct(self._endian + b'i16f')
+                s = Struct(b(self._endian + 'i16f'))
                 cen = 0 # CEN/4
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -1101,19 +1176,18 @@ class OES(OP2Common):
                                  angle2, major2, minor2, max_shear2)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
-                if self.read_mode == 1:
-                    return len(data)
-
-                if self.is_stress():
-                    self.create_transient_object(slot, ComplexPlateStress)
-                else:
-                    self.create_transient_object(slot, ComplexPlateStrain)
-                s1 = Struct(self._endian + b'i14f')
-                s2 = Struct(self._endian + b'i14f')
                 nnodes = 0  # centroid + 4 corner points
-
                 ntotal = 4 * (15 * (nnodes + 1))
                 nelements = len(data) // ntotal
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
+                if auto_return:
+                    self._data_factor = 2
+                    return nelements * ntotal
+
+                s1 = Struct(b(self._endian + 'i14f'))
+                s2 = Struct(b(self._endian + 'i14f'))
+
                 cen = 0 # 'CEN/4'
                 for i in range(nelements):
                     edata = data[n:n+60]  # 4*15=60
@@ -1180,39 +1254,31 @@ class OES(OP2Common):
 
         elif self.element_type == 74:  # TRIA3
             if self.is_stress():
-                obj_real = RealPlateStress
-                obj_complex = ComplexPlateStress
+                #obj_real = RealPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
-                result_vector_name = 'ctria3_stress'
+                result_name = 'ctria3_stress'
             else:
-                obj_real = RealPlateStrain
-                obj_complex = ComplexPlateStrain
+                #obj_real = RealPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
-                result_vector_name = 'ctria3_strain'
-            result_name = result_vector_name
+                result_name = 'ctria3_strain'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
 
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
-
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
                 nelements = len(data) // ntotal
                 nlayers = nelements * 2  # 2 layers per node
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     self._data_factor = 2
                     return nelements * ntotal
 
-                s = Struct(self._endian + b'i16f')
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -1220,35 +1286,60 @@ class OES(OP2Common):
                     self.binary_debug.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                cen = 0 # 'CEN/3'
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)
+                if self.use_vector and is_vectorized:
+                    obj = self.obj
+                    nfields = 17 * nelements
+                    nbytes = nfields * 4
+                    istart = obj.itotal
+                    iend = obj.itotal + nlayers
 
-                    (eid_device,
-                     fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                    itime = obj.itime
+                    if itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 17)
+                        eids = ints[:, 0] // 10
+                        ilayers = ints[:, 1]
+                        ints2 = ints[:, 1:].reshape(nlayers, 8)
+                        assert eids.min() > 0, eids
+                        obj._times[obj.itime] = dt
+                        obj.element_node[istart:iend:2, 0] = eids
+                        obj.element_node[istart+1:iend+1:2, 0] = eids
+                        #obj.element_node[istart:iend, 1] = 0
+                        #print('obj.element_node\n', obj.element_node)
 
-                    if self.is_debug_file:
-                        self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 17)
+                    floats1 = floats[:, 1:].reshape(nlayers, 8)
+                    obj.data[obj.itime, istart:iend, :] = floats1
+                    obj.itotal += nlayers
+                    n = nbytes
+                else:
+                #if 1:
+                    cen = 0 # 'CEN/3'
+                    s = Struct(b(self._endian + 'i16f'))
+                    for i in range(nelements):
+                        edata = data[n:n + ntotal]
+                        out = s.unpack(edata)
+                        (eid_device,
+                         fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                         fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        if self.is_debug_file:
+                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                    self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
-                                         txy1, angle1, major1, minor1, vm1)
-                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
-                                 angle2, major2, minor2, vm2)
-                    n += ntotal
+                        self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
+                                             txy1, angle1, major1, minor1, vm1)
+                        self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
+                                     angle2, major2, minor2, vm2)
+                        n += ntotal
+                #ass
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 ntotal = 60  # 4*15
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'i14f')
+                s = Struct(b(self._endian + 'i14f'))
                 cen = 0 # CEN/3
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1291,8 +1382,6 @@ class OES(OP2Common):
             # 82-CQUADR
             # 144-CQUAD4-bilinear
             if self.is_stress():
-                obj_real = RealPlateStress
-                obj_complex = ComplexPlateStress
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
                 # 64-CQUAD8
@@ -1301,55 +1390,49 @@ class OES(OP2Common):
                 # 82-CQUADR
                 # 144-CQUAD4-bilinear
                 if self.element_type == 64: # CQUAD8
-                    result_vector_name = 'cquad8_stress'
+                    result_name = 'cquad8_stress'
                     #gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
-                    result_vector_name = 'ctriar_stress'
+                    result_name = 'ctriar_stress'
                     #gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
-                    result_vector_name = 'ctria6_stress'
+                    result_name = 'ctria6_stress'
                     #gridC = 'CEN/6'
                 elif self.element_type == 82:  # CTRIA6
-                    result_vector_name = 'cquadr_stress'
+                    result_name = 'cquadr_stress'
                     #gridC = 'CEN/4'
                 elif self.element_type == 144:  # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
-                    result_vector_name = 'cquad4_stress'
+                    result_name = 'cquad4_stress'
                     #gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
             else:
-                obj_real = RealPlateStrain
-                obj_complex = ComplexPlateStrain
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
 
                 if self.element_type == 64: # CQUAD8
-                    result_vector_name = 'cquad8_strain'
+                    result_name = 'cquad8_strain'
                     #gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
-                    result_vector_name = 'ctriar_strain'
+                    result_name = 'ctriar_strain'
                     #gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
-                    result_vector_name = 'ctria6_strain'
+                    result_name = 'ctria6_strain'
                     #gridC = 'CEN/6'
                 elif self.element_type == 82: # CQUADR
-                    result_vector_name = 'cquadr_strain'
+                    result_name = 'cquadr_strain'
                     #gridC = 'CEN/4'
                 elif self.element_type == 144: # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
-                    result_vector_name = 'cquad4_strain'
+                    result_name = 'cquad4_strain'
                     #gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
-            gridC = 0
-            slot_vector = getattr(self, result_vector_name)
-            result_name = result_vector_name
-            slot = slot_vector
 
             if self._results.is_not_saved(result_name):
                 return len(data)
@@ -1363,6 +1446,8 @@ class OES(OP2Common):
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
 
+            gridC = 0
+            slot = getattr(self, result_name)
             numwide_real = 2 + 17 * (nnodes + 1)
             numwide_imag = 2 + 15 * (nnodes + 1)
             numwide_random = 2 + 9 * (nnodes + 1)
@@ -1373,82 +1458,113 @@ class OES(OP2Common):
                 ntotal = 4 * (2 + 17 * (nnodes + 1))
                 nelements = len(data) // ntotal
                 nlayers = 2 * nelements * (nnodes + 1)  # 2 layers per node
+                nnodes_all = nnodes + 1
 
-                self._data_factor = 10
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                self._data_factor = 10  # TODO: why is this 10?
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                #assert ntotal == 348, ntotal
-                center_format = b'i4si16f'
-                node_format = b'i16f'
-                cs = Struct(center_format)
-                ns = Struct(node_format)
+                obj = self.obj
+                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nelements * self.num_wide * 4
 
-                if self.is_debug_file:
-                    self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                    self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
-                    self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                    self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                    self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                    self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                    self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
+                    istart = obj.itotal
+                    iend = istart + nlayers
+                    obj._times[obj.itime] = dt
 
-                for i in range(nelements):
-                    edata = data[n:n+76]
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                        ints1 = ints[:, 2:].reshape(nlayers//2, 17)[:, 0].reshape(nelements, nnodes_all)
+                        ints1[:, 0] = 0.
+                        nids = ints1.ravel()
 
-                    out = cs.unpack(edata)  # len=17*4
-                    # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
-                    (eid_device, j, grid,
-                     fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                        eids = ints[:, 0] // 10
+                        eids2 = vstack([eids] * (nnodes_all * 2)).T.ravel()
+                        nids2 = vstack([nids, nids]).T.ravel()
+                        obj.element_node[istart:iend, 0] = eids2
+                        obj.element_node[istart:iend, 1] = nids2
+                        #assert obj.element_node[:iend, 0].min() > 0, eids2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    floats1 = floats[:, 2:].reshape(nlayers // 2, 17)
+                    results = floats1[:, 1:].reshape(nlayers, 8)
+                    #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+                    obj.data[obj.itime, istart:iend, :] = results
+                #if 1:
+                else:
+                    n = 0
+                    center_format = b'i4si16f'
+                    node_format = b'i16f'
+                    cs = Struct(center_format)
+                    ns = Struct(node_format)
 
                     if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                        self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                        self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
+                        self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                        self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                        self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                        self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                        self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
 
-                    self.obj.add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1,
-                                         txy1, angle1, major1, minor1, vm1)
-                    self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2,
-                                 angle2, major2, minor2, vm2)
-                    n += 76
-                    for inode in range(nnodes):
-                        out = ns.unpack(data[n:n + 68])
-                        (grid,
+                    for i in range(nelements):
+                        edata = data[n:n+76]
+
+                        out = cs.unpack(edata)  # len=17*4
+                        # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
+                        (eid_device, j,
+                         grid,
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        #print(out[:3])
                         if self.is_debug_file:
-                            d = tuple([grid,
-                                       fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
-                            self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
-                        assert isinstance(grid, int), grid
-                        assert grid > 0, grid
+                            self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                        self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
-                                            txy1, angle1, major1, minor1, vm1)
-                        self.obj.add(dt, eid, grid, fd2, sx2, sy2,
-                                     txy2, angle2, major2, minor2, vm2)
-                        n += 68
+                        self.obj.add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1,
+                                             txy1, angle1, major1, minor1, vm1)
+                        self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2,
+                                     angle2, major2, minor2, vm2)
+                        n += 76
+                        for inode in range(nnodes):
+                            out = ns.unpack(data[n:n + 68])
+                            (grid,
+                             fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                             fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+
+                            if self.is_debug_file:
+                                d = tuple([grid,
+                                           fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
+                                self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
+                            assert isinstance(grid, int), grid
+                            assert grid > 0, grid
+
+                            self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
+                                                txy1, angle1, major1, minor1, vm1)
+                            self.obj.add(dt, eid, grid, fd2, sx2, sy2,
+                                         txy2, angle2, major2, minor2, vm2)
+                            n += 68
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * ntotal
 
-                s1 = Struct(self._endian + b'ii')  # 2
-                s2 = Struct(self._endian + b'i14f') # 15
+                s1 = Struct(b(self._endian + 'ii'))  # 2
+                s2 = Struct(b(self._endian + 'i14f')) # 15
                 for i in range(nelements):
                     (eid_device, _) = s1.unpack(data[n:n+8])
                     n += 8
@@ -1549,7 +1665,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, NonlinearQuad)
 
                 ntotal = 52  # 4*13
-                s = Struct(self._endian + b'i12f')  # 1+12=13
+                s = Struct(b(self._endian + 'i12f'))  # 1+12=13
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1575,7 +1691,7 @@ class OES(OP2Common):
                     self.create_transient_object(slot, NonlinearQuad)
 
                 ntotal = 100  # 4*25
-                s = Struct(self._endian + b'i24f') # 1+24=25
+                s = Struct(b(self._endian + 'i24f')) # 1+24=25
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1605,105 +1721,116 @@ class OES(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.is_stress():
-                ComplexCompositePlateStress = None
-                obj_real = RealCompositePlateStress
-                obj_complex = ComplexCompositePlateStress
-
+                # obj_complex = ComplexCompositePlateStress
                 ComplexCompositePlateStressArray = None
                 obj_vector_real = RealCompositePlateStressArray
                 obj_vector_complex = ComplexCompositePlateStressArray
                 if self.element_type == 95: # CQUAD4
-                    result_vector_name = 'cquad4_composite_stress'
+                    result_name = 'cquad4_composite_stress'
                 elif self.element_type == 96:  # CQUAD8
-                    result_vector_name = 'cquad8_composite_stress'
+                    result_name = 'cquad8_composite_stress'
                 elif self.element_type == 97:  # CTRIA3
-                    result_vector_name = 'ctria3_composite_stress'
+                    result_name = 'ctria3_composite_stress'
                 elif self.element_type == 98:  # CTRIA6
-                    result_vector_name = 'ctria6_composite_stress'
+                    result_name = 'ctria6_composite_stress'
                 #elif self.element_type == ???:  # CTRIA6
-                    #result_vector_name = 'ctriar_composite_stress'
+                    #result_name = 'ctriar_composite_stress'
                 #elif self.element_type == 10:  # CTRIA6
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     raise RuntimeError(self.code_information())
                     #return self._not_implemented_or_skip(data, msg)
             else:
-                ComplexCompositePlateStrain = None
-                obj_real = RealCompositePlateStrain
-                obj_complex = ComplexCompositePlateStrain
-
                 ComplexCompositePlateStrainArray = None
                 obj_vector_real = RealCompositePlateStrainArray
                 obj_vector_complex = ComplexCompositePlateStrainArray
                 if self.element_type == 95: # CQUAD4
-                    result_vector_name = 'cquad4_composite_strain'
+                    result_name = 'cquad4_composite_strain'
                 elif self.element_type == 96:  # CQUAD8
-                    result_vector_name = 'cquad8_composite_strain'
+                    result_name = 'cquad8_composite_strain'
                 elif self.element_type == 97:  # CTRIA3
-                    result_vector_name = 'ctria3_composite_strain'
+                    result_name = 'ctria3_composite_strain'
                 elif self.element_type == 98:  # CTRIA6
-                    result_vector_name = 'ctria6_composite_strain'
+                    result_name = 'ctria6_composite_strain'
                 #elif self.element_type == ???:  # CTRIA6
-                    #result_vector_name = 'ctriar_composite_strain'
+                    #result_name = 'ctriar_composite_strain'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     raise RuntimeError(self.code_information())
                     #return self._not_implemented_or_skip(data, msg)
-            result_name = result_vector_name
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             etype = self.element_name
             if self.format_code == 1 and self.num_wide == 11:  # real
                 ntotal = 44
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(self._endian + b'ii9f')
+                obj = self.obj
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
                     self.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                eid_old = 0
-                if hasattr(self, 'eid_old'):
-                    eid_old = self.eid_old
+                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nelements * self.num_wide * 4
 
-                for i in range(nelements):
-                    edata = data[n:n+44]  # 4*11
-                    out = s.unpack(edata)
-                    (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
-                    # TODO: this is a hack that I think is composite specific
-                    eid = (eid_device) // 10
+                    istart = obj.itotal
+                    iend = istart + nelements
+                    obj._times[obj.itime] = dt
 
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 11)
+                        eids = ints[:, 0] // 10
+                        nids = ints[:, 1]
+                        obj.element_layer[istart:iend, 0] = eids
+                        obj.element_layer[istart:iend, 1] = nids
 
-                    if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                        self.obj.add_new_eid(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                    else:
-                        self.obj.add(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                    eid_old = eid
-                    n += 44
-                self.eid_old = eid_old
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 11)
+                    #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
+                    obj.data[obj.itime, istart:iend, :] = floats[:, 2:]
+                else:
+                    s = Struct(b(self._endian + 'ii9f')) # 11
+                    eid_old = 0
+                    if hasattr(self, 'eid_old'):
+                        eid_old = self.eid_old
+
+                    for i in range(nelements):
+                        edata = data[n:n+44]  # 4*11
+                        out = s.unpack(edata)
+                        (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
+                        # TODO: this is a hack that I think is composite specific
+                        eid = (eid_device) // 10
+
+                        if self.is_debug_file:
+                            self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
+
+                        if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                            self.obj.add_new_eid(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                        else:
+                            self.obj.add(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                        eid_old = eid
+                        n += 44
+                    self.eid_old = eid_old
             elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
+                aaa
                 msg = self.code_information()
                 nelements = len(data) // ntotal
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
                 #return self._not_implemented_or_skip(data, msg)
@@ -1713,9 +1840,9 @@ class OES(OP2Common):
                 #    'i8si4f4s', not 'i8si3fi4s'
                 ntotal = 36
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i')
-                s2 = Struct(self._endian + b'8si3fi4s')
-                s3 = Struct(self._endian + b'8si4f4s')
+                s = Struct(b(self._endian + 'i'))
+                s2 = Struct(b(self._endian + '8si3fi4s'))
+                s3 = Struct(b(self._endian + '8si4f4s'))
                 for i in range(nelements):
                     #out = s.unpack(data[n:n + ntotal])
                     eid_device, = s.unpack(data[n:n+4])
@@ -1757,8 +1884,8 @@ class OES(OP2Common):
                 ntotal = 132  # (1+8*4)*4 = 33*4 = 132
                 nelements = len(data) // ntotal
 
-                s1 = Struct(self._endian + b'2i7f')  # 36
-                s2 = Struct(self._endian + b'i7f')
+                s1 = Struct(b(self._endian + '2i7f'))  # 36
+                s2 = Struct(b(self._endian + 'i7f'))
                 for i in range(nelements):
                     out = s1.unpack(data[n:n + 36])
                     (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
@@ -1786,8 +1913,8 @@ class OES(OP2Common):
                 #else:
                     #self.create_transient_object(self.ctriax_strain, ComplexTriaxStrain)  # undefined
                     #raise NotImplementedError('ComplexTriaxStrain')
-                s1 = Struct(self._endian + b'ii8f')
-                s2 = Struct(self._endian + b'i8f')
+                s1 = Struct(b(self._endian + 'ii8f'))
+                s2 = Struct(b(self._endian + 'i8f'))
 
                 num_wide = 1 + 4 * 9
                 ntotal = num_wide * 4
@@ -1854,7 +1981,7 @@ class OES(OP2Common):
                 ntotal = 28  # 4*7
 
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i6f')
+                s = Struct(b(self._endian + 'i6f'))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
@@ -1874,7 +2001,7 @@ class OES(OP2Common):
                 ntotal = 52  # 4*13
 
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i12f')
+                s = Struct(b(self._endian + 'i12f'))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
@@ -1924,7 +2051,7 @@ class OES(OP2Common):
                     raise NotImplementedError('cbush1d_stress_strain; numwide=8')
 
                 ntotal = 32  # 4*8
-                s = Struct(self._endian + b'i6fi')
+                s = Struct(b(self._endian + 'i6fi'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1945,7 +2072,7 @@ class OES(OP2Common):
                     raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 
                 ntotal = 36  # 4*9
-                s = Struct(self._endian + b'i8f')
+                s = Struct(b(self._endian + 'i8f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -2008,7 +2135,7 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == 7:  # real
                 self.create_transient_object(slot, NonlinearRod)
-                s = Struct(self._endian + b'i6f')  # 1+6=7
+                s = Struct(b(self._endian + 'i6f'))  # 1+6=7
                 ntotal = 28  #  7*4 = 28
                 nelements = len(data) // ntotal
                 for i in range(nelements):
@@ -2056,7 +2183,7 @@ class OES(OP2Common):
                 assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
                 ntotal = 12  # 4*3
                 nelements = len(data) // ntotal
-                s = Struct(self._endian + b'i2f')
+                s = Struct(b(self._endian + 'i2f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)  # num_wide=3
@@ -2096,7 +2223,7 @@ class OES(OP2Common):
                     #self.create_transient_object(self.nonlinear_cgap_strain, NonlinearGapStrain)  # undefined
                     raise NotImplementedError('NonlinearGapStrain')
                 ntotal = 44  # 4*11
-                s = Struct(self._endian + b'i8f4s4s')
+                s = Struct(b(self._endian + 'i8f4s4s'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -2126,10 +2253,7 @@ class OES(OP2Common):
             else:
                 result_name = 'nonlinear_cbeam_strain'
                 slot = self.nonlinear_cbeam_strain
-            result_vector_name = result_name
-            slot_vector = slot
             self._results._found_result(result_name)
-
 
             if self.format_code == 1 and self.num_wide == numwide_real:
                 msg = result_name
@@ -2143,9 +2267,8 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
 
                 nlayers = nelements * 8
-                auto_return = self._create_oes_object2(nlayers,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nlayers,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     self._data_factor = 8
@@ -2159,7 +2282,7 @@ class OES(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
 
-                s = Struct(self._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
+                s = Struct(b(self._endian + '2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f'))  # 2 + 6*8 + 1 = 51
                 for i in range(nelements):  # num_wide=51
                     edata = data[n:n + 204]
                     out = s.unpack(edata)
@@ -2244,8 +2367,8 @@ class OES(OP2Common):
                     #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
 
                 n = 0
-                s1 = Struct(self._endian + b'i4s')
-                s2 = Struct(self._endian + b'i15f')
+                s1 = Struct(b(self._endian + 'i4s'))
+                s2 = Struct(b(self._endian + 'i15f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
                     edata = data[n:n+8]
@@ -2277,20 +2400,19 @@ class OES(OP2Common):
             if self.read_mode == 0:
                 return len(data)
             if self.is_stress():
-                result_vector_name = 'cbar_stress_10nodes'
+                result_name = 'cbar_stress_10nodes'
             else:
-                result_vector_name = 'cbar_strain_10nodes'
+                result_name = 'cbar_strain_10nodes'
 
             if self._results.is_not_saved(result_name):
                 return len(data)
-            result_name = result_vector_name
             self._results._found_result(result_name)
-            slot_vector = getattr(self, result_vector_name)
-            slot = slot_vector
+            slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 10:  # real
-                RealBar10NodesStress = None
-                RealBar10NodesStrain = None
+                # if this isn't vectorized, it will be messed up...
+                RealBar10NodesStress = RealBar10NodesStressArray
+                RealBar10NodesStrain = RealBar10NodesStrainArray
                 if self.is_stress():
                     obj_real = RealBar10NodesStress
                     obj_vector_real = RealBar10NodesStressArray
@@ -2301,9 +2423,8 @@ class OES(OP2Common):
                 ntotal = 10 * 4
                 nelements = len(data) // ntotal
 
-                auto_return = self._create_oes_object2(nelements,
-                                                       result_name, result_vector_name,
-                                                       slot, slot_vector,
+                auto_return, is_vectorized = self._create_oes_object3(nelements,
+                                                       result_name, slot,
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     return len(data)
@@ -2314,7 +2435,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #elementi = [eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                s = Struct(self._endian + b'i9f')
+                s = Struct(b(self._endian + 'i9f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -2323,6 +2444,7 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
                     n += ntotal
+                    # continue
                     self.obj.add_new_eid(self.element_name, dt, eid,
                                          sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
             else:
@@ -2361,8 +2483,8 @@ class OES(OP2Common):
             numwideC = 2 + 13 * nnodes  # 54
             if self.num_wide == numwideA:
                 ntotal = numwideA * 4
-                s1 = Struct(self._endian + b'ii')
-                s2 = Struct(self._endian + b'i11f')
+                s1 = Struct(b(self._endian + 'ii'))
+                s2 = Struct(b(self._endian + 'i11f'))
                 nelements = len(data) // ntotal  # 2+16*9 = 146 -> 146*4 = 584
                 for i in range(nelements):
                     edata = data[n:n+8]
@@ -2407,8 +2529,8 @@ class OES(OP2Common):
                 self._results._found_result(result_name)
                 n = 0
                 ntotal = 120  # 36+28*3
-                s1 = Struct(self._endian + b'i4si6f')  # 1 + 4+1+6 = 12
-                s2 = Struct(self._endian + b'i6f')
+                s1 = Struct(b(self._endian + 'i4si6f'))  # 1 + 4+1+6 = 12
+                s2 = Struct(b(self._endian + 'i6f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+36]  # 4*9
@@ -2467,8 +2589,8 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real???
                 ntotal = numwide_real * 4
-                s2 = Struct(self._endian + b'3i4s2i')
-                s3 = Struct(self._endian + b'i16f')
+                s2 = Struct(b(self._endian + '3i4s2i'))
+                s3 = Struct(b(self._endian + 'i16f'))
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     out = s2.unpack(data[n:n + 24])
@@ -2566,15 +2688,16 @@ class OES(OP2Common):
         #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
         assert self.thermal == 0, "thermal = %%s" % self.thermal
-        assert n > 0, "n = %s" % n
+        assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
 
     def OESRT_CQUAD4_95(self, data):
+        """unsupported element"""
         assert self.num_wide == 9, "num_wide=%s not 9" % self.num_wide
         ntotal = 36  # 4*9
 
         n = 0
-        s = Struct(self._endian + b'i8si3fi4s')
+        s = Struct(b(self._endian + 'i8si3fi4s'))
         nelements = len(data) // ntotal
         for i in range(nelements):
             eData = data[n:n + ntotal]
@@ -2591,10 +2714,7 @@ class OES(OP2Common):
             #self.obj.add_new_eid(element_name, dt, eid, force, stress)
             n += ntotal
 
-    def _create_oes_object2(self, nelements,
-                            result_name, result_vector_name,
-                            slot, slot_vector,
-                            obj, obj_vector):
+    def _create_oes_object3(self, nelements, result_name, slot, obj, obj_vector):
         """
         Creates the self.obj parameter based on if this is vectorized or not.
 
@@ -2606,14 +2726,9 @@ class OES(OP2Common):
             the number of elements to preallocate for vectorization
         result_name : str
             unused
-        result_vector_name : str
-            unused
         slot : dict[(int, int, str)=obj
             the self dictionary that will be filled with a
             non-vectorized result
-        slot_vector : dict[(int, int, str)=obj
-            the self dictionary that will be filled with a
-            vectorized result
         obj : OES
             a pointer to the non-vectorized class
         obj_vector : OESArray
@@ -2623,8 +2738,8 @@ class OES(OP2Common):
         -------
         auto_return : bool
             a flag indicating a return n should be called
-        result_name : str
-            string of result_name or result_vector_name
+        is_vectorized : bool
+            True/False
 
         Since that's confusing, let's say we have real CTETRA stress data.
         We're going to fill self.solidStress with the class
@@ -2638,22 +2753,21 @@ class OES(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
 
-        auto_return = self._create_oes_object2(self, nelements,
-                            'solidStress', 'ctetra_stress',
-                            self.solidStress, self.ctetra_stress,
+        auto_return, is_vectorized = self._create_oes_object3(self, nelements,
+                            'ctetra_stress', self.ctetra_stress,
                             RealSolidStress, RealSolidStressArray)
         if auto_return:
             return nelements * ntotal
         """
         auto_return = False
-        is_vectorized = self._is_vectorized(obj_vector, slot_vector)
+        is_vectorized = self._is_vectorized(obj_vector, slot)
         #print('is_vectorized=%s result_name=%r' % (is_vectorized, result_name))
         if is_vectorized:
-            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name))
+            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
             if self.read_mode == 1:
-                self.create_transient_object(slot_vector, obj_vector)
+                self.create_transient_object(slot, obj_vector)
                 #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
-                self.result_names.add(result_vector_name)
+                self.result_names.add(result_name)
                 #print('self.obj =', self.obj)
                 self.obj.nelements += nelements
                 auto_return = True
@@ -2663,7 +2777,7 @@ class OES(OP2Common):
 
                 # if this is failing, you probably set obj_vector to None...
                 try:
-                    self.obj = slot_vector[self.code]
+                    self.obj = slot[self.code]
                 except KeyError:
                     msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
                     msg += "There's probably an extra check for read_mode=1..."
@@ -2685,7 +2799,43 @@ class OES(OP2Common):
 
         if auto_return and self.read_mode == 2:
             raise RuntimeError('this should never happen...auto_return=True read_mode=2')
-        return auto_return
+        return auto_return, is_vectorized
+
+    def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
+        """same as _create_oes_object4 except it doesn't support unvectorized objects"""
+        auto_return = False
+        #is_vectorized = True
+        is_vectorized = self._is_vectorized(obj_vector, slot)
+        #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
+
+        if is_vectorized:
+            if self.read_mode == 1:
+                self.create_transient_object(slot, obj_vector)
+                #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
+                self.result_names.add(result_name)
+                #print('self.obj =', self.obj)
+                self.obj.nelements += nelements
+                auto_return = True
+            elif self.read_mode == 2:
+                self.code = self._get_code()
+                #self.log.info("code = %s" % str(self.code))
+
+                # if this is failing, you probably set obj_vector to None...
+                try:
+                    self.obj = slot[self.code]
+                except KeyError:
+                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
+                    msg += "There's probably an extra check for read_mode=1..."
+                    self.log.error(msg)
+                    raise
+                #self.obj.update_data_code(self.data_code)
+                self.obj.build()
+
+            else:  # not vectorized
+                auto_return = True
+        else:
+            auto_return = True
+        return auto_return, is_vectorized
 
     def _is_vectorized(self, obj_vector, slot_vector):
         """
@@ -2704,26 +2854,11 @@ class OES(OP2Common):
             should the data object be vectorized
 
         .. note :: the Vectorized column refers to the setting given by the user
-
-        +-------------+-------------+------------+---------+
-        |  obj_vector | slot_vector | Vectorized | Returns |
-        +-------------+-------------+------------+---------+
-        |     obj     |     dict    |    True    |  True   |
-        |     obj     |     None    |    True    |  False  |
-        |     None    |     dict    |    True    |  False  |
-        |     obj     |     None    |    True    |  False  |
-        |     None    |     None    |    True    |  False  |
-        +-------------+-------------+------------+ --------+
-        |     obj     |     dict    |    False   |  False  |
-        |     obj     |     None    |    False   |  False  |
-        |     None    |     dict    |    False   |  False  |
-        |     obj     |     None    |    False   |  False  |
-        |     None    |     None    |    False   |  False  |
-        +-------------+-------------+------------+ --------+
         """
         is_vectorized = False
+        #print('self.is_vectorized =', is_vectorized)
         if self.is_vectorized:
-            if obj_vector is not None and slot_vector is not None:
+            if obj_vector is not None:
                 is_vectorized = True
                 #print("***vectorized...")
             #else:

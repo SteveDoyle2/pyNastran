@@ -227,6 +227,8 @@ class NastranIO(object):
         self.iSubcaseNameMap = None
         self.has_caero = False
         self.dependents_nodes = set([])
+        self.i_transform = {}
+        self.transforms = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
         if is_geom:
@@ -434,6 +436,8 @@ class NastranIO(object):
     def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
         self.eidMap = {}
         self.nidMap = {}
+        self.i_transform = {}
+        self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
@@ -647,7 +651,8 @@ class NastranIO(object):
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
-        self._fill_bar_yz(dim_max, model, icase, cases, form)
+        icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
+        assert icase is not None
 
         #------------------------------------------------------------
         # loads
@@ -658,6 +663,7 @@ class NastranIO(object):
 
         #print('dependent_nodes =', self.dependents_nodes)
         form0 = form[2]
+        assert icase is not None
         for subcase_id in subcase_ids:
             if subcase_id == 0:
                 continue
@@ -673,6 +679,7 @@ class NastranIO(object):
             formi = (load_str, None, [])
             formii = formi[2]
             icase = self._plot_pressures(model, cases, formii, icase, subcase_id, subcase)
+            assert icase is not None
             icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
             if len(formii):
                 form0.append(formi)
@@ -1023,7 +1030,7 @@ class NastranIO(object):
         bar_beam_eids = out['CBAR'] + out['CBEAM']
         self.bar_lines = {}
         if len(bar_beam_eids) == 0:
-            return
+            return icase
 
         scale = 0.15
         lines_bar_y = []
@@ -1062,9 +1069,21 @@ class NastranIO(object):
             bar_types[Type] = (eids, lines_bar_y, lines_bar_z)
 
 
+        no_axial = zeros(self.element_ids.shape, dtype='int32')
+        no_torsion = zeros(self.element_ids.shape, dtype='int32')
+        no_bending = zeros(self.element_ids.shape, dtype='int32')
+        no_bending_bad = zeros(self.element_ids.shape, dtype='int32')
+
+        no_6_16 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_56 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_456 = zeros(self.element_ids.shape, dtype='int32')
+        no_56_456 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_6 = zeros(self.element_ids.shape, dtype='int32')
+        no_0_16 = zeros(self.element_ids.shape, dtype='int32')
         for eid in bar_beam_eids:
             # if eid < 30000:
                 # continue
+            ieid = self.eidMap[eid]
             elem = model.elements[eid]
             pid = elem.pid
             if pid.type in ['PBAR', 'PBEAM']:
@@ -1084,6 +1103,35 @@ class NastranIO(object):
             i = n2 - n1
             Li = norm(i)
             ihat = i / Li
+
+            if elem.pa == 0 and elem.pb == 0:
+                pass
+            elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
+                no_axial[ieid] = 1
+                no_6_16[ieid] = 1
+            elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
+                no_bending[ieid] = 1
+                no_0_56[ieid] = 1
+            elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
+                no_bending[ieid] = 1
+                no_torsion[ieid] = 1
+                no_0_456[ieid] = 1
+            elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
+                no_torsion[ieid] = 1
+                no_56_456[ieid] = 1
+            elif elem.pa == 6 and elem.pb == 0:
+                no_bending_bad[ieid] = 1
+                no_0_6[ieid] = 1
+            elif elem.pa == 0 and elem.pb == 16:
+                no_axial[ieid] = 1
+                no_bending_bad[ieid] = 1
+                no_0_16[ieid] = 1
+            # elif (elem.pa == 6 and elem.pb == 16):
+                # no_axial[ieid] = 1
+                # no_bending_bad[ieid] = 1
+            else:
+                msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
+                raise NotImplementedError(msg)
 
             if elem.g0:
                 n0 = model.nodes[elem.g0].get_position()
@@ -1178,6 +1226,7 @@ class NastranIO(object):
                 # if Type not in ['ROD', 'TUBE']:
                 bar_y = Type + '_y'
                 bar_z = Type + '_z'
+
                 self.create_alternate_vtk_grid(bar_y, color=green, line_width=5, opacity=1.,
                                                point_size=5, representation='wire', bar_scale=scale, is_visible=False)
                 self.create_alternate_vtk_grid(bar_z, color=blue, line_width=5, opacity=1.,
@@ -1194,6 +1243,50 @@ class NastranIO(object):
                 bar_form[2].append(['is_%s' % Type, icase, []])
                 cases[(0, icase, 'is_%s' % Type, 1, 'centroid', '%i')] = is_type
                 icase += 1
+
+        if no_axial.max() == 1:
+            bar_form[2].append(['No Axial', icase, []])
+            cases[(0, icase, 'No Axial', 1, 'centroid', '%i')] = no_axial
+            icase += 1
+        if no_torsion.max() == 1:
+            bar_form[2].append(['No Torsion', icase, []])
+            cases[(0, icase, 'No Torsion', 1, 'centroid', '%i')] = no_torsion
+            icase += 1
+        if no_bending.max() == 1:
+            bar_form[2].append(['No Bending', icase, []])
+            cases[(0, icase, 'No Bending', 1, 'centroid', '%i')] = no_bending
+            icase += 1
+        if no_bending_bad.max() == 1:
+            bar_form[2].append(['No Bending (Bad)', icase, []])
+            cases[(0, icase, 'No Bending (Bad)', 1, 'centroid', '%i')] = no_bending_bad
+            icase += 1
+
+
+        if no_6_16.max() == 1:
+            bar_form[2].append(['no_6_16', icase, []])
+            cases[(0, icase, 'no_6_16', 1, 'centroid', '%i')] = no_6_16
+            icase += 1
+        if no_0_56.max() == 1:
+            bar_form[2].append(['no_0_56', icase, []])
+            cases[(0, icase, 'no_0_56', 1, 'centroid', '%i')] = no_0_56
+            icase += 1
+        if no_0_456.max() == 1:
+            bar_form[2].append(['no_0_456', icase, []])
+            cases[(0, icase, 'no_0_456', 1, 'centroid', '%i')] = no_0_456
+            icase += 1
+        if no_56_456.max() == 1:
+            bar_form[2].append(['no_56_456', icase, []])
+            cases[(0, icase, 'no_56_456', 1, 'centroid', '%i')] = no_56_456
+            icase += 1
+        if no_0_6.max() == 1:
+            bar_form[2].append(['no_0_6', icase, []])
+            cases[(0, icase, 'no_0_6', 1, 'centroid', '%i')] = no_0_6
+            icase += 1
+        if no_0_16.max() == 1:
+            bar_form[2].append(['no_0_16)', icase, []])
+            cases[(0, icase, 'no_0_16', 1, 'centroid', '%i')] = no_0_16
+            icase += 1
+
         # print(geo_form)
         geo_form.append(bar_form)
         return icase
@@ -1900,7 +1993,6 @@ class NastranIO(object):
                         zi = element.zOffset + element.pid.z0
                     else:
                         raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
-                    i += 1
                 else:
                     i += 1
                     continue
@@ -1908,6 +2000,7 @@ class NastranIO(object):
                 xoffset[i] = zi * normali[0]
                 yoffset[i] = zi * normali[1]
                 zoffset[i] = zi * normali[2]
+                i += 1
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
@@ -3450,6 +3543,8 @@ class NastranIO(object):
                 continue
 
             case = result[subcase_id]
+            if case.is_complex():
+                continue
             eidsi = case.element
             i = searchsorted(eids, eidsi)
             if len(i) != len(unique(i)):
@@ -3476,50 +3571,109 @@ class NastranIO(object):
 
         if subcase_id in bars:  # vectorized....
             case = bars[subcase_id]
-            #s1a = case.data[itime, :, 0]
-            #s2a = case.data[itime, :, 1]
-            #s3a = case.data[itime, :, 2]
-            #s4a = case.data[itime, :, 3]
+            if case.is_complex():
+                pass
+            else:
+                #s1a = case.data[itime, :, 0]
+                #s2a = case.data[itime, :, 1]
+                #s3a = case.data[itime, :, 2]
+                #s4a = case.data[itime, :, 3]
 
-            axial = case.data[itime, :, 4]
-            smaxa = case.data[itime, :, 5]
-            smina = case.data[itime, :, 6]
-            #MSt = case.data[itime, :, 7]
+                axial = case.data[itime, :, 4]
+                smaxa = case.data[itime, :, 5]
+                smina = case.data[itime, :, 6]
+                #MSt = case.data[itime, :, 7]
 
-            #s1b = case.data[itime, :, 8]
-            #s2b = case.data[itime, :, 9]
-            #s3b = case.data[itime, :, 10]
-            #s4b = case.data[itime, :, 11]
+                #s1b = case.data[itime, :, 8]
+                #s2b = case.data[itime, :, 9]
+                #s3b = case.data[itime, :, 10]
+                #s4b = case.data[itime, :, 11]
 
-            smaxb = case.data[itime, :, 12]
-            sminb = case.data[itime, :, 13]
-            #MSc   = case.data[itime, :, 14]
+                smaxb = case.data[itime, :, 12]
+                sminb = case.data[itime, :, 13]
+                #MSc   = case.data[itime, :, 14]
 
-            eidsi = case.elements # [:, 0]
+                eidsi = case.elements # [:, 0]
 
-            i = searchsorted(eids, eidsi)
-            if len(i) != len(unique(i)):
-                print('ibar = %s' % i)
-                print('eids = %s' % eids)
-                msg = 'ibar=%s is not unique' % str(i)
-                raise RuntimeError(msg)
+                i = searchsorted(eids, eidsi)
+                if len(i) != len(unique(i)):
+                    print('ibar = %s' % i)
+                    print('eids = %s' % eids)
+                    msg = 'ibar=%s is not unique' % str(i)
+                    raise RuntimeError(msg)
 
-            isElementOn[i] = 1.
-            oxx[i] = axial
+                isElementOn[i] = 1.
+                oxx[i] = axial
 
-            ## TODO :not sure if this block is general for multiple CBAR elements
-            samax = amax([smaxa, smaxb], axis=0)
-            samin = amin([smaxa, smaxb], axis=0)
-            assert len(samax) == len(i), len(samax)
-            assert len(samin) == len(i)
-            savm = amax(abs([smina, sminb,
-                             smaxa, smaxb, axial]), axis=0)
+                ## TODO :not sure if this block is general for multiple CBAR elements
+                samax = amax([smaxa, smaxb], axis=0)
+                samin = amin([smaxa, smaxb], axis=0)
+                assert len(samax) == len(i), len(samax)
+                assert len(samin) == len(i)
+                savm = amax(abs([smina, sminb,
+                                 smaxa, smaxb, axial]), axis=0)
 
-            max_principal[i] = samax
-            min_principal[i] = samin
-            ovm[i] = savm
-            del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
+                max_principal[i] = samax
+                min_principal[i] = samin
+                ovm[i] = savm
+                del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
         del bars
+
+
+        if is_stress:
+            bars2 = model.cbar_stress_10nodes
+        else:
+            bars2 = model.cbar_strain_10nodes
+
+        if subcase_id in bars2 and 0:  # vectorized....
+            case = bars[subcase_id]
+            if case.is_complex():
+                pass
+            else:
+                #s1a = case.data[itime, :, 0]
+                #s2a = case.data[itime, :, 1]
+                #s3a = case.data[itime, :, 2]
+                #s4a = case.data[itime, :, 3]
+
+                axial = case.data[itime, :, 4]
+                smaxa = case.data[itime, :, 5]
+                smina = case.data[itime, :, 6]
+                #MSt = case.data[itime, :, 7]
+
+                #s1b = case.data[itime, :, 8]
+                #s2b = case.data[itime, :, 9]
+                #s3b = case.data[itime, :, 10]
+                #s4b = case.data[itime, :, 11]
+
+                smaxb = case.data[itime, :, 12]
+                sminb = case.data[itime, :, 13]
+                #MSc   = case.data[itime, :, 14]
+
+                eidsi = case.elements # [:, 0]
+
+                i = searchsorted(eids, eidsi)
+                if len(i) != len(unique(i)):
+                    print('ibar = %s' % i)
+                    print('eids = %s' % eids)
+                    msg = 'ibar=%s is not unique' % str(i)
+                    raise RuntimeError(msg)
+
+                isElementOn[i] = 1.
+                oxx[i] = axial
+
+                ## TODO :not sure if this block is general for multiple CBAR elements
+                samax = amax([smaxa, smaxb], axis=0)
+                samin = amin([smaxa, smaxb], axis=0)
+                assert len(samax) == len(i), len(samax)
+                assert len(samin) == len(i)
+                savm = amax(abs([smina, sminb,
+                                 smaxa, smaxb, axial]), axis=0)
+
+                max_principal[i] = samax
+                min_principal[i] = samin
+                ovm[i] = savm
+                #del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
+        del bars2
 
 
         if is_stress:
@@ -3529,36 +3683,39 @@ class NastranIO(object):
 
         if subcase_id in beams:  # vectorized
             case = beams[subcase_id]
-            eidsi = case.element_node[:, 0]
-            ueids = unique(eidsi)
-            #neids = len(ueids)
+            if case.is_complex():
+                pass
+            else:
+                eidsi = case.element_node[:, 0]
+                ueids = unique(eidsi)
+                #neids = len(ueids)
 
-            j = 0
-            # sxc, sxd, sxe, sxf
-            # smax, smin, MSt, MSc
-            sxc = case.data[itime, :, 0]
-            sxd = case.data[itime, :, 1]
-            sxe = case.data[itime, :, 2]
-            sxf = case.data[itime, :, 3]
-            smax = case.data[itime, :, 4]
-            smin = case.data[itime, :, 5]
-            for ieid, eid in enumerate(ueids):
-                oxxi = 0.
-                smaxi = 0.
-                smini = 0.
-                eid2 = self.eidMap[eid]
-                isElementOn[eid2] = 1.
-                for i in range(11):
-                    oxxi = max(sxc[j], sxd[j], sxe[j], sxf[j], oxxi)
-                    smaxi = max(smax[j], smaxi)
-                    smini = min(smin[j], smini)
-                    j += 1
-                ovmi = max(abs(smaxi), abs(smini))
-                oxxi = oxx[eid2]
-                max_principal[eid2] = smaxi
-                min_principal[eid2] = smini
-                ovm[eid2] = ovmi
-            del j, eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
+                j = 0
+                # sxc, sxd, sxe, sxf
+                # smax, smin, MSt, MSc
+                sxc = case.data[itime, :, 0]
+                sxd = case.data[itime, :, 1]
+                sxe = case.data[itime, :, 2]
+                sxf = case.data[itime, :, 3]
+                smax = case.data[itime, :, 4]
+                smin = case.data[itime, :, 5]
+                for ieid, eid in enumerate(ueids):
+                    oxxi = 0.
+                    smaxi = 0.
+                    smini = 0.
+                    eid2 = self.eidMap[eid]
+                    isElementOn[eid2] = 1.
+                    for i in range(11):
+                        oxxi = max(sxc[j], sxd[j], sxe[j], sxf[j], oxxi)
+                        smaxi = max(smax[j], smaxi)
+                        smini = min(smin[j], smini)
+                        j += 1
+                    ovmi = max(abs(smaxi), abs(smini))
+                    oxxi = oxx[eid2]
+                    max_principal[eid2] = smaxi
+                    min_principal[eid2] = smini
+                    ovm[eid2] = ovmi
+                del j, eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
         del beams
 
 
@@ -3579,8 +3736,10 @@ class NastranIO(object):
             ## TODO: is tria6, quad8, bilinear quad handled?
             if subcase_id not in result:
                 continue
-
             case = result[subcase_id]
+            if case.is_complex():
+                continue
+
             if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
@@ -3652,8 +3811,10 @@ class NastranIO(object):
         for cell_type, result in cplates:
             if subcase_id not in result:
                 continue
-
             case = result[subcase_id]
+            if case.is_complex():
+                continue
+
             if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
@@ -3727,8 +3888,10 @@ class NastranIO(object):
         for result in solids:
             if subcase_id not in result:
                 continue
-
             case = result[subcase_id]
+            if case.is_complex():
+                continue
+
             if case.is_von_mises():
                 vm_word = 'vonMises'
             else:

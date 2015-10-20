@@ -13,10 +13,6 @@ from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.utils.log import get_logger
 
 
-class CaseControlDeckDeprecated(object):
-    def __init__(self):
-        pass
-
     #def hasParameter(self, isubcase, param_name):
         #self.has_parameter(isubcase, param_name)
 
@@ -52,6 +48,37 @@ class CaseControlDeck(object):
         # pulls the logger from the BDF object
         self.log = get_logger(log, "debug")
         self.debug = False
+
+        self.sol_200_map = {
+            'STATICS' : 101,
+            'STATIC' : 101,
+
+            'MODES' : 103,
+            'MODE' : 103,
+
+            'BUCK' : 105,
+            'BUCKLING' : 105,
+
+            'DFREQ' : 108,
+            'MFREQ' : 111,
+            'SAERO' : 144,
+
+            'FLUTTER' : 145,
+            'FLUT' : 145,
+
+            'DIVERGE' : 144,
+            'DIVERG' : 145,
+
+            # 'HEAT' : ,
+            # 'STRUCTURE' : ,
+            'NLSTATICS' : 400,
+            'LNSTATICS' : 400,
+            'MTRAN' : 112,
+            'DCEIG' : None,
+        }
+        # 'HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
+        # 'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
+        # 'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN', 'FLUT',
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
@@ -355,12 +382,23 @@ class CaseControlDeck(object):
         they arent as clear, but the paramType lets the program know how to format it
         when writing it out.
 
-        :param self:  the CaseControlDeck object
-        :param lines: list of lines
-        :return: paramName see brief
-        :return: value     see brief
-        :return: options   see brief
-        :return: paramType see brief
+        Parameters
+        ----------
+        self : CaseControlDeck
+            the CaseControlDeck object
+        lines : List[str, str, ...]
+            list of lines
+
+        Returns
+        -------
+        paramName : str
+            see brief
+        value : List[...]
+            see brief
+        options : List[str/int/float]
+            see brief
+        paramType : str/int/float/List
+            see brief
         """
         i = 0
         options = []

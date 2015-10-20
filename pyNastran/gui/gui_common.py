@@ -97,7 +97,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self._edit_group_properties_shown = False
         #-------------
         # inputs dict
-        self.is_edges = inputs['is_edges']
+        self.is_edges = False
         self.is_edges_black = self.is_edges
         # self.is_nodal = inputs['is_nodal']
         # self.is_centroidal = inputs['is_centroidal']
@@ -351,8 +351,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
-                ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.set_actor_properties),
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
@@ -387,6 +385,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                 ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
             ]
+        # print('version =', vtk.VTK_VERSION, self.vtk_version)
+        if self.vtk_version[0] < 6:
+            tools += [
+                ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
+                ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
+            ]
+
         if 'nastran' in self.fmts:
             tools += [
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
@@ -423,7 +428,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.menu_help = self.menubar.addMenu('&Help')
 
         self.menu_hidden = self.menubar.addMenu('&Hidden')
-        self.menu_hidden.setVisible(False)
+        self.menu_hidden.menuAction().setVisible(False)
 
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script]
@@ -449,24 +454,34 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             'scshot', '', 'wireframe', 'surface', 'creset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
-            'legend', 'geo_properties', '', 'clipping', 'axis', 'edges', 'edges_black',
-        ]
+            'legend', 'geo_properties', '', 'clipping', 'axis']
+        if self.vtk_version[0] < 6:
+            menu_view += ['edges', 'edges_black',]
         if self.html_logging:
             self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
             self.actions['logwidget'].setStatusTip("Show/Hide application log")
             menu_view += ['', 'show_info', 'show_debug', 'show_gui', 'show_command']
             menu_window += ['logwidget']
 
+
+        menu_file = [
+            'load_geometry', 'load_results', 'load_csv_nodal', 'load_csv_elemental',
+            'script', '', 'exit']
+        toolbar_tools = ['reload', 'load_geometry', 'load_results',
+                         'x', 'y', 'z', 'X', 'Y', 'Z',
+                         'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
+                         'wireframe', 'surface',]
+        if self.vtk_version[0] < 6:
+            toolbar_tools.append('edges')
+        toolbar_tools += ['creset', 'view', 'scshot', '', 'exit']
+
         menu_items = [
-            (self.menu_file, ('load_geometry', 'load_results', 'load_csv_nodal', 'load_csv_elemental', 'script', '', 'exit')),
-            (self.menu_view, tuple(menu_view)),
-            (self.menu_window, tuple(menu_window)),
+            (self.menu_file, menu_file),
+            (self.menu_view, menu_view),
+            (self.menu_window, menu_window),
             (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
-            (self.toolbar, ('reload', 'load_geometry', 'load_results',
-                            'x', 'y', 'z', 'X', 'Y', 'Z',
-                            'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                            'wireframe', 'surface', 'edges', 'creset', 'view', 'scshot', '', 'exit')),
+            (self.toolbar, toolbar_tools),
             (self.menu_hidden, ('cycle_res',)),
             # (self.menu_scripts, ()),
             #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
@@ -1439,7 +1454,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         nrows, ncols = A.shape
         if ncols != len(headers):
             msg = 'Error loading csv/txt file\n'
-            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n'
+            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n' % (ncols, len(headers))
             msg += 'headers = %s' % headers
             raise SyntaxError(msg)
 
@@ -1530,26 +1545,29 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
         if out_filename == '':
             return
-        if not os.path.exists(out_filename):
-            msg = 'result file=%r does not exist' % out_filename
-            self.log_error(msg)
-            return
-            #raise IOError(msg)
-        self.last_dir = os.path.split(out_filename)[0]
-        try:
-            load_function(out_filename, self.last_dir)
-        except Exception as e:
-            msg = traceback.format_exc()
-            self.log_error(msg)
-            #return
-            raise
+        if isinstance(out_filename, string_types):
+            out_filename = [out_filename]
+        for out_filenamei in out_filename:
+            if not os.path.exists(out_filenamei):
+                msg = 'result file=%r does not exist' % out_filenamei
+                self.log_error(msg)
+                return
+                #raise IOError(msg)
+            self.last_dir = os.path.split(out_filenamei)[0]
+            try:
+                load_function(out_filenamei, self.last_dir)
+            except Exception as e:
+                msg = traceback.format_exc()
+                self.log_error(msg)
+                #return
+                raise
 
-        self.out_filename = out_filename
-        msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
-        self.set_window_title(msg)
-        print("on_load_results(%r)" % out_filename)
-        self.out_filename = out_filename
-        self.log_command("on_load_results(%r)" % out_filename)
+            self.out_filename = out_filenamei
+            msg = '%s - %s - %s' % (self.format, self.infile_name, out_filenamei)
+            self.set_window_title(msg)
+            print("on_load_results(%r)" % out_filenamei)
+            self.out_filename = out_filenamei
+            self.log_command("on_load_results(%r)" % out_filenamei)
 
     def setup_gui(self):
         assert self.fmts != [], 'supported_formats=%s' % self.supported_formats
@@ -2683,11 +2701,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self._legend_window.activateWindow()
 
         if data['close']:
-            self._apply_legend(data)
+            if not self._legend_window._updated_legend:
+                self._apply_legend(data)
             self._legend_shown = False
             del self._legend_window
         else:
             self._legend_window.activateWindow()
+
+    def update_legend(self, name, min_value, max_value, data_format,
+                      is_blue_to_red, is_horizontal_scalar_bar, scale):
+        if self._legend_shown:
+            self._legend_window._updated_legend = True
+            self._legend_window.update_legend(name,
+                    min_value, max_value, data_format,
+                    is_blue_to_red, is_horizontal_scalar_bar, scale)
+
+
 
 
     def _apply_legend(self, data):

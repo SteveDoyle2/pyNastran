@@ -4,7 +4,7 @@ from six import  iteritems
 from six.moves import range
 import copy
 from struct import pack
-
+from numpy import array
 
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
@@ -108,7 +108,8 @@ class ScalarObject(BaseScalarObject):
                 name = name + 's'
             else:
                 vals = getattr(self, name)
-            msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
+            #msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
+            msg.append('%s = %s\n' % (name, array(vals)))
         #print("***dataNames =", self.dataNames)
         return msg
 

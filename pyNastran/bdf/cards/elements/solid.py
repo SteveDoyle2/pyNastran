@@ -240,6 +240,10 @@ class CHEXA8(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
+    def getFaceAreaCentroidNormal(self, nid_opposite, nid):
+        nids = self.node_ids[:8]
+        return chexa_face_area_centroid_normal(nid_opposite, nid, nids, self.nodes[:8])
+
     def get_edge_ids(self):
         """
         Return the edge IDs
@@ -515,65 +519,9 @@ class CPENTA6(SolidElement):
             tuple(sorted([node_ids[2], node_ids[5]])),
         ]
 
-    def getFaceAreaCentroidNormal(self, nidOpposite, nid):
+    def getFaceAreaCentroidNormal(self, nid_opposite, nid):
         nids = self.node_ids[:6]
-        indx1 = nids.index(nid)
-        indx2 = nids.index(nidOpposite)
-
-        #  offset so it's easier to map the nodes with the QRG
-        pack = [indx1 + 1, indx2 + 1]
-        pack.sort()
-        mapper = {
-            # reverse points away from the element
-            [1, 2]: [1, 2, 3],  # close
-            [2, 3]: [1, 2, 3],
-            [1, 3]: [1, 2, 3],
-
-            [4, 5]: [4, 5, 6],  # far-reverse
-            [5, 6]: [4, 5, 6],
-            [4, 6]: [4, 5, 6],
-
-            [1, 5]: [1, 2, 5, 4],  # bottom
-            [2, 4]: [1, 2, 5, 4],
-
-            [1, 6]: [1, 3, 6, 4],  # left-reverse
-            [3, 4]: [1, 3, 6, 4],
-
-            [2, 6]: [2, 5, 6, 3],  # right
-            [3, 5]: [2, 3, 6, 5],
-        }
-
-        pack2 = mapper[pack]
-        if len(pack2) == 3:
-            (n1, n2, n3) = pack2
-            faceNodeIDs = [n1, n2, n3]
-            n1i = nids.index(n1 - 1)
-            n2i = nids.index(n2 - 1)
-            n3i = nids.index(n3 - 1)
-            p1 = self.nodes[n1i].get_position()
-            p2 = self.nodes[n2i].get_position()
-            p3 = self.nodes[n3i].get_position()
-            a = p1 - p2
-            b = p1 - p3
-            centroid = (p1 + p2 + p3) / 3.
-        else:
-            (n1, n2, n3, n4) = pack2
-            n1i = nids.index(n1 - 1)
-            n2i = nids.index(n2 - 1)
-            n3i = nids.index(n3 - 1)
-            n4i = nids.index(n4 - 1)
-            faceNodeIDs = [n1, n2, n3, n4]
-            p1 = self.nodes[n1i].get_position()
-            p2 = self.nodes[n2i].get_position()
-            p3 = self.nodes[n3i].get_position()
-            p4 = self.nodes[n4i].get_position()
-            a = p1 - p3
-            b = p2 - p4
-            centroid = (p1 + p2 + p3 + p4) / 4.
-        normal = cross(a, b)
-        n = norm(normal)
-        area = 0.5 * n
-        return area, centroid, normal / n
+        return cpenta_face_area_centroid_normal(nid_opposite, nid, nids, self.nodes[:6])
 
     def getFaceNodesAndArea(self, nidOpposite, nid):
         nids = self.node_ids[:6]
@@ -676,6 +624,132 @@ class CPENTA6(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
+def cpenta_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
+    indx1 = nids.index(nid)
+    indx2 = nids.index(nidOpposite)
+
+    #  offset so it's easier to map the nodes with the QRG
+    pack = [indx1 + 1, indx2 + 1]
+    pack.sort()
+    mapper = {
+        # reverse points away from the element
+        [1, 2]: [1, 2, 3],  # close
+        [2, 3]: [1, 2, 3],
+        [1, 3]: [1, 2, 3],
+
+        [4, 5]: [4, 5, 6],  # far-reverse
+        [5, 6]: [4, 5, 6],
+        [4, 6]: [4, 5, 6],
+
+        [1, 5]: [1, 2, 5, 4],  # bottom
+        [2, 4]: [1, 2, 5, 4],
+
+        [1, 6]: [1, 3, 6, 4],  # left-reverse
+        [3, 4]: [1, 3, 6, 4],
+
+        [2, 6]: [2, 5, 6, 3],  # right
+        [3, 5]: [2, 3, 6, 5],
+    }
+
+    pack2 = mapper[pack]
+    if len(pack2) == 3:
+        (n1, n2, n3) = pack2
+        faceNodeIDs = [n1, n2, n3]
+        n1i = nids.index(n1 - 1)
+        n2i = nids.index(n2 - 1)
+        n3i = nids.index(n3 - 1)
+        p1 = nodes[n1i].get_position()
+        p2 = nodes[n2i].get_position()
+        p3 = nodes[n3i].get_position()
+        a = p1 - p2
+        b = p1 - p3
+        centroid = (p1 + p2 + p3) / 3.
+    else:
+        (n1, n2, n3, n4) = pack2
+        n1i = nids.index(n1 - 1)
+        n2i = nids.index(n2 - 1)
+        n3i = nids.index(n3 - 1)
+        n4i = nids.index(n4 - 1)
+        faceNodeIDs = [n1, n2, n3, n4]
+        p1 = nodes[n1i].get_position()
+        p2 = nodes[n2i].get_position()
+        p3 = nodes[n3i].get_position()
+        p4 = nodes[n4i].get_position()
+        a = p1 - p3
+        b = p2 - p4
+        centroid = (p1 + p2 + p3 + p4) / 4.
+    normal = cross(a, b)
+    n = norm(normal)
+    area = 0.5 * n
+    return area, centroid, normal / n
+
+def chexa_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
+    """
+    # top (5-6-7-8)
+    # btm (1-2-3-4)
+    # left (1-2-3-4)
+    # right (5-6-7-8)
+    # front (1-5-8-4)
+    # back (2-6-7-3)
+    """
+    raise NotImplementedError()
+    indx1 = nids.index(nid)
+    indx2 = nids.index(nidOpposite)
+
+    #  offset so it's easier to map the nodes with the QRG
+    pack = [indx1 + 1, indx2 + 1]
+    pack.sort()
+    mapper = {
+        # reverse points away from the element
+        [1, 2]: [1, 2, 3],  # close
+        [2, 3]: [1, 2, 3],
+        [1, 3]: [1, 2, 3],
+
+        [4, 5]: [4, 5, 6],  # far-reverse
+        [5, 6]: [4, 5, 6],
+        [4, 6]: [4, 5, 6],
+
+        [1, 5]: [1, 2, 5, 4],  # bottom
+        [2, 4]: [1, 2, 5, 4],
+
+        [1, 6]: [1, 3, 6, 4],  # left-reverse
+        [3, 4]: [1, 3, 6, 4],
+
+        [2, 6]: [2, 5, 6, 3],  # right
+        [3, 5]: [2, 3, 6, 5],
+    }
+
+    pack2 = mapper[pack]
+    if len(pack2) == 3:
+        (n1, n2, n3) = pack2
+        faceNodeIDs = [n1, n2, n3]
+        n1i = nids.index(n1 - 1)
+        n2i = nids.index(n2 - 1)
+        n3i = nids.index(n3 - 1)
+        p1 = nodes[n1i].get_position()
+        p2 = nodes[n2i].get_position()
+        p3 = nodes[n3i].get_position()
+        a = p1 - p2
+        b = p1 - p3
+        centroid = (p1 + p2 + p3) / 3.
+    else:
+        (n1, n2, n3, n4) = pack2
+        n1i = nids.index(n1 - 1)
+        n2i = nids.index(n2 - 1)
+        n3i = nids.index(n3 - 1)
+        n4i = nids.index(n4 - 1)
+        faceNodeIDs = [n1, n2, n3, n4]
+        p1 = nodes[n1i].get_position()
+        p2 = nodes[n2i].get_position()
+        p3 = nodes[n3i].get_position()
+        p4 = nodes[n4i].get_position()
+        a = p1 - p3
+        b = p2 - p4
+        centroid = (p1 + p2 + p3 + p4) / 4.
+    normal = cross(a, b)
+    n = norm(normal)
+    area = 0.5 * n
+    return area, centroid, normal / n
 
 class CPENTA15(SolidElement):
     """
@@ -751,6 +825,10 @@ class CPENTA15(SolidElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def getFaceAreaCentroidNormal(self, nid_opposite, nid):
+        nids = self.node_ids[:6]
+        return cpenta_face_area_centroid_normal(nid_opposite, nid, nids, self.nodes[:6])
 
     def get_edge_ids(self):
         """
@@ -1166,18 +1244,7 @@ class CTETRA4(SolidElement):
         return nids
 
     def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
-        n1, n2, n3 = self.getFaceNodes(nid_opposite)
-        faceNodeIDs = [n1, n2, n3]
-        p1 = self.nodes[n1].get_position()
-        p2 = self.nodes[n2].get_position()
-        p3 = self.nodes[n3].get_position()
-        a = p1 - p2
-        b = p1 - p3
-        normal = cross(a, b)
-        n = norm(normal)
-        A = 0.5 * n
-        centroid = (p1 + p2 + p3) / 3.
-        return A, centroid, normal / n
+        return ctetra_face_area_centroid_normal(nid_opposite, nid, self.nodes)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -1186,6 +1253,20 @@ class CTETRA4(SolidElement):
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
+
+def ctetra_face_area_centroid_normal(nid_opposite, nid, nodes):
+    n1, n2, n3 = self.getFaceNodes(nid_opposite)
+    faceNodeIDs = [n1, n2, n3]
+    p1 = self.nodes[n1].get_position()
+    p2 = self.nodes[n2].get_position()
+    p3 = self.nodes[n3].get_position()
+    a = p1 - p2
+    b = p1 - p3
+    normal = cross(a, b)
+    n = norm(normal)
+    A = 0.5 * n
+    centroid = (p1 + p2 + p3) / 3.
+    return A, centroid, normal / n
 
 
 class CTETRA10(SolidElement):
@@ -1223,6 +1304,9 @@ class CTETRA10(SolidElement):
                '        %16i%16i%16s%16s\n'
                '        %16s%16s%16s%16s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
+
+    def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
+        return ctetra_face_area_centroid_normal(nid_opposite, nid, self.nodes[4:])
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)

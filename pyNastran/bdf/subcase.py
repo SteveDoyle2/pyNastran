@@ -382,7 +382,7 @@ class Subcase(object):
 
           model = BDF()
           model.read_bdf(bdf_filename)
-          case_control = model.caseControlDeck
+          case_control = model.case_control_deck
           subcase1 = case_control.subcases[1]
           if 'LOAD' in subcase1:
               print('found LOAD for subcase 1')
@@ -406,7 +406,7 @@ class Subcase(object):
 
           model = BDF()
           model.read_bdf(bdf_filename)
-          case_control = model.caseControlDeck
+          case_control = model.case_control_deck
           subcase1 = case_control.subcases[1]
           value, options = subcase1['LOAD']
         """
@@ -423,7 +423,7 @@ class Subcase(object):
 
           model = BDF()
           model.read_bdf(bdf_filename)
-          case_control = model.caseControlDeck
+          case_control = model.case_control_deck
           subcase1 = case_control.subcases[1]
           value, options = subcase1['LOAD']
         """
