@@ -3588,10 +3588,10 @@ class NastranIO(object):
         for result in rods:
             if subcase_id not in result:
                 continue
-            if result.is_complex():
-                continue
 
             case = result[subcase_id]
+            if case.is_complex():
+                continue
             eidsi = case.element
             i = searchsorted(eids, eidsi)
             if len(i) != len(unique(i)):
@@ -3935,10 +3935,10 @@ class NastranIO(object):
         for result in solids:
             if subcase_id not in result:
                 continue
-            if result.is_complex():
+            case = result[subcase_id]
+            if case.is_complex():
                 continue
 
-            case = result[subcase_id]
             if case.is_von_mises():
                 vm_word = 'vonMises'
             else:

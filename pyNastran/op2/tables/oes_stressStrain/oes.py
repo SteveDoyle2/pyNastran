@@ -987,59 +987,86 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                struct1 = Struct(b(self._endian + 'ii4si'))
-                struct2 = Struct(b(self._endian + 'i20f'))
-                if self.is_debug_file:
-                    msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
-                        self.element_name, self.element_type, nelements, nnodes_expected)
-                    msg += '                                 syy, syz, s2, b1, b2, b3,\n'
-                    msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
-                    self.binary_debug.write(msg)
+                if self.use_vector and is_vectorized and 0:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
 
-                for i in range(nelements):
-                    edata = data[n:n+16]
-                    out = struct1.unpack(edata)
-                    (eid_device, cid, abcd, nnodes) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[4:]
+                    #(grid_device,
+                     #sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                     #syy, syz, s2, b1, b2, b3,
+                     #szz, sxz, s3, c1, c2, c3)
+                    floats1 = floats[:4].reshape(nelements * nnodes_expected, 21)[:, 1:] # drop grid_device
 
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        # (eid_device, cid, abcd, nnodes)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                        eids = ints[:, 0] // 10
+                        ints1 = ints[:4].reshape(nelements * nnodes_expected, 21)
+                        grid_device = ints1[:, 0]
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    obj.data[obj.itime, itotal:itotal2, :] = floats1
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    struct1 = Struct(b(self._endian + 'ii4si'))
+                    struct2 = Struct(b(self._endian + 'i20f'))
                     if self.is_debug_file:
-                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+                        msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
+                            self.element_name, self.element_type, nelements, nnodes_expected)
+                        msg += '                                 syy, syz, s2, b1, b2, b3,\n'
+                        msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
+                        self.binary_debug.write(msg)
 
-                    assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
-
-                    n += 16
-                    for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
-                        out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-                        (grid_device,
-                         sxx, sxy, s1, a1, a2, a3, pressure, svm,
-                         syy, syz, s2, b1, b2, b3,
-                         szz, sxz, s3, c1, c2, c3) = out
+                    for i in range(nelements):
+                        edata = data[n:n+16]
+                        out = struct1.unpack(edata)
+                        (eid_device, cid, abcd, nnodes) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
 
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, grid_device, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
 
-                        #if grid_device == 0:
-                            #grid = 'CENTER'
-                        #else:
-                            ##grid = (grid_device - device_code) // 10
-                            #grid = grid_device
+                        assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
-                        grid = grid_device
-                        aCos = [a1, a2, a3]
-                        bCos = [b1, b2, b3]
-                        cCos = [c1, c2, c3]
-                        if inode == 0:
-                            #element_name = self.element_name + str(nnodes) #  this is correct, but fails
-                            self.obj.add_eid(element_name, cid, dt, eid, grid,
-                                             sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                             aCos, bCos, cCos, pressure, svm)
-                        else:
-                            self.obj.add_node(dt, eid, inode, grid,
-                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                              aCos, bCos, cCos, pressure, svm)
-                        n += 84
+                        n += 16
+                        for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                            out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
+                            if self.is_debug_file:
+                                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+                            (grid_device,
+                             sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                             syy, syz, s2, b1, b2, b3,
+                             szz, sxz, s3, c1, c2, c3) = out
+
+                            if self.is_debug_file:
+                                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+                            #if grid_device == 0:
+                                #grid = 'CENTER'
+                            #else:
+                                ##grid = (grid_device - device_code) // 10
+                                #grid = grid_device
+
+                            grid = grid_device
+                            aCos = [a1, a2, a3]
+                            bCos = [b1, b2, b3]
+                            cCos = [c1, c2, c3]
+                            if inode == 0:
+                                #element_name = self.element_name + str(nnodes) #  this is correct, but fails
+                                self.obj.add_eid(element_name, cid, dt, eid, grid,
+                                                 sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                                 aCos, bCos, cCos, pressure, svm)
+                            else:
+                                self.obj.add_node(dt, eid, inode, grid,
+                                                  sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                                  aCos, bCos, cCos, pressure, svm)
+                            n += 84
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
                 ntotal = numwide_imag * 4
