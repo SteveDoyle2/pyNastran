@@ -154,9 +154,9 @@ class WriteMesh(object):
 
         :param self: the BDF object
         """
-        if self.caseControlDeck:
+        if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
-            msg += str(self.caseControlDeck)
+            msg += str(self.case_control_deck)
             assert 'BEGIN BULK' in msg, msg
             outfile.write(''.join(msg))
 

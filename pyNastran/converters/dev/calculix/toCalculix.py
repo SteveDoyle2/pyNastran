@@ -278,9 +278,9 @@ class CalculixConverter(BDF):
         if self.loads:
             inp += '** LOADS\n'
             loadKeys = self.loads.keys()
-            #if isubcase in self.caseControlDeck:
-            if self.caseControlDeck.has_subcase(isubcase):
-                loadcase_id = self.caseControlDeck.get_subcase_parameter(isubcase, param_name)[0]
+            #if isubcase in self.case_control_deck:
+            if self.case_control_deck.has_subcase(isubcase):
+                loadcase_id = self.case_control_deck.get_subcase_parameter(isubcase, param_name)[0]
                 #loadcase = self.loads[loadcase_id]
                 self._write_loads(loadcase_id)
 

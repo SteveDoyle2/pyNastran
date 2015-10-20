@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
-from numpy import zeros, searchsorted, unique, ravel
+from numpy import zeros, searchsorted, unique, ravel, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats12E, _eigenvalue_header
@@ -76,6 +76,49 @@ class RealCompositePlateArray(OES_Object):
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element_layer, table.element_layer):
+            assert self.element_node.shape == table.element_layer.shape, 'element_layer shape=%s table.shape=%s' % (
+                self.element_layer.shape, table.element_layer.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += '(Eid, Layer)\n'
+            for (eid, layer1), (eid2, layer2) in zip(self.element_layer, table.element_layer):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid, layer1, eid2, layer2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element_layer):
+                    (eid, layer) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (o11, o22, t12, t1z, t2z, angle, major, minor, ovm) = t1
+                    (o112, o222, t122, t1z2, t2z2, angle2, major2, minor2, ovm2) = t2
+
+                    # vm stress can be NaN for some reason...
+                    if not array_equal(t1[:-1], t2[:-1]):
+                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, layer,
+                            o11, o22, t12, t1z, t2z, angle, major, minor, ovm,
+                            o112, o222, t122, t1z2, t2z2, angle2, major2, minor2, ovm2)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(mgs)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
 
     def add_new_eid(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z,
                     angle, major, minor, ovm):

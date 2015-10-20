@@ -114,10 +114,10 @@ def run_pch(pch_filename, makeGeom=False, writeBDF=False, write_f06=True,
         #print("subcases = %s" % pch.subcases)
 
         #assert tableNamesF06==tableNamesPCH,'tableNamesF06=%s tableNamesPCH=%s' %(tableNamesF06,tableNamesPCH)
-        #pch.caseControlDeck.sol = pch.sol
-        #print(pch.caseControlDeck.get_pch_data())
+        #pch.case_control_deck.sol = pch.sol
+        #print(pch.case_control_deck.get_pch_data())
         #print(pch.print_results())
-        #print(pch.caseControlDeck.get_pch_data())
+        #print(pch.case_control_deck.get_pch_data())
         isPassed = True
     except KeyboardInterrupt:
         sys.stdout.flush()

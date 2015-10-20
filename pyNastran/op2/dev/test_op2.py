@@ -30,14 +30,14 @@ class TestOP2New(unittest.TestCase):
 
     def test_02(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        op2_filename = os.path.join(folder, 'iSat', 'isat_dploy_sm.op2')
+        op2_filename = os.path.join(folder, 'iSat', 'isat_dploy_sm_orig.op2')
 
         # op2 = OP2(op2_filename)
         # op2.rdn2cop2()
         # print(object_attributes(op2))
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
-        #o2 = rdpostop2(op2_filename, verbose=True, getougv1=True)
+        o2 = rdpostop2(op2_filename, verbose=True, getougv1=True)
         #print('a =', o2.keys())
         #print('b =', o2['mats'].keys())
         #print('c =', len(o2['mats']['ougv1']))
@@ -46,8 +46,8 @@ class TestOP2New(unittest.TestCase):
         #print('e.shape =', o2['mats']['ougv1'][0]['lambda'].shape)
         #print('e.shape =', o2['mats']['ougv1'][0]['ougv1'].shape)
 
-        s = 'o2 = rdpostop2(r"F:\work\pyNastran\pyNastran\master2\models\iSat\isat_dploy_sm.op2", verbose=True, getougv1=True)'
-        timeit.timeit(s, setup="from pyNastran.op2.dev.op2 import rdpostop2", number=10)
+        #s = 'o2 = rdpostop2(r"F:\work\pyNastran\pyNastran\master2\models\iSat\isat_dploy_sm.op2", verbose=True, getougv1=True)'
+        #timeit.timeit(s, setup="from pyNastran.op2.dev.op2 import rdpostop2", number=10)
 
     def test_02b(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))

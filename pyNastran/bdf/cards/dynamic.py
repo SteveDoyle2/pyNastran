@@ -55,7 +55,11 @@ class DELAY(BaseCard):
 
     def add(self, delay):
         assert self.sid == delay.sid, 'sid=%s delay.sid=%s' % (self.sid, delay.sid)
-        self._comment += delay.comment
+        if delay.comment:
+            if hasattr('_comment'):
+                self._comment += delay.comment
+            else:
+                self._comment = delay.comment
         self.nodes += delay.nodes
         self.components += delay.components
         self.delays += delay.delays

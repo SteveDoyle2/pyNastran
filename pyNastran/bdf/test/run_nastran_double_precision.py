@@ -23,7 +23,7 @@ except ImportError:
     is_f06 = False
 
 def update_bdf(model, post=-1):
-    cc = model.caseControlDeck
+    cc = model.case_control_deck
     #for isubcase, subcase in sorted(iteritems(cc.subcases)):
         #for param, values in iteritems(subcase.params):
             #if param in ['SPCFORCES', 'STRESS', 'DISPLACEMENT', 'STRAIN', 'MPCFORCES', 'GPFORCE', 'GPSTRESS', 'VELOCITY', 'ACCELERATION']:

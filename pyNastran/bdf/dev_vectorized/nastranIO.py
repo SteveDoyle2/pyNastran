@@ -875,11 +875,11 @@ class NastranIO(NastranIO_xref):
         """
         if not self.is_centroidal:
             return
-        sucaseIDs = model.caseControlDeck.get_subcase_list()
+        sucaseIDs = model.case_control_deck.get_subcase_list()
         for subcaseID in sucaseIDs:
             if subcaseID == 0:
                 continue
-            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcaseID, 'LOAD')
+            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcaseID, 'LOAD')
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -924,11 +924,11 @@ class NastranIO(NastranIO_xref):
     def _plot_applied_loads(self, model, cases):
         if not self.is_nodal:
             return
-        sucaseIDs = model.caseControlDeck.get_subcase_list()
+        sucaseIDs = model.case_control_deck.get_subcase_list()
         for subcaseID in sucaseIDs:
             if subcaseID == 0:
                 continue
-            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcaseID, 'LOAD')
+            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcaseID, 'LOAD')
             loadCase = model.loads[load_case_id]
 
             # account for scale factors

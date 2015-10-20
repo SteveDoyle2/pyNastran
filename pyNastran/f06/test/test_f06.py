@@ -74,10 +74,10 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, is_vector=False,
         #print "subcases = ",f06.subcases
 
         #assert tableNamesF06==tableNamesF06,'tableNamesF06=%s tableNamesF06=%s' %(tableNamesF06,tableNamesF06)
-        #f06.caseControlDeck.sol = f06.sol
-        #print f06.caseControlDeck.getF06Data()
+        #f06.case_control_deck.sol = f06.sol
+        #print f06.case_control_deck.getF06Data()
         #print f06.print_results()
-        #print f06.caseControlDeck.getF06Data()
+        #print f06.case_control_deck.getF06Data()
         isPassed = True
     except KeyboardInterrupt:
         sys.stdout.flush()

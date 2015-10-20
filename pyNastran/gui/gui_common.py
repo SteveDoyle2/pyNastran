@@ -385,7 +385,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                 ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
             ]
-        if vtk.VTK_VERSION < 6:
+        # print('version =', vtk.VTK_VERSION, self.vtk_version)
+        if self.vtk_version[0] < 6:
             tools += [
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
@@ -454,7 +455,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
             'legend', 'geo_properties', '', 'clipping', 'axis']
-        if vtk.VTK_VERSION < 6:
+        if self.vtk_version[0] < 6:
             menu_view += ['edges', 'edges_black',]
         if self.html_logging:
             self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
@@ -470,7 +471,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                          'wireframe', 'surface',]
-        if vtk.VTK_VERSION < 6:
+        if self.vtk_version[0] < 6:
             toolbar_tools.append('edges')
         toolbar_tools += ['creset', 'view', 'scshot', '', 'exit']
 
