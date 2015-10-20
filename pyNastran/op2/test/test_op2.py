@@ -166,7 +166,6 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                 is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                       write_f06=write_f06, write_op2=write_op2,
                                       is_mag_phase=False,
-                                      is_vector=vectori,
                                       delete_f06=delete_f06,
                                       isubcases=isubcases, debug=debug,
                                       stop_on_failure=stop_on_failure,
@@ -207,7 +206,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False, is_sort2=False,
-            is_vector=False, delete_f06=False,
+            delete_f06=False,
             isubcases=None, exclude=None, compare=True, debug=False, binary_debug=False,
             quiet=False, stop_on_failure=True):
     """
@@ -230,9 +229,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     is_sort2 : bool; default=False
         False : writes "transient" data is SORT1
         True : writes "transient" data is SORT2
-    is_vector : bool; default=False
-        False : non-vectorized version of OP2
-        True : vectorized version of OP2
     delete_f06 : bool; default=False
         deletes the F06 (assumes write_f06 is True)
     isubcases : List[int, ...]; default=None
@@ -240,8 +236,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     exclude : List[str, ...]; default=None
         limits result types; (remove what's listed)
     compare : bool
-        True : compares vectorized result (requires is_vector=True) to non-vectorized result
-        False : doesn't run non-vectorized result
+        True : compares vectorized result to slow vectorized result
+        False : doesn't run slow vectorized result
     debug : bool; default=False
         dunno???
     binary_debug : bool; default=False
@@ -285,8 +281,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         op2a = OP2(debug=debug, debug_file=debug_file)
         op2b = OP2()
     op2b.use_vector = False
-    if not is_vector:
-        compare = False
 
     op2a.set_subcases(isubcases)
     op2b.set_subcases(isubcases)
@@ -437,9 +431,9 @@ def main():
     msg = "Usage:\n"
     is_release = False
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c]           [-f]      [-z] [-t] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c]           [-f]      [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-w] [-f] [-o] [-z] [-t] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-w] [-f] [-o] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -465,7 +459,6 @@ def main():
     msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
-    msg += "  -t, --unvector        Unvectorizes the results\n"
     msg += "  -w, --is_sort2        Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude   Exclude specific results\n"
     msg += "  -h, --help            Show this help message and exit\n"
@@ -497,7 +490,6 @@ def main():
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
             is_mag_phase=data['--is_mag_phase'],
-            is_vector=not data['--unvector'],
             isubcases=data['--subcase'],
             exclude=data['--exclude'],
             debug=not data['--quiet'],

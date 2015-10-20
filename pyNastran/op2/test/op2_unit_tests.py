@@ -54,7 +54,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=False,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         #os.remove(debug_file)
@@ -63,7 +63,7 @@ class TestOP2(Tester):
         write_bdf = False
         write_f06 = True
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=True,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -83,7 +83,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=True,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -103,7 +103,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=True,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -123,7 +123,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=True,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -143,7 +143,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=True,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -157,14 +157,14 @@ class TestOP2(Tester):
         debug = False
         op2file = os.path.join(folder, op2_filename)
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=False,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True)
 
         make_geom = False
         write_bdf = False
         write_f06 = True
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06, is_vector=True,
+                write_f06=write_f06,
                 debug=debug, stop_on_failure=True)
 
     def test_op2_good_sine_01(self):
@@ -176,7 +176,7 @@ class TestOP2(Tester):
         debug = False
         op2file = os.path.join(folder, op2_filename)
         op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                                  write_f06=write_f06, is_vector=True,
+                                  write_f06=write_f06,
                                   debug=debug, stop_on_failure=True,
                                   quiet=True)
 
@@ -200,7 +200,7 @@ class TestOP2(Tester):
         #write_bdf = False
         #write_f06 = True
         #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
-                #write_f06=write_f06, is_vector=True,
+                #write_f06=write_f06,
                 #debug=debug, stopOnFailure=True)
 
     def test_op2_good_sine_02(self):

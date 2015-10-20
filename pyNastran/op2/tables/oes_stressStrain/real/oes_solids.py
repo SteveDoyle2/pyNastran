@@ -6,7 +6,7 @@ from six.moves import zip, range
 from itertools import count
 from struct import Struct, pack
 
-from numpy import sqrt, zeros, where, searchsorted
+from numpy import sqrt, zeros, where, searchsorted, array_equal
 from numpy.linalg import eigh
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -101,6 +101,47 @@ class RealSolidArray(OES_Object):
         self.element_cid[self.ielement, :] = [eid, cid]
         self.itotal += 1
         self.ielement += 1
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += '(Eid, Nid)\n'
+            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element_node):
+                    (eid, nid) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1) = t1
+                    (oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid,
+                            oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1,
+                            oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
 
     def add_node_sort1(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         # skipping aCos, bCos, cCos, pressure

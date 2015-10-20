@@ -6,7 +6,7 @@ from six.moves import range
 
 from math import sqrt
 from numpy import (float32, float64, complex64, complex128, array, cross,
-                   allclose, zeros, matrix, insert, diag, eye)
+                   allclose, zeros, matrix, insert, diag, eye, argmax, argmin, arange)
 from numpy.linalg import norm
 
 from scipy.linalg import solve_banded
@@ -16,6 +16,95 @@ from scipy.integrate import quad
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
+
+# def vectorized_searchsorted_eq(eids_all, eids):
+    # """
+    # Vectorizes where to find all locations for values in array
+
+    # TODO: there has to be a better function to do this...
+    # """
+    # #i = zeros(eids.shape, dtype='int32')
+    # i = []
+    # for eid in eids:
+        # i.append(where(eids_all == eid)[0])
+    # return hstack(i)
+
+def get_abs_max(min_values, max_values):
+    """Get return the value with the greatest magnitude, preserving sign."""
+    nvalues = len(min_values)
+    data = array([min_values, max_values], dtype='float32')
+    i = argmax(abs(data), axis=0)
+    assert len(i) == nvalues
+    # return data[i, :]
+    k = arange(nvalues, dtype='int32')
+    return data[i[:], k]
+
+
+def get_abs_index(data, axis=1):
+    """
+    Gets the maximum absolute value of a 2D matrix along an axis
+
+    Example
+    -------
+    >>> data = [
+            [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
+            [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
+        ]
+    >>> max_values, index = get_min_index(data, axis=1)
+    >>> out   = [4.1, 2.2, 3.1, 5.1, 2.2]
+    >>> index = [1, 0, 1, 1, 0]
+    """
+    nvalues = data.shape[axis]
+    # isubcase, nelements
+    axis2 = abs(axis - 1)
+    i = argmax(abs(data), axis=axis2)
+    assert len(i) == nvalues, 'data.shape=%s len(i)=%s nvalues=%s' % (str(data.shape), len(i), nvalues)
+    k = arange(nvalues, dtype='int32')
+    return data[i[:], k], i
+
+def get_max_index(data, axis=1):
+    """
+    Gets the maximum values of a 2D matrix along an axis
+
+    Example
+    -------
+    >>> data = [
+            [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
+            [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
+        ]
+    >>> max_values, index = get_min_index(data, axis=1)
+    >>> out   = [4.1, 2.2, 3.1, 5.1, 2.2]
+    >>> index = [1, 0, 1, 1, 0]
+    """
+    nvalues = data.shape[axis]
+    # isubcase, nelements
+    axis2 = abs(axis - 1)
+    i = argmax(data, axis=axis2)
+    assert len(i) == nvalues, 'data.shape=%s len(i)=%s nvalues=%s' % (str(data.shape), len(i), nvalues)
+    k = arange(nvalues, dtype='int32')
+    return data[i[:], k], i
+
+def get_min_index(data, axis=1):
+    """
+    Gets the minimum values of a 2D matrix along an axis
+
+    Example
+    -------
+    >>> data = [
+            [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
+            [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
+        ]
+    >>> min_values, index = get_min_index(data, axis=1)
+    >>> out   = [4.0, 2.1, 3.0, 5.0, 2.1]
+    >>> index = [0, 1, 0, 0, 1]
+    """
+    nvalues = data.shape[axis]
+    axis2 = abs(axis - 1)
+    i = argmin(data, axis=axis2)
+    assert len(i) == nvalues, 'data.shape=%s len(i)=%s nvalues=%s' % (str(data.shape), len(i), nvalues)
+    k = arange(nvalues, dtype='int32')
+    return data[i[:], k], i
+
 
 def integrate_line(x, y):
     """

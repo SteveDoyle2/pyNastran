@@ -22,7 +22,7 @@ class OQG(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def _read_oqg1_3(self, data):
+    def _read_oqg1_3(self, data, ndata):
         self.nonlinear_factor = None
         self.is_table_1 = True
         self.is_table_2 = False
@@ -135,7 +135,7 @@ class OQG(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_oqg2_3(self, data):
+    def _read_oqg2_3(self, data, ndata):
         self.nonlinear_factor = None
         self.is_table_1 = False
         self.is_table_2 = True
@@ -255,7 +255,7 @@ class OQG(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_oqg_4(self, data):
+    def _read_oqg_4(self, data, ndata):
         result_name = 'constraint_forces'
         if self._results.is_not_saved(result_name):
             return len(data)

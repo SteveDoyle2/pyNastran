@@ -133,6 +133,21 @@ class FortranFormat(object):
         self.n += 8 + ndata
         return data_out
 
+    def read_block_ndata(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+        :retval data: the data in binary
+        """
+        data = self.f.read(4)
+        ndata, = unpack(b(self._endian + 'i'), data)
+
+        data_out = self.f.read(ndata)
+        data = self.f.read(4)
+        self.n += 8 + ndata
+        return data_out, ndata
+
+
     def read_markers(self, markers, macro_rewind=True):
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
@@ -317,10 +332,10 @@ class FortranFormat(object):
 
             self.data_code = {}
             self.obj = None
-            data = self._read_record()
+            data, ndata = self._read_record_ndata()
             if not passer:
                 try:
-                    table3_parser(data)
+                    table3_parser(data, ndata)
                 except SortCodeError:
                     if self.is_debug_file:
                         self.binary_debug.write('except SortCodeError!\n')
@@ -328,7 +343,7 @@ class FortranFormat(object):
                         self.data_code = data_code_old
                         for key, value in iteritems(data_code_old):
                             setattr(self, key, value)
-                        table4_parser(data)
+                        table4_parser(data, ndata)
                         return False
                     raise RuntimeError(self.code_information())
                 #if hasattr(self, 'isubcase'):
@@ -342,8 +357,8 @@ class FortranFormat(object):
                     # table3, but some B-list tables don't have it
                     n = self._read_subtable_results(table4_parser, record_len)
                 else:
-                    data = self._read_record()
-                    n = table4_parser(data)
+                    data, ndata = self._read_record_ndata()
+                    n = table4_parser(data, ndata)
                 #del n
 
 
@@ -372,13 +387,13 @@ class FortranFormat(object):
                 # we stream the record because we get it in partial blocks
                 for data in self._stream_record():
                     data = datai + data
-
-                    n = table4_parser(data)
+                    ndata = len(data)
+                    n = table4_parser(data, ndata)
                     assert isinstance(n, int), self.table_name
                     datai = data[n:]
             else:
-                data = self._read_record()
-                n = table4_parser(data)
+                data, ndata = self._read_record_ndata()
+                n = table4_parser(data, ndata)
                 assert isinstance(n, int), self.table_name
 
             # PCOMPs are stupid, so we need an element flag
@@ -443,7 +458,7 @@ class FortranFormat(object):
                 for i, data in enumerate(self._stream_record()):
                     data = datai + data
                     ndata = len(data)
-                    n = table4_parser(data)
+                    n = table4_parser(data, ndata)
                     assert isinstance(n, int), self.table_name
                     datai = data[n:]
                 assert len(datai) == 0, len(datai)
@@ -597,9 +612,8 @@ class FortranFormat(object):
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
-        record = self.read_block()
+        record, nrecord = self.read_block_ndata()
         if self.is_debug_file and debug:
-            nrecord = len(record)
             self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
         if(markers0[0]*4) != len(record):
             msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (markers0[0]*4, len(record), self.table_name)
@@ -617,7 +631,7 @@ class FortranFormat(object):
             markers1 = self.get_nmarkers(1, rewind=False)
             if self.is_debug_file and debug:
                 self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-            record = self.read_block()
+            record, nrecordi = self.read_block_ndata()
             yield record
             self.istream += 1
 
@@ -631,13 +645,22 @@ class FortranFormat(object):
         self : OP2()
             the OP2 object pointer
         """
+        return self._read_record_ndata(stream, debug, macro_rewind)[0]
+
+    def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+        """
+        Parameters
+        ----------
+        self : OP2()
+            the OP2 object pointer
+        """
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
-        record = self.read_block()
+        record, nrecord = self.read_block_ndata()
 
         if self.is_debug_file and debug:
-            nrecord = len(record)
+            # nrecord = len(record)
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
         if markers0[0]*4 != len(record):
             msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (markers0[0]*4, len(record), self.table_name)
@@ -655,7 +678,8 @@ class FortranFormat(object):
                 markers1 = self.get_nmarkers(1, rewind=False)
                 if self.is_debug_file and debug:
                     self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                record = self.read_block()
+                record, nrecordi = self.read_block_ndata()
+                nrecord += nrecordi
                 records.append(record)
                 markers1 = self.get_nmarkers(1, rewind=True)
                 if self.is_debug_file and debug:
@@ -664,4 +688,4 @@ class FortranFormat(object):
 
             if nloop > 0:
                 record = b''.join(records)
-        return record
+        return record, nrecord

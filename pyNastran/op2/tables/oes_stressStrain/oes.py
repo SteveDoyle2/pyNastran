@@ -7,7 +7,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import b
 from six.moves import range
 from struct import Struct
-from numpy import fromstring, radians, sin, cos, vstack
+from numpy import fromstring, radians, sin, cos, vstack, hstack, repeat
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -54,7 +54,7 @@ class OES(OP2Common):
         self.ntotal = 0
 
     #def _oes_cleanup():
-    def _read_oes1_3(self, data):
+    def _read_oes1_3(self, data, ndata):
         """
         reads OES1 subtable 3
         """
@@ -204,7 +204,7 @@ class OES(OP2Common):
         self.stress_bits = bits
         self.data_code['stress_bits'] = self.stress_bits
 
-    def _read_oes1_4(self, data):
+    def _read_oes1_4(self, data, ndata):
         """
         Reads the Stress Table 4
         """
@@ -214,13 +214,13 @@ class OES(OP2Common):
         #print "element_name =", self.element_name
         assert self.is_stress() == True, self.code_information()
         if self.is_sort1():
-            n = self._read_oes1_4_sort1(data)
+            n = self._read_oes1_4_sort1(data, ndata)
         else:
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, msg)
         return n
 
-    def _read_ostr1_4(self, data):
+    def _read_ostr1_4(self, data, ndata):
         """
         Reads the Strain Table 4
         """
@@ -230,7 +230,7 @@ class OES(OP2Common):
         #print "element_name =", self.element_name
         assert self.is_strain() == True, self.code_information()
         if self.is_sort1():
-            n = self._read_ostr1_4_sort1(data)
+            n = self._read_ostr1_4_sort1(data, ndata)
         else:
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, msg)
@@ -277,7 +277,7 @@ class OES(OP2Common):
         return new_func
 
     #@print_obj_name_on_crash
-    def _read_oes1_4_sort1(self, data):
+    def _read_oes1_4_sort1(self, data, ndata):
         """
         Reads OES1 subtable 4
         """
@@ -286,16 +286,16 @@ class OES(OP2Common):
             #assert len(data) != 146, self.code_information()
         assert self.is_sort1() == True
         if self.thermal == 0:
-            n = self._read_oes_loads(data)
+            n = self._read_oes_loads(data, ndata)
         elif self.thermal == 1:
-            n = self._read_oes_thermal(data)
+            n = self._read_oes_thermal(data, ndata)
         else:
             msg = 'thermal=%s' % self.thermal
             n = self._not_implemented_or_skip(data, msg)
         return n
 
     #@print_obj_name_on_crash
-    def _read_ostr1_4_sort1(self, data):
+    def _read_ostr1_4_sort1(self, data, ndata):
         """
         Reads OSTR1 subtable 4
         """
@@ -304,27 +304,27 @@ class OES(OP2Common):
             #assert len(data) != 146, self.code_information()
         assert self.is_sort1() == True
         if self.thermal == 0:
-            n = self._read_oes_loads(data)
+            n = self._read_oes_loads(data, ndata)
         elif self.thermal == 1:
-            n = self._read_oes_thermal(data)
+            n = self._read_oes_thermal(data, ndata)
         else:
             msg = 'thermal=%s' % self.thermal
             n = self._not_implemented_or_skip(data, msg)
         return n
 
-    def _read_oes_thermal(self, data):
+    def _read_oes_thermal(self, data, ndata):
         """
         Reads OES self.thermal=1 tables; uses a hackish method to just skip the table.
         """
         return len(data)
 
-    def _read_ostr_thermal(self, data):
+    def _read_ostr_thermal(self, data, ndata):
         """
         Reads OSTR self.thermal=1 tables; uses a hackish method to just skip the table.
         """
         return len(data)
 
-    def _read_oes_loads(self, data):
+    def _read_oes_loads(self, data, ndata):
         """
         Reads OES self.thermal=0 stress/strain
         """
@@ -969,7 +969,6 @@ class OES(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
-
             slot = getattr(self, result_name)
 
             numwide_real = 4 + 21 * nnodes_expected
@@ -987,32 +986,39 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                if self.use_vector and is_vectorized and 0:
+                obj = self.obj
+                if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
-                    ielement2 = obj.itotal + nelements
-                    itotal2 = ielement2
-
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[4:]
-                    #(grid_device,
-                     #sxx, sxy, s1, a1, a2, a3, pressure, svm,
-                     #syy, syz, s2, b1, b2, b3,
-                     #szz, sxz, s3, c1, c2, c3)
-                    floats1 = floats[:4].reshape(nelements * nnodes_expected, 21)[:, 1:] # drop grid_device
-
+                    itotali = obj.itotal + nelements
+                    itotalf = obj.itotal + nelements * nnodes_expected
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         # (eid_device, cid, abcd, nnodes)
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
                         eids = ints[:, 0] // 10
-                        ints1 = ints[:4].reshape(nelements * nnodes_expected, 21)
-                        grid_device = ints1[:, 0]
+                        cids = ints[:, 1]
                         assert eids.min() > 0, eids.min()
-                        obj.element[itotal:itotal2] = eids
+                        obj.element_node[itotal:itotalf, 0] =  repeat(eids, nnodes_expected)
+                        ints1 = ints[:, 4:].reshape(nelements * nnodes_expected, 21)
+                        grid_device = ints1[:, 0]#.reshape(nelements, nnodes_expected)
+                        obj.element_node[itotal:itotalf, 1] = grid_device#.ravel()
+                        obj.element_cid[itotal:itotali, 0] = eids
+                        obj.element_cid[itotal:itotali, 1] = cids
 
-                    obj.data[obj.itime, itotal:itotal2, :] = floats1
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                    # 1     9    15   2    10   16  3   11  17   8
+                    #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+                    isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
+                    #(grid_device,
+                        #sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                        #syy, syz, s2, b1, b2, b3,
+                        #szz, sxz, s3, c1, c2, c3)
+                    floats1 = floats.reshape(nelements * nnodes_expected, 21)#[:, 1:] # drop grid_device
+
+                    obj.data[obj.itime, itotal:itotalf, :] = floats1[:, isave]
+                    obj.itotal = itotalf
+                    obj.ielement = itotali
                 else:
                     struct1 = Struct(b(self._endian + 'ii4si'))
                     struct2 = Struct(b(self._endian + 'i20f'))
@@ -1059,13 +1065,13 @@ class OES(OP2Common):
                             cCos = [c1, c2, c3]
                             if inode == 0:
                                 #element_name = self.element_name + str(nnodes) #  this is correct, but fails
-                                self.obj.add_eid(element_name, cid, dt, eid, grid,
-                                                 sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                                 aCos, bCos, cCos, pressure, svm)
+                                obj.add_eid(element_name, cid, dt, eid, grid,
+                                            sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                            aCos, bCos, cCos, pressure, svm)
                             else:
-                                self.obj.add_node(dt, eid, inode, grid,
-                                                  sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                                  aCos, bCos, cCos, pressure, svm)
+                                obj.add_node(dt, eid, inode, grid,
+                                             sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                             aCos, bCos, cCos, pressure, svm)
                             n += 84
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
@@ -2258,7 +2264,6 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == numwide_real:
                 msg = result_name
                 if self.is_stress():
-                    obj_real = None
                     obj_vector_real = RealNonlinearBeamStressArray
                 else:
                     raise NotImplementedError('Nonlinear CBEAM Strain...this should never happen')
@@ -2267,9 +2272,8 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
 
                 nlayers = nelements * 8
-                auto_return, is_vectorized = self._create_oes_object3(nlayers,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
                     self._data_factor = 8
                     return len(data)

@@ -36,7 +36,7 @@ class OGPWG(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_ogpwg_4(self, data):
+    def _read_ogpwg_4(self, data, ndata):
         """
         Grid Point Weight Generator
         """

@@ -114,7 +114,7 @@ class RealCompositePlateArray(OES_Object):
                         i += 1
                         if i > 10:
                             print(msg)
-                            raise ValueError(mgs)
+                            raise ValueError(msg)
                 #print(msg)
                 if i > 0:
                     raise ValueError(msg)

@@ -15,7 +15,7 @@ class OPG(OP2Common):
     def __init__(self):
         pass
 
-    def _read_opg1_3(self, data):
+    def _read_opg1_3(self, data, ndata):
         three = self.parse_approach_code(data)
         self.words = [
             'aCode',       'tCode',    '???',           'isubcase',
@@ -140,7 +140,7 @@ class OPG(OP2Common):
         self._write_debug_bits()
 
 
-    def _read_opg1_4(self, data):
+    def _read_opg1_4(self, data, ndata):
         if self.table_code == 2:  # load vector
             assert self.table_name in [b'OPG1', b'OPGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_load_vector(data)

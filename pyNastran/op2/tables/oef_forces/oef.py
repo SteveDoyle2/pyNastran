@@ -19,11 +19,10 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealRodForceArray, RealCRodForce, RealCTubeForce, RealConrodForce,  # rename vectorized classes
 
     # vectorized
-    RealCBarForceArray,
+    RealCBarForceArray, RealCBar100ForceArray,
     RealPlateForceArray,
 
     # not vectorized
-    RealCBar100Force,                                 # TODO: vectorize 1
     RealCBeamForce, RealCShearForce,                  # TODO: vectorize 2
     RealSpringForce, RealDamperForce, RealViscForce,  # TODO: vectorize 3
     RealPlateBilinearForce,                           # TODO: vectorize 1
@@ -169,7 +168,7 @@ class OEF(OP2Common):
             imag = None
         return (real, imag)
 
-    def _read_oef1_3(self, data):
+    def _read_oef1_3(self, data, ndata):
         """Table 3 parser for OEF1 table"""
         self.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
@@ -286,23 +285,23 @@ class OEF(OP2Common):
         self._write_debug_bits()
         assert self.num_wide != 146, self.code_information()
 
-    def _read_oef2_3(self, data):
+    def _read_oef2_3(self, data, ndata):
         """Table 3 parser for OEF2 table"""
         pass
 
-    def _read_oef1_4(self, data):
+    def _read_oef1_4(self, data, ndata):
         """Table 4 parser for OEF1 table"""
         if self.thermal == 0:
-            n = self._read_oef1_loads(data)
+            n = self._read_oef1_loads(data, ndata)
         elif self.thermal == 1:
-            n = self._read_oef1_thermal(data)
+            n = self._read_oef1_thermal(data, ndata)
         elif self.thermal == 8: # NRL
-            n = self._read_oef1_loads(data)
+            n = self._read_oef1_loads(data, ndata)
         else:
             n = self._not_implemented_or_skip(data, 'thermal=%s' % self.thermal)
         return n
 
-    def _read_oef1_thermal(self, data):
+    def _read_oef1_thermal(self, data, ndata):
         """Table 4 parser for OEF1 thermal table"""
         if self._results.is_not_saved('element_forces'):
             return len(data)
@@ -628,8 +627,8 @@ class OEF(OP2Common):
             return n
         return new_func
 
-    @print_obj_name_on_crash
-    def _read_oef1_loads(self, data):
+    # @print_obj_name_on_crash
+    def _read_oef1_loads(self, data, ndata):
         """
         Reads the OEF1 table; stores the element forces/heat flux.
         """
@@ -749,26 +748,47 @@ class OEF(OP2Common):
 
                 ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
                 nelements = len(data) // ntotal
-                for i in range(nelements):
-                    edata = data[n:n+4]
-                    eid_device, = s1.unpack(edata)
-                    #eid = (eid_device - self.device_code) // 10
-                    eid = self._check_id(eid_device, flag, 'FORCE', out=[eid_device])
-                    n += 4
 
-                    for i in range(11):
-                        edata = data[n:n+36]
-                        out = s2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-                        (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
+                is_vectorized = False
+                if self.use_vector and is_vectorized and 0:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
 
-                        data_in = [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-                        if i == 0:  # isNewElement
-                            self.obj.add_new_element(dt, data_in)
-                        elif sd > 0.:
-                            self.obj.add(dt, data_in)
-                        n += 36
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #[axial, torsion, SMa, SMt]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    for i in range(nelements):
+                        edata = data[n:n+4]
+                        eid_device, = s1.unpack(edata)
+                        #eid = (eid_device - self.device_code) // 10
+                        eid = self._check_id(eid_device, flag, 'FORCE', out=[eid_device])
+                        n += 4
+
+                        for i in range(11):
+                            edata = data[n:n+36]
+                            out = s2.unpack(edata)
+                            if self.is_debug_file:
+                                self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
+                            (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
+
+                            data_in = [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+                            if i == 0:  # isNewElement
+                                self.obj.add_new_element(dt, data_in)
+                            elif sd > 0.:
+                                self.obj.add(dt, data_in)
+                            n += 36
             elif self.format_code in [2, 3] and self.num_wide == 177: # imag
                 self.create_transient_object(self.cbeam_force, ComplexCBeamForce)
                 s1 = Struct(b(self._endian + 'i'))
@@ -1082,28 +1102,52 @@ class OEF(OP2Common):
 
         elif self.element_type == 100:  # cbar
             #100-BARS
-            if self.read_mode == 1:
-                return len(data)
-            self._results._found_result('cbar_force_10nodes')
+            result_name = 'cbar_force_10nodes'
+            self._results._found_result(result_name)
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 8:  # real
-                self.create_transient_object(self.cbar_force_10nodes, RealCBar100Force)
 
-                s = Struct(b(self._endian + 'i7f'))
                 ntotal = 32  # 8*4
                 nelements = len(data) // ntotal
-                for i in range(nelements):
-                    edata = data[n:n+32]
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealCBar100ForceArray)
+                if auto_return:
+                    return nelements * self.num_wide * 4
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
-                    (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
-                    data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
-                    #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = self.obj.add_new_eid(out)
-                    self.obj.add(dt, data_in)
-                    n += 32
+                obj = self.obj
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 8)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 8)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #[axial, torsion, SMa, SMt]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s = Struct(b(self._endian + 'i7f'))
+                    for i in range(nelements):
+                        edata = data[n:n+32]
+
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
+                        (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
+                        eid = self._check_id(eid_device, flag, 'FORCE', out)
+                        data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
+                        #print "%s" %(self.get_element_type(self.element_type)), data_in
+                        #eid = self.obj.add_new_eid(out)
+                        self.obj.add(dt, data_in)
+                        n += 32
                 #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
             else:
                 msg = self.code_information()

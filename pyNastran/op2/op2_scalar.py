@@ -635,14 +635,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if len(data) > 0:
             raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, len(data)))
 
-    def _table_passer(self, data):
+    def _table_passer(self, data, ndata):
         """auto-table skipper"""
         return len(data)
 
     def _table_crash(self, data):
         sys.exit('asdf')
 
-    def _table_passer_r1tabrg(self, data):
+    def _table_passer_r1tabrg(self, data, ndata):
         """auto-table skipper"""
         if self._table4_count == 0:
             self._count += 1
@@ -1350,9 +1350,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
         ni = self.n
+        s = Struct(b(self._endian + '8s'))
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
-            table_name, = unpack(b(self._endian + '8s'), data)
+            table_name, = s.unpack(data)
             if self.is_debug_file and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
@@ -1360,7 +1361,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             try:
                 data = self._read_record(macro_rewind=rewind)
-                table_name, = unpack(b(self._endian + '8s'), data)
+                table_name, = s.unpack(data)
                 table_name = table_name.strip()
             except:
                 # we're done reading
@@ -1583,7 +1584,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #self.read_markers([n, 1, 1])
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
-            nbytes = markers[0]*4 + 12
+            nbytes = markers[0] * 4 + 12
             data = self.f.read(nbytes)
             self.n += nbytes
             n -= 1
@@ -1852,8 +1853,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        if len(data) == 16:
+        data, ndata = self._read_record()
+        if ndata == 16:
             subtable_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (subtable_name, dummy_a, dummy_b))
@@ -1862,7 +1863,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 assert dummy_b == 170, dummy_b
         else:
             strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % len(data)
+            msg = 'len(data) = %i\n' % ndata
             msg += 'strings  = %r\n' % strings
             msg += 'ints     = %r\n' % str(ints)
             msg += 'floats   = %r' % str(floats)
@@ -1898,13 +1899,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
-        data = self._read_record()
-        if len(data) == 8:
+        data, ndata = self._read_record_ndata()
+        if ndata == 8:
             subtable_name = unpack(b(self._endian + '8s'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-        elif len(data) == 28:
+        elif ndata == 28:
             subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
@@ -1912,7 +1913,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self._print_month(month, day, year, zero, one)
         else:
             strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % len(data)
+            msg = 'len(data) = %i\n' % ndata
             msg += 'strings  = %r\n' % strings
             msg += 'ints     = %r\n' % str(ints)
             msg += 'floats   = %r' % str(floats)

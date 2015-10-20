@@ -12,7 +12,7 @@ class ONR(OP2Common):
         self.words = None
         self.num_wide = None
 
-    def _read_onr1_3(self, data):
+    def _read_onr1_3(self, data, ndata):
         """
         reads ONRGY1 subtable 3
         """
@@ -126,7 +126,7 @@ class ONR(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_onr1_4(self, data):
+    def _read_onr1_4(self, data, ndata):
         """
         reads ONRGY1 subtable 4
         """
@@ -135,12 +135,12 @@ class ONR(OP2Common):
 
         if self.table_code == 18:  # element strain energy
             assert self.table_name in [b'ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_element_strain_energy(data)
+            n = self._read_element_strain_energy(data, ndata)
         else:
             raise NotImplementedError(self.table_code)
         return n
 
-    def _read_element_strain_energy(self, data):
+    def _read_element_strain_energy(self, data, ndata):
         """
         table_code = 19
         """

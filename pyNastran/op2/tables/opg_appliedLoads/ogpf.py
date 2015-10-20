@@ -11,20 +11,20 @@ class OGPF(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def _read_ogpf1_3(self, data):
-        self._read_opg1_3(data)  # TODO: this is wrong...
+    def _read_ogpf1_3(self, data, ndata):
+        self._read_opg1_3(data, ndata)  # TODO: this is wrong...
 
-    def _read_ogpf1_4(self, data):
+    def _read_ogpf1_4(self, data, ndata):
         if self.read_mode == 1:
             return len(data)
         if self.table_code == 19:  # grid point force balance
             assert self.table_name in [b'OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_grid_point_forces(data)
+            n = self._read_grid_point_forces(data, ndata)
         else:
             raise NotImplementedError(self.table_code)
         return n
 
-    def _read_grid_point_forces(self, data):
+    def _read_grid_point_forces(self, data, ndata):
         """
         table_code = 19
         """

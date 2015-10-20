@@ -48,7 +48,7 @@ class OUG(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def _read_oug1_3(self, data):
+    def _read_oug1_3(self, data, ndata):
         #self._set_times_dtype()
         self.nonlinear_factor = None
         self.is_table_1 = True
@@ -160,7 +160,7 @@ class OUG(OP2Common):
         self._write_debug_bits()
 
 
-    def _read_oug2_3(self, data):
+    def _read_oug2_3(self, data, ndata):
         #self._set_times_dtype()
         #return self._read_oug1_3(data)
         self.nonlinear_factor = None
@@ -280,7 +280,7 @@ class OUG(OP2Common):
         self._write_debug_bits()
         assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
 
-    def _read_oug_4(self, data):
+    def _read_oug_4(self, data, ndata):
         if self.table_name == b'OUGPSD2':
             if self.table_code not in [1, 601, 610, 611]:
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
