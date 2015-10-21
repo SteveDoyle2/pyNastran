@@ -1853,7 +1853,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        data, ndata = self._read_record()
+        data, ndata = self._read_record_ndata()
         if ndata == 16:
             subtable_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
             if self.is_debug_file:

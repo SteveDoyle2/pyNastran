@@ -88,6 +88,7 @@ BDF:
      - se_qsets: SEQSET/SEQSET1
      - dtable : DTABLE
      - dequations : DEQATN
+     - dphases : DPHASE
 
    - more xref
      - attempting to xref every card
@@ -130,7 +131,8 @@ OP2:
  - improved catching of SORT1 vs. SORT2
  - improved catching of REAL vs. IMAG
  - better SOL200 support
- - read_op2 is ~4x faster
+ - read_op2 is ~5x faster
+ - removed non-vectorized OP2
 
 OP2 Issues:
  - not all NX tables supported; some still cause crashes
@@ -142,7 +144,8 @@ GUI:
  - added sub-grids (e.g. SPCs) & sub-grid control menu
  - added label support with 'p'
  - csv result loading
- 
+ - multiple OP2 files
+
 F06:
  - reworked subcase/label parsing
  - still bad

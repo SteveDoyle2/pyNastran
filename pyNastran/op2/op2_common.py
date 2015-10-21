@@ -944,6 +944,7 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.log is not None
 
         code = self._get_code()
+        #print('code =', code)
         if hasattr(self, 'isubcase'):
             if self.code in storage_obj:
                 self.obj = storage_obj[code]
@@ -952,7 +953,9 @@ class OP2Common(Op2Codes, F06Writer):
                         msg = 'The object is flipping from a static (e.g. preload)\n'
                         msg += 'result to a transient/frequency based results\n'
                         msg += '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor)
-                        msg += '%s' % str(self.obj)
+                        msg += 'code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, subtitle=%s)\n' % tuple(code)
+                        msg += '%s\n' % str(self.obj)
+                        msg += '\nIf this isnt correct, check if the data code was applied on the object'
                         raise MultipleSolutionNotImplementedError(msg)
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:

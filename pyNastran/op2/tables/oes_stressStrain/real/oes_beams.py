@@ -3,8 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from six.moves import range, zip
 from itertools import count
-
 from numpy import zeros
+
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header, get_key0

@@ -10,7 +10,7 @@ class OGPWG(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def _read_ogpwg_3(self, data):
+    def _read_ogpwg_3(self, data, ndata):
         """
         Grid Point Weight Generator
         .. todo:: find the reference_point...

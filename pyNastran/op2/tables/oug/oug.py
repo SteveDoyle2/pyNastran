@@ -289,7 +289,7 @@ class OUG(OP2Common):
         elif self.table_code == 1:   # Displacements
             if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUGV1PAT', b'TOUGV1',
                                        b'OUGV2',
-                                       b'OUPV1']:
+                                       b'OUPV1', b'ROUGV1']:
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 raise AssertionError(msg)
             is_cid = False

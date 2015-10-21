@@ -325,10 +325,10 @@ class FortranFormat(object):
         if self.is_debug_file:
             self.binary_debug.write('record_length = %s\n' % record_len)
 
-        oes_nl = ['OESNLXD', 'OESNL1X', 'OESNLXR']
+        oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']
         if record_len == 584:  # table3 has a length of 584
             if self.table_name in oes_nl and hasattr(self, 'num_wide') and self.num_wide == 146:
-                    data_code_old = deepcopy(self.data_code)
+                data_code_old = deepcopy(self.data_code)
 
             self.data_code = {}
             self.obj = None
