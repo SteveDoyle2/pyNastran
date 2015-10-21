@@ -1493,7 +1493,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                if self.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0

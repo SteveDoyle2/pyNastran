@@ -167,7 +167,7 @@ class GEOM3(object):
                 eData = data[n:n+8]
                 n += 8
                 (si, l1) = unpack('fi', eData)
-                siTest, = unpack('i', eData[0:4])
+                siTest, = self.struct_i.unpack(eData[0:4])
                 #print(si,siTest, l1)
                 #print(type(si))
 

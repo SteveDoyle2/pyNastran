@@ -3,7 +3,7 @@ from __future__ import print_function
 from six import b
 from six.moves import range
 from struct import Struct
-from numpy import fromstring
+from numpy import fromstring, vstack, repeat
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
@@ -21,11 +21,11 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # vectorized
     RealCBarForceArray, RealCBar100ForceArray,
     RealPlateForceArray,
+    RealPlateBilinearForce, RealPlateBilinearForceArray,
 
     # not vectorized
     RealCBeamForce, RealCShearForce,                  # TODO: vectorize 2
     RealSpringForce, RealDamperForce, RealViscForce,  # TODO: vectorize 3
-    RealPlateBilinearForce,                           # TODO: vectorize 1
     RealConeAxForce,                                  # TODO: vectorize 1
     RealCGapForce, RealBendForce,                     # TODO: vectorize 2
     RealPentaPressureForce, RealCBushForce,           # TODO: vectorize 2
@@ -1266,62 +1266,76 @@ class OEF(OP2Common):
                 msg = 'name=%r type=%r' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
 
-            numwide_real = 2 + (nnodes + 1) * 9 # centroidal node is the + 1
-            numwide_imag = 2 + (nnodes + 1) * 17
-
-            if 0:
-                obj_real = RealPlateBilinearForce
-                obj_complex = ComplexPlate2Force
-
-                RealPlateForce2Array = None
-                ComplexPlateForce2Array = None
-                obj_vector_real = RealPlateForce2Array
-                obj_vector_complex = ComplexPlateForce2Array
+            slot = getattr(self, result_name)
+            nnodes_all = nnodes + 1
+            numwide_real = 2 + nnodes_all * 9 # centroidal node is the + 1
+            numwide_imag = 2 + nnodes_all * 17
 
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
+
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
-                if self.read_mode == 1:
-                    return len(data)
+                obj_vector_real = RealPlateBilinearForceArray
 
-                self.create_transient_object(slot, RealPlateBilinearForce)
-                ntotal = 8 + (nnodes + 1) * 36 # centroidal node is the + 1
+                ntotal = 8 + nnodes_all * 36 # centroidal node is the + 1
                 assert ntotal == self.num_wide * 4, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
+
                 nelements = len(data) // ntotal
-                #auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       #result_name, slot,
-                                                       #obj_real, obj_vector_real)
-                #if auto_return:
-                    #return nelements * self.num_wide * 4
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
+                if auto_return:
+                    self._data_factor = nnodes_all
+                    return nelements * self.num_wide * 4
 
-                s1 = Struct(b(self._endian + 'i4si8f'))  # 8+36
-                s2 = Struct(b(self._endian + 'i8f')) # 36
-                nelements = len(data) // ntotal
+                obj = self.obj
+                if self.use_vector and is_vectorized and self.element_type in [144]:
+                    nlayers = nelements * nnodes_all
+                    n = nelements * self.num_wide * 4
 
-                for i in range(nelements):
-                    edata = data[n:n+44]
+                    istart = obj.itotal
+                    iend = istart + nlayers
+                    obj._times[obj.itime] = dt
 
-                    out = s1.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
-                    (eid_device, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                    #term= 'CEN\'
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
-                    #print "%s" % (self.get_element_type(self.element_type)), dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty
-                    self.obj.add_new_element(eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                    n += 44
-                    for i in range(nnodes):
-                        edata = data[n : n + 36]
-                        out = s2.unpack(edata)
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                        nids = ints[:, 2:].reshape(nlayers, 9)[:, 0]
+
+                        eids = ints[:, 0] // 10
+                        eids2 = vstack([eids] * nnodes_all).T.ravel()
+                        obj.element_node[istart:iend, 0] = eids2
+                        obj.element_node[istart:iend, 1] = nids
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    results = floats[:, 2:].reshape(nlayers, 9)[:, 1:]
+                    #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+                    obj.data[obj.itime, istart:iend, :] = results
+                else:
+                    s1 = Struct(b(self._endian + 'i4si8f'))  # 8+36
+                    s2 = Struct(b(self._endian + 'i8f')) # 36
+
+                    for i in range(nelements):
+                        edata = data[n:n + 44]
+
+                        out = s1.unpack(edata)
                         if self.is_debug_file:
-                            self.binary_debug.write('    %s\n' % (str(out)))
-                        (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                        assert nid > 0, 'nid=%s' % nid
-                        data_in = [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-                        #print "***%s    " % (self.get_element_type(self.element_type)), data_in
-                        self.obj.add(eid, dt, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                        n += 36
+                            self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
+                        (eid_device, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+                        #term= 'CEN\'
+                        eid = self._check_id(eid_device, flag, 'FORCE', out)
+                        #print "%s" % (self.get_element_type(self.element_type)), dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty
+                        self.obj.add(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                        n += 44
+                        for i in range(nnodes):
+                            edata = data[n : n + 36]
+                            out = s2.unpack(edata)
+                            if self.is_debug_file:
+                                self.binary_debug.write('    %s\n' % (str(out)))
+                            (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+                            assert nid > 0, 'nid=%s' % nid
+                            #print "***%s    " % (self.get_element_type(self.element_type)), data_in
+                            obj.add(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                            n += 36
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag: # complex
                 if self.read_mode == 1:
                     return len(data)

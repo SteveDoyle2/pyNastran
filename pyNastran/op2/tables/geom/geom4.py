@@ -241,7 +241,7 @@ class GEOM4(object):
                 nids += list(nodes)
                 n += 4 * nentries
             else:
-                n2 = unpack(b(self._endian + 'i'), data[n:n+4])
+                n2 = self.struct_i.unpack(data[n:n+4])
                 n += 4
                 nids.append(n2)
             self.binary_debug.write('   nids=%s\n' % str(nids[1:]))

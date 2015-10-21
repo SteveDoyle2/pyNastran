@@ -639,7 +639,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """auto-table skipper"""
         return len(data)
 
-    def _table_crash(self, data):
+    def _table_crash(self, data, ndata):
         sys.exit('asdf')
 
     def _table_passer_r1tabrg(self, data, ndata):
@@ -766,6 +766,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.goto(self.n)
 
 
+        if self.read_mode == 1:
+            self.fdtype = np.dtype(self._endian + 'f4')
+            self.idtype = np.dtype(self._endian + 'i4')
+            self.struct_i = Struct(b(self._endian + 'i'))
+            self.struct_8s = Struct(b(self._endian + '8s'))
+
         #try:
         markers = self.get_nmarkers(1, rewind=True)
         #except:
@@ -828,10 +834,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.post = -2
         else:
             raise NotImplementedError(markers)
-
-        if self.read_mode == 1:
-            self.fdtype = np.dtype(self._endian + 'f4')
-            self.idtype = np.dtype(self._endian + 'i4')
 
         #=================
         table_name = self.read_table_name(rewind=True, stop_on_failure=False)
@@ -1133,7 +1135,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        table_name, = unpack(b(self._endian + '8s'), data)
+        table_name, = self.struct_8s.unpack(data)
 
         self.read_markers([-3, 1, 0])
         data = self._read_record()
@@ -1283,7 +1285,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.read_markers([-2, 1, 0])
         data = self._skip_record()
-        #table_name, = unpack(b(self._endian + '8s'), data)
+        #table_name, = self.struct_8s.unpack(data)
 
         self.read_markers([-3, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
@@ -1321,7 +1323,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #self.read_markers([-2, 1, 0])
         #data = self._read_record()
-        #table_name, = unpack(b(self._endian + '8s'), data)
+        #table_name, = self.struct_8s.unpack(data)
         ##print "table_name = %r" % table_name
 
         #self.read_markers([-3, 1, 0])
@@ -1350,7 +1352,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
         ni = self.n
-        s = Struct(b(self._endian + '8s'))
+        s = self.struct_8s
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
             table_name, = s.unpack(data)
@@ -1815,7 +1817,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 8:
-            subtable_name, = unpack(b(self._endian + '8s'), data)
+            subtable_name, = self.struct_8s.unpack(data)
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'Unhandled table length error\n'
@@ -1901,7 +1903,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data, ndata = self._read_record_ndata()
         if ndata == 8:
-            subtable_name = unpack(b(self._endian + '8s'), data)
+            subtable_name = self.struct_8s.unpack(data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)

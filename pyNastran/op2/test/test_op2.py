@@ -308,7 +308,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         else:
             print("---stats for %s---" % op2_filename)
             print(op2a.get_op2_stats())
-            print(op2a.print_subcase_key())
+            op2a.print_subcase_key()
         if write_bdf:
             op2a.write_bdf(bdf_filename)
             os.remove(bdf_filename)

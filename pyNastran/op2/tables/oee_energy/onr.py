@@ -32,7 +32,7 @@ class ONR(OP2Common):
         if self.is_debug_file:
             self.binary_debug.flush()
 
-        element_name, = unpack(b(self._endian + '8s'), data[24:32])
+        element_name, = self.struct_8s.unpack(data[24:32])
         print("element_name = %s" %(element_name))
         try:
             element_name = element_name.decode('utf-8').strip()  # element name

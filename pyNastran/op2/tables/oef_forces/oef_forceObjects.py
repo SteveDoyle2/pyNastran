@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from six.moves import zip, range
 from numpy import array, zeros, searchsorted, array_equal
+from itertools import cycle
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
@@ -1552,6 +1553,228 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
         f.write(page_stamp % page_num)
         return page_num
+
+class RealPlateBilinearForceArray(ScalarObject):  # 144-CQUAD4
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+
+        self.dt = dt
+        self.nelements = 0
+
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def _get_msgs(self):
+        raise NotImplementedError()
+
+    def get_headers(self):
+        return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
+
+    def build(self):
+        # print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        #self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+
+        #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += '(Eid, Nid)\n'
+            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element_node):
+                    (eid, nid) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1) = t1
+                    (mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid,
+                            mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1,
+                            mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        self.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+
+    def add_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        self._times[self.itime] = dt
+        self.element_node[self.itotal] = [eid, nid]
+        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.itotal += 1
+
+    def add_sort2(self, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        raise NotImplementedError('SORT2')
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        #msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        # if 'CTRIA3' in self.element_name:
+            # msg = [
+                # '                             F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'
+                # ' \n'
+                # '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -\n'
+                # '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n'
+            # ]
+            # nnodes = 3
+        if self.element_type == 144:
+            # CQUAD4
+            element_name = 'CQUAD4'
+            msg = [
+                '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n'
+                ' \n'
+                '    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -\n'
+                '      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
+            ]
+            nnodes = 4
+        else:
+            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+        return element_name, nnodes, msg
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element)  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        cen_word = 'CEN/%i' % nnodes
+        if self.element_type == 144:
+            cyc = cycle([0, 1, 2, 3, 4])
+        else:
+            raise NotImplementedError(self.element_type)
+
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+            mx = self.data[itime, :, 0]
+            my = self.data[itime, :, 1]
+            mxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            tx = self.data[itime, :, 6]
+            ty = self.data[itime, :, 7]
+
+            # loop over all the elements
+            if self.element_type == 144:
+                for i, eid, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(cyc, eids, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                    ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
+                    is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    # ctria3
+                    #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
+                    if i == 0:
+                        f.write('0  %8i    CEN/4 %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                    else:
+                        f.write('            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+            else:
+                raise NotImplementedError(self.element_type)
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 # class RealCBarForce(ScalarObject):  # 34-CBAR
     # def __init__(self, data_code, is_sort1, isubcase, dt):
