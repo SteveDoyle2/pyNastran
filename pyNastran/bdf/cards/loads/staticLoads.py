@@ -1365,7 +1365,6 @@ class PLOAD1(Load):
             self.p1 = double(card, 6, 'p1')
             self.x2 = double_or_blank(card, 7, 'x2', self.x1)
             self.p2 = double_or_blank(card, 8, 'p2', self.p1)
-            assert 0 <= self.x1 <= self.x2
             assert len(card) <= 9, 'len(PLOAD1 card) = %i' % len(card)
         else:
             self.sid = data[0]
@@ -1388,7 +1387,7 @@ class PLOAD1(Load):
                 self.scale, ', '.join(self.validScales).rstrip(', '))
             raise RuntimeError(msg)
 
-        assert 0.0 <= self.x1 <= self.x2
+        assert 0.0 <= self.x1 <= self.x2, '0.0 <= x1 <= x2 -> x1=%s x2=%s' % (self.x1, self.x2)
         if self.scale in ['FR', 'FRPR']:
             assert self.x1 <= 1.0, 'x1=%r' % self.x1
             assert self.x2 <= 1.0, 'x2=%r' % self.x2

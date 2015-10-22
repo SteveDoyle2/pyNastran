@@ -890,7 +890,7 @@ class BDFMethods(object):
                 if elem.type not in ['CBAR', 'CBEAM', 'CBEND']:
                     raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
 
-                nodes = elem.nodeIDs()
+                nodes = elem.node_ids
                 n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
                 n1 += elem.wa
                 n2 += elem.wb

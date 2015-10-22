@@ -3447,7 +3447,13 @@ class NastranIO(object):
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
         fx = zeros(self.nElements, dtype='float32') # axial
+        fy = zeros(self.nElements, dtype='float32') # shear_y
+        fz = zeros(self.nElements, dtype='float32') # shear_z
+
         rx = zeros(self.nElements, dtype='float32') # torque
+        ry = zeros(self.nElements, dtype='float32') # bending_y
+        rz = zeros(self.nElements, dtype='float32') # bending_z
+
         is_element_on = zeros(self.nElements, dtype='float32') # torque
         fmt = '%g'
         header = ''
@@ -3477,6 +3483,39 @@ class NastranIO(object):
                 else:
                     continue
 
+        if subcase_id in model.cbar_force:
+            ## CBAR-34
+            case = model.cbar_force[subcase_id]
+            eids = case.element
+            print('eids =', eids)
+            i = searchsorted(self.element_ids, eids)
+
+            #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+            fx[i] = case.data[:, :, 6]
+            fy[i] = case.data[:, :, 4]
+            fz[i] = case.data[:, :, 5]
+
+            rx[i] = case.data[:, :, 7]
+            ry[i] = array([case.data[:, :, 0], case.data[:, :, 2]]).max(axis=0)
+            rz[i] = array([case.data[:, :, 1], case.data[:, :, 3]]).max(axis=0)
+
+        if subcase_id in model.cbar_force_10nodes:
+            ## CBAR-100
+            case = model.cbar_force_10nodes[subcase_id]
+            eids = case.element
+            print('eids =', eids)
+            i = searchsorted(self.element_ids, eids)
+
+            # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
+            fx[i] = array([case.data[:, ::-1, 5], case.data[:, 1::-1, 5]]).max(axis=0)
+            fy[i] = array([case.data[:, ::-1, 3], case.data[:, 1::-1, 3]]).max(axis=0)
+            fz[i] = array([case.data[:, ::-1, 4], case.data[:, 1::-1, 4]]).max(axis=0)
+
+            rx[i] = array([case.data[:, ::-1, 6], case.data[:, 1::-1, 6]]).max(axis=0)
+            ry[i] = array([case.data[:, ::-1, 1], case.data[:, 1::-1, 1]]).max(axis=0)
+            rz[i] = array([case.data[:, ::-1, 2], case.data[:, 1::-1, 2]]).max(axis=0)
+            neids = len(unique(eids)) * 2
+            assert len(eids) == len(unique(eids)) * 2, 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
         if found_force:
             case = force
             fmt = '%.4f'
@@ -3488,8 +3527,62 @@ class NastranIO(object):
                 icase += 1
                 ncase += 1
 
+                cases[(subcase_id, icase, 'ShearY', 1, 'centroid', fmt, header)] = fy
+                form0[2].append(('ShearY', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'ShearZ', 1, 'centroid', fmt, header)] = fz
+                form0[2].append(('ShearZ', icase, []))
+                icase += 1
+                ncase += 1
+
                 cases[(subcase_id, icase, 'Torsion', 1, 'centroid', fmt, header)] = rx
                 form0[2].append(('Torque', icase, []))
+                icase += 1
+                ncase += 1
+
+                is_axial = zeros(self.nElements, dtype='int8')
+                is_shear_y = zeros(self.nElements, dtype='int8')
+                is_shear_z = zeros(self.nElements, dtype='int8')
+                is_torsion = zeros(self.nElements, dtype='int8')
+                is_bending_y = zeros(self.nElements, dtype='int8')
+                is_bending_z = zeros(self.nElements, dtype='int8')
+                is_axial[where(abs(fx) > 0.0)[0]] = 1
+                is_shear_y[where(abs(fy) > 0.0)[0]] = 1
+                is_shear_z[where(abs(fz) > 0.0)[0]] = 1
+                is_torsion[where(abs(rx) > 0.0)[0]] = 1
+                is_bending_y[where(abs(ry) > 0.0)[0]] = 1
+                is_bending_z[where(abs(rz) > 0.0)[0]] = 1
+                #is_bending[where(abs(rx) > 0.0)[0]] = 1
+
+                cases[(subcase_id, icase, 'IsAxial', 1, 'centroid', fmt, header)] = is_axial
+                form0[2].append(('IsAxial', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'IsShearY', 1, 'centroid', fmt, header)] = is_shear_y
+                form0[2].append(('IsShearY', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'IsShearZ', 1, 'centroid', fmt, header)] = is_shear_z
+                form0[2].append(('IsShearZ', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'IsTorsion', 1, 'centroid', fmt, header)] = is_torsion
+                form0[2].append(('IsTorsion', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'IsBendingY', 1, 'centroid', fmt, header)] = is_bending_y
+                form0[2].append(('IsBendingY', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'IsBendingZ', 1, 'centroid', fmt, header)] = is_bending_z
+                form0[2].append(('IsBendingZ', icase, []))
                 icase += 1
                 ncase += 1
 
