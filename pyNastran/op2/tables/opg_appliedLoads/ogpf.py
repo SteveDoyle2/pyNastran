@@ -1,6 +1,7 @@
 from six import b
 from six.moves import range
 from struct import Struct
+from numpy import fromstring
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
@@ -44,32 +45,60 @@ class OGPF(OP2Common):
                 if auto_return:
                     return nnodes * self.num_wide * 4
 
-                #self.create_transient_object(self.grid_point_forces, RealGridPointForces)
-                s = Struct(b(self._endian + 'ii8s6f'))
+                obj = self.obj
+                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nnodes * self.num_wide * 4
 
-                if self.is_debug_file:
-                    self.binary_debug.write('  GPFORCE\n')
-                    self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
-                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                    self.binary_debug.write('  gpforce1 = [ekey, eid, elemName, f1, f2, f3, m1, m2, m3]\n')
-                    self.binary_debug.write('  nnodes=%i\n' % nnodes)
+                    istart = obj.itotal
+                    iend = istart + nnodes
+                    obj._times[obj.itime] = dt
 
-                for i in range(nnodes):
-                    eData = data[n:n+ntotal]
-                    out = s.unpack(eData)
-                    (ekey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
-                    ekey = ekey // 10
-                    elemName = elemName.strip()
-                    #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
+                        nids = ints[:, 0] // 10
+                        eids = ints[:, 1]
+                        obj.node_element[istart:iend, 0] = nids
+                        obj.node_element[istart:iend, 1] = eids
+                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)#[:, 2:3]
+                        #a = strings[:, 0]
+                        #aa = strings[:, 1]
+                        obj.element_names[istart:iend] = strings[:, 1]
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 10)
+                    #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
+                    obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
+                else:
+                    s = Struct(b(self._endian + 'ii8s6f'))
+
                     if self.is_debug_file:
-                        self.binary_debug.write('  nid=%s - %s\n' % (ekey, str(out)))
+                        self.binary_debug.write('  GPFORCE\n')
+                        self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
+                        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                        self.binary_debug.write('  gpforce1 = [ekey, eid, elemName, f1, f2, f3, m1, m2, m3]\n')
+                        self.binary_debug.write('  nnodes=%i\n' % nnodes)
 
-                    self.obj.add(dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3)
-                    #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
-                    n += ntotal
+                    for i in range(nnodes):
+                        eData = data[n:n+ntotal]
+                        out = s.unpack(eData)
+                        (ekey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
+                        ekey = ekey // 10
+                        elemName = elemName.strip()
+                        #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
+                        if self.is_debug_file:
+                            self.binary_debug.write('  nid=%s - %s\n' % (ekey, str(out)))
+
+                        self.obj.add(dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3)
+                        #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
+                        n += ntotal
             else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                raise NotImplementedError(self.code_information())
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, msg)
 
             #complex_obj = complexGridPointForcesObject
 
@@ -81,6 +110,7 @@ class OGPF(OP2Common):
             #complex_obj = None
             #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, msg)
+            raise NotImplementedError(self.code_information())
+            #msg = self.code_information()
+            #return self._not_implemented_or_skip(data, msg)
         return n

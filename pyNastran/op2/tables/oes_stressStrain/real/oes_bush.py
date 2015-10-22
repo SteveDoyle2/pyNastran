@@ -17,8 +17,7 @@ class RealBushArray(OES_Object):
         #self.ntotal = 0
         self.ielement = 0
         self.nelements = 0  # result specific
-        print('RealBushArray.nonlinear_factor =', self.nonlinear_factor)
-        sfdasdf
+        #print('RealBushArray.nonlinear_factor =', self.nonlinear_factor)
 
     def is_real(self):
         return True

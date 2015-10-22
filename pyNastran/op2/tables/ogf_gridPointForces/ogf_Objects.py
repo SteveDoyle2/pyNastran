@@ -30,7 +30,8 @@ class RealGridPointForcesArray(ScalarObject):
 
     @property
     def element_name(self):
-        headers = unique(self.element_names)
+        headers = [name.strip() for name in unique(self.element_names)]
+        #headers = unique(self.element_names)
         return ', '.join(headers)
 
     def build(self):
@@ -189,18 +190,18 @@ class RealGridPointForcesArray(ScalarObject):
             r3 = self.data[itime, :, 5]
 
             zero = ' '
-            for (eid, nid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                 eids, nids, enames, t1, t2, t3, r1, r2, r3):
+            for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                 nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 [f1, f2, f3, m1, m2, m3] = vals2
                 if eid == 0:
-                    f.write('   %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                             nid, eid, ename, f1, f2, f3, m1, m2, m3))
                     zero = '0'
                 else:
-                    f.write('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    f.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                             zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
                     zero = ' '
             f.write(page_stamp % page_num)
