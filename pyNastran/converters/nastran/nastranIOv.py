@@ -3301,47 +3301,48 @@ class NastranIO(object):
                 formi = form_time[2]
             is_form_time = False
 
-            # stress
-            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
-                cases, model, subcase_id, form, icase, itime, dt,
-                is_stress=True, is_real=is_real, is_static=is_static)
-            if ncase:
-                assert ncase > 0, ncase
-                if is_static:
-                    formi.append(form0)
-                else:
-                    form_time[0] = header
-                    form_time[2].append(form0)
-                    is_form_time = True
+            if 0:
+                # stress
+                icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
+                    cases, model, subcase_id, form, icase, itime, dt,
+                    is_stress=True, is_real=is_real, is_static=is_static)
+                if ncase:
+                    assert ncase > 0, ncase
+                    if is_static:
+                        formi.append(form0)
+                    else:
+                        form_time[0] = header
+                        form_time[2].append(form0)
+                        is_form_time = True
 
-            # strain
-            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
-                cases, model, subcase_id, form, icase, itime, dt,
-                is_stress=False, is_real=is_real, is_static=is_static)
-            if ncase:
-                assert ncase > 0, ncase
-                if is_static:
-                    formi.append(form0)
-                else:
-                    form_time[0] = header
-                    form_time[2].append(form0)
-                    is_form_time = True
+                # strain
+                icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
+                    cases, model, subcase_id, form, icase, itime, dt,
+                    is_stress=False, is_real=is_real, is_static=is_static)
+                if ncase:
+                    assert ncase > 0, ncase
+                    if is_static:
+                        formi.append(form0)
+                    else:
+                        form_time[0] = header
+                        form_time[2].append(form0)
+                        is_form_time = True
 
-            # ese
-            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_strain_energy(
-                cases, model, subcase_id, form, icase, itime, dt,
-                is_real=is_real, is_static=is_static)
-            if ncase:
-                assert ncase > 0, ncase
-                if is_static:
-                    formi.append(form0)
-                else:
-                    #form_time[0] = header
-                    form_time[2].append(form0)
-                    is_form_time = True
+                # ese
+                icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_strain_energy(
+                    cases, model, subcase_id, form, icase, itime, dt,
+                    is_real=is_real, is_static=is_static)
+                if ncase:
+                    assert ncase > 0, ncase
+                    if is_static:
+                        formi.append(form0)
+                    else:
+                        #form_time[0] = header
+                        form_time[2].append(form0)
+                        is_form_time = True
 
             # force
-            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_force(
+            icase, ncase, header, form0 = self._get_nastran_time_centroidal_force(
                 cases, model, subcase_id, form, icase, itime, dt,
                 is_real=is_real, is_static=is_static)
             if ncase:
@@ -3484,10 +3485,11 @@ class NastranIO(object):
                     continue
 
         if subcase_id in model.cbar_force:
+            found_force = True
             ## CBAR-34
             case = model.cbar_force[subcase_id]
             eids = case.element
-            print('eids =', eids)
+            # print('eids =', eids)
             i = searchsorted(self.element_ids, eids)
 
             #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
@@ -3500,10 +3502,11 @@ class NastranIO(object):
             rz[i] = array([case.data[:, :, 1], case.data[:, :, 3]]).max(axis=0)
 
         if subcase_id in model.cbar_force_10nodes:
+            found_force = True
             ## CBAR-100
             case = model.cbar_force_10nodes[subcase_id]
             eids = case.element
-            print('eids =', eids)
+            # print('eids =', eids)
             i = searchsorted(self.element_ids, eids)
 
             # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
@@ -3516,12 +3519,12 @@ class NastranIO(object):
             rz[i] = array([case.data[:, ::-1, 2], case.data[:, 1::-1, 2]]).max(axis=0)
             neids = len(unique(eids)) * 2
             assert len(eids) == len(unique(eids)) * 2, 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
+
         if found_force:
-            case = force
             fmt = '%.4f'
             # header = self._get_nastran_header(case, dt, itime)
 
-            if fx.min() != fx.max() or rx.min() != rx.max():
+            if fx.min() != fx.max() or rx.min() != rx.max() or 1:
                 cases[(subcase_id, icase, 'Axial', 1, 'centroid', fmt, header)] = fx
                 form0[2].append(('Axial', icase, []))
                 icase += 1
@@ -3539,6 +3542,16 @@ class NastranIO(object):
 
                 cases[(subcase_id, icase, 'Torsion', 1, 'centroid', fmt, header)] = rx
                 form0[2].append(('Torque', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'BendingY', 1, 'centroid', fmt, header)] = ry
+                form0[2].append(('BendingY', icase, []))
+                icase += 1
+                ncase += 1
+
+                cases[(subcase_id, icase, 'BendingZ', 1, 'centroid', fmt, header)] = rz
+                form0[2].append(('BendingZ', icase, []))
                 icase += 1
                 ncase += 1
 
@@ -3592,7 +3605,7 @@ class NastranIO(object):
                     icase += 1
                     ncase += 1
 
-        return icase, ncase, case, header, form0
+        return icase, ncase, header, form0
 
     def _get_nastran_time_centroidal_stress(self, cases, model, subcase_id, form, icase, itime, dt,
                                             is_stress=True, is_real=True, is_static=False):
