@@ -2,8 +2,25 @@
 from six import string_types
 from types import MethodType
 import os
-from numpy import ndarray
+from numpy import ndarray, array
 import io
+
+
+def loadtxt_nice(filename, delimiter=',', skiprows=1, dtype=None):
+    data = []
+    delim = '\n\r \t' + delimiter
+    with open(filename, 'r') as file_obj:
+        if skiprows:
+            lines = file_obj.readlines()[skiprows:]
+        else:
+            lines = file_obj.readlines()
+
+        for line in lines:
+            line = line.strip(delim).split(delimiter)
+            data.append(line)
+    if dtype:
+        return array(data, dtype=dtype)
+    return array(data)
 
 
 def is_binary_file(filename):

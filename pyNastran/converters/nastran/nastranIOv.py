@@ -1112,19 +1112,23 @@ class NastranIO(object):
             elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
                 no_bending[ieid] = 1
                 no_0_56[ieid] = 1
+                print(elem)
             elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
                 no_bending[ieid] = 1
                 no_torsion[ieid] = 1
                 no_0_456[ieid] = 1
+                # print(elem)
             elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
                 no_torsion[ieid] = 1
                 no_56_456[ieid] = 1
             elif elem.pa == 6 and elem.pb == 0:
                 no_bending_bad[ieid] = 1
                 no_0_6[ieid] = 1
-            elif elem.pa == 0 and elem.pb == 16:
+                print(elem)
+            elif elem.pa == 0 and elem.pb == 16 or elem.pb == 0 and elem.pa == 16:
                 no_axial[ieid] = 1
                 no_bending_bad[ieid] = 1
+                # print(elem)
                 no_0_16[ieid] = 1
             # elif (elem.pa == 6 and elem.pb == 16):
                 # no_axial[ieid] = 1
