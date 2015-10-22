@@ -5,6 +5,7 @@ import copy
 from struct import Struct, unpack
 
 from numpy import radians, sin, cos, fromstring, ones, int32, float32
+import numpy as np
 #from numba import autojit
 
 from pyNastran import is_release
@@ -391,7 +392,7 @@ class OP2Common(Op2Codes, F06Writer):
             # self.obj.format_code = format_code
             # self.obj.data_code['format_code'] = format_code
 
-    def _read_table(self, data, result_name, storage_obj,
+    def _read_table(self, data, ndata, result_name, storage_obj,
                     real_obj, complex_obj,
                     real_vector, complex_vector,
                     node_elem, random_code=None, is_cid=False):
@@ -408,10 +409,10 @@ class OP2Common(Op2Codes, F06Writer):
         if self.format_code == 1 and self.num_wide == 8:  # real/random
             # real_obj
             assert real_obj is not None
-            nnodes = len(data) // 32  # 8*4
+            nnodes = ndata // 32  # 8*4
             auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector, is_cid=is_cid)
             if auto_return:
-                return len(data)
+                return ndata
 
             self._fix_format_code(format_code=1)
             if self.is_sort1():
@@ -421,18 +422,18 @@ class OP2Common(Op2Codes, F06Writer):
                     n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
             else:
                 n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-                #n = len(data)
+                #n = ndata
                 #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, msg)
+                #n = self._not_implemented_or_skip(data, ndata, msg)
         elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
-            nnodes = len(data) // 56  # 14*4
+            nnodes = ndata // 56  # 14*4
             if self.is_debug_file:
                 self.binary_debug.write('nnodes=%s' % nnodes)
             auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
             if auto_return:
-                return len(data)
+                return ndata
             if self.is_sort1():
                 if self.is_magnitude_phase():
                     n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
@@ -444,19 +445,19 @@ class OP2Common(Op2Codes, F06Writer):
                 else:
                     n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
                 #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, msg)
+                #n = self._not_implemented_or_skip(data, ndata, msg)
         else:
             #msg = 'COMPLEX/PHASE is included in:\n'
             #msg += '  DISP(PLOT)=ALL\n'
             #msg += '  but the result type is REAL\n'
             msg = self.code_information()
-            n = self._not_implemented_or_skip(data, msg)
+            n = self._not_implemented_or_skip(data, ndata, msg)
         #else:
         #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
-        #n = self._not_implemented_or_skip(data, msg)
+        #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_table_vectorized(self, data, result_name, storage_obj,
+    def _read_table_vectorized(self, data, ndata, result_name, storage_obj,
                                real_vector, complex_vector,
                                node_elem, random_code=None, is_cid=False):
 
@@ -468,11 +469,11 @@ class OP2Common(Op2Codes, F06Writer):
         is_vectorized = True
         if self.format_code == 1 and self.num_wide == 8:  # real/random
             # real
-            nnodes = len(data) // 32  # 8*4
+            nnodes = ndata // 32  # 8*4
             auto_return = self._create_table_vector(
                 result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
             if auto_return:
-                return len(data)
+                return ndata
 
             self._fix_format_code(format_code=1)
             if self.is_sort1():
@@ -482,18 +483,18 @@ class OP2Common(Op2Codes, F06Writer):
                     n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
             else:
                 n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-                #n = len(data)
+                #n = ndata
                 #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, msg)
+                #n = self._not_implemented_or_skip(data, ndata, msg)
         elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex
-            nnodes = len(data) // 56  # 14*4
+            nnodes = ndata // 56  # 14*4
             if self.is_debug_file:
                 self.binary_debug.write('nnodes=%s' % nnodes)
             auto_return = self._create_table_vector(
                 result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
-                return len(data)
+                return ndata
             if self.is_sort1():
                 if self.is_magnitude_phase():
                     n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
@@ -505,16 +506,16 @@ class OP2Common(Op2Codes, F06Writer):
                 else:
                     n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
                 #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, msg)
+                #n = self._not_implemented_or_skip(data, ndata, msg)
         else:
             #msg = 'COMPLEX/PHASE is included in:\n'
             #msg += '  DISP(PLOT)=ALL\n'
             #msg += '  but the result type is REAL\n'
             msg = self.code_information()
-            n = self._not_implemented_or_skip(data, msg)
+            n = self._not_implemented_or_skip(data, ndata, msg)
         #else:
         #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
-        #n = self._not_implemented_or_skip(data, msg)
+        #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def function_code(self, value):
@@ -559,7 +560,7 @@ class OP2Common(Op2Codes, F06Writer):
         if self.use_vector and is_vectorized:
             n = nnodes * 4 * 8
             itotal2 = obj.itotal + nnodes
-            #print('len(data)=%s n=%s nnodes=%s' % (len(data), n, nnodes))
+            #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
             ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
             floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
@@ -610,7 +611,8 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * 4 * 8
             itotal = obj.itotal
             itotal2 = itotal + nnodes
-            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+
+            is_mask = False
             if obj.itime == 0:
                 ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
                 #ints = floats[:, :2].view('int32')
@@ -624,11 +626,16 @@ class OP2Common(Op2Codes, F06Writer):
                 #obj.Vn = ones(floats.shape, dtype=bool)
                 #obj.Vn[itotal:itotal2, :2] = False
                 #print(obj.Vn)
+                if obj.nonlinear_factor is not None and is_mask:
+                    float_mask = np.arange(nnodes * 8, dtype=np.int32).reshape(nnodes, 8)[:, 2:]
+                    obj.float_mask = float_mask
 
+            if obj.nonlinear_factor is not None and is_mask:
+                results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
+            else:
+                floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+                obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj._times[itime] = dt
-            #obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
-            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
-            #obj.data[obj.itime, obj.itotal:itotal2, :] = floats[obj.Vn]
             obj.itotal = itotal2
         else:
             n = 0
@@ -699,7 +706,6 @@ class OP2Common(Op2Codes, F06Writer):
 
         n = 0
         obj = self.obj
-        #nnodes = len(data) // 56
         s = Struct(b(self._endian + '2i12f'))
 
         if self.use_vector and is_vectorized:
@@ -831,11 +837,10 @@ class OP2Common(Op2Codes, F06Writer):
         node_id = self.nonlinear_factor
 
         #ntotal = 56  # 14 * 4
-        #nnodes = len(data) // 56
 
         assert self.obj is not None
         assert nnodes > 0
-        #assert len(data) % ntotal == 0
+        #assert ndata % ntotal == 0
 
         if self.use_vector and is_vectorized and 0:
             pass
@@ -879,11 +884,10 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             n = 0
             #ntotal = 56  # 14 * 4
-            #nnodes = len(data) // ntotal
             s = Struct(self._endian + self._analysis_code_fmt + 'i12f')
             assert self.obj is not None
             assert nnodes > 0
-            #assert len(data) % ntotal == 0
+            #assert ndata % ntotal == 0
 
             binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
 
@@ -977,7 +981,7 @@ class OP2Common(Op2Codes, F06Writer):
         #self.log.debug('code = %s' % str(self.code))
         return self.code
 
-    def _not_implemented_or_skip(self, data, msg=''):
+    def _not_implemented_or_skip(self, data, ndata, msg=''):
         """
         A simple pass loop for unsupported tables that can be hacked on
         to crash the program everywhere that uses it.
@@ -991,7 +995,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.log.warning(msg)
                 #self.log.warning(self.code_information())
                 self._last_comment = msg
-            return len(data)
+            return ndata
         else:
             msg = 'table_name=%s table_code=%s %s\n%s' % (
                 self.table_name, self.table_code, msg, self.code_information())

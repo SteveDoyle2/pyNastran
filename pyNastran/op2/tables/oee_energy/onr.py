@@ -1,4 +1,5 @@
 #pylint: disable=C0326,C0301,C0103
+from __future__ import print_function
 from six import b
 from six.moves import range
 from struct import Struct, unpack
@@ -33,13 +34,13 @@ class ONR(OP2Common):
             self.binary_debug.flush()
 
         element_name, = self.struct_8s.unpack(data[24:32])
-        print("element_name = %s" %(element_name))
+        #print("element_name = %s" % (element_name))
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
         except UnicodeDecodeError:
-            print("element_name = ", str(element_name))
+            print("element_name = %s" % str(element_name))
             #raise
-        #print("element_name = %s" %(element_name))
+        #print("element_name = %s" % (element_name))
         if element_name.isalpha():
             self.data_code['element_name'] = element_name
         else:
@@ -131,7 +132,7 @@ class ONR(OP2Common):
         reads ONRGY1 subtable 4
         """
         if self.read_mode == 1:
-            return len(data)
+            return ndata
 
         if self.table_code == 18:  # element strain energy
             assert self.table_name in [b'ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
@@ -148,7 +149,7 @@ class ONR(OP2Common):
         n = 0
         result_name = 'strain_energy'
         if self.read_mode == 1:
-            return len(data)
+            return ndata
         self._results._found_result(result_name)
 
         if self.is_debug_file:
@@ -159,7 +160,7 @@ class ONR(OP2Common):
             s = Struct(b(self._endian + 'i3f'))
 
             ntotal = 16
-            nnodes = len(data) // ntotal
+            nnodes = ndata // ntotal
             for i in range(nnodes):
                 edata = data[n:n+ntotal]
 
@@ -177,7 +178,7 @@ class ONR(OP2Common):
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             s = Struct(b(self._endian + '8s3f'))
-            nnodes = len(data) // ntotal
+            nnodes = ndata // ntotal
             for i in range(nnodes):
                 edata = data[n:n+20]
                 out = s.unpack(edata)
@@ -195,7 +196,7 @@ class ONR(OP2Common):
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
             s = Struct(b(self._endian + 'i8s3f'))
-            nnodes = len(data) // ntotal
+            nnodes = ndata // ntotal
             for i in range(nnodes):
                 edata = data[n:n+24]
                 out = s.unpack(edata)

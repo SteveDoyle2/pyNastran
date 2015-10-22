@@ -314,7 +314,7 @@ class MPT(object):
         """
         #print "reading RADM"
         return n
-        s = Struct(b(self._endian + 'i'))
+        s = self.self.struct_i
         while len(data) >= 4:  # 1*4
             eData = data[:4]
             data = data[4:]

@@ -16,7 +16,7 @@ class OGPF(OP2Common):
 
     def _read_ogpf1_4(self, data, ndata):
         if self.read_mode == 1:
-            return len(data)
+            return ndata
         if self.table_code == 19:  # grid point force balance
             assert self.table_name in [b'OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_grid_point_forces(data, ndata)
@@ -33,18 +33,18 @@ class OGPF(OP2Common):
         if self.thermal == 0:
             result_name = 'grid_point_forces'
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
             if self.num_wide == 10:
                 self.create_transient_object(self.grid_point_forces, RealGridPointForces)
                 s = Struct(b(self._endian + 'ii8s6f'))
                 ntotal = 40
-                nnodes = len(data) // ntotal
+                nnodes = ndata // ntotal
 
                 if self.is_debug_file:
                     self.binary_debug.write('  GPFORCE\n')
                     self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
-                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                     self.binary_debug.write('  gpforce1 = [ekey, eid, elemName, f1, f2, f3, m1, m2, m3]\n')
                     self.binary_debug.write('  nnodes=%i\n' % nnodes)
 
@@ -63,7 +63,7 @@ class OGPF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
             #complex_obj = complexGridPointForcesObject
 
@@ -76,5 +76,5 @@ class OGPF(OP2Common):
             #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
         return n

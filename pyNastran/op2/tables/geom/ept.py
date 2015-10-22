@@ -378,7 +378,7 @@ class EPT(object):
         PMASS(402,4,44) - the marker for Record 48
         """
         n = 0
-        s = Struct(b(self._endian + 'ii'))
+        s = self.struct_2i
         nEntries = (len(data) - n) // 8  # 2*4
         for i in range(nEntries):
             eData = data[n:n + 8]

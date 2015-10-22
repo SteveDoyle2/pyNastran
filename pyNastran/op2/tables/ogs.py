@@ -94,7 +94,7 @@ class OGS(OP2Common):
 
     def _read_ogs1_4(self, data, ndata):
         if self.read_mode == 1:
-            return len(data)
+            return ndata
 
         if self.table_code == 26:
             # OGS1 - grid point stresses - surface
@@ -121,7 +121,7 @@ class OGS(OP2Common):
             pass
         else:
             raise NotImplementedError(self.num_wide)
-        return len(data)
+        return ndata
 
     def _read_ogs1_table26(self, data, ndata):
         resultName = 'gridPointStresses'
@@ -139,7 +139,7 @@ class OGS(OP2Common):
         s = Struct(b'2i4s8f')
 
         n = 0
-        nelements = len(data) // 44  # 11*4
+        nelements = ndata // 44  # 11*4
         for i in range(nelements):
             edata = data[n:n+44]
             out = s.unpack(edata)
@@ -168,7 +168,7 @@ class OGS(OP2Common):
         """surface stresses"""
         s = Struct(b(self._endian + '2i7f'))
         n = 0
-        nelements = len(data) // 36  # 9*4
+        nelements = ndata // 36  # 9*4
         for i in range(nelements):
             edata = data[n:n+36]
             out = s.unpack(edata)
@@ -195,7 +195,7 @@ class OGS(OP2Common):
         """grid point stress discontinuities (plane stress/strain)"""
         s = Struct(b(self._endian + 'i5f'))
         n = 0
-        nelements = len(data) // 24  # 6*4
+        nelements = ndata // 24  # 6*4
         for i in range(nelements):
             edata = data[n:n+24]
             out = s.unpack(edata)

@@ -3,7 +3,7 @@ from __future__ import print_function
 from six import b
 from six.moves import range
 from struct import Struct
-from numpy import fromstring, vstack, repeat
+from numpy import fromstring, vstack
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
@@ -16,12 +16,12 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # vectorized
-    RealRodForceArray, RealCRodForce, RealCTubeForce, RealConrodForce,  # rename vectorized classes
+    RealRodForceArray,  # consider renaming vectorized classes
 
     # vectorized
     RealCBarForceArray, RealCBar100ForceArray,
     RealPlateForceArray,
-    RealPlateBilinearForce, RealPlateBilinearForceArray,
+    RealPlateBilinearForceArray,
 
     # not vectorized
     RealCBeamForce, RealCShearForce,                  # TODO: vectorize 2
@@ -33,6 +33,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexCBarForceArray,
     ComplexCBushForceArray,
+
     # not vectorized
     # TODO: vectorize 12
     ComplexRodForce, ComplexCBeamForce,
@@ -281,7 +282,7 @@ class OEF(OP2Common):
         self._read_title(data)
         if self.element_type not in self.element_mapper:
             msg = 'element_type = %s' % self.element_type
-            return self._not_implemented_or_skip(data, msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
         self._write_debug_bits()
         assert self.num_wide != 146, self.code_information()
 
@@ -298,13 +299,13 @@ class OEF(OP2Common):
         elif self.thermal == 8: # NRL
             n = self._read_oef1_loads(data, ndata)
         else:
-            n = self._not_implemented_or_skip(data, 'thermal=%s' % self.thermal)
+            n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % self.thermal)
         return n
 
     def _read_oef1_thermal(self, data, ndata):
         """Table 4 parser for OEF1 thermal table"""
         if self._results.is_not_saved('element_forces'):
-            return len(data)
+            return ndata
         n = 0
         #is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
@@ -312,7 +313,7 @@ class OEF(OP2Common):
         flag = 'element_id'
         if self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             # 1-CROD
             # 2-CBEAM
             # 3-CTUBE
@@ -324,7 +325,7 @@ class OEF(OP2Common):
 
                 ntotal = 36  # 10*4
                 s = Struct(b(self._endian + 'i8s6f'))
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
 
@@ -340,7 +341,7 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [33, 53, 64, 74, 75,  # CQUAD4, CTRIAX6, CQUAD8, CTRIA3, CTRIA6
                                    39, 67, 68]:  # TETRA, HEXA, PENTA
@@ -361,7 +362,7 @@ class OEF(OP2Common):
             result_name = 'thermalLoad_2D_3D'
 
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
 
             slot = getattr(self, result_name)
@@ -369,7 +370,7 @@ class OEF(OP2Common):
             if self.format_code == 1 and self.num_wide == 9:  # real - 2D
                 # [33, 53, 64, 74, 75]
                 ntotal = 36
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object3(
                     nelements, result_name, slot, obj_real, obj_vector_real)
                 if auto_return:
@@ -392,7 +393,7 @@ class OEF(OP2Common):
             elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
                 # [39, 67, 68]:  # HEXA,PENTA
                 ntotal = 40
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object3(
                     nelements, result_name, slot, obj_real, obj_vector_real)
                 if auto_return:
@@ -409,19 +410,19 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
         elif self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP
             # 107-CHBDYE
             # 108-CHBDYG
             # 109-CHBDYP
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             if self.format_code == 1 and self.num_wide == 8:  # real
                 self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
 
                 s1 = Struct(b(self._endian + 'i8s5f'))
                 ntotal = 32
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+32]
                     n += ntotal
@@ -437,17 +438,17 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 110:
             # 110-CONV
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             if self.format_code == 1 and self.num_wide == 4:
                 self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
                 s1 = Struct(b(self._endian + 'ifif'))
                 ntotal = 16
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+16]
                     n += 16
@@ -460,14 +461,14 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [145, 146, 147]:  # VUHEXA,VUPENTA,VUTETRA
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
             if self.element_type == 147:  # VUTETRA
                 nnodes = 4
@@ -477,14 +478,14 @@ class OEF(OP2Common):
                 nnodes = 8
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
             numwide_real = 2 + 7 * nnodes
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 8 + 28 * nnodes
-                s1 = Struct(b(self._endian + 'ii'))
+                s1 = self.struct_2i
                 s2 = Struct(b(self._endian + 'i6f'))
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+8]  # 2*4
                     n += 8
@@ -505,13 +506,13 @@ class OEF(OP2Common):
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
             # 189-VUQUAD
             # 190-VUTRIA
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             if self.format_code == 1 and self.num_wide == 27:  # real
                 self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
                 if self.element_type == 189:
@@ -526,7 +527,7 @@ class OEF(OP2Common):
                 ntotal = 24 + 28 * nnodes
                 s1 = Struct(b(self._endian + '3i4s2i'))
                 s2 = Struct(b(self._endian + 'i6f'))
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+24]  # 6*4
                     n += 24
@@ -549,11 +550,11 @@ class OEF(OP2Common):
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 191:  # VUBEAM
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             #assert self.num_wide==27,self.code_information()
             self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
             nnodes = 2
@@ -563,7 +564,7 @@ class OEF(OP2Common):
                 ntotal = 16 + 28 * nnodes
                 s1 = Struct(b(self._endian + 'iii4s'))
                 s2 = Struct(b(self._endian + 'i6f'))
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+16]  # 4*4
                     n += 16
@@ -586,16 +587,16 @@ class OEF(OP2Common):
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
         else:
             msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
-            return self._not_implemented_or_skip(data, msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
 
 
         assert self.thermal == 1, self.thermal
-        assert len(data) > 0, len(data)
+        assert ndata > 0, ndata
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
+        #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n
         return n
@@ -633,7 +634,7 @@ class OEF(OP2Common):
         Reads the OEF1 table; stores the element forces/heat flux.
         """
         if self._results.is_not_saved('element_forces'):
-            return len(data)
+            return ndata
         flag = 'element_id'
         (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
         if self.is_debug_file:
@@ -655,24 +656,21 @@ class OEF(OP2Common):
             if self.element_type == 1: # CROD
                 result_name = 'crod_force'
                 slot = self.crod_force
-                obj_real = RealCRodForce
             elif self.element_type == 3:  # CTUBE
                 result_name = 'ctube_force'
                 slot = self.ctube_force
-                obj_real = RealCTubeForce
             elif self.element_type == 10:  # CONROD
                 result_name = 'conrod_force'
                 slot = self.conrod_force
-                obj_real = RealConrodForce
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
             if self.format_code == 1 and self.num_wide == 3: # real
                 ntotal = 12 # 3 * 4
-                nelements = len(data) // ntotal
-                auto_return, is_vectorized = self._create_oes_object3(
-                    nelements, result_name, slot, obj_real, obj_vector_real)
+                nelements = ndata // ntotal
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -689,11 +687,13 @@ class OEF(OP2Common):
                     n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 5: # imag
+                if self.read_mode == 1:
+                    return ndata
                 self.create_transient_object(slot, ComplexRodForce)
 
                 s = Struct(b(self._endian + 'i4f'))
                 ntotal = 20 # 5*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+20]
                     out = s.unpack(edata)
@@ -716,22 +716,22 @@ class OEF(OP2Common):
 
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 2:  # cbeam
             #2-CBEAM
             if self.read_mode == 1:
-                return len(data)
+                return ndata
 
             result_name = 'cbeam_force'
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
                 self.create_transient_object(self.cbeam_force, RealCBeamForce)
                 s = Struct(b(self._endian + 'i8f'))  # 36
                 ntotal = 36
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+36]
                     out = s.unpack(edata)
@@ -743,13 +743,14 @@ class OEF(OP2Common):
 
             elif self.format_code == 1 and self.num_wide == 100:  # real
                 self.create_transient_object(self.cbeam_force, RealCBeamForce)
-                s1 = Struct(b(self._endian + 'i'))
+                s1 = self.struct_i
                 s2 = Struct(b(self._endian + 'i8f'))  # 36
 
                 ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
 
                 is_vectorized = False
+                obj = self.obj
                 if self.use_vector and is_vectorized and 0:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
@@ -785,16 +786,16 @@ class OEF(OP2Common):
 
                             data_in = [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
                             if i == 0:  # isNewElement
-                                self.obj.add_new_element(dt, data_in)
+                                obj.add_new_element(dt, data_in)
                             elif sd > 0.:
-                                self.obj.add(dt, data_in)
+                                obj.add(dt, data_in)
                             n += 36
             elif self.format_code in [2, 3] and self.num_wide == 177: # imag
                 self.create_transient_object(self.cbeam_force, ComplexCBeamForce)
-                s1 = Struct(b(self._endian + 'i'))
+                s1 = self.struct_i
                 s2 = Struct(b(self._endian + 'i15f'))
                 ntotal = 708  # (16*11+1)*4 = 177*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
@@ -840,13 +841,13 @@ class OEF(OP2Common):
                             self.obj.add(dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
             #print self.beamForces
 
         elif self.element_type in [11, 12, 13, 14,   # springs
                                    20, 21, 22, 23]:  # dampers
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             # 11-CELAS1
             # 12-CELAS2
             # 13-CELAS3
@@ -899,10 +900,10 @@ class OEF(OP2Common):
                 complex_class_obj = ComplexDamperForce
             else:
                 msg = self.element_type
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
 
             if self.format_code == 1 and self.num_wide == 2:  # real
@@ -910,7 +911,7 @@ class OEF(OP2Common):
 
                 s = Struct(b(self._endian + 'if'))  # 2
                 ntotal = 8  # 2*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n + 8]
 
@@ -929,7 +930,7 @@ class OEF(OP2Common):
                 s = Struct(b(self._endian + 'i2f'))
                 ntotal = 12  # 3*4
 
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n + 12]
                     out = s.unpack(edata)
@@ -950,16 +951,16 @@ class OEF(OP2Common):
             else:
                 #msg = 'OEF: element_name=%s element_type=%s' % (self.element_name, self.element_type)
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 24:  # CVISC
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             if self.format_code == 1 and self.num_wide == 3: # real
                 self.create_transient_object(self.cvisc_force, RealViscForce)
                 s = Struct(b(self._endian + 'iff'))
                 ntotal = 12  # 3*4
-                nelements = len(data) // 12
+                nelements = ndata // 12
                 for i in range(nelements):
                     edata = data[n:n+12]
 
@@ -977,7 +978,7 @@ class OEF(OP2Common):
                 self.create_transient_object(self.cvisc_force, ComplexViscForce)
                 s = Struct(b(self._endian + 'i4f'))  # 5
                 ntotal = 20  # 5*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+20]
 
@@ -1000,7 +1001,7 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
             #print self.viscForces
 
         elif self.element_type == 34:  # cbar
@@ -1013,7 +1014,7 @@ class OEF(OP2Common):
 
             if self.format_code == 1 and self.num_wide == 9: # real
                 ntotal = 36  # 9*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_real)
                 if auto_return:
@@ -1053,7 +1054,7 @@ class OEF(OP2Common):
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 17: # imag
                 ntotal = 68  # 17*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
 
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_complex)
@@ -1097,7 +1098,7 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
             #print self.barForces
 
         elif self.element_type == 100:  # cbar
@@ -1108,7 +1109,7 @@ class OEF(OP2Common):
             if self.format_code == 1 and self.num_wide == 8:  # real
 
                 ntotal = 32  # 8*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealCBar100ForceArray)
                 if auto_return:
@@ -1151,7 +1152,7 @@ class OEF(OP2Common):
                 #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
         elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
@@ -1163,15 +1164,14 @@ class OEF(OP2Common):
                 slot = self.ctria3_force
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
-            obj_complex = ComplexPlateForce
             obj_vector_real = RealPlateForceArray
             obj_vector_complex = ComplexPlateForceArray
 
             if self.format_code == 1 and self.num_wide == 9:  # real
                 ntotal = 36 # 9*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_real)
                 if auto_return:
@@ -1192,12 +1192,12 @@ class OEF(OP2Common):
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
                 if self.read_mode == 1:
-                    return len(data)
+                    return ndata
                 self.create_transient_object(slot, ComplexPlateForce)
                 s = Struct(b(self._endian + 'i16f'))
 
                 ntotal = 68
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+68]
                     out = s.unpack(edata)
@@ -1231,7 +1231,7 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [64, 70, 75, 82, 144]: # bilinear shells
             # 64-CQUAD8
@@ -1256,7 +1256,7 @@ class OEF(OP2Common):
                 slot = self.cquad4_force
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
             if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
                 nnodes = 3
@@ -1264,7 +1264,7 @@ class OEF(OP2Common):
                 nnodes = 4
             else:
                 msg = 'name=%r type=%r' % (self.element_name, self.element_type)
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
             slot = getattr(self, result_name)
             nnodes_all = nnodes + 1
@@ -1272,7 +1272,7 @@ class OEF(OP2Common):
             numwide_imag = 2 + nnodes_all * 17
 
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
@@ -1281,7 +1281,7 @@ class OEF(OP2Common):
                 ntotal = 8 + nnodes_all * 36 # centroidal node is the + 1
                 assert ntotal == self.num_wide * 4, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
 
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_real)
                 if auto_return:
@@ -1289,7 +1289,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized and self.element_type in [144]:
+                if self.use_vector and is_vectorized: # and self.element_type in [144]:
                     nlayers = nelements * nnodes_all
                     n = nelements * self.num_wide * 4
 
@@ -1338,13 +1338,13 @@ class OEF(OP2Common):
                             n += 36
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag: # complex
                 if self.read_mode == 1:
-                    return len(data)
+                    return ndata
 
                 self.create_transient_object(slot, ComplexPlate2Force)
                 s1 = Struct(b(self._endian + 'i4s17f'))  # 2+17=19 * 4 = 76
                 s2 = Struct(b(self._endian + 'i16f'))  # 17 * 4 = 68
                 ntotal = 8 + (nnodes + 1) * 68
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n + 76]
                     n += 76
@@ -1413,7 +1413,7 @@ class OEF(OP2Common):
                         self.obj.add(eid, dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [95, 96, 97, 98]: # composites
             # 95 - CQUAD4
@@ -1421,17 +1421,17 @@ class OEF(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             if self.format_code == 1 and self.num_wide == 9:  # real
-                return len(data)
+                return ndata
                 #print self.code_information()
                 #self.create_transient_object(self.compositePlateForces, RealCompositePlateForce)  # undefined
                 ##return
                 #ntotal = 9 * 4
-                #nelements = len(data) // ntotal
+                #nelements = ndata // ntotal
                 #if self.is_debug_file:
                     #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                     ##self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
                     ##self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
                     ##self.binary_debug.write('  #nodeji = [eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
@@ -1461,44 +1461,44 @@ class OEF(OP2Common):
                     #n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [39, 67, 68]: # solids
             # 39-CTETRA
             # 67-CHEXA
             # 68-CPENTA
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             self._results._found_result('solidForces')
             if self.format_code == 1 and self.num_wide == 0:  # real
                 #self.create_transient_object(self.solidForces, RealCSolidForce)
                 pass
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 53:  # ctriax6
             # 53-CTRIAX6
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             self._results._found_result('ctriax_force')
             if self.format_code == 1 and self.num_wide == 0:  # real
                 pass
                 #self.create_transient_object(self.ctriax_force, RealCTriaxForce)  # undefined
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 4:  # cshear
             # 4-CSHEAR
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             self._results._found_result('cshear_force')
             if self.format_code == 1 and self.num_wide == 17:  # real
                 self.create_transient_object(self.cshear_force, RealCShearForce)
                 s = Struct(b(self._endian + 'i16f'))
                 ntotal = 68  # 17*4
-                nelements = len(data) // 68
+                nelements = ndata // 68
                 for i in range(nelements):
                     edata = data[n:n+68]
 
@@ -1521,7 +1521,7 @@ class OEF(OP2Common):
                 self.create_transient_object(self.cshear_force, ComplexCShearForce)
                 s = Struct(b(self._endian + 'i32f'))
                 ntotal = 132  # 33*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+132]
                     n += ntotal
@@ -1577,19 +1577,19 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 35:  # con
             # 35-CON
             if self.read_mode == 1:
-                return len(data)
+                return ndata
 
             self._results._found_result('coneax_force')
             if self.format_code == 1 and self.num_wide == 7:  # real
                 self.create_transient_object(self.coneax_force, RealConeAxForce)
                 ntotal = 28  # 7*4
                 s = Struct(b(self._endian + 'i6f'))
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -1602,19 +1602,19 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
 
         elif self.element_type == 38:  # cgap
             # 38-GAP
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             self._results._found_result('cgap_force')
             if self.format_code == 1 and self.num_wide == 9:  # real
                 self.create_transient_object(self.cgap_force, RealCGapForce)
                 s = Struct(b(self._endian + 'i8f'))
                 ntotal = 36 # 9*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+36]
 
@@ -1630,18 +1630,18 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
         elif self.element_type == 69:  # cbend
             # 69-CBEND
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             self._results._found_result('cbend_force')
             if self.format_code == 1 and self.num_wide == 15:  # real
                 self.create_transient_object(self.cbend_force, RealBendForce)
                 s = Struct(b(self._endian + 'ii13f'))
 
                 ntotal = 60  # 15*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
 
@@ -1664,7 +1664,7 @@ class OEF(OP2Common):
                 s = Struct(b(self._endian + 'ii25f'))
 
                 ntotal = 108  # 27*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+108]
                     n += ntotal
@@ -1714,14 +1714,14 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [76, 77, 78]:
             # 76-HEXPR
             # 77-PENPR
             # 78-TETPR
             if self.read_mode == 1:
-                return len(data)
+                return ndata
 
             if self.element_type == 76:
                 result_name = 'chexa_pressure_force'
@@ -1734,12 +1734,12 @@ class OEF(OP2Common):
                 slot = self.ctetra_pressure_force
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
             self._results._found_result(result_name)
             if self.format_code == 1 and self.num_wide == 10:  # real
                 ntotal = 40
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 self.create_transient_object(slot, RealPentaPressureForce)
                 s = Struct(b(self._endian + 'i8s7f'))
                 for i in range(nelements):
@@ -1758,7 +1758,7 @@ class OEF(OP2Common):
 
                 s = Struct(b(self._endian + 'i8s13f'))
                 ntotal = 64
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+64]
                     n += 64
@@ -1791,7 +1791,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 102:  # cbush
             # 102-CBUSH
@@ -1800,12 +1800,12 @@ class OEF(OP2Common):
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 7:  # real
                 if self.read_mode == 1:
-                    return len(data)
+                    return ndata
 
                 self.create_transient_object(self.cbush_force, RealCBushForce)
                 s = Struct(b(self._endian + 'i6f'))
                 ntotal = 28 # 7*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+28]
                     out = s.unpack(edata)
@@ -1817,7 +1817,7 @@ class OEF(OP2Common):
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
                 ntotal = 52  # 13*4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 obj_vector_complex = ComplexCBushForceArray
                 result_name = 'cbush_force'
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1856,20 +1856,20 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [145, 146, 147]:
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
             if self.read_mode == 1:
-                return len(data)
-            return len(data)
+                return ndata
+            return ndata
         elif self.element_type in [189, 190]:
             # 189-VUQUAD
             # 190-VUTRIA
             if self.read_mode == 1:
-                return len(data)
+                return ndata
 
             self._results._found_result('force_VU_2D')
             if self.element_type in [189]:  # VUQUAD
@@ -1887,7 +1887,7 @@ class OEF(OP2Common):
                 self.create_transient_object(self.force_VU_2D, RealForce_VU_2D)
 
                 ntotal = 24 + 52 * nnodes
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
 
                 s1 = Struct(b(self._endian + '3i4s2i'))
                 s2 = Struct(b(self._endian + 'i3f3i5fi'))
@@ -1923,7 +1923,7 @@ class OEF(OP2Common):
                 ntotal = 24 + 100 * nnodes
                 s1 = Struct(b(self._endian + 'iii4sii'))
                 s2 = Struct(b(self._endian + 'i3f3i5fi3f3i5fi'))
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+24]  # 6*4
                     n += 24
@@ -1973,13 +1973,13 @@ class OEF(OP2Common):
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
 
         elif self.element_type == 191:
             # 191-VUBEAM
             if self.read_mode == 1:
-                return len(data)
+                return ndata
             self._results._found_result('force_VU')
 
             if self.format_code == 1 and self.num_wide == 20:  # real
@@ -1988,7 +1988,7 @@ class OEF(OP2Common):
                 nnodes = 2
                 #ntotal = 16 + 32 * nnodes
                 ntotal = self.num_wide * 4
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 self.create_transient_object(self.force_VU, RealForce_VU)
 
                 s1 = Struct(b(self._endian + 'iii4s'))
@@ -2019,7 +2019,7 @@ class OEF(OP2Common):
                     #print "force %s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(nnodes, dt, data_in)
             elif self.format_code == 1 and self.num_wide == 32:  # random
-                return len(data)
+                return ndata
             elif self.format_code in [2, 3] and self.num_wide == 32:  # imag
                 # 32 = 4 + 56/4 * 2 = 4 + 14 * 2 = 4 + 28
                 self.create_transient_object(self.force_VU, ComplexForce_VU)
@@ -2029,7 +2029,7 @@ class OEF(OP2Common):
                 s1 = Struct(b(self._endian + 'i2i4s'))
                 s2 = Struct(b(self._endian + 'i13f'))
                 n = 0
-                nelements = len(data) // ntotal
+                nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+16]  # 8*4
                     n += 16
@@ -2077,15 +2077,15 @@ class OEF(OP2Common):
                     self.obj.add(nnodes, dt, data_in)
             else:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 228: # CQUADR-NX
             if self.num_wide == 9:
                 # real
-                return len(data)
+                return ndata
             elif self.num_wide == 17:
                 # complex?
-                return len(data)
+                return ndata
             else:
                 raise RuntimeError(self.code_information())
 
@@ -2093,16 +2093,16 @@ class OEF(OP2Common):
             # 233-TRIARLC
             # 235-CQUADR
             if self.read_mode == 1:
-                return len(data)
-            return len(data)
+                return ndata
+            return ndata
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
 
         #assert self.thermal == 0, self.thermal
-        assert len(data) > 0, len(data)
+        assert ndata > 0, ndata
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
+        #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n
         return n
