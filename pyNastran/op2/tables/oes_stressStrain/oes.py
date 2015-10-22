@@ -2904,6 +2904,84 @@ class OES(OP2Common):
             auto_return = True
         return auto_return, is_vectorized
 
+    def _create_nodes_object(self, nnodes, result_name, slot, obj_vector):
+        """same as _create_oes_object4 except it adds to the nnodes parameter"""
+        auto_return = False
+        #is_vectorized = True
+        is_vectorized = self._is_vectorized(obj_vector, slot)
+        #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
+
+        if is_vectorized:
+            if self.read_mode == 1:
+                #print('oes-self.nonlinear_factor =', self.nonlinear_factor)
+                #print(self.data_code)
+                self.create_transient_object(slot, obj_vector)
+                #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
+                self.result_names.add(result_name)
+                #print('self.obj =', self.obj)
+                self.obj.nnodes += nnodes
+                auto_return = True
+            elif self.read_mode == 2:
+                self.code = self._get_code()
+                #self.log.info("code = %s" % str(self.code))
+                #print("code = %s" % str(self.code))
+
+                # if this is failing, you probably set obj_vector to None...
+                try:
+                    self.obj = slot[self.code]
+                except KeyError:
+                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
+                    msg += "There's probably an extra check for read_mode=1..."
+                    self.log.error(msg)
+                    raise
+                #self.obj.update_data_code(self.data_code)
+                self.obj.build()
+
+            else:  # not vectorized
+                auto_return = True
+        else:
+            auto_return = True
+        return auto_return, is_vectorized
+
+    def _create_ntotal_object(self, ntotal, result_name, slot, obj_vector):
+        """same as _create_oes_object4 except it adds to the ntotal parameter"""
+        auto_return = False
+        #is_vectorized = True
+        is_vectorized = self._is_vectorized(obj_vector, slot)
+        #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
+
+        if is_vectorized:
+            if self.read_mode == 1:
+                #print('oes-self.nonlinear_factor =', self.nonlinear_factor)
+                #print(self.data_code)
+                self.create_transient_object(slot, obj_vector)
+                #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
+                self.result_names.add(result_name)
+                #print('self.obj =', self.obj)
+                self.obj.ntotal += ntotal
+                auto_return = True
+            elif self.read_mode == 2:
+                self.code = self._get_code()
+                #self.log.info("code = %s" % str(self.code))
+                #print("code = %s" % str(self.code))
+
+                # if this is failing, you probably set obj_vector to None...
+                try:
+                    self.obj = slot[self.code]
+                except KeyError:
+                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
+                    msg += "There's probably an extra check for read_mode=1..."
+                    self.log.error(msg)
+                    raise
+                #self.obj.update_data_code(self.data_code)
+                self.obj.build()
+
+            else:  # not vectorized
+                auto_return = True
+        else:
+            auto_return = True
+        return auto_return, is_vectorized
+
     def _is_vectorized(self, obj_vector, slot_vector):
         """
         Checks to see if the data array has been vectorized
