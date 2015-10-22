@@ -4,7 +4,7 @@ from struct import Struct
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
-    RealGridPointForces, ComplexGridPointForces)
+    RealGridPointForcesArray, ComplexGridPointForces)
 
 
 class OGPF(OP2Common):
@@ -15,8 +15,6 @@ class OGPF(OP2Common):
         self._read_opg1_3(data, ndata)  # TODO: this is wrong...
 
     def _read_ogpf1_4(self, data, ndata):
-        if self.read_mode == 1:
-            return len(data)
         if self.table_code == 19:  # grid point force balance
             assert self.table_name in [b'OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_grid_point_forces(data, ndata)
@@ -35,11 +33,19 @@ class OGPF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return len(data)
             self._results._found_result(result_name)
+            slot = getattr(self, result_name)
+
             if self.num_wide == 10:
-                self.create_transient_object(self.grid_point_forces, RealGridPointForces)
-                s = Struct(b(self._endian + 'ii8s6f'))
                 ntotal = 40
                 nnodes = len(data) // ntotal
+                obj_vector_real = RealGridPointForcesArray
+                auto_return, is_vectorized = self._create_ntotal_object(
+                    nnodes, result_name, slot, obj_vector_real)
+                if auto_return:
+                    return nnodes * self.num_wide * 4
+
+                #self.create_transient_object(self.grid_point_forces, RealGridPointForces)
+                s = Struct(b(self._endian + 'ii8s6f'))
 
                 if self.is_debug_file:
                     self.binary_debug.write('  GPFORCE\n')
@@ -52,7 +58,7 @@ class OGPF(OP2Common):
                     eData = data[n:n+ntotal]
                     out = s.unpack(eData)
                     (ekey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
-                    ekey = (ekey - self.device_code) // 10
+                    ekey = ekey // 10
                     elemName = elemName.strip()
                     #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
                     if self.is_debug_file:

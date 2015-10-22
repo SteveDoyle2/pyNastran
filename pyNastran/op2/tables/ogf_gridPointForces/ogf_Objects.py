@@ -1,8 +1,227 @@
 from six import iteritems
-from numpy import array
+from numpy import array, zeros, unique, array_equal, empty
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
+
+
+
+class RealGridPointForcesArray(ScalarObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        self.ntotal = 0
+
+        #self.ielement = 0
+        #self.nelements = 0  # result specific
+        #self.nnodes = None
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
+    def _reset_indices(self):
+        self.itotal = 0
+        #self.ielement = 0
+
+    @property
+    def element_name(self):
+        headers = unique(self.element_names)
+        return ', '.join(headers)
+
+    def build(self):
+        #print("self.ielement = %s" % self.ielement)
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        #assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+
+        #self.nnodes = nnodes_per_element
+        #self.nelements //= nnodes_per_element
+        self.itime = 0
+        #self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
+            #self.element_names, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.node_element = zeros((self.ntotal, 2), dtype='int32')
+        self.element_names = empty(self.ntotal, dtype='S8')
+        #[t1, t2, t3, r1, r2, r3]
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
+            assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
+            assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)
+
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += '(Eid, Nid, EName)\n'
+            for (nid1, eid1), ename1, (nid2, eid2), ename2 in zip(self.node_element, self.element_names,
+                                                                  table.element_names, table.element_names):
+                msg += '(%s, %s, %s)    (%s, %s, %s)\n' % (nid1, eid1, ename1, nid2, eid2, ename2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.node_element):
+                    (eid, nid) = e
+                    ename1 = self.element_names[ie]
+                    ename2 = self.element_names[ie]
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (t11, t21, t31, r11, r21, r31) = t1
+                    (t12, t22, t32, r12, r22, r32) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid, ename,
+                            t12, t22, t32, r12, r22, r32,
+                            t12, t22, t32, r12, r22, r32)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
+        assert isinstance(node_id, int), node_id
+        self.add_sort1(dt, eid, node_id, ename, t1, t2, t3, r1, r2, r3)
+
+    def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
+        assert eid is not None, eid
+        assert isinstance(node_id, int), node_id
+        self.node_element[self.itotal, :] = [eid, node_id]
+        self.element_names[self.itotal] = ename
+        self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
+        self.itotal += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        #nelements = self.nelements
+        ntimes = self.ntimes
+        #nnodes = self.nnodes
+        ntotal = self.ntotal
+        nelements = unique(self.node_element[:, 1]).size
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
+                self.__class__.__name__, ntimes, nelements, ntotal)
+            ntimes_word = 'ntimes'
+        else:
+            msgi = '  type=%s nelements=%i total=%i\n' % (
+                self.__class__.__name__, nelements, ntotal)
+            ntimes_word = 1
+        msg.append(msgi)
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
+                                                                 self.element_names))
+        msg.append('  data.shape=%s\n' % str(self.data.shape))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    #def get_element_index(self, eids):
+        #itot = searchsorted(eids, self.node_element[:, 0])
+        #return itot
+
+    #def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
+        #return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg = self._get_f06_msg()
+
+        ntimes = self.data.shape[0]
+
+        eids = self.node_element[:, 1]
+        nids = self.node_element[:, 0]
+        enames = self.element_names
+
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg))
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+            #[t1, t2, t3, r1, r2, r3]
+            t1 = self.data[itime, :, 0]
+            t2 = self.data[itime, :, 1]
+            t3 = self.data[itime, :, 2]
+            r1 = self.data[itime, :, 3]
+            r2 = self.data[itime, :, 4]
+            r3 = self.data[itime, :, 5]
+
+            zero = ' '
+            for (eid, nid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                 eids, nids, enames, t1, t2, t3, r1, r2, r3):
+
+                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                (vals2, is_all_zeros) = writeFloats13E(vals)
+                [f1, f2, f3, m1, m2, m3] = vals2
+                if eid == 0:
+                    f.write('   %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                    zero = '0'
+                else:
+                    f.write('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                    zero = ' '
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+    def _get_f06_msg(self):
+        msg = [
+            '                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
+            ' \n',
+            '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n',
+           #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+           #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+           #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        ]
+        return msg
+
+    def get_headers(self):
+        headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
+        return headers
+
 
 
 class RealGridPointForces(ScalarObject):
