@@ -2586,14 +2586,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #print(uline.rstrip())
             if uline.startswith('INCLUDE'):
                 j = i + 1
-                while len(lines[j]) and lines[j][0] == ' ':
-                    print(lines[j])
-                    j += 1
+                try:
+                    while len(lines[j]) and lines[j][0] == ' ':
+                        #print(lines[j])
+                        j += 1
+                except IndexError:
+                    #j -= 1
+                    pass
                 #j -= 1
                 #print('*** %s' % line)
                 #bdf_filename2 = line[7:].strip(" '")
                 include_lines = [line] + lines[i+1:j]
-                print(include_lines)
+                #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
 
                 try:
