@@ -202,9 +202,11 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 if on_rtd:
-    html_theme = 'default'
+    #html_theme = 'default'
+    html_theme = 'napoleon'
 else:
-    html_theme = 'alabaster' # classic/alabaster
+    html_theme = 'napoleon' # classic/alabaster/numpydoc/napolean
+    # napolean handles mixed sphinx (alabaster) and numpydoc docstring formats
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

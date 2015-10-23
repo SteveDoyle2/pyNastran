@@ -1,15 +1,16 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
+from itertools import count
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
 class RealBush1DStressArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
         self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
         #self.ntimes = 0  # or frequency/mode
@@ -28,10 +29,19 @@ class RealBush1DStressArray(OES_Object):
         self.ielement = 0
 
     def _get_msgs(self):
-        raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
+        words = [
+            #'      ELEMENT-ID =     104'
+            '                    S T R E S S E S   ( F O R C E S )   I N   B U S H 1 D   E L E M E N T S   ( C B U S H 1 D )\n',
+            ' \n',
+            '                        AXIAL          AXIAL          AXIAL       AXIAL         AXIAL         PLASTIC\n',
+            '        TIME            FORCE       DISPLACEMENT    VELOCITY      STRESS        STRAIN        STRAIN        STATUS\n',
+            #'    2.000000E-02      1.960396E+01  1.960396E-04  1.940792E-02  1.960396E+01  1.960396E-04  0.000000E+00    \n',
+        ]
+        return words
+        # raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
     def get_headers(self):
-        headers = ['element_force', 'axial_displacement', 'axial_velocity', 'axial_stress', 'axial_strain', 'plastic_strain', 'slipV', 'is_failed']
+        headers = ['element_force', 'axial_displacement', 'axial_velocity', 'axial_stress', 'axial_strain', 'plastic_strain', 'is_failed']
         return headers
 
     def build(self):
@@ -44,7 +54,7 @@ class RealBush1DStressArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
-        if self.element_type == 34:
+        if self.element_type == 40:
             nnodes_per_element = 1
         else:
             raise NotImplementedError(self.element_type)
@@ -74,7 +84,8 @@ class RealBush1DStressArray(OES_Object):
         # [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
-    def add_sort1(self, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed):
+#dt, eid, fe, ue, ve, ao, ae, ep, fail
+    def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed):
         assert isinstance(eid, int)
         self._times[self.itime] = dt
         self.elements[self.itotal] = eid
@@ -147,7 +158,7 @@ class RealBush1DStressArray(OES_Object):
                 vals = [element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 [element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi] = vals2
-                f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %%s\n'
+                f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         % (eid, element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi))
             f.write(page_stamp % page_num)
             page_num += 1

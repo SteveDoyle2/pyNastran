@@ -32,13 +32,13 @@ class OGPF(OP2Common):
         if self.thermal == 0:
             result_name = 'grid_point_forces'
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
 
             if self.num_wide == 10:
                 ntotal = 40
-                nnodes = len(data) // ntotal
+                nnodes = ndata // ntotal
                 obj_vector_real = RealGridPointForcesArray
                 auto_return, is_vectorized = self._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
@@ -98,7 +98,7 @@ class OGPF(OP2Common):
             else:
                 raise NotImplementedError(self.code_information())
                 #msg = self.code_information()
-                #return self._not_implemented_or_skip(data, msg)
+                #return self._not_implemented_or_skip(data, ndata, msg)
 
             #complex_obj = complexGridPointForcesObject
 
@@ -112,5 +112,5 @@ class OGPF(OP2Common):
         else:
             raise NotImplementedError(self.code_information())
             #msg = self.code_information()
-            #return self._not_implemented_or_skip(data, msg)
+            #return self._not_implemented_or_skip(data, ndata, msg)
         return n

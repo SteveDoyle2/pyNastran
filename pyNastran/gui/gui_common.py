@@ -24,7 +24,7 @@ from numpy.linalg import norm
 import pyNastran
 from pyNastran.bdf.cards.baseCard import deprecated
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, loadtxt_nice
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -62,14 +62,6 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
         QVTKRenderWindowInteractor.__init__(self, parent=parent,
                                             iren=iren, rw=render_window)
         #self.Highlight
-
-def loadtxt_nice(filename, delimiter=','):
-    data = []
-    delim = '\n\r \t' + delimiter
-    with open(filename, 'r') as file_obj:
-        line = file_obj.readline().strip(delim).split(delimiter)
-        data.append(line)
-    return array(data)
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):

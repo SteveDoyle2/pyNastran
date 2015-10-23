@@ -366,7 +366,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OEFIT' : [self._read_oef1_3, self._read_oef1_4],  # failure indices
             b'OEF1X' : [self._read_oef1_3, self._read_oef1_4],  # element forces at intermediate stations
             b'OEF1'  : [self._read_oef1_3, self._read_oef1_4],  # element forces or heat flux
-            b'HOEF1':  [self._table_passer, self._table_passer], # element heat flux
+            b'HOEF1':  [self._read_oef1_3, self._read_oef1_4], # element heat flux
             b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],  # scaled response spectra - spc forces?
             #=======================
             # OQG
@@ -380,6 +380,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQGV2' : [self._read_oqg2_3, self._read_oqg_4],
 
             'OQP1' : [self._read_oqg1_3, self._read_oqg_4],
+            'OQP2' : [self._read_oqg2_3, self._read_oqg_4],
 
             # OQGM1     - mpc forces in the nodal frame
             b'OQMG1' : [self._read_oqg1_3, self._read_oqg_4],
@@ -406,11 +407,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OES1X'   : [self._read_oes1_3, self._read_oes1_4],  # element stresses at intermediate stations & nonlinear stresses
             b'OES1C'   : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
             b'OESCP'   : [self._read_oes1_3, self._read_oes1_4],
+            b'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
+
+            # special nonlinear tables
             b'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear stresses
             b'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear transient stresses
             b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
             b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
 
             # strain
             b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
@@ -632,14 +635,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _not_available(self, data):
         """testing function"""
-        if len(data) > 0:
-            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, len(data)))
+        if ndata > 0:
+            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
 
     def _table_passer(self, data, ndata):
         """auto-table skipper"""
-        return len(data)
+        return ndata
 
-    def _table_crash(self, data):
+    def _table_crash(self, data, ndata):
         sys.exit('asdf')
 
     def _table_passer_r1tabrg(self, data, ndata):
@@ -647,7 +650,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self._table4_count == 0:
             self._count += 1
         self._table4_count += 1
-        return len(data)
+        return ndata
 
     def _validate_op2_filename(self, op2_filename):
         """
@@ -766,6 +769,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.goto(self.n)
 
 
+        if self.read_mode == 1:
+            self.fdtype = np.dtype(self._endian + 'f4')
+            self.idtype = np.dtype(self._endian + 'i4')
+            self.struct_i = Struct(b(self._endian + 'i'))
+            self.struct_8s = Struct(b(self._endian + '8s'))
+            self.struct_2i = Struct(b(self._endian + 'ii'))
+
         #try:
         markers = self.get_nmarkers(1, rewind=True)
         #except:
@@ -828,10 +838,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.post = -2
         else:
             raise NotImplementedError(markers)
-
-        if self.read_mode == 1:
-            self.fdtype = np.dtype(self._endian + 'f4')
-            self.idtype = np.dtype(self._endian + 'i4')
 
         #=================
         table_name = self.read_table_name(rewind=True, stop_on_failure=False)
@@ -1133,7 +1139,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        table_name, = unpack(b(self._endian + '8s'), data)
+        table_name, = self.struct_8s.unpack(data)
 
         self.read_markers([-3, 1, 0])
         data = self._read_record()
@@ -1283,7 +1289,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.read_markers([-2, 1, 0])
         data = self._skip_record()
-        #table_name, = unpack(b(self._endian + '8s'), data)
+        #table_name, = self.struct_8s.unpack(data)
 
         self.read_markers([-3, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
@@ -1321,7 +1327,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #self.read_markers([-2, 1, 0])
         #data = self._read_record()
-        #table_name, = unpack(b(self._endian + '8s'), data)
+        #table_name, = self.struct_8s.unpack(data)
         ##print "table_name = %r" % table_name
 
         #self.read_markers([-3, 1, 0])
@@ -1350,7 +1356,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('read_table_name - rewind=%s\n' % rewind)
         ni = self.n
-        s = Struct(b(self._endian + '8s'))
+        s = self.struct_8s
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
             table_name, = s.unpack(data)
@@ -1815,7 +1821,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 8:
-            subtable_name, = unpack(b(self._endian + '8s'), data)
+            subtable_name, = self.struct_8s.unpack(data)
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'Unhandled table length error\n'
@@ -1901,7 +1907,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data, ndata = self._read_record_ndata()
         if ndata == 8:
-            subtable_name = unpack(b(self._endian + '8s'), data)
+            subtable_name = self.struct_8s.unpack(data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)

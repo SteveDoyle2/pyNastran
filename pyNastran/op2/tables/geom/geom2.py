@@ -227,7 +227,7 @@ class GEOM2(object):
         nelements = (len(data) - n) // 64
         for i in range(nelements):
             eData = data[n:n + 64]  # 16*4
-            f, = unpack(b(self._endian + 'i'), eData[28:32])
+            f, = self.struct_i.unpack(eData[28:32])
             if f == 0:
                 out = unpack(b(self._endian + '4i3f3i6f'), eData)
                 (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
@@ -268,7 +268,7 @@ class GEOM2(object):
         nelements = (len(data) - n) // 72
         for i in range(nelements):
             eData = data[n:n + 72]  # 18*4
-            f, = unpack(b(self._endian + 'i'), eData[40:44])
+            f, = self.struct_i.unpack(eData[40:44])
             if   f == 0:  # basic cid
                 out = unpack(b(self._endian + '6i3f3i6f'), eData)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
@@ -527,10 +527,10 @@ class GEOM2(object):
             out = s1.unpack(eData)
             (eid, pid, ga, gb, x1, x2, x3, f, cid) = out  # f=0,1
             g0 = None
-            f2, = unpack(b(self._endian + 'i'), eData[28:32])
+            f2, = self.struct_i.unpack(eData[28:32])
             assert f == f2, 'f=%s f2=%s' % (f, f2)
             if f == 2:
-                g0 = unpack(b(self._endian + 'i'), eData[16:20])
+                g0 = self.struct_i.unpack(eData[16:20])
                 x1 = None
                 x2 = None
                 x3 = None

@@ -258,41 +258,41 @@ class OQG(OP2Common):
     def _read_oqg_4(self, data, ndata):
         result_name = 'constraint_forces'
         if self._results.is_not_saved(result_name):
-            return len(data)
+            return ndata
 
         if self.is_msc:
             if self.table_name == b'OQGPSD2':
                 if self.table_code not in [3]:
                     msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                     raise AssertionError(msg)
-                n = self._read_oqg_psd(data)
+                n = self._read_oqg_psd(data, ndata)
 
             elif self.table_code == 3:   # SPC Forces
                 assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], self.code_information()
-                n = self._read_spc_forces(data)
+                n = self._read_spc_forces(data, ndata)
             elif self.table_code == 39:  # MPC Forces
                 assert self.table_name in [b'OQMG1'], self.code_information()
-                n = self._read_mpc_forces(data)
+                n = self._read_mpc_forces(data, ndata)
             else:
                 raise RuntimeError(self.code_information())
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, msg)
+                return self._not_implemented_or_skip(data, ndata, msg)
         elif self.is_nx:
             if self.table_code == 3:   # SPC Forces
                 if self.table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1']:
-                    n = self._read_spc_forces(data)
+                    n = self._read_spc_forces(data, ndata)
                 elif self.table_name == b'OQMG1':
-                    n = self._read_mpc_forces(data)
+                    n = self._read_mpc_forces(data, ndata)
                 else:
                     raise RuntimeError(self.code_information())
                     msg = self.code_information()
-                    return self._not_implemented_or_skip(data, msg)
+                    return self._not_implemented_or_skip(data, ndata, msg)
         else:
             msg = 'table_code=%s' % self.table_code
-            return self._not_implemented_or_skip(data, msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_spc_forces(self, data):
+    def _read_spc_forces(self, data, ndata):
         """
         table_code = 3
         """
@@ -300,9 +300,9 @@ class OQG(OP2Common):
             result_name = 'spc_forces'
             storage_obj = self.spc_forces
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, result_name, storage_obj,
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealSPCForcesArray, ComplexSPCForcesArray,
                                             'node', random_code=self.random_code)
         elif self.thermal == 1:
@@ -310,9 +310,9 @@ class OQG(OP2Common):
             result_name = 'thermal_gradient_and_flux'
             storage_obj = self.thermal_gradient_and_flux
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
-            n = self._read_table(data, result_name, storage_obj,
+            n = self._read_table(data, ndata, result_name, storage_obj,
                                  RealTemperatureGradientAndFlux, None,
                                  RealTemperatureGradientAndFluxArray, None,
                                  'node', random_code=self.random_code)
@@ -320,18 +320,18 @@ class OQG(OP2Common):
             result_name = 'spc_forces_scaled_response_spectra_NRL'
             storage_obj = self.spc_forces_scaled_response_spectra_NRL
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, result_name, storage_obj,
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealSPCForcesArray, ComplexSPCForcesArray,
                                             'node', random_code=self.random_code)
         else:
             raise RuntimeError(self.code_information())
             msg = 'thermal=%s' % self.thermal
-            return self._not_implemented_or_skip(data, msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_mpc_forces(self, data):
+    def _read_mpc_forces(self, data, ndata):
         """
         table_code = 39
         """
@@ -339,9 +339,9 @@ class OQG(OP2Common):
         storage_obj = self.mpc_forces
         if self.thermal == 0:
             if self._results.is_not_saved(result_name):
-                return len(data)
+                return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, result_name, storage_obj,
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealMPCForcesArray, ComplexMPCForcesArray,
                                             'node', random_code=self.random_code)
         #elif self.thermal == 1:
@@ -352,10 +352,10 @@ class OQG(OP2Common):
         else:
             raise RuntimeError(self.code_information())
             msg = 'thermal=%s' % self.thermal
-            return self._not_implemented_or_skip(data, msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_oqg_psd(self, data):
+    def _read_oqg_psd(self, data, ndata):
         """
         table_code = 601/610/611
         """
@@ -364,26 +364,26 @@ class OQG(OP2Common):
                 result_name = 'spc_forcesPSD'
                 storage_obj = self.displacementsPSD
                 if self._results.is_not_saved(result_name):
-                    return len(data)
+                    return ndata
                 self._results._found_result(result_name)
-                n = self._read_table_vectorized(data, result_name, storage_obj,
+                n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                      RealSPCForcesArray, ComplexSPCForcesArray,
                                      'node', random_code=self.random_code)
             #elif self.table_code == 610:
                 #result_name = 'velocitiesPSD'
                 #storage_obj = self.velocitiesPSD
                 #if self._results.is_not_saved(result_name):
-                    #return len(data)
+                    #return ndata
                 #self._results._found_result(result_name)
-                #n = self._read_table_vectorized(data, result_name, storage_obj,
+                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                                 #RealVelocityArray, ComplexVelocityArray,
                                                 #'node', random_code=self.random_code)
             #elif self.table_code == 611:
                 #result_name = 'accelerationsPSD'
                 #storage_obj = self.accelerationsPSD
                 #if self._results.is_not_saved(result_name):
-                    #return len(data)
-                #n = self._read_table_vectorized(data, result_name, storage_obj,
+                    #return ndata
+                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                                 #RealAccelerationArray, ComplexAccelerationArray,
                                                 #'node', random_code=self.random_code)
             #elif self.table_code in [1]:
@@ -393,9 +393,9 @@ class OQG(OP2Common):
                 #result_name = 'displacements'
                 #storage_obj = self.displacements
                 #if self._results.is_not_saved(result_name):
-                    #return len(data)
+                    #return ndata
                 #self._results._found_result(result_name)
-                #n = self._read_table_vectorized(data, result_name, storage_obj,
+                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                      #RealDisplacementArray, ComplexDisplacementArray,
                                      #'node', random_code=self.random_code)
             else:

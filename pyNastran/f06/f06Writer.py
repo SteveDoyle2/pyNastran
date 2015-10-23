@@ -438,7 +438,7 @@ class F06Writer(OP2_F06_Common):
                 res_format = '*%%-%is SUBCASE=%%i' % res_length
                 res_format_vectorized = ' %%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
                 class_name = result.__class__.__name__
-                if hasattr(self, 'data'):
+                if hasattr(result, 'data'):
                     print(res_format_vectorized % (class_name, isubcase, subtitle))
                 else:
                     print(res_format % (class_name, isubcase))
@@ -649,8 +649,8 @@ class F06Writer(OP2_F06_Common):
                     # skipped subcase; no saved results
                     continue
 
-                res_format = ' %%-%is SUBCASE=%%i%%s' % res_length
-                res_format_vectorized = '*%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
+                res_format = '*%%-%is SUBCASE=%%i%%s' % res_length
+                res_format_vectorized = ' %%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
 
                 for res_type in res_types:
                     if res_key not in res_type:
@@ -676,6 +676,7 @@ class F06Writer(OP2_F06_Common):
                             print(res_format_vectorized % (class_name, isubcase, subtitle, element_name))
                         else:
                             print(res_format % (class_name, isubcase, element_name))
+
                         self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num,
                                                          f=f06, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)

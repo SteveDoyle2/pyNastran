@@ -308,7 +308,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         else:
             print("---stats for %s---" % op2_filename)
             print(op2a.get_op2_stats())
-            print(op2a.print_subcase_key())
+            op2a.print_subcase_key()
         if write_bdf:
             op2a.write_bdf(bdf_filename)
             os.remove(bdf_filename)
@@ -431,9 +431,9 @@ def main():
     msg = "Usage:\n"
     is_release = False
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c]           [-f]      [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c]           [-f]           [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-w] [-f] [-o] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-w] [-f] [-o] [-p] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -456,6 +456,7 @@ def main():
     msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
     if not is_release:
         msg += "  -o, --write_op2       Writes the op2 to fem.test_op2.op2\n"
+        msg += '  -p, --profile     Profiles the code (default=False)\n'
     msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
@@ -484,7 +485,14 @@ def main():
         os.remove('skippedCards.out')
 
     t0 = time.time()
-    run_op2(data['OP2_FILENAME'],
+    if data['--profile']:
+        import pstats
+
+        import cProfile
+        prof = cProfile.Profile()
+        prof.runcall(
+            run_op2,
+            data['OP2_FILENAME'],
             make_geom=data['--geometry'],
             write_bdf=data['--write_bdf'],
             write_f06=data['--write_f06'],
@@ -496,7 +504,29 @@ def main():
             binary_debug=data['--binarydebug'],
             is_sort2=data['--is_sort2'],
             compare=not data['--disablecompare'],
-            quiet=data['--quiet'])
+            quiet=data['--quiet']
+        )
+        prof.dump_stats('op2.profile')
+
+        stats = pstats.Stats("op2.profile")
+        stats.sort_stats('tottime')  # time in function
+        #stats.sort_stats('cumtime')  # time in function & subfunctions
+        stats.strip_dirs()
+        stats.print_stats(40)
+    else:
+        run_op2(data['OP2_FILENAME'],
+                make_geom=data['--geometry'],
+                write_bdf=data['--write_bdf'],
+                write_f06=data['--write_f06'],
+                write_op2=data['--write_op2'],
+                is_mag_phase=data['--is_mag_phase'],
+                isubcases=data['--subcase'],
+                exclude=data['--exclude'],
+                debug=not data['--quiet'],
+                binary_debug=data['--binarydebug'],
+                is_sort2=data['--is_sort2'],
+                compare=not data['--disablecompare'],
+                quiet=data['--quiet'])
     print("dt = %f" % (time.time() - t0))
 
 if __name__ == '__main__':  # op2

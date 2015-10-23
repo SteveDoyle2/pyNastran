@@ -12,6 +12,9 @@
 *.rar
 *.out
 *.log
+*.tar.gz
+*.zip
+*.csv
 
 # C extensions
 *.so
@@ -56,3 +59,23 @@ nosetests.xml
 *test_f06.op2
 *.bdf_out
 *.dat_out
+*.f04
+*.plt
+
+# VTK
+*.vtu
+
+# Tecplot
+*.plt
+*.mcr
+
+# GMesh
+*.bb
+*.mesh
+*.gis
+*.medit
+
+# packages
+*structMan*
+*CoFE*
+

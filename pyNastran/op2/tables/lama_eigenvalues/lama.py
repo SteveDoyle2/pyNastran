@@ -56,10 +56,10 @@ class LAMA(OP2Common):
     def _read_complex_eigenvalue_4(self, data, ndata):
         """parses the Complex Eigenvalues Table 4 Data"""
         if self.read_mode == 1:
-            return len(data)
+            return ndata
 
         ntotal = 4 * 6
-        nmodes = len(data) // ntotal
+        nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
         clama = ComplexEigenvalues(11)
@@ -76,7 +76,7 @@ class LAMA(OP2Common):
                   #(imode, order, eigr, eigc, freq, damping))
             clama.addF06Line(out)
             n += ntotal
-        assert n == len(data), 'clama length error'
+        assert n == ndata, 'clama length error'
         return n
 
     def _read_buckling_eigenvalue_4(self, data, ndata):
@@ -85,10 +85,10 @@ class LAMA(OP2Common):
         # CLAMA - Complex eigenvalue summary table
         # LAMA - Normal modes eigenvalue summary table
         if self.read_mode == 1:
-            return len(data)
+            return ndata
 
         ntotal = 4 * 7
-        nmodes = len(data) // ntotal
+        nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
         blama = BucklingEigenvalues(11)
@@ -143,9 +143,9 @@ class LAMA(OP2Common):
     def _read_real_eigenvalue_4(self, data, ndata):
         """parses the Real Eigenvalues Table 4 Data"""
         if self.read_mode == 1:
-            return len(data)
+            return ndata
         #self.show_data(data)
-        nModes = len(data) // 28
+        nModes = ndata // 28
         n = 0
         ntotal = 28
         #assert self.isubcase != 0, self.isubcase
