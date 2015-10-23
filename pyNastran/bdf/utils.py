@@ -214,7 +214,7 @@ def get_include_filename(card_lines, include_dir=''):
     if ':' in filename:
         ifilepaths = filename.split(':')
         filename = os.path.join(*ifilepaths)
-    filename = os.path.join(include_dir, filename)
+    filename = os.path.join(include_dir, filename).replace('/', '\\')
     return filename
 
 
@@ -257,7 +257,7 @@ def _parse_pynastran_header(line):
         key, value = word.strip().split('=')
         key = key.strip()
         value = value.strip()
-        if key in ['version', 'encoding', 'punch', 'nnodes', 'nelements']:
+        if key in ['version', 'encoding', 'punch', 'nnodes', 'nelements', 'dumplines']:
             pass
         else:
             msg = '\nunrecognized pyNastran key=%r\n' % key
