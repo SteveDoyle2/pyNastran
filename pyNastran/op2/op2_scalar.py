@@ -1662,7 +1662,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
-        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
 

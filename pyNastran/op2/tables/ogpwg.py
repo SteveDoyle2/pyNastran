@@ -40,6 +40,8 @@ class OGPWG(OP2Common):
         """
         Grid Point Weight Generator
         """
+        if self.read_mode == 1:
+            return ndata
         MO = array(unpack('36f', data[:4*36]))
         MO = MO.reshape(6,6)
 
@@ -62,4 +64,4 @@ class OGPWG(OP2Common):
         self.grid_point_weight.set_grid_point_weight(self.reference_point,
             MO, S, mass, cg, IS, IQ, Q)
         #del self.reference_point
-        return len(data)
+        return ndata

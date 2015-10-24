@@ -139,11 +139,12 @@ class GUIMethods(TestGuiCommon):
         return 1 * self.dim_max
     def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None,
                                   point_size=None, bar_scale=None,
-                                  representation=None):
+                                  representation=None, is_visible=True):
         self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
                            point_size=point_size, bar_scale=bar_scale,
-                           opacity=opacity, representation=representation)
+                           opacity=opacity, representation=representation,
+                           is_visible=is_visible)
         self.geometry_properties[name] = geom
 
     def _add_alt_actors(self, alt_grids):

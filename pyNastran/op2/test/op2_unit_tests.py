@@ -11,7 +11,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError
 from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.bdf.test.bdf_unit_tests import Tester
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForce, RealPlateForceArray, RealPlateForce
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
 
 class TestOP2(Tester):
     #def _spike(self):
@@ -307,11 +307,7 @@ class TestOP2(Tester):
                 raise KeyError('getting cquad4_force; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_force.keys()))
 
-            if isinstance(case, RealPlateBilinearForce):
-                eids = unique(list(case.tx.keys()))
-            else:
-                assert isinstance(case, RealPlateBilinearForce), 'update this...'
-
+            eids = unique(case.element)
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 
@@ -339,11 +335,7 @@ class TestOP2(Tester):
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_force:
             case = op2.ctria3_force[isubcase]
-            if isinstance(case, RealPlateForceArray):
-                eids = unique(case.element)
-            else:
-                assert isinstance(case, RealPlateForce), case
-                eids = unique(list(case.tx.keys()))
+            eids = unique(case.element)
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 

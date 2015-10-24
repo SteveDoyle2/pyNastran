@@ -24,6 +24,7 @@ from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck,
                                  CardParseSyntaxError)
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 from pyNastran.utils.log import get_logger2
@@ -162,6 +163,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.include_dir = ''
         self._encoding = None
         self.punch = None
+        self.dumplines = False
 
         # this flag will be flipped to True someday (and then removed), but
         # doesn't support 100% of cards yet.  It enables a new method for card
@@ -1246,6 +1248,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                             msg += elem.print_repr_card()
                     msg += '\n'
                     is_error = True
+                    raise DuplicateIDsError(msg)
 
             if self._duplicate_properties:
                 duplicate_pids = [prop.pid for prop in self._duplicate_properties]
@@ -1316,18 +1319,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                             msg += coord.print_repr_card()
                     msg += '\n'
                     is_error = True
+
             if is_error:
                 msg = 'There are dupliate cards.\n\n' + msg
 
             if self._stop_on_xref_error:
                 msg += 'There are parsing errors.\n\n'
-
                 for (card, an_error) in self._stored_parse_errors:
                     #msg += '%scard=%s\n' % (an_error[0], card)
-                    msg += '%s\n\n'% an_error[0]
+                    msg += 'xref errror: %s\n\n'% an_error[0]
                     is_error = True
 
             if is_error:
+                #print('%s' % msg)
                 raise DuplicateIDsError(msg.rstrip())
 
     def pop_xref_errors(self):
@@ -2210,7 +2214,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             return
 
         if self.echo:
-            print(print_card_8(card_obj).rstrip())
+            try:
+                print(print_card_8(card_obj).rstrip())
+            except:
+                print(print_card_16(card_obj).rstrip())
 
         # function that gets by name the initialized object (from global scope)
         failed = True
@@ -2236,7 +2243,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             except (SyntaxError, AssertionError, KeyError, ValueError) as e:
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
-                raise
+                #raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
                 var = traceback.format_exception_only(type(e), e)
@@ -2572,14 +2579,35 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         i = 0
         while i < nlines:
-            line = lines[i].rstrip('\r\n\t')
+            try:
+                line = lines[i].rstrip('\r\n\t')
+            except IndexError:
+                break
             uline = line.upper()
             #print(uline.rstrip())
             if uline.startswith('INCLUDE'):
                 j = i + 1
+                try:
+                    while len(lines[j]) and lines[j][0] == ' ':
+                        #print(lines[j])
+                        j += 1
+                except IndexError:
+                    #j -= 1
+                    pass
+                #j -= 1
                 #print('*** %s' % line)
                 #bdf_filename2 = line[7:].strip(" '")
-                bdf_filename2 = get_include_filename([line], include_dir=self.include_dir)
+                include_lines = [line] + lines[i+1:j]
+                #print(include_lines)
+                bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
+
+                try:
+                    self._open_file_checks(bdf_filename2)
+                except IOError:
+                    self._dump_file('pyNastran_crash.bdf', lines, i+1)
+                    msg = 'There was an invalid filename found whlie parsing.\n'
+                    msg += 'Check the end of %r' % bdf_filename
+                    raise IOError(msg)
 
                 with self._open_file(bdf_filename2, basename=False) as bdf_file:
                     #print('bdf_file.name = %s' % bdf_file.name)
@@ -2592,13 +2620,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #if not line2[0].isalpha():
                     #print('** %s' % line2)
 
-                include_comment = '$ INCLUDE processed:  %s' % bdf_filename2
+                include_comment = '$ INCLUDE processed:  %s\n' % bdf_filename2
                 #for line in lines2:
                     #print("  ?%s" % line.rstrip())
                 lines = lines[:i] + [include_comment] + lines2 + lines[j:]
                 #for line in lines:
                     #print("  *%s" % line.rstrip())
             i += 1
+
+        if self.dumplines:
+            self._dump_file('pyNastran_dump.bdf', lines, i)
 
         executive_control_lines = []
         case_control_lines = []
@@ -2634,6 +2665,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         case_control_lines = [_clean_comment(line) for line in case_control_lines]
         return executive_control_lines, case_control_lines, bulk_data_lines
 
+    def _dump_file(self, bdf_filename, lines, i):
+        with codec_open(bdf_filename,'w', encoding=self._encoding) as crash_file:
+            for line in lines[:i]:
+                crash_file.write(line)
+
     def _increase_card_count(self, card_name, n=1):
         """
         Used for testing to check that the number of cards going in is the
@@ -2657,21 +2693,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         else:
             self.card_count[card_name] = n
 
-    def _open_file(self, bdf_filename, basename=False):
-        """
-        Opens a new bdf_filename with the proper encoding and include directory
-
-        Parameters
-        ----------
-        bdf_filename : str
-            the filename to open
-        basename : bool (default=False)
-            should the basename of bdf_filename be appended to the include directory
-        """
+    def _open_file_checks(self, bdf_filename, basename=False):
         if basename:
             bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
         else:
             bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
+
         if not os.path.exists(bdf_filename_inc):
             msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
             msg += 'cwd: %r\n' % os.getcwd()
@@ -2687,6 +2714,51 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
                 % (bdf_filename, self.active_filenames)
             raise RuntimeError(msg)
+        elif os.path.isdir(bdf_filename):
+            current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
+            raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
+                bdf_filename_inc, current_filename))
+        elif not os.path.isfile(bdf_filename):
+            raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
+
+    def _open_file(self, bdf_filename, basename=False, check=True):
+        """
+        Opens a new bdf_filename with the proper encoding and include directory
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the filename to open
+        basename : bool (default=False)
+            should the basename of bdf_filename be appended to the include directory
+        """
+        if basename:
+            bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
+        else:
+            bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
+
+        if check:
+            if not os.path.exists(bdf_filename_inc):
+                msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
+                msg += 'cwd: %r\n' % os.getcwd()
+                msg += 'include_dir: %r\n' % self.include_dir
+                msg += print_bad_path(bdf_filename_inc)
+                raise IOError(msg)
+            elif bdf_filename_inc.endswith('.op2'):
+                raise IOError('Invalid filetype: bdf_filename=%r' % bdf_filename_inc)
+        bdf_filename = bdf_filename_inc
+
+        if check:
+            if bdf_filename in self.active_filenames:
+                msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
+                    % (bdf_filename, self.active_filenames)
+                raise RuntimeError(msg)
+            elif os.path.isdir(bdf_filename):
+                current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
+                raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
+                    bdf_filename_inc, current_filename))
+            elif not os.path.isfile(bdf_filename):
+                raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
         self.log.debug('opening %r' % bdf_filename)
         self.active_filenames.append(bdf_filename)
 
@@ -2784,6 +2856,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                         self.punch = True if value == 'true' else False
                     elif key in ['nnodes', 'nelements']:
                         pass
+                    elif key == 'dumplines':
+                        self.dumplines = True if value == 'true' else False
                     else:
                         raise NotImplementedError(key)
                 else:
