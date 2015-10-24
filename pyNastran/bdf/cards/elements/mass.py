@@ -15,7 +15,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
 from six.moves import range
-from numpy import zeros, array
+from numpy import zeros, array, all as npall
+from numpy.linalg import eigh
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import Element
@@ -24,6 +25,10 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
+
+def is_positive_semi_definite(A, tol=1e-8):
+    vals, vecs = eigh(A)
+    return npall(vals > -tol), vals
 
 class PointElement(Element):
     def __init__(self, card, data):
@@ -727,8 +732,20 @@ class CONM2(PointMassElement):
                             double_or_blank(card, 12, 'I31', 0.0),
                             double_or_blank(card, 13, 'I32', 0.0),
                             double_or_blank(card, 14, 'I33', 0.0)])
-            assert self.I[[0,2,5]].min() >= 0., 'I[11,22,33].min=%s >= 0; I=%s' % (self.I[[0,2,5]].min(), self.I)
-            assert self.I[[1,3,4]].max() <= 0., 'I[12,23,13].max=%s <= 0; I=%s' % (self.I[[1,3,4]].max(), self.I)
+
+            I11, I12, I22, I13, I23, I33 = self.I
+            I = array([
+                [I11, I12, I13],
+                [I12, I22, I23],
+                [I13, I23, I33],
+            ], dtype='float32')
+            is_psd, eigi = is_positive_semi_definite(I)
+            if not is_psd:
+                eigenvalues = eigsh
+                msg = 'The eig(I) >= 0.\n'
+                msg += 'I=\n%s\n' % str(I)
+                msg += 'eigenvalues=%s' % str(eigi)
+                raise RuntimeError(msg)
             assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
         else:
             self.eid = data[0]
