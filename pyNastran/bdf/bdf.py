@@ -2677,6 +2677,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             msg += 'cwd: %r\n' % os.getcwd()
             msg += 'include_dir: %r\n' % self.include_dir
             msg += print_bad_path(bdf_filename_inc)
+            print(msg)
             raise IOError(msg)
         elif bdf_filename_inc.endswith('.op2'):
             raise IOError('Invalid filetype: bdf_filename=%r' % bdf_filename_inc)
