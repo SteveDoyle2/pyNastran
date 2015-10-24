@@ -741,7 +741,6 @@ class CONM2(PointMassElement):
             ], dtype='float32')
             is_psd, eigi = is_positive_semi_definite(I)
             if not is_psd:
-                eigenvalues = eigsh
                 msg = 'The eig(I) >= 0.\n'
                 msg += 'I=\n%s\n' % str(I)
                 msg += 'eigenvalues=%s' % str(eigi)
