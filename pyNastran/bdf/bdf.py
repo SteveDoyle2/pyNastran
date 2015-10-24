@@ -2258,7 +2258,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 class_instance = card_class(card_obj, comment=comment)
                 add_card_function(class_instance)
             except (SyntaxError, AssertionError, ValueError) as e:
-                raise
+                #raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
                 #raise
