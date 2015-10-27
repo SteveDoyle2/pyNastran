@@ -2855,6 +2855,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                             pass
                         elif key == 'dumplines':
                             self.dumplines = True if value == 'true' else False
+                        elif key == 'skip_cards':
+                            cards = set([value.strip() for value in value.upper().split(',')])
+                            self.cards_to_read = self.cards_to_read - cards
                         else:
                             raise NotImplementedError(key)
                     else:

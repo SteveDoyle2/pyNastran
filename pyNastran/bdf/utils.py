@@ -258,6 +258,8 @@ def _parse_pynastran_header(line):
         key = key.strip()
         value = value.strip()
         if key in ['version', 'encoding', 'punch', 'nnodes', 'nelements', 'dumplines']:
+            assert ' ' not in value, 'value=%r' % value
+        elif key in ['skip_cards']:
             pass
         else:
             msg = '\nunrecognized pyNastran key=%r\n' % key
@@ -265,7 +267,6 @@ def _parse_pynastran_header(line):
             print(msg)
             raise KeyError(msg)
 
-        assert ' ' not in value, 'value=%r' % value
     else:
         key = None
         value = None

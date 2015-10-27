@@ -948,7 +948,7 @@ class PSHELL(ShellProperty):
             self.pid = integer(card, 1, 'pid')
             self.mid1 = integer_or_blank(card, 2, 'mid1')
             #: thickness
-            self.t = double(card, 3, 't')
+            self.t = double_or_blank(card, 3, 't')
 
             #: Material identification number for bending
             #: -1 for plane strin
@@ -963,9 +963,13 @@ class PSHELL(ShellProperty):
             #: Non-structural Mass
             self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
-            tOver2 = self.t / 2.
-            self.z1 = double_or_blank(card, 9, 'z1', -tOver2)
-            self.z2 = double_or_blank(card, 10, 'z2', tOver2)
+            if self.t is not None:
+                tOver2 = self.t / 2.
+                self.z1 = double_or_blank(card, 9, 'z1', -tOver2)
+                self.z2 = double_or_blank(card, 10, 'z2', tOver2)
+            else:
+                self.z1 = double_or_blank(card, 9, 'z1')
+                self.z2 = double_or_blank(card, 10, 'z2')
             self.mid4 = integer_or_blank(card, 11, 'mid4')
 
             #if self.mid2 is None:
@@ -992,8 +996,8 @@ class PSHELL(ShellProperty):
             self.mid4 = data[10]
             #maxMid = max(self.mid1,self.mid2,self.mid3,self.mid4)
 
-        assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
-                              ' card (Ti field not supported)')
+        #assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
+                              #' card (Ti field not supported)')
 
     #@property
     #def mid(self):
@@ -1175,9 +1179,13 @@ class PSHELL(ShellProperty):
         tst = set_blank_if_default(self.tst, 0.833333)
         nsm = set_blank_if_default(self.nsm, 0.0)
 
-        tOver2 = self.t / 2.
-        z1 = set_blank_if_default(self.z1, -tOver2)
-        z2 = set_blank_if_default(self.z2, tOver2)
+        if self.t is not None:
+            tOver2 = self.t / 2.
+            z1 = set_blank_if_default(self.z1, -tOver2)
+            z2 = set_blank_if_default(self.z2, tOver2)
+        else:
+            z1 = self.z1
+            z2 = self.z2
 
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                        twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
