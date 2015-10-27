@@ -1,3 +1,4 @@
+# coding: utf-8
 # pylint: disable=C0103
 """
 All beam properties are defined in this file.  This includes:
@@ -537,15 +538,17 @@ class PBEAM(IntegratedLineProperty):
                 if any([isinstance(cdefi, float) for cdefi in [c1, c2, d1, d2, e1, e2, f1, f2]]):
                     list_fields += [c1, c2, d1, d2, e1, e2, f1, f2]
             else:
-                if so == 'YES':
+                if so in ['YES', b'YES']:
                     list_fields += [
-                        so, xxb, A, i1, i2, i12, j, nsm,
+                        'YES', xxb, A, i1, i2, i12, j, nsm,
                         c1, c2, d1, d2, e1, e2, f1, f2
                     ]
-                elif so in ['NO', 'YESA']:
-                    list_fields += [so, xxb, A, i1, i2, i12, j, nsm]
+                elif so in ['NO', b'NO']:
+                    list_fields += ['NO', xxb, A, i1, i2, i12, j, nsm]
+                elif so in ['YESA', b'YESA']:
+                    list_fields += ['YESA', xxb, A, i1, i2, i12, j, nsm]
                 else:
-                    raise RuntimeError(so)
+                    raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
             i += 1
 
         footer = [
@@ -590,13 +593,15 @@ class PBEAM(IntegratedLineProperty):
                 list_fields += [A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             else:
-                if so == 'YES':
-                    list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
+                if so in ['YES', b'YES']:
+                    list_fields += ['YES', xxb, A, i1, i2, i12, j, nsm,
                                     c1, c2, d1, d2, e1, e2, f1, f2]
-                elif so in ['NO', 'YESA']:
-                    list_fields += [so, xxb, A, i1, i2, i12, j, nsm]
+                elif so in ['NO', b'NO']:
+                    list_fields += ['NO', xxb, A, i1, i2, i12, j, nsm]
+                elif so in ['YESA', b'YESA']:
+                    list_fields += ['YESA', xxb, A, i1, i2, i12, j, nsm]
                 else:
-                    raise RuntimeError(so)
+                    raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
 
             i += 1
         #k1 = set_blank_if_default(self.k1, 1.0)

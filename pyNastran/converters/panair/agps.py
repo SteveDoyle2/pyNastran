@@ -11,9 +11,9 @@ class AGPS(object):
 
     def read_agps(self, infilename):
         self.infilename = infilename
-        f = open(self.infilename, 'r')
-        lines = f.readlines()
-        f.close()
+        with open(self.infilename, 'r') as f:
+            lines = f.readlines()
+
         i = 0
         while i < len(lines):
             if 'irow' in lines[i] and 'cp1' in lines[i]:

@@ -142,8 +142,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
 
-        print(type(node_set))
-        print('*node_set', node_set)
+        #print(type(node_set))
+        #print('*node_set', node_set)
         assert len(node_set) > 0, node_set
         if isinstance(node_set, set):
             node_set = asarray(list(node_set), dtype='int32')
@@ -173,7 +173,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     inode = 0
     nid_map = {}
     if node_set is not None:
-        all_nids = array(model.nodes.keys(), dtype='int32')
+        if PY2:
+            all_nids = array(model.nodes.keys(), dtype='int32')
+        else:
+            all_nids = array(list(model.nodes.keys()), dtype='int32')
 
         # B - A
         # these are all the nodes that are requested from node_set that are missing
@@ -316,10 +319,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         if node_set is not None:
             assert nid1 in node_set, 'nid1=%s node_set=%s' % (nid1, node_set)
             assert nid2 in node_set, 'nid2=%s node_set=%s' % (nid2, node_set)
-            print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
-                nid1, str(node1.xyz),
-                nid2, str(node2.xyz),
-                distance))
+            #print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
+                #nid1, str(node1.xyz),
+                #nid2, str(node2.xyz),
+                #distance))
 
         # if hasattr(node2, 'new_node_id'):
 

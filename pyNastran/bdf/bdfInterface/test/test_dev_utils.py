@@ -12,6 +12,7 @@ from numpy import array, intersect1d
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdfInterface.dev_utils import bdf_equivalence_nodes
+from codecs import open as codec_open
 
 
 class DevUtils(unittest.TestCase):
@@ -36,7 +37,7 @@ class DevUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        bdf_file = open(bdf_filename, 'wb')
+        bdf_file = codec_open(bdf_filename, 'w')
         bdf_file.write(msg)
         bdf_file.close()
 
@@ -78,7 +79,7 @@ class DevUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        bdf_file = open(bdf_filename, 'wb')
+        bdf_file = codec_open(bdf_filename, 'w')
         bdf_file.write(msg)
         bdf_file.close()
 
@@ -198,7 +199,7 @@ class DevUtils(unittest.TestCase):
         bdf_filename = 'nonunique2.bdf'
         bdf_filename_out = 'unique2.bdf'
 
-        bdf_file = open(bdf_filename, 'wb')
+        bdf_file = codec_open(bdf_filename, 'w')
         bdf_file.write('\n'.join(lines))
         bdf_file.close()
         tol = 0.01
@@ -244,7 +245,7 @@ class DevUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        bdf_file = open(bdf_filename, 'wb')
+        bdf_file = codec_open(bdf_filename, 'w')
         bdf_file.write(msg)
         bdf_file.close()
 
@@ -267,7 +268,7 @@ class DevUtils(unittest.TestCase):
         assert 6 in nids, nids
         assert 40 not in nids, nids
         assert 41 not in nids, nids
-        print(nids)
+        #print(nids)
         # os.remove(bdf_filename)
         os.remove(bdf_filename_out)
 

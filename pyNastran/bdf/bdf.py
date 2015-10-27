@@ -458,9 +458,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.case_control_lines = str(self.case_control_deck).split('\n')
         del self.case_control_deck
         self.uncross_reference()
-        obj_file = open(obj_filename, "w")
-        pickle.dump(self, obj_file)
-        obj_file.close()
+        with open(obj_filename, 'w') as obj_file:
+            pickle.dump(self, obj_file)
 
     def load_object(self, obj_filename='model.obj'):
         """
@@ -476,9 +475,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         #del self.case_control_deck
         #self.uncross_reference()
         #import types
-        obj_file = open(obj_filename, "r")
-        obj = pickle.load(obj_file)
-        obj_file.close()
+        with open(obj_filename, "r") as obj_file:
+            obj = pickle.load(obj_file)
 
         keys_to_skip = [
             'case_control_deck', 'caseControlDeck',
@@ -2523,7 +2521,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         lines = []
         print('ENCODING - show_bad_file=%r' % self._encoding)
-        with codec_open(bdf_filename, 'rU', encoding=self._encoding) as bdf_file:
+        with codec_open(bdf_filename, 'r', encoding=self._encoding) as bdf_file:  # rU
             iline = 0
             nblank = 0
             while 1:
@@ -2834,36 +2832,35 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         ..warning :: pyNastran lines must be at the top of the file
         """
-        bdf_file = open(bdf_filename, 'r')
-        check_header = True
-        while check_header:
-            try:
-                line = bdf_file.readline()
-            except:
-                break
+        with open(bdf_filename, 'r') as bdf_file:
+            check_header = True
+            while check_header:
+                try:
+                    line = bdf_file.readline()
+                except:
+                    break
 
-            if line.startswith('$'):
-                key, value = _parse_pynastran_header(line)
+                if line.startswith('$'):
+                    key, value = _parse_pynastran_header(line)
 
-                if key:
-                    #print('pyNastran key=%s value=%s' % (key, value))
-                    if key == 'version':
-                        self.nastran_format = value
-                    elif key == 'encoding':
-                        self._encoding = value
-                    elif key == 'punch':
-                        self.punch = True if value == 'true' else False
-                    elif key in ['nnodes', 'nelements']:
-                        pass
-                    elif key == 'dumplines':
-                        self.dumplines = True if value == 'true' else False
+                    if key:
+                        #print('pyNastran key=%s value=%s' % (key, value))
+                        if key == 'version':
+                            self.nastran_format = value
+                        elif key == 'encoding':
+                            self._encoding = value
+                        elif key == 'punch':
+                            self.punch = True if value == 'true' else False
+                        elif key in ['nnodes', 'nelements']:
+                            pass
+                        elif key == 'dumplines':
+                            self.dumplines = True if value == 'true' else False
+                        else:
+                            raise NotImplementedError(key)
                     else:
-                        raise NotImplementedError(key)
+                        break
                 else:
                     break
-            else:
-                break
-        bdf_file.close()
 
     def _verify_bdf(self):
         """
