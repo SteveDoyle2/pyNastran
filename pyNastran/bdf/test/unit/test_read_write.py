@@ -64,6 +64,18 @@ class TestReadWrite(unittest.TestCase):
             bdf_filename = os.path.join(test_path, 'test_include.bdf')
         model2.read_bdf(bdf_filename, xref=True, punch=False)
 
+    def test_read_include_dir_2(self):
+        full_path = os.path.join(test_path)
+        model = BDF(debug=False)
+        bdf_filename = 'test_include2.bdf'
+        if not os.path.exists(bdf_filename):
+            bdf_filename = os.path.join(full_path, 'test_include2.bdf')
+            #print(full_path)
+        #print(bdf_filename)
+        model.read_bdf(bdf_filename, xref=True, punch=False)
+        #model.write_bdf('junk.bdf')
+
+
     def test_enddata_1(self):
         """
         There is an ENDDATA is in the baseline BDF, so None -> ENDDATA

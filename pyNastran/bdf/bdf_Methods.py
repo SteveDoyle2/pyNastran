@@ -787,7 +787,7 @@ class BDFMethods(object):
 
         Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
         """
-        print('sum_forces_moments...')
+        #print('sum_forces_moments...')
         if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if isinstance(p0, integer_types):

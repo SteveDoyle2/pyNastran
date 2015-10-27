@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=R0902,R0904,R0914,C0111
 """
 All table cards are defined in this file.  This includes:
 
@@ -31,7 +31,8 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
-    integer_or_blank, double, components, string, string_or_blank)
+    integer_or_blank, double, components, string, string_or_blank,
+    double_or_string)
 
 class Table(BaseCard):
     def __init__(self, card, data):
@@ -198,8 +199,10 @@ class TABLED1(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -243,8 +246,10 @@ class TABLED2(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -285,8 +290,10 @@ class TABLED3(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -332,8 +339,10 @@ class TABLED4(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -376,8 +385,10 @@ class TABDMP1(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -416,8 +427,10 @@ class TABLEM1(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -452,8 +465,10 @@ class TABLEM2(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -494,8 +509,10 @@ class TABLEM3(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -540,8 +557,10 @@ class TABLEM4(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -585,8 +604,10 @@ class TABLES1(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -624,8 +645,10 @@ class TABLEST(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
@@ -672,8 +695,10 @@ class TABRND1(RandomTable):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double(card, n, 'x' + str(i + 1))
-                y = double(card, n + 1, 'y' + str(i + 1))
+                x = double_or_string(card, n, 'x' + str(i + 1))
+                y = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if x == 'SKIP' or y == 'SKIP':
+                    continue
                 xy += [x, y]
             string(card, nfields, 'ENDT')
             isData = False
