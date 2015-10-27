@@ -33,6 +33,9 @@ _REMOVED_LINES = [
     '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
     '$PROPERTIES_MASS', '$MASSES',
 ]
+EXPECTED_HEADER_KEYS_CHECK = ['version', 'encoding', 'punch', 'nnodes', 'nelements', 'dumplines']
+EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards']
+
 
 def _clean_comment(comment, end=-1):
     """
@@ -257,15 +260,17 @@ def _parse_pynastran_header(line):
         key, value = word.strip().split('=')
         key = key.strip()
         value = value.strip()
-        if key in ['version', 'encoding', 'punch', 'nnodes', 'nelements', 'dumplines']:
+        if key in EXPECTED_HEADER_KEYS_CHECK:
+            assert ' ' not in value, 'value=%r' % value
+        elif key in EXPECTED_HEADER_KEYS_NO_CHECK:
             pass
         else:
-            msg = '\nunrecognized pyNastran key=%r\n' % key
-            msg += 'line=%r' % line
+            msg = '\nunrecognized pyNastran key=%r type(key)=%s\n' % (key, type(key))
+            msg += 'line=%r\n' % line
+            msg += 'expected_keys = [%s]\n' % ', '.join(EXPECTED_HEADER_KEYS_CHECK + EXPECTED_HEADER_KEYS_NO_CHECK)
+            msg += 'type(key0) = %s' % type(EXPECTED_HEADER_KEYS_CHECK[0])
             print(msg)
             raise KeyError(msg)
-
-        assert ' ' not in value, 'value=%r' % value
     else:
         key = None
         value = None

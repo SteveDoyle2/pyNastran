@@ -1069,6 +1069,10 @@ class BDFMethods(object):
             elif load.type == 'PLOAD4':
                 #elem = load.eid
                 pressure = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
+                if load.pressures.min() != load.pressures.max():
+                    msg = '%s\npressure.min=%s != pressure.max=%s'  % (
+                        str(load), load.pressures.min(), load.pressures.max())
+                    raise RuntimeError(msg)
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                 assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
                 assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
@@ -1110,6 +1114,7 @@ class BDFMethods(object):
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        #asdf
                         area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
                         msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'

@@ -1080,6 +1080,7 @@ class NastranIO(object):
         no_56_456 = zeros(self.element_ids.shape, dtype='int32')
         no_0_6 = zeros(self.element_ids.shape, dtype='int32')
         no_0_16 = zeros(self.element_ids.shape, dtype='int32')
+        bar_nids = set([])
         for eid in bar_beam_eids:
             # if eid < 30000:
                 # continue
@@ -1095,6 +1096,7 @@ class NastranIO(object):
             found_bar_types.add(Type)
 
             (nid1, nid2) = elem.node_ids
+            bar_nids.update([nid1, nid2])
             node1 = model.nodes[nid1]
             node2 = model.nodes[nid2]
             n1 = node1.get_position()
@@ -1220,6 +1222,13 @@ class NastranIO(object):
             bar_types[Type][2].append((c, c + zhat * Li * scale))
 
         #print('found_bar_types =', found_bar_types)
+
+        bar_nids = list(bar_nids)
+        red = (1., 0., 0.)
+        self.create_alternate_vtk_grid('Bar Nodes', color=red, line_width=1, opacity=1.,
+                                       point_size=5, representation='point', bar_scale=scale, is_visible=True)
+        self._add_nastran_nodes_to_grid('Bar Nodes', bar_nids, model)
+
 
         geo_form = form[2]
         bar_form = ('CBAR / CBEAM', None, [])
