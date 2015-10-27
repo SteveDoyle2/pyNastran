@@ -962,7 +962,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
         matrix_num, form, mrows, ncols, tout, nvalues, g = unpack(self._endian + '7i', data)
         m = Matrix(table_name)
-        self.matrices[table_name] = m
+        self.matrices[table_name.decode('utf-8')] = m
 
         # matrix_num is a counter (101, 102, 103, ...)
         # 101 will be the first matrix 'A' (matrix_num=101),
@@ -1404,6 +1404,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                   If the table you requested doesn't exist, there will be no effect.
         """
         self.additional_matrices = matrices
+        if PY2:
+            self.additional_matrices = matrices
+        else:
+            self.additional_matrices = {}
+            for matrix_name, value in iteritems(matrices):
+                self.additional_matrices[b(matrix_name)] = value
 
     def _skip_table_helper(self):
         """

@@ -64,6 +64,18 @@ class TestReadWrite(unittest.TestCase):
             bdf_filename = os.path.join(test_path, 'test_include.bdf')
         model2.read_bdf(bdf_filename, xref=True, punch=False)
 
+    def test_read_include_dir_2(self):
+        full_path = os.path.join(test_path)
+        model = BDF(debug=False)
+        bdf_filename = 'test_include2.bdf'
+        if not os.path.exists(bdf_filename):
+            bdf_filename = os.path.join(full_path, 'test_include2.bdf')
+            #print(full_path)
+        #print(bdf_filename)
+        model.read_bdf(bdf_filename, xref=True, punch=False)
+        #model.write_bdf('junk.bdf')
+
+
     def test_enddata_1(self):
         """
         There is an ENDDATA is in the baseline BDF, so None -> ENDDATA
@@ -83,7 +95,10 @@ class TestReadWrite(unittest.TestCase):
             out_filename = os.path.join(test_path, out_filename)
             model2.write_bdf(out_filename=out_filename+'.out', interspersed=True, size=8,
                              is_double=False, enddata=write_flag)
-            data = open(out_filename + '.out', 'r').read()
+
+            with codec_open(out_filename + '.out', 'r') as f:
+                data = f.read()
+
             if is_enddata:
                 self.assertTrue('ENDDATA' in data)
             else:
@@ -105,7 +120,10 @@ class TestReadWrite(unittest.TestCase):
             ('test_mass3.dat', False, False)]:
             model2.write_bdf(out_filename=out_filename, interspersed=True, size=8,
                              is_double=False, enddata=write_flag)
-            data = open(out_filename, 'r').read()
+
+            with codec_open(out_filename, 'r') as f:
+                data = f.read()
+
             msg = 'outfilename=%r expected=%r write_flag=%s card_count=%r' % (out_filename, is_enddata, write_flag, model2.card_count.keys())
             if is_enddata:
                 self.assertTrue('ENDDATA' in data, msg)
@@ -114,24 +132,19 @@ class TestReadWrite(unittest.TestCase):
             os.remove(out_filename)
 
     def test_include_end(self):
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
-        f = open('a.bdf', wb)
-        f.write('CEND\n')
-        f.write('BEGIN BULK\n')
-        f.write('GRID,1,,1.0\n')
-        f.write("INCLUDE 'b.bdf'\n\n")
+        with codec_open('a.bdf', 'w') as f:
+            f.write('CEND\n')
+            f.write('BEGIN BULK\n')
+            f.write('GRID,1,,1.0\n')
+            f.write("INCLUDE 'b.bdf'\n\n")
 
-        f = open('b.bdf', wb)
-        f.write('GRID,2,,2.0\n')
-        f.write("INCLUDE 'c.bdf'\n\n")
+        with codec_open('b.bdf', 'w') as f:
+            f.write('GRID,2,,2.0\n')
+            f.write("INCLUDE 'c.bdf'\n\n")
 
-        f = open('c.bdf', wb)
-        f.write('GRID,3,,3.0\n\n')
-        f.write("ENDDATA\n")
-        f.close()
+        with codec_open('c.bdf', 'w') as f:
+            f.write('GRID,3,,3.0\n\n')
+            f.write("ENDDATA\n")
 
         model = BDF(log=log, debug=False)
         model.read_bdf('a.bdf')
@@ -145,25 +158,20 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
 
     def test_include_end_02(self):
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
-        f = open('a.bdf', wb)
-        f.write('CEND\n')
-        f.write('BEGIN BULK\n')
-        f.write('GRID,1,,1.0\n')
-        f.write("INCLUDE 'b.bdf'\n\n")
-        f.write('GRID,4,,4.0\n')
+        with codec_open('a.bdf', 'w') as f:
+            f.write('CEND\n')
+            f.write('BEGIN BULK\n')
+            f.write('GRID,1,,1.0\n')
+            f.write("INCLUDE 'b.bdf'\n\n")
+            f.write('GRID,4,,4.0\n')
 
-        f = open('b.bdf', wb)
-        f.write('GRID,2,,2.0\n')
-        f.write("INCLUDE 'c.bdf'\n\n")
-        f.write('GRID,5,,5.0\n')
+        with codec_open('b.bdf', 'w') as f:
+            f.write('GRID,2,,2.0\n')
+            f.write("INCLUDE 'c.bdf'\n\n")
+            f.write('GRID,5,,5.0\n')
 
-        f = open('c.bdf', wb)
-        f.write('GRID,3,,3.0\n\n')
-        f.close()
+        with codec_open('c.bdf', 'w') as f:
+            f.write('GRID,3,,3.0\n\n')
 
         model = BDF(log=log, debug=False)
         model.read_bdf('a.bdf')
@@ -181,29 +189,29 @@ class TestReadWrite(unittest.TestCase):
             wb = 'wb'
         else:
             wb = 'w'
-        f = open('a.bdf', wb)
-        f.write("INCLUDE 'executive_control.inc'\n\n")
-        f.write('CEND\n')
-        f.write("INCLUDE 'case_control.inc'\n\n")
-        f.write('BEGIN BULK\n')
-        f.write('GRID,1,,1.0\n')
-        f.write("INCLUDE 'b.bdf'\n\n")
-        f.write('GRID,4,,4.0\n')
 
-        f = open('executive_control.inc', wb)
-        f.write('SOL = 103\n')
+        with codec_open('a.bdf', 'w') as f:
+            f.write("INCLUDE 'executive_control.inc'\n\n")
+            f.write('CEND\n')
+            f.write("INCLUDE 'case_control.inc'\n\n")
+            f.write('BEGIN BULK\n')
+            f.write('GRID,1,,1.0\n')
+            f.write("INCLUDE 'b.bdf'\n\n")
+            f.write('GRID,4,,4.0\n')
 
-        f = open('case_control.inc', wb)
-        f.write('DISP = ALL\n')
+        with codec_open('executive_control.inc', 'w') as f:
+            f.write('SOL = 103\n')
 
-        f = open('b.bdf', wb)
-        f.write('GRID,2,,2.0\n')
-        f.write("INCLUDE 'c.bdf'\n\n")
-        f.write('GRID,5,,5.0\n')
+        with codec_open('case_control.inc', 'w') as f:
+            f.write('DISP = ALL\n')
 
-        f = open('c.bdf', wb)
-        f.write('GRID,3,,3.0\n\n')
-        f.close()
+        with codec_open('b.bdf', 'w') as f:
+            f.write('GRID,2,,2.0\n')
+            f.write("INCLUDE 'c.bdf'\n\n")
+            f.write('GRID,5,,5.0\n')
+
+        with codec_open('c.bdf', 'w') as f:
+            f.write('GRID,3,,3.0\n\n')
 
         model = BDF(log=log, debug=False)
         model.read_bdf('a.bdf')

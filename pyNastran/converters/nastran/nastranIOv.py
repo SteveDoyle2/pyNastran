@@ -963,6 +963,9 @@ class NastranIO(object):
                 for pid in pids:
                     if pid == 0:
                         continue
+                    if pid is None:
+                        print(pid)
+                        continue
                     prop = model.properties[pid]
                     if prop.type not in ['PSOLID', 'PLSOLID']:
                         plot_node = True
@@ -1845,7 +1848,7 @@ class NastranIO(object):
                   isinstance(element, SpringElement) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', 'CGAP']):
 
                 # TODO: verify
                 # CBUSH, CBUSH1D, CFAST, CROD, CELAS1, CELAS3
@@ -1901,7 +1904,7 @@ class NastranIO(object):
 
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
-                print('removing eid=%s' % eid)
+                print('removing eid=%s; %s' % (eid, elem.type))
                 del self.eidMap[eid]
                 self.log_info("skipping %s" % element.type)
                 continue
@@ -1987,7 +1990,7 @@ class NastranIO(object):
             form0.append(('PropertyID', icase, []))
             icase += 1
 
-        if 1:
+        if 0:
             i = 0
             nelements = self.element_ids.shape[0]
             normals = zeros((nelements, 3), dtype='float32')

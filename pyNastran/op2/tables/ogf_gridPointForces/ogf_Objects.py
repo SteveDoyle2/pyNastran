@@ -32,7 +32,7 @@ class RealGridPointForcesArray(ScalarObject):
     def element_name(self):
         headers = [name.strip() for name in unique(self.element_names)]
         #headers = unique(self.element_names)
-        return ', '.join(headers)
+        return str(b', '.join(headers))
 
     def build(self):
         #print("self.ielement = %s" % self.ielement)

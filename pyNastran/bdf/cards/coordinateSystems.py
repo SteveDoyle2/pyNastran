@@ -380,23 +380,23 @@ class Coord(BaseCard):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
 
-    def T(self):
-        r"""
-        Gets the 6 x 6 transformation
+    #def T(self):
+        #r"""
+        #Gets the 6 x 6 transformation
 
-        .. math:: [\lambda] = [B_{ij}]
+        #.. math:: [\lambda] = [B_{ij}]
 
-        .. math::
-          [T] =
-          \left[
-            \begin{array}{cc}
-            \lambda  & 0 \\
-            0  & \lambda \\
-            \end{array}
-          \right]
-        """
-        self.deprecated('T()', 'beta_n(2)', '0.7')
-        return self.beta_n(2)
+        #.. math::
+          #[T] =
+          #\left[
+            #\begin{array}{cc}
+            #\lambda  & 0 \\
+            #0  & \lambda \\
+            #\end{array}
+          #\right]
+        #"""
+        #self.deprecated('T()', 'beta_n(2)', '0.7')
+        #return self.beta_n(2)
 
     def transformToGlobal(self, p, debug=False):
         """

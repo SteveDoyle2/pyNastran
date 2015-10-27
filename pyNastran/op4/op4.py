@@ -1116,9 +1116,13 @@ class OP4(object):
                 f = open(op4_filename, 'wb')
             else:
                 f = open(op4_filename, 'w')
+            with open(op4_filename, 'w') as f:
+                self._write_op4_f(f, name_order, is_binary, precision, matrices)
         else:
             f = op4_filename
+            self._write_op4_f(f, name_order, is_binary, precision, matrices)
 
+    def _write_op4_f(self, f, name_order, is_binary, precision, matrices):
         if name_order is None:
             name_order = sorted(matrices.keys())
         elif isinstance(name_order, string_types):

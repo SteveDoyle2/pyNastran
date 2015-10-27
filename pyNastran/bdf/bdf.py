@@ -458,9 +458,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.case_control_lines = str(self.case_control_deck).split('\n')
         del self.case_control_deck
         self.uncross_reference()
-        obj_file = open(obj_filename, "w")
-        pickle.dump(self, obj_file)
-        obj_file.close()
+        with open(obj_filename, 'w') as obj_file:
+            pickle.dump(self, obj_file)
 
     def load_object(self, obj_filename='model.obj'):
         """
@@ -476,9 +475,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         #del self.case_control_deck
         #self.uncross_reference()
         #import types
-        obj_file = open(obj_filename, "r")
-        obj = pickle.load(obj_file)
-        obj_file.close()
+        with open(obj_filename, "r") as obj_file:
+            obj = pickle.load(obj_file)
 
         keys_to_skip = [
             'case_control_deck', 'caseControlDeck',
@@ -2523,7 +2521,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         lines = []
         print('ENCODING - show_bad_file=%r' % self._encoding)
-        with codec_open(bdf_filename, 'rU', encoding=self._encoding) as bdf_file:
+        with codec_open(bdf_filename, 'r', encoding=self._encoding) as bdf_file:  # rU
             iline = 0
             nblank = 0
             while 1:
@@ -2584,29 +2582,28 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             except IndexError:
                 break
             uline = line.upper()
-            #print(uline.rstrip())
             if uline.startswith('INCLUDE'):
                 j = i + 1
-                try:
-                    while len(lines[j]) and lines[j][0] == ' ':
-                        #print(lines[j])
-                        j += 1
-                except IndexError:
-                    #j -= 1
-                    pass
-                #j -= 1
+                include_lines = [line]
+                while not line.split('$')[0].endswith("'") and j < nlines:
+                    line = lines[j].rstrip('\r\n\t').split('$')[0]
+                    include_lines.append(line)
+                    j += 1
+
                 #print('*** %s' % line)
                 #bdf_filename2 = line[7:].strip(" '")
-                include_lines = [line] + lines[i+1:j]
+                #include_lines = [line] + lines[i+1:j]
                 #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
 
                 try:
                     self._open_file_checks(bdf_filename2)
                 except IOError:
-                    self._dump_file('pyNastran_crash.bdf', lines, i+1)
+                    crash_name = 'pyNastran_crash.bdf'
+                    self._dump_file(crash_name, lines, i+1)
                     msg = 'There was an invalid filename found whlie parsing.\n'
-                    msg += 'Check the end of %r' % bdf_filename
+                    msg += 'Check the end of %r' % crash_name
+                    msg += 'bdf_filename2 = %r' % bdf_filename2
                     raise IOError(msg)
 
                 with self._open_file(bdf_filename2, basename=False) as bdf_file:
@@ -2835,36 +2832,38 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         ..warning :: pyNastran lines must be at the top of the file
         """
-        bdf_file = open(bdf_filename, 'r')
-        check_header = True
-        while check_header:
-            try:
-                line = bdf_file.readline()
-            except:
-                break
+        with open(bdf_filename, 'r') as bdf_file:
+            check_header = True
+            while check_header:
+                try:
+                    line = bdf_file.readline()
+                except:
+                    break
 
-            if line.startswith('$'):
-                key, value = _parse_pynastran_header(line)
+                if line.startswith('$'):
+                    key, value = _parse_pynastran_header(line)
 
-                if key:
-                    #print('pyNastran key=%s value=%s' % (key, value))
-                    if key == 'version':
-                        self.nastran_format = value
-                    elif key == 'encoding':
-                        self._encoding = value
-                    elif key == 'punch':
-                        self.punch = True if value == 'true' else False
-                    elif key in ['nnodes', 'nelements']:
-                        pass
-                    elif key == 'dumplines':
-                        self.dumplines = True if value == 'true' else False
+                    if key:
+                        #print('pyNastran key=%s value=%s' % (key, value))
+                        if key == 'version':
+                            self.nastran_format = value
+                        elif key == 'encoding':
+                            self._encoding = value
+                        elif key == 'punch':
+                            self.punch = True if value == 'true' else False
+                        elif key in ['nnodes', 'nelements']:
+                            pass
+                        elif key == 'dumplines':
+                            self.dumplines = True if value == 'true' else False
+                        elif key == 'skip_cards':
+                            cards = set([value.strip() for value in value.upper().split(',')])
+                            self.cards_to_read = self.cards_to_read - cards
+                        else:
+                            raise NotImplementedError(key)
                     else:
-                        raise NotImplementedError(key)
+                        break
                 else:
                     break
-            else:
-                break
-        bdf_file.close()
 
     def _verify_bdf(self):
         """
