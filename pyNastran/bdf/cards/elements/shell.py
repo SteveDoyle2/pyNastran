@@ -187,6 +187,9 @@ class TriShell(ShellElement):
         (n0, n1, n2) = self.get_node_positions()
         return _triangle_area_centroid_normal([n0, n1, n2])
 
+    def get_area(self):
+        return self.Area()
+
     def Area(self):
         r"""
         Get the area, :math:`A`.

@@ -622,6 +622,15 @@ class RBE3(RigidElement):
         for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
             self.WtCG_groups[i][2] = model.Nodes(Gij, allowEmptyNodes=True, msg=msg)
 
+    def safe_cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        assert self.Gmi is not None
+        self.Gmi = model.Nodes(self.Gmi, allowEmptyNodes=True, msg=msg)
+        assert self.Gmi is not None
+        self.refgrid = model.Node(self.ref_grid_id, msg=msg)
+        for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
+            self.WtCG_groups[i][2] = model.Nodes(Gij, allowEmptyNodes=True, msg=msg)
+
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]
         for (wt, ci, Gij) in self.WtCG_groups:

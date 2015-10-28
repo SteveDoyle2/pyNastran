@@ -13,6 +13,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from six.moves import zip, range
 
+from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -90,6 +91,19 @@ class LoadCombination(Load):  # LOAD, DLOAD
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for load_id in self.loadIDs:
             loadID2 = model.Load(load_id, msg=msg)
+            loadIDs2.append(loadID2)
+        self.loadIDs = loadIDs2
+
+    def safe_cross_reference(self, model):
+        loadIDs2 = []
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        for load_id in self.loadIDs:
+            try:
+                loadID2 = model.Load(load_id, msg=msg)
+            except KeyError:
+                msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (load_id, self.type, self.sid)
+                print(msg)
+                continue
             loadIDs2.append(loadID2)
         self.loadIDs = loadIDs2
 

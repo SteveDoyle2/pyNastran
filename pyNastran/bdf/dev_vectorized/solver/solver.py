@@ -1983,7 +1983,7 @@ class Solver(F06, OP2):
             #print("type", type(load_set))
             (typesFound, forceLoads, momentLoads,
              forceConstraints, momentConstraints,
-             gravityLoad) = load_set.organizeLoads(model)
+             gravityLoad) = load_set.organize_loads(model)
 
             self.log.info('typesFound = %s' % typesFound)
             if not (isinstance(typesFound, list) or  isinstance(typesFound, set)):

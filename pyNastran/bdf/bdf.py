@@ -21,12 +21,12 @@ from numpy import unique, array, where, in1d
 from pyNastran.bdf.utils import _parse_pynastran_header, deprecated
 from pyNastran.utils import object_attributes, print_bad_path
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
-                                 parse_executive_control_deck,
-                                 CardParseSyntaxError)
+                                 parse_executive_control_deck)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
+from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
@@ -120,12 +120,10 @@ from pyNastran.bdf.bdfInterface.addCard import AddMethods
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
-from pyNastran.bdf.bdfInterface.crossReference import XrefMesh, CrossReferenceError
+from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
+from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_16 import print_field_16
-
-class DuplicateIDsError(RuntimeError):
-    pass
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes):
     """
@@ -1153,11 +1151,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self._encoding = encoding
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
-            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
+            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch, *.ecd)|" \
                 "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"
-            wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
-            title = 'Please select a BDF/DAT/PCH to load'
+            wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch *.ecd);;All files (*)"
+            title = 'Please select a BDF/DAT/PCH/ECD to load'
             bdf_filename, wildcard_level = load_file_dialog(title, wildcard_wx, wildcard_qt)
             assert bdf_filename is not None, bdf_filename
 
@@ -1329,7 +1327,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     is_error = True
 
             if is_error:
-                #print('%s' % msg)
+                print('%s' % msg)
                 raise DuplicateIDsError(msg.rstrip())
 
     def pop_xref_errors(self):
@@ -2521,7 +2519,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         lines = []
         print('ENCODING - show_bad_file=%r' % self._encoding)
-        with codec_open(bdf_filename, 'r', encoding=self._encoding) as bdf_file:  # rU
+        with codec_open(_filename(bdf_filename), 'r', encoding=self._encoding) as bdf_file:  # rU
             iline = 0
             nblank = 0
             while 1:
@@ -2602,7 +2600,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     crash_name = 'pyNastran_crash.bdf'
                     self._dump_file(crash_name, lines, i+1)
                     msg = 'There was an invalid filename found whlie parsing.\n'
-                    msg += 'Check the end of %r' % crash_name
+                    msg += 'Check the end of %r\n' % crash_name
                     msg += 'bdf_filename2 = %r' % bdf_filename2
                     raise IOError(msg)
 
@@ -2663,7 +2661,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return executive_control_lines, case_control_lines, bulk_data_lines
 
     def _dump_file(self, bdf_filename, lines, i):
-        with codec_open(bdf_filename,'w', encoding=self._encoding) as crash_file:
+        with codec_open(_filename(bdf_filename),'w', encoding=self._encoding) as crash_file:
             for line in lines[:i]:
                 crash_file.write(line)
 
@@ -2696,27 +2694,34 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         else:
             bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
 
-        if not os.path.exists(bdf_filename_inc):
+        if not os.path.exists(_filename(bdf_filename_inc)):
             msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
             msg += 'cwd: %r\n' % os.getcwd()
             msg += 'include_dir: %r\n' % self.include_dir
+            asdf
             msg += print_bad_path(bdf_filename_inc)
             print(msg)
             raise IOError(msg)
         elif bdf_filename_inc.endswith('.op2'):
-            raise IOError('Invalid filetype: bdf_filename=%r' % bdf_filename_inc)
+            print(msg)
+            msg = 'Invalid filetype: bdf_filename=%r' % bdf_filename_inc
+            raise IOError(msg)
         bdf_filename = bdf_filename_inc
 
         if bdf_filename in self.active_filenames:
             msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
                 % (bdf_filename, self.active_filenames)
+            print(msg)
             raise RuntimeError(msg)
-        elif os.path.isdir(bdf_filename):
+        elif os.path.isdir(_filename(bdf_filename)):
             current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
-            raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
-                bdf_filename_inc, current_filename))
-        elif not os.path.isfile(bdf_filename):
-            raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
+            msg = 'Found a directory: bdf_filename=%r\ncurrent_file=%s' % (bdf_filename_inc, current_filename)
+            print(msg)
+            raise IOError(msg)
+        elif not os.path.isfile(_filename(bdf_filename)):
+            msg = 'Not a file: bdf_filename=%r' % bdf_filename
+            print(msg)
+            raise IOError(msg)
 
     def _open_file(self, bdf_filename, basename=False, check=True):
         """
@@ -2735,7 +2740,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
 
         if check:
-            if not os.path.exists(bdf_filename_inc):
+            if not os.path.exists(_filename(bdf_filename_inc)):
                 msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
                 msg += 'cwd: %r\n' % os.getcwd()
                 msg += 'include_dir: %r\n' % self.include_dir
@@ -2750,17 +2755,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
                     % (bdf_filename, self.active_filenames)
                 raise RuntimeError(msg)
-            elif os.path.isdir(bdf_filename):
+            elif os.path.isdir(_filename(bdf_filename)):
                 current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
                 raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
                     bdf_filename_inc, current_filename))
-            elif not os.path.isfile(bdf_filename):
+            elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
         self.log.debug('opening %r' % bdf_filename)
         self.active_filenames.append(bdf_filename)
 
         #print('ENCODING - _open_file=%r' % self._encoding)
-        bdf_file = codec_open(bdf_filename, 'rU', encoding=self._encoding)
+        bdf_file = codec_open(_filename(bdf_filename), 'rU', encoding=self._encoding)
         return bdf_file
 
     def _parse_cards(self, cards, card_count):

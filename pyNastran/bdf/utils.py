@@ -57,14 +57,6 @@ def _clean_comment(comment, end=-1):
     return comment
 
 
-class CardParseSyntaxError(SyntaxError):
-    """
-    Class that is used for testing.
-    Users should just treat this as a SyntaxError.
-    """
-    pass
-
-
 def _to_fields_mntpnt1(card_lines, card_name):
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines

@@ -480,8 +480,11 @@ class NastranIO(object):
             self.modelType = model.modelType
             model.read_bdf(bdf_filename,
                            punch=punch, xref=False)
-            model.cross_reference(xref=True, xref_loads=xref_loads,
-                                  xref_constraints=False)
+            # model.cross_reference(xref=True, xref_loads=xref_loads,
+                                  # xref_constraints=False)
+            model.safe_cross_reference(xref=True, xref_loads=xref_loads,
+                                       xref_constraints=False)
+
 
         # get indicies and transformations for displacements
         self.i_transform, self.transforms = model.get_displcement_index_transforms()
@@ -609,6 +612,7 @@ class NastranIO(object):
                 xyz_cid0[i, :] = xyz
                 points.InsertPoint(i, *xyz)
                 self.nidMap[nid] = i
+        print('id =', self.nidMap[32225565])
         self.xyz_cid0 = xyz_cid0
 
         maxi = xyz_cid0.max(axis=0)
@@ -650,6 +654,7 @@ class NastranIO(object):
 
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
+
         self.set_spc_grid(dim_max, model, nid_to_pid_map)
         icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
         assert icase is not None
@@ -680,7 +685,7 @@ class NastranIO(object):
             formii = formi[2]
             icase = self._plot_pressures(model, cases, formii, icase, subcase_id, subcase)
             assert icase is not None
-            icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
+            # icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
             if len(formii):
                 form0.append(formi)
 
@@ -1990,37 +1995,68 @@ class NastranIO(object):
             form0.append(('PropertyID', icase, []))
             icase += 1
 
-        if 0:
+        if 1:
             i = 0
             nelements = self.element_ids.shape[0]
             normals = zeros((nelements, 3), dtype='float32')
             xoffset = zeros(nelements, dtype='float32')
             yoffset = zeros(nelements, dtype='float32')
             zoffset = zeros(nelements, dtype='float32')
+            element_dim = zeros(nelements, dtype='int32')
             for eid, element in sorted(iteritems(model.elements)):
                 if isinstance(element, ShellElement):
+                    element_dimi = 2
                     normali = element.Normal()
                     #pid = element.pid
                     pid = element.pid
                     pid_type = pid.type
                     if pid_type == 'PSHELL':
-                        zi = element.zOffset + element.pid.z1
+                        z0 = element.pid.z1
                     elif pid_type == 'PCOMP':
-                        zi = element.zOffset + element.pid.z0
+                        z0 = element.pid.z0
                     else:
                         raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
+
+                    if z0 is None:
+                        if element.type in ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6']:
+                            z0 = (element.T1 + element.T2 + element.T3) / 3.
+                        if element.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR']:
+                            z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                        else:
+                            raise NotImplementedError(element.type)
+                    zi = element.zOffset + z0
+
+                    ie = self.eidMap[eid]
+                    normals[ie, :] = normali
+                    xoffset[ie] = zi * normali[0]
+                    yoffset[ie] = zi * normali[1]
+                    zoffset[ie] = zi * normali[2]
+                elif element.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
+                    ie = self.eidMap[eid]
+                    element_dimi = 3
+                elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM']:
+                    ie = self.eidMap[eid]
+                    element_dimi = 1
+                elif element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CVISC',
+                                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', ]:
+                    ie = self.eidMap[eid]
+                    element_dimi = 0
                 else:
-                    i += 1
-                    continue
-                normals[i, :] = normali
-                xoffset[i] = zi * normali[0]
-                yoffset[i] = zi * normali[1]
-                zoffset[i] = zi * normali[2]
+                    ie = self.eidMap[eid]
+                    element_dimi = -1
+                    print('element.type=%s doesnt have a dimension' % element.type)
+
+                element_dim[ie] = element_dimi
                 i += 1
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
             # subcase_id, resultType, vector_size, location, dataFormat
+            cases[(0, icase, 'ElementDim', 1, 'centroid', '%i')] = element_dim
+            form0.append(('ElementDim', icase, []))
+            icase += 1
+
             cases[(0, icase, 'NormalX', 1, 'centroid', '%.1f')] = normals[:, 0]
             form0.append(('NormalX', icase, []))
             icase += 1
@@ -2142,7 +2178,7 @@ class NastranIO(object):
 
             if key == 'LOAD':
                 p0 = array([0., 0., 0.], dtype='float32')
-                pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
+                centroidal_pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
                 found_load = True
             elif key in ('TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)'):
                 temperatures = self._get_temperatures_array(model, load_case_id)
@@ -2152,11 +2188,11 @@ class NastranIO(object):
                 raise NotImplementedError(key)
 
         if found_load:
-            if abs(pressures).max():
+            if abs(centroidal_pressures).max():
                 # print('iload=%s' % iload)
                 # print(case_name)
                 # subcase_id, resultType, vector_size, location, dataFormat
-                cases[(0, 'Pressure', 1, 'centroid', '%.1f')] = pressures
+                cases[(0, 'Pressure', 1, 'centroid', '%.1f')] = centroidal_pressures
                 form0.append(('Pressure', icase, []))
                 icase += 1
 
@@ -2242,7 +2278,8 @@ class NastranIO(object):
         loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
 
         eids = sorted(model.elements.keys())
-        pressures = zeros(len(model.elements), dtype='float32')
+        centroidal_pressures = zeros(len(model.elements), dtype='float32')
+        nodal_pressures = zeros(len(self.node_ids), dtype='float32')
 
         forces = zeros((nnodes, 3), dtype='float32')
         spcd = zeros((nnodes, 3), dtype='float32')
@@ -2290,7 +2327,7 @@ class NastranIO(object):
                         k = load.pressures[0] * scale / 3.
                         # TODO: doesn't consider load.eids for distributed pressures???
                         for nid in node_ids[3:]:
-                            pressures[self.nidMap[nid]] += k
+                            centroidal_pressures[self.nidMap[nid]] += k
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         eid = elem.eid
                         node_ids = elem.node_ids
@@ -2299,7 +2336,7 @@ class NastranIO(object):
                         for nid in node_ids[4:]:
                             if nid in self.dependents_nodes:
                                 print('    nid=%s is a dependent node and has an PLOAD4 applied\n%s' % (nid, str(load)))
-                            pressures[self.nidMap[nid]] += k
+                            centroidal_pressures[self.nidMap[nid]] += k
                     else:
                         print('    PLOAD4 is unhandled\n%s' % str(load))
 
@@ -2340,7 +2377,7 @@ class NastranIO(object):
                     cards_ignored[load.type] = True
                     print('  NastranIOv _get_forces_moments_array - unsupported load.type = %s' % load.type)
 
-        return pressures, forces, spcd
+        return centroidal_pressures, forces, spcd
 
     def load_nastran_results(self, op2_filename, dirname):
         """

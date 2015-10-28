@@ -70,15 +70,30 @@ def print_bad_path(path):
         string with informations whether access to parts of the path
         is possible
     """
-    path = os.path.abspath(path)
-    npath = os.path.dirname(path)
-    res = [path]
-    while path != npath:
-        path, npath = npath, os.path.dirname(npath)
-        res.append(path)
-    msg = {True: "passed", False: "failed"}
-    return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
+    raw_path = path
+    if len(filename) > 255:
+        path = os.path.abspath(_filename(path))
+        npath = os.path.dirname(path)
+        res = [path]
+        while path != npath:
+            path, npath = npath, os.path.dirname(npath)
+            res.append(path)
+        msg = {True: "passed", False: "failed"}
+        return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i[4:]) for i in res])
+    else:
+        path = os.path.abspath(path)
+        npath = os.path.dirname(path)
+        res = [path]
+        while path != npath:
+            path, npath = npath, os.path.dirname(npath)
+            res.append(path)
+        msg = {True: "passed", False: "failed"}
+        return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
 
+def _filename(filename):
+    if len(filename) > 255:
+        return "\\\\?\\" + filename
+    return filename
 
 def __object_attr(obj, mode, keys_to_skip, attr_type):
     """list object attributes of a given type"""

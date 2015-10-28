@@ -21,7 +21,7 @@ from six import iteritems, integer_types
 from six.moves import zip, range
 import multiprocessing as mp
 
-from numpy import array, cross, zeros, dot, allclose
+from numpy import array, cross, zeros, dot, allclose, mean
 from numpy.linalg import norm
 
 
@@ -432,6 +432,11 @@ class BDFMethods(object):
         else:
             p = array(p0)
 
+        if eids is None:
+            eids = list(self.element_ids)
+        if nids is None:
+            nids = list(self.node_ids)
+
         load_case = self.loads[loadcase_id]
         #for (key, load_case) in iteritems(self.loads):
             #if key != loadcase_id:
@@ -668,7 +673,13 @@ class BDFMethods(object):
                         self.log.debug('case=%s etype=%r loadtype=%r not supported' % (loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 #elem = load.eid
+                is_avg_pressure = False
                 pressure = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
+                if min(load.pressures) != max(load.pressures):
+                    msg = '%s\npressure.min=%s != pressure.max=%s using average of %%s; load=%s eid=%%s'  % (
+                        str(load), min(load.pressures), max(load.pressures), load.sid)
+                    is_avg_pressure = True
+
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                 assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
                 assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
@@ -677,8 +688,12 @@ class BDFMethods(object):
                     if eid not in eids:
                         continue
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                        if is_avg_pressure:
+                            pressure = mean(load.pressures[:3])
+                            print(msg % (pressure, eid))
+
                         # triangles
-                        nodes = elem.nodeIDs()
+                        nodes = elem.node_ids
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                         axb = cross(n1 - n2, n1 - n3)
                         nunit = norm(axb)
@@ -695,8 +710,11 @@ class BDFMethods(object):
                         centroid = (n1 + n2 + n3) / 3.
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
-                        nodes = elem.nodeIDs()
+                        nodes = elem.node_ids
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
+                        if is_avg_pressure:
+                            pressure = mean(load.pressures)
+                            print(msg % (pressure, eid))
                         axb = cross(n1 - n3, n2 - n4)
                         nunit = norm(axb)
                         area = 0.5 * nunit
@@ -712,6 +730,8 @@ class BDFMethods(object):
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        if is_avg_pressure:
+                            raise NotImplementedError()
                         A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
@@ -1069,9 +1089,9 @@ class BDFMethods(object):
             elif load.type == 'PLOAD4':
                 #elem = load.eid
                 pressure = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
-                if load.pressures.min() != load.pressures.max():
+                if min(load.pressures) != max(load.pressures):
                     msg = '%s\npressure.min=%s != pressure.max=%s'  % (
-                        str(load), load.pressures.min(), load.pressures.max())
+                        str(load), min(load.pressures), max(load.pressures))
                     raise RuntimeError(msg)
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                 assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)

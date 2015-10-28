@@ -148,7 +148,7 @@ class WriteMesh(object):
 
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
-                  interspersed=True, enddata=None, close=True):
+                  interspersed=False, enddata=None, close=True):
         """
         Writes the BDF.
 
@@ -184,8 +184,9 @@ class WriteMesh(object):
         #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
-        if encoding is None:
-            encoding = sys.getdefaultencoding()
+        if encoding is not None:
+            pass
+            # encoding = sys.getdefaultencoding()
         else:
             encoding = self._encoding
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
@@ -1015,7 +1016,7 @@ class WriteMesh(object):
             for reject in reject_lines:
                 reject2 = reject.rstrip()
                 if reject2:
-                    msg.append(str(reject2) + '\n')
+                    msg.append('%s\n' % reject2)
         outfile.write(''.join(msg))
 
     def _write_rigid_elements(self, outfile, size=8, is_double=False):

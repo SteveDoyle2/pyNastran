@@ -24,6 +24,7 @@ from six.moves import zip
 from numpy import array, cross, allclose, unique, int32
 from numpy.linalg import norm
 
+from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, expand_thru_by, range
@@ -107,7 +108,7 @@ class LOAD(LoadCombination):
         msg = ''
         (typesFound, forceLoads, momentLoads,
          forceConstraints, momentConstraints,
-         gravityLoads) = self.organizeLoads(model)
+         gravityLoads) = self.organize_loads(model)
 
         nids = []
         for nid in forceLoads:
@@ -127,12 +128,9 @@ class LOAD(LoadCombination):
         #                     _F(NOEUD='N1',
         #                        FZ=-500.0),)
 
-        #print("nids = ",nids)
         spaces = "                           "
         for nid in sorted(nids):  # ,load in sorted(iteritems(forceLoads))
-            #print("nid = ", nid)
             msg += spaces + "_F(NOEUD='%s%s'," % (grid_word, nid)
-            #print("load = ", load)
 
             if nid in forceLoads:
                 force = forceLoads[nid]
@@ -212,6 +210,10 @@ class LOAD(LoadCombination):
         return (scale_factors, loads)
 
     def organizeLoads(self, model):
+        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        return self.organize_loads(model)
+
+    def organize_loads(self, model):
         """
         Figures out magnitudes of the loads to be applied to the various nodes.
         This includes figuring out scale factors.
@@ -339,6 +341,10 @@ class GRAV(BaseCard):
         return [self]
 
     def organizeLoads(self, model):
+        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        return self.organize_loads(model)
+
+    def organize_loads(self, model):
         typesFound = [self.type]
         forceLoads = {}
         momentLoads = {}
@@ -360,6 +366,11 @@ class GRAV(BaseCard):
         #return msg
 
     def cross_reference(self, model):
+        msg = ' which is required by GRAV sid=%s' % self.sid
+        self.cid = model.Coord(self.cid, msg=msg)
+
+    def safe_cross_reference(self, model):
+        # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ' which is required by GRAV sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
 
@@ -605,6 +616,10 @@ class Force(Load):
         return(scale_factors, loads)
 
     def organizeLoads(self, model):
+        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        return self.organize_loads(model)
+
+    def organize_loads(self, model):
         (scale_factors, forceLoads) = self.get_reduced_loads()
 
         typesFound = [self.type]
@@ -664,6 +679,10 @@ class Moment(Load):
         return(scale_factors, loads)
 
     def organizeLoads(self, model):
+        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        return self.organize_loads(model)
+
+    def organize_loads(self, model):
         (scale_factors, momentLoads) = self.get_reduced_loads()
 
         typesFound = [self.type]
@@ -741,6 +760,13 @@ class FORCE(Force):
         msg = ' which is required by FORCE sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
 
+    def safe_cross_reference(self, model):
+        msg = ' which is required by FORCE sid=%s' % self.sid
+        # try:
+        self.cid = model.Coord(self.cid, msg=msg)
+        # except KeyError:
+            # pass
+
     def raw_fields(self):
         list_fields = ['FORCE', self.sid, self.node, self.Cid(),
                        self.mag] + list(self.xyz)
@@ -799,6 +825,17 @@ class FORCE1(Force):
             self.g2 = data[4]
 
     def cross_reference(self, model):
+        """
+        .. todo:: cross reference and fix repr function
+        """
+        msg = ' which is required by FORCE1 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
+        self.xyz = self.g2.get_position() - self.g1.get_position()
+        self.normalize()
+
+    def safe_cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -876,6 +913,37 @@ class FORCE2(Force):
             self.g4 = data[6]
 
     def cross_reference(self, model):
+        """
+        .. todo:: cross reference and fix repr function
+        """
+        msg = ' which is required by FORCE2 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
+        self.g3 = model.Node(self.g3, msg=msg)
+        self.g4 = model.Node(self.g4, msg=msg)
+
+        v12 = self.g2.get_position() - self.g1.get_position()
+        v34 = self.g4.get_position() - self.g3.get_position()
+        try:
+            v12 /= norm(v12)
+        except FloatingPointError:
+            msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
+            msg += 'g1.get_position()=%s\n' % self.g1.get_position()
+            msg += 'g2.get_position()=%s' % self.g2.get_position()
+            raise FloatingPointError(msg)
+
+        try:
+            v34 /= norm(v34)
+        except FloatingPointError:
+            msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
+            msg += 'g3.get_position()=%s\n' % self.g3.get_position()
+            msg += 'g4.get_position()=%s' % self.g4.get_position()
+            raise FloatingPointError(msg)
+        self.xyz = cross(v12, v34)
+        self.normalize()
+
+    def safe_cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1001,6 +1069,15 @@ class MOMENT(Moment):
         #msg = ' which is required by MOMENT sid=%s' % self.sid
         pass
 
+    @property
+    def node_id(self):
+        if isinstance(self.node, integer_types):
+            return self.node
+        return self.node.nid
+
+    def safe_cross_reference(self, model):
+        pass
+
     def raw_fields(self):
         list_fields = ['MOMENT', self.sid, self.node, self.Cid(),
                        self.mag] + list(self.xyz)
@@ -1071,6 +1148,17 @@ class MOMENT1(Moment):
         self.xyz = None
 
     def cross_reference(self, model):
+        """
+        .. todo:: cross reference and fix repr function
+        """
+        msg = ' which is required by MOMENT1 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
+        self.xyz = self.g2.get_position() - self.g1.get_position()
+        self.normalize()
+
+    def safe_cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1153,6 +1241,23 @@ class MOMENT2(Moment):
             assert len(xyz) == 3, 'xyz=%s' % str(xyz)
 
     def cross_reference(self, model):
+        """
+        .. todo:: cross reference and fix repr function
+        """
+        msg = ' which is required by MOMENT2 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
+        self.g3 = model.Node(self.g3, msg=msg)
+        self.g4 = model.Node(self.g4, msg=msg)
+
+        v12 = self.g2.get_position() - self.g1.get_position()
+        v34 = self.g4.get_position() - self.g3.get_position()
+        v12 = v12 / norm(v12)
+        v34 = v34 / norm(v34)
+        self.xyz = cross(v12, v34)
+
+    def safe_cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1740,6 +1845,17 @@ class PLOAD4(Load):
         return self.cid.cid
 
     def cross_reference(self, model):
+        msg = ' which is required by PLOAD4 sid=%s' % self.sid
+        self.eid = model.Element(self.eid, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
+        if self.g1 is not None:
+            self.g1 = model.Node(self.g1, msg=msg)
+        if self.g34 is not None:
+            self.g34 = model.Node(self.g34, msg=msg)
+        if self.eids:
+            self.eids = model.Elements(self.eids, msg=msg)
+
+    def safe_cross_reference(self, model):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)

@@ -68,9 +68,7 @@ from collections import defaultdict
 import warnings
 import traceback
 from numpy import zeros, argsort, arange, array_equal
-
-class CrossReferenceError(RuntimeError):
-    pass
+from pyNastran.bdf.errors import CrossReferenceError
 
 
 class XrefMesh(object):
@@ -94,7 +92,7 @@ class XrefMesh(object):
         # for elem in model.elements:
             # elem.check_unique_nodes()
 
-    def _safe_cross_reference(self, xref=True,
+    def safe_cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,
                         xref_properties=True,
@@ -103,9 +101,32 @@ class XrefMesh(object):
                         xref_loads=True,
                         xref_constraints=True,
                         xref_aero=True,
-                        xref_sets=True):
+                        xref_sets=True,
+                        xref_optimization=True):
+
+        self._cross_reference_nodes()
+        self._cross_reference_coordinates()
+
         if xref_elements:
             self._safe_cross_reference_elements()
+        if xref_properties:
+            self._cross_reference_properties()
+        if xref_masses:
+            self._cross_reference_masses()
+        if xref_materials:
+            self._cross_reference_materials()
+
+        if xref_aero:
+            self._cross_reference_aero()
+        if xref_constraints:
+            self._cross_reference_constraints()
+        if xref_loads:
+            self._safe_cross_reference_loads()
+        if xref_sets:
+            self._cross_reference_sets()
+        if xref_optimization:
+            self._cross_reference_optimization()
+
 
     def _safe_cross_reference_elements(self):
         """
@@ -125,7 +146,10 @@ class XrefMesh(object):
                     #self.log.error(msg)
                     #raise
         for elem in itervalues(self.rigidElements):
-            elem.safe_cross_reference(self)
+            try:
+                elem.safe_cross_reference(self)
+            except AttributeError:
+                elem.cross_reference(self)
 
     def uncross_reference(self):
         self._uncross_reference_nodes()
@@ -649,6 +673,26 @@ class XrefMesh(object):
                 self._stored_xref_errors.append((load, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
+
+    def _safe_cross_reference_loads(self):
+        """
+        Links the loads to nodes, coordinate systems, and other loads.
+        """
+        for (lid, sid) in iteritems(self.loads):
+            for load in sid:
+                load.safe_cross_reference(self)
+
+        for (lid, sid) in iteritems(self.dloads):
+            for load in sid:
+                load.safe_cross_reference(self)
+        for (lid, sid) in iteritems(self.dload_entries):
+            for load in sid:
+                load.safe_cross_reference(self)
+
+        for key, darea in iteritems(self.dareas):
+            darea.safe_cross_reference(self)
+        for key, dphase in iteritems(self.dphases):
+            dphase.safe_cross_reference(self)
 
     def _cross_reference_sets(self):
         for set_obj in self.asets:

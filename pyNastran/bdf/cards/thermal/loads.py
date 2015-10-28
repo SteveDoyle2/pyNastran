@@ -421,6 +421,9 @@ class TEMP(ThermalLoad):
     def cross_reference(self, model):
         pass
 
+    def safe_cross_reference(self, model):
+        pass
+
     def raw_fields(self):
         """Writes the TEMP card"""
         list_fields = ['TEMP', self.sid]
