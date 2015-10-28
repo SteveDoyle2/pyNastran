@@ -186,9 +186,11 @@ class WriteMesh(object):
                                            interspersed, size, is_double)
         if encoding is not None:
             pass
-            # encoding = sys.getdefaultencoding()
         else:
             encoding = self._encoding
+            if encoding is None:
+                encoding = sys.getdefaultencoding()
+
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
         if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):

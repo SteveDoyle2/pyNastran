@@ -612,7 +612,6 @@ class NastranIO(object):
                 xyz_cid0[i, :] = xyz
                 points.InsertPoint(i, *xyz)
                 self.nidMap[nid] = i
-        print('id =', self.nidMap[32225565])
         self.xyz_cid0 = xyz_cid0
 
         maxi = xyz_cid0.max(axis=0)

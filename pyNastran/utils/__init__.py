@@ -71,7 +71,7 @@ def print_bad_path(path):
         is possible
     """
     raw_path = path
-    if len(filename) > 255:
+    if len(path) > 255:
         path = os.path.abspath(_filename(path))
         npath = os.path.dirname(path)
         res = [path]

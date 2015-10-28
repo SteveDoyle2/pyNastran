@@ -310,6 +310,10 @@ class SPCD(Load):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
 
+    def safe_cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
+
     def getLoads(self):
         return [self]
 

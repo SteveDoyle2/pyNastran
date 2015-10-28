@@ -3,6 +3,10 @@ import os
 import sys
 from setuptools import setup, find_packages
 
+PY2 = False
+if sys.version_info < (3, 0):
+    PY2 = True
+
 import pyNastran
 packages = find_packages()+['gui/icons/*.*']
 #print "packages = ",packages
@@ -15,8 +19,14 @@ packages = find_packages()+['gui/icons/*.*']
     #extra['use_2to3_fixers'] = ['your.fixers']
 
 py2_gui_scripts = []
+py2_packages = []
 if sys.version_info <= (3,):
     py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
+    py2_packages += [
+        'vtk >= 5.10.0',
+        'pillow >= 2.7.0',
+        #'wx >= 2.8.12.0',
+    ]
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
@@ -56,12 +66,10 @@ setup(name='pyNastran',
           'scipy >= 0.15.0',
           'docopt == 0.6.2',
           #'matplotlib >= 1.3.0',
-          'vtk >= 5.10.0',
-          'pillow >= 2.7.0',
           'six >= 1.8.0',
-          #'wx >= 2.8.12.0',
           #'cython',
-      ],#{'': ['license.txt']}
+      ] + py2_packages,
+      #{'': ['license.txt']}
       #package_data={'': ['*.png']},
       #data_files=[(icon_path, icon_files2)],
       package_data = {
