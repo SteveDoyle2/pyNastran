@@ -187,9 +187,10 @@ class LOAD(LoadCombination):
                 raise RuntimeError('the load have not been cross-referenced')
 
             for load in loads_pack:
-                if (isinstance(load, Force) or isinstance(load, Moment) or
-                    isinstance(load, PLOAD2)  or isinstance(load, PLOAD4) or
-                    isinstance(load, GRAV)):
+                if ['FORCE', 'FORCE1', 'FORCE2',
+                    'MOMENT', 'MOMENT1', 'MOMENT2',
+                    'PLOAD1', 'PLOAD2', 'PLOAD4',
+                    'GRAV', 'ACCEL', 'ACCEL1']:
                     loads.append(load)
                     scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):
@@ -199,9 +200,6 @@ class LOAD(LoadCombination):
                     loads += reduced_loads
                     scale_factors += [scale * j_scale
                                       for j_scale in reduced_scale_factors]
-                elif load.type in ['PLOAD', 'PLOAD1']:
-                    loads.append(load)
-                    scale_factors.append(scale)
                 else:
                     msg = ('%s isnt supported in get_reduced_loads method'
                            % load.__class__.__name__)
@@ -290,6 +288,13 @@ class LOAD(LoadCombination):
         else:
             return self.comment + print_card_16(card)
 
+    def uncross_reference(self):
+        ids = []
+        for i, load_id in enumerate(self.loadIDs):
+            idi = self.LoadID(load_id)
+            ids.append(idi)
+        self.loadIDs = ids
+
 
 class GRAV(BaseCard):
     """
@@ -338,6 +343,10 @@ class GRAV(BaseCard):
                                                    'N=%s' % str(self.N))
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def organizeLoads(self, model):
@@ -373,6 +382,9 @@ class GRAV(BaseCard):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ' which is required by GRAV sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
+
+    def uncross_reference(self, model):
+        self.cid = self.Cid()
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -460,7 +472,19 @@ class ACCEL(BaseCard):
         else:
             raise NotImplementedError(data)
 
+    #def get_reduced_loads(self):
+        #scale_factors = [1.]
+        #loads = self.F()
+        #return(scale_factors, loads)
+
     def cross_reference(self, model):
+        msg = ' which is required by ACCEL sid=%s' % self.sid
+        self.cid = model.Coord(self.cid, msg=msg)
+
+    def uncross_reference(self, model):
+        self.cid = self.Cid()
+
+    def safe_cross_reference(self, model):
         msg = ' which is required by ACCEL sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
 
@@ -470,6 +494,10 @@ class ACCEL(BaseCard):
         return self.cid.cid
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):
@@ -552,6 +580,10 @@ class ACCEL1(BaseCard):
         return nodeIDs
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):
@@ -601,6 +633,10 @@ class Force(Load):
         return (False, self.node, xyz)  # enforced displacement
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def F(self):
@@ -667,6 +703,10 @@ class Moment(Load):
         return (False, self.node, xyz)  # enforced displacement
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def getReducedLoads(self):
@@ -760,6 +800,9 @@ class FORCE(Force):
         msg = ' which is required by FORCE sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
 
+    def uncross_reference(self):
+        self.cid = self.Cid()
+
     def safe_cross_reference(self, model):
         msg = ' which is required by FORCE sid=%s' % self.sid
         # try:
@@ -835,6 +878,16 @@ class FORCE1(Force):
         self.xyz = self.g2.get_position() - self.g1.get_position()
         self.normalize()
 
+    def uncross_reference(self):
+        self.node =self.NodeID()
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+
+    def uncross_reference(self):
+        self.node =self.NodeID()
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+
     def safe_cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
@@ -857,6 +910,11 @@ class FORCE1(Force):
         return self.g2.nid
 
     def NodeID(self):
+        self.deprecated('self.NodeID()', 'self.node_id')
+        return self.node_id
+
+    @property
+    def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
         return self.node.nid
@@ -1158,6 +1216,11 @@ class MOMENT1(Moment):
         self.xyz = self.g2.get_position() - self.g1.get_position()
         self.normalize()
 
+    def uncross_reference(self):
+        self.node =self.NodeID()
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+
     def safe_cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
@@ -1256,6 +1319,13 @@ class MOMENT2(Moment):
         v12 = v12 / norm(v12)
         v34 = v34 / norm(v34)
         self.xyz = cross(v12, v34)
+
+    def uncross_reference(self):
+        self.node =self.NodeID()
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+        self.g3 = self.G3()
+        self.g4 = self.G4()
 
     def safe_cross_reference(self, model):
         """
@@ -1382,6 +1452,10 @@ class GMLOAD(Load):
         #return self.node.nid
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):
@@ -1434,6 +1508,10 @@ class PLOAD(Load):
         pass
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):
@@ -1658,6 +1736,10 @@ class PLOAD1(Load):
                 momentConstraints, gravityLoads)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def Eid(self):
@@ -1712,6 +1794,10 @@ class PLOAD2(Load):
         pass
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):
@@ -1804,6 +1890,10 @@ class PLOAD4(Load):
 
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def transformLoad(self):
@@ -1969,6 +2059,10 @@ class PLOADX1(Load):
         pass
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):

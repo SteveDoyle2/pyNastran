@@ -253,13 +253,15 @@ class WriteMesh(object):
         #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
-        if encoding is None:
-            encoding = sys.getdefaultencoding()
+        if encoding is not None:
+            pass
         else:
             encoding = self._encoding
+            if encoding is None:
+                encoding = sys.getdefaultencoding()
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
-        if isinstance(out_filename, (file, StringIO)):
+        if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
             outfile = out_filename
         else:
             if PY2:

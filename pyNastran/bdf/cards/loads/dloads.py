@@ -113,6 +113,10 @@ class RLOAD1(TabularLoad):
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def Tc(self):
@@ -295,6 +299,10 @@ class RLOAD2(TabularLoad):
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def LoadID(self):
@@ -404,6 +412,10 @@ class TLOAD1(TabularLoad):
             raise NotImplementedError(data)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def cross_reference(self, model):
@@ -578,6 +590,10 @@ class TLOAD2(TabularLoad):
         return f
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def cross_reference(self, model):

@@ -315,6 +315,10 @@ class CTRIA3(TriShell):
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
@@ -475,6 +479,10 @@ class CTRIA6(TriShell):
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -638,6 +646,10 @@ class CTRIAR(TriShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     #def _verify(self, xref=False):
         #eid = self.Eid()
         #pid = self.Pid()
@@ -750,12 +762,14 @@ class CTRIAX(TriShell):
             #: Property ID
             self.pid = integer(card, 2, 'pid')
 
-            nids = [integer_or_blank(card, 3, 'n1'),
-                    integer_or_blank(card, 4, 'n2'),
-                    integer_or_blank(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4'),
-                    integer_or_blank(card, 7, 'n5'),
-                    integer_or_blank(card, 8, 'n6')]
+            nids = [
+                integer_or_blank(card, 3, 'n1'),
+                integer_or_blank(card, 4, 'n2'),
+                integer_or_blank(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4'),
+                integer_or_blank(card, 7, 'n5'),
+                integer_or_blank(card, 8, 'n6'),
+                ]
             self.thetaMcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
             assert len(card) <= 10, 'len(CTRIAX card) = %i' % len(card)
         else:
@@ -814,6 +828,10 @@ class CTRIAX(TriShell):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
@@ -871,7 +889,7 @@ class CTRIAX6(TriShell):
                 integer(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4'),
                 integer(card, 7, 'n5'),
-                integer_or_blank(card, 8, 'n6')
+                integer_or_blank(card, 8, 'n6'),
             ]
 
             #: theta
@@ -886,6 +904,10 @@ class CTRIAX6(TriShell):
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.mid = model.Material(self.mid)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.mid = self.Mid()
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -967,10 +989,6 @@ class CTRIAX6(TriShell):
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
@@ -1145,6 +1163,10 @@ class CSHEAR(QuadShell):
         msg = ' which is required by CSHEAR eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
 
     def Normal(self):
         (n1, n2, n3, n4) = self.get_node_positions()
@@ -1350,6 +1372,10 @@ class CQUAD4(QuadShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
@@ -1511,6 +1537,10 @@ class CQUADR(QuadShell):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
@@ -1614,6 +1644,10 @@ class CQUAD(QuadShell):
         msg = ' which is required by CQUAD eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
 
     def Thickness(self):
         """
@@ -1730,6 +1764,10 @@ class CQUAD8(QuadShell):
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1880,6 +1918,10 @@ class CQUADX(QuadShell):
         msg = ' which is required by CQUADX eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
 
     def Thickness(self):
         """

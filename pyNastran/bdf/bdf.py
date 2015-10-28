@@ -118,7 +118,6 @@ from pyNastran.bdf.bdf_Methods import BDFMethods
 from pyNastran.bdf.bdfInterface.getCard import GetMethods
 from pyNastran.bdf.bdfInterface.addCard import AddMethods
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
-from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
 from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError
@@ -2599,7 +2598,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 except IOError:
                     crash_name = 'pyNastran_crash.bdf'
                     self._dump_file(crash_name, lines, i+1)
-                    msg = 'There was an invalid filename found whlie parsing.\n'
+                    msg = 'There was an invalid filename found while parsing.\n'
                     msg += 'Check the end of %r\n' % crash_name
                     msg += 'bdf_filename2 = %r' % bdf_filename2
                     raise IOError(msg)
@@ -2661,7 +2660,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return executive_control_lines, case_control_lines, bulk_data_lines
 
     def _dump_file(self, bdf_filename, lines, i):
-        with codec_open(_filename(bdf_filename),'w', encoding=self._encoding) as crash_file:
+        with codec_open(_filename(bdf_filename), 'w', encoding=self._encoding) as crash_file:
             for line in lines[:i]:
                 crash_file.write(line)
 
@@ -2698,7 +2697,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
             msg += 'cwd: %r\n' % os.getcwd()
             msg += 'include_dir: %r\n' % self.include_dir
-            asdf
             msg += print_bad_path(bdf_filename_inc)
             print(msg)
             raise IOError(msg)
@@ -2765,7 +2763,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         self.active_filenames.append(bdf_filename)
 
         #print('ENCODING - _open_file=%r' % self._encoding)
-        bdf_file = codec_open(_filename(bdf_filename), 'rU', encoding=self._encoding)
+        bdf_file = codec_open(_filename(bdf_filename), 'r', encoding=self._encoding)
         return bdf_file
 
     def _parse_cards(self, cards, card_count):

@@ -176,6 +176,13 @@ class CBUSH(BushElement):
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
 
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.pid = self.Pid()
+        #if self.cid is not None:
+        self.cid = self.Cid()
+
     def raw_fields(self):
         if self.g0 is not None:
             x = [self.g0, None, None]

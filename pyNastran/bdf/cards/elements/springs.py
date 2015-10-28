@@ -132,6 +132,10 @@ class CELAS1(SpringElement):
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def raw_fields(self):
         nodes = self.node_ids
         list_fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
@@ -210,6 +214,9 @@ class CELAS2(SpringElement):
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -343,6 +350,10 @@ class CELAS3(SpringElement):
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
@@ -426,6 +437,9 @@ class CELAS4(SpringElement):
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
 
     def raw_fields(self):
         list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]

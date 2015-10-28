@@ -308,7 +308,7 @@ def get_element_stats(fem1, fem2):
         for (key, loads) in sorted(iteritems(fem1.loads)):
             for load in loads:
                 try:
-                    allLoads = load.getLoads()
+                    allLoads = load.get_loads()
                     if not isinstance(allLoads, list):
                         raise TypeError('allLoads should return a list...%s'
                                         % (type(allLoads)))

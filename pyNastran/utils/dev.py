@@ -10,10 +10,19 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
     Gets the list of all the files with a given extension in the specified directory
 
-    :param dirname:   the directory name
-    :param extension: list of filetypes to get (default='.txt')
-    :param maxSize:   size in MB for max file size
-    :returns: list of all the files with a given extension in the specified directory
+    Parameters
+    ----------
+    dirname : str
+        the directory name
+    extension : str; default='.txt'
+        list of filetypes to get
+    max_size : float; default=100.0
+        size in MB for max file size
+
+    Returns
+    -------
+    files : List[str]
+        list of all the files with a given extension in the specified directory
     """
     if not os.path.exists(dirname):
         return []
@@ -267,9 +276,8 @@ if __name__ == '__main__':  # pragma: no cover
     #print write_object_attributes('dictA', dictA, isClass=False)
     msg = write_object_attributes('dictB', dictB, nbase=0)
     print(msg)
-    f = open('junk.py', 'wb')
-    f.write(msg)
-    f.close()
+    with open('junk.py', 'wb') as f:
+        f.write(msg)
 
     import junk
 

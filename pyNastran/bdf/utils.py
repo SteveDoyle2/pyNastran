@@ -17,6 +17,8 @@ import warnings
 from numpy import unique, cross, dot, array
 
 import pyNastran
+from pyNastran.bdf.errors import CardParseSyntaxError
+
 
 _REMOVED_LINES = [
     '$EXECUTIVE CONTROL DECK',

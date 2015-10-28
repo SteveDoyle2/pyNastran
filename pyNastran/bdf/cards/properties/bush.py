@@ -27,6 +27,9 @@ class BushingProperty(Property):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
 
 class PBUSH(BushingProperty):
     type = 'PBUSH'

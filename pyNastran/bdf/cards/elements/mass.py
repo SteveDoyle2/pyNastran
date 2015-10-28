@@ -616,6 +616,10 @@ class CONM1(PointMassElement):
         self.nid = model.Node(self.Nid(), msg=msg)
         self.cid = model.Coord(self.Cid(), msg=msg)
 
+    def uncross_reference(self, model):
+        self.nid = self.Nid()
+        self.cid = self.Cid()
+
     def MassMatrix(self):
         return self.massMatrix
 

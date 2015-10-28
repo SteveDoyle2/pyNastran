@@ -116,6 +116,10 @@ class LoadCombination(Load):  # LOAD, DLOAD
             raise NotImplementedError(lid)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         """
         .. note:: requires a cross referenced load
         """
@@ -123,7 +127,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
         for allLoads in self.loadIDs:
             for load in allLoads:
                 try:
-                    loads += load.getLoads()
+                    loads += load.get_loads()
                 except RuntimeError:
                     raise RuntimeError('recursion error on load=\n%s' % str(load))
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
@@ -170,6 +174,10 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             return lid.sid
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return self.lid
 
     def Lid(self):
@@ -315,6 +323,10 @@ class SPCD(Load):
         self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):
@@ -373,6 +385,10 @@ class SLOAD(Load):
         return node.nid
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         """
         .. todo::  not done
         """
@@ -433,6 +449,10 @@ class RFORCE(Load):
         return self.cid.cid
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def raw_fields(self):
@@ -508,6 +528,10 @@ class RANDPS(RandomLoad):
             self.tid = model.RandomTable(self.tid, msg=msg)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def Tid(self):

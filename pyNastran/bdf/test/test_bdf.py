@@ -1,4 +1,4 @@
-# pylint: disable=W0612,C0103
+# pylint: disable=W0612
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, integer_types
@@ -14,7 +14,7 @@ import traceback
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
+#from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
 from pyNastran.bdf.bdf import BDF, DLOAD
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_replacer import BDFReplacer
@@ -384,33 +384,38 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
         if '.pch' in bdfModel:
             fem1.read_bdf(bdfModel, xref=False, punch=True)
         else:
-            fem1.read_bdf(bdfModel, xref=xref, punch=punch)
+            fem1.read_bdf(bdfModel, xref=False, punch=punch)
+            if xref:
+                #fem1.uncross_reference()
+                fem1.cross_reference()
+                #fem1.uncross_reference()
+                #fem1.cross_reference()
     except:
         print("failed reading %r" % bdfModel)
         raise
     #fem1.sumForces()
 
     if fem1._auto_reject:
-        outModel = bdfModel + '.rej'
+        out_model = bdfModel + '.rej'
     else:
-        outModel = bdfModel + '_out'
+        out_model = bdfModel + '_out'
         if cid is not None and xref:
             fem1.resolve_grids(cid=cid)
 
         if meshForm == 'combined':
-            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=is_double)
+            fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
         elif meshForm == 'separate':
-            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=is_double)
+            fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
         else:
             msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
             raise NotImplementedError(msg)
-        #fem1.writeAsCTRIA3(outModel)
+        #fem1.writeAsCTRIA3(out_model)
 
     fem1._get_maps()
-    return outModel
+    return out_model
 
 
-def run_fem2(bdfModel, outModel, xref, punch,
+def run_fem2(bdfModel, out_model, xref, punch,
              sum_load, size, is_double,
              reject, debug=False, log=None):
     """
@@ -419,7 +424,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
     Parameters
     ----------
     bdfModel
-    outModel
+    out_model
     xref : bool
        xrefs
     punch : bool
@@ -436,7 +441,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
         ignored
     """
     assert os.path.exists(bdfModel), bdfModel
-    assert os.path.exists(outModel), outModel
+    assert os.path.exists(out_model), out_model
 
     if reject:
         fem2 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
@@ -445,9 +450,9 @@ def run_fem2(bdfModel, outModel, xref, punch,
     fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
-        fem2.read_bdf(outModel, xref=xref, punch=punch)
+        fem2.read_bdf(out_model, xref=xref, punch=punch)
     except:
-        print("failed reading %r" % outModel)
+        print("failed reading %r" % out_model)
         raise
 
     outModel2 = bdfModel + '_out2'
@@ -481,7 +486,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
                 loadcase_id = fem2.case_control_deck.get_subcase_parameter(isubcase, 'LOAD')[0]
                 F, M = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
                 print('  isubcase=%i F=%s M=%s' % (isubcase, F, M))
-                assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107, 108, 110,  112,
+                assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107, 108, 110, 112,
                                144, 145, 153, 400, 601], 'sol=%s LOAD' % sol
             else:
                 # print('is_load =', subcase.has_parameter('LOAD'))
@@ -490,7 +495,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
             if subcase.has_parameter('FREQUENCY'):
                 freq_id = subcase.get_parameter('FREQUENCY')[0]
                 freq = fem2.frequencies[freq_id]
-                assert sol in [26, 68, 76, 78, 88, 108, 111, 112, 118], 'sol=%s FREQUENCY' % sol
+                assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118], 'sol=%s FREQUENCY' % sol
                 # print(freq)
 
             # if subcase.has_parameter('LSEQ'):
@@ -525,7 +530,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
                 # dload = DLOAD()
                 # print(dload)
                 # for
-                # loads, sf = dload.getLoads()
+                # loads, sf = dload.get_loads()
                 scale_factors2 = []
                 loads2 = []
                 for load in dload:
@@ -555,12 +560,12 @@ def run_fem2(bdfModel, outModel, xref, punch,
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for
                         #print(load2)
-                        load2.get_load_at_freq(100.) * scale_factor
+                        F = load2.get_load_at_freq(100.) * scale_factor
                 elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for
                         #print(load2)
-                        load2.get_load_at_time(0.) * scale_factor
+                        F = load2.get_load_at_time(0.) * scale_factor
                 ### 111
                 else:
                     fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
@@ -739,7 +744,7 @@ def get_element_stats(fem1, fem2):
     for (key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
             try:
-                allLoads = load.getLoads()
+                allLoads = load.get_loads()
                 if not isinstance(allLoads, list):
                     raise TypeError('allLoads should return a list...%s'
                                     % (type(allLoads)))

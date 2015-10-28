@@ -305,19 +305,19 @@ class CBAR(LineElement):
     def _verify(self, xref=False):
         pid = self.Pid()
         edges = self.get_edge_ids()
+        mid = self.Mid()
+        nsm = self.Nsm()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
         if xref:  # True
-            mid = self.Mid()
             A = self.Area()
-            nsm = self.Nsm()
             mpl = self.MassPerLength()
             L = self.Length()
             mass = self.Mass()
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(A, float), 'A=%r' % A
-        assert isinstance(L, float), 'L=%r' % L
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
-        assert isinstance(mass, float), 'nass=%r' % mass
+            assert isinstance(A, float), 'A=%r' % A
+            assert isinstance(L, float), 'L=%r' % L
+            assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+            assert isinstance(mass, float), 'nass=%r' % mass
 
     def Mid(self):
         if isinstance(self.pid, integer_types):

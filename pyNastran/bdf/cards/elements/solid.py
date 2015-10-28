@@ -76,6 +76,10 @@ class SolidElement(Element):
     def cross_reference(self, model):
         raise NotImplementedError('Element type=%r must implement cross_reference')
 
+    def uncross_reference(self, model):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+
     def Eid(self):
         return self.eid
 
@@ -1244,7 +1248,9 @@ class CTETRA4(SolidElement):
         return nids
 
     def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
-        return ctetra_face_area_centroid_normal(nid_opposite, nid, self.nodes)
+        n1, n2, n3 = self.getFaceNodes(nid_opposite)
+        return ctetra_face_area_centroid_normal(nid_opposite, nid, self.nodes,
+                                                n1, n2, n3)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -1254,12 +1260,11 @@ class CTETRA4(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-def ctetra_face_area_centroid_normal(nid_opposite, nid, nodes):
-    n1, n2, n3 = self.getFaceNodes(nid_opposite)
+def ctetra_face_area_centroid_normal(nid_opposite, nid, nodes, n1, n2, n3):
     faceNodeIDs = [n1, n2, n3]
-    p1 = self.nodes[n1].get_position()
-    p2 = self.nodes[n2].get_position()
-    p3 = self.nodes[n3].get_position()
+    p1 = nodes[n1].get_position()
+    p2 = nodes[n2].get_position()
+    p3 = nodes[n3].get_position()
     a = p1 - p2
     b = p1 - p3
     normal = cross(a, b)

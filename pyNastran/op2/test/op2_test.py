@@ -39,8 +39,9 @@ def parse_skipped_cards(fname):
 
 
 def get_all_files(folders_file, file_type):
-    f = open(folders_file, 'r')
-    lines = f.readlines()
+    with open(folders_file, 'r') as f:
+        lines = f.readlines()
+
     files2 = []
     for line in lines:
         move_dir = os.path.join('r"'+line.strip()+'"')

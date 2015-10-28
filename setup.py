@@ -3,6 +3,10 @@ import os
 import sys
 from setuptools import setup, find_packages
 
+PY2 = False
+if sys.version_info < (3, 0):
+    PY2 = True
+
 import pyNastran
 packages = find_packages()+['gui/icons/*.*']
 #print "packages = ",packages
@@ -15,8 +19,14 @@ packages = find_packages()+['gui/icons/*.*']
     #extra['use_2to3_fixers'] = ['your.fixers']
 
 py2_gui_scripts = []
+py2_packages = []
 if sys.version_info <= (3,):
     py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
+    py2_packages += [
+        'vtk >= 5.10.0',
+        'pillow >= 2.7.0',
+        #'wx >= 2.8.12.0',
+    ]
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
@@ -80,9 +90,8 @@ setup(name='pyNastran',
 
                             'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',
                             'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
-                            'format_converter = pyNastran.converters.type_converter:main',
                            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
-                           ] + py2_gui_scripts
+                           'format_converter = pyNastran.converters.type_converter:main',
       },
       test_suite = 'pyNastran.all_tests',
       )

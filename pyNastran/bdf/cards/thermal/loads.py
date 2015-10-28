@@ -50,6 +50,10 @@ class QVOL(ThermalLoad):
             self.elements = expand_thru_by(eids)
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def cross_reference(self, model):
@@ -122,6 +126,10 @@ class QBDY1(ThermalLoad):
             self.eids = data[2:]
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def cross_reference(self, model):
@@ -198,6 +206,10 @@ class QBDY2(ThermalLoad):  # not tested
             self.qFlux = data[2]
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def cross_reference(self, model):
@@ -287,6 +299,10 @@ class QBDY3(ThermalLoad):
         return list_fields
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         """
         .. todo:: return loads
         """
@@ -352,6 +368,10 @@ class QHBDY(ThermalLoad):
             self.grids = data[4:]
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         return [self]
 
     def cross_reference(self, model):
@@ -439,6 +459,10 @@ class TEMP(ThermalLoad):
         return self.raw_fields()
 
     def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def get_loads(self):
         """
         .. todo:: return loads
         """

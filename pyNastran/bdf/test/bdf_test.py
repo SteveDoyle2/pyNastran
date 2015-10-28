@@ -1,3 +1,4 @@
+# coding: utf-8
 """the interface for bdf_test"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
