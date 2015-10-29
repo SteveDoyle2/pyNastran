@@ -1133,16 +1133,33 @@ class BDFMethods(object):
                             raise FloatingPointError(msg)
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
-                    elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        #asdf
-                        area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                    elif elem.type in ['CTETRA', 'CHEXA']:
+                        #print(load)
+                        try:
+                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        except IndexError:
+                            print(elem)
+                            print(load)
+                            raise
+                    elif elem.type in ['CPENTA']:
+                        #print(load)
+                        g1 = load.g1.nid
+
+                        if load.g34 is None:
+                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid)
+                        else:
+                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        #except IndexError:
+                            #print(elem)
+                            #print(load)
+                            #raise
                     else:
                         msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
                                % (loadcase_id, eid, elem.type, load.type))
                         self.log.debug(msg)
                         continue
                     r = centroid - p
-                    f = pressure * area * n
+                    f = pressure * area * normal
                     #load.cid.transformToGlobal()
                     m = cross(r, f)
                     F += f

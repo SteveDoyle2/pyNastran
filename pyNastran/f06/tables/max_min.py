@@ -12,6 +12,12 @@ class MAX_MIN(object):
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
+    def _get_oload_resultant(self):  # .. todo:: not done
+        headers = self.skip(2)
+        #print "headers = %s" % (headers)
+        data = self._read_f06_table([int, float, float, float, float, float, float], debug=True)
+        print(data)
+
     def _get_max_mpc_forces(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" % (headers)

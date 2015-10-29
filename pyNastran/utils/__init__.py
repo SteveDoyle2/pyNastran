@@ -45,7 +45,7 @@ def is_binary_file(filename):
 
     .. warning:: this may not work for unicode."""
     assert isinstance(filename, string_types), '%r is not a valid filename' % filename
-    assert os.path.exists(filename), '%r does not exist' % filename
+    assert os.path.exists(filename), '%r does not exist\n%s' % (filename, print_bad_path(filename))
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
             if b"\0" in chunk:  # found null byte

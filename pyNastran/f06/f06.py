@@ -101,7 +101,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
             # dummy
             'MAXIMUM  SPCFORCES' : self._get_max_spc_forces,
-            #'OLOAD    RESULTANT' : self.getMaxMpcForces,
+            'OLOAD    RESULTANT' : self._get_oload_resultant,
             'MAXIMUM  MPCFORCES' : self._get_max_mpc_forces,
             'SPCFORCE RESULTANT' : self._get_max_mpc_forces,
             'MPCFORCE RESULTANT' : self._get_max_mpc_forces,
