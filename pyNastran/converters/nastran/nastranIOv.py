@@ -2033,12 +2033,12 @@ class NastranIO(object):
                 elif element.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
                     ie = self.eidMap[eid]
                     element_dimi = 3
-                elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM']:
+                elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP']:
                     ie = self.eidMap[eid]
                     element_dimi = 1
                 elif element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CVISC',
                                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', ]:
+                                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
                     ie = self.eidMap[eid]
                     element_dimi = 0
                 else:

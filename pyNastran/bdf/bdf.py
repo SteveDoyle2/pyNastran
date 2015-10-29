@@ -2581,10 +2581,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             uline = line.upper()
             if uline.startswith('INCLUDE'):
                 j = i + 1
-                include_lines = [line]
+                include_lines = [line.strip()]
                 while not line.split('$')[0].endswith("'") and j < nlines:
-                    line = lines[j].rstrip('\r\n\t').split('$')[0]
-                    include_lines.append(line)
+                    try:
+                        line = lines[j].rstrip('\r\n\t').split('$')[0]
+                    except IndexError:
+                        print('bdf_filename=%r' % bdf_filename)
+                        crash_name = 'pyNastran_crash.bdf'
+                        self._dump_file(crash_name, lines, i+1)
+                        msg = 'There was an invalid filename found while parsing (index).\n'
+                        msg += 'Check the end of %r\n' % crash_name
+                        msg += 'bdf_filename2 = %r' % bdf_filename2
+                        raise IndexError(msg)
+                    #print(line.strip())
+                    include_lines.append(line.strip())
                     j += 1
 
                 #print('*** %s' % line)
@@ -2601,6 +2611,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     msg = 'There was an invalid filename found while parsing.\n'
                     msg += 'Check the end of %r\n' % crash_name
                     msg += 'bdf_filename2 = %r' % bdf_filename2
+                    #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
                     raise IOError(msg)
 
                 with self._open_file(bdf_filename2, basename=False) as bdf_file:
