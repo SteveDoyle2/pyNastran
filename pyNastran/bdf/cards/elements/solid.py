@@ -1366,6 +1366,7 @@ def ctetra_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
     #print('areai =', areai)
     assert area > 0, area
     normal = crossi / areai
+    assert len(found_face) == 3, found_face
     return found_face, area, centroid, normal
 
     #faceNodeIDs = [n1, n2, n3]

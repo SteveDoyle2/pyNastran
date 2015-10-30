@@ -384,6 +384,17 @@ class BDFMethods(object):
                sum moments about the specified grid point
            type = (3, ) ndarray/list (e.g. [10., 20., 30]):
                the x, y, z location in the global frame
+        loadcase_id : int
+            the LOAD=ID to analyze
+        include_grav : bool; default=False
+            includes gravity in the summation (not supported)
+
+        Returns
+        -------
+        Forces : NUMPY.NDARRAY shape=(3,)
+            the forces
+        Moments : NUMPY.NDARRAY shape=(3,)
+            the moments
 
         Nodal Types  : FORCE, FORCE1, FORCE2,
                        MOMENT, MOMENT1, MOMENT2,
@@ -780,7 +791,7 @@ class BDFMethods(object):
         #self.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
         return (F, M)
 
-    def sum_forces_moments(self, p0, loadcase_id, include_grav=False):
+    def sum_forces_moments(self, p0, loadcase_id, cid=0, include_grav=False):
         """
         Sums applied forces & moments about a reference point p0 for all
         load cases.
@@ -790,31 +801,21 @@ class BDFMethods(object):
           - PLOAD, PLOAD2, PLOAD4
           - LOAD
 
-        :param p0:
-          the reference point
-        :type p0:
-          NUMPY.NDARRAY shape=(3,) or integer (node ID)
+        Parameters
+        ----------
+        p0 : NUMPY.NDARRAY shape=(3,) or integer (node ID)
+            the reference point
+        loadcase_id : int
+            the LOAD=ID to analyze
+        include_grav : bool; default=False
+            includes gravity in the summation (not supported)
 
-        :param loadcase_id:
-          the LOAD=ID to analyze
-        :type loadcase_id:
-          integer
-
-        :param include_grav:
-          includes gravity in the summation (not supported)
-        :type include_grav:
-          bool
-
-        :returns Forces:
-          the forces
-        :type Forces:
-          NUMPY.NDARRAY shape=(3,)
-
-        :returns Moments:
-          the moments
-        :type Moments:
-          NUMPY.NDARRAY shape=(3,)
-
+        Returns
+        -------
+        Forces : NUMPY.NDARRAY shape=(3,)
+            the forces
+        Moments : NUMPY.NDARRAY shape=(3,)
+            the moments
 
         .. warning:: not full validated
         .. todo:: It's super slow for cid != 0.   We can speed this up a lot
@@ -823,11 +824,13 @@ class BDFMethods(object):
 
         Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
         """
-        #print('sum_forces_moments...')
         if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if isinstance(p0, integer_types):
-            p = self.model.nodes[p0].get_position()
+            if cid == 0:
+                p = self.model.nodes[p0].get_position()
+            else:
+                p = self.model.nodes[p0].get_position_wrt(self, cid)
         else:
             p = array(p0)
 

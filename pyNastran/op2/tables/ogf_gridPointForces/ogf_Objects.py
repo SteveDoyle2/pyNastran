@@ -150,8 +150,10 @@ class RealGridPointForcesArray(ScalarObject):
         msg.append(msgi)
         headers = self.get_headers()
         n = len(headers)
+
+        #element_names = [name.strip() for name in unique(self.element_names)]
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
-                                                                 self.element_names))
+                                                                 ', '.join(headers)))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
