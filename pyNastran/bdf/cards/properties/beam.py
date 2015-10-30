@@ -255,7 +255,7 @@ class PBEAM(IntegratedLineProperty):
             # sort xxb
             ixxb = argsort(self.xxb)
 
-            self.so = array(self.so, dtype='|S8')[ixxb]
+            self.so = array(self.so, dtype='|U8')[ixxb]
             self.xxb = array(self.xxb, dtype='float64')[ixxb]
 
             self.A = array(self.A, dtype='float64')[ixxb]
@@ -538,14 +538,14 @@ class PBEAM(IntegratedLineProperty):
                 if any([isinstance(cdefi, float) for cdefi in [c1, c2, d1, d2, e1, e2, f1, f2]]):
                     list_fields += [c1, c2, d1, d2, e1, e2, f1, f2]
             else:
-                if so in ['YES', b'YES']:
+                if so in ['YES']:
                     list_fields += [
                         'YES', xxb, A, i1, i2, i12, j, nsm,
                         c1, c2, d1, d2, e1, e2, f1, f2
                     ]
-                elif so in ['NO', b'NO']:
+                elif so in ['NO']:
                     list_fields += ['NO', xxb, A, i1, i2, i12, j, nsm]
-                elif so in ['YESA', b'YESA']:
+                elif so in ['YESA']:
                     list_fields += ['YESA', xxb, A, i1, i2, i12, j, nsm]
                 else:
                     raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
@@ -593,12 +593,12 @@ class PBEAM(IntegratedLineProperty):
                 list_fields += [A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             else:
-                if so in ['YES', b'YES']:
+                if so in ['YES']:
                     list_fields += ['YES', xxb, A, i1, i2, i12, j, nsm,
                                     c1, c2, d1, d2, e1, e2, f1, f2]
-                elif so in ['NO', b'NO']:
+                elif so in ['NO']:
                     list_fields += ['NO', xxb, A, i1, i2, i12, j, nsm]
-                elif so in ['YESA', b'YESA']:
+                elif so in ['YESA']:
                     list_fields += ['YESA', xxb, A, i1, i2, i12, j, nsm]
                 else:
                     raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
