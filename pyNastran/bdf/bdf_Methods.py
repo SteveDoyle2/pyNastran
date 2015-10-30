@@ -424,7 +424,7 @@ class BDFMethods(object):
 
         .. todo:: not done...
         """
-        print('sum_forces_moments_elements...')
+        #print('sum_forces_moments_elements...')
         if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if isinstance(p0, integer_types):
@@ -504,7 +504,7 @@ class BDFMethods(object):
                 nunit = norm(axb)
                 A = 0.5 * nunit
                 try:
-                    n = axb / nunit
+                    normal = axb / nunit
                 except FloatingPointError:
                     msg = ''
                     for i, nid in enumerate(nodes):
@@ -513,7 +513,7 @@ class BDFMethods(object):
                     msg += 'nunit = %s\n' % nunit
                     raise FloatingPointError(msg)
                 r = centroid - p
-                f = load.p * A * n * scale
+                f = load.p * A * normal * scale
                 m = cross(r, f)
 
                 node_scale = nodesi / float(nnodes)
@@ -660,11 +660,10 @@ class BDFMethods(object):
                     if eid not in eids:
                         continue
                     elem = self.elements[eid]
-                    if elem.type in ['CTRIA3',
-                                     'CQUAD4', 'CSHEAR']:
-                        n = elem.Normal()
+                    if elem.type in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
+                        normal = elem.Normal()
                         area = elem.Area()
-                        f = pressure * n * area
+                        f = pressure * normal * area
                         r = elem.Centroid() - p
                         m = cross(r, f)
                         F += f
@@ -699,7 +698,7 @@ class BDFMethods(object):
                         nunit = norm(axb)
                         area = 0.5 * nunit
                         try:
-                            n = axb / nunit
+                            normal = axb / nunit
                         except FloatingPointError:
                             msg = ''
                             for i, nid in enumerate(nodes):
@@ -719,7 +718,7 @@ class BDFMethods(object):
                         nunit = norm(axb)
                         area = 0.5 * nunit
                         try:
-                            n = axb / nunit
+                            normal = axb / nunit
                         except FloatingPointError:
                             msg = ''
                             for i, nid in enumerate(nodes):
@@ -729,15 +728,32 @@ class BDFMethods(object):
                             raise FloatingPointError(msg)
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
-                    elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        if is_avg_pressure:
-                            raise NotImplementedError()
-                        A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                    elif elem.type in ['CTETRA', 'CHEXA']:
+                        #print(load)
+                        try:
+                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        except IndexError:
+                            print(elem)
+                            print(load)
+                            raise
+                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                    elif elem.type in ['CPENTA']:
+                        #print(load)
+                        g1 = load.g1.nid
+
+                        if load.g34 is None:
+                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
+                        else:
+                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
+                        #except IndexError:
+                            #print(elem)
+                            #print(load)
+                            #raise
                     else:
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
                         continue
                     r = centroid - p
-                    f = pressure * area * n
+                    f = pressure * area * normal
                     #load.cid.transformToGlobal()
                     m = cross(r, f)
                     F += f
@@ -1106,7 +1122,7 @@ class BDFMethods(object):
                         nunit = norm(axb)
                         area = 0.5 * nunit
                         try:
-                            n = axb / nunit
+                            normal = axb / nunit
                         except FloatingPointError:
                             msg = ''
                             for i, nid in enumerate(nodes):
@@ -1123,7 +1139,7 @@ class BDFMethods(object):
                         nunit = norm(axb)
                         area = 0.5 * nunit
                         try:
-                            n = axb / nunit
+                            normal = axb / nunit
                         except FloatingPointError:
                             msg = ''
                             for i, nid in enumerate(nodes):

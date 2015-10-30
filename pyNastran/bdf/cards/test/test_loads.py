@@ -47,19 +47,13 @@ class TestLoads(unittest.TestCase):
         card.write_card(size, 'dummy')
         card.raw_fields()
 
-    def test_pload4_03(self):
+    def test_pload4_cpenta(self):
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.op2')
-        make_geom = False
-        write_bdf = False
-        write_f06 = True
-        debug = False
-        op2 = OP2()
+        op2 = OP2(debug=False)
         op2.read_op2(op2_filename)
 
-        #if os.path.exists(debug_file):
-            #os.remove(debug_file)
-        model_b = BDF()
+        model_b = BDF(debug=False)
         model_b.read_bdf(bdf_filename)
         # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
         p0 = model_b.nodes[21].xyz
@@ -113,6 +107,12 @@ class TestLoads(unittest.TestCase):
                     self.assertEqual(area, 2.0, 'area=%s' % area)
 
             f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            eids = None
+            nids = None
+            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            assert allclose(f, f2)
+            assert allclose(m, m2)
+
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :3, :].sum(axis=0)
             assert len(fm) == 6, fm
@@ -136,13 +136,104 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
 
-    def test_pload4_04(self):
-        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.bdf')
-        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.op2')
-        op2 = OP2()
+    def test_pload4_ctria3(self):
+        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.bdf')
+        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.op2')
+        op2 = OP2(debug=False)
         op2.read_op2(op2_filename)
 
-        model_b = BDF()
+        model_b = BDF(debug=False)
+        model_b.read_bdf(bdf_filename)
+        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
+        p0 = model_b.nodes[21].xyz
+
+        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
+            if isubcase == 0:
+                continue
+            #if isubcase != 17:
+                #continue
+            loadcase_id = subcase.get_parameter('LOAD')[0]
+            load = model_b.loads[loadcase_id][0]
+            elem = load.eid
+            area = 0.5
+            centroid = elem.Centroid()
+            normal = elem.Normal()
+
+            msg = '%s%s%s\n' % (
+                elem.nodes[0], elem.nodes[1], elem.nodes[2])
+
+            assert array_equal(centroid, array([2/3., 1/3., 0.])),  'centroid=%s\n%s' % (centroid, msg)
+            assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
+
+            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            eids = None
+            nids = None
+            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            assert allclose(f, f2)
+            assert allclose(m, m2)
+
+            case = op2.spc_forces[isubcase]
+            fm = -case.data[0, :, :].sum(axis=0)
+            assert len(fm) == 6, fm
+            if not allclose(f[0], fm[0]):
+                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[1], fm[1]):
+                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[2], fm[2]):
+                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+
+    def test_pload4_cquad4(self):
+        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.bdf')
+        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.op2')
+        op2 = OP2(debug=False)
+        op2.read_op2(op2_filename)
+
+        model_b = BDF(debug=False)
+        model_b.read_bdf(bdf_filename)
+        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
+        p0 = model_b.nodes[21].xyz
+
+        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
+            if isubcase == 0:
+                continue
+            #if isubcase != 17:
+                #continue
+            loadcase_id = subcase.get_parameter('LOAD')[0]
+            load = model_b.loads[loadcase_id][0]
+            elem = load.eid
+            area = 1.0
+            centroid = elem.Centroid()
+            normal = elem.Normal()
+
+            msg = '%s%s%s\n' % (elem.nodes[0], elem.nodes[1], elem.nodes[2])
+
+            assert array_equal(centroid, array([0.5, 0.5, 0.])),  'centroid=%s\n%s' % (centroid, msg)
+            assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
+
+            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            eids = None
+            nids = None
+            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            assert allclose(f, f2)
+            assert allclose(m, m2)
+
+            case = op2.spc_forces[isubcase]
+            fm = -case.data[0, :, :].sum(axis=0)
+            assert len(fm) == 6, fm
+            if not allclose(f[0], fm[0]):
+                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[1], fm[1]):
+                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[2], fm[2]):
+                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+
+    def test_pload4_chexa(self):
+        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.bdf')
+        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.op2')
+        op2 = OP2(debug=False)
+        op2.read_op2(op2_filename)
+
+        model_b = BDF(debug=False)
         model_b.read_bdf(bdf_filename)
         p0 = model_b.nodes[21].xyz
         nx_minus = [
@@ -232,6 +323,12 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
             f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            eids = None
+            nids = None
+            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            assert allclose(f, f2)
+            assert allclose(m, m2)
+
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :4, :].sum(axis=0)
             assert len(fm) == 6, fm
