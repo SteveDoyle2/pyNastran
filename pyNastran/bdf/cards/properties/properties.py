@@ -173,7 +173,8 @@ class PGAP(Property):
     def repr_fields(self):
         u0 = set_blank_if_default(self.u0, 0.)
         f0 = set_blank_if_default(self.f0, 0.)
-        ka = set_blank_if_default(self.ka, 1.e8)
+        # ka doesn't have a default in MSC 2005r2
+        #ka = set_blank_if_default(self.ka, 1.e8)
         kb = set_blank_if_default(self.kb, 1e-14 * self.ka)
         kt = set_blank_if_default(self.kt, self.mu1 * self.ka)
         mu1 = set_blank_if_default(self.mu1, 0.)
@@ -182,7 +183,7 @@ class PGAP(Property):
         mar = set_blank_if_default(self.mar, 100.)
         trmin = set_blank_if_default(self.trmin, 0.001)
 
-        fields = ['PGAP', self.pid, u0, f0, ka, kb, kt, mu1, mu2,
+        fields = ['PGAP', self.pid, u0, f0, self.ka, kb, kt, mu1, mu2,
                   tmax, mar, trmin]
         return fields
 

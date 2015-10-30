@@ -831,12 +831,12 @@ class FORCE(Force):
             cids = set_string16_blank_if_default(self.Cid(), 0)
             if is_double:
                 msg = ('FORCE*  %16i%16i%16s%s\n'
-                       '*       %16s%16s%16s') % (self.sid, self.node,
+                       '*       %16s%16s%16s\n') % (self.sid, self.node,
                     cids, print_scientific_double(self.mag), print_scientific_double(self.xyz[0]),
                     print_scientific_double(self.xyz[1]), print_scientific_double(self.xyz[2]))
             else:
                 msg = ('FORCE*  %16i%16i%16s%s\n'
-                       '*       %16s%16s%16s') % (self.sid, self.node,
+                       '*       %16s%16s%16s\n') % (self.sid, self.node,
                     cids, print_float_16(self.mag), print_float_16(self.xyz[0]),
                     print_float_16(self.xyz[1]), print_float_16(self.xyz[2]))
         return self.comment + msg
@@ -1157,12 +1157,12 @@ class MOMENT(Moment):
             cids = set_string16_blank_if_default(self.Cid(), 0)
             if is_double:
                 msg = ('MOMENT* %16i%16i%16s%s\n'
-                       '*       %16s%16s%16s') % (self.sid, self.node,
+                       '*       %16s%16s%16s\n') % (self.sid, self.node,
                     cids, print_scientific_double(self.mag), print_scientific_double(self.xyz[0]),
                     print_scientific_double(self.xyz[1]), print_scientific_double(self.xyz[2]))
             else:
                 msg = ('MOMENT* %16i%16i%16s%s\n'
-                       '*       %16s%16s%16s') % (self.sid, self.node,
+                       '*       %16s%16s%16s\n') % (self.sid, self.node,
                     cids, print_float_16(self.mag), print_float_16(self.xyz[0]),
                     print_float_16(self.xyz[1]), print_float_16(self.xyz[2]))
         return self.comment + msg

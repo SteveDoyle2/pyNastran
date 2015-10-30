@@ -1,7 +1,8 @@
 import os
 import unittest
 from six import iteritems
-from numpy import array, allclose, array_equal
+from numpy import array, allclose, array_equal, set_printoptions
+set_printoptions(suppress=True,precision=3)
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4
@@ -60,6 +61,7 @@ class TestLoads(unittest.TestCase):
             #os.remove(debug_file)
         model_b = BDF()
         model_b.read_bdf(bdf_filename)
+        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
         p0 = model_b.nodes[21].xyz
         angles = [
             (23, 24), (24, 23),
@@ -73,6 +75,8 @@ class TestLoads(unittest.TestCase):
         for isubcase, subcase in sorted(iteritems(model_b.subcases)):
             if isubcase == 0:
                 continue
+            #if isubcase != 17:
+                #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
             elem = load.eid
@@ -84,17 +88,11 @@ class TestLoads(unittest.TestCase):
                 if g1 in [21, 22, 23]:
                     assert face == (2, 1, 0), 'g1=%s face=%s' % (g1, face)
                     assert array_equal(centroid, array([2/3., 1/3., 0.])),  'fore g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
-                    assert array_equal(normal, array([0., 0., -1.])), 'fore g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
+                    assert array_equal(normal, array([0., 0., 1.])), 'fore g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                 else:
                     assert face == (3, 4, 5), 'g1=%s face=%s' % (g1, face)
                     assert array_equal(centroid, array([2/3., 1/3., 2.])),  'aft g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
-                    assert array_equal(normal, array([0., 0., 1.])), 'aft g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
-
-                f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
-                case = op2.spc_forces[isubcase]
-                fm = case.data[0, 0, :]#.ravel()
-                if f[0] != fm[0]:
-                    print('%i f=%s fexpected=%s' % (isubcase, f, fm))
+                    assert array_equal(normal, array([0., 0., -1.])), 'aft g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
             else:
                 g34 = load.g34.nid
                 face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
@@ -104,8 +102,8 @@ class TestLoads(unittest.TestCase):
                     self.assertEqual(area, 2.0, 'area=%s' % area)
                     msg = '%s%s%s%s\n' % (
                         elem.nodes[face[0]], elem.nodes[face[1]], elem.nodes[face[2]], elem.nodes[face[3]])
-                    assert array_equal(centroid, array([1., .5, 1.])),  'Nx g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
-                    assert array_equal(normal, array([-1., 0., 0.])),  'Nx g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
+                    assert array_equal(centroid, array([1., .5, 1.])),  'Nx g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
+                    assert array_equal(normal, array([-1., 0., 0.])),  'Nx g1=%s g34=%s face=%s normal=%g\n%s' % (g1, g34, face, normal, msg)
                 else:
                     msg = '%s%s%s%s\n' % (
                         elem.nodes[face[0]], elem.nodes[face[1]], elem.nodes[face[2]], elem.nodes[face[3]])
@@ -113,6 +111,24 @@ class TestLoads(unittest.TestCase):
                     assert array_equal(centroid, array([0.5, .0, 1.])), 'Ny g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
                     assert array_equal(normal, array([0., 1., 0.])),  'Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                     self.assertEqual(area, 2.0, 'area=%s' % area)
+
+            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            case = op2.spc_forces[isubcase]
+            fm = -case.data[0, :3, :].sum(axis=0)
+            assert len(fm) == 6, fm
+            if not allclose(f[0], fm[0]):
+                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[1], fm[1]):
+                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[2], fm[2]):
+                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            # if not allclose(m[0], fm[3]):
+                # print('%i Mx m=%s fexpected=%s' % (isubcase, m, fm))
+            # if not allclose(m[1], fm[4]):
+                # print('%i My m=%s fexpected=%s' % (isubcase, m, fm))
+            # if not allclose(m[2], fm[5]):
+                # print('%i Mz m=%s fexpected=%s' % (isubcase, m, fm))
+
             #self.assertEqual(f[0], fm[0], 'f=%s fexpected=%s' % (f, fm[:3]))
             #self.assertEqual(f[1], fm[1], 'f=%s fexpected=%s' % (f, fm[:3]))
             #self.assertEqual(f[2], fm[2], 'f=%s fexpected=%s' % (f, fm[:3]))
@@ -129,23 +145,34 @@ class TestLoads(unittest.TestCase):
         model_b = BDF()
         model_b.read_bdf(bdf_filename)
         p0 = model_b.nodes[21].xyz
-        nx = [
+        nx_minus = [
             (22, 27), (27, 22),
-            (23, 26), (26, 22),
-
+            (23, 26), (26, 23),
+        ]
+        nx_plus = [
             (24, 25), (25, 24),
             (21, 28), (28, 21),
             #(23, 25), (25, 23),
             #(22, 26), (26, 22),
         ]
 
-        nz = [
+        ny_minus = [
+            (24, 27), (27, 24),
+            (23, 28), (28, 23),
+        ]
+        ny_plus = [
+            (21, 26), (26, 21),
+            (22, 25), (25, 22),
+        ]
+
+
+        nz_minus = [
             (25, 27), (27, 25),
             (26, 28), (28, 26),
-
+        ]
+        nz_plus = [
             (21, 23), (23, 21),
             (24, 22), (22, 24),
-
         ]
 
         for isubcase, subcase in sorted(iteritems(model_b.subcases)):
@@ -156,11 +183,11 @@ class TestLoads(unittest.TestCase):
             elem = load.eid
             g1 = load.g1.nid
 
-            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            case = op2.spc_forces[isubcase]
-            fm = case.data[0, 0, :]#.ravel()
-            if f[0] != fm[0]:
-                print('%i f=%s fexpected=%s' % (isubcase, f, fm))
+            # f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            # case = op2.spc_forces[isubcase]
+            # fm = case.data[0, 0, :]#.ravel()
+            # if f[0] != fm[0]:
+                # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
             g34 = load.g34.nid
             face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
@@ -168,27 +195,52 @@ class TestLoads(unittest.TestCase):
                 elem.nodes[face[0]], elem.nodes[face[1]],
                 elem.nodes[face[2]], elem.nodes[face[3]])
 
-            if (g1, g34) in nx:
-                self.assertEqual(area, 2.0, 'Nx area=%s' % area)
-            elif (g1, g34) in nz:
-                self.assertEqual(area, 1.0, 'Nz area=%s' % area)
+            if (g1, g34) in nx_plus:
+                self.assertEqual(area, 2.0, '+Nx area=%s' % area)
+                #assert array_equal(centroid, array([1., .5, 1.])), '+Nx g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
+                assert array_equal(normal, array([1., 0., 0.])), '+Nx g1=%s g34=%s face=%s normal=%g\n%s' % (g1, g34, face, normal, msg)
+            elif (g1, g34) in nx_minus:
+                self.assertEqual(area, 2.0, '-Nx area=%s' % area)
+                #assert array_equal(centroid, array([1., .5, 1.])), '-Nx g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
+                assert array_equal(normal, array([-1., 0., 0.])), '-Nx g1=%s g34=%s face=%s normal=%g\n%s' % (g1, g34, face, normal, msg)
 
-                #print(nodes[n1i])
-                #print(nodes[n2i])
-                #print(nodes[n3i])
-                #print(nodes[n4i])
+            elif (g1, g34) in ny_plus:
+                self.assertEqual(area, 2.0, '+Ny area=%s' % area)
+                #assert array_equal(centroid, array([1., .5, 1.])), '+Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
+                assert array_equal(normal, array([0., 1., 0.])), '+Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
+            elif (g1, g34) in ny_minus:
+                self.assertEqual(area, 2.0, '-Ny area=%s' % area)
+                #assert array_equal(centroid, array([1., .5, 1.])), '-Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
+                assert array_equal(normal, array([0., -1., 0.])), '-Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
+
+            elif (g1, g34) in nz_plus:
+                self.assertEqual(area, 1.0, '+Nz area=%s' % area)
+                #assert array_equal(centroid, array([1., .5, 1.])), '+Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
+                assert array_equal(normal, array([0., 0., 1.])), '+Nz g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
+            elif (g1, g34) in nz_minus:
+                self.assertEqual(area, 1.0, '-Nz area=%s' % area)
+                #assert array_equal(centroid, array([1., .5, 1.])), '-Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
+                assert array_equal(normal, array([0., 0., -1.])), '-Nz g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                 #assert array_equal(centroid, array([1., .5, 1.])),  'Nx g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
                 #assert array_equal(normal, array([-1., 0., 0.])),  'Nx g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
             else:
-                #assert array_equal(centroid, array([0.5, .0, 1.])), 'Ny g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
-                #assert array_equal(normal, array([0., 1., 0.])),  'Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
-                self.assertEqual(area, 2.0, 'area=%s' % area)
+                raise RuntimeError('??? g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg))
             #self.assertEqual(f[0], fm[0], 'f=%s fexpected=%s' % (f, fm[:3]))
             #self.assertEqual(f[1], fm[1], 'f=%s fexpected=%s' % (f, fm[:3]))
             #self.assertEqual(f[2], fm[2], 'f=%s fexpected=%s' % (f, fm[:3]))
             #self.assertEqual(m[0], fm[3], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
+            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            case = op2.spc_forces[isubcase]
+            fm = -case.data[0, :4, :].sum(axis=0)
+            assert len(fm) == 6, fm
+            if not allclose(f[0], fm[0]):
+                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[1], fm[1]):
+                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+            if not allclose(f[2], fm[2]):
+                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
 
 
     def test_aestat_01(self):

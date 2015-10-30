@@ -678,8 +678,8 @@ def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
         p1 = nodes[n1i].get_position()
         p2 = nodes[n2i].get_position()
         p3 = nodes[n3i].get_position()
-        a = p1 - p2
-        b = p1 - p3
+        a = p3 - p1
+        b = p2 - p1
         centroid = (p1 + p2 + p3) / 3.
     else:
         indx2 = nids.index(nid_opposite)
@@ -807,7 +807,7 @@ def chexa_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
     n3 = nodes[nid3].get_position()
     n4 = nodes[nid4].get_position()
 
-    crossi = -cross(n3 - n1, n4 - n2)
+    crossi = cross(n3 - n1, n4 - n2)
     areai = norm(crossi)
     centroid = (n1 + n2 + n3 + n4) / 4.
     area = 0.5 * areai

@@ -2625,7 +2625,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 #if not line2[0].isalpha():
                     #print('** %s' % line2)
 
-                include_comment = '$ INCLUDE processed:  %s\n' % bdf_filename2
+                include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
                 #for line in lines2:
                     #print("  ?%s" % line.rstrip())
                 lines = lines[:i] + [include_comment] + lines2 + lines[j:]
