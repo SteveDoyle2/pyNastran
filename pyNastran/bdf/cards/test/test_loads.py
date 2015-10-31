@@ -169,18 +169,18 @@ class TestLoads(unittest.TestCase):
             eids = None
             nids = None
             f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2)
-            assert allclose(m, m2)
+            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
+            assert allclose(m, m2), 'f=%s f2=%s' % (m, m2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fx f=%s fexpected=%s' % (isubcase, f, fm))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fy f=%s fexpected=%s' % (isubcase, f, fm))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
 
     def test_pload4_cquad4(self):
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.bdf')
@@ -193,26 +193,27 @@ class TestLoads(unittest.TestCase):
         # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
         p0 = model_b.nodes[21].xyz
 
+        eids = None
+        nids = None
         for isubcase, subcase in sorted(iteritems(model_b.subcases)):
             if isubcase == 0:
                 continue
             #if isubcase != 17:
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.loads[loadcase_id][0]
-            elem = load.eid
-            area = 1.0
-            centroid = elem.Centroid()
-            normal = elem.Normal()
+            load = model_b.loads[loadcase_id]
+            loadi = load[0]
+            if loadi.type == 'PLOAD4':
+                elem = loadi.eid
+                area = 1.0
+                centroid = elem.Centroid()
+                normal = elem.Normal()
+                msg = '%s%s%s\n' % (elem.nodes[0], elem.nodes[1], elem.nodes[2])
 
-            msg = '%s%s%s\n' % (elem.nodes[0], elem.nodes[1], elem.nodes[2])
-
-            assert array_equal(centroid, array([0.5, 0.5, 0.])),  'centroid=%s\n%s' % (centroid, msg)
-            assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
+                assert array_equal(centroid, array([0.5, 0.5, 0.])),  'centroid=%s\n%s' % (centroid, msg)
+                assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
 
             f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            eids = None
-            nids = None
             f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2)
             assert allclose(m, m2)

@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=R0902,R0904,R0914
 """
 All solid elements are defined in this file.  This includes:
 
@@ -14,13 +14,53 @@ All solid elements are SolidElement and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
-from numpy import dot, cross, array, matrix, zeros
-from numpy.linalg import solve, norm
+from numpy import dot, cross
+from numpy.linalg import norm
 
 from pyNastran.bdf.cards.elements.elements import Element
-from pyNastran.utils.mathematics import Area, gauss
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, fields)
+from pyNastran.utils.mathematics import Area
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank)
 
+
+_chexa_mapper = {
+    (7, 5) : (7, 6, 5, 4),
+    (5, 7) : (7, 6, 5, 4),
+    (6, 4) : (7, 6, 5, 4),
+    (4, 6) : (7, 6, 5, 4),
+
+    (0, 2) : (0, 1, 2, 3),
+    (2, 0) : (0, 1, 2, 3),
+    (1, 3) : (0, 1, 2, 3),
+    (3, 1) : (0, 1, 2, 3),
+
+    (0, 7) : (0, 3, 7, 4),
+    (7, 0) : (0, 3, 7, 4),
+    (3, 4) : (0, 3, 7, 4),
+    (4, 3) : (0, 3, 7, 4),
+
+    (5, 2) : (5, 6, 2, 1),
+    (2, 5) : (5, 6, 2, 1),
+    (6, 1) : (5, 6, 2, 1),
+    (1, 6) : (5, 6, 2, 1),
+
+    (4, 1) : (4, 5, 1, 0),
+    (1, 4) : (4, 5, 1, 0),
+    (5, 0) : (4, 5, 1, 0),
+    (0, 5) : (4, 5, 1, 0),
+
+    (2, 7) : (2, 6, 7, 3),
+    (7, 2) : (2, 6, 7, 3),
+    (6, 3) : (2, 6, 7, 3),
+    (3, 6) : (2, 6, 7, 3),
+}
+_chexa_faces = (
+    (7, 6, 5, 4),
+    (0, 1, 2, 3),
+    (0, 3, 7, 4),
+    (5, 6, 2, 1),
+    (4, 5, 1, 0),
+    (2, 6, 7, 3),
+)
 
 def volume4(n1, n2, n3, n4):
     r"""
@@ -76,7 +116,7 @@ class SolidElement(Element):
     def cross_reference(self, model):
         raise NotImplementedError('Element type=%r must implement cross_reference')
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
 
@@ -141,10 +181,6 @@ class SolidElement(Element):
         ##msg1 = self.comment + print_card_8(card)
         ##assert msg1 == msg2, 'write_card != write_card\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         #return msg2
-
-    def uncross_reference(self):
-        self.nodes = self.node_ids
-        self.pid = self.Pid()
 
 
 class CHEXA8(SolidElement):
@@ -244,6 +280,10 @@ class CHEXA8(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
+    def get_face(self, nid_opposite, nid):
+        nids = self.node_ids[:8]
+        return chexa_face(nid_opposite, nid, nids)
+
     def getFaceAreaCentroidNormal(self, nid_opposite, nid):
         """
         Parameters
@@ -259,17 +299,12 @@ class CHEXA8(SolidElement):
     def get_edge_ids(self):
         """
         Return the edge IDs
-        """
         # top (5-6-7-8)
         # btm (1-2-3-4)
         # left (1-2-3-4)
         # right (5-6-7-8)
         # front (1-5-8-4)
         # back (2-6-7-3)
-        node_ids = self.node_ids
-    def get_edge_ids(self):
-        """
-        Return the edge IDs
         """
         node_ids = self.node_ids
         return [
@@ -395,6 +430,10 @@ class CHEXA20(SolidElement):
             tuple(sorted([node_ids[3], node_ids[7]])),
         ]
 
+    def get_face(self, nid_opposite, nid):
+        nids = self.node_ids[:8]
+        return chexa_face(nid_opposite, nid, nids)
+
     def getFaceAreaCentroidNormal(self, nid_opposite, nid):
         """
         Parameters
@@ -458,7 +497,7 @@ class CHEXA20(SolidElement):
 
 
 class CPENTA6(SolidElement):
-    """
+    r"""
     +--------+-----+-----+----+----+----+----+----+----+
     | CPENTA | EID | PID | G1 | G2 | G3 | G4 | G5 | G6 |
     +--------+-----+-----+----+----+----+----+----+----+
@@ -542,6 +581,10 @@ class CPENTA6(SolidElement):
             tuple(sorted([node_ids[1], node_ids[4]])),
             tuple(sorted([node_ids[2], node_ids[5]])),
         ]
+
+    def get_face(self, nid, nid_opposite=None):
+        nids = self.node_ids[:6]
+        return cpenta_face(nid_opposite, nid, nids)
 
     def getFaceAreaCentroidNormal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
@@ -648,50 +691,24 @@ class CPENTA6(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
-    """
-    Parameters
-    ----------
-    nid_opposite : int
-        G1 - a grid point on the corner of a face
-    nid : int / None
-        G3 - the grid point diagonally opposite of G1
-    """
+def cpenta_face(nid_opposite, nid, nids):
     assert len(nids) == 6, nids
     indx1 = nids.index(nid)
 
     if nid_opposite is None:
         if indx1 in [0, 1, 2]:
-            pack2 = tuple([2, 1, 0]) #nids[:3]
+            pack2 = tuple([2, 1, 0])
         elif indx1 in [3, 4, 5]:
-            pack2 = tuple([3, 4, 5]) #nids[:3]
+            pack2 = tuple([3, 4, 5])
         else:
             raise RuntimeError(indx1)
         assert len(pack2) == 3, pack2
-        #print(pack2)
-        #face_node_ids = [n1, n2, n3]
-        n1i, n2i, n3i = pack2
-        #n1i = nids[n1 - 1]
-        #n2i = nids[n2 - 1]
-        #n3i = nids[n3 - 1]
-        #print(n1i, n2i, n3i)
-        p1 = nodes[n1i].get_position()
-        p2 = nodes[n2i].get_position()
-        p3 = nodes[n3i].get_position()
-        a = p3 - p1
-        b = p2 - p1
-        centroid = (p1 + p2 + p3) / 3.
     else:
         indx2 = nids.index(nid_opposite)
 
         #  offset so it's easier to map the nodes with the QRG
         pack = tuple(sorted([indx1 + 1, indx2 + 1]))
-        #pack2 = tuple(sorted([indx1, indx2]))
-        #print('indx1 = ', indx1)
-        #print('indx2 = ', indx2)
-        #print('pack = ', pack)
-        #print('pack2 = ', pack2)
-        mapper = {
+        _cpenta_mapper = {
             # reverse points away from the element
             #(1, 2) : [1, 2, 3],  # close
             #(2, 3) : [1, 2, 3],
@@ -712,52 +729,57 @@ def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
         }
 
         try:
-            pack2 = mapper[pack]
+            pack2 = _cpenta_mapper[pack]
         except KeyError:
             print('PLOAD4; remove a node')
             raise
-
         pack2 = [i - 1 for i in pack2]
-        if len(pack2) == 3:
-            (n1i, n2i, n3i) = pack2
-            #face_node_ids = [n1, n2, n3]
-            #n1i = nids[n1 - 1]
-            #n2i = nids[n2 - 1]
-            #n3i = nids[n3 - 1]
-            #print(n1i, n2i, n3i)
-            p1 = nodes[n1i].get_position()
-            p2 = nodes[n2i].get_position()
-            p3 = nodes[n3i].get_position()
-            a = p1 - p2
-            b = p1 - p3
-            centroid = (p1 + p2 + p3) / 3.
-        else:
-            (n1i, n2i, n3i, n4i) = pack2
-            #nid1 = nids[n1i - 1]
-            #nid2 = nids[n2i - 1]
-            #nid3 = nids[n3i - 1]
-            #nid4 = nids[n4i - 1]
+    return pack2
 
-            n1 = nodes[n1i]
-            n2 = nodes[n2i]
-            n3 = nodes[n3i]
-            n4 = nodes[n4i]
-            p1 = nodes[n1i].get_position()
-            p2 = nodes[n2i].get_position()
-            p3 = nodes[n3i].get_position()
-            p4 = nodes[n4i].get_position()
-            #p2 = nodes[n2].get_position()
-            #p3 = nodes[n3].get_position()
-            #p4 = nodes[n4].get_position()
-            #print(pack2)
-            #print(nodes)
-            a = p1 - p3
-            b = p2 - p4
-            centroid = (p1 + p2 + p3 + p4) / 4.
+def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
+    """
+    Parameters
+    ----------
+    nid_opposite : int
+        G1 - a grid point on the corner of a face
+    nid : int / None
+        G3 - the grid point diagonally opposite of G1
+    """
+    face = cpenta_face(nid_opposite, nid, nids)
+
+    if nid_opposite is None:
+        n1i, n2i, n3i = face
+        p1 = nodes[n1i].get_position()
+        p2 = nodes[n2i].get_position()
+        p3 = nodes[n3i].get_position()
+        a = p3 - p1
+        b = p2 - p1
+        centroid = (p1 + p2 + p3) / 3.
+    else:
+        n1i, n2i, n3i, n4i = face
+        p1 = nodes[n1i].get_position()
+        p2 = nodes[n2i].get_position()
+        p3 = nodes[n3i].get_position()
+        p4 = nodes[n4i].get_position()
+        a = p1 - p3
+        b = p2 - p4
+        centroid = (p1 + p2 + p3 + p4) / 4.
     normal = cross(a, b)
     n = norm(normal)
     area = 0.5 * n
-    return pack2, area, centroid, normal / n
+    return face, area, centroid, normal / n
+
+def chexa_face(nid_opposite, nid, nids):
+    assert len(nids) == 8, nids
+    g1i = nids.index(nid_opposite)
+    g3i = nids.index(nid)
+
+    for face in _chexa_faces:
+        if g1i in face and g3i in face:
+            found_face = face
+
+    found_face = _chexa_mapper[tuple([g1i, g3i])]
+    return found_face
 
 def chexa_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
     """
@@ -768,7 +790,6 @@ def chexa_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
     nid : int
         G3 - the grid point diagonally opposite of G1
 
-
     # top   (7-6-5-4)
     # btm   (0-1-2-3)
     # left  (0-3-7-4)
@@ -776,45 +797,19 @@ def chexa_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
     # front (4-5-1-0)
     # back  (2-6-7-3)
     """
-    assert len(nids) == 8, nids
-    try:
-        g1i = nids.index(nid_opposite)
-        g3i = nids.index(nid)
-    except IndexError:
-        print(str(self))
-        print('nid_opposite = ', nid_opposite)
-        print('nid = ', nid)
-        print('nids = ', nids)
-        print('nodes = ', nodes)
-        raise
-
-    #print('g1=%s g3=%s' % (g1i, g3i))
-    faces = (
-        (7, 6, 5, 4),
-        (0, 1, 2, 3),
-        (0, 3, 7, 4),
-        (5, 6, 2, 1),
-        (4, 5, 1, 0),
-        (2, 6, 7, 3),
-    )
-    for face in faces:
-        if g1i in face and g3i in face:
-            found_face = face
-
-    nid1, nid2, nid3, nid4 = found_face
+    face = chexa_face(nid_opposite, nid, nids)
+    nid1, nid2, nid3, nid4 = face
     n1 = nodes[nid1].get_position()
     n2 = nodes[nid2].get_position()
     n3 = nodes[nid3].get_position()
     n4 = nodes[nid4].get_position()
 
-    crossi = cross(n3 - n1, n4 - n2)
-    areai = norm(crossi)
+    axb = cross(n3 - n1, n4 - n2)
+    areai = norm(axb)
     centroid = (n1 + n2 + n3 + n4) / 4.
     area = 0.5 * areai
-    #print('areai =', areai)
-    assert area > 0, area
-    normal = crossi / areai
-    return found_face, area, centroid, normal
+    normal = axb / areai
+    return face, area, centroid, normal
 
 
 class CPENTA15(SolidElement):
@@ -891,6 +886,10 @@ class CPENTA15(SolidElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def get_face(self, nid_opposite, nid):
+        nids = self.node_ids[:6]
+        return cpenta_face(nid_opposite, nid, nids)
 
     def getFaceAreaCentroidNormal(self, nid_opposite, nid):
         nids = self.node_ids[:6]
@@ -1309,6 +1308,10 @@ class CTETRA4(SolidElement):
         nids.pop(indx)
         return nids
 
+    def get_face(self, nid_opposite, nid):
+        nids = self.node_ids[:6]
+        return ctetra_face(nid_opposite, nid, nids)
+
     def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
         return ctetra_face_area_centroid_normal(nid_opposite, nid,
                                                 self.node_ids, self.nodes)
@@ -1321,6 +1324,22 @@ class CTETRA4(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
+def ctetra_face(nid_opposite, nid, nids):
+    assert len(nids) == 4, nids
+    g1i = nids.index(nid_opposite)
+    g4i = nids.index(nid)
+
+    _ctetra_faces = (
+        (3, 1, 0),
+        (0, 1, 2),
+        (3, 2, 1),
+        (0, 2, 3),
+    )
+    for face in _ctetra_faces:
+        if g1i in face and g4i not in face:
+            found_face = face
+    return found_face
+
 def ctetra_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
     """
     Parameters
@@ -1330,44 +1349,21 @@ def ctetra_face_area_centroid_normal(nid_opposite, nid, nids, nodes):
     nid : int
         G4 - a grid point not being loaded
     """
-    assert len(nids) == 4, nids
-    try:
-        g1i = nids.index(nid_opposite)
-        g4i = nids.index(nid)
-    except IndexError:
-        print(str(self))
-        print(self.raw_fields())
-        print('nid_opposite = ', nid_opposite)
-        print('nid = ', nid)
-        print('nids = ', nids)
-        print('nodes = ', nodes)
-        raise
-
-    #print('g1=%s g4=%s' % (g1i, g4i))
-    faces = (
-        (3, 1, 0),
-        (0, 1, 2),
-        (3, 2, 1),
-        (0, 2, 3),
-    )
-    for face in faces:
-        if g1i in face and g4i not in face:
-            found_face = face
-
-    nid1, nid2, nid3 = found_face
+    face = ctetra_face(nid_opposite, nid, nids)
+    nid1, nid2, nid3 = face
     n1 = nodes[nid1].get_position()
     n2 = nodes[nid2].get_position()
     n3 = nodes[nid3].get_position()
 
     crossi = cross(n2 - n1, n3 - n1)
-    areai = norm(crossi)
+    n = norm(crossi)
     centroid = (n1 + n2 + n3) / 3.
-    area = 0.5 * areai
+    area = 0.5 * n
     #print('areai =', areai)
     assert area > 0, area
-    normal = crossi / areai
-    assert len(found_face) == 3, found_face
-    return found_face, area, centroid, normal
+    normal = crossi / n
+    assert len(face) == 3, face
+    return face, area, centroid, normal
 
     #faceNodeIDs = [n1, n2, n3]
     p1 = nodes[n1].get_position()

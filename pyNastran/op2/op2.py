@@ -221,7 +221,7 @@ class OP2(OP2_Scalar):
         isubcases = unique(list(self.subcase_key.keys()))
         unique_isubcases = unique(isubcases)
 
-        self.log.info('combine_results')
+        self.log.debug('combine_results')
         for result_type in result_types:
             result = getattr(self, result_type)
             if len(result) == 0:
