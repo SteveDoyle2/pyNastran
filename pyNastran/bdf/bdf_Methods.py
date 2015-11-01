@@ -793,23 +793,23 @@ class BDFMethods(object):
                         nface = 4
 
                     elif elem.type == 'CTETRA':
-                        face = elem.get_face(load.g34.nid, load.g1.nid)
-                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #face = elem.get_face(load.g1.nid, load.g34.nid)
+                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
                         nface = 3
 
                     elif elem.type == 'CHEXA':
-                        face = elem.get_face(load.g34.nid, load.g1.nid)
-                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #face = elem.get_face(load.g1.nid, load.g34.nid)
+                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
                         nface = 4
 
                     elif elem.type == 'CPENTA':
                         g1 = load.g1.nid
                         if load.g34 is None:
-                            face = elem.get_face(g1)
+                            #face = elem.get_face(g1)
                             face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
                             nface = 3
                         else:
-                            face = elem.get_face(load.g1.nid, load.g34.nid)
+                            #face = elem.get_face(load.g1.nid, load.g34.nid)
                             face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
                             nface = 4
                     else:
@@ -1221,13 +1221,14 @@ class BDFMethods(object):
                         centroid = (n1 + n2 + n3 + n4) / 4.
                         nface = 4
                     elif elem.type == 'CTETRA':
-                        face = elem.get_face(load.g34.nid, load.g1.nid)
-                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #face1 = elem.get_face(load.g1.nid, load.g34.nid)
+                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        #assert face == face1
                         nface = 3
                     elif elem.type == 'CHEXA':
                         #face1 = elem.get_face(load.g34.nid, load.g1.nid)
                         face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
-                        assert face == face1
+                        #assert face == face1
                         nface = 4
                     elif elem.type == 'CPENTA':
                         g1 = load.g1.nid
@@ -1239,7 +1240,7 @@ class BDFMethods(object):
                             #face1 = elem.get_face(g1, load.g34.nid)
                             face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
                             nface = 4
-                        assert face == face1
+                        #assert face == face1
                     else:
                         msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
                                % (loadcase_id, eid, elem.type, load.type))

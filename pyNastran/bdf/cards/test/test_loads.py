@@ -239,16 +239,16 @@ class TestLoads(unittest.TestCase):
         p0 = model_b.nodes[21].xyz
 
         nx_plus = [ # 21, 24, 23
-            (22, 21), (22, 23), (22, 23),
-            (21, 22), (23, 22), (23, 22),
+            (21, 22), (24, 22), (23, 22), # (22, 23),
+            #(21, 22), (23, 22),
         ]
-        nz_plus = [ # 21, 22, 24
-            (21, 23), (22, 23), (24, 23),
-            (23, 21), (23, 22), (23, 24),
+        ny_plus = [ # 21, 22, 24
+            #(21, 23), (22, 23), (24, 23),
+            #(23, 21), (23, 22), (23, 24),
         ]
-        ny_plus = [ # 21, 22, 23
+        nz_plus = [ # 21, 22, 23
             (21, 24), (22, 24), (23, 24),
-            (24, 21), (24, 22), (24, 23),
+            #(24, 21), (24, 22), (24, 23),
         ]
 
         for isubcase, subcase in sorted(iteritems(model_b.subcases)):
@@ -272,24 +272,26 @@ class TestLoads(unittest.TestCase):
                 elem.nodes[face[2]])
 
             if (g1, g34) in nx_plus:
-                self.assertEqual(area, 0.5, '-Nx area=%s\n%s' % (area, msg))
+                self.assertEqual(area, 0.5, '+Nx area=%s\n%s' % (area, msg))
                 #assert array_equal(centroid, array([1., .5, 1.])), '-Nx g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
                 assert array_equal(normal, array([1., 0., 0.])), '+Nx g1=%s g34=%s face=%s normal=%g\n%s' % (g1, g34, face, normal, msg)
 
             elif (g1, g34) in ny_plus:
-                self.assertEqual(area, 0.5, '-Ny area=%s\n%s' % (area, msg))
+                self.assertEqual(area, 0.5, '+Ny area=%s\n%s' % (area, msg))
                 #assert array_equal(centroid, array([1., .5, 1.])), '-Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
                 assert array_equal(normal, array([0., 1., 0.])), '+Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
             elif (g1, g34) in nz_plus:
-                self.assertEqual(area, 0.5, '-Nz area=%s\n%s' % (area, msg))
+                self.assertEqual(area, 0.5, '+Nz area=%s\n%s' % (area, msg))
                 #assert array_equal(centroid, array([1., .5, 1.])), '-Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
                 assert array_equal(normal, array([0., 0., 1.])), '+Nz g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                 #assert array_equal(centroid, array([1., .5, 1.])),  'Nx g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
                 #assert array_equal(normal, array([-1., 0., 0.])),  'Nx g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
             else:
-                self.assertEqual(area, 0.5, '-Nz area=%s\n%s' % (area, msg))
+                self.assertEqual(area, 0.75**0.5, 'slant g1=%s g34=%s face=%s area=%s\n%s' % (g1, g34, face, area, msg))
                 #assert array_equal(centroid, array([1., .5, 1.])), '-Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
-                assert array_equal(normal, array([0., 0., -1.])), '-Nz g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
+                normal_expected = array([-0.57735027, -0.57735027, -0.57735027])
+                diff = normal - normal_expected
+                assert allclose(normal, normal_expected), 'slant g1=%s g34=%s face=%s normal=%s\ndiff=%s\n%s' % (g1, g34, face, normal, diff, msg)
                 #raise RuntimeError('??? g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg))
             #self.assertEqual(f[0], fm[0], 'f=%s fexpected=%s' % (f, fm[:3]))
             #self.assertEqual(f[1], fm[1], 'f=%s fexpected=%s' % (f, fm[:3]))
@@ -305,14 +307,14 @@ class TestLoads(unittest.TestCase):
             assert allclose(m, m2)
 
             case = op2.spc_forces[isubcase]
-            fm = -case.data[0, :4, :].sum(axis=0)
+            fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fx g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (isubcase, g1, g34, f, fm, face, normal))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fy g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (isubcase, g1, g34, f, fm, face, normal))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fz g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (isubcase, g1, g34, f, fm, face, normal))
 
     def test_pload4_chexa(self):
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.bdf')
@@ -342,7 +344,6 @@ class TestLoads(unittest.TestCase):
             (21, 26), (26, 21),
             (22, 25), (25, 22),
         ]
-
 
         nz_minus = [
             (25, 27), (27, 25),

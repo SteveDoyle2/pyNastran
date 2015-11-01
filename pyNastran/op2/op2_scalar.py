@@ -1061,7 +1061,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     data = self.read_block()
                     #self.show_data(data)
 
-                    print(type(self._endian), self._endian)
+                    #print(type(self._endian), self._endian)
                     fmt = self._endian + 'i %if' % nvalues
                     #print('***itable=%s nvalues=%s fmt=%r' % (itable, nvalues, fmt))
 
