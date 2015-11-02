@@ -36,61 +36,62 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
-setup(name='pyNastran',
-      version=pyNastran.__version__,
-      description=pyNastran.__desc__,
-      long_description="""\
+setup(
+    name='pyNastran',
+    version=pyNastran.__version__,
+    description=pyNastran.__desc__,
+    long_description="""\
 """,
-      classifiers=[
-                   'Natural Language :: English',
-                   'Intended Audience :: Science/Research',
-                   'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
-                   'Programming Language :: Python :: 2',
-                   'Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 3',
-                   'Programming Language :: Python :: 3.3',
-                   'Programming Language :: Python :: 3.4',
-                   ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-      keywords='',
-      author=pyNastran.__author__,
-      author_email=pyNastran.__email__,
-      url=pyNastran.__website__,
-      license=pyNastran.__license__,
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-      include_package_data=True,
-      zip_safe=False,
-      install_requires=[
-
-          # -*- Extra requirements: -*-
-          'numpy >= 1.9.0',
-          'scipy >= 0.15.0',
-          'docopt == 0.6.2',
-          #'matplotlib >= 1.3.0',
-          'six >= 1.8.0',
-          #'cython',
-      ] + py2_packages,
-      #{'': ['license.txt']}
-      #package_data={'': ['*.png']},
-      #data_files=[(icon_path, icon_files2)],
-      package_data = {
+    classifiers=[
+        'Natural Language :: English',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    keywords='',
+    author=pyNastran.__author__,
+    author_email=pyNastran.__email__,
+    url=pyNastran.__website__,
+    license=pyNastran.__license__,
+    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    include_package_data=True,
+    zip_safe=False,
+    install_requires=[
+        # -*- Extra requirements: -*-
+        'numpy >= 1.9.0',
+        'scipy >= 0.15.0',
+        'docopt == 0.6.2',
+        #'matplotlib >= 1.3.0',
+        'six >= 1.8.0',
+        #'cython',
+    ] + py2_packages,
+    #{'': ['license.txt']}
+    #package_data={'': ['*.png']},
+    #data_files=[(icon_path, icon_files2)],
+    package_data={
+        # https://pythonhosted.org/setuptools/setuptools.html#including-data-files
         # If any package contains *.png files, include them:
         '': ['*.png'],
         #'mypkg': ['data/*.dat'],
-      },
-      entry_points = {
+    },
+    entry_points={
         'console_scripts': [
-                            'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
-                            'test_bdf  = pyNastran.bdf.test.test_bdf:main',
-                            'test_op2  = pyNastran.op2.test.test_op2:main',
-                            'test_op4  = pyNastran.op4.test.test_op4:main',
-                            'test_f06  = pyNastran.f06.test.test_f06:main',
+            'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
+            'test_bdf  = pyNastran.bdf.test.test_bdf:main',
+            'test_op2  = pyNastran.op2.test.test_op2:main',
+            'test_op4  = pyNastran.op4.test.test_op4:main',
+            'test_f06  = pyNastran.f06.test.test_f06:main',
 
-                            'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',
-                            'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
-                           #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
-                           'format_converter = pyNastran.converters.type_converter:main',
-                           ] + py2_gui_scripts
-      },
-      test_suite = 'pyNastran.all_tests',
-      )
+            #'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',
+            #'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
+            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
+            'format_converter = pyNastran.converters.type_converter:main',
+        ] + py2_gui_scripts
+    },
+    test_suite='pyNastran.all_tests',
+)
 
