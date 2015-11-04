@@ -453,7 +453,7 @@ class SPC(Constraint):
         #pass
 
     def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids')
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property

@@ -447,6 +447,8 @@ class BDFMethods(object):
             the LOAD=ID to analyze
         include_grav : bool; default=False
             includes gravity in the summation (not supported)
+        xyz_cid0 : None / Dict[int] = (3, ) ndarray
+            the nodes in the global coordinate system
 
         Returns
         -------
@@ -872,6 +874,8 @@ class BDFMethods(object):
             the LOAD=ID to analyze
         include_grav : bool; default=False
             includes gravity in the summation (not supported)
+        xyz_cid0 : None / Dict[int] = (3, ) ndarray
+            the nodes in the global coordinate system
 
         Returns
         -------
@@ -1319,3 +1323,67 @@ class BDFMethods(object):
         """
         self.deprecated('unresolveGrids(fem_old)', 'unresolve_grids(fem_old)', '0.7')
         return self.unresolve_grids(fem_old)
+
+    def get_spcs(self, spc_id, consider_nodes=False, final_flag=True):
+        """
+        Gets the SPCs in a semi-usable form.
+
+        Parameters
+        ----------
+        spc_id : int
+            the desired SPC ID
+        consider_nodes : bool; default=False
+            True : consider the GRID card PS field
+            False: consider the GRID card PS field
+        final_flag : bool; default=True
+            Internal parameter used when consider_nodes=True to avoid
+            calculating the nodes multiple times when you have an SPCADD.
+            Don't modify this.
+
+        Returns
+        -------
+        nids : List[int]
+            the constrained nodes
+        comps : List[str]
+            the components that are constrained on each node
+
+        Considers:
+          - SPC
+          - SPC1
+          - SPCADD
+
+        Doesn't consider:
+          - non-zero enforced value on SPC
+        """
+        spcs = self.spcs[spc_id]
+        #self.spcs[key] = [constraint]
+        # print(spcs)
+        nids = []
+        comps = []
+        for spc in spcs:
+            if spc.type == 'SPC1':
+                nodes = spc.nodes
+                nnodes = len(nodes)
+                nids += nodes
+                comps += [str(spc.constraints)] * nnodes
+            elif spc.type == 'SPC':
+                for nid, comp, enforced in zip(spc.gids, spc.constraints, spc.enforced):
+                    nids.append(nid)
+                    comps.append(comp)
+            elif spc.type == 'SPCADD':
+                for spci in spc.sets:
+                    nidsi, compsi = self.get_spcs(spci, consider_nodes=False, final_flag=False)
+                    nids += nidsi
+                    comps += compsi
+            else:
+                self.log.warning('not considering:\n%s' % str(spc))
+                pass
+                #raise NotImplementedError(spc.type)
+
+        if consider_nodes and final_flag:
+            for nid, node in iteritems(model.nodes):
+                if node.ps:
+                    nids.append(nid)
+                    comps.append(node.ps)
+
+        return nids, comps

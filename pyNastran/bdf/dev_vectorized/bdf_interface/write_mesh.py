@@ -69,23 +69,29 @@ class WriteMesh(object):
         self.log.debug("***writing %s" % fname)
         return out_filename
 
-    def write_bdf(self, out_filename=None, interspersed=True,
+    def write_bdf(self, out_filename=None, interspersed=False,
                   size=8, precision='single', enddata=None):
         """
         Writes the BDF.
 
-        :param self:         the BDF object
-        :param out_filename: the name to call the output bdf
-                             (default=None; pops a dialog)
-        :param interspersed: Writes a bdf with properties & elements
-              interspersed like how Patran writes the bdf.  This takes
-              slightly longer than if interspersed=False, but makes it
-              much easier to compare to a Patran-formatted bdf and is
-              more clear. (default=True)
-        :param size:  the field size (8 is recommended)
-        :param precision:  'single', 'double'
-        :param enddata:  Flag to enable/disable writing ENDDATA
-                         (default=None -> depends on input BDF)
+
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        out_filename : str; default=None -> dialog box
+            the name to call the output bdf
+        interspersed : bool; default=False
+            Writes a bdf with properties & elements interspersed like
+            how Patran writes the bdf.  This takes slightly longer than
+            if interspersed=False, but makes it much easier to compare
+            to a Patran-formatted bdf and is more clear.
+        size : int; default=8
+            the field size (8 is recommended)
+        precision : str
+            'single', 'double'
+        enddata : None / bool; default=None -> depends on input BDF
+            Flag to enable/disable writing ENDDATA
         """
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, precision)
@@ -122,7 +128,10 @@ class WriteMesh(object):
         """
         Writes the executive and case control decks.
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         self._write_executive_control_deck(outfile)
         self._write_case_control_deck(outfile)
@@ -131,7 +140,10 @@ class WriteMesh(object):
         """
         Writes the executive control deck.
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         msg = ''
         if self.executive_control_lines:
@@ -152,7 +164,10 @@ class WriteMesh(object):
         """
         Writes the Case Control Deck.
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
@@ -374,8 +389,15 @@ class WriteMesh(object):
         """
         Write the common outputs so none get missed...
 
-        :param self: the BDF object
-        :returns msg: part of the bdf
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+
+        Returns
+        -------
+        msg : str
+            part of the bdf
         """
         is_double = False
         self._write_rigid_elements(outfile, size, is_double)
@@ -451,9 +473,17 @@ class WriteMesh(object):
         """
         Writes the DMIG cards
 
-        :param self:  the BDF object
-        :param size:  large field (16) or small field (8)
-        :returns msg: string representation of the DMIGs
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        size : int
+            large field (16) or small field (8)
+
+        Returns
+        -------
+        msg : str
+            string representation of the DMIGs
         """
         msg = []
         for (unused_name, dmig) in sorted(iteritems(self.dmigs)):
@@ -557,7 +587,10 @@ class WriteMesh(object):
         """
         Writes the PARAM cards
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.params:
             msg = ['$PARAMS\n']
@@ -569,6 +602,11 @@ class WriteMesh(object):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
         cardLines
+
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if size == 8:
             print_func = print_card_8

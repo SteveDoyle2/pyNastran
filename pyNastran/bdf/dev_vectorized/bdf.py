@@ -1431,7 +1431,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Parses the Bulk Data Deck
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         self.log.debug("reading Bulk Data Deck...")
         self._break_comment = True
@@ -1488,8 +1491,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Appends self.rejects with the list of lines in the card
 
-        :param comment:  the card comment
-        :param lines:  the lines that are part of the card
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        comment : str
+            the card comment
+        lines : List[str]
+            the lines that are part of the card
         """
         if comment:
             self.rejects.append([comment])
@@ -1500,8 +1509,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
 
-        :param self:      the BDF object
-        :param card_name: the card_name -> 'GRID'
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        card_name : str
+            the card_name -> 'GRID'
 
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.card_count['GRID']
@@ -1552,10 +1565,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
     def process_card(self, card_lines):
         """
-        :param self: the BDF object
-        :param card_lines:  the lines that are part of the current card
-        :returns card:  a list of (typically) string fields that is
-          properly sized
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        card_lines : List[str]
+            the lines that are part of the current card
+
+        Returns
+        -------
+        card : list[str]
+            a list of (typically) string fields that is properly sized
 
         .. note:: If dynamic syntax is used, then the fields may be
                   ints/floats.
@@ -1616,16 +1636,27 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Adds a card object to the BDF object.
 
-        :param self:       the BDF object
-        :param card_lines: the list of the card fields
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        card_lines : List[str]
+            the list of the card fields
+
          >>> ['GRID,1,2',]  # (is_list = False)
          >>> ['GRID',1,2,]  # (is_list = True; default)
 
-        :param card_name: the card_name -> 'GRID'
-        :param comment:   an optional the comment for the card
-        :param is_list:   changes card_lines from a list of lines to
-                          a list of fields
-        :returns card_object: the card object representation of card
+        card_name : str
+            the card_name -> 'GRID'
+        comment : str; default=''
+            an optional the comment for the card
+        is_list : bool; default=True
+            changes card_lines from a list of lines to a list of fields
+
+        Returns
+        -------
+        card_object : BDFCard()
+            the card object representation of card
 
         .. note:: this is a very useful method for interfacing with the code
         .. note:: the cardObject is not a card-type object...so not a
@@ -2336,10 +2367,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Print statistics for the BDF
 
-        :param self: the BDF object
-        :param return_type:  'string'/'list'.  'string' returns one big
-          string, while 'list' of each line in the string.  List is
-          useful for the GUI.
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        return_type : str; default='string'
+            'string'/'list':
+                'string' returns one big string, while 'list' of each line in the string.
+                'list' useful for the GUI.
 
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
@@ -2394,10 +2429,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Get the SPC/SPCADD/SPC1/SPCAX IDs.
 
-        :param exclude_spcadd: you can exclude SPCADD if you just want a
-            list of all the SPCs in the model.  For example, apply all the
-            SPCs when there is no SPC=N in the case control deck, but you
-            don't need to apply SPCADD=N twice.
+        Parameters
+        ----------
+        exclude_spcadd : bool; default=False
+            you can exclude SPCADD if you just want a list of all the
+            SPCs in the model.  For example, apply all the SPCs when
+            there is no SPC=N in the case control deck, but you don't
+            need to apply SPCADD=N twice.
         """
         spcs = {
             'SPC': self.spc,
@@ -2424,10 +2462,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         Doesn't get:
           - SPCAX
 
-        :param mpc_id:  the ID to get
-        :param resolve: removes the SPCADDs by turning them into the
-          cards they point to
-        :param used_ids: an internal parameter; default=None -> []
+        Parameters
+        ----------
+        spc_id : int
+            the ID to get
+        resolve : bool
+            removes the SPCADDs by turning them into the
+            cards they point to
+        used_ids : list; default=None -> []
+            an internal parameter
         """
         if used_ids is None:
             used_ids = []
@@ -2470,10 +2513,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         Doesn't get:
           - MPCAX
 
-        :param mpc_id:  the ID to get
-        :param resolve: removes the MPCADDs by turning them into the
-          cards they point to
-        :param used_ids: an internal parameter; default=None -> []
+        Parameters
+        ----------
+        mpc_id : int
+            the ID to get
+        resolve : bool
+            removes the MPCADDs by turning them into the cards they
+            point to
+        used_ids : list; default=None -> []
+            an internal parameter;
         """
         if used_ids is None:
             used_ids = []
@@ -2597,9 +2645,17 @@ def _clean_comment(comment, end=-1):
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
 
-    :param comment: the comment to possibly remove
-    :param end: currently leftover from the unvectorized version
-    :returns comment2: the updated comment
+    Parameters
+    ----------
+    comment : str
+        the comment to possibly remove
+    end : int; default=-1
+        currently leftover from the unvectorized version
+
+    Returns
+    -------
+    comment2 : str
+        the updated comment
     """
     if comment[:end] in ['$EXECUTIVE CONTROL DECK',
                          '$CASE CONTROL DECK',

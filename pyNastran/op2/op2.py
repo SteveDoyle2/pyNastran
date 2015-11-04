@@ -8,6 +8,8 @@ from six import iteritems, string_types
 import os
 
 from numpy import unique, int32
+
+from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
@@ -41,6 +43,14 @@ class OP2(OP2_Scalar):
         OP2_Scalar.__init__(self,
                      debug=debug, log=log, debug_file=debug_file)
         self.ask = False
+
+    @property
+    def object_attributes(self):
+        return object_attributes(self, keys_to_skip=['object_attributes', 'object_methods'])
+
+    @property
+    def object_methods(self):
+        return object_methods(self, keys_to_skip=['object_attributes', 'object_methods'])
 
     def __eq__(self, op2_model):
         if not self.read_mode == op2_model.read_mode:

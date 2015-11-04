@@ -10,12 +10,15 @@ def write_include(filename, is_windows=True):
     """
     Writes a bdf INCLUDE file line given an imported filename.
 
-    :param filename: the filename to write
-    :param is_windows: Windows has a special format for writing INCLUDE files
-                       so the format for a BDF that will run on Linux and
-                       Windows is different.  We could check the platform,
-                       but since you might need to change platforms, it's an
-                       option (default=True)
+    Parameters
+    ----------
+    filename : str
+        the filename to write
+    is_windows : bool; default=True
+        Windows has a special format for writing INCLUDE files, so the
+        format for a BDF that will run on Linux and Windows is
+        different.  We could check the platform, but since you might
+        need to change platforms, it's an option
 
     For a model that will run on Linux:
 

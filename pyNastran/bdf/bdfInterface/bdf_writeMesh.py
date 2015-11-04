@@ -959,7 +959,10 @@ class WriteMesh(object):
         """
         Writes the PARAM cards
 
-        :param self: the BDF object
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
         """
         if self.params:
             msg = ['$PARAMS\n']

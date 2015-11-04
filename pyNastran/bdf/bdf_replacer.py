@@ -46,15 +46,23 @@ class BDFReplacer(BDF):
         """
         Adds a card object to the BDF object using a streaming approach.
 
-        :param self:       the BDF object
-        :param card_lines: the list of the card fields
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        card_lines : List[str]
+            the list of the card fields
+
          >>> ['GRID,1,2',]  # (is_list = False)
          >>> ['GRID',1,2,]  # (is_list = True; default)
 
-        :param card_name: the card_name -> 'GRID'
-        :param comment:   an optional the comment for the card
-        :param is_list:   changes card_lines from a list of lines to
-                          a list of fields
+        card_name : str
+            the card_name -> 'GRID'
+        comment : str; default=True
+            an optional the comment for the card
+        is_list : bool; default=True
+            changes card_lines from a list of lines to
+            a list of fields
         :returns card_object: the card object representation of card
 
         .. note:: this is a very useful method for interfacing with the code
