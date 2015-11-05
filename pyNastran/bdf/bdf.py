@@ -2581,28 +2581,34 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             uline = line.upper()
             if uline.startswith('INCLUDE'):
                 j = i + 1
-                include_lines = [line.split('$')[0].strip()]
+                line_base = line.split('$')[0]
+                include_lines = [line_base.strip()]
                 # print('----------------------')
-                while not line.split('$')[0].endswith("'") and j < nlines:
-                    # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-                    try:
-                        line = lines[j].split('$')[0].strip()
-                    except IndexError:
-                        # print('bdf_filename=%r' % bdf_filename)
-                        crash_name = 'pyNastran_crash.bdf'
-                        self._dump_file(crash_name, lines, i+1)
-                        msg = 'There was an invalid filename found while parsing (index).\n'
-                        msg += 'Check the end of %r\n' % crash_name
-                        msg += 'bdf_filename2 = %r' % bdf_filename2
-                        raise IndexError(msg)
-                    # print('endswith_quote=%s; %r' % (line.split('$')[0].strip().endswith(""), line.strip()))
-                    include_lines.append(line.strip())
-                    j += 1
-                # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
 
-                #print('*** %s' % line)
-                #bdf_filename2 = line[7:].strip(" '")
-                #include_lines = [line] + lines[i+1:j]
+                line_base = line_base[8:].strip()
+                if line_base.startswith("'") and line_base.endswith("'"):
+                    pass
+                else:
+                    while not line.split('$')[0].endswith("'") and j < nlines:
+                        # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                        try:
+                            line = lines[j].split('$')[0].strip()
+                        except IndexError:
+                            # print('bdf_filename=%r' % bdf_filename)
+                            crash_name = 'pyNastran_crash.bdf'
+                            self._dump_file(crash_name, lines, i+1)
+                            msg = 'There was an invalid filename found while parsing (index).\n'
+                            msg += 'Check the end of %r\n' % crash_name
+                            msg += 'bdf_filename2 = %r' % bdf_filename2
+                            raise IndexError(msg)
+                        # print('endswith_quote=%s; %r' % (line.split('$')[0].strip().endswith(""), line.strip()))
+                        include_lines.append(line.strip())
+                        j += 1
+                    # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+
+                    #print('*** %s' % line)
+                    #bdf_filename2 = line[7:].strip(" '")
+                    #include_lines = [line] + lines[i+1:j]
                 #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
 

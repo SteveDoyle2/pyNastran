@@ -503,6 +503,10 @@ def run_fem2(bdfModel, out_model, xref, punch,
                 # lseq = fem2.loads[lseq_id]
                 # assert sol in [], sol
                 # print(lseq)
+            if subcase.has_parameter('SPC'):
+                spc_id = subcase.get_parameter('SPC')[0]
+                fem2.get_spcs(spc_id)
+
             if subcase.has_parameter('DLOAD'):
                 assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129,
                                153, 159, 400, 601], 'sol=%s DLOAD' % sol
