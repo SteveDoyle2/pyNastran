@@ -7,7 +7,7 @@ Main BDF class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, itervalues
+from six import string_types, iteritems, itervalues, iterkeys
 from collections import defaultdict
 
 from codecs import open as codec_open
@@ -2454,13 +2454,35 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
         Returns
         ----------
-        i_transform : dict{float:ndarray}
+        i_transform : dict{int:(n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
-        transforms : dict{float:ndarray}
+        beta_transforms : dict{in:3x3 float ndarray}
             Dictionary from coordinate id to 3 x 3 transformation
             matrix for that coordinate system.
+
+        Example
+        -------
+        # assume GRID 1 has a CD=10
+        # assume GRID 2 has a CD=10
+        # assume GRID 5 has a CD=50
+        >>> model.point_ids
+        [1, 2, 5]
+        >>> i_transform, beta_transforms = model.get_displcement_index_transforms()
+        >>> i_transform[10]
+        [0, 1]
+        >>> beta_transforms[10]
+        [1., 0., 0.]
+        [0., 0., 1.]
+        [0., 1., 0.]
+
+        >>> i_transform[50]
+        [2]
+        >>> beta_transforms[50]
+        [1., 0., 0.]
+        [0., 1., 0.]
+        [0., 0., 1.]
         """
         nids_transform = {}
         i_transform = {}
@@ -2475,11 +2497,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                 nids_transform[cid_d].append(nid)
 
         nids_all = array(sorted(self.point_ids))
-        for cid in sorted(nids_transform.keys()):
+        for cid in sorted(iterkeys(nids_transform)):
             nids = array(nids_transform[cid])
             i_transform[cid] = where(in1d(nids_all, nids))[0]
-            transforms[cid] = self.coords[cid].beta()
-        return i_transform, transforms
+            beta_transforms[cid] = self.coords[cid].beta()
+        return i_transform, beta_transforms
 
     def _get_card_name(self, lines):
         """
@@ -2874,7 +2896,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                             self.dumplines = True if value == 'true' else False
                         elif key == 'skip_cards':
                             cards = set([value.strip() for value in value.upper().split(',')])
-                            self.cards_to_read = self.cards_to_read - cards
+                            #self.cards_to_read = self.cards_to_read - cards
                         else:
                             raise NotImplementedError(key)
                     else:

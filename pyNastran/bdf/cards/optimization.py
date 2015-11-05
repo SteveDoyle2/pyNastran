@@ -52,13 +52,13 @@ class DCONSTR(OptConstraint):
             return self.rid.oid
 
     def Lid(self):
-        if isinstance(self.lid, integer_types) or isinstance(self.lid, float):
+        if isinstance(self.lid, (integer_types, float)):
             return self.lid
         else:
             return self.lid.tid
 
     def Uid(self):
-        if isinstance(self.uid, integer_types) or isinstance(self.uid, float):
+        if isinstance(self.uid, (integer_types, float)):
             return self.uid
         else:
             return self.uid.tid

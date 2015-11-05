@@ -65,7 +65,7 @@ class RBE2(object):
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
-        if isinstance(i, int) or isinstance(i, int64):
+        if isinstance(i, (int, int64)):
             i = [i]
         i = asarray(i)
         n = len(i)

@@ -1377,7 +1377,6 @@ class BDFMethods(object):
                     comps += compsi
             else:
                 self.log.warning('not considering:\n%s' % str(spc))
-                pass
                 #raise NotImplementedError(spc.type)
 
         if consider_nodes and final_flag:

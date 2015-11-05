@@ -214,8 +214,7 @@ class NastranIO(NastranIO_xref):
 
         points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
         for (eid, element) in sorted(iteritems(model.caeros)):
-            if (isinstance(element, CAERO1) or isinstance(element, CAERO3) or
-                isinstance(element, CAERO4) or isinstance(element, CAERO5)):
+            if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 if self.is_sub_panels:
                     pointsi, elementsi = element.panel_points_elements()
                     for ipoint, pointii in enumerate(pointsi):
@@ -494,7 +493,7 @@ class NastranIO(NastranIO_xref):
                 self.eidMap[eid] = i
                 #print(element.type)
                 pid = 0
-                if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
+                if isinstance(element, (CTRIA3, CTRIAR)):
                     elem = vtkTriangle()
                     nodeIDs = element.nodeIDs()
                     pid = element.Pid()
@@ -548,8 +547,7 @@ class NastranIO(NastranIO_xref):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
 
-                elif (isinstance(element, CQUAD4) or isinstance(element, CSHEAR) or
-                      isinstance(element, CQUADR)):
+                elif isinstance(element, (CQUAD4, CSHEAR, CQUADR)):
                     nodeIDs = element.nodeIDs()
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:4]

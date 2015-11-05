@@ -184,8 +184,7 @@ class PARAM(BaseCard):
                 raise TypeError(msg)
 
         else:
-            if not (isinstance(value1, int) or isinstance(value1, float) or
-                    isinstance(value1, string_types)):
+            if not isinstance(value1, (int, float, string_types)):
                 msg = 'key=%s value1=%r must be an integer, float, or string.' % (self.key, value1)
                 raise TypeError(msg)
 

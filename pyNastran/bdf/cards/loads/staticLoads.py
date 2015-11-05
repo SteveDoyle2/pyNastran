@@ -60,8 +60,7 @@ class LOAD(LoadCombination):
                         load_IDs += load.lid
                     else:  # int
                         load_IDs += load.getLoadIDs()
-                elif (isinstance(load, Force) or isinstance(load, Moment) or
-                      isinstance(load, PLOAD4) or isinstance(load, GRAV)):
+                elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
                     load_IDs += [load.sid]
                 else:
                     msg = ('The getLoadIDs method doesnt support %s cards.\n'
@@ -85,8 +84,7 @@ class LOAD(LoadCombination):
                         loadTypes += load.type
                     else:  # int
                         loadTypes += [load.type] + load.getLoadTypes()
-                elif (isinstance(load, Force) or isinstance(load, Moment) or
-                      isinstance(load, PLOAD4) or isinstance(load, GRAV)):
+                elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
                     loadTypes += [load.type]
                 else:
                     raise NotImplementedError(load)
@@ -900,12 +898,12 @@ class FORCE1(Force):
         self.normalize()
 
     def G1(self):
-        if isinstance(self.g1, integer_types) or isinstance(self.g1, float):
+        if isinstance(self.g1, (integer_types, float)):
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2, integer_types) or isinstance(self.g1, float):
+        if isinstance(self.g2, (integer_types, float)):
             return self.g2
         return self.g2.nid
 
@@ -1437,12 +1435,12 @@ class GMLOAD(Load):
         #self.normalize()
 
     #def G1(self):
-        #if isinstance(self.g1, integer_types) or isinstance(self.g1, float):
+        #if isinstance(self.g1, (integer_types, float)):
             #return self.g1
         #return self.g1.nid
 
     #def G2(self):
-        #if isinstance(self.g2, integer_types) or isinstance(self.g1, float):
+        #if isinstance(self.g2, (integer_types, float)):
             #return self.g2
         #return self.g2.nid
 
@@ -1957,7 +1955,7 @@ class PLOAD4(Load):
             self.eids = model.Elements(self.eids, msg=msg)
 
     def Eid(self, eid):
-        if isinstance(eid, integer_types) or isinstance(eid, int32):
+        if isinstance(eid, (integer_types, int32)):
             return eid
         return eid.eid
 

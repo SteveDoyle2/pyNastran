@@ -34,7 +34,7 @@ class GetMethods(GetMethodsDeprecated):
             card_types = list(self.cards_to_read)
         if isinstance(card_types, string_types):
             card_types = [card_types]
-        elif not(isinstance(card_types, list) or isinstance(card_types, tuple)):
+        elif not isinstance(card_types, (list, tuple)):
             raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
 
         #if reset_type_to_slot_map or self._type_to_slot_map is None:
@@ -73,7 +73,7 @@ class GetMethods(GetMethodsDeprecated):
         out_dict : dict[str] = List[BDFCard()]
             the key=card_type, value=the card object
         """
-        if not(isinstance(card_types, list) or isinstance(card_types, tuple)):
+        if not isinstance(card_types, (list, tuple)):
             raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
 
         #self._type_to_id_map = {

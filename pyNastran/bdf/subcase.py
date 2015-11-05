@@ -488,7 +488,7 @@ class Subcase(object):
                 #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, integer_types) or value is None:
                 pass
-            elif isinstance(value, list) or isinstance(value, ndarray):  # new???
+            elif isinstance(value, (list, ndarray)):  # new???
                 msg = 'invalid type for key=%s value; expected an integer; got a list' % key
                 raise TypeError(msg)
             elif value.isdigit():  # STRESS = ALL

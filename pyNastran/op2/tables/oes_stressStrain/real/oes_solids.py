@@ -324,7 +324,7 @@ class RealSolidArray(OES_Object):
 
         n = 0
         for v in table3:
-            if isinstance(v, int) or isinstance(v, float):
+            if isinstance(v, (int, float)):
                 n += 4
             else:
                 n += len(v)

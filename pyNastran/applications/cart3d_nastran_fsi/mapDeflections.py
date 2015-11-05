@@ -42,10 +42,10 @@ class DeflectionReader(object):
         #print "defs[%s]-[%s,%s,%s,%s] = %s" %(ID, n0, n1, n2, n3, defs)
         return defs
 
-    def getDeflection(self, gridID):
-        if self.deflections.has_key(gridID):
-            return self.deflections[gridID]
-            #return [float(gridID),] * 3 # test
+    def getDeflection(self, grid_id):
+        if grid_id in self.deflections:
+            return self.deflections[grid_id]
+            #return [float(grid_id),] * 3 # test
         else:
             return [0., 0., 0.]
 
@@ -262,7 +262,7 @@ class DeflectionMapper(object):
             #print("aeroNode  = ",aeroNode)
             #continue
 
-            if properTets.has_key(i):
+            if i in properTets:
                 tet = tets[properTets[i]]
             else:
                 tet, ID2 = self.find_closest_tet(aeroNode, tet)

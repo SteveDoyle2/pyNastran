@@ -727,8 +727,7 @@ class NastranIO(object):
         points.SetNumberOfPoints(ncaeros_points)
 
         for eid, element in sorted(iteritems(model.caeros)):
-            if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
-               isinstance(element, CAERO4) or isinstance(element, CAERO5)):
+            if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 cpoints = element.get_points()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, j)
@@ -757,8 +756,7 @@ class NastranIO(object):
 
         eType = vtkQuad().GetCellType()
         for eid, element in sorted(iteritems(model.caeros)):
-            if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
-               isinstance(element, CAERO4) or isinstance(element, CAERO5)):
+            if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 pointsi, elementsi = element.panel_points_elements()
                 for ipoint, pointii in enumerate(pointsi):
                     points.InsertPoint(j + ipoint, *pointii)
@@ -1585,7 +1583,7 @@ class NastranIO(object):
                 # continue
             self.eidMap[eid] = i
             pid = 0
-            if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
+            if isinstance(element, (CTRIA3, CTRIAR)):
                 elem = vtkTriangle()
                 nodeIDs = element.node_ids
                 pid = element.Pid()
@@ -1647,8 +1645,7 @@ class NastranIO(object):
                 #elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif (isinstance(element, CQUAD4) or isinstance(element, CSHEAR) or
-                  isinstance(element, CQUADR)):
+            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR)):
                 nodeIDs = element.node_ids
                 pid = element.Pid()
                 for nid in nodeIDs:

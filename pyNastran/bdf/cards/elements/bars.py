@@ -201,7 +201,7 @@ class CBAR(LineElement):
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
     """
     type = 'CBAR'
-    asterType = 'CBAR'
+    aster_type = 'CBAR'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
         8:'offt', 9:'pa', 10:'pb',

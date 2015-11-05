@@ -258,7 +258,7 @@ def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
                     return zero_fmt
                 return j % (0. if abs(a) < tol else a)
 
-        if isinstance(a, complex) or isinstance(a, complex64) or isinstance(a, complex128):
+        if isinstance(a, (complex, complex64, complex128)):
             return '%4s%4s' % ('0' if abs(a.real) < 1e-8 else '%.4g' % (a.real),
                                '' if abs(a.imag) < 1e-8 else '%+.4gj' % (a.imag))
         try:

@@ -239,7 +239,7 @@ class TriShell(ShellElement):
 
 class CTRIA3(TriShell):
     type = 'CTRIA3'
-    asterType = 'TRIA3'
+    aster_type = 'TRIA3'
     calculixType = 'S3'
     _field_map = {
         1: 'eid', 2:'pid', 6:'thetaMcid', 7:'zOffset', 10:'TFlag',
@@ -425,7 +425,7 @@ class CTRIA3(TriShell):
 
 class CTRIA6(TriShell):
     type = 'CTRIA6'
-    asterType = 'TRIA6'
+    aster_type = 'TRIA6'
     calculixType = 'S6'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -1295,7 +1295,7 @@ class CSHEAR(QuadShell):
 
 class CQUAD4(QuadShell):
     type = 'CQUAD4'
-    asterType = 'QUAD4 # CQUAD4'
+    aster_type = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
     _field_map = {1: 'eid', 2:'pid', 7:'thetaMcid', 8:'zOffset',
                   10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
@@ -1703,7 +1703,7 @@ class CQUAD(QuadShell):
 
 class CQUAD8(QuadShell):
     type = 'CQUAD8'
-    asterType = 'QUAD8'
+    aster_type = 'QUAD8'
 
     def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)

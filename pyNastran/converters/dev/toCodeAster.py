@@ -80,10 +80,10 @@ class CodeAsterConverter(BDF):
         #for eid,elements in self.elements:
             #elems[eid] = []
         for eid, element in iteritems(self.elements):
-            if not hasattr(element, 'asterType'):
+            if not hasattr(element, 'aster_type'):
                 print('rejecting: %s' % element.type)
                 continue
-            Type = element.asterType
+            Type = element.aster_type
             if Type not in elems:
                 elems[Type] = []
 
@@ -204,7 +204,7 @@ class CodeAsterConverter(BDF):
         iFace = 0
         iStart = 0
         for pid, prop in sorted(iteritems(self.properties)):
-            if isinstance(prop, PBARL) or isinstance(prop, PBEAML):
+            if isinstance(prop, (PBARL, PBEAML)):
                 (pyCAi, iCut, iFace, iStart) = prop.write_code_aster(
                     iCut, iFace, iStart)
                 pyCA += pyCAi

@@ -494,8 +494,8 @@ class GMSPC(Constraint):
             raise NotImplementedError('GMSPC')
 
     def cross_reference(self, model):
+        """TODO: xref"""
         msg = ', which is required by %s=%s' % (self.type, self.conid)
-        pass
 
     def raw_fields(self):
         fields = ['GMSPC', self.conid, self.components, self.entity, self.entity_id]

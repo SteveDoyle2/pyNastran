@@ -73,7 +73,7 @@ class VectorizedCard(object):
     def _validate_slice(self, i):
         if self.n == 0:
             raise RuntimeError('%s has not been allocated or built' % self.type)
-        if isinstance(i, int) or isinstance(i, int64):
+        if isinstance(i, (int, int64)):
             i2 = array([i], dtype='int32')
         elif isinstance(i, list):
             i2 = asarray(i)
@@ -88,7 +88,7 @@ class VectorizedCard(object):
         return i2
 
     def _set_as_array(self, i):
-        if isinstance(i, int) or isinstance(i, int64):
+        if isinstance(i, (int, int64)):
             i = array([i], dtype='int32')
         elif isinstance(i, list):
             i = array(i, dtype='int32')
@@ -112,7 +112,7 @@ class VectorizedCard(object):
         if not array_equal(argsort(sorted_array), arange(len(sorted_array))):
             msg2 = '%s is not sorted\nsorted_array=%s' % (msg, sorted_array)
             raise RuntimeError(msg2)
-        assert isinstance(self.n, int64) or isinstance(self.n, int), 'field_name=%s n=%s type=%s' % (field_name, self.n, type(self.n))
+        assert isinstance(self.n, (int64, int)), 'field_name=%s n=%s type=%s' % (field_name, self.n, type(self.n))
         assert isinstance(check, bool)
         if unsorted_array is None:
             i = slice(None)
@@ -143,7 +143,7 @@ class VectorizedCard(object):
                     msg2 += 'sorted %s[i]= %s\n' % (field_name, sorted_array[i])
                     msg2 += 'i=%s\n' % i
                     raise RuntimeError(msg2)
-        if isinstance(i, int64) or isinstance(i, integer_types):
+        if isinstance(i, (int64, integer_types)):
             i = array([i], dtype='int32')
         return i
 

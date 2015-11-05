@@ -467,23 +467,27 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.
 
-    :param Fxyz:     the force in an arbitrary coordinate system
-    :type Fxyz:      TYPE = NDARRAY.  SIZE=(3,)
-    :param Mxyz:     the moment in an arbitrary coordinate system
-    :type Mxyz:      TYPE = NDARRAY.  SIZE=(3,)
-    :param cid:      the coordinate ID for xyz
-    :type cid:       int
-    :param cid_new:  the desired coordinate ID
-    :type cid_new:   int
-    :param model:    the BDF model object
-    :type model:     BDF()
-    :param is_cid_int:  is cid/cid_new an integer or a Coord object
-    :type is_cid_int:  bool
+    Parameters
+    ----------
+    Fxyz : (3, ) float ndarray
+        the force in an arbitrary coordinate system
+    Mxyz : (3, ) float ndarray
+        the moment in an arbitrary coordinate system
+    cid : int
+        the coordinate ID for xyz
+    cid_new : int
+        the desired coordinate ID
+    model : BDF()
+        the BDF model object
+    is_cid_int : bool
+        is cid/cid_new an integer or a Coord object
 
-    :returns Fxyz_local:  the force in an arbitrary coordinate system
-    :type Fxyz_local:     TYPE = NDARRAY.  SIZE=(3,)
-    :returns Mxyz_local:  the force in an arbitrary coordinate system
-    :type MxyMxyz_local:  TYPE = NDARRAY.  SIZE=(3,)
+    Returns
+    -------
+    Fxyz_local : (3, ) float ndarray
+        the force in an arbitrary coordinate system
+    Mxyz_local : (3, ) float ndarray
+        the force in an arbitrary coordinate system
     """
     if cid == cid_new: # same coordinate system
         return F, M

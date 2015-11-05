@@ -192,7 +192,7 @@ class CHEXA8(SolidElement):
     +-------+-----+-----+----+----+----+----+----+----+
     """
     type = 'CHEXA'
-    asterType = 'HEXA8'
+    aster_type = 'HEXA8'
     calculixType = 'C3D8'
 
     def write_card(self, size=8, is_double=False):
@@ -339,7 +339,7 @@ class CHEXA20(SolidElement):
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CHEXA'
-    asterType = 'HEXA20'
+    aster_type = 'HEXA20'
     calculixType = 'C3D20'
 
     def write_card(self, size=8, is_double=False):
@@ -512,7 +512,7 @@ class CPENTA6(SolidElement):
       C = (c1-c2)/2
     """
     type = 'CPENTA'
-    asterType = 'PENTA6'
+    aster_type = 'PENTA6'
     calculixType = 'C3D6'
 
     def write_card(self, size=8, is_double=False):
@@ -823,7 +823,7 @@ class CPENTA15(SolidElement):
     +---------+-----+-----+----+-----+-----+-----+-----+-----+
     """
     type = 'CPENTA'
-    asterType = 'PENTA15'
+    aster_type = 'PENTA15'
     calculixType = 'C3D15'
 
     def write_card(self, size=8, is_double=False):
@@ -975,7 +975,7 @@ class CPYRAM5(SolidElement):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CPYRAM'
-    #asterType = 'CPYRAM5'
+    #aster_type = 'CPYRAM5'
     #calculixType = 'C3D5'
 
     def write_card(self, size=8, is_double=False):
@@ -1088,7 +1088,7 @@ class CPYRAM13(SolidElement):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CPYRAM'
-    #asterType = 'CPYRAM13'
+    #aster_type = 'CPYRAM13'
     #calculixType = 'C3D13'
 
     def write_card(self, size=8, is_double=False):
@@ -1218,7 +1218,7 @@ class CTETRA4(SolidElement):
     +--------+-----+-----+----+----+----+----+
     """
     type = 'CTETRA'
-    asterType = 'TETRA4'
+    aster_type = 'TETRA4'
     calculixType = 'C3D4'
 
     def write_card(self, size=8, is_double=False):
@@ -1379,7 +1379,7 @@ class CTETRA10(SolidElement):
     +--------+-----+-----+-----+-----+-----+----+-----+-----+
     """
     type = 'CTETRA'
-    asterType = 'TETRA10'
+    aster_type = 'TETRA10'
     calculixType = 'C3D10'
 
     def write_card(self, size=8, is_double=False):

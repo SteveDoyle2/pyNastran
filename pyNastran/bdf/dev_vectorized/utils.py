@@ -38,7 +38,7 @@ def slice_to_iter(ids):
             ids2 = range(ids.start, ids.stop, ids.step)
     elif ids is None:
         raise TypeError('cannot turn None into an iterable')
-    elif isinstance(ids, list) or isinstance(ids, ndarray):
+    elif isinstance(ids, (list, ndarray)):
         ids2 = ids
     else:
         raise KeyError(ids)

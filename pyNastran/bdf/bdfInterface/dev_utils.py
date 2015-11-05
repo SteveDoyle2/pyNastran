@@ -1296,7 +1296,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     from numpy import zeros, float32, arccos, dot, degrees
     from collections import defaultdict
 
-    if isinstance(theta_tols, float) or isinstance(theta_tols, float32):
+    if isinstance(theta_tols, (float, float32)):
         theta_tols = [theta_tols] * len(starting_eids)
 
     model = BDF()

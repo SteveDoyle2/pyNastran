@@ -43,7 +43,7 @@ class SpringElement(Element):
 
 class CELAS1(SpringElement):
     type = 'CELAS1'
-    asterType = 'CELAS1'
+    aster_type = 'CELAS1'
     _field_map = {
         1: 'eid', 2:'pid', 4:'c1', 6:'c2',
     }
@@ -149,7 +149,7 @@ class CELAS1(SpringElement):
 
 class CELAS2(SpringElement):
     type = 'CELAS2'
-    asterType = 'CELAS2'
+    aster_type = 'CELAS2'
     _field_map = {
         1: 'eid', 2:'k', 4:'c1', 6:'c2',
     }
@@ -308,7 +308,7 @@ class CELAS2(SpringElement):
 
 class CELAS3(SpringElement):
     type = 'CELAS3'
-    asterType = 'CELAS3'
+    aster_type = 'CELAS3'
     _field_map = {
         1: 'eid', 2:'pid', 4:'s1', 6:'s2',
     }
@@ -383,7 +383,7 @@ class CELAS3(SpringElement):
 
 class CELAS4(SpringElement):
     type = 'CELAS4'
-    asterType = 'CELAS4'
+    aster_type = 'CELAS4'
     _field_map = {
         1: 'eid', 2:'k', 4:'s1', 6:'s2',
     }

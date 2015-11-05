@@ -157,7 +157,7 @@ def write_array(a, nspaces=0):
         #print "a = ",a
         for ai in a[:-1]:
             #print "ai = ",ai
-            if isinstance(ai, int) or isinstance(ai, float):
+            if isinstance(ai, (int, float)):
                 msg += '%s, ' % ai
             elif isinstance(ai, string_types):
                 msg += "'%s'," % ai
@@ -167,7 +167,7 @@ def write_array(a, nspaces=0):
                 return "'array(.not supported type.)'"
             msg += '%s, ' % ai
         if len(a) > 0:
-            if isinstance(a[-1], int) or isinstance(a[-1], float):
+            if isinstance(a[-1], (int, float)):
                 msg += "%s], dtype='%s')" % (a[-1], dtype)
             elif isinstance(a[-1], string_types):
                 msg += "'%s'], dtype='%s')" % (a[-1], dtype)

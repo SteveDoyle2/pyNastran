@@ -308,7 +308,7 @@ class CROD(RodElement):
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, element_id)
-            if isinstance(i, int) or isinstance(i, int64):
+            if isinstance(i, (int, int64)):
                 i = array([i])
 
             #print('i =', i, type(i))
