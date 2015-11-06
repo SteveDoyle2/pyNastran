@@ -611,7 +611,7 @@ class Cart3D(Cart3dIO):
         if self.loads is None or self.loads == {}:
             loads = {}
             is_loads = False
-            print("no loads")
+            # print("no loads")
         else:
             is_loads = True
 

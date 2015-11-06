@@ -45,7 +45,7 @@ class ADB_IO(object):
                 del self.iCase
                 del self.iSubcaseNameMap
             except:
-                print("cant delete geo")
+                # print("cant delete geo")
                 pass
 
             #print(dir(self))

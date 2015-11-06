@@ -3212,7 +3212,7 @@ class NastranIO(object):
         times = None
         for table_type in table_types:
             if not hasattr(model, table_type):
-                print('no table_type=%s' % table_type)
+                # print('no table_type=%s' % table_type)
                 continue
             table = getattr(model, table_type)
             if isubcase in table:

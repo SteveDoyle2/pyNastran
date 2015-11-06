@@ -109,7 +109,7 @@ class RLOAD1(TabularLoad):
             self.tc = model.Table(self.tc, msg=msg)
         if self.td:
             self.td = model.Table(self.td, msg=msg)
-        if isinstance(self.delay, int):
+        if isinstance(self.delay, int) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def getLoads(self):
@@ -310,7 +310,7 @@ class RLOAD2(TabularLoad):
             self.tb = model.Table(self.tb, msg=msg)
         if self.tp:
             self.tp = model.Table(self.tp, msg=msg)
-        if self.delay:
+        if self.delay and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def getLoads(self):
@@ -437,7 +437,7 @@ class TLOAD1(TabularLoad):
         if self.tid:
             msg = ' which is required by %s=%s' % (self.type, self.sid)
             self.tid = model.Table(self.tid, msg=msg)
-        if self.delay:
+        if self.delay and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def Tid(self):
@@ -612,7 +612,7 @@ class TLOAD2(TabularLoad):
         return [self]
 
     def cross_reference(self, model):
-        if self.delay:
+        if self.delay and self.delay > 0:
             msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
             self.delay = model.DELAY(self.delay_id, msg=msg)
         # TODO: exciteID

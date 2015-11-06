@@ -734,7 +734,7 @@ class Cart3DReader(Cart3dIO):
         if loads is None or loads == {}:
             loads = {}
             is_loads = False
-            print("no loads")
+            # print("no loads")
         else:
             is_loads = True
 

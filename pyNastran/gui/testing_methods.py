@@ -6,7 +6,7 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 class TestGuiCommon(object):
     def __init__(self, res_widget):
         self.res_widget = res_widget
-        print('init')
+        # print('init')
 
     def form(self):
         formi = self.res_widget.get_form()
