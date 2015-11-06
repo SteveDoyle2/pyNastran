@@ -216,6 +216,57 @@ def test_abs_max_min_vector():
         #[0.0, 2.0, 4.0],
     #]))
 
+def transform_force_from_local_to_global(force_in_local, gpforce_nids,
+                                         nid_cd, i_transform, beta_transforms):
+    force_in_global = zeros(force_in_local.shape, dtype='float32')
+    nids = nid_cd[:, 0]
+    cds = nid_cd[:, 1]
+    ucds = unique(cds)
+    for cd in ucds:
+        if cd == 0:
+            i = where(cds == cd)[0]
+            nidsi = nids[i]
+            #force_in_global[:, :3] = force_in_local[i, :3]
+            #force_in_global[:, 3:] = force_in_local[i, 3:]
+        else:
+            raise NotImplementedError(ucds)
+    return force_in_local
+
+def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
+    F = force_in_global
+    M = zeros(3, dtype='float32')
+    cp = coord_in
+    coord_to = coord_out  # this is really cd
+    r = cp.origin - coord_to.origin
+
+    #cp_cid = cp.cid
+    if cp.cid != 0:
+        Fxyz_local_1 = cp.coordToXYZ(F)
+        Mxyz_local_1 = cp.coordToXYZ(M)
+        Fxyz_global = dot(Fxyz_local_1, cp.beta())
+        Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coord_to.beta().T)
+    else:
+        Fxyz_local_1 = F
+        Mxyz_local_1 = M
+        Fxyz_global = Fxyz_local_1
+        Fxyz_local_2 = dot(Fxyz_local_1, coord_to.beta().T)
+
+
+    # find the moment about the new origin due to the force
+    if abs(r).max() > 0.:
+        Mxyz_global = cross(r, Fxyz_global)
+        dMxyz_local_2 = cross(r, Fxyz_local_2)
+        Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
+    else:
+        Mxyz_local_2 = r
+
+
+    # rotate the delta moment into the local frame
+    M_local = coord_to.XYZtoCoord(Mxyz_local_2)
+
+    #return Fxyz_local_2, Mxyz_local_2
+    return Fxyz_local_2
+
 if __name__ == '__main__':  # pragma: no cover
     #print(iformat('4si3f'))
     test_abs_max_min_global()

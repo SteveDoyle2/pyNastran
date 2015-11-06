@@ -5,9 +5,8 @@ from pyNastran.converters.ugrid.surf_reader import SurfReader, TagReader
 from six import iteritems
 from six.moves import range
 import os
-from numpy import where
 from numpy import unique
-#from numpy import zeros, arange, mean, amax, amin, array, where
+#from numpy import zeros, arange, mean, amax, amin, array
 
 import vtk
 from vtk import vtkTriangle, vtkQuad

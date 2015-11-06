@@ -1,19 +1,21 @@
 from __future__ import print_function
-from numpy import vstack, amax, amin, arange, ones, zeros, where
-from pyNastran.converters.ugrid.surf_reader import TagReader
-from pyNastran.converters.ugrid.ugrid_reader import UGRID
-from pyNastran.converters.ugrid.ugrid2d_reader import UGRID2D_Reader
 
-#VTK_TRIANGLE = 5
 from six import iteritems
 from six.moves import range
 import os
+
+from numpy import vstack, amax, amin, arange, ones, zeros, where
 from numpy import zeros, unique, where
-#from numpy import zeros, arange, mean, amax, amin, array, where
+
+from pyNastran.converters.ugrid.surf_reader import TagReader
+from pyNastran.converters.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.ugrid.ugrid2d_reader import UGRID2D_Reader
+from pyNastran.utils import print_bad_path, is_binary_file
+
+#VTK_TRIANGLE = 5
 
 import vtk
 from vtk import vtkTriangle, vtkQuad
-from pyNastran.utils import print_bad_path, is_binary_file
 
 
 class UGRID_IO(object):

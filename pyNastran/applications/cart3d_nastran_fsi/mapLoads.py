@@ -629,7 +629,7 @@ def run_map_loads(inputs, cart3dGeom='Components.i.triq', bdfModel='fem.bdf',
         inputs = {
             'aero_format' : 'Cart3d',
             'Mach' : 0.825,
-            'pInf' : 499.3,        # psf, alt=35k (per Schaufele p. 11)
+            # 'pInf' : 499.3,        # psf, alt=35k (per Schaufele p. 11)
             'pInf' : pInf / 144.,  # convert to psi
             'qInf' : 1.4 / 2. * pInf * Mach**2.,
             'Sref' : 1582876.,  # inch^2

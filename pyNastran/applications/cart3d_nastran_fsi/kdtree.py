@@ -9,7 +9,7 @@ class KdTree2(object):
     def __init__(self, treeType, pointsList, nClose=0):
         self.treeType = treeType
         self.nclose = nClose
-        if treeType != 'node' and treeType != 'element':
+        if treeType not in ['node', 'element']:
             # verifies you're calling the right
             msg = 'Error!  Invalid treeType\n'
             msg += "treeType=%r valid='node','element'" % treeType
@@ -34,7 +34,7 @@ class KdTree(object):
     def __init__(self, treeType, pointsList, nClose=0):
         self.nClose = nClose
         self.treeType = treeType
-        if treeType != 'node' and treeType != 'element':
+        if treeType not in ['node', 'element']:
             # verifies you're calling the right
             msg = 'Error!  Invalid treeType\n'
             msg += "treeType=%r valid='node','element'" % treeType

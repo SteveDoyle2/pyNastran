@@ -1,8 +1,6 @@
 from six import iteritems
-from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
+
 from pyNastran.f06.f06_formatting import writeFloats13E
-
-
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 
 class RealTemperatureGradientAndFluxArray(RealTableArray):

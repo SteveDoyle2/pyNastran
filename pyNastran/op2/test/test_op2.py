@@ -10,7 +10,6 @@ from traceback import print_exc
 
 import pyNastran
 from pyNastran import is_release
-from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError
 
 try:

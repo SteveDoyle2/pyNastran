@@ -8,6 +8,38 @@ from numpy import ndarray
 
 from pyNastran.bdf.cards.baseCard import collapse_thru_packs, deprecated
 
+int_cards = (
+    # these are cards that look like:
+    #    LOAD = 6
+    'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
+    'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)',
+    'DLOAD', 'MFLUID', 'CLOAD', 'NLPARM', 'CMETHOD',
+    'FREQUENCY', 'TSTEP', 'TSTEPNL', 'SDAMPING', 'DESOBJ',
+    'TEMPERATURE(INIT)', 'RANDOM', 'DESSUB', 'ADAPT', 'MAXLINES',
+    'TFL', 'DESGLB', 'SMETHOD', 'DYNRED', 'GUST', 'TEMPERATURE(MATE)',
+    'OTIME', 'NONLINEAR', 'AUXM', 'IC', 'BC', 'OUTRCV', 'DIVERG',
+    'DATAREC', 'TEMPERATURE(BOTH)', 'DEFORM', 'MODES', 'CASE',
+    'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
+    'GPSDCON', 'AUXMODEL',
+    'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
+    'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
+    'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
+)
+
+plottable_types = (
+    # these are types that look like:
+    #    STRESS(PLOT,PRINT,PUNCH,SORT1) = ALL
+    # they all support PLOT
+    'STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR',
+    'VELOCITY', 'ACCELERATION', 'FORCE', 'ESE', 'OLOAD', 'SEALL', 'GPFORCE',
+    'GPSTRESS', 'GPSTRAIN', 'FLUX', 'AEROF', 'THERMAL', 'STRFIELD',
+    'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
+    'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
+    'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
+    'NLLOAD', 'GPSDCON', 'BOUTPUT',
+)
+
+
 class Subcase(object):
     """
     Subcase creation/extraction class
@@ -411,6 +443,32 @@ class Subcase(object):
           value, options = subcase1['LOAD']
         """
         return self.get_parameter(param_name)
+
+    def suppress_output(self, suppress_to='PLOT'):
+        """
+        Replaces F06 printing with OP2 printing
+
+        Converts:
+            STRESS(PRINT,SORT1,REAL)
+            FORCE(PRINT,PLOT,SORT1,REAL)
+
+        to:
+            STRESS(PLOT,SORT1,REAL)
+            FORCE(PLOT,SORT1,REAL)
+
+        .. warning :: needs more validation
+        """
+        for key, param in iteritems(self.params):
+            value, options, param_type = param
+            if key in int_cards or key in ('SUBTITLE', 'LABEL', 'TITLE', 'ECHO'):
+                pass
+            elif key in plottable_types:
+                if suppress_to not in options:
+                    param[1].append(suppress_to)
+                if 'PRINT' in options:
+                    param[1].remove('PRINT')
+            else:
+                raise NotImplementedError(key)
 
     def get_parameter(self, param_name, msg=''):  # possibly deprecate...
         """

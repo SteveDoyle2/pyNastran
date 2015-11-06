@@ -92,6 +92,25 @@ class CaseControlDeck(object):
         self.subcases = {0: Subcase(id=0)}
         self._read(self.lines)
 
+    def suppress_output(self):
+        """
+        Replaces F06 printing with OP2 printing
+
+        Converts:
+            STRESS(PRINT,SORT1,REAL)
+            FORCE(PRINT,PLOT,SORT1,REAL)
+
+        to:
+            STRESS(PLOT,SORT1,REAL)
+            FORCE(PLOT,SORT1,REAL)
+
+        .. warning :: most case control types are not supported
+        """
+        for isubcase, subcase in iteritems(model.subcases):
+            # if isubcase == 0:
+                # continue
+            subcase.suppress_output()
+
     def has_parameter(self, isubcase, param_name):
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain

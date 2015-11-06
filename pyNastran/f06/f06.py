@@ -295,7 +295,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             'H E A T   F L O W   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )' : self._executive_control_echo,
 
             'H E A T   F L O W   I N T O   H B D Y   E L E M E N T S   (CHBDY)' : self._executive_control_echo,
-            'T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   T E T R A H E D R O N   P - E L E M E N T S' : self._executive_control_echo,
 
             # b-list outputs
             'S T R E N G T H   R A T I O S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._executive_control_echo,

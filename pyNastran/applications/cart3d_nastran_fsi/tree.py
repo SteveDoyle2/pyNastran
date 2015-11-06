@@ -26,7 +26,7 @@ class badTree(object):
         self.tree = {}
         self.nClose = nClose
         self.treeType = treeType
-        if treeType != 'node' and treeType != 'element':
+        if treeType not in ['node', 'element']:
             # verifies you're calling the right tree
             msg = 'Error!  Invalid treeType\n'
             msg += "treeType=%r valid='node','element'" % treeType
@@ -110,8 +110,8 @@ def main():
         4 : n4,
         5 : n5,
     }
-    treeObj = Tree(treeType='node', nClose=3)
-    tree = treeObj.buildTree(nodes, nodes)
+    tree_obj = Tree(treeType='node', nClose=3)
+    tree = tree_obj.buildTree(nodes, nodes)
 
     for nkey, dist in tree.items():
         print(nkey, dist[0], dist[1])
