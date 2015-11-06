@@ -891,7 +891,7 @@ class CPENTA15(SolidElement):
         nids = self.node_ids[:6]
         return cpenta_face(nid_opposite, nid, nids)
 
-    def getFaceAreaCentroidNormal(self, nid, nid_opposite):
+    def getFaceAreaCentroidNormal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
         return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:6])
 

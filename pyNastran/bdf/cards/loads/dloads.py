@@ -109,7 +109,7 @@ class RLOAD1(TabularLoad):
             self.tc = model.Table(self.tc, msg=msg)
         if self.td:
             self.td = model.Table(self.td, msg=msg)
-        if self.delay:
+        if isinstance(self.delay, int):
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def getLoads(self):
@@ -171,7 +171,9 @@ class RLOAD1(TabularLoad):
             dphase = 0.0
         else:
             #print('DPHASE is not supported')
-            dphase = self.dphase.get_dphase_at_freq(freq)
+            nids, comps, dphases = self.dphase.get_dphase_at_freq(freq)
+            assert len(dphases) == 1, dphases
+            dphase = dphases[0]
 
         if isinstance(self.delay, float):
             tau = self.delay
@@ -180,7 +182,9 @@ class RLOAD1(TabularLoad):
         else:
             #print('DELAY is not supported')
             tau = self.delay.get_delay_at_freq(freq)
-        return (c + 1.j * d) * exp(dphase - 2 * pi * freq * tau)
+
+        out = (c + 1.j * d) * exp(dphase - 2 * pi * freq * tau)
+        return out
 
     def raw_fields(self):
         list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay_id, self.dphase,
@@ -284,9 +288,20 @@ class RLOAD2(TabularLoad):
             tau = 0.0
         else:
             #raise NotImplementedError('DELAY is not supported')
-            tau = self.delay.get_delay_at_freq(freq)
+            nids, comps, taus = self.delay.get_delay_at_freq(freq)
+            assert len(taus) == 1, taus
+            tau = taus[0]
 
-        return b * exp(1.j * p + dphase - 2 * pi * freq * tau)
+        try:
+            out = b * exp(1.j * p + dphase - 2 * pi * freq * tau)
+        except TypeError:
+            print('b =', b)
+            print('p =', p)
+            print('dphase =', dphase)
+            print('freq =', freq)
+            print('tau =', tau)
+            raise
+        return out
 
 
     def cross_reference(self, model):

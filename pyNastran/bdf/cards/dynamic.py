@@ -64,6 +64,9 @@ class DELAY(BaseCard):
         self.components += delay.components
         self.delays += delay.delays
 
+    def get_delay_at_freq(self, freq):
+        return self.nodes, self.components, self.delays
+
     def cross_reference(self, model):
         msg = ', which is required by DELAY sid=%s' % self.sid
         for i, nid in enumerate(self.nodes):
