@@ -2486,9 +2486,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         nids_transform = {}
         i_transform = {}
-        transforms = {}
+        beta_transforms = {}
         if len(self.coords) < 2:
-            return i_transform, transforms
+            return i_transform, beta_transforms
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
             if cid_d:

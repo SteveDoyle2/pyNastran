@@ -476,7 +476,7 @@ def run_fem2(bdfModel, out_model, xref, punch,
             if subcase.has_parameter('METHOD'):
                 method_id = subcase.get_parameter('METHOD')[0]
                 method = fem2.methods[method_id]
-                assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111, 112, 144, 145, 187], 'sol=%s METHOD' % sol
+                assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111, 112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
             if subcase.has_parameter('CMETHOD'):
                 method_id = subcase.get_parameter('CMETHOD')[0]
                 method = fem2.cMethods[method_id]
@@ -495,7 +495,7 @@ def run_fem2(bdfModel, out_model, xref, punch,
             if subcase.has_parameter('FREQUENCY'):
                 freq_id = subcase.get_parameter('FREQUENCY')[0]
                 freq = fem2.frequencies[freq_id]
-                assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118], 'sol=%s FREQUENCY' % sol
+                assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146], 'sol=%s FREQUENCY' % sol
                 # print(freq)
 
             # if subcase.has_parameter('LSEQ'):
@@ -508,7 +508,7 @@ def run_fem2(bdfModel, out_model, xref, punch,
                 fem2.get_spcs(spc_id)
 
             if subcase.has_parameter('DLOAD'):
-                assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129,
+                assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
                                153, 159, 400, 601], 'sol=%s DLOAD' % sol
                 if subcase.has_parameter('LOADSET'):
                     raise NotImplementedError('LOADSET & DLOAD -> LSEQ')

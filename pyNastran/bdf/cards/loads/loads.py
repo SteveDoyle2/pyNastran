@@ -248,6 +248,10 @@ class DAREA(BaseCard):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.p = model.Node(self.p, allowEmptyNodes=False, msg=msg)
 
+    def safe_cross_reference(self, model):
+        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        self.p = model.Node(self.p, allowEmptyNodes=False, msg=msg)
+
     def uncross_reference(self):
         self.p = self.node_id
 

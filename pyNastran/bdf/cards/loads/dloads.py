@@ -434,9 +434,18 @@ class TLOAD1(TabularLoad):
         return [self]
 
     def cross_reference(self, model):
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
         if self.tid:
-            msg = ' which is required by %s=%s' % (self.type, self.sid)
             self.tid = model.Table(self.tid, msg=msg)
+        if self.delay and self.delay > 0:
+            self.delay = model.DELAY(self.delay_id, msg=msg)
+
+    def safe_cross_reference(self, model):
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        if self.tid:
+            #try:
+            self.tid = model.Table(self.tid, msg=msg)
+            #except
         if self.delay and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
@@ -612,8 +621,14 @@ class TLOAD2(TabularLoad):
         return [self]
 
     def cross_reference(self, model):
+        msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
         if self.delay and self.delay > 0:
-            msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
+            self.delay = model.DELAY(self.delay_id, msg=msg)
+        # TODO: exciteID
+
+    def safe_cross_reference(self, model):
+        msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
+        if self.delay and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
         # TODO: exciteID
 
