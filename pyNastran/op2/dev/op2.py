@@ -3022,7 +3022,7 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                     print("Skipping table %r..." % name)
                 o2.skipop2table()
 
-        if not(eqexin1 is None):
+        if eqexin1 is not None:
             (bgpdt, dof,
              doftype, nid, upids) = o2._proc_bgpdt(eqexin1, eqexin,
                                                    True, bgpdt_rec1)

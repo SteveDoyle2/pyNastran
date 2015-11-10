@@ -15,7 +15,7 @@ def partition_sparse(Is, Js, Vs):
 
 
 def getDOF_Set(nAll, dofs):
-    dofsAll = set([i for i in range(nAll)])
+    dofsAll = {i for i in range(nAll)}
     dofs = list(dofsAll.difference(set(dofs)))
     return dofs
 

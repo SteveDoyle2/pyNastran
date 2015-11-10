@@ -1,5 +1,5 @@
-from pyNastran.gui.menus.manage_actors import CustomQTableView
 from __future__ import print_function
+from pyNastran.gui.menus.manage_actors import CustomQTableView
 from six import iteritems
 from PyQt4 import QtCore, QtGui
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
