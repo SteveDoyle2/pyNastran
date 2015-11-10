@@ -20,6 +20,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
 
     # vectorized
     RealCBarForceArray, RealCBar100ForceArray,
+    RealCBushForceArray,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
 
@@ -28,7 +29,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealSpringForce, RealDamperForce, RealViscForce,  # TODO: vectorize 3
     RealConeAxForce,                                  # TODO: vectorize 1
     RealCGapForce, RealBendForce,                     # TODO: vectorize 2
-    RealPentaPressureForce, RealCBushForce,           # TODO: vectorize 2
+    RealPentaPressureForce,                           # TODO: vectorize 1
     RealForce_VU_2D, RealForce_VU)                    # TODO: vectorize 2
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexCBarForceArray,
@@ -1798,23 +1799,51 @@ class OEF(OP2Common):
             self._results._found_result('cbush_force')
             result_name = 'cbush_force'
             slot = getattr(self, result_name)
-            if self.format_code == 1 and self.num_wide == 7:  # real
-                if self.read_mode == 1:
-                    return ndata
 
-                self.create_transient_object(self.cbush_force, RealCBushForce)
-                s = Struct(b(self._endian + 'i6f'))
-                ntotal = 28 # 7*4
+            if self.format_code == 1 and self.num_wide == 7:  # real
+                ntotal = 4 * (2 + 17 * (nnodes + 1))
                 nelements = ndata // ntotal
-                for i in range(nelements):
-                    edata = data[n:n+28]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
-                    (eid_device, fx, fy, fz, mx, my, mz) = out
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
-                    self.obj.add(dt, eid, fx, fy, fz, mx, my, mz)
-                    n += ntotal
+
+                self._data_factor = 10  # TODO: why is this 10?
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealCBushForceArray)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
+                obj = self.obj
+                if self.use_vector and is_vectorized:
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nelements * self.num_wide * 4
+
+                    istart = obj.itotal
+                    iend = istart + nelements
+                    obj._times[obj.itime] = dt
+
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                        eids = ints[:, 0] // 10
+                        obj.element[istart:iend, 0] = eids
+                    results = fromstring(data, dtype=self.fdtype)
+
+                    #[fx, fy, fz, mx, my, mz]
+                    obj.data[obj.itime, istart:iend, :] = results[:, 1:]
+                else:
+                    s = Struct(b(self._endian + 'i6f'))
+                    ntotal = 28 # 7*4
+                    nelements = ndata // ntotal
+                    for i in range(nelements):
+                        edata = data[n:n+28]
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
+                        (eid_device, fx, fy, fz, mx, my, mz) = out
+                        eid = self._check_id(eid_device, flag, 'FORCE', out)
+                        self.obj.add(dt, eid, fx, fy, fz, mx, my, mz)
+                        n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
                 ntotal = 52  # 13*4
                 nelements = ndata // ntotal

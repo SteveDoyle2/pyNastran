@@ -222,8 +222,9 @@ RESULT_TABLES = [
     b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
 
     b'OUG2T',
+    b'AEMONPT',
 ]
-
+# RESULT_TABLES = []
 #b'TOLD',
 
 #MATRIX_TABLES = [] #
@@ -240,7 +241,8 @@ RESULT_TABLES = [
 MATRIX_TABLES = [
     b'TOLD', b'SDT', #b'STDISP',
     b'TOLB2', b'ADSPT', #b'MONITOR',
-    b'PMRT', b'PFRT', b'PGRT', b'AEMONPT',
+    b'PMRT', b'PFRT', b'PGRT', # b'AEMONPT',
+    b'AFRT', b'AGRT',
 
 
     b'A', b'SOLVE,', b'UMERGE,', b'AA', b'AAP', b'ADELUF', b'ADELUS', b'ADELX',
@@ -446,6 +448,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RESOES1': [self._table_passer, self._table_passer],
             b'RESEF1' : [self._table_passer, self._table_passer],
             b'DESCYC' : [self._table_passer, self._table_passer],
+            b'AEMONPT' : [self._read_aemonpt_3, self._read_aemonpt_4],
             #=======================
             # OEF
             # element forces
@@ -723,7 +726,59 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show_data(data, types='ifs')
         #asf
 
-    def _not_available(self, data):
+    def _read_aemonpt_3(self, data, ndata):
+        adf
+
+    def _read_aemonpt_4(self, data, ndata):
+        # self.table_name = self.read_table_name(rewind=False)
+        # self.log.debug('table_name = %r' % self.table_name)
+        # if self.is_debug_file:
+            # self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+
+        if self.read_mode == 1:
+            return ndata
+        print('name, label =(%r,%r)' % unpack(b'8s56s', data[:64]))
+        print('name2=%r' % unpack(b'12s', data[84:96]))
+        self.show_data(data[64:84], types='if', endian=None)
+        self.show_data(data[96:], types='if', endian=None)
+        #self.show_data(data[ni:], types='ifs', endian=None)
+        print('--------------------------------')
+
+        return ndata
+        for i in [-4, -5, -6, -7, -8]:
+            self.read_markers([i, 1, 0])
+            # if self.is_debug_file:
+                # self.binary_debug.write('---markers = [-1]---\n')
+            data = self._read_record()
+
+            sname = data[:64]
+            print('name, label = (%r,%r)' % unpack(b'8s56s', data[:64]))
+            print('name2=%r' % unpack(b'12s', data[84:96]))
+            self.show_data(data[64:84], types='if', endian=None)
+            self.show_data(data[96:], types='if', endian=None)
+            #self.show_data(data[ni:], types='ifs', endian=None)
+            print('--------------------------------')
+
+
+        self.read_markers([-9, 1, 0])
+        # data = self._read_record()
+        # self.show_data(data, types='ifs', endian=None)
+        print('--------------------------------')
+
+
+
+
+        # markers = self.get_nmarkers(1, rewind=True)
+        # if self.is_debug_file:
+            # self.binary_debug.write('---marker0 = %s---\n' % markers)
+        # self.read_markers([-2, 1, 0])
+        #data = self._read_record()
+
+        self.show_ndata(100, types='ifs')
+        return ndata
+        #bbbb
+
+    def _not_available(self, data, ndata):
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
@@ -939,6 +994,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if table_name is None:
             raise FatalError('no tables exists...')
 
+        self._make_tables()
         table_names = self._read_tables(table_name)
         if self.is_debug_file:
             self.binary_debug.write('-' * 80 + '\n')
@@ -980,6 +1036,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #del self._ept_map
         #del self._mpt_map
         #del self._table_mapper
+
+    def _make_tables(self):
+        return
+        global RESULT_TABLES
+        table_mapper = self._get_table_mapper()
+        RESULT_TABLES = table_mapper.keys()
 
     def _read_tables(self, table_name):
         """

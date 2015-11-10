@@ -6,7 +6,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, itervalues
 from six.moves import zip, range
+import os
 from copy import deepcopy
+from collections import defaultdict, OrderedDict
+
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -22,9 +25,6 @@ from copy import deepcopy
 
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
-
-import os
-from collections import defaultdict, OrderedDict
 
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle
@@ -1137,9 +1137,9 @@ class NastranIO(object):
                 no_bending_bad[ieid] = 1
                 # print(elem)
                 no_0_16[ieid] = 1
-            # elif (elem.pa == 6 and elem.pb == 16):
-                # no_axial[ieid] = 1
-                # no_bending_bad[ieid] = 1
+            elif elem.pa == 56 and elem.pb == 45 or elem.pb == 56 and elem.pa == 45:
+                no_torsion[ieid] = 1
+                no_bending[ieid] = 1
             else:
                 msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
                 raise NotImplementedError(msg)
@@ -3540,6 +3540,7 @@ class NastranIO(object):
             eids = case.element
             # print('eids =', eids)
             i = searchsorted(self.element_ids, eids)
+            is_element_on[i] = 1.
 
             #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
             fx[i] = case.data[:, :, 6]
@@ -3555,19 +3556,54 @@ class NastranIO(object):
             ## CBAR-100
             case = model.cbar_force_10nodes[subcase_id]
             eids = case.element
-            # print('eids =', eids)
-            i = searchsorted(self.element_ids, eids)
+            ueids = unique(eids)
+            #print('eids =', eids[:12])
+            #i = searchsorted(self.element_ids, eids)
+            j = searchsorted(self.element_ids, ueids)
+            #print('unique eids =', ueids)
+            is_element_on[j] = 1.
+            di = j[1:-1] - j[0:-2]
+            #print('di =', unique(di))
+            if di.max() != 2:
+                print('di =', unique(di))
+                # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
+                ii = 0
+                eid_old = eids[0]
+                fxi = defaultdict(list)
+                fyi = defaultdict(list)
+                fzi = defaultdict(list)
+                rxi = defaultdict(list)
+                ryi = defaultdict(list)
+                rzi = defaultdict(list)
+                for ii, eid in enumerate(eids):
+                    fxi[eid].append(case.data[:, ii, 5])
+                    fyi[eid].append(case.data[:, ii, 3])
+                    fzi[eid].append(case.data[:, ii, 4])
 
-            # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
-            fx[i] = array([case.data[:, ::-1, 5], case.data[:, 1::-1, 5]]).max(axis=0)
-            fy[i] = array([case.data[:, ::-1, 3], case.data[:, 1::-1, 3]]).max(axis=0)
-            fz[i] = array([case.data[:, ::-1, 4], case.data[:, 1::-1, 4]]).max(axis=0)
+                    rxi[eid].append(case.data[:, ii, 6])
+                    ryi[eid].append(case.data[:, ii, 1])
+                    rzi[eid].append(case.data[:, ii, 2])
+                    #if eidi == eid_old:
+                    #    fx[ii] = array([case.data[:, j, 5], case.data[:, j, 5]]).max(axis=0)
+                    #else:
+                for ii, eidi in zip(j, eids[j]):
+                    fx[ii] = max(fxi[eidi])
+                    fy[ii] = max(fyi[eidi])
+                    fz[ii] = max(fyi[eidi])
+                    rx[ii] = max(rxi[eidi])
+                    ry[ii] = max(ryi[eidi])
+                    rz[ii] = max(rzi[eidi])
+            else:
+                # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
+                neids = len(unique(eids)) * 2
+                assert len(eids) == len(unique(eids)) * 2, 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
+                fx[i] = array([case.data[itime, ::-1, 5], case.data[itime, 1::-1, 5]]).max(axis=0)
+                fy[i] = array([case.data[itime, ::-1, 3], case.data[itime, 1::-1, 3]]).max(axis=0)
+                fz[i] = array([case.data[itime, ::-1, 4], case.data[itime, 1::-1, 4]]).max(axis=0)
 
-            rx[i] = array([case.data[:, ::-1, 6], case.data[:, 1::-1, 6]]).max(axis=0)
-            ry[i] = array([case.data[:, ::-1, 1], case.data[:, 1::-1, 1]]).max(axis=0)
-            rz[i] = array([case.data[:, ::-1, 2], case.data[:, 1::-1, 2]]).max(axis=0)
-            neids = len(unique(eids)) * 2
-            assert len(eids) == len(unique(eids)) * 2, 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
+                rx[i] = array([case.data[itime, ::-1, 6], case.data[itime, 1::-1, 6]]).max(axis=0)
+                ry[i] = array([case.data[itime, ::-1, 1], case.data[itime, 1::-1, 1]]).max(axis=0)
+                rz[i] = array([case.data[itime, ::-1, 2], case.data[itime, 1::-1, 2]]).max(axis=0)
 
         if found_force:
             fmt = '%.4f'
@@ -3649,6 +3685,10 @@ class NastranIO(object):
                 ncase += 1
 
                 if is_element_on.min() == 0.0:
+                    ioff = where(is_element_on == 0)[0]
+                    noff = len(ioff)
+                    print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
+                    self.log_error('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
                     cases[(subcase_id, icase, 'IsElementOn', 1, 'centroid', fmt, header)] = is_element_on
                     form0[2].append(('IsElementOn', icase, []))
                     icase += 1
@@ -3713,9 +3753,15 @@ class NastranIO(object):
             # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
             oxx[i] = case.data[itime, :, 0]
             txy[i] = case.data[itime, :, 2]
-            ovm[i] = sqrt(oxx[i]**2 + 3*txy[i]**2)
-            max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
-            min_principal[i] = max_principal[i] - 2 * txy[i]
+            ovm[i] = sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
+            # max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
+            # min_principal[i] = max_principal[i] - 2 * txy[i]
+            # simplification of:
+            #   eig(A) = [oxx, txy]
+            #            [txy, 0.0]
+            # per Equation 7: http://www.soest.hawaii.edu/martel/Courses/GG303/Eigenvectors.pdf
+            max_principal[i] = (oxx[i] + sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+            min_principal[i] = (oxx[i] - sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
         del rods
 
 

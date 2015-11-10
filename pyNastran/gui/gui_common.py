@@ -2230,7 +2230,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                 point = points.GetPoint(ipoint)
                 node_xyz[ipoint, :] = point
             xyz = node_xyz.mean(axis=0)
-        elif cell_type in [10, 12, 13]: # CTETRA, CHEXA8, CPENTA6
+        elif cell_type in [10, 12, 13]: # CTETRA4, CHEXA8, CPENTA6
             # TODO: No idea how to get the center of the face
             #       vs. a point on a face that's not exposed
             #faces = cell.GetFaces()
@@ -2239,6 +2239,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                 #face = cell.GetFace(iface)
                 #points = face.GetPoints()
             #faces
+            xyz = world_position
+        elif cell_type in [24]: # CTETRA10
             xyz = world_position
         else:
             #self.log.error(msg)
