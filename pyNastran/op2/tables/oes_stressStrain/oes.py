@@ -22,7 +22,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressAr
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import (RealPlateStressArray, RealPlateStrainArray,
+                                                                   RealCPLSTRNPlateStressArray, RealCPLSTRNPlateStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
@@ -2168,7 +2169,7 @@ class OES(OP2Common):
                 elif self.element_type == 89:
                     result_name = 'nonlinear_crod_stress'
                     name = 'RODNL-89'
-                elif self.element_type == 89:
+                elif self.element_type == 92:
                     result_name = 'nonlinear_conrod_stress'
                     name = 'CONRODNL-92'
                 else:
@@ -2180,7 +2181,7 @@ class OES(OP2Common):
                 elif self.element_type == 89:
                     result_name = 'nonlinear_crod_strain'
                     name = 'RODNL-89'
-                elif self.element_type == 89:
+                elif self.element_type == 92:
                     result_name = 'nonlinear_conrod_strain'
                     name = 'CONRODNL-92'
                 else:
@@ -2743,6 +2744,139 @@ class OES(OP2Common):
             return ndata
         #elif self.element_type in [255]:
             #return ndata
+        elif self.element_type in [271, 275]:
+            if self.element_type == 275:
+                # CPLSTS3
+                result_name = 'cplsts3'
+                nnodes = 1
+                ntotal = 4 * 6
+            else:
+                raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+            if self.is_stress():
+                obj_vector_real = RealCPLSTRNPlateStressArray
+                result_name += '_stress'
+            else:
+                obj_vector_real = RealCPLSTRNPlateStrainArray
+                result_name += '_strain'
+
+            numwide_real = ntotal // 4
+            if self.format_code == 1 and self.num_wide == numwide_real:
+                #ntotal = 4 * (1 + 6 * (nnodes))
+                nelements = ndata // ntotal
+
+                #self._data_factor = 10  # TODO: why is this 10?
+                if self.is_stress():
+                    obj_vector_real = RealCPLSTRNPlateStressArray
+                    #result_name = 'cplstn3_stress'
+                else:
+                    obj_vector_real = RealCPLSTRNPlateStressArray
+                    #result_name = 'cplstn3_strain'
+                slot = getattr(self, result_name)
+
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
+                obj = self.obj
+                #if self.use_vector and is_vectorized:
+                n = nelements * self.num_wide * 4
+
+                istart = obj.itotal
+                iend = istart + nelements
+                obj._times[obj.itime] = dt
+
+                if obj.itime == 0:
+                    print(fromstring(data, dtype=self.idtype).size)
+                    print('nelements=%s numwide=%s' % (nelements, numwide_real))
+                    print('ndata=', ndata)
+                    print('self.element_name=%s' % self.element_name)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    eids = ints[:, 0] // 10
+                    obj.element[istart:iend] = eids
+
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                results = floats[:, 1:]
+                print('results.shape', results.shape)
+
+                #[oxx, oyy, ozz, txy, ovm]
+                obj.data[obj.itime, istart:iend, :] = results
+            else:
+                msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                return self._not_implemented_or_skip(data, ndata, msg)
+
+        elif self.element_type in [276, 277, 278]:
+            if self.element_type == 276:
+                result_name = 'cplsts4'
+                nnodes = 5  # 4 + 1
+                ntotal = 4 * 32
+            elif self.element_type == 277:
+                result_name = 'cplsts6'
+                nnodes = 4
+                ntotal = 4 * 26
+            elif self.element_type == 278:
+                result_name = 'cplsts8'
+                nnodes = 5
+                ntotal = 4 * 32
+            else:
+                raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+
+            if self.is_stress():
+                obj_vector_real = RealCPLSTRNPlateStressArray
+                result_name += '_stress'
+            else:
+                obj_vector_real = RealCPLSTRNPlateStrainArray
+                result_name += '_strain'
+
+            numwide_real = 2 + 6 * (nnodes)
+            assert ntotal // 4 == numwide_real, 'notal/4=%s numwide_real=%s\n%s' % (
+                ntotal // 4, numwide_real, self.code_information())
+
+            ntotal = numwide_real * 4
+            if self.format_code == 1 and self.num_wide == numwide_real:
+                nelements = ndata // ntotal
+
+                #self._data_factor = 10  # TODO: why is this 10?
+                if self.is_stress():
+                    obj_vector_real = RealCPLSTRNPlateStressArray
+                    #result_name = 'cplstn3_stress'
+                else:
+                    obj_vector_real = RealCPLSTRNPlateStressArray
+                    #result_name = 'cplstn3_strain'
+                slot = getattr(self, result_name)
+
+                nlayers = nelements * nnodes
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_real)
+                if auto_return:
+                    self._data_factor = nnodes
+                    return nelements * self.num_wide * 4
+
+                obj = self.obj
+                #if self.use_vector and is_vectorized:
+                n = nlayers * self.num_wide * 4
+
+                istart = obj.itotal
+                iend = istart + nlayers
+                obj._times[obj.itime] = dt
+
+                if obj.itime == 0:
+                    print(fromstring(data, dtype=self.idtype).size)
+                    print('nelements=%s numwide=%s' % (nelements, numwide_real))
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    eids = ints[:, 0] // 10
+                    #obj.element[istart:iend] = eids
+
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                print('floats[:, 2:].shape', floats[:, 2:].shape)
+                print('nnelements=%s nnodes=%s numwide//nodes=%s' % (nelements, nnodes, (numwide_real-2) / nnodes))
+                results = floats[:, 2:].reshape(nelements, nnodes * 6)
+
+                #[oxx, oyy, ozz, txy, ovm]
+                obj.data[obj.itime, istart:iend, :] = results
+            else:
+                msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                return self._not_implemented_or_skip(data, ndata, msg)
         else:
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)

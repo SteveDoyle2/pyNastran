@@ -130,6 +130,24 @@ class OP2_F06_Common(object):
         self.ctria6_composite_strain = {}
         self.ctriar_composite_strain = {}
 
+        self.cplstn3_stress = {}
+        self.cplstn4_stress = {}
+        self.cplstn6_stress = {}
+        self.cplstn8_stress = {}
+        self.cplsts3_stress = {}
+        self.cplsts4_stress = {}
+        self.cplsts6_stress = {}
+        self.cplsts8_stress = {}
+
+        self.cplstn3_strain = {}
+        self.cplstn4_strain = {}
+        self.cplstn6_strain = {}
+        self.cplstn8_strain = {}
+        self.cplsts3_strain = {}
+        self.cplsts4_strain = {}
+        self.cplsts6_strain = {}
+        self.cplsts8_strain = {}
+
         self.cshear_stress = {}
         self.cshear_strain = {}
         self.cshear_force = {}
@@ -496,6 +514,24 @@ class OP2_F06_Common(object):
             'nonlinear_cgap_stress',
             # OES - CBUSH 226
             'nonlinear_cbush_stress',
+
+            'cplstn3_stress',
+            'cplstn4_stress',
+            'cplstn6_stress',
+            'cplstn8_stress',
+            'cplsts3_stress',
+            'cplsts4_stress',
+            'cplsts6_stress',
+            'cplsts8_stress',
+
+            'cplstn3_strain',
+            'cplstn4_strain',
+            'cplstn6_strain',
+            'cplstn8_strain',
+            'cplsts3_strain',
+            'cplsts4_strain',
+            'cplsts6_strain',
+            'cplsts8_strain',
         ]
 
         table_types += [
