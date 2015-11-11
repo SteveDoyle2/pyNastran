@@ -2486,9 +2486,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         """
         nids_transform = {}
         i_transform = {}
-        transforms = {}
+        beta_transforms = {}
         if len(self.coords) < 2:
-            return i_transform, transforms
+            return i_transform, beta_transforms
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
             if cid_d:
@@ -2901,7 +2901,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                         elif key == 'dumplines':
                             self.dumplines = True if value == 'true' else False
                         elif key == 'skip_cards':
-                            cards = set([value.strip() for value in value.upper().split(',')])
+                            cards = {value.strip() for value in value.upper().split(',')}
                             #self.cards_to_read = self.cards_to_read - cards
                         else:
                             raise NotImplementedError(key)

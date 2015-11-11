@@ -14,7 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from six.moves import zip, range
 from itertools import count
-from numpy import array, unique, argsort
+from numpy import array, unique, argsort, mean
 
 from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -782,10 +782,14 @@ class PBEAML(IntegratedLineProperty):
 
         .. note:: a spline is fit to :math:`A(x)` and then integrated.
         """
-        Areas = []
+        areas = []
         for dim in self.dim:
-            Areas.append(_bar_areaL('PBEAML', self.Type, dim))
-        A = integrate_line(self.xxb, Areas)
+            areas.append(_bar_areaL('PBEAML', self.Type, dim))
+        try:
+            A = integrate_line(self.xxb, areas)
+        except ValueError:
+            print('PBEAML integration error; pid=%s x/xb=%s areas=%s' % (self.pid, self.xxb, areas))
+            A = mean(areas)
         return A
 
     #def Mid(self):

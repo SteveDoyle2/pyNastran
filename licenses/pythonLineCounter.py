@@ -1,36 +1,36 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
-# Name:       pytonLineCounter.py (originally plc.py)
-# Purpose:    A Python line counter.  Reports how many lines are in the given
-#             input files, broken down into code, comment and blank lines.
-#
-# Author:     Wayne Koorts
-# Created:    31/03/2009
-# Copyright:  Copyright 2009 Wayne Koorts
-# Licence:    This software is released under the terms of the
-#             GNU General Public License.  Please see license.txt for details.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#    Per discussion with Wayne, he has agreed to release this under the
-#    LGPL license for pyNastran.  Updates for additional breakdowns were
-#    added.  Wayne's script was also renamed for clarity.  It runs on a single
-#    file, but creating a single file with all the pyNastran code allows plc to
-#    run on the entire codebase.
-#
+"""
+Name:       pytonLineCounter.py (originally plc.py)
+Purpose:    A Python line counter.  Reports how many lines are in the given
+            input files, broken down into code, comment and blank lines.
 
+Author:     Wayne Koorts
+Created:    31/03/2009
+Copyright:  Copyright 2009 Wayne Koorts
+Licence:    This software is released under the terms of the
+            GNU General Public License.  Please see license.txt for details.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+   Per discussion with Wayne, he has agreed to release this under the
+   LGPL license for pyNastran.  Updates for additional breakdowns were
+   added.  Wayne's script was also renamed for clarity.  It runs on a single
+   file, but creating a single file with all the pyNastran code allows plc to
+   run on the entire codebase.
+"""
+from __future__ import print_function
+# -*- coding: utf-8 -*-
 import string
 import sys
 import os
@@ -44,12 +44,13 @@ usage = \
         plc.py <file1.py> <file2.py> <file3.py>"""
 
 def get_folders_files(base_dir):
+    """get all files in the subdirectory"""
     all_files = []
     for root, dirnames, filenames in os.walk(base_dir):
         all_files += [os.path.join(root, fname) for fname in filenames]
     return all_files
 
-def countLines(fnames=None):
+def count_lines(fnames=None):
     """
     def f(x):                                        -> code
         '''                                          -> header line
@@ -74,8 +75,7 @@ def countLines(fnames=None):
     """
     #if fnames==[]:
     #    fnames = sys.argv[1:]
-    import os
-    fnames = get_folders_files(os.path.join('..','pyNastran'))
+    fnames = get_folders_files(os.path.join('..', 'pyNastran'))
 
     total_lines = 0
     comment_lines = 0
@@ -124,24 +124,24 @@ def countLines(fnames=None):
             print("Error opening \"" + str(input_file_name) + "\", skipping...\n")
             break
         i = 0
-        toggleComment = False
+        toggle_comment = False
         for line in current_file.readlines():
             #if i==100:
             #    break
             total_lines += 1
-            i+=1
-            hasPound = False
+            i += 1
+            has_pound = False
             if '"""' in line or "'''" in line:
-                nQuotes = line.count('"""')+line.count("'''")
-                if nQuotes == 2:
+                nquotes = line.count('"""') + line.count("'''")
+                if nquotes == 2:
                     header_lines += 1  # inline """comment"""
                     continue
 
-                if toggleComment: # if already on
+                if toggle_comment: # if already on
                     header_lines += 1
-                toggleComment = not(toggleComment)
+                toggle_comment = not toggle_comment
 
-            if toggleComment:
+            if toggle_comment:
                 #line2 = line.strip(' \n\t\r').strip('"').strip("'")
                 #if not line2:
                 header_lines += 1
@@ -153,26 +153,26 @@ def countLines(fnames=None):
                     blank_lines += 1
                     break
                 if char == "#":
-                    hasPound = True
+                    has_pound = True
                     #comment_lines += 1
                     break
-                elif (char not in string.whitespace) and (char != "#"):
+                elif char not in string.whitespace and char != "#":
                     code_lines += 1
                     break
-            if hasPound:
-                n  = line.count('#')
+            if has_pound:
+                n = line.count('#')
                 n2 = line.count('##')
                 n3 = line.count('###')
 
-                if n3==1:
+                if n3 == 1:
                     format_lines += 1
                     print(input_file_name, "###")
-                elif n==1 and '@' in line and '<' not in line:
+                elif n == 1 and '@' in line and '<' not in line:
                     bad_doxygen_lines += 1
-                    print(input_file_name, "****bad****",i)
-                elif n2==1 and '@' in line:
+                    print(input_file_name, "****bad****", i)
+                elif n2 == 1 and '@' in line:
                     doxygen_starter_lines += 1
-                elif n2==1:
+                elif n2 == 1:
                     doxygen_lines += 1
                     #print input_file_name, "doxygen_line ##", line
                 else:
@@ -195,4 +195,4 @@ def countLines(fnames=None):
     print("Format lines:  " + str(format_lines))
 
 if __name__ == "__main__":
-    countLines()
+    count_lines()

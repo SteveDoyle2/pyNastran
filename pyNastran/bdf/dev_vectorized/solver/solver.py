@@ -591,7 +591,7 @@ class Solver(F06, OP2):
         self.build_dof_sets()
         Lambda, Ua = self.solve_sol_103(Kgg, Mgg)
 
-        dofsAll = set([i for i in range(n)])
+        dofsAll = {i for i in range(n)}
         dofsA = remove_dofs(dofsAll, self.iUs)
         dofsA.sort()
         U = zeros(n, 'float64')
@@ -655,7 +655,7 @@ class Solver(F06, OP2):
             self.log.info("Ua =\n%s" % Ua)
             self.log.info("Us =\n%s" % self.Us)
 
-            dofsAll = set([i for i in range(n)])
+            dofsAll = {i for i in range(n)}
             #dofsA = remove_dofs(remove_dofs(dofsAll, self.iUs), self.iUm))
             dofsA = remove_dofs(dofsAll, self.iUs)
             dofsA.sort()

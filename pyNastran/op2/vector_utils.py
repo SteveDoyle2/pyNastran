@@ -1,15 +1,41 @@
+from __future__ import print_function
 from struct import calcsize
-from numpy import array, abs, where, zeros, asarray
+from numpy import array, where, zeros, asarray, dot, arccos, sqrt, pi
+from numpy import cos, unique, cross, abs as npabs
 
-def iformat(Format, precision=2):
+def iformat(format_old, precision=2):
+    """
+    Converts binary data types to size vector arrays.
+
+    Parameters
+    ----------
+    format_old : str
+        the int/float data types in single precision format
+    precision : int; default=2
+        the precision to convert to
+        1 : single precision (no conversion)
+        2 : double precision
+
+    Returns
+    -------
+    format_new : str
+        the int/float data types in single/double precision format
+
+    Example
+    -------
+    >>> iformat('8i6f10s', precision=1)
+    '8i6f10s'
+    >>> iformat('8i6f10s', precision=2)
+    '8l6d10q'
+    """
     if precision == 2:  # double
-        f = Format.replace('i', 'l').replace('f', 'd')
+        format_new = format_old.replace('i', 'l').replace('f', 'd')
     elif precision == 1: # single
-        f = Format.replace('l', 'i').replace('d', 'f')
+        format_new = format_old.replace('l', 'i').replace('d', 'f')
     else:
         raise NotImplementedError(precision)
-    ndata = calcsize(f)
-    return f, ndata
+    ndata = calcsize(format_new)
+    return format_new, ndata
 
 def abs_max_min_global(values):
     """
@@ -57,7 +83,7 @@ def abs_max_min_global(values):
                      values.min()])
 
     # we figure out the absolute max/min
-    abs_vals = abs(values2)
+    abs_vals = npabs(values2)
     abs_val = abs_vals.max()
 
     # find the location of the absolute max value
@@ -68,7 +94,7 @@ def abs_max_min_global(values):
     j = where(abs_val == abs_vals)[0][0]
 
     # get the raw value from the absoluted value, so:
-    # value = abs(raw_value)
+    # value = npabs(raw_value)
     return values2[j]
 
 
@@ -117,7 +143,7 @@ def abs_max_min_vector(values):
                        values.min(axis=1)])
 
     # we figure out the absolute max/min for each row
-    abs_vals = abs(maxs_mins)
+    abs_vals = npabs(maxs_mins)
     absolute_maxs = abs_vals.max(axis=0)
 
     outs = zeros(absolute_maxs.shape[0], dtype=values.dtype)
@@ -130,7 +156,7 @@ def abs_max_min_vector(values):
         j = where(absolute_max == abs_vals[:, i])[0][0]
 
         # get the raw value from the absoluted value, so:
-        # value = abs(raw_value)
+        # value = npabs(raw_value)
         outs[i] = maxs_mins[j, i]
     return outs
 
@@ -141,15 +167,16 @@ def abs_max_min(values, global_abs_max=True):
     return abs_max_min_vector(values)
 
 
-def principal_2d(o11, o22, o12):
-    oxx = 5
-    return oxx, oy
+# def principal_2d(o11, o22, o12):
+    # oxx = 5
+    # return oxx, oy
+
 def principal_3d(o11, o22, o33, o12, o23, o13):
     """http://www.continuummechanics.org/cm/principalstrain.html"""
-    e = a
+    # e = a
     i1 = o11 + o22 + o33
     i2 = o11*o22 + o22*o33 + o11*o33 - o12**2 - o13**2 - o23**2
-    i3 = o11*o22*o33 - o111*o23**2 - o22*o13**2 + 2*o12*o13*o23
+    i3 = o11*o22*o33 - o11*o23**2 - o22*o13**2 + 2*o12*o13*o23
     Q = 3 * i2 - i1**2
     R = (2*i1**3 - 9*i1*i2 + 27*i3) / 54.
     theta = arccos(R / sqrt(-Q**3))
@@ -160,8 +187,8 @@ def principal_3d(o11, o22, o33, o12, o23, o13):
     p2 = q2 * cos(theta/3 + 2*pi/3.) + i13
     p3 = q2 * cos(theta/3 + 4*pi/3.) + i13
     max_min_mid = array([p1, p2, p3])
-    pmax = max_mid_mid.max(axis=0)
-    pmax = max_mid_mid.min(axis=0)
+    pmax = max_min_mid.max(axis=0)
+    pmin = max_min_mid.min(axis=0)
     return pmax, pmin
 
 def test_abs_max_min_global():
@@ -218,7 +245,34 @@ def test_abs_max_min_vector():
 
 def transform_force_from_local_to_global(force_in_local, gpforce_nids,
                                          nid_cd, i_transform, beta_transforms):
-    force_in_global = zeros(force_in_local.shape, dtype='float32')
+    """
+    Transforms force (not moment) from global to local.
+
+    Supports cylindrical/spherical coordinate systems.
+
+    Parameters
+    ----------
+    force_in_local : (N, 3) ndarray
+        forces in the mixed CD (output) coordinate frame
+    gpforce_nids : (N, ) int ndarray
+        node ids (no unique assumption)
+    nid_cd : (Nn, 2) int ndarray
+        [node_id, cp] or [node_id, cd] ndarray
+    i_transform : dict[int] = (Nn, ) int ndarray
+        key : cp / cd
+        value : indices of node ids corresponding to nid_cd
+    beta_transforms : dict[int] = (3, 3) float ndarray
+        key : cp / cd
+        value : transformation matrix
+
+    .. warning :: the function signature will change...
+    .. todo :: doesn't support origin shifts
+    .. todo :: doesn't support moment
+    .. todo :: doesn't support coordinate transforms (e.g. rectangular to cylindrical)
+    .. todo :: sum of moments about a point must have an rxF term to get the
+               same value as Patran.
+    """
+    force_in_global = zeros(force_in_local.shape, dtype=force_in_local.dtype)
     nids = nid_cd[:, 0]
     cds = nid_cd[:, 1]
     ucds = unique(cds)
@@ -233,8 +287,28 @@ def transform_force_from_local_to_global(force_in_local, gpforce_nids,
     return force_in_local
 
 def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
+    """
+    Transforms force (not moment) from global to local.
+
+    Supports cylindrical/spherical coordinate systems.
+
+    Parameters
+    ----------
+    force_in_global : (N, 3) ndarray
+        forces in the global frame
+    coord_in : CORD()
+        the global coordinate system object
+    coord_out : CORD()
+        the desired local frame
+
+    .. warning :: the function signature will change...
+    .. todo :: doesn't support origin shifts
+    .. todo :: doesn't support moment
+    .. todo :: sum of moments about a point must have an rxF term to get the
+               same value as Patran.
+    """
     F = force_in_global
-    M = zeros(3, dtype='float32')
+    M = zeros(3, dtype=force_in_global.dtype)
     cp = coord_in
     coord_to = coord_out  # this is really cd
     r = cp.origin - coord_to.origin
@@ -253,7 +327,7 @@ def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
 
 
     # find the moment about the new origin due to the force
-    if abs(r).max() > 0.:
+    if npabs(r).max() > 0.:
         Mxyz_global = cross(r, Fxyz_global)
         dMxyz_local_2 = cross(r, Fxyz_local_2)
         Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2

@@ -2209,6 +2209,197 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         return page_num - 1
 
 
+class RealCBushForceArray(ScalarObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[fx, fy, fz, mx, my, mz]
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (fx1, fy1, fz1, mx1, my1, mz1) = t1
+                        (fx2, fy2, fz2, mx2, my2, mz2) = t2
+                        if not allclose(t1, t2):
+                        #if not array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s)\n  (%s, %s, %s)\n' % (
+                                eid,
+                                fx1, fy1, fz1, mx1, my1, mz1,
+                                fx2, fy2, fz2, mx2, my2, mz2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid, fx, fy, fz, mx, my, mz):
+        self.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
+
+    def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        # TODO: not up to date...
+        msg = ['                                     F O R C E S   I N   B U S H   E L E M E N T S      ( C B U S H)\n', ]
+        return msg
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element)  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        is_odd = False
+        nwrite = len(eids)
+        if len(eids) % 2 == 1:
+            nwrite -= 1
+            is_odd = True
+
+        #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            fx = self.data[itime, :, 0]
+            fy = self.data[itime, :, 1]
+            fz = self.data[itime, :, 2]
+            mx = self.data[itime, :, 3]
+            my = self.data[itime, :, 4]
+            mz = self.data[itime, :, 5]
+
+            # loop over all the elements
+            out = []
+            for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
+                ([fxi, fyi, fzi, mxi, myi, mzi], is_all_zeros) = writeFloats13E([fxi, fyi, fzi, mxi, myi, mzi])
+                f.write('      %8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % tuple(eid, fxi, fyi, fzi, mxi, myi, mzi))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
 class RealCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None

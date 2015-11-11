@@ -83,7 +83,7 @@ class AECOMP(BaseCard):
         elif self.list_type == 'AELIST':
             self.lists = [model.AELIST(key, msg) for key in self.lists]
         elif self.list_type == 'CAERO':
-            self.lists = [model.CAERO(key, msg) for key in self.lists]
+            self.lists = [model.CAero(key, msg) for key in self.lists]
         else:
             raise NotImplementedError(self.list_type)
 
@@ -3281,16 +3281,21 @@ class SPLINE5(Spline):
     of aerodynamic points. The interpolating beam supports axial rotation and
     bending in the yz-plane.
 
-    +---------+------+-------+--------+-------+------+----+------+-----+
-    | SPLINE5 | EID  | CAERO | AELIST | ---   | SETG | DZ | DTOR | CID |
-    +---------+------+-------+--------+-------+------+----+------+-----+
-    |         | DTHX | DTHY  | ---    | USAGE |      |    |      |     |
-    +---------+------+-------+--------+-------+------+----+------+-----+
+    +=========+======+=======+========+=======+======+====+=======+=======+
+    |    1    |  2   |    3  |    4   |   5   |   6  |  7 |   8   |   9   |
+    +=========+======+=======+========+=======+======+====+=======+=======+
+    | SPLINE5 | EID  | CAERO | AELIST |  ---  | SETG | DZ | DTOR  |  CID  |
+    +---------+------+-------+--------+-------+------+----+-------+-------+
+    |         | DTHX | DTHY  |  ---   | USAGE | METH |    | FTYPE | RCORE |
+    +---------+------+-------+--------+-------+------+----+-------+-------+
+
+    METH, FTYPE, RCORE are in 2012+ (not MSC.2005r2 or NX.10)
     """
     type = 'SPLINE5'
     _field_map = {
         1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
         7: 'dtor', 8:'cid', 9:'thx', 10:'thy', 12:'usage',
+        13 : 'meth', 15 : 'ftype', 16 : 'rcore',
     }
 
     def __init__(self, card=None, data=None, comment=''):
@@ -3308,9 +3313,16 @@ class SPLINE5(Spline):
             self.cid = integer_or_blank(card, 8, 'cid', 0)
             self.thx = double(card, 9, 'thx')
             self.thy = double(card, 10, 'thy')
+            self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
+            self.meth = string_or_blank(card, 13, 'meth', 'BEAM')  # per nast/tpl/fmondsp.dat, METH can be a double(0.0) ???
+            self.ftype = string_or_blank(card, 15, 'ftype', 'WF2')
+            self.rcore = double_or_blank(card, 16, 'rcore')
+            assert self.meth in ['BEAM', 'RIS'], self.meth
+            assert self.ftype in ['WF0', 'WF2'], self.ftype
+
 
             self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-            assert len(card) <= 13, 'len(SPLINE5 card) = %i' % len(card)
+            assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -3328,7 +3340,7 @@ class SPLINE5(Spline):
     def AEList(self):
         if isinstance(self.aelist, integer_types):
             return self.aelist
-        return self.aelist.aelist
+        return self.aelist.sid
 
     def Set(self):
         if isinstance(self.setg, integer_types):
@@ -3363,7 +3375,7 @@ class SPLINE5(Spline):
         """
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
-                       self.thy, None, self.usage]
+                       self.thy, None, self.usage, None, self.ftype, self.rcore]
         return list_fields
 
     def repr_fields(self):
@@ -3371,7 +3383,7 @@ class SPLINE5(Spline):
         usage = set_blank_if_default(self.usage, 'BOTH')
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
-                       None, usage]
+                       None, usage, self.meth, None, self.ftype, self.rcore]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

@@ -122,7 +122,7 @@ def integrate_line(x, y):
         # integrate the area; y=f(x); A=integral(y*dx,x)
         out = quad(splev, 0., 1., args=(build_spline(x, y)))
     except:
-        print('spline Error x=%s y=%s' % (x, y))
+        # print('spline Error x=%s y=%s' % (x, y))
         raise
     return out[0]
 

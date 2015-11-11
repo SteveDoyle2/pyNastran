@@ -4,8 +4,7 @@ from six import iteritems
 from six.moves import range
 import os
 
-from numpy import vstack, amax, amin, arange, ones, zeros, where
-from numpy import zeros, unique, where
+from numpy import vstack, amax, amin, arange, ones, zeros, where, unique
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
