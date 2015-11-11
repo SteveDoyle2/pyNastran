@@ -335,6 +335,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                 ('text_col', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
 
                 ('label_clear', 'Clear current labels', '', None, 'Clear current labels', self.clear_labels),
+                ('label_resize', 'Resize labels', '', None, 'Resize labels', self.resize_labels),
                 ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
 
                 ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
@@ -2427,6 +2428,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.label_actors[result_name] = []
         self.label_ids[result_name] = set([])
 
+    def resize_labels(self):
+        """
+        This resizes labels for all result cases.
+        """
+        if result_names is None:
+            names = 'None)  # None -> all'
+            result_names = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(result_names)
+            names = '[' + mid[:-1] + '])'
+
+        count = 0
+        for key in result_names:
+            actors = self.label_actors[key]
+            for actor in actors:
+                actor.VisibilityOff()
+                count += 1
+        if count and show_msg:
+            self.log_command('hide_labels(%s' % names)
+
     def hide_labels(self, result_names=None, show_msg=True):
         if result_names is None:
             names = 'None)  # None -> all'
@@ -2440,6 +2461,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             actors = self.label_actors[key]
             for actor in actors:
                 actor.VisibilityOff()
+                #prop = actor.GetProperty()
                 count += 1
         if count and show_msg:
             self.log_command('hide_labels(%s' % names)
