@@ -16,7 +16,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # vectorized
-    RealRodForceArray,  # consider renaming vectorized classes
+    RealRodForceArray,
 
     # vectorized
     RealCBarForceArray, RealCBar100ForceArray,
@@ -1800,8 +1800,9 @@ class OEF(OP2Common):
             result_name = 'cbush_force'
             slot = getattr(self, result_name)
 
+            numwide_real = 7
             if self.format_code == 1 and self.num_wide == 7:  # real
-                ntotal = 4 * (2 + 17 * (nnodes + 1))
+                ntotal = 28 # 7*4
                 nelements = ndata // ntotal
 
                 self._data_factor = 10  # TODO: why is this 10?
@@ -1826,15 +1827,13 @@ class OEF(OP2Common):
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
                         eids = ints[:, 0] // 10
-                        obj.element[istart:iend, 0] = eids
-                    results = fromstring(data, dtype=self.fdtype)
+                        obj.element[istart:iend] = eids
+                    results = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
 
                     #[fx, fy, fz, mx, my, mz]
                     obj.data[obj.itime, istart:iend, :] = results[:, 1:]
                 else:
                     s = Struct(b(self._endian + 'i6f'))
-                    ntotal = 28 # 7*4
-                    nelements = ndata // ntotal
                     for i in range(nelements):
                         edata = data[n:n+28]
                         out = s.unpack(edata)

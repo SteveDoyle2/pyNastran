@@ -2345,8 +2345,10 @@ class RealCBushForceArray(ScalarObject):
         return msg
 
     def get_f06_header(self, is_mag_phase=True):
-        # TODO: not up to date...
-        msg = ['                                     F O R C E S   I N   B U S H   E L E M E N T S      ( C B U S H)\n', ]
+        msg = ['                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
+        ' \n'
+        '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+        #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
 
     def get_element_index(self, eids):
@@ -2391,66 +2393,13 @@ class RealCBushForceArray(ScalarObject):
             mz = self.data[itime, :, 5]
 
             # loop over all the elements
-            out = []
             for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
                 ([fxi, fyi, fzi, mxi, myi, mzi], is_all_zeros) = writeFloats13E([fxi, fyi, fzi, mxi, myi, mzi])
-                f.write('      %8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % tuple(eid, fxi, fyi, fzi, mxi, myi, mzi))
+                f.write('                    %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, fxi, fyi, fzi, mxi, myi, mzi))
+                #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
-
-
-class RealCBushForce(ScalarObject):  # 102-CBUSH
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.force = {}
-        self.moment = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.force)
-            time0 = get_key0(self.force)
-            nelements = len(self.force[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.force)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force, moment\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.force[dt] = {}
-        self.moment[dt] = {}
-
-    def add(self, dt, eid, fx, fy, fz, mx, my, mz):
-        self.force[eid] = array([fx, fy, fz], dtype='float32')
-        self.moment[eid] = array([mx, my, mz], dtype='float32')
-
-    def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = array([fx, fy, fz], dtype='float32')
-        self.moment[dt][eid] = array([mx, my, mz], dtype='float32')
-
-    def add_sort2(self, eid, dt, fx, fy, fz, mx, my, mz):
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = array([fx, fy, fz], dtype='float32')
-        self.moment[dt][eid] = array([mx, my, mz], dtype='float32')
 
 
 class RealForce_VU(ScalarObject):  # 191-VUBEAM
