@@ -1345,7 +1345,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     raise CrossReferenceError(msg.rstrip())
 
     def get_bdf_cards(self, bulk_data_lines):
-        cards = defaultdict(list)
+        cards = []
+        #cards = defaultdict(list)
         card_count = defaultdict(int)
         full_comment = ''
         card_lines = []
@@ -1360,16 +1361,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
-                    #print('-------')
-                    #print('applying %s' % card_name)
-                    #print(full_comment)
-                    #for linei in card_lines:
-                        #print('  %r' % linei)
-                    #print('-------')
                     if self.echo:
                         self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
 
-                    cards[old_card_name].append([full_comment, card_lines])
+                    # old dictionary version
+                    # cards[old_card_name].append([full_comment, card_lines])
+
+                    # new list version
+                    cards.append([old_card_name, full_comment, card_lines])
+
                     card_count[old_card_name] += 1
                     card_lines = []
                     full_comment = ''
@@ -1383,12 +1383,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     self.card_count['ENDDATA'] = 1
                     if nlines - i > 1:
                         self.log.debug('exiting due to ENDDATA found with %i lines left' % (nlines - i - 1))
-                    #print('enddata')
                     return cards, card_count
                 #print("card_name = %s" % card_name)
 
             comment = _clean_comment(comment)
-            if line:
+            if line.rstrip():
                 card_lines.append(line)
                 if backup_comment:
                     if comment:
@@ -1410,7 +1409,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             if self.echo:
                 self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
             #print('end_add %s' % card_lines)
-            cards[old_card_name].append([backup_comment + full_comment, card_lines])
+
+            # old dictionary version
+            #cards[old_card_name].append([backup_comment + full_comment, card_lines])
+
+            # new list version
+            cards.append([old_card_name, backup_comment + full_comment, card_lines])
             card_count[old_card_name] += 1
         return cards, card_count
 
@@ -2811,15 +2815,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
     def _parse_cards(self, cards, card_count):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
-        for card_name, card in sorted(iteritems(cards)):
-            #print('---%r---' % card_name)
-            if self.is_reject(card_name):
-                self.log.info('    rejecting card_name = %s' % card_name)
-                for cardi in card:
+        if isinstance(cards, dict):
+            for card_name, card in sorted(iteritems(cards)):
+                if self.is_reject(card_name):
+                    self.log.info('    rejecting card_name = %s' % card_name)
+                    for cardi in card:
+                        self._increase_card_count(card_name)
+                        self.rejects.append([cardi[0]] + cardi[1])
+                else:
+                    for comment, card_lines in card:
+                        self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
+        else:
+            for card in cards:
+                card_name, comment, card_lines = card
+                if self.is_reject(card_name):
+                    self.log.info('    rejecting card_name = %s' % card_name)
                     self._increase_card_count(card_name)
-                    self.rejects.append([cardi[0]] + cardi[1])
-            else:
-                for comment, card_lines in card:
+                    self.rejects.append([comment] + card_lines)
+                else:
                     self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
 
     def _parse_dynamic_syntax(self, key):

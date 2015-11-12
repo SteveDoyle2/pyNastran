@@ -128,6 +128,20 @@ class GetMethods(GetMethodsDeprecated):
             out[card_type] = cards
         return out
 
+    def get_rigid_elements_with_node_ids(self, node_ids):
+        nids = set(node_ids)
+        rbes = []
+        for eid, rigid_element in iteritems(self.rigidElements):
+            if rigid_element.type in ['RBE3', 'RBE2']:
+                independent_nodes = set(rigid_element.independent_nodes)
+                dependent_nodes = set(rigid_element.dependent_nodes)
+                rbe_nids = independent_nodes | dependent_nodes
+                if nids.intersection(rbe_nids):
+                    rbes.append(eid)
+            else:
+                raise RuntimeError(rigid_element.type)
+        return rbes
+
     def get_node_ids_with_element(self, eid, msg=''):
         return self.get_node_ids_with_elements([eid], msg=msg)
 

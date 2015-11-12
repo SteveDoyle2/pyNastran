@@ -204,7 +204,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
-            write_f06=True, write_op2=False, is_mag_phase=False, is_sort2=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False,
             delete_f06=False,
             isubcases=None, exclude=None, compare=True, debug=False, binary_debug=False,
             quiet=False, stop_on_failure=True):
@@ -221,6 +222,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         should a BDF be written based on the geometry tables
     write_f06 : bool; default=True
         should an F06 be written based on the results
+    write_op2 : bool; default=False
+        should an OP2 be written based on the results
+    write_xlsx : bool; default=False
+        should an XLSX be written based on the results
     is_mag_phase : bool; default=False
         False : write real/imag results
         True : write mag/phase results
@@ -340,6 +345,15 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                 except:
                     pass
 
+        if write_xlsx:
+            model = os.path.splitext(op2_filename)[0]
+            op2a.write_xlsx(model + '.test_op2.xlsx', is_mag_phase=is_mag_phase)
+            if delete_f06:
+                try:
+                    os.remove(model + '.test_op2.xlsx')
+                except:
+                    pass
+
         if is_memory:
             del op2a
             del op2b
@@ -430,9 +444,9 @@ def main():
     msg = "Usage:\n"
     is_release = False
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c]           [-f]           [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c]                [-f]           [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-w] [-f] [-o] [-p] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -451,9 +465,10 @@ def main():
     msg += "  -q, --quiet           Suppresses debug messages [default: False]\n"
     #if not is_release:
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
-    #msg += "  -b, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
+    msg += "  -n, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
     msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
     if not is_release:
+        msg += "  -m, --write_xlsx      Writes an XLSX to fem.test_op2.xlsx\n"  # m is for Microsoft
         msg += "  -o, --write_op2       Writes the op2 to fem.test_op2.op2\n"
         msg += '  -p, --profile     Profiles the code (default=False)\n'
     msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
@@ -518,6 +533,7 @@ def main():
                 write_bdf=data['--write_bdf'],
                 write_f06=data['--write_f06'],
                 write_op2=data['--write_op2'],
+                write_xlsx=data['--write_xlsx'],
                 is_mag_phase=data['--is_mag_phase'],
                 isubcases=data['--subcase'],
                 exclude=data['--exclude'],

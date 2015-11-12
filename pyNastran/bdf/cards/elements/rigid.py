@@ -261,6 +261,17 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def Gmi_node_ids(self):
         return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
 
+    @property
+    def independent_nodes(self):
+        # checked
+        return self.Gni_node_ids
+
+    @property
+    def dependent_nodes(self):
+        # checked
+        nodes += self.Gmi_node_ids
+        return nodes
+
     def raw_fields(self):
         list_fields = [self.type, self.eid]
         for (i, gn, cn) in zip(count(), self.Gni_node_ids, self.Cni):
@@ -463,6 +474,15 @@ class RBE2(RigidElement):
     def Gmi_node_ids(self):
         return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
 
+    @property
+    def independent_nodes(self):
+        nodes = [self.Gn()]
+        return nodes
+
+    @property
+    def dependent_nodes(self):
+        return self.Gmi_node_ids
+
     def raw_fields(self):
         list_fields = ['RBE2', self.eid, self.Gn(), self.cm] + self.Gmi_node_ids + [self.alpha]
         return list_fields
@@ -630,6 +650,22 @@ class RBE3(RigidElement):
         self.refgrid = model.Node(self.ref_grid_id, msg=msg)
         for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
             self.WtCG_groups[i][2] = model.Nodes(Gij, allowEmptyNodes=True, msg=msg)
+
+    @property
+    def independent_nodes(self):
+        """TODO: not checked"""
+        nodes = []
+        for (wt, ci, Gij) in self.WtCG_groups:
+            Giji = self._nodeIDs(nodes=Gij, allowEmptyNodes=True)
+            nodes += Giji
+        return nodes
+
+    @property
+    def dependent_nodes(self):
+        """TODO: not checked"""
+        nodes = [self.ref_grid_id]
+        nodes += self.Gmi_node_ids
+        return nodes
 
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]

@@ -155,8 +155,12 @@ class TableArray(ScalarObject):  # displacement style table
         msg += self.get_data_code()
         return msg
 
-    def _get_headers(self):
+    @property
+    def headers(self):
         return ['t1', 't2', 't3', 'r1', 'r2', 'r3']
+
+    def _get_headers(self):
+        return self.headers
 
     def _reset_indices(self):
         self.itotal = 0
@@ -423,6 +427,49 @@ class RealTableArray(TableArray):  # displacement style table
         ]
         f.write(pack(b'%ii' % len(header), *header))
         return itable
+
+    def spike():
+        import xlwings as xw
+        wb = xw.Workbook()  # Creates a connection with a new workbook
+        xw.Range('A1').value = 'Foo 1'
+        xw.Range('A1').value
+        'Foo 1'
+        xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        xw.Range('A1').table.value  # or: Range('A1:C2').value
+        [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        xw.Sheet(1).name
+        'Sheet1'
+        chart = xw.Chart.add(source_data=xw.Range('A1').table)
+
+    def _write_xlsx(self, sheet, is_mag_phase=False):
+        from xlwings import Range, Chart
+        #from numpy import astype
+        # print('xlsx_filename = %r' % xlsx_filename)
+        #f = None
+        #wb = Workbook()  # Creates a connection with a new workbook
+        #wb.save(xlsx_filename)
+        #Range('A1').value = 'Foo 1'
+        #print(Range('A1').value)
+        #'Foo 1'
+        # Range('A1').value = xlsx_filename
+        Range(sheet, 'A1').value = self.__class__.__name__
+        Range(sheet, 'A2').value = ['Node', 'GridType'] + self.headers
+        Range(sheet, 'A3').value = self.node_gridtype
+
+        Range(sheet, 'C3').value = self.data[0, :, :]
+        #Range('C4').value = self.data[0, :, 0]
+        #Range('D4').value = self.data[0, :, 1:]
+        #print(Range('A1').table.value)  # or: Range('A1:C2').value
+        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #print(Sheet(1).name)
+        #Sheet(isheet).name = 'displacements'
+        #'Sheet1'
+        #nrows = self.data.shape[1]
+        #end_row = '%s' % (4 + nrows)
+        #t1 = self.data[0, :, 0]
+        #chart = Chart.add(source_data=Range('C4').value)
+        #wb.save()
+        # wb.save()
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words,
                          is_mag_phase=False, is_sort1=True):

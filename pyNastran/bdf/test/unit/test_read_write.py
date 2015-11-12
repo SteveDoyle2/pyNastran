@@ -227,6 +227,69 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(len(model.nodes), 5)
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
+    def test_include_04(self):
+        if PY2:
+            wb = 'wb'
+        else:
+            wb = 'w'
+
+        with codec_open('include4.bdf', 'w') as f:
+            f.write('$ pyNastran: punch=True\n')
+            f.write('$ pyNastran: dumplines=True\n')
+            f.write("INCLUDE 'include4b.inc'\n\n")
+
+        with codec_open('include4b.inc', 'w') as f:
+            f.write('$ GRID comment\n')
+            f.write('GRID,2,,2.0\n')
+
+        model = BDF(log=log, debug=False)
+        model.read_bdf('include4.bdf')
+        model.write_bdf('include4.out.bdf')
+
+        os.remove('include4.out.bdf')
+        os.remove('include4b.inc')
+        # os.remove('c.bdf')
+        # os.remove('executive_control.inc')
+        # os.remove('case_control.inc')
+
+        self.assertEqual(len(model.nodes), 1)
+        self.assertEqual(model.nnodes, 1, 'nnodes=%s' % model.nnodes)
+
+    def test_include_05(self):
+        if PY2:
+            wb = 'wb'
+        else:
+            wb = 'w'
+
+        with codec_open('include5.bdf', 'w') as f:
+            f.write('$ pyNastran: punch=True\n')
+            f.write('$ pyNastran: dumplines=True\n')
+            f.write("INCLUDE 'include5b.inc'\n\n")
+
+        with codec_open('include5b.inc', 'w') as f:
+            f.write('ECHOON\n')
+            f.write('$ GRID comment\n')
+            f.write('GRID,2,,2.0\n')
+            f.write('ECHOOFF\n')
+            f.write('GRID,3,,3.0\n')
+            f.write('grid,4,,4.0\n')
+            f.write('grid ,5,,5.0\n')
+
+        model = BDF(log=log, debug=False)
+        model.read_bdf('include5.bdf')
+        assert model.echo == False, model.echo
+        #model.write_bdf('include4.out.bdf')
+
+        os.remove('include5.bdf')
+        #os.remove('include5.out.bdf')
+        os.remove('include5b.inc')
+        # os.remove('c.bdf')
+        # os.remove('executive_control.inc')
+        # os.remove('case_control.inc')
+
+        self.assertEqual(len(model.nodes), 4)
+        self.assertEqual(model.nnodes, 4, 'nnodes=%s' % model.nnodes)
+
     def test_encoding_write(self):
 
         mesh = BDF()
