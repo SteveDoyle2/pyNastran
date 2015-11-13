@@ -20,19 +20,21 @@ class DevUtils(unittest.TestCase):
         """
         Collapse nodes 2 and 3; consider 1-3
         """
-        msg = 'CEND\n'
-        msg += 'BEGIN BULK\n'
-        msg += 'GRID,1,,0.,0.,0.\n'
-        msg += 'GRID,2,,0.,0.,0.5\n'
-        msg += 'GRID,3,,0.,0.,0.51\n'
-        msg += 'GRID,10,,0.,0.,1.\n'
-        msg += 'GRID,11,,0.,0.,1.\n'
-        msg += 'CTRIA3,1,1,1,2,11\n'
-        msg += 'CTRIA3,3,1,2,3,11\n'
-        msg += 'CTRIA3,4,1,1,2,10\n'
-        msg += 'PSHELL,1,1,0.1\n'
-        msg += 'MAT1,1,3.0,, 0.3\n'
-        msg += 'ENDDATA'
+        msg = (
+            'CEND\n'
+            'BEGIN BULK\n'
+            'GRID,1,,0.,0.,0.\n'
+            'GRID,2,,0.,0.,0.5\n'
+            'GRID,3,,0.,0.,0.51\n'
+            'GRID,10,,0.,0.,1.\n'
+            'GRID,11,,0.,0.,1.\n'
+            'CTRIA3,1,1,1,2,11\n'
+            'CTRIA3,3,1,2,3,11\n'
+            'CTRIA3,4,1,1,2,10\n'
+            'PSHELL,1,1,0.1\n'
+            'MAT1,1,3.0,, 0.3\n'
+            'ENDDATA'
+        )
 
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
@@ -44,9 +46,9 @@ class DevUtils(unittest.TestCase):
         tol = 0.2
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False)
+                              node_set=None, crash_on_collapse=False, debug=False)
 
-        # model = BDF()
+        # model = BDF(debug=False)
         # model.read_bdf(bdf_filename_out)
         # assert len(model.nodes) == 3, len(model.nodes)
 
@@ -54,7 +56,7 @@ class DevUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
 
     def test_eq2(self):
-        """
+        r"""
           5
         6 *-------* 40
           | \     |
@@ -63,19 +65,21 @@ class DevUtils(unittest.TestCase):
           *-------* 3
           1       20
         """
-        msg = 'CEND\n'
-        msg += 'BEGIN BULK\n'
-        msg += 'GRID,1, , 0.,   0.,   0.\n'
-        msg += 'GRID,20,, 1.,   0.,   0.\n'
-        msg += 'GRID,3, , 1.01, 0.,   0.\n'
-        msg += 'GRID,40,, 1.,   1.,   0.\n'
-        msg += 'GRID,5, , 0.,   1.,   0.\n'
-        msg += 'GRID,6, , 0.,   1.01, 0.\n'
-        msg += 'CTRIA3,1, 100,1,20,6\n'
-        msg += 'CTRIA3,10,100,3,40,5\n'
-        msg += 'PSHELL,100,1000,0.1\n'
-        msg += 'MAT1,1000,3.0,, 0.3\n'
-        msg += 'ENDDATA'
+        msg = (
+            'CEND\n'
+            'BEGIN BULK\n'
+            'GRID,1, , 0.,   0.,   0.\n'
+            'GRID,20,, 1.,   0.,   0.\n'
+            'GRID,3, , 1.01, 0.,   0.\n'
+            'GRID,40,, 1.,   1.,   0.\n'
+            'GRID,5, , 0.,   1.,   0.\n'
+            'GRID,6, , 0.,   1.01, 0.\n'
+            'CTRIA3,1, 100,1,20,6\n'
+            'CTRIA3,10,100,3,40,5\n'
+            'PSHELL,100,1000,0.1\n'
+            'MAT1,1000,3.0,, 0.3\n'
+            'ENDDATA'
+        )
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
@@ -87,9 +91,9 @@ class DevUtils(unittest.TestCase):
         # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False)
+                              node_set=None, crash_on_collapse=False, debug=False)
 
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 4, len(model.nodes)
         # os.remove(bdf_filename)
@@ -99,8 +103,8 @@ class DevUtils(unittest.TestCase):
         # Don't collapse anything because the tolerance is too small
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False)
-        model = BDF()
+                              node_set=None, crash_on_collapse=False, debug=False)
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 6, len(model.nodes)
         os.remove(bdf_filename_out)
@@ -112,15 +116,15 @@ class DevUtils(unittest.TestCase):
             # node 2 is not defined because it should be node 20
             bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                                   renumber_nodes=False, neq_max=4, xref=True,
-                                  node_set=node_set, crash_on_collapse=False)
+                                  node_set=node_set, crash_on_collapse=False, debug=False)
 
         tol = 0.2
         node_set = [20, 3]
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False)
-        model = BDF()
+                              node_set=node_set, crash_on_collapse=False, debug=False)
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 5, len(model.nodes)
         os.remove(bdf_filename_out)
@@ -130,8 +134,8 @@ class DevUtils(unittest.TestCase):
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False)
-        model = BDF()
+                              node_set=node_set, crash_on_collapse=False, debug=False)
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 5, len(model.nodes)
         os.remove(bdf_filename_out)
@@ -145,8 +149,8 @@ class DevUtils(unittest.TestCase):
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False)
-        model = BDF()
+                              node_set=node_set, crash_on_collapse=False, debug=False)
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 5, len(model.nodes)
         os.remove(bdf_filename_out)
@@ -205,9 +209,9 @@ class DevUtils(unittest.TestCase):
         tol = 0.01
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False)
+                              node_set=None, crash_on_collapse=False, debug=False)
 
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 11, len(model.nodes)
 
@@ -215,7 +219,7 @@ class DevUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
 
     def test_eq4(self):
-        """
+        r"""
           5
         6 *-------* 40
           | \     |
@@ -254,9 +258,9 @@ class DevUtils(unittest.TestCase):
         # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False)
+                              node_set=node_set, crash_on_collapse=False, debug=False)
 
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
         nids = model.nodes.keys()
         assert len(model.nodes) == 6, 'nnodes=%s nodes=%s' % (len(model.nodes), nids)

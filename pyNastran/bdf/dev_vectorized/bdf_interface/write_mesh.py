@@ -678,7 +678,7 @@ class WriteMesh(object):
     def _write_thermal(self, outfile, size, card_writer):
         """Writes the thermal cards"""
         # PHBDY
-        if self.phbdys or self.convectionProperties or self.bcs:
+        if self.phbdys or self.convection_properties or self.bcs:
             # self.thermalProperties or
             msg = ['$THERMAL\n']
 
@@ -687,7 +687,7 @@ class WriteMesh(object):
 
             #for unused_key, prop in sorted(iteritems(self.thermalProperties)):
             #    msg.append(str(prop))
-            for (unused_key, prop) in sorted(iteritems(self.convectionProperties)):
+            for (unused_key, prop) in sorted(iteritems(self.convection_properties)):
                 msg.append(prop.write_card(size, card_writer))
 
             # BCs
@@ -698,9 +698,9 @@ class WriteMesh(object):
 
     def _write_thermal_materials(self, outfile, size, card_writer):
         """Writes the thermal materials in a sorted order"""
-        if self.thermalMaterials:
+        if self.thermal_materials:
             msg = ['$THERMAL MATERIALS\n']
-            for (mid, material) in sorted(iteritems(self.thermalMaterials)):
+            for (mid, material) in sorted(iteritems(self.thermal_materials)):
                 msg.append(material.write_card(size, card_writer))
             outfile.write(''.join(msg))
 

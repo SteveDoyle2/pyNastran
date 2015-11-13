@@ -292,7 +292,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_encoding_write(self):
 
-        mesh = BDF()
+        mesh = BDF(debug=False)
         mesh.add_card(['GRID', 100000, 0, 43.91715, -29., .8712984], 'GRID')
         mesh.write_bdf('out.bdf')
         lines_expected = [
@@ -310,7 +310,7 @@ class TestReadWrite(unittest.TestCase):
             compare_lines(self, lines, lines_expected, has_endline=False)
 
     def test_read_bad_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         model.active_filenames = ['fake.file']
         with self.assertRaises(IOError):
             model._open_file('fake.file')
@@ -318,7 +318,7 @@ class TestReadWrite(unittest.TestCase):
     def test_disable_cards(self):
         bdf_filename = os.path.join(root_path, '..', 'models',
             'solid_bending', 'solid_bending.bdf')
-        model = BDF()
+        model = BDF(debug=False)
         model.disable_cards(['CTETRA'])
         model.read_bdf(bdf_filename)
         assert len(model.elements) == 0, len(model.elements)

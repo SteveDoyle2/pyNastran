@@ -91,6 +91,11 @@ def print_bad_path(path):
         return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
 
 def _filename(filename):
+    """
+    Prepends some magic data to a filename in order to have long filenames.
+
+    .. warning :: This might be Windows specific.
+    """
     if len(filename) > 255:
         return "\\\\?\\" + filename
     return filename

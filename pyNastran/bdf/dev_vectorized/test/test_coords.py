@@ -142,7 +142,7 @@ class TestCoords(unittest.TestCase):
             'GRID' : 3,
         }
 
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
         model.add_card(lines, 'CORD1R', is_list=False)
         for grid in grids:
@@ -491,7 +491,7 @@ class TestCoords(unittest.TestCase):
             'GRID' : 3,
         }
 
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
         model.add_card(lines, 'CORD1C', is_list=False)
         for grid in grids:
@@ -516,7 +516,7 @@ class TestCoords(unittest.TestCase):
             'CORD1S' : 1,
             'GRID' : 3,
         }
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
         model.add_card(lines, 'CORD1S', is_list=False)
         for grid in grids:

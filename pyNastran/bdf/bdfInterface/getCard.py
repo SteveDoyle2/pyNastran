@@ -6,11 +6,13 @@ from collections import defaultdict
 
 from pyNastran.bdf.deprecated import GetMethodsDeprecated
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
+from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
 
-class GetMethods(GetMethodsDeprecated):
+class GetMethods(GetMethodsDeprecated, BDFAttributes):
     def __init__(self):
         self._type_to_slot_map = {}
+        BDFAttributes.__init__(self)
 
     def get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
                                    stop_on_missing_card=False):
@@ -135,7 +137,7 @@ class GetMethods(GetMethodsDeprecated):
             print(node_ids)
             raise
         rbes = []
-        for eid, rigid_element in iteritems(self.rigidElements):
+        for eid, rigid_element in iteritems(self.rigid_elements):
             if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
@@ -521,10 +523,10 @@ class GetMethods(GetMethodsDeprecated):
     def RigidElement(self, eid, msg=''):
         """gets a rigid element (RBAR, RBE2, RBE3)"""
         try:
-            return self.rigidElements[eid]
+            return self.rigid_elements[eid]
         except KeyError:
-            raise KeyError('eid=%s not found%s.  Allowed rigidElements=%s'
-                           % (eid, msg, self.rigidElements.keys()))
+            raise KeyError('eid=%s not found%s.  Allowed rigid_elements=%s'
+                           % (eid, msg, self.rigid_elements.keys()))
 
     #--------------------
     # PROPERTY CARDS
@@ -571,16 +573,16 @@ class GetMethods(GetMethodsDeprecated):
         return self.materials.keys()
 
     def get_material_ids(self):
-        return self.materials.keys() + self.thermalMaterials.keys()
+        return self.materials.keys() + self.thermal_materials.keys()
 
     def get_thermal_material_ids(self):
-        return self.thermalMaterials.keys()
+        return self.thermal_materials.keys()
 
     def Material(self, mid, msg=''):
         if mid in self.materials:
             return self.materials[mid]
-        elif mid in self.thermalMaterials:
-            return self.thermalMaterials[mid]
+        elif mid in self.thermal_materials:
+            return self.thermal_materials[mid]
         else:
             msg = '\n' + msg
             raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
@@ -595,7 +597,7 @@ class GetMethods(GetMethodsDeprecated):
 
     def ThermalMaterial(self, mid, msg=''):
         try:
-            mat = self.thermalMaterials[mid]
+            mat = self.thermal_materials[mid]
         except KeyError:
             msg = '\n' + msg
             raise KeyError('Invalid Thermal Material ID:  mid=%s%s' % (mid, msg))
@@ -603,7 +605,7 @@ class GetMethods(GetMethodsDeprecated):
 
     def HyperelasticMaterial(self, mid, msg=''):
         try:
-            mat = self.hyperelasticMaterials[mid]
+            mat = self.hyperelastic_materials[mid]
         except KeyError:
             msg = '\n' + msg
             raise KeyError('Invalid Hyperelastic Material ID:  mid=%s%s' % (mid, msg))

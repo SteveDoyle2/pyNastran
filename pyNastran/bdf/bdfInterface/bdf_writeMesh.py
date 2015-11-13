@@ -1,4 +1,3 @@
-# pylint: disable=E1101
 # coding: utf-8
 """
 This file defines:
@@ -14,9 +13,10 @@ from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
 
-class WriteMesh(object):
+class WriteMesh(BDFAttributes):
     """
     Major methods:
       - model.write_bdf(...)
@@ -24,6 +24,7 @@ class WriteMesh(object):
       - model.auto_reject_bdf(...)
     """
     def __init__(self):
+        BDFAttributes.__init__(self)
         self._auto_reject = True
         self.cards_to_read = set([])
 
@@ -751,16 +752,16 @@ class WriteMesh(object):
 
     def _write_materials(self, outfile, size=8, is_double=False):
         """Writes the materials in a sorted order"""
-        if(self.materials or self.hyperelasticMaterials or self.creepMaterials or
+        if(self.materials or self.hyperelastic_materials or self.creep_materials or
            self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
            self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
            self.MATT8 or self.MATT9):
             msg = ['$MATERIALS\n']
             for (unused_mid, material) in sorted(iteritems(self.materials)):
                 msg.append(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(iteritems(self.hyperelasticMaterials)):
+            for (unused_mid, material) in sorted(iteritems(self.hyperelastic_materials)):
                 msg.append(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(iteritems(self.creepMaterials)):
+            for (unused_mid, material) in sorted(iteritems(self.creep_materials)):
                 msg.append(material.write_card(size, is_double))
 
             for (unused_mid, material) in sorted(iteritems(self.MATS1)):
@@ -1028,10 +1029,10 @@ class WriteMesh(object):
 
     def _write_rigid_elements(self, outfile, size=8, is_double=False):
         """Writes the rigid elements in a sorted order"""
-        if self.rigidElements:
+        if self.rigid_elements:
             outfile.write('$RIGID ELEMENTS\n')
             if self.is_long_ids:
-                for (eid, element) in sorted(iteritems(self.rigidElements)):
+                for (eid, element) in sorted(iteritems(self.rigid_elements)):
                     try:
                         outfile.write(element.write_card_16(is_double))
                     except:
@@ -1039,7 +1040,7 @@ class WriteMesh(object):
                               'type=%s eid=%s' % (element.type, eid))
                         raise
             else:
-                for (eid, element) in sorted(iteritems(self.rigidElements)):
+                for (eid, element) in sorted(iteritems(self.rigid_elements)):
                     try:
                         outfile.write(element.write_card(size, is_double))
                     except:
@@ -1110,7 +1111,7 @@ class WriteMesh(object):
     def _write_thermal(self, outfile, size=8, is_double=False):
         """Writes the thermal cards"""
         # PHBDY
-        if self.phbdys or self.convectionProperties or self.bcs:
+        if self.phbdys or self.convection_properties or self.bcs:
             # self.thermalProperties or
             msg = ['$THERMAL\n']
 
@@ -1119,7 +1120,7 @@ class WriteMesh(object):
 
             #for unused_key, prop in sorted(iteritems(self.thermalProperties)):
             #    msg.append(str(prop))
-            for (unused_key, prop) in sorted(iteritems(self.convectionProperties)):
+            for (unused_key, prop) in sorted(iteritems(self.convection_properties)):
                 msg.append(prop.write_card(size, is_double))
 
             # BCs
@@ -1130,8 +1131,8 @@ class WriteMesh(object):
 
     def _write_thermal_materials(self, outfile, size=8, is_double=False):
         """Writes the thermal materials in a sorted order"""
-        if self.thermalMaterials:
+        if self.thermal_materials:
             msg = ['$THERMAL MATERIALS\n']
-            for (unused_mid, material) in sorted(iteritems(self.thermalMaterials)):
+            for (unused_mid, material) in sorted(iteritems(self.thermal_materials)):
                 msg.append(material.write_card(size, is_double))
             outfile.write(''.join(msg))

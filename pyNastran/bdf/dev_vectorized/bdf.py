@@ -564,7 +564,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.coords = Coord(model)
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
-        #self.rigidElements = {}
+        #self.rigid_elements = {}
         self.rbe2 = RBE2(model)
         self.rbe3 = RBE3(model)
 
@@ -705,7 +705,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores MATS1
         self.materialDeps = {}
         #: stores the CREEP card
-        self.creepMaterials = {}
+        self.creep_materials = {}
 
         # loads
         #self.gusts  = {} # Case Control GUST = 100
@@ -846,12 +846,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores thermal boundary conditions - CONV,RADBC
         self.bcs = {}  # e.g. RADBC
         #: defines the MAT4, MAT5, MATT4, etc.  .. todo:: verify MATT4
-        self.thermalMaterials = {}
+        self.thermal_materials = {}
 
         #: stores PHBDY
         self.phbdys = {}
         #: stores convection properties - PCONV, PCONVM ???
-        self.convectionProperties = {}
+        self.convection_properties = {}
 
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}

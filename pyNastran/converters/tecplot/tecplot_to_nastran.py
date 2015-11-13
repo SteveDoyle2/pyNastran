@@ -4,7 +4,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import Tecplot
 from numpy import unique
 
-def tecplot_to_nastran_filename(tecplot_filename, bdf_filename):
+def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, debug=True):
     """
     Converts a Tecplot file to Nastran.
     """
@@ -94,7 +94,7 @@ def tecplot_to_nastran_filename(tecplot_filename, bdf_filename):
     bdf_file.close()
 
     if removed_nodes:
-        model = BDF()
+        model = BDF(debug=debug)
         model.read_bdf(bdf_filename)
         remove_unassociated_nodes(bdf_filename, bdf_filename,
                                   renumber=True)

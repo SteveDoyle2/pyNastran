@@ -30,7 +30,7 @@ from pyNastran.converters.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 
 
-def process_nastran(bdf_filename, fmt2, fname2, data=None):
+def process_nastran(bdf_filename, fmt2, fname2, data=None, debug=True):
     """
     Converts Nastran to STL/Cart3d/Tecplot
     """
@@ -38,7 +38,7 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None):
     xref = True
     if fmt2 == 'ugrid':
         xref = False
-    model = BDF()
+    model = BDF(debug=debug)
     model.read_bdf(bdf_filename, xref=xref)
 
     if fmt2 == 'stl':

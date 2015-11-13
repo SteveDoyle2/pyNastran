@@ -25,6 +25,7 @@ from numpy.linalg import norm
 
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
+from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
 
 def _mass_properties_mass_mp_func(element):
@@ -38,7 +39,7 @@ def _mass_properties_mass_mp_func(element):
     return mass, cg
 
 
-class BDFMethods(object):
+class BDFMethods(BDFAttributes):
     """
     Has the following methods:
         mass_properties(element_ids=None, reference_point=None, sym_axis=None,
@@ -52,7 +53,7 @@ class BDFMethods(object):
     """
 
     def __init__(self):
-        pass
+        BDFAttributes.__init__(self)
 
     def mass_properties(self, element_ids=None, reference_point=None,
                         sym_axis=None, num_cpus=1, scale=None):

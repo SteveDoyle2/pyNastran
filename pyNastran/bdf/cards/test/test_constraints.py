@@ -119,7 +119,7 @@ class TestConstraints(unittest.TestCase):
         self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_card(size=8))
 
     def test_mpc_02(self):
-        model = BDF()
+        model = BDF(debug=False)
 
         card = ['MPC            1    1002       4      1.    1000       4-.129394',
                 '                    1000       5-7.152-3    1000       6-.013655']
@@ -132,6 +132,7 @@ class TestConstraints(unittest.TestCase):
 
 
         card = model.add_card(card, 'MPC', is_list=False)
+        assert card is not None
         mpc = MPC(card)
         msg_8_actual = mpc.write_card(size=8)
         msg_16_actual = mpc.write_card(size=16)
@@ -139,7 +140,7 @@ class TestConstraints(unittest.TestCase):
         self.check_card(msg16, msg_16_actual)
 
     def test_mpc_03(self):
-        model = BDF()
+        model = BDF(debug=False)
 
         card = ['MPC            1    1002       4      1.    1000       4-.129394',
                 '                    1000       5-7.152-3    1000       6-.013655',
@@ -156,6 +157,7 @@ class TestConstraints(unittest.TestCase):
 
 
         card = model.add_card(card, 'MPC', is_list=False)
+        assert card is not None
         mpc = MPC(card)
         msg_8_actual = mpc.write_card(size=8)
         msg_16_actual = mpc.write_card(size=16)

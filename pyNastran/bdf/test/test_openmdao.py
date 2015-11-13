@@ -123,11 +123,11 @@ class BDFUpdater(BDF):
             #'NSM'   : self.elements, # ???
 
             # rigid elements
-            'RBAR'  : self.rigidElements,
-            'RBAR1' : self.rigidElements,
-            'RBE1'  : self.rigidElements,
-            'RBE2'  : self.rigidElements,
-            'RBE3'  : self.rigidElements,
+            'RBAR'  : self.rigid_elements,
+            'RBAR1' : self.rigid_elements,
+            'RBE1'  : self.rigid_elements,
+            'RBE2'  : self.rigid_elements,
+            'RBE3'  : self.rigid_elements,
 
             # methods
             'EIGB' : self.methods,
@@ -276,7 +276,7 @@ class TestOpenMDAO(unittest.TestCase):
     def test_openmaod_bad_3(self):
         params_bad = {1 : '10'}
         params_good = {'cat' : '10'}
-        model = BDF()
+        model = BDF(debug=False)
 
         with self.assertRaises(TypeError):
             model.set_dynamic_syntax(params_bad)

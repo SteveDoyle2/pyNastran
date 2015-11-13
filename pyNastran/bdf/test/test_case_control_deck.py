@@ -291,7 +291,7 @@ class CaseControlTest(unittest.TestCase):
         with codec_open(bdf_filename, 'w', encoding='ascii') as f:
             for line in lines_expected:
                 f.write(line)
-        bdf = BDF()
+        bdf = BDF(debug=False)
         bdf.read_bdf(bdf_filename)
         bdf.write_bdf(bdf_filename2)
 

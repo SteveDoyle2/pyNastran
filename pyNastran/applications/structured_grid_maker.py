@@ -5,8 +5,8 @@ from numpy.linalg import norm # acos
 from pyNastran.bdf.bdf import BDF
 
 def Grid(object):
-    def __init__(self, bdf_name):
-        self.bdf = BDF()
+    def __init__(self, bdf_name, debug=True):
+        self.bdf = BDF(debug=debug)
         self.bdf.read_bdf(bdf_name, xref=True)
 
         self.xyz = {}
