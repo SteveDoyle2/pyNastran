@@ -650,7 +650,6 @@ class RBE3(RigidElement):
 
     @property
     def Gmi_node_ids(self):
-        print('self.Gmi', self.Gmi)
         if len(self.Gmi) == 0:
             return []
         return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)

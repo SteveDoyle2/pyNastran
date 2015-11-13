@@ -104,7 +104,6 @@ class XrefMesh(object):
                         xref_sets=True,
                         xref_optimization=True,
                         debug=True):
-        assert debug == False, debug
         self._cross_reference_nodes()
         self._cross_reference_coordinates()
 
