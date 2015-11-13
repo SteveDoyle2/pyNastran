@@ -441,7 +441,7 @@ class TEMP(ThermalLoad):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         pass
 
     def raw_fields(self):

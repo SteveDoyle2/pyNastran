@@ -376,7 +376,7 @@ class GRAV(BaseCard):
         msg = ' which is required by GRAV sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ' which is required by GRAV sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
@@ -482,7 +482,7 @@ class ACCEL(BaseCard):
     def uncross_reference(self, model):
         self.cid = self.Cid()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by ACCEL sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
 
@@ -801,7 +801,7 @@ class FORCE(Force):
     def uncross_reference(self):
         self.cid = self.Cid()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by FORCE sid=%s' % self.sid
         # try:
         self.cid = model.Coord(self.cid, msg=msg)
@@ -886,7 +886,7 @@ class FORCE1(Force):
         self.g1 = self.G1()
         self.g2 = self.G2()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -999,7 +999,7 @@ class FORCE2(Force):
         self.xyz = cross(v12, v34)
         self.normalize()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1131,7 +1131,7 @@ class MOMENT(Moment):
             return self.node
         return self.node.nid
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         pass
 
     def raw_fields(self):
@@ -1219,7 +1219,7 @@ class MOMENT1(Moment):
         self.g1 = self.G1()
         self.g2 = self.G2()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1325,7 +1325,7 @@ class MOMENT2(Moment):
         self.g3 = self.G3()
         self.g4 = self.G4()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1943,7 +1943,7 @@ class PLOAD4(Load):
         if self.eids:
             self.eids = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)

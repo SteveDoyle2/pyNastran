@@ -102,8 +102,9 @@ class XrefMesh(object):
                         xref_constraints=True,
                         xref_aero=True,
                         xref_sets=True,
-                        xref_optimization=True):
-
+                        xref_optimization=True,
+                        debug=True):
+        assert debug == False, debug
         self._cross_reference_nodes()
         self._cross_reference_coordinates()
 
@@ -121,7 +122,7 @@ class XrefMesh(object):
         if xref_constraints:
             self._cross_reference_constraints()
         if xref_loads:
-            self._safe_cross_reference_loads()
+            self._safe_cross_reference_loads(debug=debug)
         if xref_sets:
             self._cross_reference_sets()
         if xref_optimization:
@@ -674,25 +675,25 @@ class XrefMesh(object):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-    def _safe_cross_reference_loads(self):
+    def _safe_cross_reference_loads(self, debug=True):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
         for (lid, sid) in iteritems(self.loads):
             for load in sid:
-                load.safe_cross_reference(self)
+                load.safe_cross_reference(self, debug=debug)
 
         for (lid, sid) in iteritems(self.dloads):
             for load in sid:
-                load.safe_cross_reference(self)
+                load.safe_cross_reference(self, debug=debug)
         for (lid, sid) in iteritems(self.dload_entries):
             for load in sid:
-                load.safe_cross_reference(self)
+                load.safe_cross_reference(self, debug=debug)
 
         for key, darea in iteritems(self.dareas):
-            darea.safe_cross_reference(self)
+            darea.safe_cross_reference(self, debug=debug)
         for key, dphase in iteritems(self.dphases):
-            dphase.safe_cross_reference(self)
+            dphase.safe_cross_reference(self, debug=debug)
 
     def _cross_reference_sets(self):
         for set_obj in self.asets:

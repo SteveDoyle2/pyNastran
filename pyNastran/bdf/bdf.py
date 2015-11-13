@@ -2829,7 +2829,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             for card in cards:
                 card_name, comment, card_lines = card
                 if self.is_reject(card_name):
-                    self.log.info('    rejecting card_name = %s' % card_name)
+                    if card_name not in self.card_count:
+                        self.log.info('    rejecting card_name = %s' % card_name)
                     self._increase_card_count(card_name)
                     self.rejects.append([comment] + card_lines)
                 else:

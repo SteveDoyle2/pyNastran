@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=R0902,R0904,R0914,C0111
 """
 All rigid elements are defined in this file.  This includes:
 
@@ -14,7 +14,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, integer_types
 from six.moves import zip, range
-import sys
 from itertools import count
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -22,9 +21,9 @@ from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
-    blank, fields, string, interpret_value)
+    blank, string)
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.utils import build_table_lines
+# from pyNastran.bdf.cards.utils import build_table_lines
 
 
 class RigidElement(Element):
@@ -108,6 +107,16 @@ class RBAR(RigidElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
+
+    @property
+    def independent_nodes(self):
+        """gets the independent node ids"""
+        return [self.Ga()]
+
+    @property
+    def dependent_nodes(self):
+        """gets the dependent node ids"""
+        return [self.Gb()]
 
     def raw_fields(self):
         list_fields = ['RBAR', self.eid, self.Ga(), self.Gb(), self.cna,
@@ -255,21 +264,27 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     @property
     def Gni_node_ids(self):
+        if len(self.Gni) == 0:
+            return []
         return self._nodeIDs(nodes=self.Gni, allowEmptyNodes=True)
 
     @property
     def Gmi_node_ids(self):
+        if len(self.Gmi) == 0:
+            return []
         return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
 
     @property
     def independent_nodes(self):
+        """gets the independent node ids"""
         # checked
         return self.Gni_node_ids
 
     @property
     def dependent_nodes(self):
+        """gets the dependent node ids"""
         # checked
-        nodes += self.Gmi_node_ids
+        nodes = self.Gmi_node_ids
         return nodes
 
     def raw_fields(self):
@@ -279,9 +294,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             if i > 0 and i % 3 == 0:
                 list_fields += [None]
 
-        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM/ALPHA onto next line
-        if nSpaces < 8:
-            list_fields += [None] * nSpaces
+        nspaces = 8 - (len(list_fields) - 1) % 8  # puts UM/ALPHA onto next line
+        if nspaces < 8:
+            list_fields += [None] * nspaces
 
         # overly complicated loop to print the UM section
         list_fields += ['UM']
@@ -294,8 +309,8 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             j += 1
 
         if self.alpha > 0.:  # handles default alpha value
-            nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
-            if nSpaces == 1:
+            nspaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
+            if nspaces == 1:
                 list_fields += [None, None]
             list_fields += [self.alpha]
         return list_fields
@@ -472,15 +487,19 @@ class RBE2(RigidElement):
 
     @property
     def Gmi_node_ids(self):
+        if len(self.Gmi) == 0:
+            return []
         return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
 
     @property
     def independent_nodes(self):
+        """gets the independent node ids"""
         nodes = [self.Gn()]
         return nodes
 
     @property
     def dependent_nodes(self):
+        """gets the dependent node ids"""
         return self.Gmi_node_ids
 
     def raw_fields(self):
@@ -526,25 +545,25 @@ class RBE3(RigidElement):
         self.refc = components_or_blank(card, 4, 'refc')
 
         fields = [field.upper() if isinstance(field, string_types) else field for field in card[5:]]
-        iOffset = 5
-        iWtMax = len(fields) + iOffset
+        ioffset = 5
+        iWtMax = len(fields) + ioffset
         try:
-            iAlpha = fields.index('ALPHA') + iOffset
-            iWtMax = iAlpha  # the index to start parsing UM
-            iUmStop = iAlpha  # the index to stop  parsing UM
+            ialpha = fields.index('ALPHA') + ioffset
+            iWtMax = ialpha  # the index to start parsing UM
+            ium_stop = ialpha  # the index to stop  parsing UM
         except ValueError:
-            iAlpha = None
-            iUmStop = iWtMax
+            ialpha = None
+            ium_stop = iWtMax
 
         try:
-            iUm = fields.index('UM') + iOffset
-            iWtMax = iUm
+            ium = fields.index('UM') + ioffset
+            # iwt_max = ium
         except ValueError:
-            iUm = None
+            ium = None
 
         self.WtCG_groups = []
 
-        i = iOffset
+        i = ioffset
         n = 1
         while i < iWtMax:
             Gij = []
@@ -552,9 +571,9 @@ class RBE3(RigidElement):
             wt = double_or_blank(card, i, wtname)
             if wt is not None:
                 cname = 'c'+str(n)
-                ci = components_or_blank(card, i + 1, cname)
+                compi = components_or_blank(card, i + 1, cname)
 
-                #print("%s=%s %s=%s" % (wtname, wt, cname, ci))
+                #print("%s=%s %s=%s" % (wtname, wt, cname, compi))
                 i += 2
                 gij = 0
 
@@ -569,10 +588,10 @@ class RBE3(RigidElement):
                     if gij is not None:
                         Gij.append(gij)
                     i += 1
-                assert ci is not None
+                assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
-                wtCG_group = [wt, ci, Gij]
+                wtCG_group = [wt, compi, Gij]
                 self.WtCG_groups.append(wtCG_group)
                 #print('----finished a group=%r----' % wtCG_group)
             else:
@@ -580,12 +599,12 @@ class RBE3(RigidElement):
 
         self.Gmi = []
         self.Cmi = []
-        if iUm:
-            #print('UM = %s' % card.field(iUm))  # UM
-            i = iUm + 1
+        if ium:
+            #print('UM = %s' % card.field(ium))  # UM
+            i = ium + 1
             n = 1
             #print("i=%s iUmStop=%s" % (i, iUmStop))
-            for j in range(i, iUmStop, 2):
+            for j in range(i, ium_stop, 2):
 
                 gm_name = 'gm' + str(n)
                 cm_name = 'cm' + str(n)
@@ -596,8 +615,8 @@ class RBE3(RigidElement):
                     self.Gmi.append(gmi)
                     self.Cmi.append(cmi)
 
-        if iAlpha:
-            self.alpha = double_or_blank(card, iAlpha + 1, 'alpha')
+        if ialpha:
+            self.alpha = double_or_blank(card, ialpha + 1, 'alpha')
         else:
             #: thermal expansion coefficient
             self.alpha = 0.0
@@ -631,6 +650,9 @@ class RBE3(RigidElement):
 
     @property
     def Gmi_node_ids(self):
+        print('self.Gmi', self.Gmi)
+        if len(self.Gmi) == 0:
+            return []
         return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
 
     def cross_reference(self, model):
@@ -642,7 +664,7 @@ class RBE3(RigidElement):
         for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
             self.WtCG_groups[i][2] = model.Nodes(Gij, allowEmptyNodes=True, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         assert self.Gmi is not None
         self.Gmi = model.Nodes(self.Gmi, allowEmptyNodes=True, msg=msg)
@@ -653,16 +675,22 @@ class RBE3(RigidElement):
 
     @property
     def independent_nodes(self):
-        """TODO: not checked"""
+        """
+        gets the independent node ids
+        TODO: not checked
+        """
         nodes = []
-        for (wt, ci, Gij) in self.WtCG_groups:
+        for (wt, compi, Gij) in self.WtCG_groups:
             Giji = self._nodeIDs(nodes=Gij, allowEmptyNodes=True)
             nodes += Giji
         return nodes
 
     @property
     def dependent_nodes(self):
-        """TODO: not checked"""
+        """
+        gets the dependent node ids
+        TODO: not checked
+        """
         nodes = [self.ref_grid_id]
         nodes += self.Gmi_node_ids
         return nodes
@@ -672,19 +700,19 @@ class RBE3(RigidElement):
         for (wt, ci, Gij) in self.WtCG_groups:
             Giji = self._nodeIDs(nodes=Gij, allowEmptyNodes=True)
             list_fields += [wt, ci] + Giji
-        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
+        nspaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 
-        if nSpaces < 8:
-            list_fields += [None] * nSpaces
+        if nspaces < 8:
+            list_fields += [None] * nspaces
 
         if self.Gmi:
             list_fields += ['UM']
             for (gmi, cmi) in zip(self.Gmi_node_ids, self.Cmi):
                 list_fields += [gmi, cmi]
 
-        nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
-        if nSpaces < 8:
-            list_fields += [None] * nSpaces
+        nspaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
+        if nspaces < 8:
+            list_fields += [None] * nspaces
 
         if self.alpha > 0.:  # handles the default value
             list_fields += ['ALPHA', self.alpha]

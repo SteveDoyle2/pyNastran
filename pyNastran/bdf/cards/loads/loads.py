@@ -94,15 +94,16 @@ class LoadCombination(Load):  # LOAD, DLOAD
             loadIDs2.append(loadID2)
         self.loadIDs = loadIDs2
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         loadIDs2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for load_id in self.loadIDs:
             try:
                 loadID2 = model.Load(load_id, msg=msg)
             except KeyError:
-                msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (load_id, self.type, self.sid)
-                print(msg)
+                if debug:
+                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (load_id, self.type, self.sid)
+                    print(msg)
                 continue
             loadIDs2.append(loadID2)
         self.loadIDs = loadIDs2
@@ -248,7 +249,7 @@ class DAREA(BaseCard):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.p = model.Node(self.p, allowEmptyNodes=False, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.p = model.Node(self.p, allowEmptyNodes=False, msg=msg)
 
@@ -322,7 +323,7 @@ class SPCD(Load):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
 

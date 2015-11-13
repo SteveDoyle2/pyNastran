@@ -129,10 +129,14 @@ class GetMethods(GetMethodsDeprecated):
         return out
 
     def get_rigid_elements_with_node_ids(self, node_ids):
-        nids = set(node_ids)
+        try:
+            nids = set(node_ids)
+        except TypeError:
+            print(node_ids)
+            raise
         rbes = []
         for eid, rigid_element in iteritems(self.rigidElements):
-            if rigid_element.type in ['RBE3', 'RBE2']:
+            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 rbe_nids = independent_nodes | dependent_nodes
