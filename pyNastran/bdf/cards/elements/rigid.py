@@ -546,18 +546,18 @@ class RBE3(RigidElement):
 
         fields = [field.upper() if isinstance(field, string_types) else field for field in card[5:]]
         ioffset = 5
-        iWtMax = len(fields) + ioffset
+        iwt_max = len(fields) + ioffset
         try:
             ialpha = fields.index('ALPHA') + ioffset
-            iWtMax = ialpha  # the index to start parsing UM
+            iwt_max = ialpha  # the index to start parsing UM
             ium_stop = ialpha  # the index to stop  parsing UM
         except ValueError:
             ialpha = None
-            ium_stop = iWtMax
+            ium_stop = iwt_max
 
         try:
             ium = fields.index('UM') + ioffset
-            # iwt_max = ium
+            iwt_max = ium
         except ValueError:
             ium = None
 
@@ -565,7 +565,7 @@ class RBE3(RigidElement):
 
         i = ioffset
         n = 1
-        while i < iWtMax:
+        while i < iwt_max:
             Gij = []
             wtname = 'wt' + str(n)
             wt = double_or_blank(card, i, wtname)
@@ -578,7 +578,7 @@ class RBE3(RigidElement):
                 gij = 0
 
                 j = 0
-                while isinstance(gij, int) and i < iWtMax:
+                while isinstance(gij, int) and i < iwt_max:
                     j += 1
                     gij_name = 'g%s,%s' % (n, j)
                     gij = integer_double_or_blank(card, i, gij_name)
