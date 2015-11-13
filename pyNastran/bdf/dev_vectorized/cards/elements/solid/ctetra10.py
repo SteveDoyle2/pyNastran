@@ -68,7 +68,7 @@ class CTETRA10(SolidElement):
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
-        nids = self.nodeIDs()
+        nids = self.node_ids
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
@@ -192,7 +192,7 @@ class CTETRA10(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.nodeIDs()[:4]
+        nids = self.node_ids[:4]
         indx = nids.index(nid_opposite)
         nids.pop(indx)
         return nids

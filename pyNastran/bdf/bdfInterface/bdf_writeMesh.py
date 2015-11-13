@@ -833,7 +833,7 @@ class WriteMesh(BDFAttributes):
         #msg = []
         #associated_nodes = set([])
         #for (eid, element) in iteritems(self.elements):
-            #associated_nodes = associated_nodes.union(set(element.nodeIDs()))
+            #associated_nodes = associated_nodes.union(set(element.node_ids))
 
         #all_nodes = set(self.nodes.keys())
         #unassociated_nodes = list(all_nodes.difference(associated_nodes))

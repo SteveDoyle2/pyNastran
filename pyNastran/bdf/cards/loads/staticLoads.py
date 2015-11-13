@@ -1642,7 +1642,7 @@ class PLOAD1(Load):
 
             if isinstance(load, PLOAD1): # CBAR/CBEAM
                 element = load.eid
-                (ga, gb) = element.nodeIDs()
+                (ga, gb) = element.node_ids
                 load_type = load.Type
 
                 scale = load.scale
@@ -1914,7 +1914,7 @@ class PLOAD4(Load):
             nidOpposite = self.g34.nid
             (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid, nidOpposite)
         else:
-            faceNodeIDs = self.eid.nodeIDs()
+            faceNodeIDs = self.eid.node_ids
             Area = self.eid.Area()
         n = len(faceNodeIDs)
 

@@ -954,7 +954,7 @@ class Solver(F06, OP2):
 
         for (eid, axiali) in zip(eids, axial):
             element = model.Element(eid)
-            n1, n2 = element.nodeIDs()
+            n1, n2 = element.node_ids
             self.log.info(n1, n2)
             #      (eid, grid, sd,  sxc,   sxd, sxe, sxf,  smax, smin, mst, msc) = out
             line = [eid, n1, 0.0, axiali, 0., 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -1002,7 +1002,7 @@ class Solver(F06, OP2):
         i = 0
         for (eid, fxi) in zip(eids, fx):
             element = model.Element(eid)
-            n1, n2 = element.nodeIDs()
+            n1, n2 = element.node_ids
             self.log.info('***(*', n1, n2)
             #      [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
             line = [eid, n1, 0.0, 0., 0., 0., 0., 0., 0., 0.0]
@@ -1586,7 +1586,7 @@ class Solver(F06, OP2):
         return Ua
 
     def element_dof_start(self, elem, nids):
-        node_ids = elem.nodeIDs()
+        node_ids = elem.node_ids
         index0s = searchsorted(nids, node_ids)
         index0s *= 6
         return node_ids, index0s

@@ -107,7 +107,7 @@ class CDAMP1(LineDamper):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid()] + self.node_ids + [self.c1, self.c2]
-        fields2 = [elem.eid, elem.Pid()] + elem.nodeIDs() + [elem.c1, elem.c2]
+        fields2 = [elem.eid, elem.Pid()] + elem.node_ids + [elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)

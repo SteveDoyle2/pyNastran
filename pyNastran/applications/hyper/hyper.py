@@ -97,7 +97,7 @@ class Hypersonic(BDF):
 
             print(element.type)
             if element.type in ['CTRIA3', 'CTRIA6']:
-                n1, n2, n3 = element.nodeIDs()
+                n1, n2, n3 = element.node_ids
                 p1, p2, p3 = positions[n1], positions[n2], positions[n3]
 
                 # hacked an extra point in to make the equations work nice
@@ -106,7 +106,7 @@ class Hypersonic(BDF):
                 a = p2 - p1
                 b = p3 - p1
             elif element.type in ['CQUAD4', 'CQUAD8']:
-                n1, n2, n3, n4 = element.nodeIDs()
+                n1, n2, n3, n4 = element.node_ids
                 p1, p2, p3, p4 = positions[n1], positions[n2], positions[n3], positions[n4]
                 xyz = vstack([p1, p2, p3, p4])
                 xyz_avg = (p1 + p2 + p3 + p4) / 4.

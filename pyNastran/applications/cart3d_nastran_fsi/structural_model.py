@@ -20,7 +20,7 @@ class StructuralModel(Model):
         self.fem = fem
         #nodes = fem.getNodes()
         #elements = fem.getElements()
-        nodeIDs = fem.nodeIDs()
+        nodeIDs = fem.node_ids
         elementIDs = fem.elementIDs()
 
         self.nNodes = len(nodeIDs)
@@ -32,7 +32,7 @@ class StructuralModel(Model):
             log().debug("***StructuralModel.init")
 
     def NodeIDs(self):
-        return self.fem.nodeIDs()
+        return self.fem.node_ids
 
     def get_element_properties(self, eid):
         """Returns area, centroid, normal"""
@@ -47,7 +47,7 @@ class StructuralModel(Model):
 
     def get_element_node_ids(self, eid):
         e = self.fem.Element(eid)
-        return e.nodeIDs()
+        return e.node_ids
 
     def Node(self, nid):
         node = self.fem.Node(nid)

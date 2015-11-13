@@ -208,7 +208,7 @@ class NastranIO(NastranIO_xref):
                                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
-                        nodeIDs = element.nodeIDs()
+                        nodeIDs = element.node_ids
                         if None in nodeIDs:
                             nsprings += 1
 
@@ -495,7 +495,7 @@ class NastranIO(NastranIO_xref):
                 pid = 0
                 if isinstance(element, (CTRIA3, CTRIAR)):
                     elem = vtkTriangle()
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs
                     elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -504,7 +504,7 @@ class NastranIO(NastranIO_xref):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
                 elif isinstance(element, CTRIA6):
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:3]
                     if None not in nodeIDs:
@@ -521,7 +521,7 @@ class NastranIO(NastranIO_xref):
                                              elem.GetPointIds())
                 elif isinstance(element, CTRIAX6):
                     # midside nodes are required, nodes out of order
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     if None not in nodeIDs:
                         elem = vtkQuadraticTriangle()
@@ -548,7 +548,7 @@ class NastranIO(NastranIO_xref):
                                              elem.GetPointIds())
 
                 elif isinstance(element, (CQUAD4, CSHEAR, CQUADR)):
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:4]
                     elem = vtkQuad()
@@ -559,7 +559,7 @@ class NastranIO(NastranIO_xref):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
                 elif isinstance(element, CQUAD8):
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:4]
                     if None not in nodeIDs:
@@ -578,7 +578,7 @@ class NastranIO(NastranIO_xref):
                                              elem.GetPointIds())
                 elif isinstance(element, CTETRA4):
                     elem = vtkTetra()
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:4]
                     elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -588,7 +588,7 @@ class NastranIO(NastranIO_xref):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
                 elif isinstance(element, CTETRA10):
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:4]
                     if None not in nodeIDs:
@@ -609,7 +609,7 @@ class NastranIO(NastranIO_xref):
                                              elem.GetPointIds())
                 elif isinstance(element, CPENTA6):
                     elem = vtkWedge()
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:6]
                     elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -622,7 +622,7 @@ class NastranIO(NastranIO_xref):
                                              elem.GetPointIds())
 
                 elif isinstance(element, CPENTA15):
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:6]
                     if None not in nodeIDs:
@@ -647,7 +647,7 @@ class NastranIO(NastranIO_xref):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
                 elif isinstance(element, CHEXA8):
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     self.eid_to_nid_map[eid] = nodeIDs[:8]
                     elem = vtkHexahedron()
@@ -662,7 +662,7 @@ class NastranIO(NastranIO_xref):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
                 elif isinstance(element, CHEXA20):
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     pid = element.Pid()
                     if None not in nodeIDs:
                         elem = vtkQuadraticHexahedron()
@@ -707,7 +707,7 @@ class NastranIO(NastranIO_xref):
                         # CONROD
                         # CELAS2, CELAS4?
                         pid = 0
-                    nodeIDs = element.nodeIDs()
+                    nodeIDs = element.node_ids
                     if nodeIDs[0] is None and  nodeIDs[0] is None: # CELAS2
                         del self.eidMap[eid]
                         continue
@@ -956,13 +956,13 @@ class NastranIO(NastranIO_xref):
                     elem = load.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
                         eid = elem.eid
-                        node_ids = elem.nodeIDs()
+                        node_ids = elem.node_ids
                         k = load.pressures[0] * scale / 3.
                         for nid in node_ids[3:]:
                             pressures[eids.index(nid)] += k
                     if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         eid = elem.eid
-                        node_ids = elem.nodeIDs()
+                        node_ids = elem.node_ids
                         k = load.pressures[0] * scale / 4.
                         for nid in node_ids[4:]:
                             pressures[eids.index(nid)] += k

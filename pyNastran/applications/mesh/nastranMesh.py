@@ -308,10 +308,10 @@ class NastranMesh(BDF):
         for eid, element in sorted(iteritems(self.elements)):
             if eid in eids:
                 newElements[eid] = element
-                newNodes = newNodes.union(set(element.nodeIDs()))
+                newNodes = newNodes.union(set(element.node_ids))
             else:
                 originalElements[eid] = element
-                oldNodes = oldNodes.union(set(element.nodeIDs()))
+                oldNodes = oldNodes.union(set(element.node_ids))
 
         #for eid in newElements:
         newNodes = list(newNodes)
@@ -372,7 +372,7 @@ class NastranMesh(BDF):
     #         if isinstance(element, ShellElement):
     #             elem = self.Element(starterEid)
     #             normals[starterEid] = elem.Normal()
-    #             validNids = validNids.union(set(elem.nodeIDs()))
+    #             validNids = validNids.union(set(elem.node_ids))
     #
     #     # clean up the elements that will be considered
     #     elemsToCheck = set([])

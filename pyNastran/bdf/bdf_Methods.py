@@ -558,7 +558,7 @@ class BDFMethods(BDFAttributes):
                 M += m * scale
 
             elif load.type == 'PLOAD':
-                nodes = load.nodeIDs()
+                nodes = load.node_ids
                 nnodes = len(nodes)
                 nodesi = 0
                 if nnodes == 3:
@@ -611,7 +611,7 @@ class BDFMethods(BDFAttributes):
                 if elem.type not in ['CBAR', 'CBEAM', 'CBEND']:
                     raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
 
-                nodes = elem.nodeIDs()
+                nodes = elem.node_ids
                 n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
                 n1 += elem.wa
                 n2 += elem.wb
@@ -641,7 +641,7 @@ class BDFMethods(BDFAttributes):
                     raise NotImplementedError(msg)
 
                 if x1 != x2:
-                    print('PLOAD1 x1 != x2 continue\n%s\n%s'% (str(elem), str(load)))
+                    print('PLOAD1 x1 != x2 continue\n%s%s'% (str(elem), str(load)))
                     continue
 
                 #print(load)
@@ -1014,7 +1014,12 @@ class BDFMethods(BDFAttributes):
 
                 deltaL = n2 - n1
                 L = norm(deltaL)
-                Ldir = deltaL / L
+                try:
+                    Ldir = deltaL / L
+                except:
+                    msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
+                    msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
+                    raise FloatingPointError(msg)
                 if load.scale == 'FR':  # x1, x2 are fractional lengths
                     x1 = load.x1
                     x2 = load.x2
@@ -1038,13 +1043,13 @@ class BDFMethods(BDFAttributes):
 
                 # FY - force in basic coordinate system
                 # FR - fractional;
-                assert x1 < x2, 'x1=%s x2=%s' % (x1, x2)
+                assert x1 <= x2, 'x1=%s x2=%s' % (x1, x2)
                 if x1 != x2:
                     # continue
                     if not load.type in ['FX', 'FY', 'FZ']:
-                        print('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s\n%s'% (x1, x2, load.scale, str(elem), str(load)))
+                        print('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (x1, x2, load.scale, str(elem), str(load)))
                         continue
-                    print('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s\n%s'% (x1, x2, load.scale, str(elem), str(load)))
+                    print('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (x1, x2, load.scale, str(elem), str(load)))
 
                     # y = (y2-y1)/(x2-x1)*(x-x1) + y1
                     # y = (y2-y1) * (x-x1)/(x2-x1) + y1
