@@ -26,7 +26,7 @@ class RealEigenvalues(BaseScalarObject):
         msg = []
         neigenvalues = len(self.extractionOrder)
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
-                                                 neigenvalues))
+                                                    neigenvalues))
         msg.append('  title, extractionOrder, eigenvalues, radians, '
                    'cycles, generalizedMass, generalizedStiffness\n')
         return msg
@@ -38,17 +38,17 @@ class RealEigenvalues(BaseScalarObject):
         return False
 
     def addF06Line(self, data):
-        (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = data
+        (modeNum, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = data
         #print('data =', data)
-        self.extractionOrder[modeNum] = extractOrder
+        self.extractionOrder[modeNum] = extract_order
         self.eigenvalues[modeNum] = eigenvalue
         self.radians[modeNum] = radian
         #cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
         #if not allclose(cycle, cyclei):
             #print('cycle=%s cyclei=%s' % (cycle, cyclei))
         self.cycles[modeNum] = cycle
-        self.generalizedMass[modeNum] = genM
-        self.generalizedStiffness[modeNum] = genK
+        self.generalizedMass[modeNum] = gen_mass
+        self.generalizedStiffness[modeNum] = gen_stiffness
 
     def add_f06_data(self, data):
         for line in data:
@@ -61,31 +61,31 @@ class RealEigenvalues(BaseScalarObject):
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n', title,
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
-        for (iMode, order) in sorted(iteritems(self.extractionOrder)):
-            eigenvalue = self.eigenvalues[iMode]
+        for (imode, order) in sorted(iteritems(self.extractionOrder)):
+            eigenvalue = self.eigenvalues[imode]
             #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
 
-            omega = self.radians[iMode]
-            freq = self.cycles[iMode]
-            mass = self.generalizedMass[iMode]
-            stiff = self.generalizedStiffness[iMode]
+            omega = self.radians[imode]
+            freq = self.cycles[imode]
+            mass = self.generalizedMass[imode]
+            stiff = self.generalizedStiffness[imode]
             ([eigen, omega, freq, mass, stiff], is_all_zeros) = writeFloats13E([eigenvalue, omega, freq, mass, stiff])
-            msg.append(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
+            msg.append(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (imode, order, eigen, omega, freq, mass, stiff))
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s %15s\n' % ('ModeNum', 'ExtractionOrder', 'Eigenvalue', 'Radians', 'Cycles', 'GenMass', 'GenStiffness')
-        for modeNum, extractOrder in sorted(iteritems(self.extractionOrder)):
-            eigenvalue = self.eigenvalues[modeNum]
-            radian = self.radians[modeNum]
+        for mode_num, extract_order in sorted(iteritems(self.extractionOrder)):
+            eigenvalue = self.eigenvalues[mode_num]
+            radian = self.radians[mode_num]
 
             cycle = sqrt(abs(eigenvalue)) / (2. * pi)
-            #cycle = self.cycles[modeNum]
-            genM = self.generalizedMass[modeNum]
-            genK = self.generalizedStiffness[modeNum]
-            msg += '%-7s %15s %15s %10s %10s %10s %15s\n' % (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK)
+            #cycle = self.cycles[mode_num]
+            genM = self.generalizedMass[mode_num]
+            genK = self.generalizedStiffness[mode_num]
+            msg += '%-7s %15s %15s %10s %10s %10s %15s\n' % (mode_num, extract_order, eigenvalue, radian, cycle, genM, genK)
         return msg
 
 

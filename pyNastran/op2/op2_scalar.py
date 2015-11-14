@@ -915,11 +915,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 
         if self.read_mode == 1:
-            self.fdtype = np.dtype(self._endian + 'f4')
-            self.idtype = np.dtype(self._endian + 'i4')
-            self.struct_i = Struct(b(self._endian + 'i'))
-            self.struct_8s = Struct(b(self._endian + '8s'))
-            self.struct_2i = Struct(b(self._endian + 'ii'))
+            self._set_structs()
 
         #try:
         markers = self.get_nmarkers(1, rewind=True)

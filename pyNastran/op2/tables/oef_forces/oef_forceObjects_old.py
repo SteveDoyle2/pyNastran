@@ -1,3 +1,5 @@
+from numpy import array
+
 class RealRodForce(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None

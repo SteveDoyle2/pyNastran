@@ -124,7 +124,7 @@ class OGS(OP2Common):
         return ndata
 
     def _read_ogs1_table26(self, data, ndata):
-        resultName = 'gridPointStresses'
+        result_name = 'gridPointStresses'
         if self.num_wide == 11:  # real/random
             #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
             n = self._readOGS1_table26_numWide11(data, ndata)
@@ -156,7 +156,7 @@ class OGS(OP2Common):
         """OGS1 - grid point stresses - volume direct"""
         #is_sort1 = self.is_sort1()
         if self.num_wide == 9:  # real/random
-            resultName = 'gridPointVolumeStresses'
+            result_name = 'gridPointVolumeStresses'
             #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolumeObject)
             n = self._readOGS1_table27_numWide9(data, ndata)
         else:
@@ -182,7 +182,7 @@ class OGS(OP2Common):
 
     def _read_ogs1_table35(self, data, ndata):
         """grid point stress discontinuities (plane stress/strain)"""
-        resultName = 'gridPointStresses'
+        result_name = 'gridPointStresses'
         if self.num_wide == 6:
             #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
             n = self._readOGS1_table35_numWide6(data, ndata)

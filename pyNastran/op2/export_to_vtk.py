@@ -249,7 +249,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
                                 title = '%s_%s_isubcase=%s_itime=%s' % (case_type, name, isubcase, itime)
                                 vtk_file.write('SCALARS %s float\n' % title)
                                 vtk_file.write('LOOKUP_TABLE default\n')
-                                datai = data[itime, i, icol]
+                                #datai = data[itime, i, icol]
                                 vtk_file.write(pack_float_1d_array(fmt, data[itime, i, icol]))
                         if 1:
                             title = '%s_isubcase=%s_itime=%s' % (case_type, isubcase, itime)

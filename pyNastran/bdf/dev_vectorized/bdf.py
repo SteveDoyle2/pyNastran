@@ -2312,10 +2312,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         assert key >= 0
         self.aeros[key] = aero
 
-    def add_AEFACT(self, card_obj, comment='', allowOverwrites=False):
+    def add_AEFACT(self, card_obj, comment='', allow_overwrites=False):
         aefact = AEFACT(card_obj, comment=comment)
         key = aefact.sid
-        if key in self.aefacts and not allowOverwrites:
+        if key in self.aefacts and not allow_overwrites:
             if not aefact._is_same_card(self.aefacts[key]):
                 assert key not in self.aefacts, 'sid=%s\noldAEFACT=\n%snewAEFACT=\n%s' % (key, self.aefacts[key], aefact)
         else:

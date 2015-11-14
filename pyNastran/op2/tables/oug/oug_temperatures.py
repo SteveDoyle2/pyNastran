@@ -206,9 +206,9 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
         gType = ipack[1]
         while len(ipack) > 8:
             nID = ipack[0]
-            packOut = ipack[:8]
+            pack_out = ipack[:8]
             ipack = [nID + 6, gType] + ipack[8:]
-            msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E\n' % (tuple(packOut)))
+            msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E\n' % (tuple(pack_out)))
 
         if ipack:
             fmt = '      %8i   %4s   ' + '   %10.6E' * (len(ipack) - 2) + '\n'

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 import os
 import sys
@@ -18,7 +19,7 @@ def parse_skipped_cards(fname):
             (fore, aft) = line.strip().split('->')
             (oes, form, elementTypeNum) = fore.strip().split(' ')
             (element_type, eType) = elementTypeNum.strip().split('=')
-            (msg,fpath) = aft.strip().split('-')
+            (msg, fpath) = aft.strip().split('-')
             #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
             eName = msg.split(' ')[0]

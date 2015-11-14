@@ -208,7 +208,7 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
         self.flux[dt] = {}
 
     def add(self, nNodes, dt, data):
-        [eid, parent, coord, icord, gradFluxes] = data
+        [eid, parent, coord, icord, grad_fluxes] = data
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
@@ -216,13 +216,13 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
 
         self.grad[eid] = {}
         self.flux[eid] = {}
-        for gradFlux in gradFluxes:
-            [nid, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = gradFlux
-            self.grad[eid][nid] = [xGrad, yGrad, zGrad]
-            self.flux[eid][nid] = [xFlux, yFlux, zFlux]
+        for grad_flux in grad_fluxes:
+            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
+            self.grad[eid][nid] = [xgrad, ygrad, zgrad]
+            self.flux[eid][nid] = [xflux, yflux, zflux]
 
     def add_sort1(self, nNodes, dt, data):
-        [eid, parent, coord, icord, gradFluxes] = data
+        [eid, parent, coord, icord, grad_fluxes] = data
         if dt not in self.grad:
             self.add_new_transient(dt)
         self.parent[eid] = parent
@@ -232,13 +232,13 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
 
         self.grad[dt][eid] = {}
         self.flux[dt][eid] = {}
-        for gradFlux in gradFluxes:
-            [nid, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = gradFlux
-            self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
-            self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
+        for grad_flux in grad_fluxes:
+            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
+            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
+            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
 
-    def addSort2(self, nNodes, eid, data):
-        [dt, parent, coord, icord, gradFluxes] = data
+    def add_sort2(self, nnodes, eid, data):
+        [dt, parent, coord, icord, grad_fluxes] = data
         if dt not in self.fApplied:
             self.add_new_transient(dt)
         self.parent[eid] = parent
@@ -248,10 +248,10 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
 
         self.grad[dt][eid] = {}
         self.flux[dt][eid] = {}
-        for gradFlux in gradFluxes:
-            [nid, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = gradFlux
-            self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
-            self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
+        for grad_flux in grad_fluxes:
+            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
+            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
+            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
 
 
 class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
@@ -287,26 +287,26 @@ class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         self.flux[dt] = {}
 
     def add(self, dt, data):
-        [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
+        [eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
         self.eType[eid] = eType
-        self.grad[eid] = [xGrad, yGrad, zGrad]
-        self.flux[eid] = [xFlux, yFlux, zFlux]
+        self.grad[eid] = [xgrad, ygrad, zgrad]
+        self.flux[eid] = [xflux, yflux, zflux]
 
     def add_sort1(self, dt, data):
-        [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
+        [eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
         if dt not in self.grad:
             self.add_new_transient(dt)
         self.eType[eid] = eType
-        self.grad[dt][eid] = [xGrad, yGrad, zGrad]
-        self.flux[dt][eid] = [xFlux, yFlux, zFlux]
+        self.grad[dt][eid] = [xgrad, ygrad, zgrad]
+        self.flux[dt][eid] = [xflux, yflux, zflux]
 
     def addSort2(self, eid, data):
-        [dt, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
+        [dt, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
         if dt not in self.fApplied:
             self.add_new_transient(dt)
         self.eType[eid] = eType
-        self.grad[dt][eid] = [xGrad, yGrad, zGrad]
-        self.flux[dt][eid] = [xFlux, yFlux, zFlux]
+        self.grad[dt][eid] = [xgrad, ygrad, zgrad]
+        self.flux[dt][eid] = [xflux, yflux, zflux]
 
 class HeatFlux_2D_3DArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -359,20 +359,20 @@ class HeatFlux_2D_3D(ScalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
         self.flux[dt] = {}
 
     def add_sort1(self, dt, data):
-        [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
+        [eid, eType, xGrad, yGrad, zGrad, xflux, yflux, zflux] = data
         if dt not in self.grad:
             self.add_new_transient(dt)
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
-        self.flux[dt][eid] = [xFlux, yFlux, zFlux]
+        self.flux[dt][eid] = [xflux, yflux, zflux]
 
     def addSort2(self, eid, data):
-        [dt, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux] = data
+        [dt, eType, xGrad, yGrad, zGrad, xflux, yflux, zflux] = data
         if dt not in self.fApplied:
             self.add_new_transient(dt)
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
-        self.flux[dt][eid] = [xFlux, yFlux, zFlux]
+        self.flux[dt][eid] = [xflux, yflux, zflux]
 
 
 class HeatFlux_CONV(ScalarObject):  # 110-CONV
