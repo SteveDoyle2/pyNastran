@@ -5,9 +5,263 @@ from six.moves import range
 from math import isnan
 from numpy import zeros
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E
 
+class RealNonlinearPlateArray(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        self.eType = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.ielement = 0
+        self.nelements = 0  # result specific
+        self.nnodes = None
+
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
+                self.addNewNode = self.addNewNodeSort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'fiberDistance', 'oxx', 'oyy', 'ozz', 'txy',
+            'exx', 'eyy', 'ezz', 'exy', 'es', 'eps', 'ecs'
+        ]
+        return headers
+
+    #def is_bilinear(self):
+        #if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
+            #return False
+        #elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
+            #return True
+        #else:
+            #raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+
+    def build(self):
+        #print("self.ielement = %s" % self.ielement)
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        #if self.element_type in [33, 74]:
+            #nnodes_per_element = 1
+        #elif self.element_type == 144:
+            #nnodes_per_element = 5
+        #elif self.element_type == 64:  # CQUAD8
+            #nnodes_per_element = 5
+        #elif self.element_type == 82:  # CQUADR
+            #nnodes_per_element = 5
+        #elif self.element_type == 70:  # CTRIAR
+            #nnodes_per_element = 4
+        #elif self.element_type == 75:  # CTRIA6
+            #nnodes_per_element = 4
+        #else:
+        raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+
+        self.nnodes = nnodes_per_element
+        #self.nelements //= nnodes_per_element
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
+            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+
+        #[fiberDistance, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs]
+        self.data = zeros((self.ntimes, self.ntotal, 12), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += '(Eid, Nid)\n'
+            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element_node):
+                    (eid, nid) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (fiberDistance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1) = t1
+                    (fiberDistance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2) = t2
+
+                    # vm stress can be NaN for some reason...
+                    if not array_equal(t1[:-1], t2[:-1]):
+                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
+                                '            (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid,
+                            fiberDistance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1,
+                            fiberDistance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    #def add_new_eid(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #self.add_new_eid_sort1(etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+
+    #def add_new_eid_sort1(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #assert isinstance(eid, int), eid
+        #assert isinstance(node_id, int), node_id
+        #self._times[self.itime] = dt
+        ##assert self.itotal == 0, oxx
+        #self.element_node[self.itotal, :] = [eid, node_id]
+        #self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        #self.itotal += 1
+        #self.ielement += 1
+
+    #def addNewNode(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #assert isinstance(node_id, int), node_id
+        #self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+
+    #def add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #assert isinstance(node_id, int), node_id
+        #self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+
+    #def addNewNodeSort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+
+    #def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #assert eid is not None, eid
+        #assert isinstance(node_id, int), node_id
+        #self.element_node[self.itotal, :] = [eid, node_id]
+        #self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        #self.itotal += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        nnodes = self.nnodes
+        ntotal = self.ntotal
+        nlayers = 2
+        nelements = self.ntotal // self.nnodes // 2
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
+                self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
+            ntimes_word = 'ntimes'
+        else:
+            msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
+                self.__class__.__name__, nelements, nnodes, nlayers, ntotal)
+            ntimes_word = 1
+        msg.append(msgi)
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
+                                                                 str(', '.join(headers))))
+        msg.append('  data.shape=%s\n' % str(self.data.shape))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        asdf
+        msg, nnodes, cen = _get_plate_msg(self)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+
+        #cen_word = 'CEN/%i' % nnodes
+        cen_word = cen
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg))
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+            #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+            fiber_dist = self.data[itime, :, 0]
+            oxx = self.data[itime, :, 1]
+            oyy = self.data[itime, :, 2]
+            txy = self.data[itime, :, 3]
+            angle = self.data[itime, :, 4]
+            majorP = self.data[itime, :, 5]
+            minorP = self.data[itime, :, 6]
+            ovm = self.data[itime, :, 7]
+
+            # loop over all the elements
+            for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
+                 count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+                ([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
+                 is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
+                ilayer = i % 2
+                # tria3
+                if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
+                    if ilayer == 0:
+                        f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                    else:
+                        f.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % ('', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+
+                elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
+                    # bilinear
+                    if nid == 0 and ilayer == 0:  # CEN
+                        f.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                    elif ilayer == 0:
+                        f.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % ('', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                    elif ilayer == 1:
+                        f.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % ('', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                else:
+                    raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 class NonlinearQuad(StressObject):
 

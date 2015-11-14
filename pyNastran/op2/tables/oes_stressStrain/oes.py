@@ -40,7 +40,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShear
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStress, ComplexCelasStrain   # TODO: vectorize 2
 
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRod, NonlinearQuad, HyperelasticQuad  # TODO: vectorize 3
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (NonlinearRod, NonlinearQuad, HyperelasticQuad,  # TODO: vectorize 3
+                                                                 RealNonlinearPlateArray)
 
 
 class OES(OP2Common):
@@ -1692,33 +1693,65 @@ class OES(OP2Common):
             slot = getattr(self, result_name)
             self._results._found_result(result_name)
 
-            if self.format_code == 1 and self.num_wide == 13:  # real
-                if self.is_stress():
-                    self.create_transient_object(slot, NonlinearQuad)
-                else:
-                    self.create_transient_object(slot, NonlinearQuad)
-
+            if self.format_code == 1 and self.num_wide == 13 and self.element_type in [88, 90]:  # real
+                # single layered hyperelastic (???) ctria3, cquad4
                 ntotal = 52  # 4*13
-                s = Struct(b(self._endian + 'i12f'))  # 1+12=13
                 nelements = ndata // ntotal
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('CQUADNL-90 - %s\n' % str(out))
 
-                    (eid_device, fd1,
-                     sx1, sy1, sz1, txy1, es1, eps1, ecs1,
-                     ex1, ey1, ez1, exy1) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
-                    indata = (eid, fd1,
-                              sx1, sy1, sz1, txy1, es1, eps1, ecs1,
-                              ex1, ey1, ez1, exy1)
-                    self.obj.add_new_eid(self.element_type, dt, indata)
-                    #print("eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (
-                        #eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss))
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
+                obj = self.obj
+                #if self.use_vector and is_vectorized:
+                # self.itime = 0
+                # self.ielement = 0
+                # self.itotal = 0
+                #self.ntimes = 0
+                #self.nelements = 0
+                n = nelements * self.num_wide * 4
+
+                istart = obj.itotal
+                iend = istart + nelements
+                obj._times[obj.itime] = dt
+
+                if obj.itime == 0:
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    eids = ints1[:, 0] // 10
+                    obj.element[istart:iend, 0] = eids
+
+                results = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+
+                #[fiber_distance, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs]
+                obj.data[obj.itime, istart:iend, :] = results[:, 1:]
+                #else:
+                if 0:
+                    if self.is_stress():
+                        self.create_transient_object(slot, NonlinearQuad)
+                    else:
+                        self.create_transient_object(slot, NonlinearQuad)
+
+                    s = Struct(b(self._endian + 'i12f'))  # 1+12=13
+                    for i in range(nelements):
+                        edata = data[n:n + ntotal]
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('CQUADNL-90 - %s\n' % str(out))
+
+                        (eid_device, fd1,
+                         sx1, sy1, sz1, txy1, es1, eps1, ecs1,
+                         ex1, ey1, ez1, exy1) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        indata = (eid, fd1,
+                                  sx1, sy1, sz1, txy1, es1, eps1, ecs1,
+                                  ex1, ey1, ez1, exy1)
+                        self.obj.add_new_eid(self.element_type, dt, indata)
+                        #print("eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (
+                            #eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss))
                     n += ntotal
-            elif self.format_code == 1 and self.num_wide == 25:  # TODO: real?
+            elif self.format_code == 1 and self.num_wide == 25 and self.element_type in [88, 90]:  # TODO: real?
+                cfjhfg
                 if self.is_stress():
                     self.create_transient_object(slot, NonlinearQuad)
                 else:
@@ -2745,7 +2778,12 @@ class OES(OP2Common):
         #elif self.element_type in [255]:
             #return ndata
         elif self.element_type in [271, 275]:
-            if self.element_type == 275:
+            if self.element_type == 271:
+                # CPLSTS3
+                result_name = 'cplstn3'
+                nnodes = 1
+                ntotal = 4 * 6
+            elif self.element_type == 275:
                 # CPLSTS3
                 result_name = 'cplsts3'
                 nnodes = 1

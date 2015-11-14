@@ -89,15 +89,19 @@ class XlsxWriter(OP2_F06_Common):
             #data = self._read_record()
             #self.read_markers([-1, 0])
         #elif markers == [2,]:  # PARAM, POST, -2
+        isheet = 1
         if 0:
         #_write_markers(op2, op2_ascii, [3, 0, 7])
             #tape_code = b'NASTRAN FORT TAPE ID CODE - '
+            Sheet(isheet).name = sheet_name
+            sheet = Sheet(isheet)
             sheet['A1'].value = 'NASTRAN FORT TAPE ID CODE'
             sheet['B1'].value = tape_code
 
             nastran_version = b'NX8.5   ' if self.is_nx else b'XXXXXXXX'
             sheet['A2'].value = 'nastran_version'
             sheet['B2'].value = nastran_version
+            isheet =+ 1
 
         if self.grid_point_weight.reference_point is not None and 0:
             if has_attr(result, 'write_xlsx'):
@@ -295,7 +299,6 @@ class XlsxWriter(OP2_F06_Common):
 
         # TODO: this may need to be reworked such that all of subcase 1
         #is printed before subcase 2
-        isheet = 1
         for res_category_name, res_category in res_categories:
             #print("res_category_name = %s" % res_category_name)
             for res_type in res_category:

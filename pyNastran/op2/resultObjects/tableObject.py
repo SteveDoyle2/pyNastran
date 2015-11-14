@@ -200,73 +200,84 @@ class TableArray(ScalarObject):  # displacement style table
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((nx, ny, 6), self.data_type())
 
+    def _write_xlsx(self, sheet, is_mag_phase=False):
+        from xlwings import Range, Chart
+        # 0.3.5 doesn't work, 0.5 does
+        #from numpy import astype
+        # print('xlsx_filename = %r' % xlsx_filename)
+        #f = None
+        #wb = Workbook()  # Creates a connection with a new workbook
+        #wb.save(xlsx_filename)
+        #Range('A1').value = 'Foo 1'
+        #print(Range('A1').value)
+        #'Foo 1'
+        # Range('A1').value = xlsx_filename
+        name = str(self.__class__.__name__)
+        Range(sheet, 'A1').value = [name]
+        Range(sheet, 'A2').value = ['Node', 'GridType'] + self.headers
+        Range(sheet, 'A3').value = self.node_gridtype
+
+        if self.is_real():
+            Range(sheet, 'C3').value = self.data[0, :, :]
+        else:
+            pass
+            #from numpy.core.defchararray import add as sadd
+            #n, m = self.data[0, :, :].shape
+            #nm = n * m
+            #scomplex = array(['=complex('] * nm, dtype='|S10').reshape(n, m)
+            #scomma = array([','] * nm, dtype='|S40').reshape(n, m)
+            #sparen = array([')'] * nm, dtype='|S40').reshape(n, m)
+            #data = sadd(
+                #sadd(scomplex, self.data.real.astype('|S10')), # complex(5.
+                #sadd(
+                    #scomma, # ,
+                    #sadd(self.data.imag.astype('|U10'), sparen), # 3j)
+                #)
+            #)
+            #data = sadd(
+                #scomplex,
+                #self.data.real.astype('|S10'),
+                #scomma,
+                #self.data.imag.astype('|S10'),
+                #sparen)
+            #print(self.data.real)
+            #Range(sheet, 'C3', atleast_2d=True).table.value = self.data.real
+            #Range(sheet, 'C3').value = self.data.real
+        #Range('C4').value = self.data[0, :, 0]
+        #Range('D4').value = self.data[0, :, 1:]
+        #print(Range('A1').table.value)  # or: Range('A1:C2').value
+        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #print(Sheet(1).name)
+        #Sheet(isheet).name = 'displacements'
+        #'Sheet1'
+        #nrows = self.data.shape[1]
+        #end_row = '%s' % (4 + nrows)
+        #t1 = self.data[0, :, 0]
+        #chart = Chart.add(source_data=Range('C4').value)
+        #wb.save()
+        # wb.save()
+
+
     def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         self.add_sort1(None, node_id, grid_type, v1, v2, v3, v4, v5, v6)
 
-    #@autojit
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        #print "dt=%s out=%s" %(dt, out)
-        #if dt not in self.translations:
-        #    self.add_new_transient(dt)
-        #print(msg)
-        #if not 0 < node_id < 1000000000:
-            #msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
-            #msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-            #raise RuntimeError(msg)
-        #assert isinstance(node_id, int), node_id
-        #assert isinstance(node_id, int), msg
-        #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
-
-        # [t1, t2, t3, r1, r2, r3]
-        #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
-        #print "%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6])
-
         # itotal - the node number
         # itime - the time/frequency step
 
         # the times/freqs
         self._times[self.itime] = dt
-        #try:
         self.node_gridtype[self.itotal, :] = [node_id, grid_type]
-        #except IndexError:
-            #print('self.node_gridtype.shape =', self.node_gridtype.shape)
-            #print('self.data[self.itime, self.itotal, :] =', self.data.shape)
-            #print(self)
-            #raise
         self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
         self.itotal += 1
 
     def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        #print "dt=%s out=%s" %(dt, out)
-        #if dt not in self.translations:
-        #    self.add_new_transient(dt)
-        #print('itime=%s itotal=%s' % (self.itotal, self.itime))
-        #print(msg)
         msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
         msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #if not 0 < node_id < 1000000000:
-            #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
-            #msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
-            #raise RuntimeError(msg)
-        #assert isinstance(node_id, int), node_id
-        #print(msg)
-        #assert isinstance(node_id, int), msg
-        #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
-
-        # [t1, t2, t3, r1, r2, r3]
-        #asd
-        #print("%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6]))
-
-        # the node IDs
-        #print('itime =', self.itotal)
         self._times[self.itotal] = dt
 
         if 1:  # this is needed for SORT1 tables
-            #inode = self.itotal // self.ntimes
             inode = self.itime
-            # print("%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, inode,
-                                                    # [node_id, grid_type]))
-            #print("%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6]))
             self.node_gridtype[self.itime, :] = [node_id, grid_type]
             self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
             # itotal - the node number
@@ -280,6 +291,16 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
         #self.itime += 1
 
+def two_dee_string_add(string_lists):
+    string0 = string_lists[0]
+    n, m = string0.shape
+
+    s = []
+    for string_list in string_lists:
+        for string in string_list:
+            pass
+
+    return sumned
 
 class RealTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -440,36 +461,6 @@ class RealTableArray(TableArray):  # displacement style table
         xw.Sheet(1).name
         'Sheet1'
         chart = xw.Chart.add(source_data=xw.Range('A1').table)
-
-    def _write_xlsx(self, sheet, is_mag_phase=False):
-        from xlwings import Range, Chart
-        #from numpy import astype
-        # print('xlsx_filename = %r' % xlsx_filename)
-        #f = None
-        #wb = Workbook()  # Creates a connection with a new workbook
-        #wb.save(xlsx_filename)
-        #Range('A1').value = 'Foo 1'
-        #print(Range('A1').value)
-        #'Foo 1'
-        # Range('A1').value = xlsx_filename
-        Range(sheet, 'A1').value = self.__class__.__name__
-        Range(sheet, 'A2').value = ['Node', 'GridType'] + self.headers
-        Range(sheet, 'A3').value = self.node_gridtype
-
-        Range(sheet, 'C3').value = self.data[0, :, :]
-        #Range('C4').value = self.data[0, :, 0]
-        #Range('D4').value = self.data[0, :, 1:]
-        #print(Range('A1').table.value)  # or: Range('A1:C2').value
-        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        #print(Sheet(1).name)
-        #Sheet(isheet).name = 'displacements'
-        #'Sheet1'
-        #nrows = self.data.shape[1]
-        #end_row = '%s' % (4 + nrows)
-        #t1 = self.data[0, :, 0]
-        #chart = Chart.add(source_data=Range('C4').value)
-        #wb.save()
-        # wb.save()
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words,
                          is_mag_phase=False, is_sort1=True):
