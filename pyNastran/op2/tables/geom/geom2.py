@@ -129,87 +129,87 @@ class GEOM2(object):
             # record 117
             (5551,  49,  105): ['SPOINT', self._readSPOINT],   # record 118
             (11601,116, 9942): ['VUBEAM', self._readVUBEAM],  # record 119 - not done
-            (2108, 21, 224): ['', self._readFake],
-            (3101, 31, 61): ['', self._readFake],
-            (4301, 43, 28): ['', self._readFake],
-            (5601, 56, 296): ['', self._readFake],
-            (6908, 69, 115): ['', self._readFake],
-            (6808, 68, 114): ['', self._readFake],
-            (7409, 74, 9991): ['', self._readFake],
-            (7509, 75, 9992): ['', self._readFake],
-            (7609, 76, 9993): ['', self._readFake],
-            (8100, 81, 381): ['', self._readFake],
-            (8200, 82, 383): ['', self._readFake],
-            (8308, 83, 405): ['', self._readFake],
-            (11201, 112, 9940): ['', self._readFake],
-            (12801, 128, 417): ['', self._readFake],
-            (13900, 139, 9984): ['', self._readFake],
-            (14000, 140, 9990): ['', self._readFake],
-            (16000, 160, 9988): ['', self._readFake],
-            (16100, 161, 9986): ['', self._readFake],
-            (16300, 163, 9989): ['', self._readFake],
-            (16700, 167, 9981): ['', self._readFake],
-            (16800, 168, 9978): ['', self._readFake],
-            (16500, 165, 9987): ['', self._readFake],
-            (2708, 27, 59): ['', self._readFake],
-            (5008, 50, 258): ['', self._readFake],
-            (16400, 164, 9983) : ['', self._readFake],
-            (3201, 32, 478): ['', self._readFake],
-            (11000, 110, 6667): ['', self._readFake],
-            (12301, 123, 9921): ['', self._readFake],
-            (12401, 124, 9922): ['', self._readFake],
-            (12600, 126, 6661): ['', self._readFake],
-            (14700, 147, 6662): ['', self._readFake],
-            (7309, 73, 0): ['', self._readFake],
-            (17200, 172, 6663): ['', self._readFake],
-            (17300, 173, 6664): ['', self._readFake],
-            (11501, 115, 9941): ['', self._readFake],    # record
-            (12501, 125, 9923): ['', self._readFake],    # record
-            (3401, 34, 9600): ['', self._readFake],    # record
-            (2208, 22, 225): ['', self._readFake],  # record
-            (17000, 170, 9980): ['', self._readFake],  # record
-            (7701, 77, 8881): ['', self._readFake],  # record
-            (12901, 129, 482): ['', self._readFake],  # record
-            (7801, 78, 8883): ['', self._readFake],  # record
-            (4408, 44, 227): ['', self._readFake],  # record
-            (17100, 171, 9979): ['', self._readFake],  # record
-            (2901, 29, 9601): ['', self._readFake],  # record
-            (4508, 45, 228): ['', self._readFake],  # record
-            (16600, 166, 9985) : ['', self._readFake],  # record
-            (16200, 162, 9982) : ['', self._readFake],  # record
-            (16900, 169, 9977) : ['', self._readFake],  # record
+            (2108, 21, 224): ['', self._read_fake],
+            (3101, 31, 61): ['', self._read_fake],
+            (4301, 43, 28): ['', self._read_fake],
+            (5601, 56, 296): ['', self._read_fake],
+            (6908, 69, 115): ['', self._read_fake],
+            (6808, 68, 114): ['', self._read_fake],
+            (7409, 74, 9991): ['', self._read_fake],
+            (7509, 75, 9992): ['', self._read_fake],
+            (7609, 76, 9993): ['', self._read_fake],
+            (8100, 81, 381): ['', self._read_fake],
+            (8200, 82, 383): ['', self._read_fake],
+            (8308, 83, 405): ['', self._read_fake],
+            (11201, 112, 9940): ['', self._read_fake],
+            (12801, 128, 417): ['', self._read_fake],
+            (13900, 139, 9984): ['', self._read_fake],
+            (14000, 140, 9990): ['', self._read_fake],
+            (16000, 160, 9988): ['', self._read_fake],
+            (16100, 161, 9986): ['', self._read_fake],
+            (16300, 163, 9989): ['', self._read_fake],
+            (16700, 167, 9981): ['', self._read_fake],
+            (16800, 168, 9978): ['', self._read_fake],
+            (16500, 165, 9987): ['', self._read_fake],
+            (2708, 27, 59): ['', self._read_fake],
+            (5008, 50, 258): ['', self._read_fake],
+            (16400, 164, 9983) : ['', self._read_fake],
+            (3201, 32, 478): ['', self._read_fake],
+            (11000, 110, 6667): ['', self._read_fake],
+            (12301, 123, 9921): ['', self._read_fake],
+            (12401, 124, 9922): ['', self._read_fake],
+            (12600, 126, 6661): ['', self._read_fake],
+            (14700, 147, 6662): ['', self._read_fake],
+            (7309, 73, 0): ['', self._read_fake],
+            (17200, 172, 6663): ['', self._read_fake],
+            (17300, 173, 6664): ['', self._read_fake],
+            (11501, 115, 9941): ['', self._read_fake],    # record
+            (12501, 125, 9923): ['', self._read_fake],    # record
+            (3401, 34, 9600): ['', self._read_fake],    # record
+            (2208, 22, 225): ['', self._read_fake],  # record
+            (17000, 170, 9980): ['', self._read_fake],  # record
+            (7701, 77, 8881): ['', self._read_fake],  # record
+            (12901, 129, 482): ['', self._read_fake],  # record
+            (7801, 78, 8883): ['', self._read_fake],  # record
+            (4408, 44, 227): ['', self._read_fake],  # record
+            (17100, 171, 9979): ['', self._read_fake],  # record
+            (2901, 29, 9601): ['', self._read_fake],  # record
+            (4508, 45, 228): ['', self._read_fake],  # record
+            (16600, 166, 9985) : ['', self._read_fake],  # record
+            (16200, 162, 9982) : ['', self._read_fake],  # record
+            (16900, 169, 9977) : ['', self._read_fake],  # record
 
-            (1701, 17, 980) : ['', self._readFake],  # record
-            (1801, 18, 986) : ['', self._readFake],  # record
-            (8801, 88, 984) : ['', self._readFake],  # record
-            (8401, 84, 985) : ['', self._readFake],  # record
-            (17200, 172, 1000) : ['', self._readFake],  # record
-            (23500, 235, 6662) : ['', self._readFake],  # record
-            (23800, 238, 6665) : ['', self._readFake],  # record
-            (23900, 239, 6666) : ['', self._readFake],  # record
-            (1976, 1, 1996) : ['', self._readFake],  # record
-            (6120, 1, 60434) : ['', self._readFake],  # record
-            (2024, 1001, 2024) : ['', self._readFake],  # record
-            (801, 1, 572) : ['', self._readFake],  # record
+            (1701, 17, 980) : ['', self._read_fake],  # record
+            (1801, 18, 986) : ['', self._read_fake],  # record
+            (8801, 88, 984) : ['', self._read_fake],  # record
+            (8401, 84, 985) : ['', self._read_fake],  # record
+            (17200, 172, 1000) : ['', self._read_fake],  # record
+            (23500, 235, 6662) : ['', self._read_fake],  # record
+            (23800, 238, 6665) : ['', self._read_fake],  # record
+            (23900, 239, 6666) : ['', self._read_fake],  # record
+            (1976, 1, 1996) : ['', self._read_fake],  # record
+            (6120, 1, 60434) : ['', self._read_fake],  # record
+            (2024, 1001, 2024) : ['', self._read_fake],  # record
+            (801, 1, 572) : ['', self._read_fake],  # record
 
-            (5701, 57, 981) : ['', self._readFake],  # record
-            (5801, 58, 982) : ['', self._readFake],  # record
-            (6111, 61, 996) : ['', self._readFake],  # record
-            (6112, 61, 997) : ['', self._readFake],  # record
-            (6113, 61, 998) : ['', self._readFake],  # record
-            (6114, 61, 999) : ['', self._readFake],  # record
-            (3501, 35, 1) : ['', self._readFake],  # record
-            (1001, 100, 10000) : ['', self._readFake],  # record
-            (1118, 1, 1874) : ['', self._readFake],  # record
-            (1801, 18, 986) : ['', self._readFake],  # record
-            (7909, 79, 9946) : ['', self._readFake],  # record
+            (5701, 57, 981) : ['', self._read_fake],  # record
+            (5801, 58, 982) : ['', self._read_fake],  # record
+            (6111, 61, 996) : ['', self._read_fake],  # record
+            (6112, 61, 997) : ['', self._read_fake],  # record
+            (6113, 61, 998) : ['', self._read_fake],  # record
+            (6114, 61, 999) : ['', self._read_fake],  # record
+            (3501, 35, 1) : ['', self._read_fake],  # record
+            (1001, 100, 10000) : ['', self._read_fake],  # record
+            (1118, 1, 1874) : ['', self._read_fake],  # record
+            (1801, 18, 986) : ['', self._read_fake],  # record
+            (7909, 79, 9946) : ['', self._read_fake],  # record
         }
 
-    def add_element(self, elem, allowOverwrites=True):
+    def add_element(self, elem, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
     def addOp2Element(self, elem):
-        self.add_element(elem, allowOverwrites=True)
+        self.add_element(elem, allow_overwrites=True)
         #print(str(elem)[:-1])
 
 # 1-AEROQ4 (???)
@@ -231,24 +231,24 @@ class GEOM2(object):
             if f == 0:
                 out = unpack(b(self._endian + '4i3f3i6f'), eData)
                 (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
-                    w1a, w2a, w3a, w1b, w2b, w3b) = out
-                dataIn = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                          [f, x1, x2, x3]]
+                 w1a, w2a, w3a, w1b, w2b, w3b) = out
+                data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                           [f, x1, x2, x3]]
             elif f == 1:
                 out = unpack(b(self._endian + '4i3f3i6f'), eData)
                 (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
-                    w1a, w2a, w3a, w1b, w2b, w3b) = out
-                dataIn = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                          [f, x1, x2, x3]]
+                 w1a, w2a, w3a, w1b, w2b, w3b) = out
+                data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                           [f, x1, x2, x3]]
             elif f == 2:
                 out = unpack(b(self._endian + '7if2i6f'), eData)
                 (eid, pid, ga, gb, g0, junk, junk, f, pa,
-                    pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                dataIn = [[eid, pid, ga, gb, pa, pb, w1a,
+                 pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                data_in = [[eid, pid, ga, gb, pa, pb, w1a,
                            w2a, w3a, w1b, w2b, w3b], [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
-            elem = CBAR(None, dataIn)
+            elem = CBAR(None, data_in)
             self.addOp2Element(elem)
             n += 64
         self.card_count['CBAR'] = nelements
@@ -272,24 +272,24 @@ class GEOM2(object):
             if   f == 0:  # basic cid
                 out = unpack(b(self._endian + '6i3f3i6f'), eData)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
-                    pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                dataIn = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                          [f, x1, x2, x3]]
+                 pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                           [f, x1, x2, x3]]
             elif f == 1:  # global cid
                 out = unpack(b(self._endian + '6i3f3i6f'), eData)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
-                    pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                dataIn = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                          [f, x1, x2, x3]]
+                 pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                           [f, x1, x2, x3]]
             elif f == 2:  # grid option
                 out = unpack(b(self._endian + '12i6f'), eData)
                 (eid, pid, ga, gb, sa, sb, g0, xx, xx, f, pa,
-                    pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                dataIn = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                          [f, g0]]
+                 pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                           [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%r' % f)
-            elem = CBEAM(None, dataIn)
+            elem = CBEAM(None, data_in)
             self.addOp2Element(elem)
             n += 72
         self.card_count['CBEAM'] = nelements
@@ -355,7 +355,7 @@ class GEOM2(object):
             eData = data[n:n + 24]  # 6*4
             out = unpack(b(self._endian + 'if4i'), eData)
             self.binary_debug.write('  CDAMP2=%s\n' % str(out))
-            (eid, b, g1, g2, c1, c2) = out
+            (eid, bdamp, g1, g2, c1, c2) = out
             elem = CDAMP2(None, out)
             self.addOp2Element(elem)
             n += 24
@@ -389,7 +389,7 @@ class GEOM2(object):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             self.binary_debug.write('  CDAMP4=%s\n' % str(out))
-            (eid, b, s1, s2) = out
+            (eid, bdamp, s1, s2) = out
             elem = CDAMP4(None, out)
             self.addOp2Element(elem)
             n += 16
@@ -535,8 +535,8 @@ class GEOM2(object):
                 x2 = None
                 x3 = None
 
-            dataIn = [eid, pid, ga, gb, g0, x1, x2, x3, cid]
-            elem = CGAP(None, dataIn)
+            data_in = [eid, pid, ga, gb, g0, x1, x2, x3, cid]
+            elem = CGAP(None, data_in)
             self.addOp2Element(elem)
             n += 36
         self.card_count['CGAP'] = nelements
@@ -560,9 +560,9 @@ class GEOM2(object):
             (eid, blank, Type, iviewf, iviewb, radmidf, radmidb, blank2,
              g1, g2, g3, g4, g5, g6, g7, g8) = out
             self.binary_debug.write('  CHBDYG=%s\n' % str(out))
-            dataIn = [eid, Type, iviewf, iviewb, radmidf, radmidb,
-                      g1, g2, g3, g4, g5, g6, g7, g8]
-            elem = CHBDYG(None, dataIn)
+            data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
+                       g1, g2, g3, g4, g5, g6, g7, g8]
+            elem = CHBDYG(None, data_in)
             self.addOp2Element(elem)
             n += ntotal
         return n
@@ -585,13 +585,13 @@ class GEOM2(object):
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20) = out
 
-            dataIn = [eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, ]
+            data_in = [eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, ]
             big_nodes = [g9, g10, g11, g12, g13, g14, g15, g16,
                          g17, g18, g19, g20]
             if sum(big_nodes) > 0:
-                elem = CHEXA20(None, dataIn + big_nodes)
+                elem = CHEXA20(None, data_in + big_nodes)
             else:
-                elem = CHEXA8(None, dataIn)
+                elem = CHEXA8(None, data_in)
             self.addOp2Element(elem)
             n += ntotal
         self.card_count['CHEXA'] = nelements
@@ -746,10 +746,10 @@ class GEOM2(object):
             (eid, pconID, flmnd, cntrlnd,
              ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8,
              wt1, wt2, wt3, wt4, wt5, wt6, wt7, wt8) = out
-            dataIn = [eid, pconID, flmnd, cntrlnd,
-                      [ta1, ta2, ta3, ta5, ta6, ta7, ta8],
-                      [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
-            elem = CONV(None, dataIn)
+            data_in = [eid, pconID, flmnd, cntrlnd,
+                       [ta1, ta2, ta3, ta5, ta6, ta7, ta8],
+                       [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
+            elem = CONV(None, data_in)
             self.addOp2Element(elem)
             n += ntotal
         self.card_count['CONV'] = nelements
@@ -769,9 +769,9 @@ class GEOM2(object):
             self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pconID, flmnd, cntrlnd,
              [ta1, ta2, ta3]) = out
-            dataIn = [eid, pconID, flmnd, cntrlnd,
+            data_in = [eid, pconID, flmnd, cntrlnd,
                       [ta1, ta2, ta3]]
-            elem = CONVM(None, dataIn)  # undefined
+            elem = CONVM(None, data_in)  # undefined
             self.addOp2Element(elem)
             n += ntotal
         self.card_count['CONVM'] = nelements
@@ -792,12 +792,12 @@ class GEOM2(object):
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15) = out
 
-            dataIn = [eid, pid, g1, g2, g3, g4, g5, g6]
+            data_in = [eid, pid, g1, g2, g3, g4, g5, g6]
             bigNodes = [g7, g8, g9, g10, g11, g12, g13, g14, g15]
             if sum(bigNodes) > 0:
-                elem = CPENTA15(None, dataIn + bigNodes)
+                elem = CPENTA15(None, data_in + bigNodes)
             else:
-                elem = CPENTA6(None, dataIn)
+                elem = CPENTA6(None, data_in)
             self.addOp2Element(elem)
             n += 68
         self.card_count['CPENTA'] = nelements
@@ -826,7 +826,7 @@ class GEOM2(object):
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
             self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
-            #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+            #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = Element(None, data)
             self.addOp2Element(elem)
@@ -855,9 +855,9 @@ class GEOM2(object):
              t1, t2, t3, t4) = out
             self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4))
-            dataInit = [eid, pid, n1, n2, n3, n4, theta, zoffs,
+            data_init = [eid, pid, n1, n2, n3, n4, theta, zoffs,
                         tflag, t1, t2, t3, t4]
-            elem = Element(None, dataInit)
+            elem = Element(None, data_init)
             self.addOp2Element(elem)
             n += 56
         self.card_count[Element.type] = nelements
@@ -880,7 +880,7 @@ class GEOM2(object):
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                 t3, t4, theta, tflag) = out
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
-            #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+            #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8(None, out)
             self.addOp2Element(elem)
             n += 64
@@ -970,8 +970,8 @@ class GEOM2(object):
             #print("f  = ",f)
             #print("b1  = ",b1)
             #print("ee = ",ee)
-            dataIn = [eid, pid, n1, n2, n2, n3, n4]
-            elem = CTETRA4(None, dataIn)
+            data_in = [eid, pid, n1, n2, n2, n3, n4]
+            elem = CTETRA4(None, data_in)
             self.addOp2Element(elem)
 
     def _readCTETRA(self, data, n):
@@ -987,12 +987,12 @@ class GEOM2(object):
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
             #print("out = ",out)
 
-            dataIn = [eid, pid, n1, n2, n3, n4]
+            data_in = [eid, pid, n1, n2, n3, n4]
             bigNodes = [n5, n6, n7, n8, n9, n10]
             if sum(bigNodes) > 0:
-                elem = CTETRA10(None, dataIn + bigNodes)
+                elem = CTETRA10(None, data_in + bigNodes)
             else:
-                elem = CTETRA4(None, dataIn)
+                elem = CTETRA4(None, data_in)
             self.addOp2Element(elem)
             n += 48
         self.card_count['CTETRA'] = nelements
@@ -1018,8 +1018,8 @@ class GEOM2(object):
             (eid, pid, n1, n2, n3, theta, zoffs, blank1,
                 blank2, tflag, t1, t2, t3) = out
             self.binary_debug.write('  CTRIA3=%s\n' % str(out))
-            dataIn = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
-            elem = CTRIA3(None, dataIn)
+            data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
+            elem = CTRIA3(None, data_in)
             self.addOp2Element(elem)
             n += ntotal
         self.card_count['CTRIA3'] = nelements

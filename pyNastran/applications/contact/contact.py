@@ -31,7 +31,7 @@ def split_model(model, nids, func=None):
 
     for eid, element in iteritems(model.elements):
         #print(dir(element))
-        e_nids = element.nodeIDs()
+        e_nids = element.node_ids
         e_nids2 = [nid for nid in e_nids if nid in nids]
         #e_nids2 = [nid if nid in nids else False for nid in e_nids]
 
@@ -54,7 +54,7 @@ def split_model(model, nids, func=None):
 
     all_nids = set([])
     for eid, element in iteritems(model.elements):
-        e_nids = element.nodeIDs()
+        e_nids = element.node_ids
         for nid in e_nids:
             all_nids.add(nid)
     lost_nids = set(model.nodes.keys()) - all_nids
@@ -327,7 +327,7 @@ if __name__ == '__main__':  # pragma: no cover
     group1_nodes = set([])
     group2_nodes = set([])
     for eid, element in iteritems(model.elements):
-        nids = element.nodeIDs()
+        nids = element.node_ids
         if func(element):
             for nid in nids:
                 group1_nodes.add(nid)

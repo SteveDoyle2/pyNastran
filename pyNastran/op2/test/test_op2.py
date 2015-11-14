@@ -208,7 +208,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             is_mag_phase=False, is_sort2=False,
             delete_f06=False,
             isubcases=None, exclude=None, compare=True, debug=False, binary_debug=False,
-            quiet=False, stop_on_failure=True):
+            quiet=False, check_memory=False, stop_on_failure=True):
     """
     Runs an OP2
 
@@ -291,7 +291,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     op2a.remove_results(exclude)
     op2b.remove_results(exclude)
 
-    if is_memory:
+    if is_memory and check_memory:
         if is_linux: # linux
             kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         else: # windows
@@ -319,7 +319,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         if compare:
             assert op2a == op2b
 
-        if is_memory:
+        if is_memory and check_memory:
             if is_linux: # linux
                 kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             else: # windows
@@ -354,8 +354,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                 except:
                     pass
 
-        if is_memory:
-            del op2a
+        if is_memory and check_memory:
+            op2a = None
             del op2b
             if is_linux: # linux
                 kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss

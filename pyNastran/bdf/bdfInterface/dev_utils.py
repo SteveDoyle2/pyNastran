@@ -82,7 +82,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                           node_set=None,
                           size=8, is_double=False,
                           remove_collapsed_elements=False, avoid_collapsed_elements=False,
-                          crash_on_collapse=False):
+                          crash_on_collapse=False, debug=True):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -152,7 +152,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     if isinstance(bdf_filename, string_types):
         xref = True
-        model = BDF()
+        model = BDF(debug=debug)
         model.read_bdf(bdf_filename, xref=True)
     else:
         model = bdf_filename
@@ -340,7 +340,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
     if crash_on_collapse:
         # lazy way to make sure there aren't any collapsed nodes
-        model2 = BDF()
+        model2 = BDF(debug=debug)
         model2.read_bdf(bdf_filename_out)
     return model
 
@@ -808,9 +808,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     all_materials = (
         model.materials,
-        model.creepMaterials,
-        model.thermalMaterials,
-        model.hyperelasticMaterials,
+        model.creep_materials,
+        model.thermal_materials,
+        model.hyperelastic_materials,
         model.MATT1,
         model.MATT2,
         model.MATT3,
@@ -848,7 +848,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         # PMASS
         prop.pid = pid
         pid += 1
-    for pidi, prop in sorted(iteritems(model.convectionProperties)):
+    for pidi, prop in sorted(iteritems(model.convection_properties)):
         # PCONV
         prop.pid = pid
         pid += 1
@@ -867,7 +867,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         element.eid = eid
         eid_map[eidi] = eid
         eid += 1
-    for eidi, elem in sorted(iteritems(model.rigidElements)):
+    for eidi, elem in sorted(iteritems(model.rigid_elements)):
         # RBAR/RBAR1/RBE1/RBE2/RBE3
         elem.eid = eid
         eid_map[eidi] = eid

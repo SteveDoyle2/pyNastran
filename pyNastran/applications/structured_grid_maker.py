@@ -5,8 +5,8 @@ from numpy.linalg import norm # acos
 from pyNastran.bdf.bdf import BDF
 
 def Grid(object):
-    def __init__(self, bdf_name):
-        self.bdf = BDF()
+    def __init__(self, bdf_name, debug=True):
+        self.bdf = BDF(debug=debug)
         self.bdf.read_bdf(bdf_name, xref=True)
 
         self.xyz = {}
@@ -45,7 +45,7 @@ def Grid(object):
         nx, eids_x = self.walk_edge(starting_eid, edge_x)
         ny, eids_y = self.walk_edge(starting_eid, edge_y)
 
-        starting_nids = starting_element.nodeIDs()
+        starting_nids = starting_element.node_ids
         set_starting_nids = set(starting_nids)
         non_corner_nids = set(edge_x) + set(edge_y)
         corner_nid = set_starting_nids - non_corner_nids
@@ -90,7 +90,7 @@ def Grid(object):
         for icol, eid in enumerate(eids_x):
             # walk_coords(corner_nid)
             element = self.bdf.elements[eid]
-            nids = element.nodeIDs()
+            nids = element.node_ids
             nids.pop(corner_nid)
 
             (n2, n3, n4) = nids
@@ -146,7 +146,7 @@ def Grid(object):
 
         for eid, element in self.bdf.elements:
             if isinstance(element, CQUAD4):
-                (n1, n2, n3, n4) = element.nodeIDs()
+                (n1, n2, n3, n4) = element.node_ids
                 edge1 = [n1, n2]
                 edge2 = [n2, n3]
                 edge3 = [n3, n4]

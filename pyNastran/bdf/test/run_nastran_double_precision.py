@@ -56,7 +56,7 @@ def main(bdf_name, run_first_nastran=True, debug=True):
     out_bdf_8 = base + '_8.bdf'
     out_bdf_16 = base + '_16.bdf'
     out_bdf_16s = base + '_16s.bdf'
-    model3 = BDF()
+    model3 = BDF(debug=debug)
     model3.read_bdf(bdf_name)
     update_bdf(model3, post=-1)
 

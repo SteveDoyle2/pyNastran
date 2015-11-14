@@ -49,23 +49,23 @@ class GEOM3(object):
             (8209, 82, 202): ['TEMPP2', self._readTEMPP2],   # record 38 - not done
             (8309, 83, 203): ['TEMPP3', self._readTEMPP3],   # record 39 - not done
             (8409, 84, 204): ['TEMP4', self._readTEMPP4],     # record 40 - not done
-            (2309, 23, 416): ['', self._readFake],
-            (4309, 43, 233): ['', self._readFake],
-            (6609, 66, 9031): ['', self._readFake],
-            (8100, 81, 381): ['', self._readFake],
-            (11302, 113, 600): ['', self._readFake],
-            (11402, 114, 601): ['', self._readFake],
-            (2209, 22, 241): ['', self._readFake],
-            (6409, 64, 9032): ['', self._readFake],
-            (3809, 38, 332): ['', self._readFake],    # record
-            (6209, 62, 390): ['', self._readFake],    # record
-            (10901, 109, 427): ['', self._readFake],  # record
-            (10801, 108, 428): ['', self._readFake],  # record
-            (11329, 113, 9602): ['', self._readFake],  # record
-            (11429, 114, 9603): ['', self._readFake],  # record
-            (11529, 115, 9604): ['', self._readFake],  # record
-            (7002, 70, 254) : ['', self._readFake],  # record
-            (7601, 76, 608) : ['', self._readFake],  # record
+            (2309, 23, 416): ['', self._read_fake],
+            (4309, 43, 233): ['', self._read_fake],
+            (6609, 66, 9031): ['', self._read_fake],
+            (8100, 81, 381): ['', self._read_fake],
+            (11302, 113, 600): ['', self._read_fake],
+            (11402, 114, 601): ['', self._read_fake],
+            (2209, 22, 241): ['', self._read_fake],
+            (6409, 64, 9032): ['', self._read_fake],
+            (3809, 38, 332): ['', self._read_fake],    # record
+            (6209, 62, 390): ['', self._read_fake],    # record
+            (10901, 109, 427): ['', self._read_fake],  # record
+            (10801, 108, 428): ['', self._read_fake],  # record
+            (11329, 113, 9602): ['', self._read_fake],  # record
+            (11429, 114, 9603): ['', self._read_fake],  # record
+            (11529, 115, 9604): ['', self._read_fake],  # record
+            (7002, 70, 254) : ['', self._read_fake],  # record
+            (7601, 76, 608) : ['', self._read_fake],  # record
         }
 
 # ACCEL
@@ -178,8 +178,8 @@ class GEOM3(object):
                 self.binary_debug.write('       [%s,%s]\n' % (si, l1))
                 #print(Si, L1)
 
-            dataIn = [sid, s, Si, L1]
-            load = LOAD(None, dataIn)
+            data_in = [sid, s, Si, L1]
+            load = LOAD(None, data_in)
             self.add_load(load)
             count += 1
             if count > 1000:

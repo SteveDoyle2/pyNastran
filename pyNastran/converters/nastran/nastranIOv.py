@@ -1348,7 +1348,7 @@ class NastranIO(object):
 
     def _get_rigid(self, dim_max, model):
         lines_rigid = []
-        for eid, elem in iteritems(model.rigidElements):
+        for eid, elem in iteritems(model.rigid_elements):
             if elem.type == 'RBE3':
                 assert elem.Gmi == [], 'UM is not supported; RBE3 eid=%s Gmi=%s' % (elem.eid, elem.Gmi)
                 # list_fields = ['RBE3', elem.eid, None, elem.ref_grid_id, elem.refc]
@@ -3687,7 +3687,7 @@ class NastranIO(object):
                 if is_element_on.min() == 0.0:
                     ioff = where(is_element_on == 0)[0]
                     noff = len(ioff)
-                    print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
+                    # print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
                     self.log_error('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
                     cases[(subcase_id, icase, 'IsElementOn', 1, 'centroid', fmt, header)] = is_element_on
                     form0[2].append(('IsElementOn', icase, []))

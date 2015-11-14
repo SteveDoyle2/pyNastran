@@ -60,18 +60,16 @@ Cross-referencing allows you to easily jump across cards and also helps
 with calculating things like position, area, and mass.  The BDF is designed
 around the idea of cross-referencing, so it's recommended that you use it.
 """
-# pylint: disable=E1101,C0103,R0902,R0904,R0914
+# pylint: disable=R0902,R0904,R0914
 
 from __future__ import print_function
 from six import iteritems, itervalues
 from collections import defaultdict
-import warnings
 import traceback
 from numpy import zeros, argsort, arange, array_equal
-from pyNastran.bdf.errors import CrossReferenceError
+from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 
-
-class XrefMesh(object):
+class XrefMesh(BDFAttributes):
     """
     Links up the various cards in the BDF.
     """
@@ -79,6 +77,7 @@ class XrefMesh(object):
         """
         The main BDF class defines all the parameters that are used.
         """
+        BDFAttributes.__init__(self)
         self._ixref_errors = 0
         self._nxref_errors = 100
         self._stop_on_xref_error = True
@@ -93,17 +92,22 @@ class XrefMesh(object):
             # elem.check_unique_nodes()
 
     def safe_cross_reference(self, xref=True,
-                        xref_elements=True,
-                        xref_nodes_with_elements=True,
-                        xref_properties=True,
-                        xref_masses=True,
-                        xref_materials=True,
-                        xref_loads=True,
-                        xref_constraints=True,
-                        xref_aero=True,
-                        xref_sets=True,
-                        xref_optimization=True,
-                        debug=True):
+                             xref_elements=True,
+                             xref_nodes_with_elements=True,
+                             xref_properties=True,
+                             xref_masses=True,
+                             xref_materials=True,
+                             xref_loads=True,
+                             xref_constraints=True,
+                             xref_aero=True,
+                             xref_sets=True,
+                             xref_optimization=True,
+                             debug=True):
+        """
+        Performs cross referencing in a way that skips data gracefully.
+
+        .. warning :: not fully implemented
+        """
         self._cross_reference_nodes()
         self._cross_reference_coordinates()
 
@@ -126,6 +130,8 @@ class XrefMesh(object):
             self._cross_reference_sets()
         if xref_optimization:
             self._cross_reference_optimization()
+        if xref_nodes_with_elements:
+            self._cross_reference_nodes_with_elements()
 
 
     def _safe_cross_reference_elements(self):
@@ -145,7 +151,7 @@ class XrefMesh(object):
                     #msg = "Couldn't cross reference Element.\n%s" % str(elem)
                     #self.log.error(msg)
                     #raise
-        for elem in itervalues(self.rigidElements):
+        for elem in itervalues(self.rigid_elements):
             try:
                 elem.safe_cross_reference(self)
             except AttributeError:
@@ -165,38 +171,45 @@ class XrefMesh(object):
         self._uncross_reference_optimization()
 
     def _uncross_reference_nodes(self):
+        """cross references the GRID objects"""
         for node in itervalues(self.nodes):
             node.uncross_reference()
 
     def _uncross_reference_coords(self):
+        """cross references the CORDx objects"""
         for cid, coord in iteritems(self.coords):
             if cid == 0:
                 continue
             coord.uncross_reference()
 
     def _uncross_reference_elements(self):
+        """cross references the element objects"""
         for element in itervalues(self.elements):
             element.uncross_reference()
-        for element in itervalues(self.rigidElements):
+        for element in itervalues(self.rigid_elements):
             element.uncross_reference()
         for element in itervalues(self.plotels):
             element.uncross_reference()
 
     def _uncross_reference_properties(self):
+        """cross references the property objects"""
         for prop in itervalues(self.properties):
             prop.uncross_reference()
 
     def _uncross_reference_materials(self):
+        """cross references the material objects"""
         for material in itervalues(self.materials):
             material.uncross_reference()
 
     def _uncross_reference_masses(self):
+        """cross references the mass objects"""
         for mass in itervalues(self.masses):
             mass.uncross_reference()
         for prop in itervalues(self.properties_mass):
             prop.uncross_reference()
 
     def _uncross_reference_aero(self):
+        """cross references the aero objects"""
         for caero in itervalues(self.caeros):
             caero.uncross_reference()
         for paero in itervalues(self.paeros):
@@ -281,6 +294,7 @@ class XrefMesh(object):
             set_obj.uncross_reference()
 
     def _uncross_reference_optimization(self):
+        """uncross references the optimization objects"""
         for key, deqatn in iteritems(self.dequations):
             deqatn.uncross_reference()
         for key, dresp in iteritems(self.dresps):
@@ -388,7 +402,7 @@ class XrefMesh(object):
 
         for mpcadd in itervalues(self.mpcadds):
             self.mpcObject.Add(mpcadd)
-            mpc.cross_reference(mpcadd)
+            mpcadd.cross_reference(self)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
@@ -507,7 +521,7 @@ class XrefMesh(object):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for elem in itervalues(self.rigidElements):
+        for elem in itervalues(self.rigid_elements):
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
@@ -695,6 +709,7 @@ class XrefMesh(object):
             dphase.safe_cross_reference(self, debug=debug)
 
     def _cross_reference_sets(self):
+        """cross references the SET objects"""
         for set_obj in self.asets:
             set_obj.cross_reference(self)
         for set_obj in self.bsets:
@@ -720,6 +735,7 @@ class XrefMesh(object):
             set_obj.cross_reference(self)
 
     def _cross_reference_optimization(self):
+        """cross references the optimization objects"""
         for key, deqatn in iteritems(self.dequations):
             deqatn.cross_reference(self)
         for key, dresp in iteritems(self.dresps):

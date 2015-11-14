@@ -14,7 +14,7 @@ class TestNodes(unittest.TestCase):
         seid = 0
         card_count = {'GRID': 1,}
 
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
         data1 = BDFCard(['GRID', nid, cp, 0., 0., 0., cd, ps, seid])
 
@@ -43,7 +43,7 @@ class TestNodes(unittest.TestCase):
         self.assertCardEqual(msg, card)
 
     def test_grid_02(self):
-        model = BDF()
+        model = BDF(debug=False)
         nid = 1
         cp = 2
         cd = 0
@@ -51,7 +51,7 @@ class TestNodes(unittest.TestCase):
         seid = 0
         card_count = {'GRID': 2,}
 
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
 
         nodes = model.grid
@@ -64,7 +64,7 @@ class TestNodes(unittest.TestCase):
         #print(f.getvalue())
 
     def test_grid_03(self):
-        model = BDF()
+        model = BDF(debug=False)
         nid = 1
         cp = 2
         cd = 0
@@ -72,7 +72,7 @@ class TestNodes(unittest.TestCase):
         seid = 0
         card_count = {'GRID': 2,}
 
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
 
         nodes = model.grid
@@ -89,7 +89,7 @@ class TestNodes(unittest.TestCase):
         #print(f.getvalue())
 
     def test_grid_04(self):
-        model = BDF()
+        model = BDF(debug=False)
         nid = 1
         cp = 2
         cd = 0
@@ -97,7 +97,7 @@ class TestNodes(unittest.TestCase):
         seid = 0
         card_count = {'GRID': 2,}
 
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
 
         nodes = model.grid
@@ -139,10 +139,10 @@ class TestNodes(unittest.TestCase):
         #print(f.getvalue())
 
     def test_spoint_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         card_count = {'SPOINT': 2,}
 
-        model = BDF()
+        model = BDF(debug=False)
         model.allocate(card_count)
 
         spoints = model.spoint

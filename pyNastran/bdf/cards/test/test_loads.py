@@ -110,8 +110,8 @@ class TestLoads(unittest.TestCase):
             eids = None
             nids = None
             f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2)
-            assert allclose(m, m2)
+            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
+            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :3, :].sum(axis=0)
@@ -170,7 +170,7 @@ class TestLoads(unittest.TestCase):
             nids = None
             f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
-            assert allclose(m, m2), 'f=%s f2=%s' % (m, m2)
+            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
@@ -215,8 +215,8 @@ class TestLoads(unittest.TestCase):
 
             f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
             f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2)
-            assert allclose(m, m2)
+            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
+            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
@@ -303,8 +303,8 @@ class TestLoads(unittest.TestCase):
             eids = None
             nids = None
             f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2)
-            assert allclose(m, m2)
+            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
+            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
@@ -414,8 +414,8 @@ class TestLoads(unittest.TestCase):
             eids = None
             nids = None
             f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2)
-            assert allclose(m, m2)
+            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
+            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :4, :].sum(axis=0)
@@ -427,6 +427,68 @@ class TestLoads(unittest.TestCase):
             if not allclose(f[2], fm[2]):
                 print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
 
+    @unittest.expectedFailure
+    def test_pload1_cbar(self):
+        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'pload1.bdf')
+        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'pload1.op2')
+        op2 = OP2(debug=False)
+        op2.read_op2(op2_filename)
+
+        model_b = BDF(debug=False)
+        model_b.read_bdf(bdf_filename)
+        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
+        p0 = model_b.nodes[1].xyz
+
+        fail = False
+        dashes = '-' * 80
+        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
+            if isubcase == 0:
+                continue
+            #if isubcase != 17:
+                #continue
+            loadcase_id = subcase.get_parameter('LOAD')[0]
+            load = model_b.loads[loadcase_id][0]
+            elem = load.eid
+
+            msg = '%s%s\n' % (elem.nodes[0], elem.nodes[1])
+
+            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            eids = None
+            nids = None
+            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
+            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
+
+            case = op2.spc_forces[isubcase]
+            fm = -case.data[0, :, :].sum(axis=0)
+            assert len(fm) == 6, fm
+            if not allclose(f[0], fm[0]):
+                print('%-2i Fx f=%s fexpected=%s' % (isubcase, f, fm))
+                print(dashes)
+                fail = True
+            if not allclose(f[1], fm[1]):
+                print('%-2i Fy f=%s fexpected=%s' % (isubcase, f, fm))
+                print(dashes)
+                fail = True
+            if not allclose(f[2], fm[2]):
+                print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
+                print(dashes)
+                fail = True
+
+            if not allclose(m[0], fm[3]):
+                print('%-2i Mx m=%s fexpected=%s' % (isubcase, m, fm))
+                print(dashes)
+                fail = True
+            if not allclose(m[1], fm[4]):
+                print('%-2i My m=%s fexpected=%s' % (isubcase, m, fm))
+                print(dashes)
+                fail = True
+            if not allclose(m[2], fm[5]):
+                print('%-2i Mz m=%s fexpected=%s' % (isubcase, m, fm))
+                print(dashes)
+                fail = True
+        if fail:
+            raise RuntimeError('incorrect loads')
 
     def test_aestat_01(self):
         lines = ['AESTAT  502     PITCH']

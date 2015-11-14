@@ -71,10 +71,10 @@ class TestRenumber(unittest.TestCase):
         bdf_filename_renumber = 'renumber_out.bdf'
         bdf_renumber(bdf_filename, bdf_filename_renumber)
 
-        #model = BDF()
+        #model = BDF(debug=False)
         #model.read_bdf(bdf_filename)
         #model.write_bdf(bdf_filename_check)
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename_renumber)
 
     def test_renumber_02(self):
@@ -111,11 +111,11 @@ class TestRenumber(unittest.TestCase):
 def check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check):
     bdf_renumber(bdf_filename, bdf_filename_renumber)
 
-    model = BDF()
+    model = BDF(debug=False)
     model.read_bdf(bdf_filename)
     model.write_bdf(bdf_filename_check, interspersed=False)
 
-    model = BDF()
+    model = BDF(debug=False)
     model.read_bdf(bdf_filename_renumber)
 
 if __name__ == '__main__':

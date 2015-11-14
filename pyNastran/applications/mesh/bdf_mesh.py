@@ -36,13 +36,13 @@ class MeshTools(BDF):
         nid_to_eids = defaultdict(list)
         eid_to_nids = {}
         for eid, element in iteritems(self.elements):
-            nids = element.nodeIDs()
+            nids = element.node_ids
             eid_to_nids[eid] = nids
             for nid in nids:
                 nid_to_eids[nid].append(eid)
 
         for eid, element in iteritems(self.rigidElements):
-            nids = element.nodeIDs()
+            nids = element.node_ids
             #print(nids)
             eid_to_nids[eid] = nids
             for nid in nids:
@@ -52,7 +52,7 @@ class MeshTools(BDF):
         for (eid, mpcs) in sorted(iteritems(self.mpcs)):
             for mpc in mpcs:
                 #print(str(mpc))
-                nids = mpc.nodeIDs()
+                nids = mpc.node_ids
                 eid_to_nids[eid] = nids
                 for nid in nids:
                     nid_to_eids[nid].append(eid)

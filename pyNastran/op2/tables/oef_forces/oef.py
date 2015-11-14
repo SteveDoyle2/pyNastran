@@ -32,12 +32,13 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealPentaPressureForce,                           # TODO: vectorize 1
     RealForce_VU_2D, RealForce_VU)                    # TODO: vectorize 2
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
+    ComplexRodForceArray,
     ComplexCBarForceArray,
     ComplexCBushForceArray,
 
     # not vectorized
-    # TODO: vectorize 12
-    ComplexRodForce, ComplexCBeamForce,
+    # TODO: vectorize 11
+    ComplexCBeamForce,
     ComplexCShearForce, ComplexSpringForce,
     ComplexDamperForce, ComplexViscForce,
     ComplexPlateForce, ComplexPlate2Force,
@@ -653,7 +654,7 @@ class OEF(OP2Common):
             #obj_complex = ComplexRodForce
 
             obj_vector_real = RealRodForceArray
-            obj_vector_complex = None  #ComplexRodForceArray
+            obj_vector_complex = ComplexRodForceArray
             if self.element_type == 1: # CROD
                 result_name = 'crod_force'
                 slot = self.crod_force
@@ -667,54 +668,108 @@ class OEF(OP2Common):
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 3: # real
-                ntotal = 12 # 3 * 4
+                ntotal = 3 * 4
                 nelements = ndata // ntotal
+
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b(self._endian + 'iff'))  # 3
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    (eid_device, axial, torque) = out
-                    #eid = (eid_device - self.device_code) // 10
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
-                    self.obj.add(dt, eid, axial, torque)
-                    n += ntotal
+                obj = self.obj
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    #self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 3)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 3)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #[axial, torsion]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    ntotal = 12 # 3 * 4
+                    nelements = ndata // ntotal
+                    auto_return, is_vectorized = self._create_oes_object4(
+                        nelements, result_name, slot, obj_vector_real)
+                    if auto_return:
+                        return nelements * self.num_wide * 4
+
+                    s = Struct(b(self._endian + 'iff'))  # 3
+                    for i in range(nelements):
+                        edata = data[n:n+ntotal]
+                        out = s.unpack(edata)
+                        (eid_device, axial, torque) = out
+                        #eid = (eid_device - self.device_code) // 10
+                        eid = self._check_id(eid_device, flag, 'FORCE', out)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
+                        self.obj.add(dt, eid, axial, torque)
+                        n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 5: # imag
-                if self.read_mode == 1:
-                    return ndata
-                self.create_transient_object(slot, ComplexRodForce)
-
-                s = Struct(b(self._endian + 'i4f'))
-                ntotal = 20 # 5*4
+                ntotal = 5 * 4
                 nelements = ndata // ntotal
-                for i in range(nelements):
-                    edata = data[n:n+20]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
-                    (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
 
-                    if is_magnitude_phase:
-                        axial = polar_to_real_imag(axial_real, axial_imag)
-                        torque = polar_to_real_imag(torque_real, torque_imag)
-                    else:
-                        axial = complex(axial_real, axial_imag)
-                        torque = complex(torque_real, torque_imag)
-                    #eid = (eid_device - self.device_code) // 10
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
-                    data_in = [eid, axial, torque]
-                    #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    self.obj.add(dt, data_in)
-                    n += ntotal
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
+                if auto_return:
+                    return nelements * self.num_wide * 4
 
+                obj = self.obj
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    #self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                    eids = ints[:, 0] // 10
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+
+                #[axial_force, torque]
+                #(eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
+                if is_magnitude_phase:
+                    mag = floats[:, [1, 2]]
+                    phase = floats[:, [3, 4]]
+                    rtheta = radians(phase)
+                    real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+                else:
+                    real = floats[:, [1, 2]]
+                    imag = floats[:, [3, 4]]
+                    real_imag = real + 1.j * imag
+                obj.data[obj.itime, itotal:itotal2, :] = real_imag
+                obj.itotal = itotal2
+                obj.ielement = ielement2
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)

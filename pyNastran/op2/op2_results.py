@@ -318,7 +318,7 @@ def setup(bdf_filename, op2_filename):
 
     eid_to_nid_map = {}
     for eid, element in iteritems(fem.elements):
-        node_ids = element.nodeIDs()
+        node_ids = element.node_ids
         eid_to_nid_map[eid] = node_ids
     del fem
 

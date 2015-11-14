@@ -13,8 +13,8 @@ mesh.write_bdf('before_i.bdf', interspersed=False)
 for k, n in enumerate(mesh.elements.keys()):
     mesh.elements[n].eid = k + startnum
 
-for k, n in enumerate(mesh.rigidElements.keys()):
-    mesh.rigidElements[n].eid = k + startnum
+for k, n in enumerate(mesh.rigid_elements.keys()):
+    mesh.rigidelements[n].eid = k + startnum
 
 # renumber properties
 

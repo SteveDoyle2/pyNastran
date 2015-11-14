@@ -51,28 +51,28 @@ class GEOM4(object):
             (10100, 101, 472): ['SUPORT1', self._readSUPORT1],  # record 60 - not done
             (2010,   20, 193) : ['USET', self._readUSET], # Record 62 -- USET(2010,20,193)
 
-            (1310, 13,    247): ['', self._readFake],    # record
-            (4901, 49, 420017): ['', self._readFake],    # record
-            (5561, 76,      0): ['', self._readFake],     # record
-            (5110, 51,    256): ['', self._readFake],     # record
-            (610,   6,      0): ['', self._readFake],     # record
-            (5110, 51, 620256): ['', self._readFake],    # record
-            (5501, 55, 620016): ['', self._readFake],    # record
-            (5001, 50, 15): ['', self._readFake],    # record
-            (410, 4, 0): ['', self._readFake],    # record
-            (110, 1, 584): ['', self._readFake],    # record
-            (210, 2, 585): ['', self._readFake],    # record
-            (6210, 62, 344): ['', self._readFake],    # record
-            (510, 5, 315): ['', self._readFake],    # record
-            (6701, 67, 293): ['', self._readFake],    # record
-            (8801, 88, 9022): ['', self._readFake],    # record
-            (9001, 90, 9024): ['', self._readFake],    # record
-            (9901, 99, 80): ['', self._readFake],  # record
-            (1010, 10, 320): ['', self._readFake],  # record
-            (9801, 98, 79): ['', self._readFake],  # record
-            (12001, 120, 601) : ['', self._readFake],  # record
-            (2110, 21, 194) : ['', self._readFake],  # record
-            (310, 3, 586) : ['', self._readFake],  # record
+            (1310, 13,    247): ['', self._read_fake],    # record
+            (4901, 49, 420017): ['', self._read_fake],    # record
+            (5561, 76,      0): ['', self._read_fake],     # record
+            (5110, 51,    256): ['', self._read_fake],     # record
+            (610,   6,      0): ['', self._read_fake],     # record
+            (5110, 51, 620256): ['', self._read_fake],    # record
+            (5501, 55, 620016): ['', self._read_fake],    # record
+            (5001, 50, 15): ['', self._read_fake],    # record
+            (410, 4, 0): ['', self._read_fake],    # record
+            (110, 1, 584): ['', self._read_fake],    # record
+            (210, 2, 585): ['', self._read_fake],    # record
+            (6210, 62, 344): ['', self._read_fake],    # record
+            (510, 5, 315): ['', self._read_fake],    # record
+            (6701, 67, 293): ['', self._read_fake],    # record
+            (8801, 88, 9022): ['', self._read_fake],    # record
+            (9001, 90, 9024): ['', self._read_fake],    # record
+            (9901, 99, 80): ['', self._read_fake],  # record
+            (1010, 10, 320): ['', self._read_fake],  # record
+            (9801, 98, 79): ['', self._read_fake],  # record
+            (12001, 120, 601) : ['', self._read_fake],  # record
+            (2110, 21, 194) : ['', self._read_fake],  # record
+            (310, 3, 586) : ['', self._read_fake],  # record
         }
 
     def _readASET(self, data, n):

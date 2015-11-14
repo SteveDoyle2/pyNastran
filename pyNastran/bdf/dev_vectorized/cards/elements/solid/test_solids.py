@@ -9,7 +9,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.solid.elements_solid import (
 class TestSolids(unittest.TestCase):
 
     def test_cpenta_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         lines = ['CPENTA,85,22,201,202,203,205,206,207']
         card = model.process_card(lines)
         card = BDFCard(card)
@@ -24,7 +24,7 @@ class TestSolids(unittest.TestCase):
         print(f.getvalue())
 
     def test_cpenta_02(self):
-        model = BDF()
+        model = BDF(debug=False)
         lines = ['CPENTA,85,22,201,202,203,205,206,207,+PN2',
                  '+PN2,209,210,217,  ,  ,  ,213,214,218']
         card = model.process_card(lines)
@@ -40,7 +40,7 @@ class TestSolids(unittest.TestCase):
         print(f.getvalue())
 
     def test_chexa_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         lines = [
             'CHEXA,85,22,201,202,203,205,206,207,+PN2',
             '+PN2,209,210']
@@ -57,7 +57,7 @@ class TestSolids(unittest.TestCase):
         print(f.getvalue())
 
     def test_chexa_02(self):
-        model = BDF()
+        model = BDF(debug=False)
         lines = [
             'CHEXA,85,22,201,202,203,205,206,207,+PN2',
             '+PN2,209,210,217,  ,  ,  ,213,214,218']
@@ -74,7 +74,7 @@ class TestSolids(unittest.TestCase):
         print(f.getvalue())
 
     def test_ctetra_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         lines = ['CTETRA,85,22,201,202,203,205']
         card = model.process_card(lines)
         card = BDFCard(card)
@@ -89,7 +89,7 @@ class TestSolids(unittest.TestCase):
         print(f.getvalue())
 
     def test_ctetra_02(self):
-        model = BDF()
+        model = BDF(debug=False)
         lines = ['CTETRA,85,22,201,202,203,205,206,207,+PN2',
                  '+PN2,209,210,217']
         card = model.process_card(lines)

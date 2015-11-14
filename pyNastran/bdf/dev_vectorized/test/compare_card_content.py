@@ -48,8 +48,8 @@ def check_length(fem1, fem2, name):
 
 def compare_card_content(fem1, fem2):
     check_obj_names = [
-        'params', 'nodes', 'elements', #'rigidElements',
-        'properties', 'materials', 'creepMaterials',
+        'params', 'nodes', 'elements', #'rigid_elements',
+        'properties', 'materials', 'creep_materials',
         #'loads',
         'coords',
         'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas',
@@ -90,9 +90,9 @@ def compare_card_content(fem1, fem2):
         #card2 = fem2.materials[key]
         assert_fields(mat1, mat2, mat1.material_id)
 
-    for key in fem1.creepMaterials:
-        card1 = fem1.creepMaterials[key]
-        card2 = fem2.creepMaterials[key]
+    for key in fem1.creep_materials:
+        card1 = fem1.creep_materials[key]
+        card2 = fem2.creep_materials[key]
         assert_fields(card1, card2, key)
 
     #for key in fem1.loads:
@@ -222,9 +222,9 @@ def compare_matrices(fem1, fem2):
 
 def compare_thermal_content(fem1, fem2):
     assert len(fem1.bcs) == len(fem2.bcs)
-    assert len(fem1.thermalMaterials) == len(fem2.thermalMaterials)
+    assert len(fem1.thermal_materials) == len(fem2.thermal_materials)
     assert len(fem1.phbdys) == len(fem2.phbdys)
-    assert len(fem1.convectionProperties) == len(fem2.convectionProperties)
+    assert len(fem1.convection_properties) == len(fem2.convection_properties)
 
     for key in fem1.bcs:
         BCs1 = fem1.bcs[key]
@@ -232,9 +232,9 @@ def compare_thermal_content(fem1, fem2):
         for (card1, card2) in zip(BCs1, BCs2):
             assert_fields(card1, card2)
 
-    for key in fem1.thermalMaterials:
-        card1 = fem1.thermalMaterials[key]
-        card2 = fem2.thermalMaterials[key]
+    for key in fem1.thermal_materials:
+        card1 = fem1.thermal_materials[key]
+        card2 = fem2.thermal_materials[key]
         assert_fields(card1, card2)
 
     for key in fem1.phbdys:
@@ -242,9 +242,9 @@ def compare_thermal_content(fem1, fem2):
         card2 = fem2.phbdys[key]
         assert_fields(card1, card2)
 
-    for key in fem1.convectionProperties:
-        card1 = fem1.convectionProperties[key]
-        card2 = fem2.convectionProperties[key]
+    for key in fem1.convection_properties:
+        card1 = fem1.convection_properties[key]
+        card2 = fem2.convection_properties[key]
 
 
 def compare_optimization_content(fem1, fem2):

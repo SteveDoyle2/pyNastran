@@ -40,7 +40,7 @@ class PanelBuckling(object):
         for eid, element in sorted(iteritems(self.shells)):
             edges = []
             Normals[eid] = element.Normal()
-            nodeIDs = element.nodeIDs()
+            nodeIDs = element.node_ids
             for i in range(len(nodeIDs) - 1):
                 key = tuple(sorted([nodeIDs[i], nodeIDs[i + 1]]))
                 Edges[eid].append(key)
@@ -52,7 +52,7 @@ class PanelBuckling(object):
             if on:
                 #print(Edges[eid])
                 on = False
-            #print('nodeIDs[%s] = %s' % (eid, element.nodeIDs()))
+            #print('nodeIDs[%s] = %s' % (eid, element.node_ids))
             #Edges[eid] = edges
         del key, edges, element
 

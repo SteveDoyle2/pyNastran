@@ -177,7 +177,7 @@ class BdfToP3d(object):
         element = self.getElement(eSpot)
         #print("element = ", element)
         print("n0 = ", n0)
-        node_ids = element.nodeIDs()
+        node_ids = element.node_ids
         nid0  = node_ids[n0]
         node0 = self.getNode(nid0)
         #print("node0 = ", node0)
@@ -189,7 +189,7 @@ class BdfToP3d(object):
 
         for i,eid in enumerate(elementsLine):
             element = self.getElement(eid)
-            node_ids = element.nodeIDs()
+            node_ids = element.node_ids
             print("n1 = ", n1)
             nid1  = node_ids[n1]
             print("nid = ", nid1)
@@ -305,7 +305,7 @@ class BdfToP3d(object):
         reversedSides = {}
         for eid,element in self.mesh.elements.items():
             #print(dir(element))
-            nodes = element.nodeIDs()
+            nodes = element.node_ids
             #print("element[%s]=%s" %(eid,nodes))
             nList = self.makeTuple(nodes,0,-1)
             sides[eid] = [nList]

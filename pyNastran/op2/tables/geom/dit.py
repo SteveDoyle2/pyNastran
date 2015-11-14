@@ -13,31 +13,31 @@ class DIT(object):
 
     def __init__(self):
         self._dit_map = {
-            (1005, 10, 174): self.readGust,     # record 1
-            (1105, 11, 133): self.readTableD1,  # record 4
-            (1205, 12, 134): self.readTableD2,  # record 5
-            (1305, 13, 140): self.readTableD3,  # record 6
+            (1005, 10, 174): self._ead_gust,     # record 1
+            (1105, 11, 133): self._read_tabled1,  # record 4
+            (1205, 12, 134): self._read_tabled2,  # record 5
+            (1305, 13, 140): self._read_tabled3,  # record 6
 
             #(105,1,93): self.readTableM1, # record 9
-            (205, 2, 94): self.readTableM2,  # record 10
-            (305, 3, 95): self.readTableM3,  # record 11
+            (205, 2, 94): self._read_tablem2,  # record 10
+            (305, 3, 95): self._read_tablem3,  # record 11
             #(405,4,96): self.readTableM4, # record 12
 
-            (15, 21, 162): self._readFake,
-            (56, 26, 303): self._readFake,
-            (3105, 31, 97): self._readFake,  # record 13 - TABLES1
+            (15, 21, 162): self._read_fake,
+            (56, 26, 303): self._read_fake,
+            (3105, 31, 97): self._read_fake,  # record 13 - TABLES1
         }
 
-    def readGust(self, data, n):
+    def _read_gust(self, data, n):
         """
         GUST(1005,10,174)    - the marker for Record 1
         """
         #print("reading GUST")
-        nEntries = (len(data) - n) // 20  # 5*4
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 20  # 5*4
+        for i in range(nentries):
             eData = data[n:n + 20]
             out = unpack('ii3f', eData)
-            (sid, dload, wg, x0, V) = out
+            # (sid, dload, wg, x0, V) = out
             gust = GUST(None, out)
             self.add_GUST(gust)
             n += 20
@@ -46,7 +46,7 @@ class DIT(object):
 #TABDMP1
 #TABLE3D
 
-    def readTableD1(self, data, n):
+    def _read_tabled1(self, data, n):
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
@@ -54,10 +54,10 @@ class DIT(object):
         return
         #print("reading TABLED1")
         func = TABLED1
-        n = self.readTable1(func, data, n)
+        n = self.read_table1(func, data, n)
         return n
 
-    def readTable1(self, func, data, n):
+    def _read_table1(self, func, data, n):
         #nEntries = len(data)//40 # 10*4
         n = 0
         ndata = len(data)
@@ -65,7 +65,7 @@ class DIT(object):
             eData = data[n:n + 40]
             out = unpack('8iff', eData)
             (sid, codeX, codeY, a, a, a, a, a, x, y) = out
-            dataIn = [sid, codeX, codeY]
+            data_in = [sid, codeX, codeY]
             n += 40
             while 1:
                 (xInt, yInt) = unpack('ii', data[n:n + 8])
@@ -75,30 +75,30 @@ class DIT(object):
                 if [xInt, yInt] != [-1, -1]:
                     break
                 else:
-                    dataIn += [x, y]
+                    data_in += [x, y]
 
-            dataIn += [x, y]
+            data_in += [x, y]
             table = func(None, out)
             self.add_table(table)
         return n
 
-    def readTableD2(self, data, n):
+    def _read_tabled2(self, data, n):
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
         #print("reading TABLED2")
         func = TABLED2
-        n = self.readTable2(func, data)
+        n = self._read_table2(func, data)
         return n
 
-    def readTable2(self, func, data):
+    def _read_table2(self, func, data):
         n = 0
         return len(data)
         while len(data) >= 40:
             eData = data[n:n + 40]
             out = unpack('ifiiiiiiff', eData)
             (sid, x1, a, a, a, a, a, a, x, y) = out
-            dataIn = [sid, x1]
+            data_in = [sid, x1]
             n += 40
             while 1:
                 (xInt, yInt) = unpack('ii', data[n:n + 8])
@@ -108,29 +108,29 @@ class DIT(object):
                 if [xInt, yInt] != [-1, -1]:
                     break
                 else:
-                    dataIn += [x, y]
-            dataIn += [x, y]
+                    data_in += [x, y]
+            data_in += [x, y]
             table = func(None, out)
             self.add_table(table)
         return len(data)
 
-    def readTableD3(self, data, n):
+    def _read_tabled3(self, data, n):
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
         #print("reading TABLED3")
         func = TABLED3
-        n = self.readTable3(func, data)
+        n = self._read_table3(func, data)
         return n
 
-    def readTable3(self, func, data):
+    def _read_table3(self, func, data):
         n = 0
         ndata = len(data)
         while ndata - n >= 40:
-            eData = data[n:n + 40]
-            out = unpack('iffiiiiiff', eData)
+            edata = data[n:n + 40]
+            out = unpack('iffiiiiiff', edata)
             (sid, x1, x2, a, a, a, a, a, x, y) = out
-            dataIn = [sid, x1, x2]
+            data_in = [sid, x1, x2]
             n += 40
             while 1:
                 (xInt, yInt) = unpack('ii', data[n:n + 8])
@@ -140,15 +140,15 @@ class DIT(object):
                 if [xInt, yInt] != [-1, -1]:
                     break
                 else:
-                    dataIn += [x, y]
-            dataIn += [x, y]
+                    data_in += [x, y]
+            data_in += [x, y]
             table = func(None, out)
             self.add_table(table)
         return len(data)
 
 #TABLEDR
 
-    def readTableM1(self, data, n):
+    def _read_tablem1(self, data, n):
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
@@ -156,34 +156,34 @@ class DIT(object):
         return
         #print("reading TABLED1")
         func = TABLEM1
-        n = self.readTable1(func, data)
+        n = self.read_table1(func, data)
         return n
 
-    def readTableM2(self, data, n):
+    def _read_tablem2(self, data, n):
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
         #print("reading TABLEM2")
         func = TABLEM2
-        n = self.readTable2(func, data)
+        n = self._read_table2(func, data)
         return n
 
-    def readTableM3(self, data, n):
+    def _read_tableM3(self, data, n):
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
         #print("reading TABLED3")
         func = TABLEM3
-        n = self.readTable3(func, data)
+        n = self._read_table3(func, data)
         return n
 
-    def readTableM4(self, data, n):
+    def _read_tablem4(self, data, n):
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
         #print("reading TABLED3")
         func = TABLEM4
-        n = self.readTable4(func, data)
+        n = self._read_table4(func, data)
         return n
 
 #TABLES1

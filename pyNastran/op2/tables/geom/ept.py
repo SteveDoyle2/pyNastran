@@ -14,7 +14,7 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
 
 
 class EPT(object):
-    def add_property(self, card, allowOverwrites=True):
+    def add_property(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
     def _read_ept_4(self, data):
@@ -50,37 +50,37 @@ class EPT(object):
             (1802,  18,  31): ['PVISC',   self._readPVISC],   # record 59
             (10201,102, 400): ['PVAL',   self._readPVAL],     # record 58 - not done
             (2606,  26, 289): ['VIEW',   self._readVIEW],     # record 62 - not done
-            (2706,   27, 287): ['', self._readFake],    # record
-            (702,     7,  38): ['', self._readFake],    # record
-            (10301, 103, 399): ['', self._readFake],
-            (5403, 55, 349): ['', self._readFake],
-            (6902, 69, 165): ['', self._readFake],
-            (3002, 30, 415): ['', self._readFake],
-            (13301, 133, 509): ['', self._readFake],
-            (6802, 68, 164): ['', self._readFake],
-            (4606, 46, 375): ['', self._readFake],
-            (1302, 13, 34): ['', self._readFake],
-            (4706, 47, 376): ['', self._readFake],
-            (8702, 87, 412): ['', self._readFake],
-            (2902, 29, 420): ['', self._readFake],
-            (1502, 15, 36): ['', self._readFake],
-            (3201, 32, 991) : ['', self._readFake],  # record
-            (3301, 33, 992) : ['', self._readFake],  # record
-            (3301, 33, 56): ['', self._readFake],
-            (3401, 34, 57) : ['', self._readFake],    # record
-            (3701, 37, 995) : ['', self._readFake],    # record
-            (1202, 12, 33): ['', self._readFake],  # record
-            (12001, 120, 480): ['', self._readFake],  # record
-            (12101, 121, 484): ['', self._readFake],  # record
-            (3501, 35, 58): ['', self._readFake],  # record
-            (3601, 36, 62): ['', self._readFake],  # record
-            (8300, 83, 382): ['', self._readFake],  # record
-            (8500, 85, 384): ['', self._readFake],  # record
-            (15006, 150, 604): ['', self._readFake],  # record
+            (2706,   27, 287): ['', self._read_fake],    # record
+            (702,     7,  38): ['', self._read_fake],    # record
+            (10301, 103, 399): ['', self._read_fake],
+            (5403, 55, 349): ['', self._read_fake],
+            (6902, 69, 165): ['', self._read_fake],
+            (3002, 30, 415): ['', self._read_fake],
+            (13301, 133, 509): ['', self._read_fake],
+            (6802, 68, 164): ['', self._read_fake],
+            (4606, 46, 375): ['', self._read_fake],
+            (1302, 13, 34): ['', self._read_fake],
+            (4706, 47, 376): ['', self._read_fake],
+            (8702, 87, 412): ['', self._read_fake],
+            (2902, 29, 420): ['', self._read_fake],
+            (1502, 15, 36): ['', self._read_fake],
+            (3201, 32, 991) : ['', self._read_fake],  # record
+            (3301, 33, 992) : ['', self._read_fake],  # record
+            (3301, 33, 56): ['', self._read_fake],
+            (3401, 34, 57) : ['', self._read_fake],    # record
+            (3701, 37, 995) : ['', self._read_fake],    # record
+            (1202, 12, 33): ['', self._read_fake],  # record
+            (12001, 120, 480): ['', self._read_fake],  # record
+            (12101, 121, 484): ['', self._read_fake],  # record
+            (3501, 35, 58): ['', self._read_fake],  # record
+            (3601, 36, 62): ['', self._read_fake],  # record
+            (8300, 83, 382): ['', self._read_fake],  # record
+            (8500, 85, 384): ['', self._read_fake],  # record
+            (15006, 150, 604): ['', self._read_fake],  # record
         }
 
     def addOp2Property(self, prop):
-        self.add_property(prop, allowOverwrites=True)
+        self.add_property(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
 # HGSUPPR
@@ -170,7 +170,7 @@ class EPT(object):
             out = s.unpack(eData)
             (pid, mid, group, Type, value) = out
             Type = Type.strip()
-            dataIn = [pid, mid, group, Type, value]
+            data_in = [pid, mid, group, Type, value]
             print("pid=%s mid=%s group=%r Type=%r value=%s" %(pid, mid, group, Type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
@@ -178,7 +178,7 @@ class EPT(object):
             iFormat = b'%if' % expectedLength
 
             ndelta = expectedLength * 4
-            dataIn += list(unpack(iFormat, data[n:n+ndelta]))
+            data_in += list(unpack(iFormat, data[n:n+ndelta]))
             # TODO why do i need the +4???
             #min_len =  expectedLength * 4 + 4
             #if len(data)
@@ -186,8 +186,8 @@ class EPT(object):
             n += ndelta
 
             #prin( "len(out) = ",len(out)))
-            #print("PBARL = %s" % dataIn)
-            prop = PBARL(None, dataIn)  # last value is nsm
+            #print("PBARL = %s" % data_in)
+            prop = PBARL(None, data_in)  # last value is nsm
             self.addOp2Property(prop)
             #print(self.show_data(data[n-8:-100]))
             break
@@ -210,9 +210,9 @@ class EPT(object):
         for i in range(nproperties):
             eData = data[n:n+20]
             n += 20
-            dataIn = list(s1.unpack(eData))
-            self.binary_debug.write('  PBEAM=%s\n' % str(dataIn))
-            (pid, mid, nsegs, ccf, x) = dataIn
+            data_in = list(s1.unpack(eData))
+            self.binary_debug.write('  PBEAM=%s\n' % str(data_in))
+            (pid, mid, nsegs, ccf, x) = data_in
 
             for i in range(12):
                 eData = data[n:n+64]
@@ -220,14 +220,14 @@ class EPT(object):
                 pack = s2.unpack(eData)
                 (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                     d1, d2, e1, e2, f1, f2) = pack
-                dataIn.append(pack)
+                data_in.append(pack)
                 self.binary_debug.write('     %s\n' % str(pack))
             eData = data[n:n+44]
 
-            dataIn = list(s3.unpack(eData))
+            data_in = list(s3.unpack(eData))
             #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
 
-            # prop = PBEAM(None, dataIn)
+            # prop = PBEAM(None, data_in)
             # self.addOp2Property(prop)
             #sys.exit('ept-PBEAM')
         self.card_count['PBEAM'] = nproperties
@@ -293,10 +293,10 @@ class EPT(object):
                 Sout.append(sout)
                 idata += 16
 
-            dataIn = [pid, z0, nsm, sb, ft, Tref, ge,
+            data_in = [pid, z0, nsm, sb, ft, Tref, ge,
                       isSymmetrical, Mid, T, Theta, Sout]
-            #print("PCOMP = %s" % (dataIn))
-            prop = PCOMP(None, dataIn)
+            #print("PCOMP = %s" % (data_in))
+            prop = PCOMP(None, data_in)
             self.addOp2Property(prop)
             nproperties += 1
         self.card_count['PCOMP'] = nproperties
@@ -460,7 +460,7 @@ class EPT(object):
             eData = data[n:n+28]
             out = s.unpack(eData)
             #(pid, mid, cid, inp, stress, isop, fctn) = out
-            #dataIn = [pid, mid, cid, inp, stress, isop, fctn]
+            #data_in = [pid, mid, cid, inp, stress, isop, fctn]
             self.binary_debug.write('  PSOLID=%s\n' % str(out))
             prop = PSOLID(None, out)
             self.addOp2Property(prop)
@@ -485,9 +485,9 @@ class EPT(object):
             eData = data[n:n+20]  # or 24???
             out = s.unpack(eData)
             (pid, mid, OD, t, nsm) = out
-            dataIn = [pid, mid, OD, t, nsm]
+            data_in = [pid, mid, OD, t, nsm]
             self.binary_debug.write('  PTUBE=%s\n' % str(out))
-            prop = PTUBE(None, dataIn)
+            prop = PTUBE(None, data_in)
             self.addOp2Property(prop)
             n += 20
         self.card_count['PTUBE'] = nproperties

@@ -42,6 +42,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCel
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (NonlinearRod, NonlinearQuad, HyperelasticQuad,  # TODO: vectorize 3
                                                                  RealNonlinearPlateArray)
+ComplexShearStressArray = None
+ComplexShearStrainArray = None
 
 
 class OES(OP2Common):
@@ -603,7 +605,6 @@ class OES(OP2Common):
                 #obj_real = RealShearStress
                 obj_complex = ComplexShearStress
 
-                ComplexShearStressArray = None
                 obj_vector_real = RealShearStressArray
                 obj_vector_complex = ComplexShearStressArray
                 result_name = 'cshear_stress'
@@ -611,7 +612,6 @@ class OES(OP2Common):
                 #obj_real = RealShearStrain
                 obj_complex = ComplexShearStrain
 
-                ComplexShearStrainArray = None
                 obj_vector_real = RealShearStrainArray
                 obj_vector_complex = ComplexShearStrainArray
                 result_name = 'cshear_strain'
@@ -624,9 +624,8 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == 4:  # real
                 ntotal = 16  # 4*4
                 nelements = ndata // ntotal
-                auto_return, is_vectorized = self._create_oes_object4(nelements,
-                                                       result_name, slot,
-                                                       obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
 

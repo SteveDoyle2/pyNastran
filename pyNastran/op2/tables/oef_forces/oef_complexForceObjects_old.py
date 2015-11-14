@@ -1,3 +1,5 @@
+from pyNastran.f06.f06_formatting import get_key0
+
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)

@@ -15,9 +15,9 @@ def main():
         cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
     run(bdf_filename)
 
-def run(bdf_filename):
+def run(bdf_filename, debug=True):
     # http://www.3dpanelmethod.com/documents/Graduate%20Work.pdf
-    model = BDF()
+    model = BDF(debug=debug)
     model.read_bdf(bdf_filename)
 
 

@@ -312,7 +312,7 @@ class TestBeams(unittest.TestCase):
         The number of continuation lines on a PBEAM for a NO/YESA is 0.
         The number of continuation lines on a PBEAM for a YES is 1.
         """
-        model = BDF()
+        model = BDF(debug=False)
 
         # correct - standard NO with full list of values
         lines = [
@@ -383,7 +383,7 @@ class TestBeams(unittest.TestCase):
         model.add_card(lines, 'PBEAM', is_list=False)
 
     def test_pbeam_11(self):
-        model = BDF()
+        model = BDF(debug=False)
         lines = [
             #'PBEAM         1       1    1.e8    1.e8    1.e8              10.      1.',
             #'             NO      1.    3.e5    3.e8    3.e8              10.      1.',

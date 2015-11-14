@@ -339,7 +339,7 @@ class CONROD(RodElement):
         #J = self.J()
 
         #========================
-        #(n1, n2) = self.nodeIDs()
+        #(n1, n2) = self.node_ids
         n0, n1 = self.node_ids[i, :]
 
         i0 = index0s[n0]

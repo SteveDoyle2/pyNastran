@@ -5,7 +5,8 @@ from numpy import fromstring
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
-    RealGridPointForcesArray, ComplexGridPointForces)
+    RealGridPointForcesArray, ComplexGridPointForcesArray,
+    ComplexGridPointForces)
 
 
 class OGPF(OP2Common):
@@ -29,6 +30,8 @@ class OGPF(OP2Common):
         """
         dt = self.nonlinear_factor
         n = 0
+        is_magnitude_phase = self.is_magnitude_phase()
+
         if self.thermal == 0:
             result_name = 'grid_point_forces'
             if self._results.is_not_saved(result_name):
@@ -65,13 +68,14 @@ class OGPF(OP2Common):
                         obj.node_element[istart:iend, 0] = nids
                         obj.node_element[istart:iend, 1] = eids
                         strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)#[:, 2:3]
-                        #a = strings[:, 0]
-                        #aa = strings[:, 1]
                         obj.element_names[istart:iend] = strings[:, 1]
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 10)
-                    #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
+                    #[f1, f2, f3, m1, m2, m3]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
+                    #obj._times[obj.itime] = dt
+                    #obj.data[obj.itime, obj.itotal:itotal2, :] = real_imag
+                    #obj.itotal = itotal2
                 else:
                     s = Struct(b(self._endian + 'ii8s6f'))
 
@@ -83,16 +87,92 @@ class OGPF(OP2Common):
                         self.binary_debug.write('  nnodes=%i\n' % nnodes)
 
                     for i in range(nnodes):
-                        eData = data[n:n+ntotal]
-                        out = s.unpack(eData)
-                        (ekey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
+                        edata = data[n:n+ntotal]
+                        out = s.unpack(edata)
+                        (ekey, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
                         ekey = ekey // 10
-                        elemName = elemName.strip()
+                        elem_name = elem_name.strip()
                         #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
                         if self.is_debug_file:
                             self.binary_debug.write('  nid=%s - %s\n' % (ekey, str(out)))
 
-                        self.obj.add(dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3)
+                        self.obj.add(dt, ekey, eid, elem_name, f1, f2, f3, m1, m2, m3)
+                        #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
+                        n += ntotal
+            elif self.num_wide == 16:
+                # complex
+                ntotal = 64
+                nnodes = ndata // ntotal
+                obj_vector_real = ComplexGridPointForcesArray
+                auto_return, is_vectorized = self._create_ntotal_object(
+                    nnodes, result_name, slot, obj_vector_real)
+                if auto_return:
+                    return nnodes * self.num_wide * 4
+
+                obj = self.obj
+                is_vectorized = False
+                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nnodes * self.num_wide * 4
+
+                    istart = obj.itotal
+                    iend = istart + nnodes
+                    obj._times[obj.itime] = dt
+
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 16)
+                        nids = ints[:, 0] // 10
+                        eids = ints[:, 1]
+                        obj.node_element[istart:iend, 0] = nids
+                        obj.node_element[istart:iend, 1] = eids
+                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 8)#[:, 2:3]
+                        obj.element_names[istart:iend] = strings[:, 1]
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 16)
+                    #[f1, f2, f3, m1, m2, m3]
+                    obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
+                else:
+                    s = Struct(b(self._endian + 'ii8s12f'))
+
+                    #if self.is_debug_file:
+                        #self.binary_debug.write('  GPFORCE\n')
+                        #self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
+                        #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                        #self.binary_debug.write('  gpforce1 = [ekey, eid, elemName, f1, f2, f3, m1, m2, m3]\n')
+                        #self.binary_debug.write('  nnodes=%i\n' % nnodes)
+
+                    for i in range(nnodes):
+                        edata = data[n:n+ntotal]
+                        out = s.unpack(edata)
+                        (ekey, eid, elem_name,
+                         f1r, f2r, f3r, m1r, m2r, m3r,
+                         f1i, f2i, f3i, m1i, m2i, m3i) = out
+                        ekey = ekey // 10
+                        elem_name = elem_name.strip()
+                        #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
+                        if self.is_debug_file:
+                            self.binary_debug.write('  nid=%s - %s\n' % (ekey, str(out)))
+
+                        if is_magnitude_phase:
+                            f1 = polar_to_real_imag(f1r, f1i)
+                            f2 = polar_to_real_imag(f2r, f2i)
+                            f3 = polar_to_real_imag(f3r, f3i)
+                            m1 = polar_to_real_imag(m1r, m1i)
+                            m2 = polar_to_real_imag(m2r, m2i)
+                            m3 = polar_to_real_imag(m3r, m3i)
+                        else:
+                            f1 = complex(f1r, f1i)
+                            f2 = complex(f2r, f2i)
+                            f3 = complex(f3r, f3i)
+                            m1 = complex(m1r, m1i)
+                            m2 = complex(m2r, m2i)
+                            m3 = complex(m3r, m3i)
+
+                        self.obj.add(dt, ekey, eid, elem_name, f1, f2, f3, m1, m2, m3)
                         #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
                         n += ntotal
             else:

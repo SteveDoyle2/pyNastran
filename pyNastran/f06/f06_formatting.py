@@ -1,4 +1,4 @@
-from numpy import angle
+from numpy import angle, float32
 from pyNastran.utils import object_attributes
 
 
@@ -118,8 +118,10 @@ def _eigenvalue_header(obj, header, itime, ntimes, dt):
         name = obj.data_code['name']
         if isinstance(dt, int):
             dt_line = ' %14s = %i\n' % (name.upper(), dt)
-        else:
+        elif isinstance(dt, (float, float32)):
             dt_line = ' %14s = %12.5E\n' % (name, dt)
+        else:
+            dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)
         header[1] = dt_line
         codes = getattr(obj, name + 's')
         if not len(codes) == ntimes:

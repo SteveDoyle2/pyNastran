@@ -69,9 +69,17 @@ class ScalarObject(BaseScalarObject):
         BaseScalarObject.__init__(self)
         self.isubcase = isubcase
         self.isTransient = False
+        # the nonlinear factor; None=static; float=transient
         self.dt = None
+        # the number of time steps
         self.ntimes = 0
+        # the number of entries in a table for a single time step
         self.ntotal = 0
+        # there are a few tables (e.g. GridPointForcesArray) that change
+        # length from time=1 to time=2.  As such, we will track the
+        # length of each time step
+        self._ntotals = []
+
         self.data_code = copy.deepcopy(data_code)
 
         # if data code isn't being applied and you don't have
@@ -80,7 +88,7 @@ class ScalarObject(BaseScalarObject):
         # your vectorized class as setting data_code
         #
         # see pyNastran.op2.oes_stressStrain.real.oes_bars for an example
-        # it's raelly subtle...
+        # it's really subtle...
         if apply_data_code:
             self.apply_data_code()
             self.set_data_members()

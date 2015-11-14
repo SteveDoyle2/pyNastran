@@ -55,7 +55,7 @@ class TestDMIG(unittest.TestCase):
 
         self.assertTrue(array_equal(REAL_expected, REAL_actual))
 
-        #model2 = BDF()
+        #model2 = BDF(debug=False)
         #bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
         #model2.read_bdf(bdf_name, xref=False, punch=True)
 

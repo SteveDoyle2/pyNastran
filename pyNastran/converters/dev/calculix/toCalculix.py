@@ -185,7 +185,7 @@ class CalculixConverter(BDF):
                 for eid in eids:
                     dat += formE % eid
                     element = self.elements[eid]
-                    for nid in element.nodeIDs():
+                    for nid in element.node_ids:
                         dat += '%s,' % nid
                     dat = dat[:-1] + '\n'
         dat += self.breaker()
@@ -339,7 +339,7 @@ class CalculixConverter(BDF):
                 i = nid_to_i_map[load.node]
                 M[i, :] += m * scale
             elif load.type == 'PLOAD':
-                nodes = load.nodeIDs()
+                nodes = load.node_ids
                 nnodes = len(nodes)
                 if nnodes == 3:
                     n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
@@ -378,7 +378,7 @@ class CalculixConverter(BDF):
                     elem = self.elements[eid]
                     if elem.type in ['CTRIA3',
                                      'CQUAD4', 'CSHEAR']:
-                        nodes = elem.nodeIDs()
+                        nodes = elem.node_ids
                         nnodes = len(nodes)
                         n = elem.Normal()
                         A = elem.Area()
@@ -398,7 +398,7 @@ class CalculixConverter(BDF):
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
                         # triangles
                         nnodes = 3
-                        nodes = elem.nodeIDs()
+                        nodes = elem.node_ids
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                         axb = cross(n1 - n2, n1 - n3)
                         nunit = norm(axb)
@@ -416,7 +416,7 @@ class CalculixConverter(BDF):
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
                         nnodes = 4
-                        nodes = elem.nodeIDs()
+                        nodes = elem.node_ids
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
                         axb = cross(n1 - n3, n2 - n4)
                         nunit = norm(axb)

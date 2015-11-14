@@ -288,7 +288,7 @@ class TestShells(unittest.TestCase):
             Mid[1], T[1], Theta[1], Sout[1],
             Mid[2], T[2], Theta[2], Sout[2],
         ]
-        model = BDF()
+        model = BDF(debug=False)
         card_count = {
             'PCOMP' : 1,
             'MAT1' : 3,
@@ -443,7 +443,7 @@ class TestShells(unittest.TestCase):
         """
         symmetrical, nsm=0.0 and nsm=1.0
         """
-        model = BDF()
+        model = BDF(debug=False)
         pid = 1
         z0 = 0.
         nsm = 0.
