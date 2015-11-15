@@ -151,14 +151,14 @@ class GEOM4(object):
         #n=0
         #nData = len(data)  # 5*4
         if 1:
-            eData = data[:12]
-            (eid, gn, cm, gm) = unpack(b(self._endian + '4i'), eData)
+            edata = data[:12]
+            (eid, gn, cm, gm) = unpack(b(self._endian + '4i'), edata)
 
-            eData = data[12:-4]
-            nGm = len(eData) // 4
+            edata = data[12:-4]
+            nGm = len(edata) // 4
             iFormat = 'i' * nGm
             iFormat = bytes(iFormat)
-            Gm = list(unpack(iFormat, eData))
+            Gm = list(unpack(iFormat, edata))
             alpha, = unpack(b(self._endian + 'f'), data[-4:])
         elem = RBE2(None, [eid, gn, cm, Gm, alpha])
         self.add_rigid_element(elem)
@@ -209,10 +209,10 @@ class GEOM4(object):
         """SPC(5501,55,16) - Record 44"""
         #self.log.debug('skipping SPC in GEOM4\n')
         n = 0
-        nEntries = len(data) // 20  # 5*4
-        for i in range(nEntries):
-            eData = data[n:n + 20]
-            (sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), eData)
+        nentries = len(data) // 20  # 5*4
+        for i in range(nentries):
+            edata = data[n:n + 20]
+            (sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), edata)
 
             constraint = SPC(None, [sid, ID, c, dx])
             self.add_constraint_SPC(constraint)
@@ -227,12 +227,12 @@ class GEOM4(object):
         #nentries = (len(data) - n - 12) // 4  # 5*4
         nentries = 0
         while n2 < n:
-            eData = data[n:n+12]
+            edata = data[n:n+12]
             n += 12
-            out = unpack('4i', eData)
+            out = unpack('4i', edata)
             (sid, g, thru_flag, n1) = out
             self.binary_debug.write('  SPC1=%s\n' % str(out))
-            eData = data[n:n + 12]
+            edata = data[n:n + 12]
 
             nids = [n1]
             if thru_flag == 0:  # repeat 4 to end
@@ -261,17 +261,17 @@ class GEOM4(object):
         #self.log.debug('skipping SPCD in GEOM4\n')
         n = 0
         s = Struct(b(self._endian + '4if'))
-        nEntries = len(data) // 20  # 5*4
-        for i in range(nEntries):
-            eData = data[n:n + 20]
-            out = s.unpack(eData)
+        nentries = len(data) // 20  # 5*4
+        for i in range(nentries):
+            edata = data[n:n + 20]
+            out = s.unpack(edata)
             (sid, ID, c, xxx, dx) = out
             self.binary_debug.write('  SPCD=%s\n' % str(out))
 
             constraint = SPCD(None, [sid, ID, c, dx])
             self.add_constraint_SPC(constraint)
             n += 20
-        self.card_count['SPCD'] = nEntries
+        self.card_count['SPCD'] = nentries
         return n
 
     def _readSPCDE(self, data, n):
@@ -314,9 +314,9 @@ class GEOM4(object):
         """SUPORT(5601,56, 14) - Record 59"""
         #self.log.debug('skipping SUPORT in GEOM4\n')
         n = 0
-        nEntries = len(data) // 8  # 2*4
+        nentries = len(data) // 8  # 2*4
         s = Struct(b(self._endian + '2i'))
-        for i in range(nEntries):
+        for i in range(nentries):
             self.add_suport(SUPORT(None, list(s.unpack(data[n:n + 8])))) # extracts [sid, c]
             n += 8
         return n

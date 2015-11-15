@@ -1,4 +1,8 @@
 #pylint: disable=C0301,C0103
+"""
+Defines the Real/Complex Forces created by:
+    OLOAD = ALL
+"""
 from struct import unpack
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (RealAppliedLoads,  #ComplexAppliedLoads,

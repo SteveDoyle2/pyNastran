@@ -2,10 +2,15 @@
 """
 This file defines the OUG Table, which contains:
  * Real/Complex Displacement
+   - DISPLACEMENT = ALL
  * Real/Complex Acceleration
+   - ACCELERATION = ALL
  * Real/Complex Velocity
+   - VELOCITY = ALL
  * Real/Complex Eigenvectors
+   - DISPLACEMENT = ALL
  * Real Temperature
+   - DISPLACEMENT = ALL
 """
 from pyNastran import is_release
 from pyNastran.op2.op2_common import OP2Common

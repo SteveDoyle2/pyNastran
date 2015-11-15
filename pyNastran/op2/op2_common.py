@@ -674,13 +674,14 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             itotal2 = itotal + nnodes
             if obj.itime == 0:
                 ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
-                nids = ints[:, 0] // 10
+                #nids = ints[:, 0] // 10
+                nids = ones(nnodes, dtype='int32') * eid
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
             floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
-            obj._times[itime] = dt
+            obj._times[itime] = floats[:, 0]
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:

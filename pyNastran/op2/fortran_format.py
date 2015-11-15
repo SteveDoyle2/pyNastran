@@ -281,7 +281,7 @@ class FortranFormat(object):
         self.is_table_1 = True
         self._data_factor = 1
 
-        nstart = self.n
+        #nstart = self.n
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
         if self.is_debug_file:

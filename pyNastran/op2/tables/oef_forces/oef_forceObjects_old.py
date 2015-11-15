@@ -1,4 +1,9 @@
 from numpy import array
+from six import iteritems
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0, write_float_12E
+from pyNastran.f06.f06_formatting import _eigenvalue_header
+from numpy import zeros, array_equal
 
 class RealRodForce(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -578,4 +583,218 @@ class RealCBushForce(ScalarObject):  # 102-CBUSH
         self.force[dt][eid] = array([fx, fy, fz], dtype='float32')
         self.moment[dt][eid] = array([mx, my, mz], dtype='float32')
 
+
+class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.force = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.force)
+            time0 = get_key0(self.force)
+            nelements = len(self.force[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.force)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force\n')
+        return msg
+
+    def add_f06_data(self, data, dt):
+        if dt is not None:
+            for datai in data:
+                (eid, forcei) = datai
+                self.force[dt][eid] = forcei
+            return
+
+        for datai in data:
+            (eid, forcei) = datai
+            self.force[eid] = forcei
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.force[dt] = {}
+
+    def add(self, dt, data):
+        [eid, force] = data
+        self.force[eid] = force
+
+    def add_sort1(self, dt, data):
+        [eid, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force
+
+    def add_sort2(self, eid, data):
+        [dt, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force
+
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
+                 '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
+                 '        ID.                              ID.                              ID.                              ID.\n',
+                 ]
+        msg = []
+        for dt, Force in sorted(iteritems(self.force)):
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            msg += header + words
+
+            forces = []
+            #elements = []
+            line = '   '
+            for eid, force in sorted(iteritems(Force)):
+                #elements.append(eid)
+                forces.append(force)
+                line += '%13s  %13s     ' % (eid, f)
+                if len(forces) == 3:
+                    forces = []
+                    msg.append(line.rstrip() + '\n')
+                    line = '   '
+
+            if forces:
+                msg.append(line.rstrip() + '\n')
+
+            msg.append(page_stamp % page_num)
+            f.write(''.join(msg))
+            msg = ['']
+            page_num += 1
+
+        return page_num - 1
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
+        msg = header + ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
+                        '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
+                        '        ID.                              ID.                              ID.                              ID.\n',
+                        ]
+        f.write(''.join(msg))
+        _write_f06_springs(f, self.force)
+        f.write(page_stamp % page_num)
+
+        return page_num
+
+
+class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.force = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.force)
+            time0 = get_key0(self.force)
+            nelements = len(self.force[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.force)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.force[dt] = {}
+
+    def add(self, dt, data):
+        [eid, force] = data
+        self.force[eid] = force
+
+    def add_sort1(self, dt, data):
+        [eid, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force
+
+    def add_sort2(self, eid, data):
+        [dt, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force
+
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
+                 ' \n',
+                 '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
+        msg = []
+        for dt, Force in sorted(self.force.items()):
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            msg += header + words
+
+            #packs = []
+            forces = []
+            elements = []
+            line = '   '
+            for eid, force in sorted(Force.items()):
+                elements.append(eid)
+                forces.append(force)
+                #pack.append(eid)
+                #pack.append(f)
+                line += '%13s  %13s     ' % (eid, f)
+                if len(forces) == 3:
+                    msg.append(line.rstrip() + '\n')
+
+            if forces:
+                msg.append(line.rstrip() + '\n')
+            msg.append(page_stamp % page_num)
+            f.write(''.join(msg))
+            msg = ['']
+            page_num += 1
+
+        return page_num - 1
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
+        msg = header + ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
+                        ' \n',
+                        '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
+        #packs = []
+        forces = []
+        elements = []
+        line = '   '
+        for eid, force in sorted(self.force.items()):
+            elements.append(eid)
+            forces.append(force)
+            #pack.append(eid)
+            #pack.append(f)
+            line += '%13s  %13s     ' % (eid, force)
+            if len(forces) == 3:
+                msg.append(line.rstrip() + '\n')
+
+        if forces:
+            msg.append(line.rstrip() + '\n')
+
+        msg.append(page_stamp % page_num)
+        f.write(''.join(msg))
+        return page_num
 

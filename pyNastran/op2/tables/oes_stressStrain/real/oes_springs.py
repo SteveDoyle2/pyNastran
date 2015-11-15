@@ -5,7 +5,7 @@ from six.moves import zip
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, write_float_13E
+from pyNastran.f06.f06_formatting import writeFloats13E, write_float_13E, _eigenvalue_header
 
 class RealSpringArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -27,9 +27,6 @@ class RealSpringArray(OES_Object):
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
-
-    def _get_msgs(self):
-        raise NotImplementedError()
 
     def get_headers(self):
         raise NotImplementedError()
@@ -77,7 +74,10 @@ class RealSpringArray(OES_Object):
                 '  ntotal: %i\n' % self.ntotal,
             ]
 
-        ntimes, nelements = self.data.shape[:1]
+        #print(self.data.shape[:1])
+        #ntimes, nelements = self.data.shape[:1]
+        ntimes = self.data.shape[0]
+        nelements = self.data.shape[1]
         assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
@@ -99,18 +99,6 @@ class RealSpringArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self, is_mag_phase=True):
-        crod_msg, conrod_msg, ctube_msg = self._get_msgs()
-        if 'CROD' in self.element_name:
-            msg = crod_msg
-        elif 'CONROD' in self.element_name:
-            msg = conrod_msg
-        elif 'CTUBE' in self.element_name:
-            msg = ctube_msg
-        else:
-            raise NotImplementedError(self.element_name)
-        return self.element_name, msg
-
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
         itot = searchsorted(eids, self.element)  #[0]
@@ -124,7 +112,7 @@ class RealSpringArray(OES_Object):
         return ind
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
+        msg_temp = self.get_f06_header(is_mag_phase)
 
         if self.is_sort1():
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
@@ -156,6 +144,7 @@ class RealSpringArray(OES_Object):
                 f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
                     tuple(out[i] + out[i + 1] + out[i + 2] + out[i + 3])))
 
+            i = nrows * 4
             if nleftover == 3:
                 f.write('    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
                     tuple(out[i] + out[i + 1] + out[i + 2])))
@@ -163,11 +152,67 @@ class RealSpringArray(OES_Object):
                 f.write('    %10i  %13s    %10i  %13s\n' % (
                     tuple(out[i] + out[i + 1])))
             elif nleftover == 1:
-                f.write('    %10i  %13s\n' % (
-                    tuple(out[i])))
+                f.write('    %10i  %13s\n' % tuple(out[i]))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
+
+class RealSpringStressArray(RealSpringArray, StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self):
+        headers = ['spring_stress']
+        return headers
+
+    def get_f06_header(self, is_mag_phase=True):
+        if self.element_type == 11:  # CELAS1
+            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )\n']
+        elif self.element_type == 12:  # CELAS2
+            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n']
+        elif self.element_type == 13:  # CELAS3
+            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
+        elif self.element_type == 14:  # CELAS4
+            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
+        else:
+            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+
+        msg += [
+            '      ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS\n'
+            '        ID.                              ID.                              ID.                              ID.\n'
+        ]
+        return msg
+
+
+
+class RealSpringStrainArray(RealSpringArray, StrainObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StrainObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self):
+        headers = ['spring_strain']
+        return headers
+
+    def get_f06_header(self, is_mag_phase=True):
+        if self.element_type == 1:  # CELAS1
+            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )\n']
+        #elif self.element_type == 12:  # CELAS2
+            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n']
+        #elif self.element_type == 13:  # CELAS3
+            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
+        #elif self.element_type == 14:  # CELAS4
+            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
+        else:
+            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+
+        msg += [
+            '      ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS\n'
+            '        ID.                              ID.                              ID.                              ID.\n'
+        ]
+        return msg
 
 
 class RealCelasStress(StressObject):

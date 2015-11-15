@@ -99,8 +99,8 @@ class GEOM1(object):
         s = Struct(b(self._endian + '6i'))
         nentries = (len(data) - n) // 24
         for i in range(nentries):
-            eData = data[n:n + 24]  # 6*4
-            out = s.unpack(eData)
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
             (cid, one, two, g1, g2, g3) = out
             assert one in [1, 2], one
             assert two in [1, 2], two
@@ -119,8 +119,8 @@ class GEOM1(object):
         s = Struct(b(self._endian + '6i'))
         nentries = (len(data) - n) // 24
         for i in range(nentries):
-            eData = data[n:n + 24]  # 6*4
-            out = s.unpack(eData)
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
             (cid, one1, one2, g1, g2, g3) = out
             self.binary_debug.write('  CORD1R=%s\n' % str(out))
             assert one1 == 1, one1
@@ -159,8 +159,8 @@ class GEOM1(object):
         s = Struct(b(self._endian + '4i9f'))
         nentries = (len(data) - n) // 52
         for i in range(nentries):
-            eData = data[n:n + 52]  # 13*4
-            out = s.unpack(eData)
+            edata = data[n:n + 52]  # 13*4
+            out = s.unpack(edata)
             (cid, two1, two2, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             assert two1 == 2, two1
             assert two2 == 2, two2
@@ -178,9 +178,9 @@ class GEOM1(object):
         """
         nentries = (len(data) - n) // 52
         for i in range(nentries):
-            eData = data[n:n + 52]  # 13*4
+            edata = data[n:n + 52]  # 13*4
             (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
-                c2, c3) = unpack(b(self._endian + '4i9f'), eData)
+                c2, c3) = unpack(b(self._endian + '4i9f'), edata)
             assert one == 1, one
             assert two == 2, two
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
@@ -199,8 +199,8 @@ class GEOM1(object):
         s = Struct(b(self._endian + '4i9f'))
         nentries = (len(data) - n) // 52
         for i in range(nentries):
-            eData = data[n:n + 52]  # 13*4
-            out = s.unpack(eData)
+            edata = data[n:n + 52]  # 13*4
+            out = s.unpack(edata)
             (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             self.binary_debug.write('  CORD2S=%s\n' % str(out))
@@ -218,8 +218,8 @@ class GEOM1(object):
         s = Struct(b(self._endian + '4i'))
         nentries = (len(data) - n) // 16
         for i in range(nentries):
-            eData = data[n:n + 16]  # 4*4
-            out = s.unpack(eData)
+            edata = data[n:n + 16]  # 4*4
+            out = s.unpack(edata)
             (cid, n1, n2, n3) = out
             coord = CORD3G(None, out)
             self.binary_debug.write('  CORD3G=%s\n' % str(out))

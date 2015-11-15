@@ -35,8 +35,8 @@ class DIT(object):
         #print("reading GUST")
         nentries = (len(data) - n) // 20  # 5*4
         for i in range(nentries):
-            eData = data[n:n + 20]
-            out = unpack('ii3f', eData)
+            edata = data[n:n + 20]
+            out = unpack('ii3f', edata)
             # (sid, dload, wg, x0, V) = out
             gust = GUST(None, out)
             self.add_GUST(gust)
@@ -58,12 +58,12 @@ class DIT(object):
         return n
 
     def _read_table1(self, func, data, n):
-        #nEntries = len(data)//40 # 10*4
+        #nentries = len(data)//40 # 10*4
         n = 0
         ndata = len(data)
         while ndata - n >= 40:
-            eData = data[n:n + 40]
-            out = unpack('8iff', eData)
+            edata = data[n:n + 40]
+            out = unpack('8iff', edata)
             (sid, codeX, codeY, a, a, a, a, a, x, y) = out
             data_in = [sid, codeX, codeY]
             n += 40
@@ -95,8 +95,8 @@ class DIT(object):
         n = 0
         return len(data)
         while len(data) >= 40:
-            eData = data[n:n + 40]
-            out = unpack('ifiiiiiiff', eData)
+            edata = data[n:n + 40]
+            out = unpack('ifiiiiiiff', edata)
             (sid, x1, a, a, a, a, a, a, x, y) = out
             data_in = [sid, x1]
             n += 40

@@ -64,7 +64,7 @@ class RealBushArray(OES_Object):
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.elements = zeros(self.ntotal, dtype='int32')
+        self.element = zeros(self.ntotal, dtype='int32')
 
         # [tx, ty, tz, rx, ry, rz]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
@@ -116,7 +116,7 @@ class RealBushArray(OES_Object):
     def add_sort1(self, dt, eid, tx, ty, tz, rx, ry, rz):
         assert isinstance(eid, int)
         self._times[self.itime] = dt
-        self.elements[self.itotal] = eid
+        self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [tx, ty, tz, rx, ry, rz]
         self.itotal += 1
         self.ielement += 1
@@ -154,17 +154,17 @@ class RealBushArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.elements)  #[0]
+        itot = searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.elements == eid) for eid in eids])
+        ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
-        eids = self.elements
+        eids = self.element
 
         for itime in range(ntimes):
             dt = self._times[itime]

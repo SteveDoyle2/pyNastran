@@ -105,7 +105,7 @@ class OP2Writer(OP2_F06_Common):
             _write_markers(op2, op2_ascii, [2, 4])
 
         if self.grid_point_weight.reference_point is not None:
-            if has_attr(result, 'write_op2'):
+            if hasattr(result, 'write_op2'):
                 print("grid_point_weight")
                 self.grid_point_weight.write_op2(op2, page_stamp, self.page_num)
             else:
@@ -118,7 +118,7 @@ class OP2Writer(OP2_F06_Common):
         for ikey, result in sorted(iteritems(self.eigenvalues)):
             header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            if has_attr(result, 'write_op2'):
+            if hasattr(result, 'write_op2'):
                 result.write_op2(op2, op2_ascii)
                 if delete_objects:
                     del result

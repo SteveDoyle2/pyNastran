@@ -341,7 +341,7 @@ class F06Writer(OP2_F06_Common):
             self.page_num += 1
 
     def write_f06(self, f06_outname, is_mag_phase=False, is_sort1=True,
-                  delete_objects=True, end_flag=False):
+                  delete_objects=True, end_flag=False, quiet=False):
         """
         Writes an F06 file based on the data we have stored in the object
 
@@ -362,8 +362,11 @@ class F06Writer(OP2_F06_Common):
             should objects be deleted after they're written to reduce memory
         end_flag : bool; default=False
             should a dummy Nastran "END" table be made
+        quiet : bool; default=False
+             suppress print messages
         """
-        print("F06:")
+        if not quiet:
+            print("F06:")
         if isinstance(f06_outname, str):
             if PY2:
                 f06 = open(f06_outname, 'wb')
@@ -378,7 +381,8 @@ class F06Writer(OP2_F06_Common):
 
         page_stamp = self.make_stamp(self.Title, self.date)
         if self.grid_point_weight.reference_point is not None:
-            print("grid_point_weight")
+            if not quiet:
+                print("grid_point_weight")
             self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
             assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
 
@@ -388,13 +392,14 @@ class F06Writer(OP2_F06_Common):
 
         # writes all results for
         self._write_f06_subcase_based(f06, page_stamp, delete_objects=delete_objects,
-                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1,
+                                      quiet=quiet)
         #self._write_f06_time_based(f06, page_stamp)
         f06.write(make_end(end_flag))
         f06.close()
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
-                                 is_mag_phase=False, is_sort1=True):
+                                 is_mag_phase=False, is_sort1=True, quiet=False):
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
@@ -673,7 +678,8 @@ class F06Writer(OP2_F06_Common):
 
                         class_name = result.__class__.__name__
                         if hasattr(result, 'data'):
-                            print(res_format_vectorized % (class_name, isubcase, subtitle, element_name))
+                            if not quiet:
+                                print(res_format_vectorized % (class_name, isubcase, subtitle, element_name))
                         else:
                             print(res_format % (class_name, isubcase, element_name))
 

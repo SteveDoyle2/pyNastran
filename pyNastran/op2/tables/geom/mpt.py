@@ -94,8 +94,8 @@ class MPT(object):
         s = Struct(b(self._endian + 'i10fi'))
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
-            eData = data[n:n+48]
-            out = s.unpack(eData)
+            edata = data[n:n+48]
+            out = s.unpack(edata)
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
             self.addOp2Material(MAT1(None, out))
             n += ntotal
@@ -237,9 +237,9 @@ class MPT(object):
         s2 = Struct(b(self._endian + '8i'))
         n2 = n
         while n2 < n:
-            eData = data[n:n+140]
+            edata = data[n:n+140]
             n += 140
-            out1 = s1.unpack(eData)
+            out1 = s1.unpack(edata)
             (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
              a20, a11, a02, d2,
              a30, a21, a12, a03, d3,
@@ -249,9 +249,9 @@ class MPT(object):
             data_in = [out1]
 
             if continueFlag:
-                eData = data[n:n+32]  # 7*4
+                edata = data[n:n+32]  # 7*4
                 n += 32
-                out2 = s2.unpack(eData)
+                out2 = s2.unpack(edata)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data.append(out2)
             self.addOp2Material(MATHP(None, data_in))
@@ -316,23 +316,23 @@ class MPT(object):
         return n
         s = self.struct_i
         while len(data) >= 4:  # 1*4
-            eData = data[:4]
+            edata = data[:4]
             data = data[4:]
-            number, = s.unpack(eData)
+            number, = s.unpack(edata)
 
             iFormat = 'if%if' % (number + 1)
-            eDataLen = len(strings) * 4
+            edataLen = len(strings) * 4
 
-            eData = data[:eDataLen]
-            data = data[eDataLen:]
+            edata = data[:edataLen]
+            data = data[edataLen:]
             iFormat = bytes(iFormat)
-            pack = list(unpack(iFormat, eData))
+            pack = list(unpack(iFormat, edata))
             packs = []
 
             while data:
-                eData = data[:eDataLen]
-                data = data[eDataLen:]
-                pack = list(unpack(iFormat, eData))
+                edata = data[:edataLen]
+                data = data[edataLen:]
+                pack = list(unpack(iFormat, edata))
                 packs.append(pack)
 
             #mat = RADM(None, packs)

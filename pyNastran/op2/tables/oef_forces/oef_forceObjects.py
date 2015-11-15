@@ -3,12 +3,225 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
-from numpy import array, zeros, searchsorted, array_equal
+from numpy import zeros, searchsorted, array_equal, allclose
 from itertools import cycle
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header, get_key0, write_float_13E
+
+
+class ForceObject(ScalarObject):
+    def __init__(self, data_code, isubcase, apply_data_code=True):
+        self.element_type = None
+        self.element_name = None
+        self.nonlinear_factor = None
+        self._times = None
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
+
+
+class RealSpringDamperForceArray(ForceObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ForceObject.__init__(self, data_code, isubcase)
+
+        self.nelements = 0  # result specific
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        raise NotImplementedError()
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[force]
+        self.data = zeros((self.ntimes, self.nelements, 1), dtype='float32')
+
+    def add(self, dt, eid, force):
+        self.add_sort1(dt, eid, force)
+
+    def add_sort1(self, dt, eid, force):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [force]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        ntimes = self.data.shape[0]
+        nelements = self.data.shape[1]
+        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
+        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_element_index(self, eids):
+        itot = searchsorted(eids, self.element)  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        ind = searchsorted(eids, self.element)
+        return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+
+        if self.is_sort1():
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
+        else:
+            raise NotImplementedError(self.code_information())
+            #page_num = self._write_sort2_as_sort2(header, page_stamp, page_num, f, msg_temp)
+        return page_num
+
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        is_odd = False
+        nwrite = len(eids)
+        nrows = nwrite // 4
+        nleftover = nwrite - nrows * 4
+
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+            stress = self.data[itime, :, 0]
+
+            out = []
+            for eid, stressi in zip(eids, stress):
+                out.append([eid, write_float_13E(stressi)])
+
+            for i in range(0, nrows * 4, 4):
+                f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
+                    tuple(out[i] + out[i + 1] + out[i + 2] + out[i + 3])))
+
+            i = nrows * 4
+            if nleftover == 3:
+                f.write('    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
+                    tuple(out[i] + out[i + 1] + out[i + 2])))
+            elif nleftover == 2:
+                f.write('    %10i  %13s    %10i  %13s\n' % (
+                    tuple(out[i] + out[i + 1])))
+            elif nleftover == 1:
+                f.write('    %10i  %13s\n' % tuple(out[i]))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+class RealSpringForceArray(RealSpringDamperForceArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def get_headers(self):
+        headers = ['spring_force']
+        return headers
+
+    def get_f06_header(self, is_mag_phase=True, is_sort1=True):
+        if self.element_type == 11:  # CELAS1
+            msg = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )\n']
+        elif self.element_type == 12:  # CELAS2
+            msg = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n']
+        elif self.element_type == 13:  # CELAS3
+            msg = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
+        elif self.element_type == 14:  # CELAS4
+            msg = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
+        else:
+            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+
+        msg += [
+            '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n'
+            '        ID.                              ID.                              ID.                              ID.\n'
+        ]
+        return msg
+
+class RealDamperForceArray(RealSpringDamperForceArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def get_headers(self):
+        headers = ['damper_force']
+        return headers
+
+    def get_f06_header(self, is_mag_phase=True, is_sort1=True):
+        if self.element_type == 20:  # CDAMP1
+            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 1 )\n']
+        elif self.element_type == 21:  # CDAMP2
+            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n']
+        #elif self.element_type == 13:  # CDAMP3
+            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
+        #elif self.element_type == 14:  # CDAMP4
+            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
+        else:
+            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+
+        if is_sort1:
+            msg += [
+                '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n'
+                '        ID.                              ID.                              ID.                              ID.\n'
+            ]
+        else:
+            msg += [
+                '                         AXIAL                                                       AXIAL\n'
+                '       TIME              FORCE         TORQUE                      TIME              FORCE         TORQUE\n'
+        ]
+        return msg
+
 
 class RealRodForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -606,221 +819,6 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
             ] = vals2
             msg.append('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, f14, f12, f21, f23, f32, f34, f43, f41))
             msg.append('                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
-
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
-        return page_num
-
-
-class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.force = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.force)
-            time0 = get_key0(self.force)
-            nelements = len(self.force[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.force)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force\n')
-        return msg
-
-    def add_f06_data(self, data, dt):
-        if dt is not None:
-            for datai in data:
-                (eid, forcei) = datai
-                self.force[dt][eid] = forcei
-            return
-
-        for datai in data:
-            (eid, forcei) = datai
-            self.force[eid] = forcei
-
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.force[dt] = {}
-
-    def add(self, dt, data):
-        [eid, force] = data
-        self.force[eid] = force
-
-    def add_sort1(self, dt, data):
-        [eid, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
-
-    def add_sort2(self, eid, data):
-        [dt, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
-
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
-                 '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
-                 '        ID.                              ID.                              ID.                              ID.\n',
-                 ]
-        msg = []
-        for dt, Force in sorted(iteritems(self.force)):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-
-            forces = []
-            #elements = []
-            line = '   '
-            for eid, force in sorted(iteritems(Force)):
-                #elements.append(eid)
-                forces.append(force)
-                line += '%13s  %13s     ' % (eid, f)
-                if len(forces) == 3:
-                    forces = []
-                    msg.append(line.rstrip() + '\n')
-                    line = '   '
-
-            if forces:
-                msg.append(line.rstrip() + '\n')
-
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
-            page_num += 1
-
-        return page_num - 1
-
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
-        msg = header + ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
-                        '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
-                        '        ID.                              ID.                              ID.                              ID.\n',
-                        ]
-        f.write(''.join(msg))
-        _write_f06_springs(f, self.force)
-        f.write(page_stamp % page_num)
-
-        return page_num
-
-
-class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.force = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.force)
-            time0 = get_key0(self.force)
-            nelements = len(self.force[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.force)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.force[dt] = {}
-
-    def add(self, dt, data):
-        [eid, force] = data
-        self.force[eid] = force
-
-    def add_sort1(self, dt, data):
-        [eid, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
-
-    def add_sort2(self, eid, data):
-        [dt, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
-
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
-                 ' \n',
-                 '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
-        msg = []
-        for dt, Force in sorted(self.force.items()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-
-            #packs = []
-            forces = []
-            elements = []
-            line = '   '
-            for eid, force in sorted(Force.items()):
-                elements.append(eid)
-                forces.append(force)
-                #pack.append(eid)
-                #pack.append(f)
-                line += '%13s  %13s     ' % (eid, f)
-                if len(forces) == 3:
-                    msg.append(line.rstrip() + '\n')
-
-            if forces:
-                msg.append(line.rstrip() + '\n')
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
-            page_num += 1
-
-        return page_num - 1
-
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
-        msg = header + ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
-                        ' \n',
-                        '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
-        #packs = []
-        forces = []
-        elements = []
-        line = '   '
-        for eid, force in sorted(self.force.items()):
-            elements.append(eid)
-            forces.append(force)
-            #pack.append(eid)
-            #pack.append(f)
-            line += '%13s  %13s     ' % (eid, force)
-            if len(forces) == 3:
-                msg.append(line.rstrip() + '\n')
-
-        if forces:
-            msg.append(line.rstrip() + '\n')
 
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
@@ -2195,13 +2193,13 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         self.pressure[dt] = {}
 
     def add(self, dt, data):
-        [eid, eName, ax, ay, az, vx, vy, vz, pressure] = data
+        [eid, ename, ax, ay, az, vx, vy, vz, pressure] = data
         self.acceleration[eid] = [ax, ay, az]
         self.velocity[eid] = [vx, vy, vz]
         self.pressure[eid] = pressure
 
     def add_sort1(self, dt, data):
-        [eid, eName, ax, ay, az, vx, vy, vz, pressure] = data
+        [eid, ename, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
         self.acceleration[dt][eid] = [ax, ay, az]
@@ -2209,7 +2207,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         self.pressure[dt][eid] = pressure
 
     def add_sort2(self, eid, data):
-        [dt, eName, ax, ay, az, vx, vy, vz, pressure] = data
+        [dt, ename, ax, ay, az, vx, vy, vz, pressure] = data
         if dt not in self.acceleration:
             self.add_new_transient(dt)
         self.acceleration[dt][eid] = [ax, ay, az]
@@ -2330,7 +2328,7 @@ class RealCBushForceArray(ScalarObject):
                         (fx2, fy2, fz2, mx2, my2, mz2) = t2
                         if not allclose(t1, t2):
                         #if not array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s)\n  (%s, %s, %s)\n' % (
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 fx1, fy1, fz1, mx1, my1, mz1,
                                 fx2, fy2, fz2, mx2, my2, mz2)
@@ -2491,7 +2489,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.bendingY[dt] = {}
         self.bendingZ[dt] = {}
 
-    def add(self, nNodes, dt, data):
+    def add(self, nnodes, dt, data):
         [eid, parent, coord, icord, forces] = data
         self.parent[eid] = parent
         self.coord[eid] = coord
@@ -2514,7 +2512,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingY[eid][nid] = bendingY
             self.bendingZ[eid][nid] = bendingZ
 
-    def add_sort1(self, nNodes, dt, data):
+    def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
@@ -2539,7 +2537,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def add_sort2(self, nNodes, eid, data):
+    def add_sort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
@@ -2617,7 +2615,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.shearYZ[dt] = {}
         self.shearXZ[dt] = {}
 
-    def add(self, nNodes, dt, data):
+    def add(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
         self.parent[eid] = parent
         self.coord[eid] = coord
@@ -2645,11 +2643,11 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.shearYZ[eid][nid] = shearYZ
             self.shearXZ[eid][nid] = shearXZ
 
-    def add_sort1(self, nNodes, dt, data):
+    def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 
-    def add_sort2(self, nNodes, eid, data):
+    def add_sort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, theta, forces] = data
         self._fillObject(dt, eid, parent, coord, icord, theta, forces)
 

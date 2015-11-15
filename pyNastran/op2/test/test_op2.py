@@ -130,7 +130,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       is_vector=False, vector_stop=True,
                       debug=True, saveCases=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000, binary_debug=False,
-                      compare=True):
+                      compare=True, quiet=False):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
         skip_files = []
@@ -268,7 +268,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             isubcases = [int(i) for i in isubcases.split('_')]
         else:
             isubcases = [int(isubcases)]
-    print('isubcases = %s' % isubcases)
+    if not quiet:
+        print('isubcases = %s' % isubcases)
 
     debug_file = None
     model = os.path.splitext(op2_filename)[0]
@@ -297,7 +298,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         else: # windows
             kb = get_memory_usage() / 1024
         mb = kb / 1024.
-        #mbs.append(mb)
         print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
 
     try:
@@ -325,11 +325,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             else: # windows
                 kb = get_memory_usage() / 1024
             mb = kb / 1024.
-            #mbs.append(mb)
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            op2a.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase, is_sort1=not is_sort2)
+            op2a.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
+                           is_sort1=not is_sort2, quiet=quiet)
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.f06')
@@ -362,7 +362,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             else: # windows
                 kb = get_memory_usage() / 1024
             mb = kb / 1024.
-            #mbs.append(mb)
             print("Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb))
 
 

@@ -22,9 +22,9 @@ def parse_skipped_cards(fname):
             (msg, fpath) = aft.strip().split('-')
             #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
-            eName = msg.split(' ')[0]
-            #print "eName=%s eType=%s form=%s fpath=|%s|" %(eName,eType,form,fpath)
-            key = (eName, eType, form)
+            ename = msg.split(' ')[0]
+            #print "eName=%s eType=%s form=%s fpath=|%s|" %(ename, eType, form, fpath)
+            key = (ename, eType, form)
             if key not in results:
                 results[key] = fpath
 
@@ -72,6 +72,7 @@ def main(regenerate=True):
     is_vector = [True] # is this vectorized
     vector_stop = [True]  # corresponds to is_vector; stop if case fails=True
     binary_debug = False  # catch any errors
+    quiet = True
 
     delete_f06 = True
     saveCases = True
@@ -107,7 +108,7 @@ def main(regenerate=True):
                    stop_on_failure=stop_on_failure,
                    is_vector=is_vector, vector_stop=vector_stop,
                    nstart=nstart, nstop=nstop, binary_debug=binary_debug,
-                   compare=not data['--disablecompare'])
+                   compare=not data['--disablecompare'], quiet=quiet)
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 

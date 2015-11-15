@@ -79,7 +79,7 @@ class EPT(object):
             (15006, 150, 604): ['', self._read_fake],  # record
         }
 
-    def addOp2Property(self, prop):
+    def _add_op2_property(self, prop):
         self.add_property(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
@@ -93,13 +93,13 @@ class EPT(object):
         return n
         s = Struct(b(self._endian + 'i4sif'))
         while len(data) >= 16:  # 4*4
-            eData = data[:16]
+            edata = data[:16]
             data = data[16:]
-            out = s.unpack(eData)
+            out = s.unpack(edata)
             (sid, propSet, ID, value) = out
             #print("sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value))
             prop = NSM(None, None, [sid, propSet, ID, value])
-            #self.addOp2Property(prop)
+            #self._add_op2_property(prop)
         return n
 
 # NSM1
@@ -119,12 +119,12 @@ class EPT(object):
         s = Struct(b(self._endian + '2i17f'))
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            eData = data[n:n+76]
-            out = s.unpack(eData)
+            edata = data[n:n+76]
+            out = s.unpack(edata)
             (pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
                 e1, e2, f1, f2, k1, k2, I12) = out
             prop = PBAR(None, out)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += ntotal
         self.card_count['PBAR'] = nentries
         return n
@@ -164,10 +164,10 @@ class EPT(object):
         #print(self.show_ndata(80))
         ndata = len(data)
         while ndata - n > ntotal:
-            eData = data[n:n+28]
+            edata = data[n:n+28]
             n += 28
 
-            out = s.unpack(eData)
+            out = s.unpack(edata)
             (pid, mid, group, Type, value) = out
             Type = Type.strip()
             data_in = [pid, mid, group, Type, value]
@@ -188,7 +188,7 @@ class EPT(object):
             #prin( "len(out) = ",len(out)))
             #print("PBARL = %s" % data_in)
             prop = PBARL(None, data_in)  # last value is nsm
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             #print(self.show_data(data[n-8:-100]))
             break
         self._increase_card_count('PBARL')
@@ -208,27 +208,27 @@ class EPT(object):
         ntotal = 1072  # 44+12*84+20
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
-            eData = data[n:n+20]
+            edata = data[n:n+20]
             n += 20
-            data_in = list(s1.unpack(eData))
+            data_in = list(s1.unpack(edata))
             self.binary_debug.write('  PBEAM=%s\n' % str(data_in))
             (pid, mid, nsegs, ccf, x) = data_in
 
             for i in range(12):
-                eData = data[n:n+64]
+                edata = data[n:n+64]
                 n += 64
-                pack = s2.unpack(eData)
+                pack = s2.unpack(edata)
                 (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                     d1, d2, e1, e2, f1, f2) = pack
                 data_in.append(pack)
                 self.binary_debug.write('     %s\n' % str(pack))
-            eData = data[n:n+44]
+            edata = data[n:n+44]
 
-            data_in = list(s3.unpack(eData))
+            data_in = list(s3.unpack(edata))
             #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
 
             # prop = PBEAM(None, data_in)
-            # self.addOp2Property(prop)
+            # self._add_op2_property(prop)
             #sys.exit('ept-PBEAM')
         self.card_count['PBEAM'] = nproperties
         return n
@@ -268,12 +268,12 @@ class EPT(object):
             #print("len(data) = %s" % len(data))
             #print(self.print_block(data[0:200]))
             isSymmetrical = 'NO'
-            eData = data[n:n+32]
-            out = s1.unpack(eData)
+            edata = data[n:n+32]
+            out = s1.unpack(edata)
             self.binary_debug.write('  PCOMP=%s\n' % str(out))
             (pid, nLayers, z0, nsm, sb, ft, Tref, ge,) = out
 
-            eData = data[n:n+16 * (nLayers)]
+            edata = data[n:n+16 * (nLayers)]
             Mid = []
             T = []
             Theta = []
@@ -286,7 +286,7 @@ class EPT(object):
 
             idata = 0
             for ilayer in range(nLayers):
-                (mid, t, theta, sout) = s2.unpack(eData[idata:idata+16])
+                (mid, t, theta, sout) = s2.unpack(edata[idata:idata+16])
                 Mid.append(mid)
                 T.append(t)
                 Theta.append(theta)
@@ -297,7 +297,7 @@ class EPT(object):
                       isSymmetrical, Mid, T, Theta, Sout]
             #print("PCOMP = %s" % (data_in))
             prop = PCOMP(None, data_in)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             nproperties += 1
         self.card_count['PCOMP'] = nproperties
         return n
@@ -334,12 +334,12 @@ class EPT(object):
         ntotal = 16  # 4*4
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
-            eData = data[n:n+16]
-            out = s.unpack(eData)
+            edata = data[n:n+16]
+            out = s.unpack(edata)
             #(pid,k,ge,s) = out
             self.binary_debug.write('  PELAS=%s\n' % str(out))
             prop = PELAS(data=out)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += ntotal
         self.card_count['PELAS'] = nproperties
         return n
@@ -354,12 +354,12 @@ class EPT(object):
         s = Struct(b(self._endian + 'i10f'))
         nproperties = (len(data) - n) // 44
         for i in range(nproperties):
-            eData = data[n:n+44]
-            out = s.unpack(eData)
+            edata = data[n:n+44]
+            out = s.unpack(edata)
             self.binary_debug.write('  PGAP=%s\n' % str(out))
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP(None, out)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
         return n
 
     def _readPHBDY(self, data, n):
@@ -379,14 +379,14 @@ class EPT(object):
         """
         n = 0
         s = self.struct_2i
-        nEntries = (len(data) - n) // 8  # 2*4
-        for i in range(nEntries):
-            eData = data[n:n + 8]
-            out = s.unpack(eData)
+        nentries = (len(data) - n) // 8  # 2*4
+        for i in range(nentries):
+            edata = data[n:n + 8]
+            out = s.unpack(edata)
             #out = (pid,mass)
             self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS(data=out)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += 8
         return n
 
@@ -398,12 +398,12 @@ class EPT(object):
         s = Struct(b(self._endian + '2i4f'))
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
-            eData = data[n:n+24]
-            out = s.unpack(eData)
+            edata = data[n:n+24]
+            out = s.unpack(edata)
             (pid, mid, a, j, c, nsm) = out
             prop = PROD(None, out)
             self.binary_debug.write('  PROD=%s\n' % str(out))
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += ntotal
         self.card_count['PROD'] = nproperties
         return n
@@ -415,12 +415,12 @@ class EPT(object):
         s = Struct(b(self._endian + '2i4f'))
         nproperties = (len(data) - n) // 24
         for i in range(nproperties):
-            eData = data[n:n+24]
-            out = s.unpack(eData)
+            edata = data[n:n+24]
+            out = s.unpack(edata)
             (pid, mid, t, nsm, f1, f2) = out
             self.binary_debug.write('  PSHEAR=%s\n' % str(out))
             prop = PSHEAR(data=out)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += 24
         self.card_count['PSHEAR'] = nproperties
         return n
@@ -433,8 +433,8 @@ class EPT(object):
         s = Struct(b(self._endian + 'iififi4fi'))
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
-            eData = data[n:n+44]
-            out = s.unpack(eData)
+            edata = data[n:n+44]
+            out = s.unpack(edata)
             (pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
             self.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL(None, out)
@@ -443,7 +443,7 @@ class EPT(object):
                 #print("PSHELL = ",out)
                 self.bigProperties[pid] = prop
             else:
-                self.addOp2Property(prop)
+                self._add_op2_property(prop)
             n += ntotal
         self.card_count['PSHELL'] = nproperties
         return n
@@ -457,13 +457,13 @@ class EPT(object):
         s = Struct(b(self._endian + '6i4s'))
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
-            eData = data[n:n+28]
-            out = s.unpack(eData)
+            edata = data[n:n+28]
+            out = s.unpack(edata)
             #(pid, mid, cid, inp, stress, isop, fctn) = out
             #data_in = [pid, mid, cid, inp, stress, isop, fctn]
             self.binary_debug.write('  PSOLID=%s\n' % str(out))
             prop = PSOLID(None, out)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += ntotal
         self.card_count['PSOLID'] = nproperties
         return n
@@ -482,13 +482,13 @@ class EPT(object):
         s = Struct(b(self._endian + '2i3f'))
         nproperties = (len(data) - n) // 20
         for i in range(nproperties):
-            eData = data[n:n+20]  # or 24???
-            out = s.unpack(eData)
+            edata = data[n:n+20]  # or 24???
+            out = s.unpack(edata)
             (pid, mid, OD, t, nsm) = out
             data_in = [pid, mid, OD, t, nsm]
             self.binary_debug.write('  PTUBE=%s\n' % str(out))
             prop = PTUBE(None, data_in)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += 20
         self.card_count['PTUBE'] = nproperties
         return n
@@ -503,12 +503,12 @@ class EPT(object):
         s = Struct(b(self._endian + 'i2f'))
         nproperties = (len(data) - n) // 12
         for i in range(nproperties):
-            eData = data[n:n+12]
-            out = s.unpack(eData)
+            edata = data[n:n+12]
+            out = s.unpack(edata)
             self.binary_debug.write('  PVISC=%s\n' % str(out))
             #(pid,ce,cr) = out
             prop = PVISC(data=out)
-            self.addOp2Property(prop)
+            self._add_op2_property(prop)
             n += 12
         self.card_count['PVISC'] = nproperties
         return n

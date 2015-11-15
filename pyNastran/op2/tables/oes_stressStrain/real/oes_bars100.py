@@ -81,7 +81,7 @@ class RealBar10NodesArray(OES_Object):
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.elements = zeros(self.ntotal, dtype='int32')
+        self.element = zeros(self.ntotal, dtype='int32')
 
         #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
         self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
@@ -94,7 +94,7 @@ class RealBar10NodesArray(OES_Object):
                           sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
         self._times[self.itime] = dt
         # print('isubcase=%s itotal=%s ieid=%s eid=%s' % (self.isubcase, self.itotal, self.ielement, eid))
-        self.elements[self.itotal] = eid
+        self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
         self.itotal += 1
         self.ielement += 1
@@ -155,7 +155,7 @@ class RealBar10NodesArray(OES_Object):
 
     def _write_sort1_as_sort1(self, f06_file, header, page_stamp, msg, page_num):
         (ntimes, ntotal) = self.data.shape[:2]
-        eids = self.elements
+        eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)

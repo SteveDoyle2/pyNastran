@@ -8,6 +8,7 @@ from six import string_types, iteritems, PY2, b
 from six.moves import range
 import os
 from struct import unpack, Struct
+import sys
 
 from numpy import array
 import numpy as np
@@ -727,7 +728,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #asf
 
     def _read_aemonpt_3(self, data, ndata):
-        adf
+        sys.exit(self.code_information())
 
     def _read_aemonpt_4(self, data, ndata):
         # self.table_name = self.read_table_name(rewind=False)

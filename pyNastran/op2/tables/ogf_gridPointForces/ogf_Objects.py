@@ -483,7 +483,7 @@ class RealGridPointForces(ScalarObject):
                 self.add = self.add_sort1
         else:
             assert dt is not None, 'is_sort1=%s' % is_sort1
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         nelements = len(self.eids)

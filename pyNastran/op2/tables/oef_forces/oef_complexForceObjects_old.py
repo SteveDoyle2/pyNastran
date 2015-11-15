@@ -1,4 +1,6 @@
-from pyNastran.f06.f06_formatting import get_key0
+from six import iteritems
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -150,3 +152,154 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
         self.moment[dt][eid] = [mx, my, mz]
 
 
+class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.axialForce = {}
+        self.torque = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.axialForce[dt] = {}
+        self.torque[dt] = {}
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = get_key0(self.torque)
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  axialForce, torque\n')
+        return msg
+
+    def add(self, dt, data):
+        [eid, axialForce, torque] = data
+        self.axialForce[eid] = axialForce
+        self.torque[eid] = torque
+
+    def add_sort1(self, dt, data):
+        [eid, axialForce, torque] = data
+        if dt not in self.axialForce:
+            self.add_new_transient(dt)
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid] = torque
+
+    def add_sort2(self, eid, data):
+        [dt, axialForce, torque] = data
+        if dt not in self.axialForce:
+            self.add_new_transient(dt)
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid] = torque
+
+
+class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.bendingMoment = {}
+        self.shear = {}
+        self.axial = {}
+        self.totalTorque = {}
+        self.warpingTorque = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add_new_element = self.addNewElementSort1
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add_new_element = self.addNewElementSort2
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  ']
+        msg += self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.shear)
+            time0 = get_key0(self.shear)
+            nelements = len(self.shear[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.shear)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  bendingMoment, shear, axial, totalTorque, '
+                   'warpingTorque\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.bendingMoment[dt] = {}
+        self.shear[dt] = {}
+        self.axial[dt] = {}
+        self.totalTorque[dt] = {}
+        self.warpingTorque[dt] = {}
+
+    def add_new_element(self, dt, data):
+        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+        #print "CBEAM addnew",data
+        self.bendingMoment[eid] = {sd: [bm1, bm2]}
+        self.shear[eid] = {sd: [ts1, ts2]}
+        self.axial[eid] = {sd: af}
+        self.totalTorque[eid] = {sd: ttrq}
+        self.warpingTorque[eid] = {sd: wtrq}
+
+    def add(self, dt, data):
+        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+        #print "CBEAM add   ",data
+        self.bendingMoment[eid][sd] = [bm1, bm2]
+        self.shear[eid][sd] = [ts1, ts2]
+        self.axial[eid][sd] = af
+        self.totalTorque[eid][sd] = ttrq
+        self.warpingTorque[eid][sd] = wtrq
+
+    def addNewElementSort1(self, dt, data):
+        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+        self._fillNewObject(
+            dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+
+    def add_sort1(self, dt, data):
+        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+        self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+
+    def addNewElementSort2(self, eid, data):
+        [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+        self._fillNewObject(
+            dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+
+    def add_sort2(self, eid, data):
+        [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+        self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+
+    def _fillObject(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        #if dt not in self.axial:
+            #self.add_new_transient(dt)
+        self.bendingMoment[dt][eid][sd] = [bm1, bm2]
+        self.shear[dt][eid][sd] = [ts1, ts2]
+        self.axial[dt][eid][sd] = af
+        self.totalTorque[dt][eid][sd] = ttrq
+        self.warpingTorque[dt][eid][sd] = wtrq
+
+    def _fillNewObject(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        if dt not in self.axial:
+            self.add_new_transient(dt)
+        self.bendingMoment[dt][eid] = {sd: [bm1, bm2]}
+        self.shear[dt][eid] = {sd: [ts1, ts2]}
+        self.axial[dt][eid] = {sd: af}
+        self.totalTorque[dt][eid] = {sd: ttrq}
+        self.warpingTorque[dt][eid] = {sd: wtrq}

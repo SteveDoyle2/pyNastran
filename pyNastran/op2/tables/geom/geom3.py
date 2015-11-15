@@ -77,9 +77,9 @@ class GEOM3(object):
         """
         #print("reading FORCE")
         ntotal = 28  # 7*4
-        nEntries = (len(data) - n) // ntotal
+        nentries = (len(data) - n) // ntotal
         s = Struct(b(self._endian + 'iiiffff'))
-        for i in range(nEntries):
+        for i in range(nentries):
             out = s.unpack(data[n:n + 28])
             (sid, g, cid, f, n1, n2, n3) = out
             self.binary_debug.write('  FORCE=%s\n' % str(out))
@@ -95,16 +95,16 @@ class GEOM3(object):
         #print("reading FORCE1")
         ntotal = 20  # 5*4
         s = Struct(b(self._endian + 'iifii'))
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 20]
-            out = s.unpack(eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 20]
+            out = s.unpack(edata)
             (sid, g, f, n1, n2) = out
             self.binary_debug.write('  FORCE1=%s\n' % str(out))
             load = FORCE1(None, [sid, g, f, n1, n2])
             self.add_load(load)
             n += 20
-        self.card_count['FORCE1'] = nEntries
+        self.card_count['FORCE1'] = nentries
         return n
 
     def _readFORCE2(self, data, n):
@@ -114,15 +114,15 @@ class GEOM3(object):
         #print("reading FORCE2")
         ntotal = 28  # 7*4
         s = Struct(b(self._endian + 'iif4i'))
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
             out = s.unpack(data[n:n + 28])
             (sid, g, f, n1, n2, n3, n4) = out
             self.binary_debug.write('  FORCE2=%s\n' % str(out))
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
             self.add_load(load)
             n += 28
-        self.card_count['FORCE2'] = nEntries
+        self.card_count['FORCE2'] = nentries
         return n
 
 # GMLOAD
@@ -134,15 +134,15 @@ class GEOM3(object):
         #print("reading GRAV")
         ntotal = 28  # 7*4
         s = Struct(b(self._endian + 'ii4fi'))
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 28]
-            out = s.unpack(eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 28]
+            out = s.unpack(edata)
             (sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV(None, out)
             self.add_load(grav)
             n += 28
-        self.card_count['GRAV'] = nEntries
+        self.card_count['GRAV'] = nentries
         return n
 
     def _readLOAD(self, data, n):
@@ -152,22 +152,22 @@ class GEOM3(object):
         """
         #print("reading LOAD")
         ntotal = 16  # 4*4
-        nEntries = (len(data) - n) // ntotal
+        nentries = (len(data) - n) // ntotal
         count = 0
         while (len(data) - n) >= 16:
-            eData = data[n:n+16]
+            edata = data[n:n+16]
             n += 16
-            out = unpack('iffi', eData)
+            out = unpack('iffi', edata)
             (sid, s, si, l1) = out
             self.binary_debug.write('  LOAD=%s\n' % str(out))
             Si = [si]
             L1 = [l1]
             #print(Si, L1)
             while 1:
-                eData = data[n:n+8]
+                edata = data[n:n+8]
                 n += 8
-                (si, l1) = unpack('fi', eData)
-                siTest, = self.struct_i.unpack(eData[0:4])
+                (si, l1) = unpack('fi', edata)
+                siTest, = self.struct_i.unpack(edata[0:4])
                 #print(si,siTest, l1)
                 #print(type(si))
 
@@ -184,7 +184,7 @@ class GEOM3(object):
             count += 1
             if count > 1000:
                 raise RuntimeError('Iteration limit...probably have a bug.')
-        self.card_count['LOAD'] = nEntries
+        self.card_count['LOAD'] = nentries
         return n
 
     def _readLOADCYH(self, data, n):
@@ -205,16 +205,16 @@ class GEOM3(object):
         #print("reading MOMENT")
         ntotal = 28
         s = Struct(b(self._endian + '3i4f'))
-        nEntries = (len(data) - n) // 28  # 7*4
-        for i in range(nEntries):
-            eData = data[n:n + 28]
-            out = s.unpack(eData)
+        nentries = (len(data) - n) // 28  # 7*4
+        for i in range(nentries):
+            edata = data[n:n + 28]
+            out = s.unpack(edata)
             self.binary_debug.write('  MOMENT=%s\n' % str(out))
             (sid, g, cid, m, n1, n2, n3) = out
             load = MOMENT(None, out)
             self.add_load(load)
             n += 28
-        self.card_count['MOMENT'] = nEntries
+        self.card_count['MOMENT'] = nentries
         return n
 
     def _readMOMENT1(self, data, n):
@@ -223,16 +223,16 @@ class GEOM3(object):
         """
         #print("reading MOMENT1")
         ntotal = 20  # 5*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 20]
-            out = unpack(b(self._endian + 'iifii'), eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 20]
+            out = unpack(b(self._endian + 'iifii'), edata)
             self.binary_debug.write('  MOMENT1=%s\n' % str(out))
             (sid, g, m, n1, n2) = out
             load = MOMENT1(None, out)
             self.add_load(load)
             n += 20
-        self.card_count['MOMENT1'] = nEntries
+        self.card_count['MOMENT1'] = nentries
         return n
 
     def _readMOMENT2(self, data, n):
@@ -241,17 +241,17 @@ class GEOM3(object):
         """
         #print("reading MOMENT2")
         ntotal = 28  # 7*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 28]
-            out = unpack(b(self._endian + 'iif4i'), eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 28]
+            out = unpack(b(self._endian + 'iif4i'), edata)
             self.binary_debug.write('  MOMENT2=%s\n' % str(out))
             (sid, g, m, n1, n2, n3, n4) = out
 
             load = MOMENT2(None, out)
             self.add_load(load)
             n += 28
-        self.card_count['MOMENT2'] = nEntries
+        self.card_count['MOMENT2'] = nentries
         return n
 
     def _readPLOAD(self, data, n):
@@ -264,17 +264,17 @@ class GEOM3(object):
         #print("reading PLOAD1")
         ntotal = 32  # 8*4
         s = Struct(b(self._endian + '4i4f'))
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 32]
-            out = s.unpack(eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 32]
+            out = s.unpack(edata)
             self.binary_debug.write('  PLOAD1=%s\n' % str(out))
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
             #print("PLOAD1 = ", out)
             load = PLOAD1(None, out)
             self.add_load(load)
             n += 32
-        self.card_count['PLOAD1'] = nEntries
+        self.card_count['PLOAD1'] = nentries
         return n
 
     def _readPLOAD2(self, data, n):
@@ -283,16 +283,16 @@ class GEOM3(object):
         """
         #print("reading PLOAD2")
         ntotal = 12  # 3*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 12]
-            out = unpack('ifi', eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 12]
+            out = unpack('ifi', edata)
             self.binary_debug.write('  PLOAD2=%s\n' % str(out))
             (sid, p, eid) = out
             load = PLOAD2(None, out)
             self.add_load(load)
             n += 12
-        self.card_count['PLOAD2'] = nEntries
+        self.card_count['PLOAD2'] = nentries
         return n
 
     def _readPLOAD3(self, data, n):
@@ -301,16 +301,16 @@ class GEOM3(object):
         """
         #print("reading PLOAD3")
         ntotal = 20  # 5*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 20]
-            out = unpack('if3i', eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 20]
+            out = unpack('if3i', edata)
             self.binary_debug.write('  PLOAD3=%s\n' % str(out))
             (sid, p, eid, n1, n2) = out
             load = PLOAD3(None, out)  # undefined
             self.add_load(load)
             n += 20
-        self.card_count['PLOAD3'] = nEntries
+        self.card_count['PLOAD3'] = nentries
         return n
 
     def _readPLOAD4(self, data, n):  ## inconsistent with DMAP
@@ -319,11 +319,11 @@ class GEOM3(object):
         """
         #print("reading PLOAD4")
         ntotal = 48  # 13*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 48]
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 48]
                          #iiffffiiifffi   ssssssssssssssss
-            out = unpack('2i4f3i3f', eData)
+            out = unpack('2i4f3i3f', edata)
             self.binary_debug.write('  PLOAD4=%s\n' % str(out))
             (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
             #s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8
@@ -339,7 +339,7 @@ class GEOM3(object):
                                  cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
             self.add_load(load)
             n += 48
-        self.card_count['PLOAD4'] = nEntries
+        self.card_count['PLOAD4'] = nentries
         return n
 
 # PLOADX - obsolete
@@ -355,16 +355,16 @@ class GEOM3(object):
         """
         #print("reading QBDY1")
         ntotal = 12  # 3*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 12]
-            out = unpack('ifi', eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 12]
+            out = unpack('ifi', edata)
             self.binary_debug.write('  QBDY1=%s\n' % str(out))
             (sid, q0, eid) = out
             load = QBDY1(None, out)
             self.add_thermal_load(load)
             n += 12
-        self.card_count['QBDY1'] = nEntries
+        self.card_count['QBDY1'] = nentries
         return n
 
     def _readQBDY2(self, data, n):
@@ -373,16 +373,16 @@ class GEOM3(object):
         """
         #print("reading QBDY2")
         ntotal = 40  # 10*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 40]
-            out = unpack('ii8f', eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 40]
+            out = unpack('ii8f', edata)
             self.binary_debug.write('  QBDY2=%s\n' % str(out))
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
             load = QBDY2(None, out)
             self.add_thermal_load(load)
             n += 40
-        self.card_count['QBDY2'] = nEntries
+        self.card_count['QBDY2'] = nentries
         return n
 
     def _readQBDY3(self, data, n):
@@ -391,15 +391,15 @@ class GEOM3(object):
         """
         #print("reading QBDY3")
         ntotal = 16  # 4*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 16]
-            out = unpack('ifii', eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 16]
+            out = unpack('ifii', edata)
             (sid, q0, cntrlnd, eid) = out
             load = QBDY3(None, out)
             self.add_thermal_load(load)
             n += 16
-        self.card_count['QBDY3'] = nEntries
+        self.card_count['QBDY3'] = nentries
         return n
 
     def _readTEMP(self, data, n):
@@ -409,10 +409,10 @@ class GEOM3(object):
         """
         #print("reading TEMP")
         ntotal = 12  # 3*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 12]
-            out = unpack('iif', eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 12]
+            out = unpack('iif', edata)
             self.binary_debug.write('  TEMP=%s\n' % str(out))
             (sid, g, T) = out
             if g < 10000000:
@@ -421,7 +421,7 @@ class GEOM3(object):
             else:
                 self.log.debug('TEMP = %s' % (out))
             n += 12
-        self.card_count['TEMP'] = nEntries
+        self.card_count['TEMP'] = nentries
         return n
 
     def _readTEMPD(self, data, n):
@@ -431,16 +431,16 @@ class GEOM3(object):
         """
         #print("reading TEMPD")
         ntotal = 8  # 2*4
-        nEntries = (len(data) - n) // ntotal
-        for i in range(nEntries):
-            eData = data[n:n + 8]
-            out = unpack('if', eData)
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + 8]
+            out = unpack('if', edata)
             self.binary_debug.write('  TEMPD=%s\n' % str(out))
             (sid, T) = out
             load = TEMPD(None, 0, out)
             #self.add_thermal_load(load)
             n += 8
-        self.card_count['TEMPD'] = nEntries
+        self.card_count['TEMPD'] = nentries
         return n
 
 # QHBDY

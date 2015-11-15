@@ -10,7 +10,7 @@ class DYNAMICS(object):
     def __init__(self):
         self.card_count = {}
         self._dynamics_map = {
-            (5307,53,379) : ['ACSRCE', self._read_fake], # 1
+            (5307, 53, 379) : ['ACSRCE', self._read_fake], # 1
             (27, 17, 182): ['DAREA', self._read_darea],  # 2
             (37, 18, 183): ['DELAY', self._read_delay],  # 3
             (57, 5, 123): ['DLOAD', self._read_dload],  # 4
@@ -68,8 +68,8 @@ class DYNAMICS(object):
         nentries = (len(data) - n) // ntotal
         self._increase_card_count('DAREA', nentries)
         for i in range(nentries):
-            eData = data[n:n+ntotal]
-            out = unpack('iiff', eData)
+            edata = data[n:n+ntotal]
+            out = unpack('iiff', edata)
             #(sid,p,c,a) = out
             darea = DAREA(data=out)
             self.add_DAREA(darea)

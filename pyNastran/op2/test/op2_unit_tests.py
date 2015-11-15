@@ -55,7 +55,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         #os.remove(debug_file)
 
@@ -64,7 +64,7 @@ class TestOP2(Tester):
         write_f06 = True
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -84,7 +84,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -104,7 +104,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -124,7 +124,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -144,7 +144,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -158,7 +158,7 @@ class TestOP2(Tester):
         op2file = os.path.join(folder, op2_filename)
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True)
+                debug=debug, stop_on_failure=True, quiet=True)
 
         make_geom = False
         write_bdf = False

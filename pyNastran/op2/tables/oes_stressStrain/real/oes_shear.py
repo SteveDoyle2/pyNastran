@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from six.moves import zip, range
-from numpy import zeros, searchsorted, array_equal
+from numpy import zeros, searchsorted, array_equal, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import _eigenvalue_header, get_key0

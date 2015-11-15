@@ -1,8 +1,11 @@
 """
 This file defines the OUG Table, which contains:
  * Real/Complex SPC Forces
+   - SPCFORCE = ALL
  * Real/Complex MPC Forces
+   - MPCFORCE = ALL
  * Real Temperature Gradient & Flux
+   - FLUX = ALL
 """
 from struct import unpack
 
