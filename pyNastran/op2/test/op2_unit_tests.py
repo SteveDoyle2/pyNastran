@@ -165,7 +165,7 @@ class TestOP2(Tester):
         write_f06 = True
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True)
+                debug=debug, stop_on_failure=True, quiet=True)
 
     def test_op2_good_sine_01(self):
         op2_filename = os.path.join('freq_sine', 'good_sine.op2')
@@ -254,7 +254,7 @@ class TestOP2(Tester):
                 msg += 'isubcase=%s != key0=%s keys=%s\n' % (isubcase, keys[0], keys)
         if msg:
             assert msg == '', msg
-        op2.write_f06('junk.f06')
+        op2.write_f06('junk.f06', quiet=True)
         os.remove('junk.f06')
 
 

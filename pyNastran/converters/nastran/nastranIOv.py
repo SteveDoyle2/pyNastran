@@ -2385,7 +2385,7 @@ class NastranIO(object):
         self.scalarBar.Modified()
         #self.show_caero_mesh()
 
-        print("tring to read...%s" % op2_filename)
+        print("trying to read...%s" % op2_filename)
         ext = os.path.splitext(op2_filename)[1].lower()
 
         if ext == '.op2':

@@ -979,7 +979,7 @@ class NastranIO(NastranIO_xref):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        print("tring to read...", op2_filename)
+        print("trying to read...", op2_filename)
         if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
             model = OP2(log=self.log, debug=True)
             model._results.saved = set([])
