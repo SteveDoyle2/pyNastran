@@ -7,15 +7,15 @@ from numpy import zeros, searchsorted, array_equal, allclose
 from itertools import cycle
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header, get_key0, write_float_13E
 
 
-class ForceObject(ScalarObject):
+class RealForceObject(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
         self.element_name = None
         self.nonlinear_factor = None
+        self.element = None
         self._times = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
 
@@ -33,15 +33,6 @@ class ForceObject(ScalarObject):
         raise NotImplementedError()
 
     def get_element_index(self, eids):
-        itot = searchsorted(eids, self.element)  #[0]
-        return itot
-
-    def eid_to_element_node_index(self, eids):
-        ind = searchsorted(eids, self.element)
-        return ind
-
-
-    def get_element_index(self, eids):
         # elements are always sorted; nodes are not
         itot = searchsorted(eids, self.element)  #[0]
         return itot
@@ -54,9 +45,9 @@ class ForceObject(ScalarObject):
         return ind
 
 
-class RealSpringDamperForceArray(ForceObject):
+class RealSpringDamperForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ForceObject.__init__(self, data_code, isubcase)
+        RealForceObject.__init__(self, data_code, isubcase)
 
         self.nelements = 0  # result specific
         if is_sort1:
@@ -236,9 +227,9 @@ class RealDamperForceArray(RealSpringDamperForceArray):
         return msg
 
 
-class RealRodForceArray(ForceObject):
+class RealRodForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ForceObject.__init__(self, data_code, isubcase)
+        RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
 
         if is_sort1:
@@ -815,12 +806,9 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
         f.write(''.join(msg))
         return page_num
 
-class RealViscForceArray(ScalarObject):  # 24-CVISC
+class RealViscForceArray(RealForceObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
+        RealForceObject.__init__(self, data_code, isubcase)
 
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
@@ -830,10 +818,6 @@ class RealViscForceArray(ScalarObject):  # 24-CVISC
             self.add = self.add_sort1
         else:
             raise NotImplementedError('SORT2')
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def get_headers(self):
         headers = ['axial', 'torsion']
@@ -912,6 +896,7 @@ class RealViscForceArray(ScalarObject):  # 24-CVISC
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         if is_sort1:
+            realviscforcearray
             msg = [
                 '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n'
                 '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n'
@@ -920,18 +905,6 @@ class RealViscForceArray(ScalarObject):  # 24-CVISC
         else:
             raise NotImplementedError('sort2')
         return msg
-
-    def get_element_index(self, eids):
-        # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
-        return itot
-
-    def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
-        #ind = ind.reshape(ind.size)
-        #ind.sort()
-        return ind
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg_temp = self.get_f06_header(is_mag_phase)
@@ -1016,11 +989,9 @@ class RealViscForceArray(ScalarObject):  # 24-CVISC
         return True
 
 
-class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
+class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        RealForceObject.__init__(self, data_code, isubcase)
 
         self.dt = dt
         self.nelements = 0
@@ -1031,10 +1002,6 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         else:
             assert dt is not None
             self.add = self.add_sort2
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def _get_msgs(self):
         raise NotImplementedError()
@@ -1141,18 +1108,6 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             raise NotImplementedError(self.element_name)
         return self.element_name, nnodes, msg
 
-    def get_element_index(self, eids):
-        # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
-        return itot
-
-    def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
-        #ind = ind.reshape(ind.size)
-        #ind.sort()
-        return ind
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
 
@@ -1204,11 +1159,9 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         return page_num - 1
 
 
-class RealPlateBilinearForceArray(ScalarObject):  # 144-CQUAD4
+class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        RealForceObject.__init__(self, data_code, isubcase)
 
         self.dt = dt
         self.nelements = 0
@@ -1219,10 +1172,6 @@ class RealPlateBilinearForceArray(ScalarObject):  # 144-CQUAD4
         else:
             assert dt is not None
             self.add = self.add_sort2
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def _get_msgs(self):
         raise NotImplementedError()
@@ -1407,18 +1356,6 @@ class RealPlateBilinearForceArray(ScalarObject):  # 144-CQUAD4
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
         return element_name, nnodes, msg
 
-    def get_element_index(self, eids):
-        # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
-        return itot
-
-    def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
-        #ind = ind.reshape(ind.size)
-        #ind.sort()
-        return ind
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
 
@@ -1469,126 +1406,6 @@ class RealPlateBilinearForceArray(ScalarObject):  # 144-CQUAD4
             page_num += 1
         return page_num - 1
 
-# class RealCBarForce(ScalarObject):  # 34-CBAR
-    # def __init__(self, data_code, is_sort1, isubcase, dt):
-        # self.element_type = None
-        # self.element_name = None
-        # ScalarObject.__init__(self, data_code, isubcase)
-        # self.bendingMomentA = {}
-        # self.bendingMomentB = {}
-        # self.shear = {}
-        # self.axial = {}
-        # self.torque = {}
-
-        # self.dt = dt
-        # if is_sort1:
-            # if dt is not None:
-                # self.add = self.add_sort1
-        # else:
-            # assert dt is not None
-            # self.add = self.add_sort2
-
-    # def get_stats(self):
-        # msg = ['  '] + self.get_data_code()
-        # if self.dt is not None:  # transient
-            # ntimes = len(self.torque)
-            # time0 = get_key0(self.torque)
-            # nelements = len(self.torque[time0])
-            # msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       # % (self.__class__.__name__, ntimes, nelements))
-        # else:
-            # nelements = len(self.torque)
-            # msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     # nelements))
-        # msg.append('  bendingMomentA, bendingMomentB, shear, axial, torque\n')
-        # return msg
-
-    # def add_new_transient(self, dt):
-        # self.dt = dt
-        # self.bendingMomentA[dt] = {}
-        # self.bendingMomentB[dt] = {}
-        # self.shear[dt] = {}
-        # self.axial[dt] = {}
-        # self.torque[dt] = {}
-
-    # def add(self, dt, data):
-        # [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-        # self.bendingMomentA[eid] = [bm1a, bm2a]
-        # self.bendingMomentB[eid] = [bm1b, bm2b]
-        # self.shear[eid] = [ts1, ts2]
-        # self.axial[eid] = af
-        # self.torque[eid] = trq
-
-    # def add_sort1(self, dt, data):
-        # [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-        # if dt not in self.axial:
-            # self.add_new_transient(dt)
-
-        # self.bendingMomentA[dt][eid] = [bm1a, bm2a]
-        # self.bendingMomentB[dt][eid] = [bm1b, bm2b]
-        # self.shear[dt][eid] = [ts1, ts2]
-        # self.axial[dt][eid] = af
-        # self.torque[dt][eid] = trq
-
-    # def add_sort2(self, eid, data):
-        # [dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
-        # if dt not in self.axial:
-            # self.add_new_transient(dt)
-
-        # self.bendingMomentA[dt][eid] = [bm1a, bm2a]
-        # self.bendingMomentB[dt][eid] = [bm1b, bm2b]
-        # self.shear[dt][eid] = [ts1, ts2]
-        # self.axial[dt][eid] = af
-        # self.torque[dt][eid] = trq
-
-
-    # def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        # if self.nonlinear_factor is not None:
-            # return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=is_sort1)
-
-        # words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
-                 # '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-                 # '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
-        # msg = []
-        # #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-        # f.write(''.join(words))
-        # for eid in sorted(self.bendingMomentA):
-            # bm1a, bm2a = self.bendingMomentA[eid]
-            # bm1b, bm2b = self.bendingMomentB[eid]
-            # ts1, ts2 = self.shear[eid]
-            # af = self.axial[eid]
-            # trq = self.torque[eid]
-            # (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
-            # [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
-            # f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
-# #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
-
-            # f.write(page_stamp % page_num)
-        # return page_num
-
-    # def _write_f06_transient(self, header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=True):
-        # assert f is not None
-        # words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
-                 # '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-                 # '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
-
-        # for dt, bm in sorted(iteritems(self.bendingMomentA)):
-            # header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            # f.write(''.join(header + words))
-            # for eid in sorted(bm):
-                # bm1a, bm2a = self.bendingMomentA[dt][eid]
-                # bm1b, bm2b = self.bendingMomentB[dt][eid]
-                # ts1, ts2 = self.shear[dt][eid]
-                # af = self.axial[dt][eid]
-                # trq = self.torque[dt][eid]
-                # (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
-                # [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
-                # f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
-# #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
-
-            # f.write(page_stamp % page_num)
-            # page_num += 1
-        # return page_num - 1
 
 class RealCBarForceArray(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1934,7 +1751,7 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
         self.sv[dt][eid] = sv
 
 
-class RealCBar100ForceArray(ScalarObject):  # 100-CBAR
+class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
     """
     CBAR-34s are converted to CBAR-100s when you have PLOAD1s
     (distributed bar loads).  The number of stations by default is 2,
@@ -1945,10 +1762,7 @@ class RealCBar100ForceArray(ScalarObject):  # 100-CBAR
     CBAR-100s as well.
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
+        RealForceObject.__init__(self, data_code, isubcase)
 
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
@@ -1958,10 +1772,6 @@ class RealCBar100ForceArray(ScalarObject):  # 100-CBAR
             self.add = self.add_sort1
         else:
             raise NotImplementedError('SORT2')
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def get_headers(self):
         headers = [

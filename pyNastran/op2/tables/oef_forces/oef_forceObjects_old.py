@@ -1,9 +1,10 @@
 from numpy import array
 from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0, write_float_12E
+from pyNastran.f06.f06_formatting import writeFloats13E, get_key0
 from pyNastran.f06.f06_formatting import _eigenvalue_header
-from numpy import zeros, array_equal
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
+
 
 class RealRodForce(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -46,22 +47,22 @@ class RealRodForce(ScalarObject):
         msg.append(' axial_force, torque\n')
         return msg
 
-    def add(self, dt, eid,axial_force, torque):
-        self.axial_force[eid] =axial_force
+    def add(self, dt, eid, axial_force, torque):
+        self.axial_force[eid] = axial_force
         self.torque[eid] = torque
 
-    def add_sort1(self, dt, eid,axial_force, torque):
+    def add_sort1(self, dt, eid, axial_force, torque):
         if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
     def add_sort2(self, eid, data):
-        [dt,axial_force, torque] = data
+        [dt, axial_force, torque] = data
         if dt not in self.axial_force:
             self.add_new_transient(dt)
 
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
     def add_f06_data(self, data, transient):
@@ -836,22 +837,142 @@ class RealViscForce(ScalarObject):  # 24-CVISC
         self.torque[dt] = {}
 
     def add(self, dt, data):
-        [eid,axial_force, torque] = data
-        self.axial_force[eid] =axial_force
+        [eid, axial_force, torque] = data
+        self.axial_force[eid] = axial_force
         self.torque[eid] = torque
 
     def add_sort1(self, dt, data):
-        [eid,axial_force, torque] = data
+        [eid, axial_force, torque] = data
         if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
     def add_sort2(self, eid, data):
-        [dt,axial_force, torque] = data
+        [dt, axial_force, torque] = data
         if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
 
+class RealCBarForce(ScalarObject):  # 34-CBAR
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.bendingMomentA = {}
+        self.bendingMomentB = {}
+        self.shear = {}
+        self.axial = {}
+        self.torque = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = get_key0(self.torque)
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  bendingMomentA, bendingMomentB, shear, axial, torque\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.bendingMomentA[dt] = {}
+        self.bendingMomentB[dt] = {}
+        self.shear[dt] = {}
+        self.axial[dt] = {}
+        self.torque[dt] = {}
+
+    def add(self, dt, data):
+        [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+        self.bendingMomentA[eid] = [bm1a, bm2a]
+        self.bendingMomentB[eid] = [bm1b, bm2b]
+        self.shear[eid] = [ts1, ts2]
+        self.axial[eid] = af
+        self.torque[eid] = trq
+
+    def add_sort1(self, dt, data):
+        [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+        if dt not in self.axial:
+            self.add_new_transient(dt)
+
+        self.bendingMomentA[dt][eid] = [bm1a, bm2a]
+        self.bendingMomentB[dt][eid] = [bm1b, bm2b]
+        self.shear[dt][eid] = [ts1, ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
+
+    def add_sort2(self, eid, data):
+        [dt, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = data
+        if dt not in self.axial:
+            self.add_new_transient(dt)
+
+        self.bendingMomentA[dt][eid] = [bm1a, bm2a]
+        self.bendingMomentB[dt][eid] = [bm1b, bm2b]
+        self.shear[dt][eid] = [ts1, ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
+
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=is_sort1)
+
+        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+        msg = []
+        #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+        f.write(''.join(words))
+        for eid in sorted(self.bendingMomentA):
+            bm1a, bm2a = self.bendingMomentA[eid]
+            bm1b, bm2b = self.bendingMomentB[eid]
+            ts1, ts2 = self.shear[eid]
+            af = self.axial[eid]
+            trq = self.torque[eid]
+            (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+            [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
+            f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+            #1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
+
+            f.write(page_stamp % page_num)
+        return page_num
+
+    def _write_f06_transient(self, header, page_stamp, page_num, f, is_mag_phase=False, is_sort1=True):
+        assert f is not None
+        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+
+        for dt, bm in sorted(iteritems(self.bendingMomentA)):
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            f.write(''.join(header + words))
+            for eid in sorted(bm):
+                bm1a, bm2a = self.bendingMomentA[dt][eid]
+                bm1b, bm2b = self.bendingMomentB[dt][eid]
+                ts1, ts2 = self.shear[dt][eid]
+                af = self.axial[dt][eid]
+                trq = self.torque[dt][eid]
+                (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+                [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
+                f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+                #1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
+
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
