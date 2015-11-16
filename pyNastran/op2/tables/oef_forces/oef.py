@@ -20,7 +20,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # vectorized
-    RealRodForceArray,
+    RealRodForceArray, RealViscForceArray,
 
     # vectorized
     RealCBarForceArray, RealCBar100ForceArray,
@@ -31,7 +31,6 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
 
     # not vectorized
     RealCBeamForce, RealCShearForce,                  # TODO: vectorize 2
-    RealViscForce,  # TODO: vectorize 1
     RealConeAxForce,                                  # TODO: vectorize 1
     RealCGapForce, RealBendForce,                     # TODO: vectorize 2
     RealPentaPressureForce,                           # TODO: vectorize 1
@@ -55,7 +54,6 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects_old import ComplexCBeamForce
 
 ComplexPlateForceArray = None
-RealViscForceArray = None
 
 class OEF(OP2Common):
     """Defines OEFx table reading for element forces/heat flux"""
@@ -373,7 +371,6 @@ class OEF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-
             slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 9:  # real - 2D
@@ -502,14 +499,13 @@ class OEF(OP2Common):
                     n += 8
                     out = s1.unpack(edata)
                     (eid_device, parent) = out
-                    #eid = self._check_id(eid_device, flag, 'FORCE', out)
                     eid = self._check_id(eid_device, flag, 'FORCE', out)
                     data_in = [eid, parent]
                     grad_fluxes = []
                     for i in range(nnodes):
                         edata = data[0:28]
                         n += 28
-                        #print "i=%s len(edata)=%s" %(i,len(edata))
+                        #print "i=%s len(edata)=%s" %(i, len(edata))
                         out = s2.unpack(edata)
                         grad_fluxes.append(out)
                     data_in.append(grad_fluxes)
@@ -662,8 +658,6 @@ class OEF(OP2Common):
             #1-CROD
             #3-CTUBE
             #10-CONROD
-            #obj_complex = ComplexRodForce
-
             obj_vector_real = RealRodForceArray
             obj_vector_complex = ComplexRodForceArray
             if self.element_type == 1: # CROD
@@ -694,11 +688,11 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                    #self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
-                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+                if self.is_debug_file:
+                    self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
+                    self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
@@ -749,11 +743,11 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                    #self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
-                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+                if self.is_debug_file:
+                    self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
+                    self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
@@ -902,17 +896,16 @@ class OEF(OP2Common):
                         if i == 0:  # isNewElement:
                             data_in = [eid, nid, sd, bm1, bm2,
                                        ts1, ts2, af, ttrq, wtrq]
-                            #print "%s cNew   " % (self.get_element_type(self.element_type)), data_in
+                            #print "%s c_new   " % (self.get_element_type(self.element_type)), data_in
                             obj.add_new_element(dt, data_in)
                         elif sd > 0.:
                             data_in = [eid, nid, sd, bm1, bm2,
                                        ts1, ts2, af, ttrq, wtrq]
-                            #print "%s cOld   " % (self.get_element_type(self.element_type)), data_in
+                            #print "%s c_old   " % (self.get_element_type(self.element_type)), data_in
                             obj.add(dt, data_in)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
-            #print self.beamForces
 
         elif self.element_type in [11, 12, 13, 14,   # springs
                                    20, 21, 22, 23]:  # dampers
@@ -1010,18 +1003,17 @@ class OEF(OP2Common):
                             self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                         (eid_device, force) = out
                         eid = self._check_id(eid_device, flag, 'FORCE', out)
-                        #print "%s" % (self.get_element_type(self.element_type)), data_in
                         obj.add(dt, eid, force)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
                 if self.read_mode == 1:
                     return ndata
                 self.create_transient_object(slot, obj_complex)
-                obj = self.obj
                 s = Struct(b(self._endian + 'i2f'))
                 ntotal = 12  # 3*4
-
                 nelements = ndata // ntotal
+                obj = self.obj
+
                 for i in range(nelements):
                     edata = data[n:n + 12]
                     out = s.unpack(edata)
@@ -1035,8 +1027,6 @@ class OEF(OP2Common):
                         force = complex(force_real, force_imag)
 
                     data_in = [eid, force]
-                    #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    #eid = obj.add_new_eid(out)
                     obj.add(dt, data_in)
                     n += ntotal
             else:
@@ -1056,27 +1046,23 @@ class OEF(OP2Common):
             if self.format_code == 1 and self.num_wide == 3: # real
                 ntotal = 12 # 3 * 4
                 nelements = ndata // ntotal
-                if self.read_mode == 1:
-                    return ndata
-                self.create_transient_object(self.cvisc_force, RealViscForce)
 
-                #auto_return, is_vectorized = self._create_oes_object4(
-                    #nelements, result_name, slot, obj_real)
-                #if auto_return:
-                    #return nelements * self.num_wide * 4
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4
 
                 obj = self.obj
-                is_vectorized = False
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     ielement2 = obj.itotal + nelements
                     itotal2 = ielement2
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 2)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 3)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 2)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 3)
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
@@ -1096,7 +1082,6 @@ class OEF(OP2Common):
                         (eid_device, axial, torque) = out
                         eid = self._check_id(eid_device, flag, 'FORCE', out)
                         data_in = [eid, axial, torque]
-                        #print "%s" % (self.get_element_type(self.element_type)), data_in
                         obj.add(dt, data_in)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 5: # complex
@@ -1122,10 +1107,7 @@ class OEF(OP2Common):
                         axial = complex(axial_real, axial_imag)
                         torque = complex(torque_real, torque_imag)
 
-                    data_in = [eid, axial, torque]
-                    #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    #eid = obj.add_new_eid(out)
-                    obj.add(dt, data_in)
+                    obj.add(dt, eid, axial, torque)
                     n += ntotal
             else:
                 msg = self.code_information()

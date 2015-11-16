@@ -14,6 +14,9 @@ class RealGridPointForcesArray(ScalarObject):
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
 
+        # do the element_names/node_element vectors change with the time step
+        self.is_unique = False
+
         #self.ielement = 0
         #self.nelements = 0  # result specific
         #self.nnodes = None
@@ -43,8 +46,13 @@ class RealGridPointForcesArray(ScalarObject):
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-        if self.ntotal != max(self._ntotals) or self.ntotal != min(self._ntotals):
-            raise ValueError('RealGridPointForcesArray: ntotal=%s _ntotals=%s' % (self.ntotal, self._ntotals))
+        #if self.ntotal != max(self._ntotals) or self.ntotal != min(self._ntotals):
+            #raise ValueError('RealGridPointForcesArray: ntotal=%s _ntotals=%s' % (self.ntotal, self._ntotals))
+
+        self.is_unique = False
+        if self.ntotal != min(self._ntotals):
+            self.ntotal = max(self._ntotals)
+            self.is_unique = True
         #self.names = []
 
         #self.nnodes = nnodes_per_element
@@ -63,8 +71,14 @@ class RealGridPointForcesArray(ScalarObject):
             dtype = 'int32'
 
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.node_element = zeros((self.ntotal, 2), dtype='int32')
-        self.element_names = empty(self.ntotal, dtype='S8')
+
+        if self.is_unique:
+            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
+            self.element_names = empty(self.ntimes, self.ntotal, dtype='S8')
+        else:
+            self.node_element = zeros((self.ntotal, 2), dtype='int32')
+            self.element_names = empty(self.ntotal, dtype='S8')
+
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
@@ -132,6 +146,7 @@ class RealGridPointForcesArray(ScalarObject):
                 '<%s>\n' % self.__class__.__name__,
                 '  ntimes: %i\n' % self.ntimes,
                 '  ntotal: %i\n' % self.ntotal,
+                '  _ntotals: %s\n' % self._ntotals,
             ]
 
         #nelements = self.nelements
@@ -144,10 +159,14 @@ class RealGridPointForcesArray(ScalarObject):
         if self.nonlinear_factor is not None:  # transient
             msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, ntotal)
+            if self.ntotal != min(self._ntotals):
+                msgi += '  _ntotals=%s\n' % (self._ntotals)
             ntimes_word = 'ntimes'
         else:
             msgi = '  type=%s nelements=%i total=%i\n' % (
                 self.__class__.__name__, nelements, ntotal)
+            if self.ntotal != min(self._ntotals):
+                msgi += '  _ntotals=%s\n' % (self._ntotals)
             ntimes_word = 1
         msg.append(msgi)
         headers = self.get_headers()
@@ -236,6 +255,9 @@ class ComplexGridPointForcesArray(ScalarObject):
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
 
+        # do the element_names/node_element vectors change with the time step
+        self.is_unique = False
+
         #self.ielement = 0
         #self.nelements = 0  # result specific
         #self.nnodes = None
@@ -264,7 +286,11 @@ class ComplexGridPointForcesArray(ScalarObject):
         #print("self.ntotal = %s" % self.ntotal)
         #print("self.itotal = %s" % self.itotal)
         #print("self._ntotals = %s" % self._ntotals)
-        self.ntotal = max(self._ntotals)
+
+        self.is_unique = False
+        if self.ntotal != min(self._ntotals):
+            self.ntotal = max(self._ntotals)
+            self.is_unique = True
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
@@ -287,8 +313,13 @@ class ComplexGridPointForcesArray(ScalarObject):
             dtype = 'int32'
 
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.node_element = zeros((self.ntotal, 2), dtype='int32')
-        self.element_names = empty(self.ntotal, dtype='S8')
+
+        if self.is_unique:
+            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
+            self.element_names = empty(self.ntimes, self.ntotal, dtype='S8')
+        else:
+            self.node_element = zeros((self.ntotal, 2), dtype='int32')
+            self.element_names = empty(self.ntotal, dtype='S8')
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='complex64')
 

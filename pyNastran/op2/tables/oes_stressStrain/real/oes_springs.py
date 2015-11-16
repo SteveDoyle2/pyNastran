@@ -197,19 +197,19 @@ class RealSpringStrainArray(RealSpringArray, StrainObject):
         return headers
 
     def get_f06_header(self, is_mag_phase=True):
-        if self.element_type == 1:  # CELAS1
-            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )\n']
-        #elif self.element_type == 12:  # CELAS2
-            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n']
-        #elif self.element_type == 13:  # CELAS3
-            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
-        #elif self.element_type == 14:  # CELAS4
-            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
+        if self.element_type == 11:  # CELAS1
+            msg = ['                               S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )\n']
+        elif self.element_type == 12:  # CELAS2
+            msg = ['                               S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n']
+        elif self.element_type == 13:  # CELAS3
+            msg = ['                               S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
+        elif self.element_type == 14:  # CELAS4
+            msg = ['                               S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
         else:
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
 
         msg += [
-            '      ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS\n'
+            '      ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN\n'
             '        ID.                              ID.                              ID.                              ID.\n'
         ]
         return msg

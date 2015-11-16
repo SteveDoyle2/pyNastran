@@ -715,3 +715,8 @@ class OP2_F06_Common(object):
             for msgi in msg:
                 print(msgi.rstrip())
                 assert isinstance(msgi, string_types), msgi
+        except UnicodeDecodeError:
+            for msgi in msg:
+                print(msgi.rstrip())
+                assert isinstance(msgi, string_types), msgi
+            raise

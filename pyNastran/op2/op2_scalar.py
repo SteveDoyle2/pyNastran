@@ -103,10 +103,12 @@ RESULT_TABLES = [
     b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
     b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
     b'OESNL1X', b'OESRT',
+    #----------------------
     # strain
     b'OSTR1X', b'OSTR1C',
-    # forces
 
+    #----------------------
+    # forces
     # OEF1  - Element forces (linear elements only)
     # HOEF1 - Element heat flux
     # OEF1X - Element forces with intermediate (CBAR and CBEAM) station forces
@@ -114,6 +116,12 @@ RESULT_TABLES = [
     # DOEF1 - Scaled Response Spectra
     b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
 
+
+    # Table of Max values?
+    # Table of RMS values?
+    b'OEF1MX', b'OUGV1MX',
+
+    #----------------------
     # spc forces - gset - sort 1
     b'OQG1', b'OQGV1',
     # mpc forces - gset - sort 1
@@ -121,6 +129,7 @@ RESULT_TABLES = [
     # ??? forces
     b'OQP1',
 
+    #----------------------
     # displacement/velocity/acceleration/eigenvector/temperature
     # OUPV1 - Scaled Response Spectra
     b'OUG1', b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
@@ -133,6 +142,7 @@ RESULT_TABLES = [
     # TOUGV1 - Temperature OUGV1
     b'ROUGV1', b'TOUGV1', b'RSOUGV1', b'RESOES1', b'RESEF1',
 
+    #----------------------
     # applied loads
     # OPG1 - Applied static loads
     b'OPNL1', # nonlinear applied loads - sort 1
@@ -142,6 +152,7 @@ RESULT_TABLES = [
     # grid point stresses
     b'OGS1', # grid point stresses/strains - sort 1
 
+    #----------------------
     # other
     b'OPNL1', b'OFMPF2M',
     b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',

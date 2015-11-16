@@ -785,7 +785,7 @@ class OES(OP2Common):
                         obj.element[itotal:itotal2] = eids
 
                     #(eid_device, stress)
-                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1]
+                    obj.data[obj.itime, itotal:itotal2, 0] = floats[:, 1]
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:

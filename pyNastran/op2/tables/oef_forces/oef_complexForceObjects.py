@@ -503,7 +503,7 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
 class ComplexViscForce(ScalarObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        self.axialForce = {}
+        self.axial_force = {}
         self.torque = {}
 
         self.dt = dt
@@ -526,31 +526,28 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
             nelements = len(self.torque)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  axialForce, torque\n')
+        msg.append(' axial_force, torque\n')
         return msg
 
     def add_new_transient(self, dt):
         self.dt = dt
-        self.axialForce[dt] = {}
+        self.axial_force[dt] = {}
         self.torque[dt] = {}
 
-    def add(self, dt, data):
-        [eid, axialForce, torque] = data
-        self.axialForce[eid] = axialForce
+    def add(self, dt, eid,axial_force, torque):
+        self.axial_force[eid] =axial_force
         self.torque[eid] = torque
 
-    def add_sort1(self, dt, data):
-        [eid, axialForce, torque] = data
-        if dt not in self.axialForce:
+    def add_sort1(self, dt, eid,axial_force, torque):
+        if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axialForce[dt][eid] = axialForce
+        self.axial_force[dt][eid] =axial_force
         self.torque[dt][eid] = torque
 
-    def add_sort2(self, eid, data):
-        [dt, axialForce, torque] = data
-        if dt not in self.axialForce:
+    def add_sort2(self, eid, dt,axial_force, torque):
+        if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axialForce[dt][eid] = axialForce
+        self.axial_force[dt][eid] =axial_force
         self.torque[dt][eid] = torque
 
 

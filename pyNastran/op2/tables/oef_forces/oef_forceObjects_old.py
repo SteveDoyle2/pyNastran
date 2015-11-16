@@ -11,7 +11,7 @@ class RealRodForce(ScalarObject):
         self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
 
-        self.axialForce = {}
+        self.axial_force = {}
         self.torque = {}
 
         self.dt = dt
@@ -24,7 +24,7 @@ class RealRodForce(ScalarObject):
 
     def add_new_transient(self, dt):
         self.dt = dt
-        self.axialForce[dt] = {}
+        self.axial_force[dt] = {}
         self.torque[dt] = {}
 
     def get_stats(self):
@@ -43,59 +43,59 @@ class RealRodForce(ScalarObject):
             nelements = len(self.torque)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  axialForce, torque\n')
+        msg.append(' axial_force, torque\n')
         return msg
 
-    def add(self, dt, eid, axialForce, torque):
-        self.axialForce[eid] = axialForce
+    def add(self, dt, eid,axial_force, torque):
+        self.axial_force[eid] =axial_force
         self.torque[eid] = torque
 
-    def add_sort1(self, dt, eid, axialForce, torque):
-        if dt not in self.axialForce:
+    def add_sort1(self, dt, eid,axial_force, torque):
+        if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axialForce[dt][eid] = axialForce
+        self.axial_force[dt][eid] =axial_force
         self.torque[dt][eid] = torque
 
     def add_sort2(self, eid, data):
-        [dt, axialForce, torque] = data
-        if dt not in self.axialForce:
+        [dt,axial_force, torque] = data
+        if dt not in self.axial_force:
             self.add_new_transient(dt)
 
-        self.axialForce[dt][eid] = axialForce
+        self.axial_force[dt][eid] =axial_force
         self.torque[dt][eid] = torque
 
     def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
                 (eid, axial, torque) = line
-                self.axialForce[eid] = axial
+                self.axial_force[eid] = axial
                 self.torque[eid] = torque
             return
 
         (dtName, dt) = transient
         self.dt = dt
         self.data_code['name'] = dtName
-        #if dt not in self.axialForce:
+        #if dt not in self.axial_force:
             #self.update_dt(self.data_code, dt)
 
         for line in data:
             (eid, axial, torsion) = line
-            self.axialForce[dt][eid] = axial
+            self.axial_force[dt][eid] = axial
             self.torque[dt][eid] = torsion
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
                              is_mag_phase=False, is_sort1=True):
         msg = []
         itime = 0
-        ntimes = len(self.axialForce)
-        for dt, axials in sorted(iteritems(self.axialForce)):
+        ntimes = len(self.axial_force)
+        for dt, axials in sorted(iteritems(self.axial_force)):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             #dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
             #header[2] = dtLine
             msg += header
             out = []
             for eid in sorted(axials):
-                axial = self.axialForce[dt][eid]
+                axial = self.axial_force[dt][eid]
                 torsion = self.torque[dt][eid]
                 out.append([eid, axial, torsion])
 
@@ -124,8 +124,8 @@ class RealRodForce(ScalarObject):
 
     def _write_f06(self, msg, page_stamp, page_num, f):
         out = []
-        for eid in sorted(self.axialForce):
-            axial = self.axialForce[eid]
+        for eid in sorted(self.axial_force):
+            axial = self.axial_force[eid]
             torsion = self.torque[eid]
             (vals2, is_all_zeros) = writeFloats13E([axial, torsion])
             (axial, torsion) = vals2
@@ -797,4 +797,61 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
+
+
+class RealViscForce(ScalarObject):  # 24-CVISC
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.axial_force = {}
+        self.torque = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = get_key0(self.torque)
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append(' axial_force, torque\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.axial_force[dt] = {}
+        self.torque[dt] = {}
+
+    def add(self, dt, data):
+        [eid,axial_force, torque] = data
+        self.axial_force[eid] =axial_force
+        self.torque[eid] = torque
+
+    def add_sort1(self, dt, data):
+        [eid,axial_force, torque] = data
+        if dt not in self.axial_force:
+            self.add_new_transient(dt)
+        self.axial_force[dt][eid] =axial_force
+        self.torque[dt][eid] = torque
+
+    def add_sort2(self, eid, data):
+        [dt,axial_force, torque] = data
+        if dt not in self.axial_force:
+            self.add_new_transient(dt)
+        self.axial_force[dt][eid] =axial_force
+        self.torque[dt][eid] = torque
+
 
