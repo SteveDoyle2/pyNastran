@@ -303,3 +303,122 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         self.axial[dt][eid] = {sd: af}
         self.totalTorque[dt][eid] = {sd: ttrq}
         self.warpingTorque[dt][eid] = {sd: wtrq}
+
+class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.force41 = {}
+        self.force14 = {}
+        self.force21 = {}
+        self.force12 = {}
+        self.force32 = {}
+        self.force23 = {}
+        self.force43 = {}
+        self.force34 = {}
+        self.kickForce1 = {}
+        self.kickForce2 = {}
+        self.kickForce3 = {}
+        self.kickForce4 = {}
+        self.shear12 = {}
+        self.shear23 = {}
+        self.shear34 = {}
+        self.shear41 = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.shear12)
+            time0 = get_key0(self.shear12)
+            nelements = len(self.shear12[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.shear12)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force41, force14, force21, force12, force32, force23, '
+                   '  force 43, force34, kickForce1, kickForce2, kickForce3, '
+                   '  kickForce4, shear12, shear23, shear34, shear41\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.force41[dt] = {}
+        self.force14[dt] = {}
+        self.force21[dt] = {}
+        self.force12[dt] = {}
+        self.force32[dt] = {}
+        self.force23[dt] = {}
+        self.force43[dt] = {}
+        self.force34[dt] = {}
+        self.kickForce1[dt] = {}
+        self.kickForce2[dt] = {}
+        self.kickForce3[dt] = {}
+        self.kickForce4[dt] = {}
+        self.shear12[dt] = {}
+        self.shear23[dt] = {}
+        self.shear34[dt] = {}
+        self.shear41[dt] = {}
+
+    def add(self, dt, data):
+        [eid, f41, f21, f12, f32, f23, f43, f34, f14,
+         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
+        #self.eType[eid] = eType
+        self.force41[eid] = f41
+        self.force14[eid] = f14
+        self.force21[eid] = f21
+        self.force12[eid] = f12
+        self.force32[eid] = f32
+        self.force23[eid] = f23
+        self.force43[eid] = f43
+        self.force34[eid] = f34
+        self.kickForce1[eid] = kf1
+        self.kickForce2[eid] = kf2
+        self.kickForce3[eid] = kf3
+        self.kickForce4[eid] = kf4
+        self.shear12[eid] = s12
+        self.shear23[eid] = s23
+        self.shear34[eid] = s34
+        self.shear41[eid] = s41
+
+    def add_sort1(self, dt, data):
+        [eid, f41, f21, f12, f32, f23, f43, f34, f14,
+         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
+        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+
+    def add_sort2(self, eid, data):
+        [dt, f41, f21, f12, f32, f23, f43, f34, f14,
+         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
+        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+
+    def _fillObject(self, dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                    kf1, s12, kf2, s23, kf3, s34, kf4, s41):
+        if dt not in self.force41:
+            self.add_new_transient(dt)
+        self.force41[dt][eid] = f41
+        self.force14[dt][eid] = f14
+        self.force21[dt][eid] = f21
+        self.force12[dt][eid] = f12
+        self.force32[dt][eid] = f32
+        self.force23[dt][eid] = f23
+        self.force43[dt][eid] = f43
+        self.force34[dt][eid] = f34
+        self.kickForce1[dt][eid] = kf1
+        self.kickForce2[dt][eid] = kf2
+        self.kickForce3[dt][eid] = kf3
+        self.kickForce4[dt][eid] = kf4
+        self.shear12[dt][eid] = s12
+        self.shear23[dt][eid] = s23
+        self.shear34[dt][eid] = s34
+        self.shear41[dt][eid] = s41
+
+

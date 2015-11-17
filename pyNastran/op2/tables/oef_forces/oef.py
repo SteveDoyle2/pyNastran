@@ -30,22 +30,23 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealSpringForceArray, RealDamperForceArray,
 
     # not vectorized
-    RealCBeamForce, RealCShearForce,                  # TODO: vectorize 2
-    RealConeAxForce,                                  # TODO: vectorize 1
-    RealCGapForce, RealBendForce,                     # TODO: vectorize 2
-    RealPentaPressureForce,                           # TODO: vectorize 1
-    RealForce_VU_2D, RealForce_VU)                    # TODO: vectorize 2
+    RealCBeamForce, RealCShearForce,      # TODO: vectorize 2
+    RealConeAxForce,                      # TODO: vectorize 1
+    RealCGapForce, RealBendForce,         # TODO: vectorize 2
+    RealPentaPressureForce,               # TODO: vectorize 1
+    RealForce_VU_2D, RealForce_VU)        # TODO: vectorize 2
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexRodForceArray,
     ComplexCBarForceArray,
     ComplexCBushForceArray,
+    ComplexCShearForceArray,
+    ComplexSpringForceArray,
+    ComplexSpringForceArray as ComplexDamperForceArray,
 
     # not vectorized
-    # TODO: vectorize 10
-    ComplexCShearForce, ComplexSpringForce,
-    ComplexDamperForce, ComplexViscForce,
+    # TODO: vectorize 7
     ComplexPlateForce, ComplexPlate2Force,
-    ComplexBendForce,
+    ComplexBendForce, ComplexViscForce,
     ComplexPentaPressureForce,
     ComplexForce_VU_2D,
     ComplexForce_VU)
@@ -713,8 +714,6 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    ntotal = 12 # 3 * 4
-                    nelements = ndata // ntotal
                     auto_return, is_vectorized = self._create_oes_object4(
                         nelements, result_name, slot, obj_vector_real)
                     if auto_return:
@@ -922,43 +921,43 @@ class OEF(OP2Common):
                 result_name = 'celas1_force'
                 slot = self.celas1_force
                 obj_real = RealSpringForceArray
-                obj_complex = ComplexSpringForce
+                obj_complex = ComplexSpringForceArray
             elif self.element_type == 12:
                 result_name = 'celas2_force'
                 slot = self.celas2_force
                 obj_real = RealSpringForceArray
-                obj_complex = ComplexSpringForce
+                obj_complex = ComplexSpringForceArray
             elif self.element_type == 13:
                 result_name = 'celas3_force'
                 slot = self.celas3_force
                 obj_real = RealSpringForceArray
-                obj_complex = ComplexSpringForce
+                obj_complex = ComplexSpringForceArray
             elif self.element_type == 14:
                 result_name = 'celas4_force'
                 slot = self.celas4_force
                 obj_real = RealSpringForceArray
-                obj_complex = ComplexSpringForce
+                obj_complex = ComplexSpringForceArray
 
             elif self.element_type == 20:
                 result_name = 'cdamp1_force'
                 slot = self.cdamp1_force
                 obj_real = RealDamperForceArray
-                obj_complex = ComplexDamperForce
+                obj_complex = ComplexDamperForceArray
             elif self.element_type == 21:
                 result_name = 'cdamp2_force'
                 slot = self.cdamp2_force
                 obj_real = RealDamperForceArray
-                obj_complex = ComplexDamperForce
+                obj_complex = ComplexDamperForceArray
             elif self.element_type == 22:
                 result_name = 'cdamp3_force'
                 slot = self.cdamp3_force
                 obj_real = RealDamperForceArray
-                obj_complex = ComplexDamperForce
+                obj_complex = ComplexDamperForceArray
             elif self.element_type == 23:
                 result_name = 'cdamp4_force'
                 slot = self.cdamp4_force
                 obj_real = RealDamperForceArray
-                obj_complex = ComplexDamperForce
+                obj_complex = ComplexDamperForceArray
             else:
                 msg = self.element_type
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -1006,29 +1005,64 @@ class OEF(OP2Common):
                         obj.add(dt, eid, force)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
-                if self.read_mode == 1:
-                    return ndata
-                self.create_transient_object(slot, obj_complex)
-                s = Struct(b(self._endian + 'i2f'))
                 ntotal = 12  # 3*4
                 nelements = ndata // ntotal
+
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_complex)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
                 obj = self.obj
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                for i in range(nelements):
-                    edata = data[n:n + 12]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
-                    (eid_device, force_real, force_imag) = out
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 3)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 3)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #[spring_force]
                     if is_magnitude_phase:
-                        force = polar_to_real_imag(force_real, force_imag)
+                        mag = floats[:, 1]
+                        phase = floats[:, 2]
+                        rtheta = radians(phase)
+                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
                     else:
-                        force = complex(force_real, force_imag)
+                        real = floats[:, 1]
+                        imag = floats[:, 2]
+                        real_imag = real + 1.j * imag
+                    obj.data[obj.itime, itotal:itotal2, 0] = real_imag
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s = Struct(b(self._endian + 'i2f'))
+                    for i in range(nelements):
+                        edata = data[n:n + 12]
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
+                        (eid_device, force_real, force_imag) = out
+                        eid = self._check_id(eid_device, flag, 'FORCE', out)
+                        if is_magnitude_phase:
+                            force = polar_to_real_imag(force_real, force_imag)
+                        else:
+                            force = complex(force_real, force_imag)
 
-                    data_in = [eid, force]
-                    obj.add(dt, data_in)
-                    n += ntotal
+                        obj.add(dt, eid, force)
+                        n += ntotal
             else:
                 #msg = 'OEF: element_name=%s element_type=%s' % (self.element_name, self.element_type)
                 msg = self.code_information()
@@ -1604,10 +1638,15 @@ class OEF(OP2Common):
 
         elif self.element_type == 4:  # cshear
             # 4-CSHEAR
-            if self.read_mode == 1:
+            result_name = 'cshear_force'
+            if self._results.is_not_saved(result_name):
                 return ndata
-            self._results._found_result('cshear_force')
+            self._results._found_result(result_name)
+
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 17:  # real
+                if self.read_mode == 1:
+                    return ndata
                 self.create_transient_object(self.cshear_force, RealCShearForce)
                 s = Struct(b(self._endian + 'i16f'))
                 ntotal = 68  # 17*4
@@ -1632,64 +1671,108 @@ class OEF(OP2Common):
                     n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 33:  # imag
-                self.create_transient_object(self.cshear_force, ComplexCShearForce)
-                s = Struct(b(self._endian + 'i32f'))
                 ntotal = 132  # 33*4
                 nelements = ndata // ntotal
+
+                obj_vector_complex = ComplexCShearForceArray
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
                 obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+132]
-                    n += ntotal
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
-                    (eid_device,
-                     f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r,
-                     kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,
-                     f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
-                     kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 33)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 33)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+
+                    #[f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r
+                    # kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r
+                    # f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i
+                    # kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i]
                     if is_magnitude_phase:
-                        f41r = polar_to_real_imag(f41r, f41i)
-                        kf1 = polar_to_real_imag(kf1r, kf1i)
-                        f21r = polar_to_real_imag(f21r, f21i)
-                        kf2 = polar_to_real_imag(kf2r, kf2i)
-                        f12r = polar_to_real_imag(f12r, f12i)
-                        kf3 = polar_to_real_imag(kf3r, kf3i)
-                        f23r = polar_to_real_imag(f23r, f23i)
-                        kf4 = polar_to_real_imag(kf4r, kf4i)
-                        f32r = polar_to_real_imag(f32r, f32i)
-                        s12 = polar_to_real_imag(s12r, s12i)
-                        f43r = polar_to_real_imag(f43r, f43i)
-                        s23 = polar_to_real_imag(s23r, s23i)
-                        f34r = polar_to_real_imag(f34r, f34i)
-                        s34 = polar_to_real_imag(s34r, s34i)
-                        f14r = polar_to_real_imag(f14r, f14i)
-                        s41 = polar_to_real_imag(s41r, s41i)
+                        mag   = floats[:, [ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16]]
+                        phase = floats[:, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]]
+                        rtheta = radians(phase)
+                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
                     else:
-                        f41 = complex(f41r, f41i)
-                        kf1 = complex(kf1r, kf1i)
-                        f21 = complex(f21r, f21i)
-                        kf2 = complex(kf2r, kf2i)
-                        f12 = complex(f12r, f12i)
-                        kf3 = complex(kf3r, kf3i)
-                        f23 = complex(f23r, f23i)
-                        kf4 = complex(kf4r, kf4i)
-                        f32 = complex(f32r, f32i)
-                        s12 = complex(s12r, s12i)
-                        f43 = complex(f43r, f43i)
-                        s23 = complex(s23r, s23i)
-                        f34 = complex(f34r, f34i)
-                        s34 = complex(s34r, s34i)
-                        f14 = complex(f14r, f14i)
-                        s41 = complex(s41r, s41i)
+                        real = floats[:, [ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16]]
+                        imag = floats[:, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]]
+                        real_imag = real + 1.j * imag
+                    obj.data[obj.itime, itotal:itotal2, :] = real_imag
 
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
-                    data_in = [eid,
-                               f41, f21, f12, f32, f23, f43, f34, f14,
-                               kf1, s12, kf2, s23, kf3, s34, kf4, s41]
-                    #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    obj.add(dt, data_in)
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    #self.create_transient_object(self.cshear_force, ComplexCShearForce)
+                    s = Struct(b(self._endian + 'i32f'))
+
+                    for i in range(nelements):
+                        edata = data[n:n+132]
+                        n += ntotal
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
+                        (eid_device,
+                         f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, # 8
+                         kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r, # 16
+                         f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
+                         kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
+                        if is_magnitude_phase:
+                            f41r = polar_to_real_imag(f41r, f41i)
+                            kf1 = polar_to_real_imag(kf1r, kf1i)
+                            f21r = polar_to_real_imag(f21r, f21i)
+                            kf2 = polar_to_real_imag(kf2r, kf2i)
+                            f12r = polar_to_real_imag(f12r, f12i)
+                            kf3 = polar_to_real_imag(kf3r, kf3i)
+                            f23r = polar_to_real_imag(f23r, f23i)
+                            kf4 = polar_to_real_imag(kf4r, kf4i)
+                            f32r = polar_to_real_imag(f32r, f32i)
+                            s12 = polar_to_real_imag(s12r, s12i)
+                            f43r = polar_to_real_imag(f43r, f43i)
+                            s23 = polar_to_real_imag(s23r, s23i)
+                            f34r = polar_to_real_imag(f34r, f34i)
+                            s34 = polar_to_real_imag(s34r, s34i)
+                            f14r = polar_to_real_imag(f14r, f14i)
+                            s41 = polar_to_real_imag(s41r, s41i)
+                        else:
+                            f41 = complex(f41r, f41i)
+                            kf1 = complex(kf1r, kf1i)
+                            f21 = complex(f21r, f21i)
+                            kf2 = complex(kf2r, kf2i)
+                            f12 = complex(f12r, f12i)
+                            kf3 = complex(kf3r, kf3i)
+                            f23 = complex(f23r, f23i)
+                            kf4 = complex(kf4r, kf4i)
+                            f32 = complex(f32r, f32i)
+                            s12 = complex(s12r, s12i)
+                            f43 = complex(f43r, f43i)
+                            s23 = complex(s23r, s23i)
+                            f34 = complex(f34r, f34i)
+                            s34 = complex(s34r, s34i)
+                            f14 = complex(f14r, f14i)
+                            s41 = complex(s41r, s41i)
+
+                        eid = self._check_id(eid_device, flag, 'FORCE', out)
+                        obj.add(dt, eid,
+                                f41, f21, f12, f32, f23, f43, f34, f14,
+                                kf1, s12, kf2, s23, kf3, s34, kf4, s41)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)

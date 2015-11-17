@@ -237,19 +237,7 @@ RESULT_TABLES = [
     b'AEMONPT',
 ]
 # RESULT_TABLES = []
-#b'TOLD',
 
-#MATRIX_TABLES = [] #
-# MATRIX_TABLES = [
-    # b'BHH', b'BELM', b'BPP', b'BRDD', b'BXX',
-
-    # b'KELM', b'K2DD', b'K2GG', b'K2PP', b'K4AA', b'K4XX', b'KAA', b'KAAL', b'KBDD',
-    # b'KDD', b'KGG', b'KGG1', b'KGGNL', b'KGGNL1', b'KGGT', b'KPP', b'KHH', b'KHH1',
-    # b'KKK', b'KLL', b'KLR', b'KMM', b'KNN',
-    # b'MEFF',
-
-    # b'HMKT',
-# ]
 MATRIX_TABLES = [
     b'TOLD', b'SDT', #b'STDISP',
     b'TOLB2', b'ADSPT', #b'MONITOR',

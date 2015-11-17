@@ -4,7 +4,7 @@ from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0, write_float_12E
 from pyNastran.f06.f06_formatting import _eigenvalue_header
-from numpy import zeros, array_equal
+from numpy import zeros, array_equal, searchsorted
 
 class ComplexRodForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -72,7 +72,7 @@ class ComplexRodForceArray(ScalarObject):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid\n'
-            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+            for eid, eid2 in zip(self.element, table.element):
                 msg += '%s, %s\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
@@ -223,129 +223,464 @@ class ComplexRodForceArray(ScalarObject):
         return page_num - 1
 
 
-class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
+class ComplexCShearForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
-        self.force41 = {}
-        self.force14 = {}
-        self.force21 = {}
-        self.force12 = {}
-        self.force32 = {}
-        self.force23 = {}
-        self.force43 = {}
-        self.force34 = {}
-        self.kickForce1 = {}
-        self.kickForce2 = {}
-        self.kickForce3 = {}
-        self.kickForce4 = {}
-        self.shear12 = {}
-        self.shear23 = {}
-        self.shear34 = {}
-        self.shear41 = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.dt = dt
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
         if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
+            self.add = self.add_sort1
         else:
-            assert dt is not None
-            self.add = self.add_sort2
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'force41', 'force14', 'force21', 'force12', 'force32', 'force23',
+            'force43', 'force34', 'kickForce1', 'kickForce2', 'kickForce3',
+            'kickForce4', 'shear12', 'shear23', 'shear34', 'shear41'
+        ]
+        return headers
+
+    #def get_headers(self):
+        #headers = ['axial', 'torque']
+        #return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[force41, force14, force21, force12, force32, force23, force43, force34,
+        #kick_force1, kick_force2, kick_force3, kick_force4,
+        #shear12, shear23, shear34, shear41]
+        self.data = zeros((self.ntimes, self.ntotal, 16), dtype='complex64')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid\n'
+            for (eid, nid), (eid2, nid2) in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element):
+                    (eid, nid) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a, kick_force1a, kick_force2a, kick_force3a, kick_force4a, shear12a, shear23a, shear34a, shear41a) = t1
+                    (force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b, kick_force1b, kick_force2b, kick_force3b, kick_force4b, shear12b, shear23b, shear34b, shear41b) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += (
+                            '%s   (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
+                            '     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a, kick_force1a, kick_force2a, kick_force3a, kick_force4a, shear12a, shear23a, shear34a, shear41a,
+                                force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b, kick_force1b, kick_force2b, kick_force3b, kick_force4b, shear12b, shear23b, shear34b, shear41b
+                            ))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid,
+            force41, force14, force21, force12, force32, force23, force43, force34,
+            kick_force1, kick_force2, kick_force3, kick_force4,
+            shear12, shear23, shear34, shear41):
+        self.add_sort1(dt, eid,
+                       force41, force14, force21, force12, force32, force23, force43, force34,
+                       kick_force1, kick_force2, kick_force3, kick_force4,
+                       shear12, shear23, shear34, shear41)
+
+    def add_sort1(self, dt, eid,
+                  force41, force14, force21, force12, force32, force23, force43, force34,
+                  kick_force1, kick_force2, kick_force3, kick_force4,
+                  shear12, shear23, shear34, shear41):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [
+            force41, force14, force21, force12, force32, force23, force43, force34,
+            kick_force1, kick_force2, kick_force3, kick_force4,
+            shear12, shear23, shear34, shear41]
+        self.ielement += 1
 
     def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.shear12)
-            time0 = get_key0(self.shear12)
-            nelements = len(self.shear12[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
         else:
-            nelements = len(self.shear12)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force41, force14, force21, force12, force32, force23, '
-                   '  force 43, force34, kickForce1, kickForce2, kickForce3, '
-                   '  kickForce4, shear12, shear23, shear34, shear41\n')
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.force41[dt] = {}
-        self.force14[dt] = {}
-        self.force21[dt] = {}
-        self.force12[dt] = {}
-        self.force32[dt] = {}
-        self.force23[dt] = {}
-        self.force43[dt] = {}
-        self.force34[dt] = {}
-        self.kickForce1[dt] = {}
-        self.kickForce2[dt] = {}
-        self.kickForce3[dt] = {}
-        self.kickForce4[dt] = {}
-        self.shear12[dt] = {}
-        self.shear23[dt] = {}
-        self.shear34[dt] = {}
-        self.shear41[dt] = {}
+    def get_f06_header(self, is_mag_phase=True, is_sort1=True):
+        msg = ['ComplexCSHEAR Force\n']
+        aaa
 
-    def add(self, dt, data):
-        [eid, f41, f21, f12, f32, f23, f43, f34, f14,
-         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        #self.eType[eid] = eType
-        self.force41[eid] = f41
-        self.force14[eid] = f14
-        self.force21[eid] = f21
-        self.force12[eid] = f12
-        self.force32[eid] = f32
-        self.force23[eid] = f23
-        self.force43[eid] = f43
-        self.force34[eid] = f34
-        self.kickForce1[eid] = kf1
-        self.kickForce2[eid] = kf2
-        self.kickForce3[eid] = kf3
-        self.kickForce4[eid] = kf4
-        self.shear12[eid] = s12
-        self.shear23[eid] = s23
-        self.shear34[eid] = s34
-        self.shear41[eid] = s41
+        if is_mag_phase:
+            #msg += ['                                                          (REAL/IMAGINARY)']
+            asdf
+        else:
+            msg += ['                                                          (REAL/IMAGINARY)\n']
 
-    def add_sort1(self, dt, data):
-        [eid, f41, f21, f12, f32, f23, f43, f34, f14,
-         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+        if is_sort1:
+            msg += [
+                ' \n'
+                #'                 ELEMENT                             AXIAL                                       TORSIONAL\n'
+                #'                   ID.                              STRAIN                                         STRAIN\n'
+            ]
+            #'                      14                  0.0          /  0.0                           0.0          /  0.0'
+        else:
+            raise NotImplementedError('sort2')
 
-    def add_sort2(self, eid, data):
-        [dt, f41, f21, f12, f32, f23, f43, f34, f14,
-         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
 
-    def _fillObject(self, dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                    kf1, s12, kf2, s23, kf3, s34, kf4, s41):
-        if dt not in self.force41:
-            self.add_new_transient(dt)
-        self.force41[dt][eid] = f41
-        self.force14[dt][eid] = f14
-        self.force21[dt][eid] = f21
-        self.force12[dt][eid] = f12
-        self.force32[dt][eid] = f32
-        self.force23[dt][eid] = f23
-        self.force43[dt][eid] = f43
-        self.force34[dt][eid] = f34
-        self.kickForce1[dt][eid] = kf1
-        self.kickForce2[dt][eid] = kf2
-        self.kickForce3[dt][eid] = kf3
-        self.kickForce4[dt][eid] = kf4
-        self.shear12[dt][eid] = s12
-        self.shear23[dt][eid] = s23
-        self.shear34[dt][eid] = s34
-        self.shear41[dt][eid] = s41
+        return self.element_name, msg
+
+    #def get_element_index(self, eids):
+        ## elements are always sorted; nodes are not
+        #itot = searchsorted(eids, self.element)  #[0]
+        #return itot
+
+    #def eid_to_element_node_index(self, eids):
+        ##ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        #ind = searchsorted(eids, self.element)
+        ##ind = ind.reshape(ind.size)
+        ##ind.sort()
+        #return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+
+        # write the f06
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        is_odd = False
+        nwrite = len(eids)
+        if len(eids) % 2 == 1:
+            nwrite -= 1
+            is_odd = True
+
+        #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            axial = self.data[itime, :, 0]
+            torsion = self.data[itime, :, 1]
+
+            # loop over all the elements
+            out = []
+            for eid, axiali, torsioni in zip(eids, axial, torsion):
+                ([raxial, rtorsion, iaxial, itorsion], is_all_zeros) = writeImagFloats13E([axiali, torsioni], is_mag_phase)
+                #ELEMENT                             AXIAL                                       TORSIONAL
+                    #ID.                              STRESS                                         STRESS
+                    #14                  0.0          /  0.0                           0.0          /  0.0
+
+                f.write('      %8i   %-13s / %-13s   %-13s / %s\n' % (eid, raxial, iaxial, rtorsion, itorsion))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
+class ComplexSpringForceArray(ScalarObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = ['spring_force']
+        return headers
+
+    #def get_headers(self):
+        #headers = ['axial', 'torque']
+        #return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[axial_force, torque]
+        self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid\n'
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element):
+                    (eid, nid) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    #(springr, springi) = t1
+                    #(axial2, torque2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += '%s    (%s, %s)  (%s, %s)\n' % (
+                            eid,
+                            t1.real, t1.imag,
+                            t2.real, t2.imag)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid, force):
+        self.add_sort1(dt, eid, force)
+
+    def add_sort1(self, dt, eid, force):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, 0] = force
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True, is_sort1=True):
+        # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
+        if self.element_type == 11:
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 1 )\n']
+        elif self.element_type == 12:
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 2 )\n']
+        elif self.element_type == 13:
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 3 )\n']
+        elif self.element_type == 14:
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n']
+        elif self.element_type == 20: # CDAMP1
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 1 )\n']
+        elif self.element_type == 21: # CDAMP2
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 2 )\n']
+        else:
+            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+
+        if is_mag_phase:
+            #msg += ['                                                          (REAL/IMAGINARY) \n']
+            asdf
+        else:
+            msg += ['                                                          (REAL/IMAGINARY)\n \n']
+
+        if is_sort1:
+            msg += [
+                '                ELEMENT                                                   ELEMENT\n'
+                '                  ID.                    FORCE                              ID.                    FORCE\n'
+            ]
+            #'                      14                  0.0          /  0.0                           0.0          /  0.0'
+        else:
+            msg += ['            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
+
+
+        return msg
+
+    #def get_element_index(self, eids):
+        ## elements are always sorted; nodes are not
+        #itot = searchsorted(eids, self.element)  #[0]
+        #return itot
+
+    #def eid_to_element_node_index(self, eids):
+        ##ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        #ind = searchsorted(eids, self.element)
+        ##ind = ind.reshape(ind.size)
+        ##ind.sort()
+        #return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+
+        # write the f06
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        is_odd = False
+        nwrite = len(eids)
+        if len(eids) % 2 == 1:
+            nwrite -= 1
+            is_odd = True
+
+        #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            spring_force = self.data[itime, :, 0]
+
+            # loop over all the elements
+            out = []
+            for eid, spring_forcei in zip(eids, spring_force):
+                ([rspring, ispring], is_all_zeros) = writeImagFloats13E([spring_forcei], is_mag_phase)
+                #ELEMENT                             AXIAL                                       TORSIONAL
+                    #ID.                              STRESS                                         STRESS
+                    #14                  0.0          /  0.0                           0.0          /  0.0
+
+
+                f.write('      %8i   %-13s / %-13s\n' % (eid, rspring, ispring))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 
 class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.force = {}
-
+        adfasdfasdf
         self.dt = dt
         if is_sort1:
             if dt is not None:
@@ -396,11 +731,10 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
                         '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
-        #packs = []
         forces = []
         elements = []
         line = '   '
-        for eid, force in sorted(self.force.items()):
+        for eid, force in sorted(iteritems(self.force)):
             elements.append(eid)
             forces.append(force)
             #pack.append(eid)
@@ -534,20 +868,20 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
         self.axial_force[dt] = {}
         self.torque[dt] = {}
 
-    def add(self, dt, eid,axial_force, torque):
-        self.axial_force[eid] =axial_force
+    def add(self, dt, eid, axial_force, torque):
+        self.axial_force[eid] = axial_force
         self.torque[eid] = torque
 
-    def add_sort1(self, dt, eid,axial_force, torque):
+    def add_sort1(self, dt, eid, axial_force, torque):
         if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
-    def add_sort2(self, eid, dt,axial_force, torque):
+    def add_sort2(self, eid, dt, axial_force, torque):
         if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
 
