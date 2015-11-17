@@ -48,7 +48,6 @@ class RealForceObject(ScalarObject):
 class RealSpringDamperForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
-
         self.nelements = 0  # result specific
         if is_sort1:
             self.add = self.add_sort1
@@ -56,10 +55,10 @@ class RealSpringDamperForceArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -257,7 +256,6 @@ class RealRodForceArray(RealForceObject):
         return crod_msg, conrod_msg, ctube_msg
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
@@ -266,6 +264,7 @@ class RealRodForceArray(RealForceObject):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
         self.nelements //= self.ntimes
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -281,16 +280,19 @@ class RealRodForceArray(RealForceObject):
         self.element = zeros(self.nelements, dtype='int32')
 
         #[axial_force, torque]
-        self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
+        self.data = zeros((self.ntimes, self.nelements, 2), dtype='float32')
 
     def add(self, dt, eid, axial, torque):
         self.add_sort1(dt, eid, axial, torque)
 
     def add_sort1(self, dt, eid, axial, torque):
+        # print('ielement=%s' % self.ielement)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
+        if self.ielement == self.nelements:
+            self.ielement = 0
 
     def get_stats(self):
         if not self.is_built:

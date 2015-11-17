@@ -686,7 +686,6 @@ class OEF(OP2Common):
                     nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
-
                 obj = self.obj
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
@@ -711,7 +710,7 @@ class OEF(OP2Common):
                     #[axial, torsion]
                     obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
                     obj.itotal = itotal2
-                    obj.ielement = ielement2
+                    # obj.ielement = ielement2
                 else:
                     ntotal = 12 # 3 * 4
                     nelements = ndata // ntotal

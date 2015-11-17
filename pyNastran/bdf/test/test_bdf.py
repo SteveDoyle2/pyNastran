@@ -1,4 +1,12 @@
 # pylint: disable=W0612
+"""
+``test_bdf`` runs multiple checks on a BDF in order to make sure that:
+  - no data is lost on IO
+  - card field types are correct (e.g. node_ids are integers)
+  - various card methods (e.g. Area) work correctly
+
+As such, ``test_bdf`` is very useful for debugging models.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, integer_types
@@ -229,7 +237,6 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     quiet : bool; default=False
         suppresses print messages
     """
-    assert quiet == False, quiet
     if dynamic_vars is None:
         dynamic_vars = {}
 
@@ -267,7 +274,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
                 print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
-        diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
         #except:
             #return 1, 2, 3
@@ -483,7 +490,8 @@ def run_fem2(bdfModel, out_model, xref, punch,
             if subcase.has_parameter('METHOD'):
                 method_id = subcase.get_parameter('METHOD')[0]
                 method = fem2.methods[method_id]
-                assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111, 112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
+                assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
+                               112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
             if subcase.has_parameter('CMETHOD'):
                 method_id = subcase.get_parameter('CMETHOD')[0]
                 method = fem2.cMethods[method_id]
@@ -513,6 +521,9 @@ def run_fem2(bdfModel, out_model, xref, punch,
             if subcase.has_parameter('SPC'):
                 spc_id = subcase.get_parameter('SPC')[0]
                 fem2.get_spcs(spc_id)
+            if subcase.has_parameter('MPC'):
+                mpc_id = subcase.get_parameter('MPC')[0]
+                fem2.get_mpcs(mpc_id)
 
             if subcase.has_parameter('DLOAD'):
                 assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
@@ -637,7 +648,7 @@ def test_get_cards_by_card_types(model):
             assert card_type == card.type, 'this should never crash here...card_type=%s card.type=%s' % (card_type, card.type)
 
 
-def compare_card_count(fem1, fem2, print_stats=False):
+def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
     """
     Checks that no cards from fem1 are lost when we write fem2
     """
@@ -650,10 +661,10 @@ def compare_card_count(fem1, fem2, print_stats=False):
         print(fem1.get_bdf_stats())
     else:
         fem1.get_bdf_stats()
-    return compute_ints(cards1, cards2, fem1)
+    return compute_ints(cards1, cards2, fem1, quiet=quiet)
 
 
-def compute_ints(cards1, cards2, fem1):
+def compute_ints(cards1, cards2, fem1, quiet=True):
     """
     computes the difference / ratio / inverse-ratio between
     fem1 and fem2 to verify the number of card are the same:
@@ -701,14 +712,16 @@ def compute_ints(cards1, cards2, fem1):
         factor1 = divide(value1, value2)
         factor2 = divide(value2, value1)
         factor_msg = ''
-        if factor1 != factor2:
-            factor_msg = 'diff=%s factor1=%g factor2=%g' % (
-                diff, factor1, factor2)
-        msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (
-            star, key, value1, value2) + factor_msg
-        msg = msg.rstrip()
-        print(msg)
-    #return listKeys1 + listKeys2
+        if not quiet or not star or factor1 != factor2:
+            if factor1 != factor2:
+                factor_msg = 'diff=%s factor1=%g factor2=%g' % (
+                    diff, factor1, factor2)
+            msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (
+                star, key, value1, value2) + factor_msg
+        if msg:
+            msg = msg.rstrip()
+            print(msg)
+    #return list_keys1 + list_keys2
     return diff_keys1 + diff_keys2
 
 
@@ -748,10 +761,11 @@ def compute(cards1, cards2, quiet=False):
             msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
                 key, value1, value2)
         msg = msg.rstrip()
-        print(msg)
+        if msg:
+            print(msg)
 
 
-def get_element_stats(fem1, fem2):
+def get_element_stats(fem1, fem2, quiet=False):
     """verifies that the various element methods work"""
     for (key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
@@ -768,8 +782,9 @@ def get_element_stats(fem1, fem2):
     fem1._verify_bdf()
 
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
-    print("mass =", mass)
-    print("cg   =", cg)
+    if not quiet:
+        print("mass =", mass)
+        print("cg   =", cg)
     #print("I    =", I)
 
 
@@ -790,10 +805,10 @@ def get_matrix_stats(fem1, fem2):
             raise
 
 
-def compare(fem1, fem2, xref=True, check=True, print_stats=True):
-    diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats)
+def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
+    diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats, quiet=quiet)
     if xref and check:
-        get_element_stats(fem1, fem2)
+        get_element_stats(fem1, fem2, quiet=quiet)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)
     #compare_params(fem1, fem2)

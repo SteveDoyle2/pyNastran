@@ -82,9 +82,39 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                                 write_f06=write_f06,
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+
+        isubcase = 1
+        rod_force = op2.crod_force[isubcase]
+        assert rod_force.nelements == 2, rod_force.nelements
+        assert rod_force.data.shape == (1, 2, 2), rod_force.data.shape
+
+        rod_stress = op2.crod_stress[isubcase]
+        assert rod_stress.nelements == 2, rod_stress.nelements
+        assert rod_stress.data.shape == (1, 2, 4), rod_stress.data.shape
+
+        cquad4_stress = op2.cquad4_stress[isubcase]
+        assert cquad4_stress.nelements == 20, cquad4_stress.nelements
+        assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
+
+        ctria3_stress = op2.ctria3_stress[isubcase]
+        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
+
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        assert ctetra_stress.nelements == 2, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, 10, 10), ctetra_stress.data.shape
+
+        cpenta_stress = op2.cpenta_stress[isubcase]
+        assert cpenta_stress.nelements == 2, cpenta_stress.nelements
+        assert cpenta_stress.data.shape == (1, 14, 10), cpenta_stress.data.shape
+
+        chexa_stress = op2.chexa_stress[isubcase]
+        assert chexa_stress.nelements == 1, chexa_stress.nelements
+        assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
+
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -142,9 +172,13 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
-                write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                                 write_f06=write_f06,
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        isubcase = 1
+        rod_force = op2.crod_force[isubcase]
+        assert rod_force.nelements == 2, rod_force.nelements
+        assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
