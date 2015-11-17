@@ -178,6 +178,7 @@ class OEF(OP2Common):
 
     def _read_oef1_3(self, data, ndata):
         """Table 3 parser for OEF1 table"""
+        self._data_factor = 1
         self.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
             '???', '???', '???', '???',
@@ -710,7 +711,7 @@ class OEF(OP2Common):
                     #[axial, torsion]
                     obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
                     obj.itotal = itotal2
-                    # obj.ielement = ielement2
+                    obj.ielement = ielement2
                 else:
                     ntotal = 12 # 3 * 4
                     nelements = ndata // ntotal

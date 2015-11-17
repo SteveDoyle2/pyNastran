@@ -279,7 +279,7 @@ class TestOP2(Tester):
         assert rod_stress.data.shape == (7, 2, 2), rod_stress.data.shape
 
         cbar_stress = op2.cbar_stress[isubcase]
-        assert cbar_stress.nelements == 1.0, cbar_stress.nelements  # TODO: wrong...what???
+        assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (7, 1, 9), cbar_stress.data.shape
 
         #print(op2.cbeam_stress.keys())
@@ -288,7 +288,6 @@ class TestOP2(Tester):
         # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
-        print(cquad4_stress)
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: wrong
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
 

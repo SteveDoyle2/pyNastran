@@ -457,6 +457,8 @@ class FortranFormat(object):
                         self.obj.words = self.words
                         self.obj.itime += 1
                     else:
+                        # this happens when self._data_factor hasn't been reset
+                        # can it happen any other time?
                         self.log.debug('self.obj.name=%r has itime' % self.obj.__class__.__name__)
                         self.log.debug('ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
                             self.obj.ntotal, str(self.obj.data.shape),
@@ -501,6 +503,11 @@ class FortranFormat(object):
                     self.obj._reset_indices()
                     self.obj.ntimes += 1
                     ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                    #class_name = self.obj.__class__.__name__
+                    #if class_name == 'RealRodForceArray':
+                        #print('%s.ntotal = %s' % (class_name, ntotal))
+                        #print('num_wide=%s factor=%s len=%s ntotal=%s' % (self.num_wide, self._data_factor, record_len, ntotal))
+
                     self.obj.ntotal = ntotal
                     self.obj._ntotals.append(ntotal)
 

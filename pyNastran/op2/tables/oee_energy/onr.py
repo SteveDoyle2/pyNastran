@@ -38,13 +38,15 @@ class ONR(OP2Common):
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
         except UnicodeDecodeError:
-            print("element_name = %s" % str(element_name))
+            self.log.warning("element_name = %s" % str(element_name))
+            self.show_data(data)
             #raise
         #print("element_name = %s" % (element_name))
         if element_name.isalpha():
             self.data_code['element_name'] = element_name
         else:
             self.data_code['element_name'] = 'UnicodeDecodeError???'
+            self.log.warning('data[20:24]=%r instead of data[24:32]' % data[20:28])
 
         #: Load set or zero
         self.load_set = self.add_data_parameter(data, 'load_set', 'i', 8, False)
