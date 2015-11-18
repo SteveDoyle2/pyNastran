@@ -407,7 +407,8 @@ class F06Writer(OP2_F06_Common):
         f06.write(page_stamp % self.page_num)
         self.page_num += 1
         for ikey, result in sorted(iteritems(self.eigenvalues)):
-            print('%-18s case=%r' % (result.__class__.__name__, ikey))
+            if not quiet:
+                print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
                                              page_num=self.page_num)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
@@ -444,7 +445,8 @@ class F06Writer(OP2_F06_Common):
                 res_format_vectorized = ' %%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
                 class_name = result.__class__.__name__
                 if hasattr(result, 'data'):
-                    print(res_format_vectorized % (class_name, isubcase, subtitle))
+                    if not quiet:
+                        print(res_format_vectorized % (class_name, isubcase, subtitle))
                 else:
                     print(res_format % (class_name, isubcase))
 

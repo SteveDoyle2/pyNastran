@@ -702,7 +702,19 @@ class Subcase(object):
             msg += write_set(value, options, spaces)
         else:
             # SET-type is not supported yet...
-            raise NotImplementedError((key, param))
+            msg = ('\nkey=%r param=%r\n'
+                   'allowed_params=[SET-type, STRESS-type, STRING-type, SUBCASE-type, KEY-type]\n'
+                   'CSV-type     -> PARAM,FIXEDB,-1\n'
+                   'KEY-type     -> ???\n'
+                   'SET-type     -> SET 99 = 1234\n'
+                   'SUBCASE-type -> ???\n'
+                   'STRESS-type  -> DISP(PLOT, SORT1)=ALL\n'
+                   '                STRESS(PLOT, SORT1)=ALL\n'
+                   'STRING-type  -> LABEL = A label\n'
+                   '                TITLE = A title\n'
+                   '                SUBTITLE = A subtitle\n'
+                   ''% (key, param))
+            raise NotImplementedError(msg)
 
         #print "msg = |%r|" %(msg)
         return msg

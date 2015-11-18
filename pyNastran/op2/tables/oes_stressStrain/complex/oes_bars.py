@@ -50,7 +50,7 @@ class ComplexBarArray(OES_Object):
 
         #self.names = []
         #self.nelements //= nnodes
-        self.nelements /= self.ntimes
+        self.nelements //= self.ntimes
         #self.ntotal //= self.ntimes
         self.itime = 0
         self.ielement = 0

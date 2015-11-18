@@ -1363,7 +1363,6 @@ class BDFMethods(BDFAttributes):
         """
         spcs = self.spcs[spc_id]
         #self.spcs[key] = [constraint]
-        # print(spcs)
         nids = []
         comps = []
         for spc in spcs:
@@ -1378,9 +1377,23 @@ class BDFMethods(BDFAttributes):
                     comps.append(comp)
             elif spc.type == 'SPCADD':
                 for spci in spc.sets:
-                    nidsi, compsi = self.get_spcs(spci, consider_nodes=False, final_flag=False)
-                    nids += nidsi
-                    comps += compsi
+                    if isinstance(spci, list):
+                        for spcii in spci:
+                            if isinstance(spcii, int):
+                                spciii = spcii
+                            else:
+                                spciii = spcii.conid
+                            #assert isinstance(spcii, int), 'spcii=\n%s\ndir=%s' % (spcii, dir(spcii))
+                            nidsi, compsi = self.get_spcs(spciii, consider_nodes=False, final_flag=False)
+                            nids += nidsi
+                            comps += compsi
+                    else:
+                        # print('spci =', spci)
+                        # print(spci.object_attributes())
+                        assert isinstance(spci, int), spci
+                        nidsi, compsi = self.get_spcs(spci, consider_nodes=False, final_flag=False)
+                        nids += nidsi
+                        comps += compsi
             else:
                 self.log.warning('not considering:\n%s' % str(spc))
                 #raise NotImplementedError(spc.type)

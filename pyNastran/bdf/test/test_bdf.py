@@ -1,4 +1,12 @@
 # pylint: disable=W0612
+"""
+``test_bdf`` runs multiple checks on a BDF in order to make sure that:
+  - no data is lost on IO
+  - card field types are correct (e.g. node_ids are integers)
+  - various card methods (e.g. Area) work correctly
+
+As such, ``test_bdf`` is very useful for debugging models.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, integer_types
@@ -179,7 +187,8 @@ def memory_usage_psutil():
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
-            reject=False, stop=False, nastran='', post=-1, dynamic_vars=None):
+            reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
+            quiet=False):
     """
     Runs a single BDF
 
@@ -225,6 +234,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         the PARAM,POST,value to run
     dynamic vars : dict[str]=int / float / str / None
         support OpenMDAO syntax  %myvar; max variable length=7
+    quiet : bool; default=False
+        suppresses print messages
     """
     if dynamic_vars is None:
         dynamic_vars = {}
@@ -249,7 +260,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
-    diffCards = []
+    diff_cards = []
 
     try:
         #nastran = 'nastran scr=yes bat=no old=no news=no '
@@ -263,7 +274,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
                 print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
-        diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
         #except:
             #return 1, 2, 3
@@ -299,7 +310,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         raise
 
     print("-" * 80)
-    return (fem1, fem2, diffCards)
+    return (fem1, fem2, diff_cards)
 
 
 def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
@@ -479,7 +490,8 @@ def run_fem2(bdfModel, out_model, xref, punch,
             if subcase.has_parameter('METHOD'):
                 method_id = subcase.get_parameter('METHOD')[0]
                 method = fem2.methods[method_id]
-                assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111, 112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
+                assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
+                               112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
             if subcase.has_parameter('CMETHOD'):
                 method_id = subcase.get_parameter('CMETHOD')[0]
                 method = fem2.cMethods[method_id]
@@ -487,8 +499,8 @@ def run_fem2(bdfModel, out_model, xref, punch,
 
             if subcase.has_parameter('LOAD'):
                 loadcase_id = fem2.case_control_deck.get_subcase_parameter(isubcase, 'LOAD')[0]
-                F, M = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
-                print('  isubcase=%i F=%s M=%s' % (isubcase, F, M))
+                force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
+                print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
                 assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107, 108, 110, 112,
                                144, 145, 153, 400, 601], 'sol=%s LOAD' % sol
             else:
@@ -509,6 +521,9 @@ def run_fem2(bdfModel, out_model, xref, punch,
             if subcase.has_parameter('SPC'):
                 spc_id = subcase.get_parameter('SPC')[0]
                 fem2.get_spcs(spc_id)
+            if subcase.has_parameter('MPC'):
+                mpc_id = subcase.get_parameter('MPC')[0]
+                fem2.get_mpcs(mpc_id)
 
             if subcase.has_parameter('DLOAD'):
                 assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
@@ -547,14 +562,14 @@ def run_fem2(bdfModel, out_model, xref, punch,
                         scale_factors = []
                         loads = []
                         # scale_factors, loads = load.get_reduced_loads()
-                        for load, sf in zip(load.loadIDs, load.scaleFactors):
+                        for load, scale_factor in zip(load.loadIDs, load.scaleFactors):
                             if isinstance(load, list):
                                 for loadi in load:
                                     assert not isinstance(loadi, list), loadi
-                                    scale_factors.append(scale * sf)
+                                    scale_factors.append(scale * scale_factor)
                                     loads.append(loadi)
                             else:
-                                scale_factors.append(scale * sf)
+                                scale_factors.append(scale * scale_factor)
                                 assert not isinstance(load, list), load
                                 loads.append(load)
                         scale_factors2 += scale_factors
@@ -567,12 +582,12 @@ def run_fem2(bdfModel, out_model, xref, punch,
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for
                         #print(load2)
-                        F = load2.get_load_at_freq(100.) * scale_factor
+                        force = load2.get_load_at_freq(100.) * scale_factor
                 elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for
                         #print(load2)
-                        F = load2.get_load_at_time(0.) * scale_factor
+                        force = load2.get_load_at_time(0.) * scale_factor
                 ### 111
                 else:
                     fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
@@ -633,7 +648,7 @@ def test_get_cards_by_card_types(model):
             assert card_type == card.type, 'this should never crash here...card_type=%s card.type=%s' % (card_type, card.type)
 
 
-def compare_card_count(fem1, fem2, print_stats=False):
+def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
     """
     Checks that no cards from fem1 are lost when we write fem2
     """
@@ -646,10 +661,10 @@ def compare_card_count(fem1, fem2, print_stats=False):
         print(fem1.get_bdf_stats())
     else:
         fem1.get_bdf_stats()
-    return compute_ints(cards1, cards2, fem1)
+    return compute_ints(cards1, cards2, fem1, quiet=quiet)
 
 
-def compute_ints(cards1, cards2, fem1):
+def compute_ints(cards1, cards2, fem1, quiet=True):
     """
     computes the difference / ratio / inverse-ratio between
     fem1 and fem2 to verify the number of card are the same:
@@ -664,25 +679,25 @@ def compute_ints(cards1, cards2, fem1):
 
     The * indicates a change, which may or may not be a problem.
     """
-    cardKeys1 = set(cards1.keys())
-    cardKeys2 = set(cards2.keys())
-    allKeys = cardKeys1.union(cardKeys2)
-    diffKeys1 = list(allKeys.difference(cardKeys1))
-    diffKeys2 = list(allKeys.difference(cardKeys2))
+    card_keys1 = set(cards1.keys())
+    card_keys2 = set(cards2.keys())
+    all_keys = card_keys1.union(card_keys2)
+    diff_keys1 = list(all_keys.difference(card_keys1))
+    diff_keys2 = list(all_keys.difference(card_keys2))
 
-    listKeys1 = list(cardKeys1)
-    listKeys2 = list(cardKeys2)
-    if diffKeys1 or diffKeys2:
-        print(' diffKeys1=%s diffKeys2=%s' % (diffKeys1, diffKeys2))
+    list_keys1 = list(card_keys1)
+    list_keys2 = list(card_keys2)
+    if diff_keys1 or diff_keys2:
+        print(' diffKeys1=%s diffKeys2=%s' % (diff_keys1, diff_keys2))
 
-    for key in sorted(allKeys):
+    for key in sorted(all_keys):
         msg = ''
-        if key in listKeys1:
+        if key in list_keys1:
             value1 = cards1[key]
         else:
             value1 = 0
 
-        if key in listKeys2:
+        if key in list_keys2:
             value2 = cards2[key]
         else:
             value2 = 0
@@ -697,64 +712,68 @@ def compute_ints(cards1, cards2, fem1):
         factor1 = divide(value1, value2)
         factor2 = divide(value2, value1)
         factor_msg = ''
-        if factor1 != factor2:
-            factor_msg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
-                                                            factor2)
-        msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (star, key, value1,
-                                                         value2) + factor_msg
-        msg = msg.rstrip()
-        print(msg)
-    #return listKeys1 + listKeys2
-    return diffKeys1 + diffKeys2
+        if not quiet or not star or factor1 != factor2:
+            if factor1 != factor2:
+                factor_msg = 'diff=%s factor1=%g factor2=%g' % (
+                    diff, factor1, factor2)
+            msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (
+                star, key, value1, value2) + factor_msg
+        if msg:
+            msg = msg.rstrip()
+            print(msg)
+    #return list_keys1 + list_keys2
+    return diff_keys1 + diff_keys2
 
 
-def compute(cards1, cards2):
+def compute(cards1, cards2, quiet=False):
     """
     Computes the difference between two dictionaries to data is the same
     """
-    cardKeys1 = set(cards1.keys())
-    cardKeys2 = set(cards2.keys())
-    allKeys = cardKeys1.union(cardKeys2)
-    diffKeys1 = list(allKeys.difference(cardKeys1))
-    diffKeys2 = list(allKeys.difference(cardKeys2))
+    card_keys1 = set(cards1.keys())
+    card_keys2 = set(cards2.keys())
+    all_keys = card_keys1.union(card_keys2)
+    diff_keys1 = list(all_keys.difference(card_keys1))
+    diff_keys2 = list(all_keys.difference(card_keys2))
 
-    listKeys1 = list(cardKeys1)
-    listKeys2 = list(cardKeys2)
+    list_keys1 = list(card_keys1)
+    list_keys2 = list(card_keys2)
     msg = ''
-    if diffKeys1 or diffKeys2:
-        msg = 'diffKeys1=%s diffKeys2=%s' % (diffKeys1, diffKeys2)
+    if diff_keys1 or diff_keys2:
+        msg = 'diffKeys1=%s diffKeys2=%s' % (diff_keys1, diff_keys2)
 
-    for key in sorted(allKeys):
+    for key in sorted(all_keys):
         msg = ''
-        if key in listKeys1:
+        if key in list_keys1:
             value1 = cards1[key]
         else:
             value2 = 0
 
-        if key in listKeys2:
+        if key in list_keys2:
             value2 = cards2[key]
         else:
             value2 = 0
 
         if key == 'INCLUDE':
-            msg += '    key=%-7s value1=%-7s value2=%-7s' % (key,
-                                                             value1, value2)
+            if not quiet:
+                msg += '    key=%-7s value1=%-7s value2=%-7s' % (
+                    key, value1, value2)
         else:
-            msg += '   *key=%-7s value1=%-7s value2=%-7s' % (key,
-                                                             value1, value2)
+            msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
+                key, value1, value2)
         msg = msg.rstrip()
-        print(msg)
+        if msg:
+            print(msg)
 
 
-def get_element_stats(fem1, fem2):
+def get_element_stats(fem1, fem2, quiet=False):
     """verifies that the various element methods work"""
     for (key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
             try:
-                allLoads = load.get_loads()
-                if not isinstance(allLoads, list):
+                all_loads = load.get_loads()
+                if not isinstance(all_loads, list):
                     raise TypeError('allLoads should return a list...%s'
-                                    % (type(allLoads)))
+                                    % (type(all_loads)))
             except:
                 print("load statistics not available - load.type=%s "
                       "load.sid=%s" % (load.type, load.sid))
@@ -763,8 +782,9 @@ def get_element_stats(fem1, fem2):
     fem1._verify_bdf()
 
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
-    print("mass =", mass)
-    print("cg   =", cg)
+    if not quiet:
+        print("mass =", mass)
+        print("cg   =", cg)
     #print("I    =", I)
 
 
@@ -785,15 +805,15 @@ def get_matrix_stats(fem1, fem2):
             raise
 
 
-def compare(fem1, fem2, xref=True, check=True, print_stats=True):
-    diffCards = compare_card_count(fem1, fem2, print_stats=print_stats)
+def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
+    diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats, quiet=quiet)
     if xref and check:
-        get_element_stats(fem1, fem2)
+        get_element_stats(fem1, fem2, quiet=quiet)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)
     #compare_params(fem1, fem2)
     #print_points(fem1, fem2)
-    return diffCards
+    return diff_cards
 
 
 def compare_params(fem1, fem2):
@@ -883,19 +903,20 @@ def main():
         prof = cProfile.Profile()
         prof.runcall(
             run_bdf,
-                '.',
-                data['BDF_FILENAME'],
-                debug=not(data['--quiet']),
-                xref=not(data['--xref']),
-                # xref_safe=data['--xref_safe'],
-                check=not(data['--check']),
-                punch=data['--punch'],
-                reject=data['--reject'],
-                size=size,
-                is_double=is_double,
-                sum_load=not data['--loads'],
-                stop=data['--stop'],
-            )
+            '.',
+            data['BDF_FILENAME'],
+            debug=not(data['--quiet']),
+            xref=not(data['--xref']),
+            # xref_safe=data['--xref_safe'],
+            check=not(data['--check']),
+            punch=data['--punch'],
+            reject=data['--reject'],
+            size=size,
+            is_double=is_double,
+            sum_load=not data['--loads'],
+            stop=data['--stop'],
+            quiet=data['--quiet'],
+        )
         prof.dump_stats('bdf.profile')
 
         stats = pstats.Stats("bdf.profile")
@@ -929,6 +950,7 @@ def main():
             is_double=is_double,
             sum_load=not data['--loads'],
             stop=data['--stop'],
+            quiet=data['--quiet'],
         )
     print("total time:  %.2f sec" % (time.time() - t0))
 

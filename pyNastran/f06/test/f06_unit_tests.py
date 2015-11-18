@@ -46,13 +46,13 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
     if op2_name:
         op2 = OP2(debug=False)
         op2.read_op2(op2_name, vectorized=vectorized)
-        op2.write_f06(op2_name[:-4] + '.test_op2.out')
+        op2.write_f06(op2_name[:-4] + '.test_op2.out', quiet=True)
         outputs.append(op2)
 
     if f06_name:
         f06 = F06(debug=False, log=None)
         f06.read_f06(f06_name)
-        f06.write_f06(f06_name[:-4] + '.test_f06.out')
+        f06.write_f06(f06_name[:-4] + '.test_f06.out', quiet=True)
         outputs.append(f06)
         if f06_has_weight:
             assert f06.grid_point_weight.reference_point is not None
@@ -92,7 +92,7 @@ class TestF06(unittest.TestCase):
         except FatalError:
             pass
 
-        f06.write_f06(f06_filename + '.out')
+        f06.write_f06(f06_filename + '.out', quiet=True)
 
         ref_point = f06.grid_point_weight.reference_point
         #print("ref_point = %s" % ref_point)
@@ -155,7 +155,7 @@ class TestF06(unittest.TestCase):
         f06.stop_after_reading_grid_point_weight()
         f06.read_f06(f06_filename)
 
-        f06.write_f06(f06_filename + '.out')
+        f06.write_f06(f06_filename + '.out', quiet=True)
 
         ref_point = f06.grid_point_weight.reference_point
         #print("ref_point = %s" % ref_point)
@@ -519,7 +519,7 @@ class TestF06(unittest.TestCase):
         self.assertTrue(allclose(T3.real, -1.456074E+02))
         self.assertTrue(allclose(T3.imag, -6.035482E+00))
 
-        #f06.write_f06(f06name2)
+        #f06.write_f06(f06name2, quiet=True)
         #os.remove(f06name2)
 
     def test_eigenvectors1(self):

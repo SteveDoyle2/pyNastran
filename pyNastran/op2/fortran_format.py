@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, b
+from six import iteritems, b, integer_types
 from six.moves import range
 import sys
 from struct import unpack, Struct
@@ -407,12 +407,12 @@ class FortranFormat(object):
                     data = datai + data
                     ndata = len(data)
                     n = table4_parser(data, ndata)
-                    assert isinstance(n, int), self.table_name
+                    assert isinstance(n, integer_types), self.table_name
                     datai = data[n:]
             else:
                 data, ndata = self._read_record_ndata()
                 n = table4_parser(data, ndata)
-                assert isinstance(n, int), self.table_name
+                assert isinstance(n, integer_types), self.table_name
 
             # PCOMPs are stupid, so we need an element flag
             if hasattr(self, 'eid_old'):
@@ -457,6 +457,8 @@ class FortranFormat(object):
                         self.obj.words = self.words
                         self.obj.itime += 1
                     else:
+                        # this happens when self._data_factor hasn't been reset
+                        # can it happen any other time?
                         self.log.debug('self.obj.name=%r has itime' % self.obj.__class__.__name__)
                         self.log.debug('ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
                             self.obj.ntotal, str(self.obj.data.shape),
@@ -477,7 +479,7 @@ class FortranFormat(object):
                     data = datai + data
                     ndata = len(data)
                     n = table4_parser(data, ndata)
-                    assert isinstance(n, int), self.table_name
+                    assert isinstance(n, integer_types), self.table_name
                     datai = data[n:]
                 assert len(datai) == 0, len(datai)
                 #n = record_len
@@ -485,7 +487,7 @@ class FortranFormat(object):
             else:
                 data, ndata = self._skip_record_ndata()
                 n = table4_parser(data, ndata)
-                assert isinstance(n, int), self.table_name
+                assert isinstance(n, integer_types), self.table_name
 
             #self.goto(n)
             #n = self._skip_record()
@@ -501,10 +503,15 @@ class FortranFormat(object):
                     self.obj._reset_indices()
                     self.obj.ntimes += 1
                     ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                    #class_name = self.obj.__class__.__name__
+                    #if class_name == 'RealRodForceArray':
+                        #print('%s.ntotal = %s' % (class_name, ntotal))
+                        #print('num_wide=%s factor=%s len=%s ntotal=%s' % (self.num_wide, self._data_factor, record_len, ntotal))
+
                     self.obj.ntotal = ntotal
                     self.obj._ntotals.append(ntotal)
 
-                    assert isinstance(self.obj.ntotal, int), type(self.obj.ntotal)
+                    assert isinstance(self.obj.ntotal, integer_types), type(self.obj.ntotal)
                 else:
                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         else:

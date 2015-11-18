@@ -558,6 +558,8 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
                 if self.read_mode == 1:
                     return ndata
+                if self.is_debug_file:
+                    self.binary_debug.write('skipping imag/random OES-CBEAM\n')
 
                 ntotal = 444 # 44 + 10*40  (11 nodes)
                 #if self.is_stress():
@@ -598,6 +600,8 @@ class OES(OP2Common):
                 return ndata
             elif self.format_code == 1 and self.num_wide == 67: # random
                 msg = self.code_information()
+                if self.is_debug_file:
+                    self.binary_debug.write('skipping OES-CBEAM\n')
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())

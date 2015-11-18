@@ -27,7 +27,7 @@ from collections import defaultdict, OrderedDict
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
-from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle
+from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle, hstack, vstack, array_equal
 from numpy.linalg import norm
 import numpy as np
 
@@ -2385,7 +2385,7 @@ class NastranIO(object):
         self.scalarBar.Modified()
         #self.show_caero_mesh()
 
-        print("tring to read...%s" % op2_filename)
+        print("trying to read...%s" % op2_filename)
         ext = os.path.splitext(op2_filename)[1].lower()
 
         if ext == '.op2':
@@ -3525,10 +3525,18 @@ class NastranIO(object):
                 if force.nonlinear_factor is None:
                     ntimes = data.shape[:1]
                     eids = force.element
+                    from numpy import intersect1d
+                    #eids_to_find = intersect1d(self.element_ids, eids)
                     i = searchsorted(self.element_ids, eids)
+                    assert array_equal(self.element_ids[i], eids)
                     #print(data[0, :, 0])
-                    fx[i] = data[0, :, 0]
-                    rx[i] = data[0, :, 1]
+                    print(data.shape)
+                    print(force)
+                    fxi = data[0, :, 0]
+                    rxi = data[0, :, 1]
+                    assert fxi.size == i.size, 'fx.size=%s i.size=%s fx=%s eids_to_find=%s' % (fxi.size, i.size, fxi, eids)
+                    fx[i] = fxi
+                    rx[i] = rxi
                     is_element_on[i] = 1.
                 else:
                     continue
@@ -3543,13 +3551,33 @@ class NastranIO(object):
             is_element_on[i] = 1.
 
             #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-            fx[i] = case.data[:, :, 6]
-            fy[i] = case.data[:, :, 4]
-            fz[i] = case.data[:, :, 5]
+            #fx[i] = case.data[:, :, 6]
+            #fy[i] = case.data[:, :, 4]
+            #fz[i] = case.data[:, :, 5]
 
-            rx[i] = case.data[:, :, 7]
-            ry[i] = array([case.data[:, :, 0], case.data[:, :, 2]]).max(axis=0)
-            rz[i] = array([case.data[:, :, 1], case.data[:, :, 3]]).max(axis=0)
+
+            if i.size == 1:
+                print(case.element)
+                rxi = case.data[itime, :, 7].max()
+                ryi = vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max()
+                rzi = vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max()
+            else:
+                rxi = case.data[itime, :, 7]#.max(axis=0)
+                ryi = vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max(axis=0)
+                rzi = vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max(axis=0)
+                rzv = rzi
+
+                # rza = array([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
+                # rzh = hstack([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
+
+                # print(rzv.shape, rzv.shape, rzv.shape)
+            assert rxi.size == i.size, 'rx.size=%s i.size=%s rx=%s' % (rxi.size, i.size, rxi)
+            assert ryi.size == i.size, 'ry.size=%s i.size=%s ry=%s' % (ryi.size, i.size, ryi)
+            assert rzi.size == i.size, 'rz.size=%s i.size=%s rz=%s' % (rzi.size, i.size, rzi)
+
+            rx[i] = rxi
+            ry[i] = ryi
+            rz[i] = rzi
 
         if subcase_id in model.cbar_force_10nodes:
             found_force = True

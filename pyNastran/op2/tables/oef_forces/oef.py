@@ -179,6 +179,7 @@ class OEF(OP2Common):
 
     def _read_oef1_3(self, data, ndata):
         """Table 3 parser for OEF1 table"""
+        self._data_factor = 1
         self.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
             '???', '???', '???', '???',
@@ -687,7 +688,6 @@ class OEF(OP2Common):
                     nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nelements * self.num_wide * 4
-
                 obj = self.obj
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')

@@ -71,7 +71,7 @@ class OP2(OP2_Scalar):
                 if not aname == bname:
                     print('type(a)=%s type(b)=%s' % (aname, bname))
                     return False
-                if 'Array' not in aname:
+                if not any(word in aname for word in ['Array', 'Eigenvalues']):
                     print('%s is not an Array ... assume equal' % aname)
                     continue
                 if avalue != bvalue:
