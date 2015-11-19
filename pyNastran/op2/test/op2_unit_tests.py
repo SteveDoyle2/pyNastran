@@ -202,10 +202,14 @@ class TestOP2(Tester):
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
-        isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
+        isubcases = [(1, 1, 1, 0, 'DEFAULT1'), (1, 8, 1, 0, 'DEFAULT1')]
         isubcase = isubcases[1]
 
-        rod_force = op2.crod_force[isubcase]
+        try:
+            rod_force = op2.crod_force[isubcase]
+        except KeyError:
+            msg = 'isubcase=%s was not found\nkeys=%s' % (isubcase, op2.crod_force.keys())
+            raise KeyError(msg)
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (4, 2, 2), rod_force.data.shape
 

@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, b, integer_types
+from six import iteritems, b, integer_types, PY2
 from six.moves import range
 import sys
 from struct import unpack, Struct
@@ -7,6 +7,17 @@ from copy import deepcopy
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
 from numpy import fromfile, dtype as npdtype
+
+if PY2:
+    if b('test') != 'test':
+        msg = (
+            'Unknown Error\n'
+            'Possible Solutions:\n'
+            '   1. Reinstall Python\n'
+            '   2. Renstall six\n'
+            '   3. Put a unicode encoding at the top of your main script\n'
+        )
+        raise RuntimeError(msg)
 
 class FortranFormat(object):
     def __init__(self):
