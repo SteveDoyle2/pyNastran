@@ -1,7 +1,8 @@
 import subprocess
 def get_git_revision_short_hash():
     try:
-        ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+        #ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+        ghash = subprocess.check_output(['git', 'describe', '--always'])
         ghash = ghash.decode('utf-8').rstrip()
     except:
         ghash = 'no_checksum_error'

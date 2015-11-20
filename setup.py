@@ -6,6 +6,10 @@ from setuptools import setup, find_packages
 PY2 = False
 if sys.version_info < (3, 0):
     PY2 = True
+if sys.version_info < (2, 7, 7):
+    # makes sure we don't get the following bug:
+    #   Issue #19099: The struct module now supports Unicode format strings.
+    sys.exit('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
 
 import pyNastran
 packages = find_packages()+['gui/icons/*.*']

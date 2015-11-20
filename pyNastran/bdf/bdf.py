@@ -614,7 +614,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.case_control_deck.solmap_toValue = self._solmap_to_value
             self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
 
-            cards, card_count = self.get_bdf_cards(bulk_data_lines)
+            if self._is_cards_dict:
+                cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
+            else:
+                cards, card_count = self.get_bdf_cards(bulk_data_lines)
             self._parse_cards(cards, card_count)
             self.pop_parse_errors()
             self.fill_dmigs()
@@ -848,6 +851,80 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             card_count[old_card_name] += 1
         return cards, card_count
 
+    def get_bdf_cards_dict(self, bulk_data_lines):
+        """Parses the BDF lines into a list of card_lines"""
+        cards = []
+        #cards = defaultdict(list)
+        card_count = defaultdict(int)
+        full_comment = ''
+        card_lines = []
+        old_card_name = None
+        backup_comment = ''
+        nlines = len(bulk_data_lines)
+        for i, line in enumerate(bulk_data_lines):
+            #print('    backup=%r' % backup_comment)
+            comment = ''
+            if '$' in line:
+                line, comment = line.split('$', 1)
+            card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
+            if card_name and card_name[0] not in ['+', '*']:
+                if old_card_name:
+                    if self.echo:
+                        self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
+
+                    # old dictionary version
+                    cards[old_card_name].append([full_comment, card_lines])
+
+                    # new list version
+                    #cards.append([old_card_name, full_comment, card_lines])
+
+                    card_count[old_card_name] += 1
+                    card_lines = []
+                    full_comment = ''
+
+                    if old_card_name == 'ECHOON':
+                        self.echo = True
+                    elif old_card_name == 'ECHOOFF':
+                        self.echo = False
+                old_card_name = card_name.rstrip(' *')
+                if old_card_name == 'ENDDATA':
+                    self.card_count['ENDDATA'] = 1
+                    if nlines - i > 1:
+                        self.log.debug('exiting due to ENDDATA found with %i lines left' % (nlines - i - 1))
+                    return cards, card_count
+                #print("card_name = %s" % card_name)
+
+            comment = _clean_comment(comment)
+            if line.rstrip():
+                card_lines.append(line)
+                if backup_comment:
+                    if comment:
+                        full_comment += backup_comment + '$' + comment + '\n'
+                    else:
+                        full_comment += backup_comment
+                    backup_comment = ''
+                elif comment:
+                    full_comment += '$' + comment + '\n'
+                    backup_comment = ''
+
+            elif comment:
+                backup_comment += '$' + comment + '\n'
+                #print('add backup=%r' % backup_comment)
+            #elif comment:
+                #backup_comment += '$' + comment + '\n'
+
+        if card_lines:
+            if self.echo:
+                self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
+            #print('end_add %s' % card_lines)
+
+            # old dictionary version
+            cards[old_card_name].append([backup_comment + full_comment, card_lines])
+
+            # new list version
+            #cards.append([old_card_name, backup_comment + full_comment, card_lines])
+            card_count[old_card_name] += 1
+        return cards, card_count
 
     def update_solution(self, sol, method, isol_line):
         """
@@ -2401,7 +2478,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _parse_cards(self, cards, card_count):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
-        if isinstance(cards, dict):
+        if isinstance(cards, dict): # self._is_cards_dict = True
             for card_name, card in sorted(iteritems(cards)):
                 if self.is_reject(card_name):
                     self.log.info('    rejecting card_name = %s' % card_name)

@@ -6,7 +6,12 @@ from struct import unpack, Struct
 from copy import deepcopy
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
-from numpy import fromfile, dtype as npdtype
+from numpy import dtype as npdtype
+
+if sys.version_info < (2, 7, 7):
+    # makes sure we don't get the following bug:
+    #   Issue #19099: The struct module now supports Unicode format strings.
+    raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
 
 class FortranFormat(object):
     def __init__(self):
