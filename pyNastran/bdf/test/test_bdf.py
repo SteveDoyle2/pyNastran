@@ -188,7 +188,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
             reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False):
+            quiet=False, dumplines=False, dictsort=False):
     """
     Runs a single BDF
 
@@ -236,6 +236,10 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         support OpenMDAO syntax  %myvar; max variable length=7
     quiet : bool; default=False
         suppresses print messages
+    dumplines: bool; default=False
+        writes pyNastran_dump.bdf
+    dictsort : bool; default=False
+        writes pyNastran_dict.bdf
     """
     if dynamic_vars is None:
         dynamic_vars = {}
@@ -836,11 +840,11 @@ def main():
     """
     from docopt import docopt
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-p] [-r] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-x] [-p] [-s] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-p] [-r] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-s] [-f] BDF_FILENAME\n" #
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -864,6 +868,8 @@ def main():
     msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
     msg += '  -L, --loads    Disables forces/moments summation for the different subcases (default=False)\n'
     msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
+    msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed (pyNastran_dump.bdf)\n'
+    msg += '  -i, --dictsort  Writes the BDF with exactly as read with the INCLUDES processed (pyNastran_dict.bdf)\n'
     msg += '  -f, --profile  Profiles the code (default=False)\n'
     msg += '  -s, --stop     Stop after first read/write (default=False)\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
@@ -916,6 +922,8 @@ def main():
             sum_load=not data['--loads'],
             stop=data['--stop'],
             quiet=data['--quiet'],
+            dumplines=data['--dumplines'],
+            dictsort=data['--dictsort'],
         )
         prof.dump_stats('bdf.profile')
 
@@ -951,6 +959,8 @@ def main():
             sum_load=not data['--loads'],
             stop=data['--stop'],
             quiet=data['--quiet'],
+            dumplines=data['--dumplines'],
+            dictsort=data['--dictsort'],
         )
     print("total time:  %.2f sec" % (time.time() - t0))
 

@@ -1,23 +1,17 @@
 from __future__ import print_function
-from six import iteritems, b, integer_types, PY2
+from six import iteritems, b, integer_types
 from six.moves import range
 import sys
 from struct import unpack, Struct
 from copy import deepcopy
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
-from numpy import fromfile, dtype as npdtype
+from numpy import dtype as npdtype
 
-if PY2:
-    if b('test') != 'test':
-        msg = (
-            'Unknown Error\n'
-            'Possible Solutions:\n'
-            '   1. Reinstall Python\n'
-            '   2. Renstall six\n'
-            '   3. Put a unicode encoding at the top of your main script\n'
-        )
-        raise RuntimeError(msg)
+if sys.version_info < (2, 7, 7):
+    # makes sure we don't get the following bug:
+    #   Issue #19099: The struct module now supports Unicode format strings.
+    raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
 
 class FortranFormat(object):
     def __init__(self):
