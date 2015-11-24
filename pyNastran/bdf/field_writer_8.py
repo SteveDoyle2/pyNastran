@@ -34,8 +34,13 @@ def set_blank_if_default(value, default):
     """
     Used when setting the output data of a card to clear default values
 
-    :param value: the field value the may be set to None (blank)
-                  if value=default, the default value for the field
+    Parameters
+    ----------
+    value : int/float/str
+        the field value the may be set to None (blank)
+        if value=default, the default value for the field
+    default : int/float/str
+        the default value
 
     .. note:: this method is used by almost every card when printing
     """
@@ -197,8 +202,15 @@ def print_float_or_int_8(value):
     """
     Prints a 8-character width field
 
-    :param value:   the value to print
-    :returns field: an 8-character string
+    Parameters
+    ----------
+    value : int/float
+        the value to print
+
+    Returns
+    -------
+    field : str
+        an 8-character string
     """
     if isinstance(value, (float, float32)):
         field = print_float_8(value)
@@ -212,8 +224,15 @@ def print_field_8(value):
     """
     Prints a 8-character width field
 
-    :param value:   the value to print
-    :returns field: an 8-character string
+    Parameters
+    ----------
+    value : int/float/str
+        the value to print
+
+    Returns
+    -------
+    field : str
+        an 8-character string
     """
     if isinstance(value, integer_types):
         field = "%8s" % value
@@ -233,8 +252,14 @@ def print_card_8(fields):
     """
     Prints a nastran-style card with 8-character width fields.
 
-    :param fields: all the fields in the BDF card (no trailing Nones)
-    :returns card: string representation of the card in small field format
+    Parameters
+    ----------
+    fields : List[int/float/str/None]
+        all the fields in the BDF card (no trailing Nones)
+
+    Returns
+    card : str
+        string representation of the card in small field format
 
     .. note:: An internal field value of None or '' will be treated as
               a blank field
@@ -281,7 +306,9 @@ def print_int_card(fields):
     All fields (other than the first field) must be integers.
     This is used to speed up SET cards.
 
-    :param fields:
+    Parameters
+    ----------
+    fields : List[int/float/str/None]
       The list of fields to write to a nastran card.
 
     .. warning::
@@ -319,15 +346,15 @@ def print_int_card_blocks(fields_blocks):
     All fields other than the card name must be written in "block" format.
     This is used to speed up SET cards.
 
-    :param fields_blocks:
+    Parameters
+    ----------
+    fields_blocks : List[int]
       The fields written in "block" notation.
-    :type msg:
-      list or tuple
 
-    :returns msg:
-      the field blocks as a 8-character width Nastran card
-    :type msg:
-      str
+    Returns
+    -------
+    msg : str
+        the field blocks as a 8-character width Nastran card
 
     .. note:: Blanks are allowed in the False block.
 

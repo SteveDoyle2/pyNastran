@@ -777,7 +777,7 @@ class PBARL(LineProperty):
     .. todo:: doesnt support user-defined types
     """
     type = 'PBARL'
-    validTypes = {
+    valid_types = {
         "ROD": 1,
         "TUBE": 2,
         "I": 6,
@@ -819,7 +819,8 @@ class PBARL(LineProperty):
             dims = []
             #dim_old = None  ## TODO: is there a default?
             for i in range(ndim):
-                dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
+                #dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
+                dim = double(card, 9 + i, 'dim%i' % (i + 1))
                 dims.append(dim)
 
             #: dimension list
@@ -843,15 +844,15 @@ class PBARL(LineProperty):
             #print(str(self))
             #print("*PBARL = ",data)
             #raise NotImplementedError('not finished...')
-        if self.Type not in self.validTypes:
+        if self.Type not in self.valid_types:
             msg = ('Invalid PBARL Type, Type=%s '
-                   'validTypes=%s' % (self.Type, self.validTypes.keys()))
+                   'valid_types=%s' % (self.Type, self.valid_types.keys()))
             raise RuntimeError(msg)
 
-        if len(self.dim) != self.validTypes[self.Type]:
+        if len(self.dim) != self.valid_types[self.Type]:
             msg = 'dim=%s len(dim)=%s Type=%s len(dimType)=%s' % (
                 self.dim, len(self.dim), self.Type,
-                self.validTypes[self.Type])
+                self.valid_types[self.Type])
             raise RuntimeError(msg)
 
         assert None not in self.dim
