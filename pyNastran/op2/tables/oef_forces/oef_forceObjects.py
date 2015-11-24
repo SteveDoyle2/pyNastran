@@ -1264,6 +1264,12 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             #self.add_new_transient(dt)
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
+    @property
+    def nnodes_per_element(self):
+        if self.element_type == 144:
+            nnodes_element = 5
+        return nnodes_element
+
     def get_stats(self):
         if not self.is_built:
             return [
@@ -1274,21 +1280,21 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         nelements = self.nelements
         ntimes = self.ntimes
-        #ntotal = self.ntotal
+        ntotal = self.ntotal
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i ntotal=%i nnodes/element=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements, ntotal, self.nnodes_per_element))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i ntotal=%i nnodes/element=%i\n'
+                       % (self.__class__.__name__, nelements, ntotal, self.nnodes_per_element))
             ntimes_word = 1
-        #msg.append('  eType\n')
+
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -1517,27 +1523,6 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
     def eid_to_element_node_index(self, eids):
         ind = searchsorted(eids, self.element)
         return ind
-
-    #def _get_msgs(self):
-        #base_msg = ['       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
-                    #'         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
-        #crod_msg   = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
-        #conrod_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
-        #ctube_msg  = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
-        #crod_msg += base_msg
-        #conrod_msg += base_msg
-        #ctube_msg += base_msg
-        #return crod_msg, conrod_msg, ctube_msg
-
-    #def get_f06_header(self, is_mag_phase=True):
-        #crod_msg, conrod_msg, ctube_msg = self._get_msgs()
-        #if 'CROD' in self.element_name:
-            #msg = crod_msg
-        #elif 'CONROD' in self.element_name:
-            #msg = conrod_msg
-        #elif 'CTUBE' in self.element_name:
-            #msg = ctube_msg
-        #return self.element_name, msg
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',

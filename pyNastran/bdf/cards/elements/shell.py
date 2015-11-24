@@ -164,6 +164,17 @@ class TriShell(ShellElement):
             tuple(sorted([node_ids[2], node_ids[0]]))
         ]
 
+    def get_edge_axes(self):
+        n1, n2, n3 = self.nodes
+        g1 = n1.get_position()
+        g2 = n2.get_position()
+        g3 = n3.get_position()
+        x = g2 - g1
+        yprime = g3 - g1
+        normal = cross(x, yprime)
+        y = cross(normal, x)
+        return x, y
+
     def Thickness(self):
         """
         Returns the thickness
@@ -209,7 +220,7 @@ class TriShell(ShellElement):
           n = \frac{(n_0-n_1) \times (n_0-n_2)}
              {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
-        (n1, n2, n3) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions()
         try:
             n = _normal(n1 - n2, n1 - n3)
         except:
@@ -228,8 +239,8 @@ class TriShell(ShellElement):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        (n0, n1, n2) = self.get_node_positions()
-        centroid = centroid_triangle(n0, n1, n2)
+        n1, n2, n3 = self.get_node_positions()
+        centroid = centroid_triangle(n1, n2, n3)
         return centroid
 
     def uncross_reference(self):
@@ -1027,6 +1038,31 @@ class QuadShell(ShellElement):
             tuple(sorted([node_ids[3], node_ids[0]]))
         ]
 
+    def get_edge_number_by_node_ids(self, n1, n2):
+        edge_ids = self.get_edge_ids()
+        edge = [n1, n2]
+        edge.sort()
+        tedge = tuple(edge)
+        iedge = edge_ids.index(tedge)
+        return iedge
+
+    def get_edge_axes(self):
+        n1, n2, n3, n4 = self.nodes
+
+        g1 = n1.get_position()
+        g2 = n2.get_position()
+        g3 = n3.get_position()
+        g4 = n4.get_position()
+        g12 = (g1 + g2) / 2.
+        g23 = (g2 + g3) / 2.
+        g34 = (g3 + g4) / 2.
+        g14 = (g1 + g4) / 2.
+        x = g23 - g14
+        yprime = g34 - g12
+        normal = cross(x, yprime)
+        y = cross(normal, x)
+        return x, y
+
     def Thickness(self):
         """
         Returns the thickness
@@ -1069,13 +1105,13 @@ class QuadShell(ShellElement):
            c=centroid
            A=area
         """
-        (n1, n2, n3, n4) = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions()
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
     def Centroid(self):
-        (n1, n2, n3, n4) = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions()
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
