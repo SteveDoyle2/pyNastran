@@ -245,9 +245,9 @@ class CBAR(LineElement):
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
             self.ga = integer(card, 3, 'ga')
             self.gb = integer(card, 4, 'gb')
-            self.initX_G0(card)
+            self._init_x_g0(card)
 
-            self.offt = string_or_blank(card, 8, 'offt', 'GGG')
+            self.offt = string_or_blank(card, 8, 'offt', 'GGG')  # doesn't exist in NX nastran
             #print('self.offt = |%s|' % (self.offt))
 
             self.pa = integer_or_blank(card, 9, 'pa', 0)
@@ -362,7 +362,7 @@ class CBAR(LineElement):
     def Centroid(self):
         return (self.ga.get_position() + self.gb.get_position()) / 2.
 
-    def initX_G0(self, card):
+    def _init_x_g0(self, card):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, integer_types):
             self.g0 = field5
@@ -461,7 +461,10 @@ class CBAR(LineElement):
         w2b = set_blank_if_default(self.wb[1], 0.0)
         w3b = set_blank_if_default(self.wb[2], 0.0)
         (x1, x2, x3) = self.getX_G0_defaults()
+
+        # offt doesn't exist in NX nastran
         offt = set_blank_if_default(self.offt, 'GGG')
+
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
                        x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
         return list_fields
@@ -490,7 +493,7 @@ class CBEAM3(CBAR):
             self.gb = integer(card, 4, 'gb')
             self.gc = integer(card, 5, 'gc')
 
-            self.initX_G0(card)
+            self._init_x_g0(card)
 
             self.wa = array([double_or_blank(card, 9, 'w1a', 0.0),
                              double_or_blank(card, 10, 'w2a', 0.0),

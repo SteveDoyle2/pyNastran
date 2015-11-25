@@ -1,9 +1,34 @@
+import os
 import sys
 from six import iteritems
 
-import pyNastran
 from docopt import docopt
+import pyNastran
 #from gui.formats import format_string
+
+def determine_format(input):
+    """
+    Tries to map the input filename to an extension.
+
+    .. note :: this function will not support generic extensions (e.g. .inp, .dat)
+    """
+    format_to_extension = {
+        'nastran' : ['.bdf', '.ecd', '.nas'],
+        'stl' : ['.stl'],
+        'cart3d' : ['.tri', '.triq'],
+        'tecplot' : ['.plt'],
+        'ugrid' : ['.ugrid'],
+        'plot3d' : ['.p3d', '.p3da'],
+    }
+    ext = os.path.splitext(input)[1].lower()
+    extension_to_format = {val : key for key, value in iteritems(format_to_extension)
+                           for val in value}
+    try:
+        format = extension_to_format[ext]
+    except:
+        msg = 'format=%r was not found; Specify it' % ext
+        raise TypeError(msg)
+    return format
 
 def run_arg_parse():
     msg  = "Usage:\n"
@@ -43,6 +68,10 @@ def run_arg_parse():
     input = data['--input']
     output = data['--output']
     debug = not(data['--quiet'])
+
+    if input and not format:
+        format = determine_format(input)
+
 
     shots = []
     if '--shots' in data:

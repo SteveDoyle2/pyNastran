@@ -2579,7 +2579,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                             self.dumplines = True if value == 'true' else False
                         elif key == 'skip_cards':
                             cards = {value.strip() for value in value.upper().split(',')}
-                            #self.cards_to_read = self.cards_to_read - cards
+                            self.cards_to_read = self.cards_to_read - cards
                         else:
                             raise NotImplementedError(key)
                     else:

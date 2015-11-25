@@ -80,8 +80,8 @@ class CBEAM(CBAR):
             self.ga = integer(card, 3, 'ga')
             self.gb = integer(card, 4, 'gb')
 
-            self.initX_G0(card)
-            self.initOfftBit(card)
+            self._init_x_g0(card)
+            self._init_offt_bit(card)  # offt doesn't exist in NX nastran
             self.pa = integer_or_blank(card, 9, 'pa', 0)
             self.pb = integer_or_blank(card, 10, 'pb', 0)
 
@@ -121,7 +121,7 @@ class CBEAM(CBAR):
             self.sa = main[4]
             self.sb = main[5]
 
-            self.isOfft = True  #: .. todo:: is this correct???
+            self.is_offt = True  #: .. todo:: is this correct???
             #self.offt = str(data[6]) # GGG
             self.offt = 'GGG'  #: .. todo:: is this correct???
 
@@ -139,18 +139,21 @@ class CBEAM(CBAR):
     def Nodes(self):
         return [self.ga, self.gb]
 
-    def initOfftBit(self, card):
+    def _init_offt_bit(self, card):
+        """
+        offt doesn't exist in NX nastran
+        """
         field8 = integer_double_string_or_blank(card, 8, 'field8')
         if isinstance(field8, float):
-            self.isOfft = False
+            self.is_offt = False
             self.offt = None
             self.bit = field8
         elif field8 is None:
-            self.isOfft = True
+            self.is_offt = True
             self.offt = 'GGG'  # default
             self.bit = None
         elif isinstance(field8, string_types):
-            self.isOfft = True
+            self.is_offt = True
             self.bit = None
             self.offt = field8
             #print("self.offt = ", self.offt)
@@ -182,8 +185,11 @@ class CBEAM(CBAR):
         return self.pid.Nsm()
 
     def getOfft_Bit_defaults(self):
-        if self.isOfft:
-            field8 = self.offt
+        """
+        offt doesn't exist in NX nastran
+        """
+        if self.is_offt:
+            field8 = field8 = set_blank_if_default(self.offt, 'GGG')
         else:
             field8 = set_blank_if_default(self.bit, 0.0)
         return field8
