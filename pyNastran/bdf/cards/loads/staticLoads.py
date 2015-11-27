@@ -1530,9 +1530,9 @@ class PLOAD(Load):
 
 class PLOAD1(Load):
     type = 'PLOAD1'
-    validTypes = ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE',
-                  'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
-    validScales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
+    valid_types = ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE',
+                   'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
+    valid_scales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -1540,8 +1540,8 @@ class PLOAD1(Load):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.eid = integer(card, 2, 'eid')
-            self.Type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.validTypes))
-            self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.validScales))
+            self.Type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.valid_types))
+            self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.valid_scales))
             self.x1 = double(card, 5, 'x1')
             self.p1 = double(card, 6, 'p1')
             self.x2 = double_or_blank(card, 7, 'x2', self.x1)
@@ -1556,23 +1556,23 @@ class PLOAD1(Load):
             self.p1 = data[5]
             self.x2 = data[6]
             self.p2 = data[7]
-            self.Type = self.validTypes[self.Type - 1]
-            self.scale = self.validScales[self.scale - 1]
+            self.Type = self.valid_types[self.Type - 1]
+            self.scale = self.valid_scales[self.scale - 1]
 
-        if self.Type not in self.validTypes:
-            msg = '%s is an invalid type on the PLOAD1 card; validTypes=[%s]' % (
-                self.Type, ', '.join(self.validTypes).rstrip(', '))
+        if self.Type not in self.valid_types:
+            msg = '%s is an invalid type on the PLOAD1 card; valid_types=[%s]' % (
+                self.Type, ', '.join(self.valid_types).rstrip(', '))
             raise RuntimeError(msg)
-        if self.scale not in self.validScales:
-            msg = '%s is an invalid scale on the PLOAD1 card; validScales=[%s]' % (
-                self.scale, ', '.join(self.validScales).rstrip(', '))
+        if self.scale not in self.valid_scales:
+            msg = '%s is an invalid scale on the PLOAD1 card; valid_scales=[%s]' % (
+                self.scale, ', '.join(self.valid_scales).rstrip(', '))
             raise RuntimeError(msg)
 
         assert 0.0 <= self.x1 <= self.x2, '0.0 <= x1 <= x2 -> x1=%s x2=%s' % (self.x1, self.x2)
         if self.scale in ['FR', 'FRPR']:
             assert self.x1 <= 1.0, 'x1=%r' % self.x1
             assert self.x2 <= 1.0, 'x2=%r' % self.x2
-        assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
+        assert self.scale in self.valid_scales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
 
     def cross_reference(self, model):

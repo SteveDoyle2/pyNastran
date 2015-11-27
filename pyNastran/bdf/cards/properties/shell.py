@@ -949,6 +949,8 @@ class PSHELL(ShellProperty):
             self.mid1 = integer_or_blank(card, 2, 'mid1')
             #: thickness
             self.t = double_or_blank(card, 3, 't')
+            if self.t is not None:
+                assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
 
             #: Material identification number for bending
             #: -1 for plane strin

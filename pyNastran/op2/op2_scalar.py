@@ -410,7 +410,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         self : OP2
             the OP2 object pointer
-        subcases : List[int, ...]; default=None->all subcases
+        subcases : List[int, ...] / int; default=None->all subcases
             list of [subcase1_ID,subcase2_ID]
         """
         #: stores the set of all subcases that are in the OP2
@@ -422,6 +422,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             #: should all the subcases be read (default=True)
             self.isAllSubcases = False
+
+            if isinstance(subcases, int):
+                subcases = [subcases]
 
             #: the set of valid subcases -> set([1,2,3])
             self.valid_subcases = set(subcases)

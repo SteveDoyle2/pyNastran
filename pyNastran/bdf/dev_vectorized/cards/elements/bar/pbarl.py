@@ -102,7 +102,7 @@ class PBARL(Property):
 
         if Type not in self.valid_types:
             msg = ('Invalid PBARL Type, Type=%s '
-                   'validTypes=%s' % (Type, self.valid_types.keys()))
+                   'valid_types=%s' % (Type, self.valid_types.keys()))
             raise RuntimeError(msg)
 
         if len(dim) != self.valid_types[Type]:

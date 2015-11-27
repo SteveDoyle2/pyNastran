@@ -200,7 +200,26 @@ class CBEAM(CBAR):
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.g0:
-            self.g0_vector = model.nodes[self.g0].get_position() - self.ga.get_position()
+            g0 = model.nodes[self.g0]
+            self.g0_vector = g0.get_position() - self.ga.get_position()
+        else:
+            self.g0_vector = self.x
+
+    def safe_cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
+        try:
+            self.pid = model.Property(self.pid, msg=msg)
+        except KeyError:
+            model.log.warning('pid=%s%s' % (self.pid, msg))
+
+        if self.g0:
+            try:
+                g0 = model.nodes[self.g0]
+                self.g0_vector = g0.get_position() - self.ga.get_position()
+            except KeyError:
+                model.log.warning('Node=%s%s' % (self.g0, msg))
         else:
             self.g0_vector = self.x
 

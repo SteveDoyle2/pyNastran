@@ -813,7 +813,7 @@ class PBARL(LineProperty):
             #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
             self.Type = string(card, 4, 'Type')
 
-            ndim = self.validTypes[self.Type]
+            ndim = self.valid_types[self.Type]
             j = 9 + ndim + 1
 
             dims = []
@@ -1101,9 +1101,72 @@ class PBARL(LineProperty):
 
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
-            Ixx = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
-            Iyy = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
+            Ixx = 1/12 * sum((yi**2 + yi*yip1+yip1**2)*ai)
+            Iyy = 1/12 * sum((xi**2 + xi*xip1+xip1**2)*ai)
             #Ixy = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
+        elif self.Type == 'I':
+            # http://www.efunda.com/designstandards/beams/SquareIBeam.cfm
+            # d - outside height
+            # h - inside height
+            # b - base
+            # t - l thickness
+            # s - web thickness
+            #(b, d, t, s) = self.dim
+            #h = d - 2 * s
+            #cx = b / 2.
+            #cy = d / 2.
+            (d, b1, b2, t, s1, s2) = self.dim
+            if b1 != b2:
+                msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (self.Type, self.dim)
+                raise NotImplementedError(msg)
+            if s1 != s2:
+                msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (self.Type, self.dim)
+                raise NotImplementedError(msg)
+            h = d - b1 - b2
+            s = s1
+            b = b1
+            Ixx = (b*d**3-h**3*(b-t)) / 12.
+            Iyy = (2.*s*b**3 + h*t**3) / 12.
+        elif self.Type == 'T': # test
+            # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
+            # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
+            # d - outside height
+            # h - inside height
+            # b - base
+            # t - l thickness
+            # s - web thickness
+            #(b, d, t, s) = self.dim
+            #h = d - 2 * s
+            (b, d, s, t) = self.dim
+            # if b1 != b2:
+                # msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (self.Type, self.dim)
+                # raise NotImplementedError(msg)
+            # if s1 != s2:
+                # msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (self.Type, self.dim)
+                # raise NotImplementedError(msg)
+            # h = d - b1 - b2
+            # s = s1
+            # b = b1
+
+            # http://www.engineersedge.com/material_science/moment-inertia-gyration-6.htm
+            y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
+            Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
+            Iyy = t**3*(h-s)/12. + b**3*s/12.
+            #A = b*s + h*t
+
+        elif self.Type == 'C':
+            # http://www.efunda.com/math/areas/squarechannel.cfm
+            # d - outside height
+            # h - inside height
+            # b - base
+            # t - l thickness
+            # s - web thickness
+            (b, d, t, s) = self.dim
+            h = d - 2 * s
+            #cx = (2.*b**2*s + h*t**2)/(2*b*d - 2*h*(b-t))
+            #cy = d / 2.
+            Ixx = (b * d**3 - h **3 * (b-t)) / 12.
+            Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
         else:
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)
