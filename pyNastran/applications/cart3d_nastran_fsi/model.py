@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+
 class Model(object):
     def __init__(self):
         pass

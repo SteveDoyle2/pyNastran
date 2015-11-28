@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip
 import os
@@ -8,12 +9,12 @@ from time import time
 
 from numpy import argsort, mean, array, cross
 
-# my code
-from mathFunctions import pierce_plane_vector, shepard_weight, Normal, ListPrint
-#from mathFunctions import get_triangle_weights
-from structural_model import StructuralModel
-from aero_model import AeroModel
-from kdtree import KdTree
+
+from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import pierce_plane_vector, shepard_weight, Normal, ListPrint
+#from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import get_triangle_weights
+from pyNastran.applications.cart3d_nastran_fsi.structural_model import StructuralModel
+from pyNastran.applications.cart3d_nastran_fsi.aero_model import AeroModel
+from pyNastran.applications.cart3d_nastran_fsi.kdtree import KdTree
 
 # pyNastran
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
@@ -38,21 +39,29 @@ class LoadMapping(object):
 
         self.configpath = configpath
         self.workpath = workpath
-        self.aeroModel = aeroModel
-        self.structuralModel = structuralModel
+        self.aero_model = aeroModel
+        self.structural_model = structuralModel
 
-        self.mappingMatrix = {}
+        self.mapping_matrix = {}
         self.mapfile = 'mapfile.in'
         self.bdffile = 'fem.bdf'
+
+        self.centroid_tree = None
+        self.nodal_tree = None
+        self.pInf = None
+        self.qInf = None
+        self.load_case = None
+        self.bdf = None
+        self.load_cases = None
 
         self.Sref = 1582876. # inches
         self.Lref = 623.  # inch
         self.xref = 268.
 
     #@entryExit
-    def setOutput(self, bdffile='fem.bdf', loadCase=1):
+    def set_output(self, bdffile='fem.bdf', load_case=1):
         self.bdffile = bdffile
-        self.loadCase = loadCase
+        self.load_case = load_case
 
     #@entryExit
     def set_flight_condition(self, pInf=499.3, qInf=237.885):
@@ -60,20 +69,19 @@ class LoadMapping(object):
         self.qInf = qInf  #1.4/2.*pInf*Mach**2.
 
     #@entryExit
-    def loadMappingMatrix(self):
+    def load_mapping_matrix(self):
         infile = open(self.mapfile, 'r')
-        self.mappingMatrix = cPickle.loads(infile)
+        self.mapping_matrix = cPickle.loads(infile)
         infile.close()
 
     #@entryExit
     def save_mapping_matrix(self):
-        outString = cPickle.dumps(self.mappingMatrix)
-        outfile = open(self.mapfile, 'wb')
-        outfile.write(outString)
-        outfile.close()
+        out_string = cPickle.dumps(self.mapping_matrix)
+        with open(self.mapfile, 'wb') as outfile:
+            outfile.write(out_string)
 
     #@entryExit
-    def getPressure(self, Cp):
+    def get_pressure(self, Cp):
         """
         Caculates the pressure based on:
            Cp = (p-pInf)/qInf
@@ -83,95 +91,97 @@ class LoadMapping(object):
         return p
 
     #@entryExit
-    def mapLoads(self):
+    def map_loads(self):
         """
-        Loops thru the unitLoad mappingMatrix and multiplies by the
+        Loops thru the unitLoad mapping_matrix and multiplies by the
         total force F on each panel to calculate the PLOAD that will be
         printed to the output file.
         Also, performs a sum of Forces & Moments to verify the aero loads.
         """
-        log.info("---starting mapLoads---")
+        log.info("---starting map_loads---")
         self.bdf = open(self.bdffile, 'wb')
-        #self.buildMappingMatrix()
-        log.info("self.loadCase = %s" % self.loadCase)
-        self.loadCases = {self.loadCase:{}}
+        #self.build_mapping_matrix()
+        log.info("self.load_case = %s" % self.load_case)
+        self.load_cases = {
+            self.load_case : {},
+        }
 
-        #self.loadCases = {self.loadCase={}, }
-        momentCenter = array([self.xref, 0., 0.])
-        sumMoments = array([0., 0., 0.])
-        sumForces = array([0., 0., 0.])
+        #self.loadCases = {self.load_case={}, }
+        moment_center = array([self.xref, 0., 0.])
+        sum_forces = array([0., 0., 0.])
+        sum_moments = array([0., 0., 0.])
         sys.stdout.flush()
-        for aEID, distribution in iteritems(self.mappingMatrix):
-            #print "aEID = ", aEID
-            #print "***distribution = ", distribution
-            sumLoad = 0.
-            area = self.aeroModel.Area(aEID)
-            normal = self.aeroModel.Normal(aEID)
-            Cp = self.aeroModel.Cp(aEID)
+        for aero_eid, distribution in iteritems(self.mapping_matrix):
+            #print("aero_eid = ", aero_eid)
+            #print("***distribution = ", distribution)
+            sum_load = 0.
+            area = self.aero_model.Area(aero_eid)
+            normal = self.aero_model.Normal(aero_eid)
+            Cp = self.aero_model.Cp(aero_eid)
             #print "Cp = ", Cp
-            #print "area[%s]=%s" % (aEID, area)
+            #print "area[%s]=%s" % (aero_eid, area)
 
-            p = self.getPressure(Cp)
-            centroid = self.aeroModel.Centroid(aEID)
-            r = momentCenter - centroid
+            p = self.get_pressure(Cp)
+            centroid = self.aero_model.Centroid(aero_eid)
+            r = moment_center - centroid
             F = area * p
             Fn = F * normal
-            sumMoments += cross(r, Fn)
-            sumForces += Fn
-            for sNID, percentLoad in sorted(iteritems(distribution)):
-                sumLoad += percentLoad
+            sum_moments += cross(r, Fn)
+            sum_forces += Fn
+            for sNID, percent_load in sorted(iteritems(distribution)):
+                sum_load += percent_load
 
-                Fxyz = Fn * percentLoad  # negative sign is to be consistent with nastran
-                self.addForce(sNID, Fxyz)
+                Fxyz = Fn * percent_load  # negative sign is to be consistent with nastran
+                self.add_force(sNID, Fxyz)
 
                 #print("Fxyz = ",Fxyz)
                 #print("type(structuralModel) = ", type(self.structuralModel))
 
-                #comment = 'percentLoad=%.2f' % percentLoad
-                #self.structuralModel.writeLoad(self.bdf, self.loadCase, sNID,
-                #                               Fxyz[0], Fxyz[1], Fxyz[2], comment)
+                #comment = 'percent_load=%.2f' % percent_load
+                #self.structuralModel.write_load(self.bdf, self.loadCase, sNID,
+                #                                Fxyz[0], Fxyz[1], Fxyz[2], comment)
 
             #msg = '$ End of aEID=%s sumLoad=%s p=%s area=%s F=%s normal=%s\n' % (aEID, sumLoad, p, area, F, normal)
             #self.bdf.write(msg)
 
-        self.writeLoads()  # short version of writing loads...
+        self.write_loads()  # short version of writing loads...
         self.bdf.close()
 
         log.info("pInf=%g [psi]; qInf= %g [psi]" % (self.pInf, self.qInf))
-        log.info("sumForcesFEM  [lb]    = %s" % ListPrint(sumForces))
-        log.info("sumMomentsFEM [lb-ft] = %s" % ListPrint(sumMoments/12.))  # divided by 12 to have moments in lb-ft
+        log.info("sumForcesFEM  [lb]    = %s" % ListPrint(sum_forces))
+        log.info("sumMomentsFEM [lb-ft] = %s" % ListPrint(sum_moments / 12.))  # divided by 12 to have moments in lb-ft
 
-        Cf = sumForces /(self.Sref * self.qInf)
+        Cf = sum_forces /(self.Sref * self.qInf)
         log.info("Cf = %s" % ListPrint(Cf))
 
-        Cm = sumMoments / (self.Sref * self.qInf * self.Lref)
-        log.info("Cm = %s" % ListPrint(Cm*12.)) # multiply by 12 to nondimensionalize ???  maybe 144...
+        Cm = sum_moments / (self.Sref * self.qInf * self.Lref)
+        log.info("Cm = %s" % ListPrint(Cm * 12.)) # multiply by 12 to nondimensionalize ???  maybe 144...
 
         #self.bdf.write('$***********\n')
         log.info("wrote loads to %r" % self.bdffile)
-        log.info("---finished mapLoads---")
+        log.info("---finished map_loads---")
 
     #@entryExit
-    def writeLoads(self):
+    def write_loads(self):
         """writes the load in BDF format"""
         log.info("---starting writeLoads---")
         self.bdf.write('$ ***writeLoads***\n')
         self.bdf.write('$ nCloseElements=%s\n' % self.nCloseElements)
-        for loadCase, loads in sorted(iteritems(self.loadCases)):
-            log.info("  loadCase = %s" % loadCase)
+        for load_case, loads in sorted(iteritems(self.load_cases)):
+            log.info("  load_case = %s" % load_case)
             for (sNID, Fxyz) in sorted(iteritems(loads)):
-                self.structuralModel.write_load(self.bdf, loadCase, sNID, *Fxyz)
+                self.structural_model.write_load(self.bdf, load_case, sNID, *Fxyz)
 
         log.info("finished writeLoads---")
 
-    def addForce(self, sNID, Fxyz):
+    def add_force(self, sNID, Fxyz):
         try:
-            self.loadCases[self.loadCase][sNID] += Fxyz
+            self.load_cases[self.load_case][sNID] += Fxyz
         except KeyError:
-            self.loadCases[self.loadCase][sNID] = Fxyz
+            self.load_cases[self.load_case][sNID] = Fxyz
 
     #@entryExit
-    def buildCentroids(self, model, eids=None):
+    def build_centroids(self, model, eids=None):
         centroids = {}
         if eids is None:
             eids = model.ElementIDs()
@@ -182,99 +192,98 @@ class LoadMapping(object):
         return centroids
 
     #@entryExit
-    def buildNodalTree(self, sNodes):
-        log.info("---start buildNodalTree---")
-        raise Exception('DEPRECATED...buildNodalTree in mapLoads.py')
+    def build_nodal_tree(self, sNodes):
+        log.info("---start build_nodal_tree---")
+        raise Exception('DEPRECATED...build_nodal_tree in mapLoads.py')
         sys.stdout.flush()
         #print "type(aCentroids)=%s type(sCentroids)=%s" %(type(aCentroids), type(sCentroids))
-        self.nodalTree = KdTree('node', sNodes, nClose=self.nCloseNodes)
-        log.info("---finish buildNodalTree---")
+        self.nodal_tree = KdTree('node', sNodes, nclose=self.nCloseNodes)
+        log.info("---finish build_nodal_tree---")
         sys.stdout.flush()
 
     #@entryExit
-    def buildCentroidTree(self, sCentroids):
+    def build_centroid_tree(self, structural_centroids):
         """
-        sCentroids - dict of structural centroids
+        structural_centroids - dict of structural centroids
         id:  element id
         """
-        log.info("---start buildCentroidTree---")
+        log.info("---start build_centroid_tree---")
         sys.stdout.flush()
-        #print "type(aCentroids)=%s type(sCentroids)=%s" %(type(aCentroids), type(sCentroids))
+        #print "type(aCentroids)=%s type(structural_centroids)=%s" %(type(aCentroids), type(structural_centroids))
 
         msg = 'Element '
-        for id, sCentroid in sorted(iteritems(sCentroids)):
-            msg += "%s " % id
+        for eid, structural_centroid in sorted(iteritems(structural_centroids)):
+            msg += "%s " % eid
         log.info(msg + '\n')
 
-        self.centroidTree = KdTree('element', sCentroids, nClose=self.nCloseElements)
-        log.info("---finish buildCentroidTree---")
+        self.centroid_tree = KdTree('element', structural_centroids, nclose=self.nCloseElements)
+        log.info("---finish build_centroid_tree---")
         sys.stdout.flush()
 
     #@entryExit
-    def parseMapFile(self, mapFilename='mappingMatrix.new.out'):
+    def parseMapFile(self, map_filename='mappingMatrix.new.out'):
         """
         This is used for rerunning an analysis quickly (cuts out building the mapping matrix ~1.5 hours).
         1 {8131: 0.046604568185355716, etc...}
         """
         log.info("---starting parseMapFile---")
-        mappingMatrix = {}
+        mapping_matrix = {}
 
-        log.info('loading mapFile=%r' % mapFilename)
-        mapFile = open(mapFilename, 'r')
-        lines = mapFile.readlines()
-        mapFile.close()
+        log.info('loading mapFile=%r' % map_filename)
+        with open(map_filename, 'r') as map_file:
+            lines = map_file.readlines()
 
-        for (i, line) in enumerate(lines[1:]):  # dont read the first line, thats a header line
+        # dont read the first line, thats a header line
+        for (i, line) in enumerate(lines[1:]):
             line = line.strip()
             #print "line = %r" % line
-            (aEID, dictLine) = line.split('{') # splits the dictionary from the aEID
+            (aEID, dict_line) = line.split('{') # splits the dictionary from the aEID
             aEID = int(aEID)
             #assert i == int(aEID)
 
             # time to parse a dictionary with no leading brace
             distribution = {}
-            mapSline = dictLine.strip('{}, ').split(',')
-            for pair in mapSline:
+            map_sline = dict_line.strip('{}, ').split(',')
+            for pair in map_sline:
                 (sEID, weight) = pair.strip(' ').split(':')
                 sEID = int(sEID)
                 weight = float(weight)
                 distribution[sEID] = weight
-            mappingMatrix[aEID] = distribution
-        #log.info("mappingKeys = %s" %(sorted(mappingMatrix.keys())))
-        self.runMapTest(mappingMatrix)
+            mapping_matrix[aEID] = distribution
+        #log.info("mappingKeys = %s" %(sorted(mapping_matrix.keys())))
+        self.runMapTest(mapping_matrix)
         log.info("---finished parseMapFile---")
-        return mappingMatrix
+        return mapping_matrix
 
     #@entryExit
-    def runMapTest(self, mappingMatrix, mapTestFilename='mapTest.out'):
+    def runMapTest(self, mapping_matrix, mapTestFilename='mapTest.out'):
         """
         Checks to see what elements loads were mapped to.
         Ideally, all elements would have a value of 1.0, given equal area.
         Instead, each element should have a value of area[i].
         """
         mapTest = {}
-        for (aEID, distribution) in sorted(iteritems(mappingMatrix)):
+        for (aero_eid, distribution) in sorted(iteritems(mapping_matrix)):
             for sEID, weight in distribution.items():
                 if sEID in mapTest:
                     mapTest[sEID] += weight
                 else:
                     mapTest[sEID] = weight
 
-        mapOut = open(mapTestFilename, 'wb')
-        mapOut.write('# sEID  weight\n')
-        for sEID, weight in sorted(iteritems(mapTest)):
-            mapOut.write("%s %s\n" % (sEID, weight))
-        mapOut.close()
+        with open(mapTestFilename, 'wb') as map_out:
+            map_out.write('# sEID  weight\n')
+            for sEID, weight in sorted(iteritems(mapTest)):
+                map_out.write("%s %s\n" % (sEID, weight))
 
-    def map_loads_mp_func(self, aEID, aModel):
-        aElement = aModel.Element(aEID)
-        (aArea, aCentroid, aNormal) = aModel.get_element_properties(aEID)
+    def map_loads_mp_func(self, aero_eid, aero_model):
+        aero_element = aero_model.Element(aero_eid)
+        (aero_area, aero_centroid, aero_normal) = aero_model.get_element_properties(aero_eid)
         #percentDone = i / nAeroElements * 100
 
-        pSource = aCentroid
-        distribution = self.pierce_elements(aCentroid, aEID, pSource, aNormal)
-        #distribution = self.poorMansMapping(aCentroid, aEID, pSource, aNormal)
-        self.mappingMatrix[aEID] = distribution
+        pSource = aero_centroid
+        distribution = self.pierce_elements(aero_centroid, aero_eid, pSource, aero_normal)
+        #distribution = self.poorMansMapping(aero_centroid, aero_eid, pSource, aero_normal)
+        self.mapping_matrix[aero_eid] = distribution
 
     #@entryExit
     def build_mapping_matrix(self, debug=False):
@@ -285,47 +294,47 @@ class LoadMapping(object):
 
         eid,distribution
         """
-        if self.mappingMatrix != {}:
-            return self.mappingMatrix
+        if self.mapping_matrix != {}:
+            return self.mapping_matrix
 
-        log.info("---starting buildMappingMatrix---")
-        #print "self.mappingMatrix = ",self.mappingMatrix
+        log.info("---starting build_mapping_matrix---")
+        #print "self.mapping_matrix = ",self.mapping_matrix
         if os.path.exists('mappingMatrix.new.out'):
-            self.mappingMatrix = self.parseMapFile('mappingMatrix.new.out')
-            log.info("---finished buildMappingMatrix based on mappingMatrix.new.out---")
+            self.mapping_matrix = self.parseMapFile('mappingMatrix.new.out')
+            log.info("---finished build_mapping_matrix based on mappingMatrix.new.out---")
             sys.stdout.flush()
-            return self.mappingMatrix
+            return self.mapping_matrix
         log.info("...couldn't find 'mappingMatrix.new.out' in %r, so going to make it..." % os.getcwd())
 
         # this is the else...
         log.info("creating...")
-        aModel = self.aeroModel
-        sModel = self.structuralModel
+        aero_model = self.aero_model
+        structural_model = self.structural_model
 
-        #aNodes = aModel.getNodes()
-        #sNodes = sModel.getNodes()
+        #aNodes = aero_model.getNodes()
+        #sNodes = structural_model.getNodes()
         #treeObj = Tree(nClose=5)
         #tree    = treeObj.buildTree(aNodes,sNodes) # fromNodes,toNodes
 
-        aElementIDs = aModel.ElementIDs() # list
-        sElementIDs = sModel.getElementIDsWithPIDs() # list
-        sElementIDs2 = sModel.ElementIDs() # list
+        aElementIDs = aero_model.ElementIDs() # list
+        sElementIDs = structural_model.getElementIDsWithPIDs() # list
+        sElementIDs2 = structural_model.ElementIDs() # list
 
         msg = "there are no internal elements in the structural model?\n   ...len(sElementIDs)=%s len(sElementIDs2)=%s" % (
             len(sElementIDs), len(sElementIDs2))
         assert sElementIDs != sElementIDs2, msg
         log.info("maxAeroID=%s maxStructuralID=%s sElements=%s" % (max(aElementIDs), max(sElementIDs), len(sElementIDs2)))
 
-        log.info("buildCentroids - structural")
-        sCentroids = self.buildCentroids(sModel, sElementIDs)
-        self.buildCentroidTree(sCentroids)
+        log.info("build_centroids - structural")
+        sCentroids = self.build_centroids(structural_model, sElementIDs)
+        self.build_centroid_tree(sCentroids)
         #self.buildNodalTree(sNodes)
 
-        log.info("buildCentroids - aero")
-        aCentroids = self.buildCentroids(aModel)
+        log.info("build_centroids - aero")
+        aero_centroids = self.build_centroids(aero_model)
 
-        mapFile = open('mappingMatrix.out', 'wb')
-        mapFile.write('# aEID distribution (sEID:  weight)\n')
+        map_file = open('mappingMatrix.out', 'wb')
+        map_file.write('# aEID distribution (sEID:  weight)\n')
 
         t0 = time()
         nAeroElements = float(len(aElementIDs))
@@ -340,71 +349,71 @@ class LoadMapping(object):
             num_cpus = 4
             pool = mp.Pool(num_cpus)
             result = pool.imap(self.map_loads_mp_func,
-                               [(aEID, aModel) for aEID in aElementIDs])
+                               [(aEID, aero_model) for aEID in aElementIDs])
 
             for j, return_values in enumerate(result):
                 aEID, distribution = return_values
                 #self.mappingMatrix[aEID] = distribution
-                mapFile.write('%s %s\n' % (aEID, distribution))
+                map_file.write('%s %s\n' % (aEID, distribution))
             pool.close()
             pool.join()
         else:
-            for (i, aEID) in enumerate(aElementIDs):
+            for (i, aero_eid) in enumerate(aElementIDs):
                 if i % 1000 == 0 and debug:
                     log.debug('  piercing %sth element' % i)
                     log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" % (
                         tEst, tLeft, percent_done))
                     sys.stdout.flush()
 
-                aElement = aModel.Element(aEID)
-                (aArea, aCentroid, aNormal) = aModel.get_element_properties(aEID)
+                aElement = aero_model.Element(aero_eid)
+                (aArea, aCentroid, aNormal) = aero_model.get_element_properties(aero_eid)
                 percentDone = i / nAeroElements * 100
                 if debug:
                     log.info('aEID=%s percentDone=%.2f aElement=%s aArea=%s aCentroid=%s aNormal=%s' %(
-                        aEID, percentDone, aElement, aArea, aCentroid, aNormal))
+                        aero_eid, percentDone, aElement, aArea, aCentroid, aNormal))
                 pSource = aCentroid
-                (distribution) = self.pierce_elements(aCentroid, aEID, pSource, aNormal)
-                #(distribution)  = self.poorMansMapping(aCentroid, aEID, pSource, aNormal)
-                self.mappingMatrix[aEID] = distribution
-                mapFile.write('%s %s\n' % (aEID, distribution))
+                (distribution) = self.pierce_elements(aCentroid, aero_eid, pSource, aNormal)
+                #(distribution)  = self.poorMansMapping(aCentroid, aero_eid, pSource, aNormal)
+                self.mapping_matrix[aero_eid] = distribution
+                map_file.write('%s %s\n' % (aero_eid, distribution))
 
                 dt = (time() - t0) / 60.
                 tEst = dt * nAeroElements / (i + 1)  # dtPerElement*nElements
                 tLeft = tEst - dt
                 percent_done = dt / tEst * 100.
 
-        mapFile.close()
+        map_file.close()
         log.info("---finish piercing---")
-        self.runMapTest(self.mappingMatrix)
-        #print "mappingMatrix = ", self.mappingMatrix
-        log.info("---finished buildMappingMatrix---")
+        self.runMapTest(self.mapping_matrix)
+        #print "mapping_matrix = ", self.mapping_matrix
+        log.info("---finished build_mapping_matrix---")
         sys.stdout.flush()
-        return self.mappingMatrix
+        return self.mapping_matrix
 
-    def poor_mans_mapping(self, aCentroid, aEID, pSource, normal):
+    def poor_mans_mapping(self, aCentroid, aero_eid, pSource, normal):
         """
         distributes load without piercing elements
         based on distance
         """
-        (sElements, sDists) = self.centroidTree.getCloseElementIDs(aCentroid)
+        (sElements, sDists) = self.centroid_tree.getCloseElementIDs(aCentroid)
         log.debug("aCentroid = %s" % aCentroid)
         log.debug("sElements = %s" % sElements)
         log.debug("sDists    = %s" % ListPrint(sDists))
 
         setNodes = set([])
-        sModel = self.structuralModel
-        for sEID in sElements:
-            sNodes = sModel.get_element_nodes(sEID)
+        structural_model = self.structural_model
+        for structural_eid in sElements:
+            sNodes = structural_model.get_element_nodes(structural_eid)
             setNodes.union(set(sNodes))
 
         nIDs = list(setNodes)
-        sNodes = sModel.getNodeIDLocations(nIDs)
-        weights = self.get_weights(closePoint, sNodes)
+        sNodes = structural_model.getNodeIDLocations(nIDs)
+        weights = self.get_weights(close_point, sNodes)
         distribution = self.create_distribution(nIDs, weights)
         return distribution
 
     def pierce_elements(self, aCentroid, aEID, pSource, normal):
-        """
+        r"""
         Pierces *1* element with a ray casted from the centroid/pSource
         in the direction of the normal vector of an aerodynamic triangle
 
@@ -418,17 +427,17 @@ class LoadMapping(object):
         *P = A+(B-A)*t
         """
         #direction = -1. # TODO: direction of normal...?
-        (sElements, sDists) = self.centroidTree.getCloseElementIDs(aCentroid)
+        (sElements, sDists) = self.centroid_tree.getCloseElementIDs(aCentroid)
         log.info("aCentroid = %s" % aCentroid)
         log.info("sElements = %s" % sElements)
         log.info("sDists    = %s" % ListPrint(sDists))
         #(nearbySElements, nearbyDistances) = sElements
-        piercedElements = []
+        pierced_elements = []
 
         for sEID, sDist in zip(sElements, sDists):
             #print "aEID=%s sEID=%s" % (aEID, sEID)
-            sArea, sNormal, sCentroid = self.structuralModel.get_element_properties(sEID)
-            sNodes = self.structuralModel.get_element_nodes(sEID)
+            sArea, sNormal, sCentroid = self.structural_model.get_element_properties(sEID)
+            sNodes = self.structural_model.get_element_nodes(sEID)
             nNodes = len(sNodes)
 
             pEnd = pSource + normal * 10.
@@ -436,59 +445,59 @@ class LoadMapping(object):
             if nNodes == 3:  # TODO:  is this enough of a breakdown?
                 sA, sB, sC = sNodes
                 #pEnd = pSource+normal*10.
-                tuv = pierce_plane_vector(sA, sB, sC, pSource, pEnd, piercedElements)
-                #tuv2 = pierce_plane_vector(sA, sB, sC, pSource, pEnd2, piercedElements)
+                tuv = pierce_plane_vector(sA, sB, sC, pSource, pEnd, pierced_elements)
+                #tuv2 = pierce_plane_vector(sA, sB, sC, pSource, pEnd2, pierced_elements)
             elif nNodes == 4:
                 sA, sB, sC, sD = sNodes
-                tuv = pierce_plane_vector(sA, sB, sC, pSource, pEnd, piercedElements)
-                #tuv2 = pierce_plane_vector(sA, sB, sC, pSource, pEnd2, piercedElements)
-                #self.pierceTriangle(sA, sB, sC, sCentroid, sNormal, piercedElements)
-                #self.pierceTriangle(sA, sC, sD, sCentroid, sNormal, piercedElements)
+                tuv = pierce_plane_vector(sA, sB, sC, pSource, pEnd, pierced_elements)
+                #tuv2 = pierce_plane_vector(sA, sB, sC, pSource, pEnd2, pierced_elements)
+                #self.pierceTriangle(sA, sB, sC, sCentroid, sNormal, pierced_elements)
+                #self.pierceTriangle(sA, sC, sD, sCentroid, sNormal, pierced_elements)
             else:
                 raise RuntimeError('invalid element; nNodes=%s' % nNodes)
 
             t1, u1, v1 = tuv
             #t2, u2, v2 = tuv2
 
-            isInside = False
-            #if self.isInside(u1, v1) or self.isInside(u2, v2):
+            is_inside = False
+            #if self.is_inside(u1, v1) or self.is_inside(u2, v2):
             if self.is_inside(u1, v1):
-                isInside = True
+                is_inside = True
                 #pIntersect = pSource + (pEnd - pSource) * t1
                 pIntersect = pEnd * t1 +pSource * (1 - t1)
                 #P = A + (B - A) * t
-                tuv = pierce_plane_vector(sA, sB, sC, pSource, pIntersect, piercedElements)
+                tuv = pierce_plane_vector(sA, sB, sC, pSource, pIntersect, pierced_elements)
                 #print "t,u,v=", tuv
 
-                piercedElements.append([sEID, pIntersect, u1, v1, sDist])
+                pierced_elements.append([sEID, pIntersect, u1, v1, sDist])
 
             #t = min(t1, t2)
             #print "t1=%6.3g t2=%6.3g" % (t1, t2)
-            #if isInside:
+            #if is_inside:
                 #print "*t[%s]=%6.3g u1=%6.3g v1=%6.3g u2=%6.3g v2=%6.3g" %(sEID,t,u1,v1,u2,v2)
             #else:
                 #print " t[%s]=%6.3g u1=%6.3g v1=%6.3g u2=%6.3g v2=%6.3g" %(sEID,t,u1,v1,u2,v2)
 
-            #if isInside:
+            #if is_inside:
                 #print "*t[%s]=%6.3g u1=%6.3g v1=%6.3g d=%g" %(sEID,t1,u1,v1,sDist)
             #else:
                 #print " t[%s]=%6.3g u1=%6.3g v1=%6.3g d=%g" %(sEID,t1,u1,v1,sDist)
 
         log.info("avgDist = %g" % mean(sDists))
-        (piercedElements, nPiercings) = self.fix_piercings(sElements, piercedElements)
-        distribution = self.distribute_unit_load(aEID, piercedElements, nPiercings)
+        (pierced_elements, nPiercings) = self.fix_piercings(sElements, pierced_elements)
+        distribution = self.distribute_unit_load(aEID, pierced_elements, nPiercings)
 
         return distribution
 
-    def fix_piercings(self, sElements, piercedElements):
-        if len(piercedElements) == 0:
-            piercedElements = sElements
+    def fix_piercings(self, sElements, pierced_elements):
+        if len(pierced_elements) == 0:
+            pierced_elements = sElements
             #for sEID in sElements:
-                #piercedElements.append([sEID, None])  # TODO: why a None?
-            nPiercings = 0
+                #pierced_elements.append([sEID, None])  # TODO: why a None?
+            npiercings = 0
         else:
             dists = []
-            for element in piercedElements:
+            for element in pierced_elements:
                 log.info("element = %s" % element)
                 dist = element[-1]
                 log.info("dist = %s\n" % dist)
@@ -498,15 +507,15 @@ class LoadMapping(object):
 
             piercedElements2 = []
             for iElement in iSort:
-                piercedElements2.append(piercedElements[iElement])
+                piercedElements2.append(pierced_elements[iElement])
             #piercedElements = piercedElements[iSort]
 
-            #for element in piercedElements:
+            #for element in pierced_elements:
                 #print "element = ",element
                 #print "dist = ",dist, '\n'
 
-            nPiercings = len(piercedElements)
-        return (piercedElements, nPiercings)
+            npiercings = len(pierced_elements)
+        return (pierced_elements, npiercings)
 
     def is_inside(self, u, v):
         if (0. <= u and u <= 1.) and (0. <= v and v <= 1.):
@@ -533,39 +542,39 @@ class LoadMapping(object):
         weights = shepard_weight(closePoint, nodes)
         return weights
 
-    def distribute_unit_load(self, aEID, piercedElements, nPiercings):
+    def distribute_unit_load(self, aero_eid, pierced_elements, npiercings):
         """
         distribute unit loads to nearby nodes
-        piercedElements is a list of piercings
+        pierced_elements is a list of piercings
         piercing = [sEID,P,u,v] or [sEID]
         where
           sEID - the structural element ID
           P    - point p was pierced
           u    - u coordinate
           v    - v coordinate
-        if nPiercings==0, all the nearby nodes will recieve load
+        if npiercings==0, all the nearby nodes will recieve load
         """
-        aModel = self.aeroModel
-        sModel = self.structuralModel
-        #print("piercedElements = ", piercedElements)
+        aero_model = self.aero_model
+        structural_model = self.structural_model
+        #print("pierced_elements = ", pierced_elements)
         nIDs = []
-        if nPiercings == 0:
-            #assert len(nPiercings)==1,'fix me...'
-            #print("nPiercings=0 distributing load to closest nodes...u=%g v=%g" %(-1,-1))
-            log.debug("nPiercings=0 distributing load to closest nodes...")
-            for sEID in piercedElements:
-                nIDs += sModel.get_element_node_ids(sEID)
-            #print "nIDs1 = ",nIDs
+        if npiercings == 0:
+            #assert len(npiercings)==1,'fix me...'
+            #print("npiercings=0 distributing load to closest nodes...u=%g v=%g" %(-1,-1))
+            log.debug("npiercings=0 distributing load to closest nodes...")
+            for structural_eid in pierced_elements:
+                nIDs += structural_model.get_element_node_ids(structural_eid)
+            #print("nIDs1 = ", nIDs)
             nIDs = list(set(nIDs))
             log.debug("nIDs2 = %s" % nIDs)
-            aCentroid = aModel.Centroid(aEID)
-            nodes = sModel.getNodeIDLocations(nIDs)
+            aCentroid = aero_model.Centroid(aero_eid)
+            nodes = structural_model.getNodeIDLocations(nIDs)
 
             #print "nodes = ", nodes
             weights = self.get_weights(aCentroid, nodes)
             distribution = self.create_distribution(nIDs, weights)
 
-            log.debug("element aEID=%s sEID=%s weights=%s" % (aEID, sEID, ListPrint(weights)))
+            log.debug("element aEID=%s sEID=%s weights=%s" % (aero_eid, structural_eid, ListPrint(weights)))
             #print("distribution = ", distribution)
             #print("nIDs         = ", nIDs)
             #print("weights      = ", weights)
@@ -573,30 +582,30 @@ class LoadMapping(object):
             #print("nPiercings = ", nPiercings)
         else:
             log.info("mapping load to actual element...")
-            nClose = 3  # number of elements to map to
-            closeElements = piercedElements[:nClose]
+            nclose = 3  # number of elements to map to
+            close_elements = pierced_elements[:nclose]
 
             setCloseNodes = set([])
-            for closeElement in reversed(closeElements):
-                log.info("closeElement = %s" % closeElement)
+            for close_element in reversed(close_elements):
+                log.info("close_element = %s" % close_element)
                 #sEID, pIntersect, u1, v1, sDist
-                sEID, P, u, v, sDist = closeElement  # TODO:  bug here...???
+                structural_eid, P, u, v, sDist = close_element  # TODO:  bug here...???
 
-                #closePoint = closeElement[1]
-                #closeElement = sEID
-                closePoint = P
+                #close_point = close_element[1]
+                #close_element = structural_eid
+                close_point = P
 
                 # get list of nearby structural nodes
-                setElementNodes = set(sModel.get_element_node_ids(sEID))
+                setElementNodes = set(structural_model.get_element_node_ids(structural_eid))
                 setCloseNodes = setCloseNodes.union(setElementNodes)
 
             # setup for weighted average
             nIDs = list(setCloseNodes)
-            sNodes = sModel.getNodeIDLocations(nIDs)
-            weights = self.get_weights(closePoint, sNodes)
+            sNodes = structural_model.getNodeIDLocations(nIDs)
+            weights = self.get_weights(close_point, sNodes)
             distribution = self.create_distribution(nIDs, weights)
 
-            log.info("element aEID=%s sEID=%s weights=%s" %(aEID, sEID, ListPrint(weights)))
+            log.info("element aEID=%s sEID=%s weights=%s" %(aero_eid, structural_eid, ListPrint(weights)))
         log.info("-------------------------\n")
         sys.stdout.flush()
         return distribution
@@ -679,14 +688,14 @@ def run_map_loads(inputs, cart3dGeom='Components.i.triq', bdfModel='fem.bdf',
     mapper = LoadMapping(aeroModel, structuralModel)
     t1 = time()
     mapper.set_flight_condition(pInf, qInf)
-    mapper.setOutput(bdffile=bdfModelOut, loadCase=isubcase)
+    mapper.set_output(bdffile=bdfModelOut, load_case=isubcase)
     log.info("setup time = %g sec; %g min" % (t1-t0, (t1-t0)/60.))
 
     mapper.build_mapping_matrix(debug=False)
     t2 = time()
     log.info("mapping matrix time = %g sec; %g min" % (t2-t1, (t2-t1)/60.))
 
-    mapper.mapLoads()
+    mapper.map_loads()
     t3 = time()
     log.info("map loads time = %g sec" % (t3 - t2))
     log.info("total time = %g min" % ((t3 - t0) / 60.))

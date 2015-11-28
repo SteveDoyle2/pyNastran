@@ -7,8 +7,8 @@ import copy
 import shutil
 from numpy import allclose
 
-from mapLoads import run_map_loads
-from runSpline import run_map_deflections
+from pyNastran.applications.cart3d_nastran_fsi.mapLoads import run_map_loads
+from pyNastran.applications.cart3d_nastran_fsi.runSpline import run_map_deflections
 
 from pyNastran.utils.log import get_logger
 debug = True
@@ -96,9 +96,9 @@ def run_mapping():
     assert os.path.exists(cart3dGeom), '%r doesnt exist' % cart3dGeom
 
     os.chdir(workpath)
-    copyFile(cart3dGeom, 'Components.i.tri')
+    copy_file(cart3dGeom, 'Components.i.tri')
 
-    nodeList = [
+    node_list = [
         20037, 21140, 21787, 21028, 1151, 1886, 2018, 1477, 1023, 1116, 1201,
         1116, 1201, 1828, 2589, 1373, 1315, 1571, 1507, 1532, 1317, 1327, 2011,
         1445, 2352, 1564, 1878, 1402, 1196, 1234, 1252, 1679, 1926, 1274, 2060,
@@ -106,10 +106,10 @@ def run_mapping():
     ]
     outfile = open('convergeDeflections.out', 'ab')
 
-    maxADeflectionOld = 0.
-    nIterations = 30
-    iCart = 1
-    for i in range(1, nIterations):
+    max_aero_deflection_old = 0.
+    niterations = 30
+    #icart = 1
+    for i in range(1, niterations):
         strI = '_' + str(i)
         assert os.path.exists('Components.i.tri')
         #if i==iCart:
@@ -119,58 +119,58 @@ def run_mapping():
             sys.stdout.flush()
             failFlag = os.system('./COMMAND > command.out') # runs cart3d.i.tri, makes Components.i.triq
             assert failFlag == 0, 'Cart3d ./COMMAND failed on iteration #%s' % i
-            moveFile('Components.i.triq', cart3dLoads)
-            copyFile(cart3dLoads, cart3dLoads+strI)
-            copyFile('forces.dat', 'forces.dat' + strI)
-            copyFile('moments.dat', 'moments.dat' + strI)
-            copyFile('loadsCC.dat', 'loadsCC.dat' + strI)
-            copyFile('history.dat', 'history.dat' + strI)
+            move_file('Components.i.triq', cart3dLoads)
+            copy_file(cart3dLoads, cart3dLoads+strI)
+            copy_file('forces.dat', 'forces.dat' + strI)
+            copy_file('moments.dat', 'moments.dat' + strI)
+            copy_file('loadsCC.dat', 'loadsCC.dat' + strI)
+            copy_file('history.dat', 'history.dat' + strI)
             os.remove('Components.i.tri') # verifies new Components.i.tri gets created
             sys.stdout.flush()
 
         # map loads
         run_map_loads(required_inputs, cart3dLoads, bdfModel, bdfModelOut)  # maps loads
-        copyFile(bdfModelOut, bdfModelOut + strI)
+        copy_file(bdfModelOut, bdfModelOut + strI)
 
         # run nastran
         log.info("---running Nastran #%s---" % i)
         sys.stdout.flush()
         #failFlag = os.system('nastran scr=yes bat=no fem3.bdf') # runs fem3.bdf with fem_loads_3.bdf
         #assert failFlag == 0,'nastran failed on iteration #%s' % i
-        #copyFile('fem3.op2', 'fem3.op2' + strI)
-        copyFile('fem3.f06', 'fem3.f06' + strI)
+        #copy_file('fem3.op2', 'fem3.op2' + strI)
+        copy_file('fem3.f06', 'fem3.f06' + strI)
 
         # map deflections
-        (wA, wS) = run_map_deflections(nodeList, bdf, f06, cart3dGeom, cart3dGeom2, log=log)
+        (wA, wS) = run_map_deflections(node_list, bdf, f06, cart3dGeom, cart3dGeom2, log=log)
         #(wA, wS) = run_map_deflections(nodeList, bdf, op2, cart3dGeom, cart3dGeom2, log=log)
         assert os.path.exists('Components.i.tri')
 
         # cleans up fem_loads.bdf
         os.remove(bdfModelOut)
-        if 0:
+        #if 0:
             # disabled b/c nastran isn't on this computer
-            os.remove(op2) # verifies new fem3.op2 was created
-            os.remove(f06) # verifies new fem3.f06 was created
+            #os.remove(op2) # verifies new fem3.op2 was created
+            #os.remove(f06) # verifies new fem3.f06 was created
 
         # post-processing
-        (maxAID, maxADeflection) = maxDict(wA)
-        maxSID = '???'
-        maxADeflection = wA[maxAID]
-        maxSDeflection = max(wS)[0, 0]
-        log.info(     "AERO      - i=%s maxAID=%s maxADeflection=%s"   % (i, maxAID, maxADeflection))
-        log.info(     "STRUCTURE - i=%s maxSID=%s maxSDeflection=%s"   % (i, maxSID, maxSDeflection))
-        outfile.write("AERO      - i=%s maxAID=%s maxADeflection=%s\n" % (i, maxAID, maxADeflection))
-        outfile.write("STRUCTURE - i=%s maxSID=%s maxSDeflection=%s\n" % (i, maxSID, maxSDeflection))
+        (max_aero_nid, max_aero_deflection) = maxDict(wA)
+        max_structural_nid = '???'
+        max_aero_deflection = wA[max_aero_nid]
+        max_structural_deflection = max(wS)[0, 0]
+        log.info("AERO      - i=%s max_aero_nid=%s max_aero_deflection=%s"   % (i, max_aero_nid, max_aero_deflection))
+        log.info("STRUCTURE - i=%s max_structural_nid=%s max_structural_deflection=%s"   % (i, max_structural_nid, max_structural_deflection))
+        outfile.write("AERO      - i=%s max_aero_nid=%s max_aero_deflection=%s\n" % (i, max_aero_nid, max_aero_deflection))
+        outfile.write("STRUCTURE - i=%s max_structural_nid=%s max_structural_deflection=%s\n" % (i, max_structural_nid, max_structural_deflection))
 
-        msg = '\n'+'*'*80 + '\n'
-        msg += 'finished iteration #%s\n' %(i)
-        msg += '*'*80+'\n'
+        msg = '\n'+'*' * 80 + '\n'
+        msg += 'finished iteration #%s\n' % (i)
+        msg += '*' * 80 + '\n'
         log.info(msg)
 
-        if allclose(maxADeflection, maxADeflectionOld, atol=0.001):
+        if allclose(max_aero_deflection, max_aero_deflection_old, atol=0.001):
             break
-        maxADeflectionOld = copy.deepcopy(maxADeflection)
-        iCart += 1
+        max_aero_deflection_old = copy.deepcopy(max_aero_deflection)
+        #icart += 1
         sys.stdout.flush()
 
     outfile.close()
@@ -186,7 +186,7 @@ def maxDict(dictA):
     return (max_key, max_value)
 
 
-def moveFile(a, b):
+def move_file(a, b):
     assert a != b, 'a=b=True  a=%r b=%r' % (a, b)
     assert os.path.exists(a), 'fileA=%s does not exist...' % a
     if os.path.exists(b):
@@ -195,7 +195,7 @@ def moveFile(a, b):
     assert os.path.exists(b), 'fileB=%r was not moved...' % b
 
 
-def copyFile(a, b):
+def copy_file(a, b):
     assert a != b, 'a=b=True  a=%r b=%r' % (a, b)
     assert os.path.exists(a), 'fileA=%r does not exist...' % a
     if os.path.exists(b):

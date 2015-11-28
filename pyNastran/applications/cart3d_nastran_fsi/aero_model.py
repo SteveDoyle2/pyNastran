@@ -1,10 +1,9 @@
 from __future__ import print_function
 from six.moves import range
-from model import Model
+from pyNastran.applications.cart3d_nastran_fsi.model import Model
 from numpy import array, cross, ndarray
 
-# my code
-from mathFunctions import Centroid, Triangle_AreaCentroidNormal, AreaNormal, ListPrint
+from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import Triangle_AreaCentroidNormal, ListPrint
 
 from pyNastran.utils.log import get_logger
 debug = True
@@ -88,14 +87,14 @@ class AeroModel(Model):
         #Cp = loads['Cp']
         assert isinstance(Cp, ndarray)
 
-        CpDict = {}
+        Cp_dict = {}
         for eid, element in enumerate(self.elements):
             eidi = eid + 1
             (n1, n2, n3) = element #self.get_element_node_ids(eid)
             cp = Cp[element-1].sum() / 3.
-            CpDict[eidi] = cp
-        self.Cps = CpDict
-        return CpDict
+            Cp_dict[eidi] = cp
+        self.Cps = Cp_dict
+        return Cp_dict
 
     def nNodes(self):
         return self._nNodes
@@ -131,17 +130,17 @@ class AeroModel(Model):
     def Area(self, eid):
         return self.areas[eid]
 
-        nodes = self.get_element_nodes(eid)
-        #print("nodes[%s]=%s" % (eid, nodes))
-        area, normal = AreaNormal(nodes)
-        return area
+        #nodes = self.get_element_nodes(eid)
+        ##print("nodes[%s]=%s" % (eid, nodes))
+        #area, normal = AreaNormal(nodes)
+        #return area
 
     def Normal(self, eid):
         return self.normals[eid]
 
-        nodes = self.get_element_nodes(eid)
-        area, normal = AreaNormal(nodes)
-        return normal
+        #nodes = self.get_element_nodes(eid)
+        #area, normal = AreaNormal(nodes)
+        #return normal
 
     def area_normal_centroid(self, eid):
         area = self.areas[eid]

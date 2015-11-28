@@ -1,5 +1,6 @@
 from __future__ import print_function
-fom six import string_types
+import sys
+from six import string_types
 from numpy import array, cross, allclose
 from numpy.linalg import norm, solve
 
@@ -21,7 +22,7 @@ def is_float_ranged(a, x, b):
     """
     if not a < x:
         if not allclose(x, a):
-           return False
+            return False
 
     if not x < b:
         if not allclose(x, b):
@@ -59,7 +60,7 @@ def ListPrint(listA):
     return msg
 
 #------------------------------------------------------------------
-def pierce_plane_vector(p0, p1, p2, pA, pB, piercedElements):
+def pierce_plane_vector(p0, p1, p2, pA, pB, pierced_elements):
     """
     http://en.wikipedia.org/wiki/Line-plane_intersection
 
@@ -105,7 +106,7 @@ def shepard_SMS_weight(n, nodes):
         dists.append(hi)
     R = min(dists)
 
-    Aweights = []
+    aWeights = []
     for hi in dists:
         a = ((R-hi) / R*hi)**2.
         aWeights.append(a)
@@ -142,7 +143,7 @@ def shepard_weight(n, nodes):
     weights = invDists / invDistSum
     return weights
 
-def areaWeight(n, n1, n2, n3):
+def area_weight(n, n1, n2, n3):
     """
     Finds the weightings based on the barycentric coordinates weighted average method
     http://www.ems-i.com/smshelp/Data_Module/Interpolation/Inverse_Distance_Weighted.htm
@@ -203,7 +204,8 @@ def AreaNormal(nodes):
 def Triangle_AreaCentroidNormal(nodes):
     """Returns area,centroid,unitNormal"""
     (area, normal) = AreaNormal(nodes)
-    centroid = Centroid(*nodes)
+    n1, n2, n3 = nodes[0], nodes[1], nodes[2]
+    centroid = Centroid(n1, n2, n3)
     return area, centroid, normal
 
 def Normal(a, b):

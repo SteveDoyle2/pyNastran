@@ -1,10 +1,11 @@
+from __future__ import print_function
 from six.moves import zip
 import os
-from numpy import array, cross, dot, abs, transpose
-from numpy.linalg import norm, solve, cond
+from numpy import array, cross, dot, npabs
+from numpy.linalg import norm, solve #, cond
 
-from mathFunctions import printMatrix, is_list_ranged, ListPrint, shepard_weight
-from matTest import fIsNatural
+from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import is_list_ranged, ListPrint, shepard_weight
+#from pyNastran.applications.cart3d_nastran_fsi.matTest import fIsNatural
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 from logger import dummyLogger
@@ -71,7 +72,7 @@ class Tet4(object):
         return self._centroid
 
     def abs_volume(self):
-        return abs(self.volume())
+        return npabs(self.volume())
 
     def testVol(self, a, b, c, d):
         vol = dot(a-d, cross(b-d, c-d)) / 6.
@@ -142,7 +143,7 @@ class Tet4(object):
         Then we ratios the new deflection diMax and compares it to the nearby points to 'test'.
         """
         di = array([d1[i], d2[i], d3[i], d4[i]])
-        diMax = max(abs(di)) # L1 norm
+        diMax = max(npabs(di)) # L1 norm
         log.info("d%s = %s" % (dType, ListPrint(di)))
 
         abcd = solve(A, di)
@@ -151,11 +152,11 @@ class Tet4(object):
         (a, b, c, d) = abcd
         ui = a + b*aeroNode[0] + c*aeroNode[1] + d*aeroNode[2]
         isRanged = is_list_ranged(0., abcd, 1.)
-        log.info('isRanged=%s  u%sRatio=%g - a=%g b=%g c=%g d=%g' %(isRanged, dType, abs(ui/diMax), a, b, c, d))
+        log.info('isRanged=%s  u%sRatio=%g - a=%g b=%g c=%g d=%g' %(isRanged, dType, npabs(ui/diMax), a, b, c, d))
         return ui
 
     def is_internal_node(self, pAero):
-        """
+        r"""
         If there is an internal node, than the sum of the internal volumes without
         an absolute value will equal the volume of the local tet
           *   3
@@ -235,7 +236,7 @@ class DelauneyReader(object):
         m = array([0., 0., 0.])
         tets, grids, elements, volume = self.build_tets()
         tetNew = self.find_closest_tet(m, tets)
-        updateNode(m, tets)
+        self.updateNode(m, tets)
         return tetNew
 
     def updateNode(self, m, tets):
@@ -252,7 +253,7 @@ class DelauneyReader(object):
         newAeroNode = tetNew.map_deflections(deflections, m)
         return newAeroNode
 
-    def find_closest_tet(self, m, ets):
+    def find_closest_tet(self, m, tets):
         """
         Finds the closest tet.  Has the potential to fail, but until then, skipping.
         Solution to failure:  brute force method.
