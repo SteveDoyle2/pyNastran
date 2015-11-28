@@ -364,7 +364,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
         #else:
             #assert dt is not None, dt
             #raise NotImplementedError('SORT2')
-            ##self.add = self.addSort2
+            ##self.add = self.add_sort2
             ##self.add_new_eid = self.add_new_eid_sort2
 
     #def get_stats(self):
@@ -732,7 +732,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
         #else:
             #assert dt is not None, dt
             #raise NotImplementedError('SORT2')
-            ##self.add = self.addSort2
+            ##self.add = self.add_sort2
             ##self.add_new_eid = self.add_new_eid_sort2
 
     #def get_stats(self):

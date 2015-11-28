@@ -1,8 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0, write_float_12E
+from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, write_float_12E
 from pyNastran.f06.f06_formatting import _eigenvalue_header
 from numpy import zeros, array_equal, searchsorted
 
@@ -154,8 +153,7 @@ class ComplexRodForceArray(ScalarObject):
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
 
         if is_mag_phase:
-            #msg += ['                                                          (REAL/IMAGINARY)']
-            asdf
+            msg += ['                                                          (MAGNITUDE/PHASE)\n']
         else:
             msg += ['                                                          (REAL/IMAGINARY)\n']
 
@@ -381,55 +379,32 @@ class ComplexCShearForceArray(ScalarObject):
         return msg
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
-        msg = ['ComplexCSHEAR Force\n']
-        aaa
+        msg = ['                C O M P L E X   F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)\n']
 
         if is_mag_phase:
-            #msg += ['                                                          (REAL/IMAGINARY)']
-            asdf
+            msg += ['                                                          (MAGNITUDE/PHASE)\n \n']
         else:
-            msg += ['                                                          (REAL/IMAGINARY)\n']
+            msg += ['                                                          (REAL/IMAGINARY)\n \n']
 
         if is_sort1:
             msg += [
-                ' \n'
-                #'                 ELEMENT                             AXIAL                                       TORSIONAL\n'
-                #'                   ID.                              STRAIN                                         STRAIN\n'
+                '                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======'
+                ' ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1'
+                '         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41'
             ]
-            #'                      14                  0.0          /  0.0                           0.0          /  0.0'
         else:
             raise NotImplementedError('sort2')
-
-
-        return self.element_name, msg
-
-    #def get_element_index(self, eids):
-        ## elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element)  #[0]
-        #return itot
-
-    #def eid_to_element_node_index(self, eids):
-        ##ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
-        ##ind = ind.reshape(ind.size)
-        ##ind.sort()
-        #return ind
+        return msg
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         # write the f06
         #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
-        nwrite = len(eids)
-        if len(eids) % 2 == 1:
-            nwrite -= 1
-            is_odd = True
 
-        #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
@@ -440,21 +415,64 @@ class ComplexCShearForceArray(ScalarObject):
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
 
+            force41
+            force14
+            force21
+            force12
+            force32
+            force23
+            force43
+            force34
+            kick_force1
+            kick_force2
+            kick_force3
+            kick_force4
+            shear12
+            shear23
+            shear34
+            shear41
+
             # loop over all the elements
             out = []
-            for eid, axiali, torsioni in zip(eids, axial, torsion):
-                ([raxial, rtorsion, iaxial, itorsion], is_all_zeros) = writeImagFloats13E([axiali, torsioni], is_mag_phase)
-                #ELEMENT                             AXIAL                                       TORSIONAL
-                    #ID.                              STRESS                                         STRESS
-                    #14                  0.0          /  0.0                           0.0          /  0.0
+            for (eid, iforce41, force14i, iforce21, iforce12, iforce32, iforce23, iforce43, iforce34,
+                 ikick_force1, ikick_force2, ikick_force3, ikick_force4,
+                 ishear12, ishear23, ishear34, ishear41) in zip(
+                     eids, force41, force14, force21, force12, force32, force23, force43, force34,
+                     kick_force1, kick_force2, kick_force3, kick_force4,
+                     shear12, shear23, shear34, shear41):
 
-                f.write('      %8i   %-13s / %-13s   %-13s / %s\n' % (eid, raxial, iaxial, rtorsion, itorsion))
+                (vals2, is_all_zeros) = writeImagFloats13E([
+                     iforce41, force14i, iforce21, iforce12, iforce32, iforce23, iforce43, iforce34,
+                     ikick_force1, ikick_force2, ikick_force3, ikick_force4,
+                     ishear12, ishear23, ishear34, ishear41], is_mag_phase)
+
+                [
+                    force41r, force14r, force21i, force12r, force32r, force23r, force43r, force34r,
+                    kick_force1r, kick_force2r, kick_force3r, kick_force4r,
+                    shear12r, shear23r, shear34r, shear41r,
+
+                    force41i, force14i, force21i, force12i, force32i, force23i, force43i, force34i,
+                    kick_force1i, kick_force2i, kick_force3i, kick_force4i,
+                    shear12i, shear23i, shear34i, shear41i
+                ] = vals2
+                for val in vals2:
+                    assert allclose(val, 0.0), val
+                #'                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======'
+                #' ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1'
+                #'         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41'
+                #'            25  0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0'
+                #'                0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0'
+
+                #f.write('      %8i   %-13s %-13s %-13s / %s\n' % (eid,
+                                                                  #force41r, 0force42r, force21r, kick
+                                                                  #force41i, ))
+                assert force41i == 0.
+
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
-
-class ComplexSpringForceArray(ScalarObject):
+class ComplexSpringDamperForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -529,8 +547,7 @@ class ComplexSpringForceArray(ScalarObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element):
-                    (eid, nid) = e
+                for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     #(springr, springi) = t1
@@ -608,8 +625,7 @@ class ComplexSpringForceArray(ScalarObject):
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
 
         if is_mag_phase:
-            #msg += ['                                                          (REAL/IMAGINARY) \n']
-            asdf
+            msg += ['                                                          (MAGNITUDE/PHASE)\n \n']
         else:
             msg += ['                                                          (REAL/IMAGINARY)\n \n']
 
@@ -675,163 +691,13 @@ class ComplexSpringForceArray(ScalarObject):
             page_num += 1
         return page_num - 1
 
-
-class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
+class ComplexSpringForceArray(ComplexSpringDamperForceArray):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.force = {}
-        adfasdfasdf
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
+        ComplexSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.force)
-            time0 = get_key0(self.force)
-            nelements = len(self.force[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.force)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.force[dt] = {}
-
-    def add(self, dt, data):
-        [eid, force] = data
-        self.force[eid] = force
-
-    def add_sort1(self, dt, data):
-        [eid, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
-
-    def add_sort2(self, eid, data):
-        [dt, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
-
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        msg = header + ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
-                        '                                                          (REAL/IMAGINARY)\n',
-                        ' \n',
-                        '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
-        forces = []
-        elements = []
-        line = '   '
-        for eid, force in sorted(iteritems(self.force)):
-            elements.append(eid)
-            forces.append(force)
-            #pack.append(eid)
-            #pack.append(f)
-            line += '%-13s  %-13s / %-13s     ' % (eid, force.real, force.imag)
-            if len(forces) == 3:
-                msg.append(line.rstrip() + '\n')
-        if forces:
-            msg.append(line.rstrip() + '\n')
-        msg.append(page_stamp % page_num)
-
-        f.write(''.join(msg))
-        return page_num
-
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
-                 '                                                          (REAL/IMAGINARY)\n',
-                 ' \n',
-                 '                ELEMENT                                                   ELEMENT\n',
-                 '                  ID.                    FORCE                              ID.                    FORCE\n']
-        msg = []
-        for dt, Force in sorted(self.force.items()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            #packs = []
-            forces = []
-            elements = []
-            line = ''
-            for eid, force in sorted(Force.items()):
-                elements.append(eid)
-                forces.append(force)
-                #pack.append(eid)
-                #pack.append(f)
-                ([forceReal, forceImag], is_all_zeros) = writeFloats13E([force.real, force.imag])
-
-                line += '          %13s      %-13s / %-13s' % (eid, forceReal, forceImag)
-                if len(forces) == 2:
-                    msg.append(line.rstrip() + '\n')
-                    line = ''
-                    forces = []
-            if forces:
-                msg.append(line.rstrip() + '\n')
-            msg.append(page_stamp % page_num)
-
-            f.write(''.join(msg))
-            msg = ['']
-            page_num += 1
-        return page_num - 1
-
-
-class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
+class ComplexDamperForceArray(ComplexSpringDamperForceArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.force = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.force)
-            time0 = get_key0(self.force)
-            nelements = len(self.force[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.force)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.force[dt] = {}
-
-    def add(self, dt, data):
-        [eid, force] = data
-        self.force[eid] = force
-
-    def add_sort1(self, dt, data):
-        [eid, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
-
-    def add_sort2(self, eid, data):
-        [dt, force] = data
-        if dt not in self.force:
-            self.add_new_transient(dt)
-        self.force[dt][eid] = force
+        ComplexSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
 class ComplexViscForce(ScalarObject):  # 24-CVISC
@@ -1463,18 +1329,18 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
     def add_sort1(self, dt, data):
         [eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
          nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
-        self._fillObject(
+        self._fill_object(
             dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB)
 
     def add_sort2(self, eid, data):
         [dt, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
-        self._fillObject(
+        self._fill_object(
             dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB)
 
-    def _fillObject(
+    def _fill_object(
         self, dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
         nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB):
         if dt not in self.axial:
@@ -1488,7 +1354,7 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
         self.torque[dt][eid] = [torqueA, torqueB]
 
 
-class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
+class ComplexSolidPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.acceleration = {}
@@ -1952,13 +1818,13 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
 
     def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
-        self._fillObject(dt, eid, parent, coord, icord, theta, forces)
+        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
     def add_sort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, theta, forces] = data
-        self._fillObject(dt, eid, parent, coord, icord, theta, forces)
+        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
-    def _fillObject(self, dt, eid, parent, coord, icord, theta, forces):
+    def _fill_object(self, dt, eid, parent, coord, icord, theta, forces):
         if dt not in self.membraneX:
             self.add_new_transient(dt)
         self.parent[eid] = parent

@@ -149,18 +149,6 @@ class RealShearArray(OES_Object):
     def get_f06_header(self):
         raise NotImplementedError('CSHEAR...')
 
-    def get_element_index(self, eids):
-        # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
-        return itot
-
-    def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element_node[:, 0])
-        #ind = ind.reshape(ind.size)
-        #ind.sort()
-        return ind
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg_temp = self.get_f06_header()
 

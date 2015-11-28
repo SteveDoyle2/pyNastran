@@ -1,6 +1,6 @@
 from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0
+from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, writeFloats13E
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -187,22 +187,22 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         return msg
 
     def add(self, dt, data):
-        [eid,axial_force, torque] = data
-        self.axial_force[eid] =axial_force
+        [eid, axial_force, torque] = data
+        self.axial_force[eid] = axial_force
         self.torque[eid] = torque
 
     def add_sort1(self, dt, data):
-        [eid,axial_force, torque] = data
+        [eid, axial_force, torque] = data
         if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
     def add_sort2(self, eid, data):
-        [dt,axial_force, torque] = data
+        [dt, axial_force, torque] = data
         if dt not in self.axial_force:
             self.add_new_transient(dt)
-        self.axial_force[dt][eid] =axial_force
+        self.axial_force[dt][eid] = axial_force
         self.torque[dt][eid] = torque
 
 
@@ -275,7 +275,7 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
 
     def add_sort1(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+        self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def addNewElementSort2(self, eid, data):
         [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
@@ -284,9 +284,9 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
 
     def add_sort2(self, eid, data):
         [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+        self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def _fillObject(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+    def _fill_object(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         #if dt not in self.axial:
             #self.add_new_transient(dt)
         self.bendingMoment[dt][eid][sd] = [bm1, bm2]
@@ -391,17 +391,17 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
     def add_sort1(self, dt, data):
         [eid, f41, f21, f12, f32, f23, f43, f34, f14,
          kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+        self._fill_object(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                          kf1, s12, kf2, s23, kf3, s34, kf4, s41)
 
     def add_sort2(self, eid, data):
         [dt, f41, f21, f12, f32, f23, f43, f34, f14,
          kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+        self._fill_object(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                          kf1, s12, kf2, s23, kf3, s34, kf4, s41)
 
-    def _fillObject(self, dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                    kf1, s12, kf2, s23, kf3, s34, kf4, s41):
+    def _fill_object(self, dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                     kf1, s12, kf2, s23, kf3, s34, kf4, s41):
         if dt not in self.force41:
             self.add_new_transient(dt)
         self.force41[dt][eid] = f41
@@ -422,3 +422,158 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
         self.shear41[dt][eid] = s41
 
 
+class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.force = {}
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.force)
+            time0 = get_key0(self.force)
+            nelements = len(self.force[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.force)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.force[dt] = {}
+
+    def add(self, dt, data):
+        [eid, force] = data
+        self.force[eid] = force
+
+    def add_sort1(self, dt, data):
+        [eid, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force
+
+    def add_sort2(self, eid, data):
+        [dt, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        msg = header + ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
+                        '                                                          (REAL/IMAGINARY)\n',
+                        ' \n',
+                        '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
+        forces = []
+        elements = []
+        line = '   '
+        for eid, force in sorted(iteritems(self.force)):
+            elements.append(eid)
+            forces.append(force)
+            #pack.append(eid)
+            #pack.append(f)
+            line += '%-13s  %-13s / %-13s     ' % (eid, force.real, force.imag)
+            if len(forces) == 3:
+                msg.append(line.rstrip() + '\n')
+        if forces:
+            msg.append(line.rstrip() + '\n')
+        msg.append(page_stamp % page_num)
+
+        f.write(''.join(msg))
+        return page_num
+
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
+                 '                                                          (REAL/IMAGINARY)\n',
+                 ' \n',
+                 '                ELEMENT                                                   ELEMENT\n',
+                 '                  ID.                    FORCE                              ID.                    FORCE\n']
+        msg = []
+        for dt, Force in sorted(self.force.items()):
+            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            msg += header + words
+            #packs = []
+            forces = []
+            elements = []
+            line = ''
+            for eid, force in sorted(Force.items()):
+                elements.append(eid)
+                forces.append(force)
+                #pack.append(eid)
+                #pack.append(f)
+                ([forceReal, forceImag], is_all_zeros) = writeFloats13E([force.real, force.imag])
+
+                line += '          %13s      %-13s / %-13s' % (eid, forceReal, forceImag)
+                if len(forces) == 2:
+                    msg.append(line.rstrip() + '\n')
+                    line = ''
+                    forces = []
+            if forces:
+                msg.append(line.rstrip() + '\n')
+            msg.append(page_stamp % page_num)
+
+            f.write(''.join(msg))
+            msg = ['']
+            page_num += 1
+        return page_num - 1
+
+
+class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.force = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.force)
+            time0 = get_key0(self.force)
+            nelements = len(self.force[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.force)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  force\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.force[dt] = {}
+
+    def add(self, dt, data):
+        [eid, force] = data
+        self.force[eid] = force
+
+    def add_sort1(self, dt, data):
+        [eid, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force
+
+    def add_sort2(self, eid, data):
+        [dt, force] = data
+        if dt not in self.force:
+            self.add_new_transient(dt)
+        self.force[dt][eid] = force

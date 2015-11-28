@@ -32,5 +32,4 @@ def real_imag_to_mag_phase(real_imag):
 
 # def realImagToMagPhase(real_imag):
     # """returns the magnitude and phase (degrees) of a complex number"""
-    # asdf
     # return abs(real_imag), angle(real_imag, deg=True)

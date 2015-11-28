@@ -6,7 +6,6 @@ from struct import unpack, Struct
 from copy import deepcopy
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
-from numpy import dtype as npdtype
 
 if sys.version_info < (2, 7, 7):
     # makes sure we don't get the following bug:
@@ -35,14 +34,6 @@ class FortranFormat(object):
         #: stores if the user entered [] for iSubcases
         self.isAllSubcases = True
         self.valid_subcases = []
-
-    def _set_structs(self):
-        """defines common struct formats"""
-        self.fdtype = npdtype(self._endian + 'f4')
-        self.idtype = npdtype(self._endian + 'i4')
-        self.struct_i = Struct(b(self._endian + 'i'))
-        self.struct_8s = Struct(b(self._endian + '8s'))
-        self.struct_2i = Struct(b(self._endian + 'ii'))
 
     def show(self, n, types='ifs', endian=None):
         """

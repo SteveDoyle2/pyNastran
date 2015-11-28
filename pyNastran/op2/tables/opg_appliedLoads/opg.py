@@ -7,10 +7,13 @@ from struct import unpack
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (RealAppliedLoads,  #ComplexAppliedLoads,
                                                                RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (RealLoadVector, ComplexLoadVector,
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (#RealLoadVector, ComplexLoadVector,
                                                                   RealLoadVectorArray, ComplexLoadVectorArray,
-                                                                  RealThermalLoadVector)
-from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import RealForceVector, ComplexForceVector
+                                                                  #RealThermalLoadVector,
+                                                                  RealTemperatureVectorArray,
+                                                                  #RealThermalVelocityArray
+                                                                  )
+from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import RealForceVectorArray, ComplexForceVectorArray
 
 from pyNastran.op2.op2_common import OP2Common
 
@@ -173,17 +176,20 @@ class OPG(OP2Common):
             result_name = 'thermal_load_vectors'
             storage_obj = self.thermal_load_vectors
 
-            RealThermalLoadVectorArray = None
-            RealThermalLoadVectorVector = None
-            ComplexThermalLoadVectorVector = None
+            #RealThermalLoadVectorVector = None
+            #ComplexThermalLoadVectorVector = None
             ComplexThermalLoadVectorArray = None
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table(data, ndata, result_name, storage_obj,
-                                 RealThermalLoadVector, ComplexThermalLoadVectorVector,
-                                 RealThermalLoadVectorArray, ComplexThermalLoadVectorArray,
-                                 'node', random_code=self.random_code)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealThermalLoadVector, ComplexThermalLoadVectorVector,
+                                 #RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
+                                 #'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
+                                            'node', random_code=self.random_code)
+
         else:
             raise NotImplementedError(self.thermal)
         return n
@@ -195,16 +201,19 @@ class OPG(OP2Common):
         if self.thermal == 0:
             result_name = 'force_vectors'
             storage_obj = self.force_vectors
-            ForceVectorVector = None
+            #ForceVectorVector = None
             ComplexForceVectorArray = None
-            RealForceVectorArray = None
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table(data, ndata, result_name, storage_obj,
-                                 RealForceVector, ComplexForceVector,
-                                 RealForceVectorArray, ComplexForceVectorArray,
-                                 'node', random_code=self.random_code)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealForceVector, ComplexForceVector,
+                                 #RealForceVectorArray, ComplexForceVectorArray,
+                                 #'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            RealForceVectorArray, ComplexForceVectorArray,
+                                            'node', random_code=self.random_code)
+
         #elif self.thermal == 1:
             #result_name = 'thermal_force_vectors'
             #storage_obj = self.thermal_force_vectors

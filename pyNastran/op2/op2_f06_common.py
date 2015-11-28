@@ -544,7 +544,6 @@ class OP2_F06_Common(object):
             'ctube_force',
 
             # bar/beam/bend
-            #'bar100Force',
             'cbend_force',
 
             'cbush_force',
@@ -658,7 +657,14 @@ class OP2_F06_Common(object):
             'acceleration_scaled_response_spectra_ABS',
 
         ]
-        assert len(table_types) == len(unique(table_types))
+        utables = unique(table_types)
+        if len(table_types) != len(utables):
+            msg = 'Non-unique tables: '
+            for i, table_type in enumerate(table_types):
+                if table_type in table_types[i+1:]:
+                    msg += table_type + ', '
+            raise AssertionError(msg)
+
         return table_types
 
     def _get_table_types_testing(self):

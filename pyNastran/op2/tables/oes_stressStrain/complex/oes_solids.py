@@ -134,14 +134,6 @@ class ComplexSolidArray(OES_Object):
         #self.itotal += 1
 
     def add_node_sort1(self, dt, eid, grid, inode, ex, ey, ez, etxy, etyz, etzx):
-        #ielem = self.ielement - 1
-        #print('eid=%i grid=%i exx=%s' % (eid, grid, str(ex)))
-        #print('data[%s, %s, :] = %s dt=%s' % (self.itime, self.itotal, ex, dt))
-        #if dt != 0.0:
-            #asfd
-        #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, [ex, ey, ez, etxy, etyz, etzx]))
-        #print('element_node[%s, %s] = [%s, %s]' % (ielem, inode, eid, grid))
-
         if self.result_flag == 0:
             self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
         else:
@@ -314,7 +306,7 @@ class ComplexSolidStrainArray(ComplexSolidArray, StrainObject):
         #else:
             #assert dt is not None
             #raise NotImplementedError('SORT2')
-            ##self.add = self.addSort2
+            ##self.add = self.add_sort2
             ##self.add_new_eid = self.add_new_eid_sort2
 
     #def get_stats(self):

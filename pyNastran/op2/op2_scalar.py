@@ -787,8 +787,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """auto-table skipper"""
         return ndata
 
-    def _table_crash(self, data, ndata):
-        sys.exit('asdf')
+    #def _table_crash(self, data, ndata):
+        #sys.exit('asdf')
 
     def _table_passer_r1tabrg(self, data, ndata):
         """auto-table skipper"""
@@ -1281,7 +1281,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         raise RuntimeError('this should never happen; n=%s' % niter_max)
         print('------------')
         #self.show(100)
-
         #asdf
 
     def _skip_table(self, table_name):

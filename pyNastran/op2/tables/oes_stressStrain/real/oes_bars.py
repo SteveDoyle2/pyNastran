@@ -27,7 +27,7 @@ class RealBarArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
             #assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
 
@@ -291,7 +291,7 @@ class RealBarStress(StressObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):

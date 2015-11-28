@@ -982,7 +982,6 @@ class UGRID(object):
                 #type1 = type_mapper[i1]
                 #type2 = type_mapper[i2]
                 #if type1:
-                #asdf
             faces_file.write(')\n')
         return
 

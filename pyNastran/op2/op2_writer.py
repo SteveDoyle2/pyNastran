@@ -124,7 +124,7 @@ class OP2Writer(OP2_F06_Common):
                     del result
             else:
                 print("*op2 - %s not written" % result.__class__.__name__)
-                asdf
+                write_op2
 
         # then eigenvectors
         # has a special header
@@ -138,7 +138,7 @@ class OP2Writer(OP2_F06_Common):
                     del result
             else:
                 print("*op2 - %s not written" % result.__class__.__name__)
-                asdf
+                write_op2
 
         # finally, we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,

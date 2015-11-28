@@ -4,7 +4,8 @@ from six.moves import range, zip
 import copy
 from struct import Struct, unpack
 
-from numpy import radians, sin, cos, fromstring, ones, int32, float32
+from numpy import radians, sin, cos, fromstring, ones, int32, float32, dtype as npdtype
+
 import numpy as np
 #from numba import autojit
 
@@ -191,7 +192,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             else:
                 msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
                 raise RuntimeError(msg)
-            self.data_code['format_code'] = self.code_information()
+            self.data_code['format_code'] = self.format_code
         #assert self.format_code == 1, self.code_information()
         #if self.format_code != self.format_code_original:
             #print('self.format_code=%s orig=%s' % (self.format_code,
@@ -935,6 +936,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         .. note:: dt can also be load_step depending on the class
         """
         assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
+        assert class_obj is not None, class_obj
         if debug:
             print("create Transient Object")
             print("***NF = %s" % self.nonlinear_factor)
@@ -996,6 +998,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             if msg != self._last_comment:
                 #print(self.code_information())
                 self.log.warning(msg)
+                self.log.error(self.code_information())
                 #self.log.warning(self.code_information())
                 self._last_comment = msg
             return ndata
@@ -1315,3 +1318,52 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
             auto_return = True
         return auto_return
+
+
+    def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
+        """same as _create_oes_object4 except it doesn't support unvectorized objects"""
+        auto_return = False
+        #is_vectorized = True
+        is_vectorized = self._is_vectorized(obj_vector, slot)
+        #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
+
+        if is_vectorized:
+            if self.read_mode == 1:
+                #print('oes-self.nonlinear_factor =', self.nonlinear_factor)
+                #print(self.data_code)
+                self.create_transient_object(slot, obj_vector)
+                #print("read_mode 1; ntimes=%s" % obj.ntimes)
+                self.result_names.add(result_name)
+                #print('self.obj =', self.obj)
+                self.obj.nelements += nelements
+                auto_return = True
+            elif self.read_mode == 2:
+                self.code = self._get_code()
+                #self.log.info("code = %s" % str(self.code))
+                #print("code = %s" % str(self.code))
+
+                # if this is failing, you probably set obj_vector to None...
+                try:
+                    self.obj = slot[self.code]
+                except KeyError:
+                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
+                    msg += "There's probably an extra check for read_mode=1...%s" % result_name
+                    self.log.error(msg)
+                    raise
+                #obj.update_data_code(self.data_code)
+                self.obj.build()
+
+            else:  # not vectorized
+                auto_return = True
+        else:
+            auto_return = True
+        return auto_return, is_vectorized
+
+    def _set_structs(self):
+        """defines common struct formats"""
+        self.fdtype = npdtype(self._endian + 'f4')
+        self.idtype = npdtype(self._endian + 'i4')
+        #self.sdtype = npdtype(self._endian + '4s')
+        self.struct_i = Struct(b(self._endian + 'i'))
+        self.struct_8s = Struct(b(self._endian + '8s'))
+        self.struct_2i = Struct(b(self._endian + 'ii'))

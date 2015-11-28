@@ -37,6 +37,7 @@ class OES_Object(ScalarObject):
         :returns types_out:      the ordered list of types
         :returns ordered_etypes: dictionary of Type-IDs to write
         """
+        raise RuntimeError('is this still used???')
         ordered_etypes = {}
 
         #valid_types = ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']

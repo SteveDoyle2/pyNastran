@@ -533,6 +533,8 @@ class F06Writer(OP2_F06_Common):
             self.cpenta_pressure_force,
             self.ctetra_pressure_force,
 
+            self.coneax_force,
+
             #------------------------------------------
             # OES - strain
             # 1.  cbar

@@ -202,6 +202,24 @@ class ComplexLoadVector(ComplexTableObject):  # table_code=11, approach_code=???
         return page_num - 1
 
 
+class RealTemperatureVectorArray(RealTableArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        words = [
+            '                                              T E M P E R A T U R E   V E C T O R\n',
+            ' \n',
+            '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n'
+        ]
+        #words += self.get_table_marker()
+        write_words = False
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, write_words,
+                                                   is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
+                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+
 class RealThermalVector(RealTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -257,11 +275,30 @@ class RealThermalVector(RealTableObject):
         return page_num - 1
 
 
-class RealThermalLoadVector(RealThermalVector):     # table_code=2, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
+#class RealThermalLoadVector(RealThermalVector):     # table_code=2, thermal=1
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #RealThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
-class RealThermalVelocityVector(RealThermalVector):  # table_code=10, thermal=1
+#class RealThermalVelocityVector(RealThermalVector):  # table_code=10, thermal=1
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #RealThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+class RealThermalVelocityVectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        words = [
+            '                                              THERMAL VELOCITY   V E C T O R\n',
+            ' \n',
+            '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n'
+        ]
+        #words += self.get_table_marker()
+        write_words = False
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, write_words,
+                                                   is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
+                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+

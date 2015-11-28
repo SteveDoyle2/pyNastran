@@ -74,7 +74,7 @@ class RealGridPointForcesArray(ScalarObject):
 
         if self.is_unique:
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
-            self.element_names = empty(self.ntimes, self.ntotal, dtype='S8')
+            self.element_names = empty((self.ntimes, self.ntotal), dtype='S8')
         else:
             self.node_element = zeros((self.ntotal, 2), dtype='int32')
             self.element_names = empty(self.ntotal, dtype='S8')

@@ -207,7 +207,7 @@ class RealNonlinearPlateArray(OES_Object):
         return msg
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        asdf
+        real_nonlinear_plate_array
         msg, nnodes, cen = _get_plate_msg(self)
 
         # write the f06
@@ -293,7 +293,7 @@ class NonlinearQuad(StressObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
@@ -462,7 +462,7 @@ class HyperelasticQuad(StressObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
@@ -573,7 +573,7 @@ class NonlinearRod(StressObject):
                 #self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):

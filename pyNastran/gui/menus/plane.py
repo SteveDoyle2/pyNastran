@@ -350,7 +350,7 @@ def main():
     app = QtGui.QApplication(sys.argv)
     #The Main window
     d = {
-        'name' : 'asdf',
+        'name' : 'plane_test',
         'origin': [1., 2., 3.],
         'normal' : [4., 5., 6.],
         'a' : [7., 8., 9.],

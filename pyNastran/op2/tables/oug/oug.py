@@ -45,7 +45,7 @@ from pyNastran.op2.tables.oug.oug_eigenvectors import (
     #RealEigenvector,                # analysis_code=9, sort_code=1 format_code=1 table_code=7
 )
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVector
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVectorArray # RealThermalVelocityVector
 
 
 class OUG(OP2Common):
@@ -408,15 +408,17 @@ class OUG(OP2Common):
                                             RealVelocityArray, ComplexVelocityArray,
                                             'node', random_code=self.random_code)
         elif self.thermal == 1:
-            real_obj = RealThermalVelocityVector
-            complex_obj = None
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table(data, ndata, result_name, storage_obj,
-                                 RealThermalVelocityVector, None,
-                                 None, None,
-                                 'node', random_code=self.random_code)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealThermalVelocityVector, None,
+                                 #None, None,
+                                 #'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            RealThermalVelocityVectorArray, None,
+                                            'node', random_code=self.random_code)
+
         elif self.thermal == 2:
             result_name = 'velocity_scaled_response_spectra_ABS'
             storage_obj = self.velocity_scaled_response_spectra_ABS

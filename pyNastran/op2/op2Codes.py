@@ -19,7 +19,12 @@ class Op2Codes(object):
             self.element_mapper = msc_elements
         else:
             self.element_mapper = nx_elements
-        return self.element_mapper[elem_code]
+        try:
+            etype = self.element_mapper[elem_code]
+        except TypeError:
+            print('elem_code=%r' % elem_code)
+            raise
+
 
     def _get_element_mappers(self):
         msc_elements = {
@@ -391,9 +396,9 @@ class Op2Codes(object):
             114 : 'QVOL',
             115 : 'RADBC',
             116 : 'SLIF1D',
-            117 : '',
-            118 : '',
-            119 : '',
+            117 : 'CWELDC',  # unlisted in the main table, used in OEF table
+            118 : 'CWELDP',  # unlisted in the main table, used in OEF table
+            119 : 'CFAST',  # unlisted in the main table, used in OEF table
             120 : '',
 
             121 : '',
@@ -402,19 +407,19 @@ class Op2Codes(object):
             124 : '',
             125 : '',
             126 : '',
-            127 : '',
-            128 : '',
-            129 : '',
-            130 : '',
+            127 : 'CQUAD',  # unlisted in the main table, used in OEF table
+            128 : 'CQUADX',  # unlisted in the main table, used in OEF table
+            129 : 'RELUC',  # unlisted in the main table, used in OEF table
+            130 : 'RES',  # unlisted in the main table, used in OEF table
 
-            131 : '',
-            132 : '',
-            133 : '',
-            134 : '',
-            135 : '',
-            136 : '',
-            137 : '',
-            138 : '',
+            131 : 'TETRAE',  # unlisted in the main table, used in OEF table
+            132 : 'CTRIA',  # unlisted in the main table, used in OEF table
+            133 : 'CTRIAX',  # unlisted in the main table, used in OEF table
+            134 : 'LINEOB',  # unlisted in the main table, used in OEF table
+            135 : 'LINXOB',  # unlisted in the main table, used in OEF table
+            136 : 'QUADOB',  # unlisted in the main table, used in OEF table
+            137 : 'TRIAOB',  # unlisted in the main table, used in OEF table
+            138 : 'LINX',  # unlisted in the main table, used in OEF table
             139 : 'CQUAD4FD',
             140 : 'CHEXA8FD',
 
@@ -425,19 +430,19 @@ class Op2Codes(object):
             145 : 'VUHEXA',
             146 : 'VUPENTA',
             147 : 'VUTETRA',
-            148 : '',
-            149 : '',
-            150 : '',
+            148 : 'HEXAM',  # unlisted in the main table, used in OEF table
+            149 : 'PENTAM',  # unlisted in the main table, used in OEF table
+            150 : 'TETRAM',  # unlisted in the main table, used in OEF table
 
-            151 : '',
-            152 : '',
-            153 : '',
-            154 : '',
-            155 : '',
-            156 : '',
-            157 : '',
-            158 : '',
-            159 : '',
+            151 : 'QUADM',  # unlisted in the main table, used in OEF table
+            152 : 'TRIAM',  # unlisted in the main table, used in OEF table
+            153 : 'QUADXM',  # unlisted in the main table, used in OEF table
+            154 : 'TRIAXM',  # unlisted in the main table, used in OEF table
+            155 : 'QUADPW',  # unlisted in the main table, used in OEF table
+            156 : 'TRIAPW',  # unlisted in the main table, used in OEF table
+            157 : 'LINEPW',  # unlisted in the main table, used in OEF table
+            158 : 'QUADOBM',  # unlisted in the main table, used in OEF table
+            159 : 'TRIAOBM',  # unlisted in the main table, used in OEF table
             160 : 'CPENTA6FD',
 
             161 : 'CTETRA4FD',
@@ -454,32 +459,32 @@ class Op2Codes(object):
             171 : 'CQUADXFD',
             172 : '',
             173 : '',
-            174 : '',
-            175 : '',
-            176 : '',
-            177 : '',
-            178 : '',
-            179 : '',
-            180 : '',
+            174 : 'LINEOBM',  # unlisted in the main table, used in OEF table
+            175 : 'LINXOBM',  # unlisted in the main table, used in OEF table
+            176 : 'QUADWGM',  # unlisted in the main table, used in OEF table
+            177 : 'TRIAWGM',  # unlisted in the main table, used in OEF table
+            178 : 'QUADIB',  # unlisted in the main table, used in OEF table
+            179 : 'TRIAIB',  # unlisted in the main table, used in OEF table
+            180 : 'LINEIB',  # unlisted in the main table, used in OEF table
 
-            181 : '',
-            182 : '',
-            183 : '',
-            184 : '',
-            185 : '',
-            186 : '',
-            187 : '',
-            188 : '',
+            181 : 'LINXIB',  # unlisted in the main table, used in OEF table
+            182 : 'QUADIBM',  # unlisted in the main table, used in OEF table
+            183 : 'TRIAIBM',  # unlisted in the main table, used in OEF table
+            184 : 'LINEIBM',  # unlisted in the main table, used in OEF table
+            185 : 'LINXIBM',  # unlisted in the main table, used in OEF table
+            186 : 'QUADPWM',  # unlisted in the main table, used in OEF table
+            187 : 'TRIAPWM',  # unlisted in the main table, used in OEF table
+            188 : 'LINEPWM',  # unlisted in the main table, used in OEF table
             189 : 'VUQUAD',
             190 : 'VUTRIA',
 
             191 : 'VUBEAM',
             192 : 'CVINT',
-            193 : '',
-            194 : '',
-            195 : '',
-            196 : '',
-            197 : 'SFINT',
+            193 : 'QUADFR',  # unlisted in the main table, used in OEF table
+            194 : 'TRIAFR',  # unlisted in the main table, used in OEF table
+            195 : 'LINEFR',  # unlisted in the main table, used in OEF table
+            196 : 'LINXFR',  # unlisted in the main table, used in OEF table
+            197 : 'SFINT',  # TODO: GMINTS-OEF??
             198 : 'CNVPEL',
             199 : 'VUHBDY',
             200 : 'CWELD',
@@ -565,7 +570,7 @@ class Op2Codes(object):
             288 : 'CPLSTS8',
             289 : 'CPLSTN4',
             290 : 'CPLSTS4',
-            291 : 'CPLSTN3)',
+            291 : 'CPLSTN3',
             292 : 'CPLSTN4',
             293 : 'CPLSTN6',
             294 : 'CPLSTS8',
@@ -707,7 +712,7 @@ class Op2Codes(object):
     def approach_code_str(self, approach_code):
         return ''
 
-    def code_information(self):
+    def code_information(self, include_time=True):
         """
         prints the general table information
         DMAP - page 60-63
@@ -1002,6 +1007,7 @@ class Op2Codes(object):
         else:
             msg += '  NX Nastran\n'
         #print msg
+        assert isinstance(self.format_code, int), type(self.format_code)
         return msg
 
     #----
@@ -1089,18 +1095,19 @@ class Op2Codes(object):
 
     #----
     # sort_code
-    def isSortedResponse(self):
-        if self.sort_bits[0] == 0:
-            return True
-        return False
+    # disabled 11/2015
+    #def isSortedResponse(self):
+        #if self.sort_bits[0] == 0:
+            #return True
+        #return False
 
-    def isRandomResponse(self):
-        return not self.isSortedResponse()
+    # disabled 11/2015
+    #def isRandomResponse(self):
+        #return not self.isSortedResponse()
 
     #----
     # combos
     #def isRealOrRandom(self):  # been broken for a long time
-        #asfd
         #return self.isReal() or self.isRandom()
 
     #def isRealImaginaryOrMagnitudePhase(self):  # been broken for a long time

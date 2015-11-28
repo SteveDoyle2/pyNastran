@@ -1,5 +1,5 @@
 #pylint: disable=C0326,C0301,C0103
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from six import b
 from six.moves import range
 from struct import Struct, unpack
@@ -38,8 +38,9 @@ class ONR(OP2Common):
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
         except UnicodeDecodeError:
-            self.log.warning("element_name = %s" % str(element_name))
-            self.show_data(data)
+            #self.log.warning("element_name = %s" % str(element_name))
+            self.log.warning("element_name - UnicodeDecodeError")
+            #self.show_data(data)
             #raise
         #print("element_name = %s" % (element_name))
         if element_name.isalpha():

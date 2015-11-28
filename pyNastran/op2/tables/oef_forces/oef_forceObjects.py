@@ -112,7 +112,6 @@ class RealSpringDamperForceArray(RealForceObject):
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
-        msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -120,6 +119,9 @@ class RealSpringDamperForceArray(RealForceObject):
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
+
+    def get_f06_header(self, is_mag_phase=True, is_sort1=True):
+        raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -315,7 +317,6 @@ class RealRodForceArray(RealForceObject):
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
-        msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -387,7 +388,7 @@ class RealRodForceArray(RealForceObject):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid\n'
-            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+            for eid, eid2 in zip(self.element, table.element):
                 msg += '%s, %s\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
@@ -512,7 +513,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
 
     def add_sort1(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+        self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def addNewElementSort2(self, eid, data):
         [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
@@ -521,9 +522,9 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
 
     def add_sort2(self, eid, data):
         [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        self._fillObject(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+        self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def _fillObject(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+    def _fill_object(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         #if dt not in self.axial:
             #self.add_new_transient(dt)
         self.nodes[eid][sd] = nid
@@ -599,214 +600,225 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         return page_num
 
 
-class RealCShearForce(ScalarObject):  # 4-CSHEAR
+class RealCShearForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
-        self.force41 = {}
-        self.force14 = {}
-        self.force21 = {}
-        self.force12 = {}
-        self.force32 = {}
-        self.force23 = {}
-        self.force43 = {}
-        self.force34 = {}
-        self.kickForce1 = {}
-        self.kickForce2 = {}
-        self.kickForce3 = {}
-        self.kickForce4 = {}
-        self.shear12 = {}
-        self.shear23 = {}
-        self.shear34 = {}
-        self.shear41 = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.dt = dt
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
         if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
+            self.add = self.add_sort1
         else:
-            assert dt is not None
-            self.add = self.add_sort2
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'force41', 'force21', 'force12', 'force32', 'force23', 'force43',
+            'force34', 'force14', 'kick_force1', 'shear23', 'kick_force3', 'shear34',
+            'kick_force4', 'shear41',
+        ]
+        return headers
+
+    #def get_headers(self):
+        #headers = ['axial', 'torque']
+        #return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[force41, force14, force21, force12, force32, force23, force43, force34,
+        #kick_force1, kick_force2, kick_force3, kick_force4,
+        #shear12, shear23, shear34, shear41]
+        self.data = zeros((self.ntimes, self.ntotal, 16), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid\n'
+            for (eid, nid), (eid2, nid2) in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element):
+                    eid = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a, kick_force1a, kick_force2a, kick_force3a, kick_force4a, shear12a, shear23a, shear34a, shear41a) = t1
+                    (force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b, kick_force1b, kick_force2b, kick_force3b, kick_force4b, shear12b, shear23b, shear34b, shear41b) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += (
+                            '%s   (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
+                            '     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a, kick_force1a, kick_force2a, kick_force3a, kick_force4a, shear12a, shear23a, shear34a, shear41a,
+                                force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b, kick_force1b, kick_force2b, kick_force3b, kick_force4b, shear12b, shear23b, shear34b, shear41b
+                            ))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid,
+            force41, force14, force21, force12, force32, force23, force43, force34,
+            kick_force1, kick_force2, kick_force3, kick_force4,
+            shear12, shear23, shear34, shear41):
+        self.add_sort1(dt, eid,
+                       force41, force14, force21, force12, force32, force23, force43, force34,
+                       kick_force1, kick_force2, kick_force3, kick_force4,
+                       shear12, shear23, shear34, shear41)
+
+    def add_sort1(self, dt, eid,
+                  force41, force14, force21, force12, force32, force23, force43, force34,
+                  kick_force1, kick_force2, kick_force3, kick_force4,
+                  shear12, shear23, shear34, shear41):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [
+            force41, force14, force21, force12, force32, force23, force43, force34,
+            kick_force1, kick_force2, kick_force3, kick_force4,
+            shear12, shear23, shear34, shear41]
+        self.ielement += 1
 
     def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.shear12)
-            time0 = get_key0(self.shear12)
-            nelements = len(self.shear12[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
         else:
-            nelements = len(self.shear12)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force41, force14, force21, force12, force32, force23, '
-                   '  force 43, force34, kickForce1, kickForce2, kickForce3, '
-                   '  kickForce4, shear12, shear23, shear34, shear41\n')
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.force41[dt] = {}
-        self.force14[dt] = {}
-        self.force21[dt] = {}
-        self.force12[dt] = {}
-        self.force32[dt] = {}
-        self.force23[dt] = {}
-        self.force43[dt] = {}
-        self.force34[dt] = {}
-        self.kickForce1[dt] = {}
-        self.kickForce2[dt] = {}
-        self.kickForce3[dt] = {}
-        self.kickForce4[dt] = {}
-        self.shear12[dt] = {}
-        self.shear23[dt] = {}
-        self.shear34[dt] = {}
-        self.shear41[dt] = {}
-
-    def add(self, dt, data):
-        [eid, f41, f21, f12, f32, f23, f43, f34, f14,
-         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        self.force41[eid] = f41
-        self.force14[eid] = f14
-        self.force21[eid] = f21
-        self.force12[eid] = f12
-        self.force32[eid] = f32
-        self.force23[eid] = f23
-        self.force43[eid] = f43
-        self.force34[eid] = f34
-        self.kickForce1[eid] = kf1
-        self.kickForce2[eid] = kf2
-        self.kickForce3[eid] = kf3
-        self.kickForce4[eid] = kf4
-        self.shear12[eid] = s12
-        self.shear23[eid] = s23
-        self.shear34[eid] = s34
-        self.shear41[eid] = s41
-
-    def add_sort1(self, dt, data):
-        [eid, f41, f21, f12, f32, f23, f43, f34, f14,
-         kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
-
-    def add_sort2(self, eid, data):
-        [dt, f41, f21, f12, f32, f23, f43, f34, f14,
-            kf1, s12, kf2, s23, kf3, s34, kf4, s41] = data
-
-        self._fillObject(dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                         kf1, s12, kf2, s23, kf3, s34, kf4, s41)
-
-    def add_f06_data(self, data, dt=None):
-        if dt:
-            raise NotImplementedError(dt)
-
-        for d in data:
-            [
-                eid,
-                f41, f21, tau12, kick1,
-                f12, f32, tau23, kick2,
-                f23, f43, tau34, kick3,
-                f34, f14, tau41, kick4,
-            ] = d
-            #print('eid, nid, sd', eid, nid, sd)
-            self.force41[eid] = f41
-            self.force14[eid] = f14
-
-            self.force21[eid] = f21
-            self.force12[eid] = f12
-
-            self.force32[eid] = f32
-            self.force23[eid] = f23
-
-            self.force43[eid] = f43
-            self.force34[eid] = f34
-
-            self.kickForce1[eid] = kick1
-            self.kickForce2[eid] = kick2
-            self.kickForce3[eid] = kick3
-            self.kickForce4[eid] = kick4
-
-            self.shear12[eid] = tau12
-            self.shear23[eid] = tau23
-            self.shear34[eid] = tau34
-            self.shear41[eid] = tau41
-
-    def _fillObject(self, dt, eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                    kf1, s12, kf2, s23, kf3, s34, kf4, s41):
-        if dt not in self.force41:
-            self.add_new_transient(dt)
-        self.force41[dt][eid] = f41
-        self.force14[dt][eid] = f14
-        self.force21[dt][eid] = f21
-        self.force12[dt][eid] = f12
-        self.force32[dt][eid] = f32
-        self.force23[dt][eid] = f23
-        self.force43[dt][eid] = f43
-        self.force34[dt][eid] = f34
-        self.kickForce1[dt][eid] = kf1
-        self.kickForce2[dt][eid] = kf2
-        self.kickForce3[dt][eid] = kf3
-        self.kickForce4[dt][eid] = kf4
-        self.shear12[dt][eid] = s12
-        self.shear23[dt][eid] = s23
-        self.shear34[dt][eid] = s34
-        self.shear41[dt][eid] = s41
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-
-        words = [
+        msg_temp = [
             '                           F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)\n'
             ' \n'
             '                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======\n'
             '   ELEMENT        F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1\n'
             '         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41\n'
         ]
-        msg = header + words
-        for eid, forcei in sorted(iteritems(self.force14)):
-            f41 = self.force41[eid]
-            f14 = self.force14[eid]
-            f21 = self.force21[eid]
-            f12 = self.force12[eid]
-            f32 = self.force32[eid]
-            f23 = self.force23[eid]
-            f43 = self.force43[eid]
-            f34 = self.force34[eid]
-            kick1 = self.kickForce1[eid]
-            kick2 = self.kickForce2[eid]
-            kick3 = self.kickForce3[eid]
-            kick4 = self.kickForce4[eid]
-            tau12 = self.shear12[eid]
-            tau23 = self.shear23[eid]
-            tau34 = self.shear34[eid]
-            tau41 = self.shear41[eid]
 
-            vals = [
-                f14, f12,
-                f21, f23,
-                f32, f34,
-                f43, f41,
-                kick1, tau12,
-                kick2, tau23,
-                kick3, tau34,
-                kick4, tau41,
+        #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            f14 = self.data[itime, :, 0]
+            f12 = self.data[itime, :, 1]
+            f21 = self.data[itime, :, 2]
+            f23 = self.data[itime, :, 3]
+            f32 = self.data[itime, :, 4]
+            f34 = self.data[itime, :, 5]
+            f43 = self.data[itime, :, 6]
+            f41 = self.data[itime, :, 7]
+
+            kick1 = self.data[itime, :, 8]
+            tau12 = self.data[itime, :, 9]
+            kick2 = self.data[itime, :, 10]
+            tau23 = self.data[itime, :, 11]
+            kick3 = self.data[itime, :, 12]
+            tau34 = self.data[itime, :, 13]
+            kick4 = self.data[itime, :, 14]
+            tau41 = self.data[itime, :, 15]
+
+            zip_in = [
+                f14, f12, f21, f23, f32, f34, f43, f41,
+                kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
             ]
-            (vals2, is_all_zeros) = writeFloats12E(vals)
-            [f14, f12,
-             f21, f23,
-             f32, f34,
-             f43, f41,
-             kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
-            ] = vals2
-            msg.append('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, f14, f12, f21, f23, f32, f34, f43, f41))
-            msg.append('                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
+            for (eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i, kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
+                eids, f14, f12, f21, f23, f32, f34, f43, f41, kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41):
+                (vals2, is_all_zeros) = writeFloats12E(
+                    [f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                     kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i])
+                [
+                    f14i, f12i,
+                    f21i, f23i,
+                    f32i, f34i,
+                    f43i, f41i,
+                    kick1i, tau12i, kick2i, tau23i,
+                    kick3i, tau34i, kick4i, tau41i
+                ] = vals2
+                f.write('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n'
+                        '                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                            eid, f14, f12, f21, f23, f32, f34, f43, f41,
+                            kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
-        return page_num
 
 class RealViscForceArray(RealForceObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -886,7 +898,6 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
-        msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -960,7 +971,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid\n'
-            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+            for eid, eid2 in zip(self.element, table.element):
                 msg += '%s, %s\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
@@ -1080,7 +1091,6 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
-        #msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1266,8 +1276,18 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     @property
     def nnodes_per_element(self):
-        if self.element_type == 144:
+        if self.element_type == 144:  # CQUAD4
             nnodes_element = 5
+        elif self.element_type == 64:  # CQUAD8
+            nnodes_element = 5
+        elif self.element_type == 82:  # CQUADR
+            nnodes_element = 5
+        elif self.element_type == 75:  # CTRIA6
+            nnodes_element = 4
+        elif self.element_type == 70:  # CTRIAR
+            nnodes_element = 4
+        else:
+            raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
         return nnodes_element
 
     def get_stats(self):
@@ -1510,7 +1530,6 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
-        msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1662,80 +1681,189 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         # self.torque[dt][eid] = trq
 
 
-class RealConeAxForce(ScalarObject):  # 35-CCONEAX
+class RealConeAxForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
-        self.hopa = {}
-        self.bmu = {}
-        self.bmv = {}
-        self.tm = {}
-        self.su = {}
-        self.sv = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.dt = dt
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
         if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
+            self.add = self.add_sort1
         else:
-            assert dt is not None
-            self.add = self.add_sort2
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'hopa', 'bmu', 'bmv', 'tm', 'su', 'sv'
+        ]
+        return headers
+
+    #def get_headers(self):
+        #headers = ['axial', 'torque']
+        #return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[hopa, bmu, bmv, tm, su, sv]
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid\n'
+            for (eid, nid), (eid2, nid2) in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element):
+                    eid = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (hopa1, bmu1, bmv1, tm1, su1, sv1) = t1
+                    (hopa2, bmu2, bmv2, tm2, su2, sv2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += (
+                            '%s   (%s, %s, %s, %s, %s, %s)\n'
+                            '     (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                hopa1, bmu1, bmv1, tm1, su1, sv1,
+                                hopa2, bmu2, bmv2, tm2, su2, sv2,
+                            ))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
+        self.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
+
+    def add_sort1(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
+        self.ielement += 1
 
     def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.hopa)
-            time0 = get_key0(self.hopa)
-            nelements = len(self.hopa[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
         else:
-            nelements = len(self.hopa)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  hopa, bmu, bmv, tm, su, sv\n')
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.hopa[dt] = {}
-        self.bmu[dt] = {}
-        self.bmv[dt] = {}
-        self.tm[dt] = {}
-        self.su[dt] = {}
-        self.sv[dt] = {}
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp = [
+            '             F O R C E S   I N   A X I S - S Y M M E T R I C   C O N I C A L   S H E L L   E L E M E N T S   (CCONEAX)\n'
+            ' \n'
+            '  ELEMENT     HARMONIC    POINT           BEND-MOMENT       BEND-MOMENT      TWIST-MOMENT           SHEAR            SHEAR\n'
+            '   ID.         NUMBER     ANGLE               V                 U                                     V                U\n'
+            #'      101        0                       5.864739E-09      1.759422E-09      0.0               0.0               0.0'
+            #'      101                0.0000          5.864739E-09      1.759422E-09      0.0               0.0               0.0'
+        ]
 
-    def add(self, dt, data):
-        [eid, hopa, bmu, bmv, tm, su, sv] = data
-        self.hopa[eid] = hopa
-        self.bmu[eid] = bmu
-        self.bmv[eid] = bmv
-        self.tm[eid] = tm
-        self.su[eid] = su
-        self.sv[eid] = sv
+        #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
 
-    def add_sort1(self, dt, data):
-        [eid, hopa, bmu, bmv, tm, su, sv] = data
-        if dt not in self.hopa:
-            self.add_new_transient(dt)
-        self.hopa[dt][eid] = hopa
-        self.bmu[dt][eid] = bmu
-        self.bmv[dt][eid] = bmv
-        self.tm[dt][eid] = tm
-        self.su[dt][eid] = su
-        self.sv[dt][eid] = sv
+        eids = self.element
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
 
-    def add_sort2(self, eid, data):
-        [dt, hopa, bmu, bmv, tm, su, sv] = data
-        if dt not in self.hopa:
-            self.add_new_transient(dt)
-        self.hopa[dt][eid] = hopa
-        self.bmu[dt][eid] = bmu
-        self.bmv[dt][eid] = bmv
-        self.tm[dt][eid] = tm
-        self.su[dt][eid] = su
-        self.sv[dt][eid] = sv
+            hopa = self.data[itime, :, 0]
+            bmu = self.data[itime, :, 1]
+            bmv = self.data[itime, :, 2]
+            tm = self.data[itime, :, 3]
+            su = self.data[itime, :, 4]
+            sv = self.data[itime, :, 5]
+
+            for (eid, hopai, bmui, bmvi, tmi, sui, svi) in zip(
+                eids, hopa, bmu, bmv, tm, su, sv):
+                if hopai > 0.1:
+                    raise NotImplementedError(hopai)
+
+                (vals2, is_all_zeros) = writeFloats13E(
+                    [hopai, bmui, bmvi, tmi, sui, svi])
+                [hopai, bmui, bmvi, tmi, sui, svi] = vals2
+
+                # TODO: hopa is probably the wrong type
+                              # hopa        # Mu       Mv      twist       Vy       Vu
+                f.write(' %8i  %-13s  %-13s %-13s     %-13s     %-13s     %-13s     %s\n' % (
+                    eid, 0.0, hopai, bmui, bmvi, tmi, sui, svi))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 
 class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
@@ -1825,7 +1953,6 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
-        msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1917,90 +2044,181 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         return True
 
 
-class RealCGapForce(ScalarObject):  # 38-CGAP
+class RealCGapForceArray(ScalarObject):  # 38-CGAP
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
-        self.fx = {}
-        self.sfy = {}
-        self.sfz = {}
-        self.u = {}
-        self.v = {}
-        self.w = {}
-        self.sv = {}
-        self.sw = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.dt = dt
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
         if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
+            self.add = self.add_sort1
         else:
-            assert dt is not None
-            self.add = self.add_sort2
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'fx', 'sfy', 'sfz', 'u', 'v', 'w', 'sv', 'sw'
+        ]
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        # [fx, sfy, sfz, u, v, w, sv, sw]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid\n'
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element):
+                    eid = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (fx1, sfy1, sfz1, u1, v1, w1, sv1, sw1) = t1
+                    (fx2, sfy2, sfz2, u2, v2, w2, sv2, sw2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += (
+                            '%s   (%s, %s, %s, %s, %s, %s, %s, %s)\n'
+                            '     (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                fx1, sfy1, sfz1, u1, v1, w1, sv1, sw1,
+                                fx2, sfy2, sfz2, u2, v2, w2, sv2, sw2,
+                            ))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
+        self.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
+
+    def add_sort1(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
+        self.ielement += 1
 
     def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.fx)
-            time0 = get_key0(self.fx)
-            nelements = len(self.fx[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
         else:
-            nelements = len(self.fx)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  fx, sfy, sfz, u, v, w, sv, sw\n')
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.fx[dt] = {}
-        self.sfy[dt] = {}
-        self.sfz[dt] = {}
-        self.u[dt] = {}
-        self.v[dt] = {}
-        self.w[dt] = {}
-        self.sv[dt] = {}
-        self.sw[dt] = {}
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp = [
+            '                                    F O R C E S   I N   G A P   E L E M E N T S   ( C G A P )\n'
+            '  ELEMENT   - F O R C E S  I N  E L E M  S Y S T E M -         - D I S P L A C E M E N T S  I N  E L E M  S Y S T E M -\n'
+            '    ID       COMP-X         SHEAR-Y        SHEAR-Z        AXIAL-U        TOTAL-V        TOTAL-W        SLIP-V         SLIP-W\n'
+            #'     101   3.333333E+04   0.0            0.0            1.149425E-04   0.0            0.0            0.0            0.0\n'
+        ]
 
-    def add(self, dt, data):
-        [eid, fx, sfy, sfz, u, v, w, sv, sw] = data
-        self.fx[eid] = fx
-        self.sfy[eid] = sfy
-        self.sfz[eid] = sfz
-        self.u[eid] = u
-        self.v[eid] = v
-        self.w[eid] = w
-        self.sv[eid] = sv
-        self.sw[eid] = sw
+        ##(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #ntimes, ntotal = self.data.shape[:1]
+        ntimes = self.data.shape[0]
 
-    def add_sort1(self, dt, data):
-        [eid, fx, sfy, sfz, u, v, w, sv, sw] = data
-        if dt not in self.fx:
-            self.add_new_transient(dt)
-        self.fx[dt][eid] = fx
-        self.sfy[dt][eid] = sfy
-        self.sfz[dt][eid] = sfz
-        self.u[dt][eid] = u
-        self.v[dt][eid] = v
-        self.w[dt][eid] = w
-        self.sv[dt][eid] = sv
-        self.sw[dt][eid] = sw
+        eids = self.element
 
-    def add_sort2(self, eid, data):
-        [dt, fx, sfy, sfz, u, v, w, sv, sw] = data
-        if dt not in self.fx:
-            self.add_new_transient(dt)
-        self.fx[dt][eid] = fx
-        self.sfy[dt][eid] = sfy
-        self.sfz[dt][eid] = sfz
-        self.u[dt][eid] = u
-        self.v[dt][eid] = v
-        self.w[dt][eid] = w
-        self.sv[dt][eid] = sv
-        self.sw[dt][eid] = sw
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            # [fx, sfy, sfz, u, v, w, sv, sw]
+            fx = self.data[itime, :, 0]
+            sfy = self.data[itime, :, 1]
+            sfz = self.data[itime, :, 2]
+            u = self.data[itime, :, 3]
+            v = self.data[itime, :, 4]
+            w = self.data[itime, :, 5]
+            sv = self.data[itime, :, 6]
+            sw = self.data[itime, :, 7]
+
+            for (eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi) in zip(eids, fx, sfy, sfz, u, v, w, sv, sw):
+                (vals2, is_all_zeros) = writeFloats12E(
+                    [fxi, sfyi, sfzi, ui, vi, wi, svi, swi])
+                [fxi, sfyi, sfzi, ui, vi, wi, svi, swi] = vals2
+                f.write('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                            eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
 
 
 class RealBendForce(ScalarObject):  # 69-CBEND
@@ -2063,18 +2281,18 @@ class RealBendForce(ScalarObject):  # 69-CBEND
     def add_sort1(self, dt, data):
         [eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
          nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
-        self._fillObject(
+        self._fill_object(
             dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB)
 
     def add_sort2(self, eid, data):
         [dt, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
             nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB] = data
-        self._fillObject(dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
-                                  nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB)
+        self._fill_object(dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
+                                   nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB)
 
-    def _fillObject(self, dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
-                                   nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB):
+    def _fill_object(self, dt, eid, nidA, bm1A, bm2A, sp1A, sp2A, axialA, torqueA,
+                                    nidB, bm1B, bm2B, sp1B, sp2B, axialB, torqueB):
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.nodeIDs[eid] = [nidA, nidB]
@@ -2086,96 +2304,223 @@ class RealBendForce(ScalarObject):  # 69-CBEND
         self.torque[dt][eid] = [torqueA, torqueB]
 
 
-class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
+class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
-        self.acceleration = {}
-        self.velocity = {}
-        self.pressure = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.dt = dt
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
         if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
+            self.add = self.add_sort1
         else:
-            assert dt is not None
-            self.add = self.add_sort2
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure'
+        ]
+        return headers
+
+    #def get_headers(self):
+        #headers = ['axial', 'torque']
+        #return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[ax, ay, az, vx, vy, vz, pressure]
+        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid\n'
+            for (eid, nid), (eid2, nid2) in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element):
+                    eid = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (ax1, ay1, az1, vx1, vy1, vz1, pressure1) = t1
+                    (ax2, ay2, az2, vx2, vy2, vz2, pressure2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += (
+                            '%s   (%s, %s, %s, %s, %s, %s, %s)\n'
+                            '     (%s, %s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                ax1, ay1, az1, vx1, vy1, vz1, pressure1,
+                                ax2, ay2, az2, vx2, vy2, vz2, pressure2,
+                            ))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
+        self.add_sort1(dt, eid, etype, ax, ay, az, vx, vy, vz, pressure)
+
+    def add_sort1(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
+        self.ielement += 1
 
     def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.acceleration)
-            time0 = get_key0(self.acceleration)
-            nelements = len(self.acceleration[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
         else:
-            nelements = len(self.acceleration)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  acceleration, velocity, pressure\n')
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.acceleration[dt] = {}
-        self.velocity[dt] = {}
-        self.pressure[dt] = {}
-
-    def add(self, dt, data):
-        [eid, ename, ax, ay, az, vx, vy, vz, pressure] = data
-        self.acceleration[eid] = [ax, ay, az]
-        self.velocity[eid] = [vx, vy, vz]
-        self.pressure[eid] = pressure
-
-    def add_sort1(self, dt, data):
-        [eid, ename, ax, ay, az, vx, vy, vz, pressure] = data
-        if dt not in self.acceleration:
-            self.add_new_transient(dt)
-        self.acceleration[dt][eid] = [ax, ay, az]
-        self.velocity[dt][eid] = [vx, vy, vz]
-        self.pressure[dt][eid] = pressure
-
-    def add_sort2(self, eid, data):
-        [dt, ename, ax, ay, az, vx, vy, vz, pressure] = data
-        if dt not in self.acceleration:
-            self.add_new_transient(dt)
-        self.acceleration[dt][eid] = [ax, ay, az]
-        self.velocity[dt][eid] = [vx, vy, vz]
-        self.pressure[dt][eid] = pressure
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        #words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
-        #         ' \n',
-        #         '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_sort1=is_sort1)
-        f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
-        #raise NotImplementedError()
+        #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #(ntimes, ntotal, two) = self.data.shape
+
+        if self.is_sort1():
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f)
+        else:
+            raise NotImplementedError(sort2)
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
-                 ' \n',
-                 '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
-        msg = []
-        for dt, acc in sorted(self.acceleration.items()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            for eid in sorted(acc):
-                ax, ay, az = self.acceleration[dt][eid]
-                vx, vy, vz = self.velocity[dt][eid]
-                pressure = self.pressure[dt][eid]
-                vals = [ax, ay, az, pressure]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
-                [ax, ay, az, pressure] = vals2
-                eType = 'PENPR'
-                msg.append('0%13s    %5s               %-13s             %-13s             %-13s             %s\n' % (eid, eType, ax, ay, az, pressure))
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
+    def _write_sort2_as_sort1(self, header, page_stamp, page_num=1, f=None):
+        msg_temp = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
+                    ' \n',
+                    '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        etype = self.element_name
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            vx = self.data[itime, :, 0]
+            vy = self.data[itime, :, 1]
+            vz = self.data[itime, :, 2]
+            ax = self.data[itime, :, 3]
+            ay = self.data[itime, :, 4]
+            az = self.data[itime, :, 5]
+            pressure = self.data[itime, :, 5]
+
+            for (eid, vxi, vyi, vzi, axi, ayi, azi, pressurei) in zip(
+                eids, vx, vy, vz, ax, ay, az, pressure):
+
+                (vals2, is_all_zeros) = writeFloats13E(
+                    [axi, ayi, azi, pressurei])
+                [sax, say, saz, spressure] = vals2
+
+                #etype = 'PENPR'
+                f.write('0%13s    %5s               %-13s             %-13s             %-13s             %s\n' % (eid, etype, sax, say, saz, spressure))
+
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num=1, f=None):
+        msg_temp = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
+                    ' \n',
+                    '    ELEMENT-ID   EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']  # TODO: bad line...
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        etype = self.element_name
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            vx = self.data[itime, :, 0]
+            vy = self.data[itime, :, 1]
+            vz = self.data[itime, :, 2]
+            ax = self.data[itime, :, 3]
+            ay = self.data[itime, :, 4]
+            az = self.data[itime, :, 5]
+            pressure = self.data[itime, :, 5]
+
+            for (eid, vxi, vyi, vzi, axi, ayi, azi, pressurei) in zip(
+                eids, vx, vy, vz, ax, ay, az, pressure):
+
+                (vals2, is_all_zeros) = writeFloats13E(
+                    [axi, ayi, azi, pressurei])
+                [sax, say, saz, spressure] = vals2
+
+                #etype = 'PENPR'
+                f.write('0%13s    %5s               %-13s             %-13s             %-13s             %s\n' % (eid, etype, sax, say, saz, spressure))
+
+            f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -2305,7 +2650,6 @@ class RealCBushForceArray(ScalarObject):
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
-        msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -2577,13 +2921,13 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
 
     def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
-        self._fillObject(dt, eid, parent, coord, icord, theta, forces)
+        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
     def add_sort2(self, nnodes, eid, data):
         [dt, parent, coord, icord, theta, forces] = data
-        self._fillObject(dt, eid, parent, coord, icord, theta, forces)
+        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
-    def _fillObject(self, dt, eid, parent, coord, icord, theta, forces):
+    def _fill_object(self, dt, eid, parent, coord, icord, theta, forces):
         if dt not in self.membraneX:
             self.add_new_transient(dt)
         self.parent[eid] = parent

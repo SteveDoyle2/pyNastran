@@ -238,7 +238,6 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
                         #ni = nnodes
                     #else:
                         #data = zeros((nnodes, 6), dtype='float32')
-                        #asdf
                         #data[:, i, :] = case.data
                     data = case.data[:, i, :]
                     ntimes = case.data.shape[0]

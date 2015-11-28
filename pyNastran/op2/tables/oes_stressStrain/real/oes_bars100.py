@@ -28,7 +28,7 @@ class RealBar10NodesArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
             #assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
 

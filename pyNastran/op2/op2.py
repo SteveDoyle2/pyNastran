@@ -73,6 +73,7 @@ class OP2(OP2_Scalar):
                     return False
                 if not any(word in aname for word in ['Array', 'Eigenvalues']):
                     print('%s is not an Array ... assume equal' % aname)
+                    #raise NotImplementedError('%s __eq__' % aname)
                     continue
                 if avalue != bvalue:
                     print('key=%s table_type=%r is different; class_name=%r' % (key, table_type, aname))

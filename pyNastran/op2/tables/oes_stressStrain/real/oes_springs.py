@@ -239,7 +239,7 @@ class RealCelasStress(StressObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             self.add_new_eid = self.add_new_eid_sort2
 
     def is_real(self):
@@ -406,7 +406,7 @@ class RealCelasStrain(StrainObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
+            #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
