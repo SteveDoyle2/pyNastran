@@ -1923,7 +1923,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                if self.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0

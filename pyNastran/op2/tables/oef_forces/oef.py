@@ -1600,7 +1600,7 @@ class OEF(OP2Common):
                 slot = self.ctria6_force
             elif self.element_type == 82:
                 result_name = 'cquadr_force'
-                slot = self.cquad8_force
+                slot = self.cquadr_force
             elif self.element_type == 144:
                 result_name = 'cquad4_force'
                 slot = self.cquad4_force
@@ -1639,7 +1639,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized: # and self.element_type in [144]:
+                if self.use_vector and is_vectorized:
                     nlayers = nelements * nnodes_all
                     n = nelements * self.num_wide * 4
 
@@ -1715,8 +1715,6 @@ class OEF(OP2Common):
                         obj.element[itotal:itotal2] = eids
 
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-                    #print(floats[:, 2:].shape)
-                    #print(nelements, nelements * nnodes_all, 17)
                     floats2 = floats[:, 2:].reshape(nelements * nnodes_all, 17)
                     if is_magnitude_phase:
                         mag = floats[:, [1, 2, 3, 4, 5, 6, 7, 8]]
@@ -1767,8 +1765,7 @@ class OEF(OP2Common):
                             bmxy = complex(bmxyr, bmxyi)
                             tx = complex(txr, txi)
                             ty = complex(tyr, tyi)
-
-                        #obj.add_new_element(eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                        obj.add_new_element_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
 
                         for i in range(nnodes):  # .. todo:: fix crash...
                             edata = data[n:n+68]
@@ -1797,7 +1794,7 @@ class OEF(OP2Common):
                                 ty = complex(tyr, tyi)
                             if self.is_debug_file:
                                 self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (eid, nid, str(out)))
-                            obj.add(eid, dt, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                            obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)

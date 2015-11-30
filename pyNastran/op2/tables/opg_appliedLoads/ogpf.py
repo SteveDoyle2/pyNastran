@@ -54,7 +54,15 @@ class OGPF(OP2Common):
                     return nnodes * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+
+                if self.is_debug_file:
+                    self.binary_debug.write('  GPFORCE\n')
+                    self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
+                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                    self.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
+                    self.binary_debug.write('  nnodes=%i\n' % nnodes)
+
+                if self.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
@@ -79,30 +87,19 @@ class OGPF(OP2Common):
                     #[f1, f2, f3, m1, m2, m3]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
                     #obj._times[obj.itime] = dt
-                    #obj.data[obj.itime, obj.itotal:itotal2, :] = real_imag
                     #obj.itotal = itotal2
                 else:
                     s = Struct(b(self._endian + 'ii8s6f'))
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('  GPFORCE\n')
-                        self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
-                        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                        self.binary_debug.write('  gpforce1 = [ekey, eid, elemName, f1, f2, f3, m1, m2, m3]\n')
-                        self.binary_debug.write('  nnodes=%i\n' % nnodes)
-
                     for i in range(nnodes):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
-                        (ekey, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
-                        ekey = ekey // 10
+                        (nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
+                        nid = nid_device // 10
                         elem_name = elem_name.strip()
-                        #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
                         if self.is_debug_file:
-                            self.binary_debug.write('  nid=%s - %s\n' % (ekey, str(out)))
-
-                        self.obj.add(dt, ekey, eid, elem_name, f1, f2, f3, m1, m2, m3)
-                        #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
+                            self.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
+                        self.obj.add(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
+                        #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(nid, eid, elemName, f1, f2, f3, m1, m2, m3)
                         n += ntotal
             elif self.num_wide == 16:
                 # complex
@@ -116,7 +113,7 @@ class OGPF(OP2Common):
 
                 obj = self.obj
                 is_vectorized = False
-                if self.use_vector and is_vectorized: #  and self.element_type in [144]
+                if self.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
@@ -147,7 +144,7 @@ class OGPF(OP2Common):
                         #self.binary_debug.write('  GPFORCE\n')
                         #self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
                         #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                        #self.binary_debug.write('  gpforce1 = [ekey, eid, elemName, f1, f2, f3, m1, m2, m3]\n')
+                        #self.binary_debug.write('  gpforce1 = [ekey, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
                         #self.binary_debug.write('  nnodes=%i\n' % nnodes)
 
                     for i in range(nnodes):

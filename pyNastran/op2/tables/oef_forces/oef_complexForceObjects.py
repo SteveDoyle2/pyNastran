@@ -87,7 +87,7 @@ class ComplexRodForceArray(ScalarObject):
                     (axial1, torque1) = t1
                     (axial2, torque2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not allclose(t1, t2):
                         msg += '(%s, %s)    (%s, %s)  (%s, %s)\n' % (
                             eid, nid,
                             axial1, torque1,
@@ -304,7 +304,7 @@ class ComplexCShearForceArray(ScalarObject):
                     (force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a, kick_force1a, kick_force2a, kick_force3a, kick_force4a, shear12a, shear23a, shear34a, shear41a) = t1
                     (force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b, kick_force1b, kick_force2b, kick_force3b, kick_force4b, shear12b, shear23b, shear34b, shear41b) = t2
 
-                    if not array_equal(t1, t2):
+                    if not allclose(t1, t2):
                         msg += (
                             '%s   (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
                             '     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
@@ -533,7 +533,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
                     t1 = self.data[itime, ie, 0]
                     t2 = table.data[itime, ie, 0]
 
-                    if not array_equal([t1.real, t1.imag], [t2.real, t2.imag]):
+                    if not allclose([t1.real, t1.imag], [t2.real, t2.imag]):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
                             eid,
                             t1.real, t1.imag,
@@ -757,7 +757,7 @@ class ComplexViscForceArray(ScalarObject):
                     (axial1, torque1) = t1
                     (axial2, torque2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not allclose(t1, t2):
                         msg += '(%s, %s)    (%s, %s)  (%s, %s)\n' % (
                             eid, nid,
                             axial1, torque1,
@@ -1166,7 +1166,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
         self.term[eid] = term
         self.ngrids[eid] = nid
-
         self.mx[eid] = [mx]
         self.my[eid] = [my]
         self.mxy[eid] = [mxy]
@@ -1178,7 +1177,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
     def add(self, eid, dt, data):
         [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        #print "mx = ",self.mx,mx
         self.mx[eid].append(mx)
         self.my[eid].append(my)
         self.mxy[eid].append(mxy)
@@ -1286,7 +1284,6 @@ class ComplexPlate2ForceArray(ScalarObject):
         return headers
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
@@ -1295,6 +1292,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
         self.nelements //= self.ntimes
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -1341,7 +1339,7 @@ class ComplexPlate2ForceArray(ScalarObject):
                     (mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1) = t1
                     (mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not allclose(t1, t2):
                         msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,
                             mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1,
@@ -1355,11 +1353,18 @@ class ComplexPlate2ForceArray(ScalarObject):
                     raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+    def add_new_element_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.itotal += 1
         self.ielement += 1
+
+    def add_sort1(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        self._times[self.itime] = dt
+        assert self.element[self.ielement - 1] == eid, eid
+        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.itotal += 1
 
     def get_stats(self):
         if not self.is_built:
