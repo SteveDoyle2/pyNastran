@@ -134,7 +134,7 @@ class EPT(object):
         PBARL(9102,91,52) - the marker for Record 12
         TODO: buggy
         """
-        validTypes = {
+        valid_types = {
             "ROD": 1,
             "TUBE": 2,
             "I": 6,
@@ -174,7 +174,7 @@ class EPT(object):
             print("pid=%s mid=%s group=%r Type=%r value=%s" %(pid, mid, group, Type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
-            expectedLength = validTypes[Type]
+            expectedLength = valid_types[Type]
             iFormat = b'%if' % expectedLength
 
             ndelta = expectedLength * 4

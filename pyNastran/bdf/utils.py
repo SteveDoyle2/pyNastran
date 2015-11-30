@@ -423,8 +423,15 @@ def parse_patran_syntax(node_sets, pound=None):
     """
     Parses Patran's syntax for compressing nodes/elements
 
-    :param node_sets: the node_set to parse
-    :returns nodes: list of integers
+    Parameters
+    ----------
+    node_sets : str
+        the node_set to parse
+
+    Returns
+    -------
+    nodes : List[int]
+        the integer values
 
     Patran has a short syntax of the form:
 
@@ -484,8 +491,16 @@ def parse_patran_syntax_dict(node_sets):
     """
     Parses Patran's syntax for compressing nodes/elements
 
-    :param node_sets: the node_set to parse
-    :returns nodes: list of integers
+    Parameters
+    ----------
+    node_sets : str
+        the node_set to parse
+
+    Returns
+    -------
+    nodes : Dict[str] = List[int]
+        str : the key
+        values : the integer values for that key
 
     .. code-block:: python
 
@@ -505,6 +520,9 @@ def parse_patran_syntax_dict(node_sets):
     data = {}
     try:
         snodes = node_sets.split()
+    except AttributeError:
+        print('node_sets =', node_sets, type(node_sets))
+        raise
     except TypeError:
         print('node_sets =', node_sets, type(node_sets))
         raise
@@ -548,16 +566,19 @@ def Position(xyz, cid, model, is_cid_int=True):
     """
     Gets the point in the global XYZ coordinate system.
 
-    :param xyz:    the position of the GRID in an arbitrary
-                   coordinate system
-    :type xyz:     TYPE = NDARRAY.  SIZE=(3,)
-    :param cid:    the coordinate ID for xyz
-    :type cid:     int
-    :param model:  the BDF model object
-    :type model:   BDF()
+    Parameters
+    ----------
+    xyz : (3,) ndarray
+        the position of the GRID in an arbitrary coordinate system
+    cid : int
+        the coordinate ID for xyz
+    model : BDF()
+        the BDF model object
 
-    :returns xyz2:  the position of the GRID in an arbitrary coordinate system
-    :type xyz2:     TYPE = NDARRAY.  SIZE=(3,)
+    Returns
+    -------
+    xyz2 : (3,) ndarray
+        the position of the GRID in an arbitrary coordinate system
     """
     if is_cid_int:
         cp = model.Coord(cid)

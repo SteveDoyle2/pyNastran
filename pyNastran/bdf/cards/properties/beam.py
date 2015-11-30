@@ -665,7 +665,7 @@ class PBEAML(IntegratedLineProperty):
     +--------+---------+
     """
     type = 'PBEAML'
-    validTypes = {
+    valid_types = {
         "ROD": 1,
         "TUBE": 2,
         "L": 4,
@@ -704,7 +704,7 @@ class PBEAML(IntegratedLineProperty):
             self.Type = string(card, 4, 'Type')
 
             # determine the number of required dimensions on the PBEAM
-            ndim = self.validTypes[self.Type]
+            ndim = self.valid_types[self.Type]
             #nAll = ndim + 1
 
             #: dimension list

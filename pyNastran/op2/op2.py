@@ -184,7 +184,7 @@ class OP2(OP2_Scalar):
         OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
         self.combine_results(combine=combine)
-        self.log.info('finished reading op2')
+        self.log.debug('finished reading op2')
 
     def combine_results(self, combine=True):
         """

@@ -1215,6 +1215,9 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
+        # -MEMBRANE FORCES-   -BENDING MOMENTS- -TRANSVERSE SHEAR FORCES -
+        #     FX FY FXY           MX MY MXY            QX QY
+        #[fx, fy, fxy,  mx,  my,  mxy, qx, qy]
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
