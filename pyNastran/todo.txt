@@ -3,8 +3,11 @@ Release 0.8
  Tasks
  -----
  - various BDF/OP2/F06 tests
- - sphinx documention on all relevant functions
-   - make sure OP2/BDF classes are shown in ReadTheDocs
+ - make sure OP2/BDF classes are shown in ReadTheDocs
+ - vectorize op2 fully
+
+Done
+----
  - fix SetInput/SetInputData
 
 Release 0.7
@@ -31,6 +34,5 @@ Future
  Tasks
  -----
  - make op2 able to skip user specified parameters (e.g. get maxP or oVM from solidStresses)
- - vectorize op2 fully
  - add op2 writing
  - vectorize bdf

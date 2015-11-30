@@ -54,7 +54,6 @@ class OGPF(OP2Common):
                     return nnodes * self.num_wide * 4
 
                 obj = self.obj
-
                 if self.is_debug_file:
                     self.binary_debug.write('  GPFORCE\n')
                     self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
@@ -144,20 +143,19 @@ class OGPF(OP2Common):
                         #self.binary_debug.write('  GPFORCE\n')
                         #self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
                         #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                        #self.binary_debug.write('  gpforce1 = [ekey, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
+                        #self.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
                         #self.binary_debug.write('  nnodes=%i\n' % nnodes)
 
                     for i in range(nnodes):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
-                        (ekey, eid, elem_name,
+                        (nid_device, eid, elem_name,
                          f1r, f2r, f3r, m1r, m2r, m3r,
                          f1i, f2i, f3i, m1i, m2i, m3i) = out
-                        ekey = ekey // 10
+                        nid = nid_device // 10
                         elem_name = elem_name.strip()
-                        #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
                         if self.is_debug_file:
-                            self.binary_debug.write('  nid=%s - %s\n' % (ekey, str(out)))
+                            self.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
 
                         if is_magnitude_phase:
                             f1 = polar_to_real_imag(f1r, f1i)
@@ -174,8 +172,7 @@ class OGPF(OP2Common):
                             m2 = complex(m2r, m2i)
                             m3 = complex(m3r, m3i)
 
-                        self.obj.add(dt, ekey, eid, elem_name, f1, f2, f3, m1, m2, m3)
-                        #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
+                        self.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
                         n += ntotal
             else:
                 raise NotImplementedError(self.code_information())

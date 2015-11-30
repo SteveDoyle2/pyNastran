@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from numpy import array, zeros, unique, array_equal, empty
 from struct import pack
@@ -73,11 +74,12 @@ class RealGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
+            raise NotImplementedError('not unique')
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
-            self.element_names = empty((self.ntimes, self.ntotal), dtype='S8')
+            self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
             self.node_element = zeros((self.ntotal, 2), dtype='int32')
-            self.element_names = empty(self.ntotal, dtype='S8')
+            self.element_names = empty(self.ntotal, dtype='U8')
 
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
@@ -289,6 +291,7 @@ class ComplexGridPointForcesArray(ScalarObject):
 
         self.is_unique = False
         if self.ntotal != min(self._ntotals):
+            print(self._ntotals)
             self.ntotal = max(self._ntotals)
             self.is_unique = True
 
@@ -315,11 +318,12 @@ class ComplexGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
+            print(self._ntotals)
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
-            self.element_names = empty(self.ntimes, self.ntotal, dtype='S8')
+            self.element_names = empty(self.ntimes, self.ntotal, dtype='U8')
         else:
             self.node_element = zeros((self.ntotal, 2), dtype='int32')
-            self.element_names = empty(self.ntotal, dtype='S8')
+            self.element_names = empty(self.ntotal, dtype='U8')
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='complex64')
 
@@ -369,14 +373,17 @@ class ComplexGridPointForcesArray(ScalarObject):
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
-        assert isinstance(node_id, int), node_id
-        self.add_sort1(dt, eid, node_id, ename, t1, t2, t3, r1, r2, r3)
-
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
-        self.node_element[self.itotal, :] = [eid, node_id]
+        try:
+            self.node_element[self.itotal, :] = [node_id, eid]
+        except IndexError:
+            #print('ntotals =', self._ntotals)
+            print('ComplexGridPointForcesArray.itotal =', self.itotal)
+            self.itotal += 1
+            #raise
+            return
         self.element_names[self.itotal] = ename
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
