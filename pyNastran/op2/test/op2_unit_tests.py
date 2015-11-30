@@ -248,6 +248,7 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
+    #@unittest.expectedFailure
     def test_op2_solid_shell_bar_04(self):
         op2_filename = os.path.join('freq_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
@@ -311,6 +312,11 @@ class TestOP2(Tester):
         chexa_stress = op2.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (7, 9, 6), chexa_stress.data.shape
+
+        grid_point_forces = op2.grid_point_forces[isubcase]
+        #print(grid_point_forces._ntotals)
+        assert grid_point_forces.ntotal == 106, grid_point_forces.ntotal
+        assert grid_point_forces.data.shape == (7, 106, 6), grid_point_forces.data.shape
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)

@@ -87,6 +87,16 @@ class OGPF(OP2Common):
                     obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
                     #obj._times[obj.itime] = dt
                     #obj.itotal = itotal2
+                    if self.is_debug_file:
+                        if obj.itime != 0:
+                            ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
+                            strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)
+                        for i in range(iend - istart):
+                            self.binary_debug.write('  nid=%s - (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                ints[i, 0] // 10,
+                                ints[i, 0], ints[i, 1], strings[i, 1],
+                                floats[i, 4], floats[i, 5], floats[i, 6],
+                                floats[i, 7], floats[i, 8], floats[i, 9], ))
                 else:
                     s = Struct(b(self._endian + 'ii8s6f'))
                     for i in range(nnodes):

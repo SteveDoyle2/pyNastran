@@ -3,8 +3,9 @@ from __future__ import print_function, unicode_literals
 from six import b
 from six.moves import range
 from struct import Struct, unpack
+from numpy import fromstring
 
-from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy, RealStrainEnergyArray
 from pyNastran.op2.op2_common import OP2Common
 
 class ONR(OP2Common):
@@ -33,7 +34,12 @@ class ONR(OP2Common):
         if self.is_debug_file:
             self.binary_debug.flush()
 
-        element_name, = self.struct_8s.unpack(data[24:32])
+        #field_num = 6
+        #datai = data[4 * (field_num - 1) : 4 * (field_num + 1)]
+        #assert len(datai) == 8, len(datai)
+        #print(4 * (field_num - 1), 4 * (field_num + 1))
+        #element_name, = self.struct_8s.unpack(data[24:32])  # changed on 11/30/2015; was this for a long time...
+        element_name, = self.struct_8s.unpack(data[20:28])
         #print("element_name = %s" % (element_name))
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
@@ -41,13 +47,14 @@ class ONR(OP2Common):
             #self.log.warning("element_name = %s" % str(element_name))
             self.log.warning("element_name - UnicodeDecodeError")
             #self.show_data(data)
-            #raise
-        #print("element_name = %s" % (element_name))
-        if element_name.isalpha():
+            raise
+        if element_name.isalnum():
             self.data_code['element_name'] = element_name
         else:
+            # print("element_name = %r" % (element_name))
+            # print(type(element_name))
             self.data_code['element_name'] = 'UnicodeDecodeError???'
-            self.log.warning('data[20:24]=%r instead of data[24:32]' % data[20:28])
+            self.log.warning('data[20:28]=%r instead of data[24:32]' % data[20:28])
 
         #: Load set or zero
         self.load_set = self.add_data_parameter(data, 'load_set', 'i', 8, False)
@@ -134,9 +141,6 @@ class ONR(OP2Common):
         """
         reads ONRGY1 subtable 4
         """
-        if self.read_mode == 1:
-            return ndata
-
         if self.table_code == 18:  # element strain energy
             assert self.table_name in [b'ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_element_strain_energy(data, ndata)
@@ -151,8 +155,7 @@ class ONR(OP2Common):
         dt = self.nonlinear_factor
         n = 0
         result_name = 'strain_energy'
-        if self.read_mode == 1:
-            return ndata
+        auto_return = False
         self._results._found_result(result_name)
 
         if self.is_debug_file:
@@ -160,59 +163,146 @@ class ONR(OP2Common):
         if self.num_wide == 4:
             assert self.cvalres in [0, 1], self.cvalres
             self.create_transient_object(self.strain_energy, RealStrainEnergy)
-            s = Struct(b(self._endian + 'i3f'))
-
             ntotal = 16
-            nnodes = ndata // ntotal
-            for i in range(nnodes):
-                edata = data[n:n+ntotal]
+            nelements = ndata // ntotal
+            slot = getattr(self, result_name)
+            #auto_return, is_vectorized = self._create_oes_object4(
+            #    nelements, result_name, slot, RealStrainEnergyArray)
+            #if auto_return:
+            #    return nelements * self.num_wide * 4
+            if self.read_mode == 1:
+                return ndata
+            is_vectorized = False
+            obj = self.obj
+            if self.is_debug_file:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                self.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
+                self.binary_debug.write('  nelements=%i\n' % nelements)
 
-                out = s.unpack(edata)
-                (eid_device, energy, percent, density) = out
-                eid = (eid_device - self.device_code) // 10
-                #print "eType=%s" % (eType)
+            if self.use_vector and is_vectorized:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.itotal
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+                print(itotal, itotal2)
 
-                data_in = [eid, energy, percent, density]
-                #print "%s" % (self.get_element_type(self.element_type)), data_in
-                self.obj.add(dt, data_in)
-                n += ntotal
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
+                    eids = ints[:, 0] // 10
+                    print(eids)
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+
+                #[energy, percent, density]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                obj.itotal = itotal2
+                #obj.ielement = ielement2
+            else:
+                s = Struct(b(self._endian + 'i3f'))
+                for i in range(nelements):
+                    edata = data[n:n+ntotal]
+
+                    out = s.unpack(edata)
+                    (eid_device, energy, percent, density) = out
+                    eid = eid_device // 10
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+                    self.obj.add_sort1(dt, eid, energy, percent, density)
+                    n += ntotal
         elif self.num_wide == 5:
+            if self.read_mode == 1:
+                return ndata
             assert self.cvalres in [0, 1, 2], self.cvalres # 0??
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
             ntotal = 20
-            s = Struct(b(self._endian + '8s3f'))
             nnodes = ndata // ntotal
-            for i in range(nnodes):
-                edata = data[n:n+20]
-                out = s.unpack(edata)
-                (word, energy, percent, density) = out
-                #print "out = ",out
-                word = word.strip()
-                #print "eType=%s" % (eType)
 
-                data_in = [word, energy, percent, density]
-                #print "%s" %(self.get_element_type(self.element_type)), data_in
-                #eid = self.obj.add_new_eid(out)
-                self.obj.add(dt, data_in)
-                n += ntotal
+            obj = self.obj
+            is_vectorized = False
+            if self.use_vector and is_vectorized:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                obj._times[obj.itime] = dt
+
+                strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 5)
+                s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                if obj.itime == 0:
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                    eids = ints[:, 0] // 10
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+                    obj.element_type[obj.itime, itotal:itotal2, :] = s
+
+                #[energy, percent, density]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:]
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s = Struct(b(self._endian + '8s3f'))
+                for i in range(nnodes):
+                    edata = data[n:n+20]
+                    out = s.unpack(edata)
+                    (word, energy, percent, density) = out
+                    word = word.strip()
+                    #print "eType=%s" % (eType)
+                    #print "%s" %(self.get_element_type(self.element_type)), data_in
+                    #eid = self.obj.add_new_eid(out)
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+                    obj.add(dt, word, energy, percent, density)
+                    n += ntotal
         elif self.num_wide == 6:  ## TODO: figure this out...
+            if self.read_mode == 1:
+                return ndata
             self.create_transient_object(self.strain_energy, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
-            s = Struct(b(self._endian + 'i8s3f'))
             nnodes = ndata // ntotal
-            for i in range(nnodes):
-                edata = data[n:n+24]
-                out = s.unpack(edata)
-                (word, energy, percent, density) = out  # TODO: this has to be wrong...
-                #print "out = ",out
-                word = word.strip()
-                #print "eType=%s" % (eType)
 
-                data_in = [word, energy, percent, density]
-                #print "%s" %(self.get_element_type(self.element_type)), data_in
-                #eid = self.obj.add_new_eid(out)
-                self.obj.add(dt, data_in)
-                n += ntotal
+            obj = self.obj
+            is_vectorized = False
+            if self.use_vector and is_vectorized:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                obj._times[obj.itime] = dt
+
+                strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 6)
+                s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                if obj.itime == 0:
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 6)
+                    eids = ints[:, 0] // 10
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+                    obj.element_type[obj.itime, itotal:itotal2, :] = s
+
+                #[energy, percent, density]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 4:]
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s = Struct(b(self._endian + 'i8s3f'))
+                for i in range(nnodes):
+                    edata = data[n:n+24]
+                    out = s.unpack(edata)
+                    (word, energy, percent, density) = out  # TODO: this has to be wrong...
+                    word = word.strip()
+                    #print "eType=%s" % (eType)
+                    #print "%s" %(self.get_element_type(self.element_type)), data_in
+                    #eid = self.obj.add_new_eid(out)
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+                    obj.add(dt, word, energy, percent, density)
+                    n += ntotal
         else:
             raise NotImplementedError('num_wide = %s' % self.num_wide)
         return n

@@ -194,43 +194,83 @@ class RealGridPointForcesArray(ScalarObject):
         msg = self._get_f06_msg()
 
         ntimes = self.data.shape[0]
+        if self.is_unique:
+            #print('RealGridPointForcesArray.write_f06 with is_unique=True is not supported')
 
-        eids = self.node_element[:, 1]
-        nids = self.node_element[:, 0]
-        enames = self.element_names
+            for itime in range(ntimes):
+                dt = self._times[itime]
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
+                f.write(''.join(header + msg))
 
-        for itime in range(ntimes):
-            dt = self._times[itime]
-            header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
-            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+                #[t1, t2, t3, r1, r2, r3]
+                t1 = self.data[itime, :, 0]
+                t2 = self.data[itime, :, 1]
+                t3 = self.data[itime, :, 2]
+                r1 = self.data[itime, :, 3]
+                r2 = self.data[itime, :, 4]
+                r3 = self.data[itime, :, 5]
 
-            #[t1, t2, t3, r1, r2, r3]
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
+                nids = self.node_element[itime, 0]
+                eids = self.node_element[itime, 1]
+                enames = self.element_names[itime, :]
 
-            zero = ' '
-            for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                 nids, eids, enames, t1, t2, t3, r1, r2, r3):
+                zero = ' '
+                ntotal = self._ntotals[itime]
+                for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                     range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
-                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
-                [f1, f2, f3, m1, m2, m3] = vals2
-                if eid == 0:
-                    f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            nid, eid, ename, f1, f2, f3, m1, m2, m3))
-                    zero = '0'
-                else:
-                    f.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
-                    zero = ' '
-            f.write(page_stamp % page_num)
-            page_num += 1
+                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    [f1, f2, f3, m1, m2, m3] = vals2
+                    if eid == 0:
+                        f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        zero = '0'
+                    else:
+                        f.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        zero = ' '
+                f.write(page_stamp % page_num)
+                page_num += 1
+        else:
+            nids = self.node_element[:, 0]
+            eids = self.node_element[:, 1]
+            enames = self.element_names
+
+            for itime in range(ntimes):
+                dt = self._times[itime]
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
+                f.write(''.join(header + msg))
+
+                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+                #[t1, t2, t3, r1, r2, r3]
+                t1 = self.data[itime, :, 0]
+                t2 = self.data[itime, :, 1]
+                t3 = self.data[itime, :, 2]
+                r1 = self.data[itime, :, 3]
+                r2 = self.data[itime, :, 4]
+                r3 = self.data[itime, :, 5]
+
+                zero = ' '
+                for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                     nids, eids, enames, t1, t2, t3, r1, r2, r3):
+
+                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    [f1, f2, f3, m1, m2, m3] = vals2
+                    if eid == 0:
+                        f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        zero = '0'
+                    else:
+                        f.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        zero = ' '
+                f.write(page_stamp % page_num)
+                page_num += 1
         return page_num - 1
 
     def _get_f06_msg(self):
@@ -290,8 +330,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         #print("self._ntotals = %s" % self._ntotals)
 
         self.is_unique = False
-        if self.ntotal != min(self._ntotals):
-            print(self._ntotals)
+        if self.ntotal != max(self._ntotals):
             self.ntotal = max(self._ntotals)
             self.is_unique = True
 
@@ -318,9 +357,9 @@ class ComplexGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
-            print(self._ntotals)
+            #print(self._ntotals)
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
-            self.element_names = empty(self.ntimes, self.ntotal, dtype='U8')
+            self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
             self.node_element = zeros((self.ntotal, 2), dtype='int32')
             self.element_names = empty(self.ntotal, dtype='U8')
@@ -376,15 +415,13 @@ class ComplexGridPointForcesArray(ScalarObject):
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
-        try:
+
+        if self.is_unique:
+            self.node_element[self.itime, self.itotal, :] = [node_id, eid]
+            self.element_names[self.itime, self.itotal] = ename
+        else:
             self.node_element[self.itotal, :] = [node_id, eid]
-        except IndexError:
-            #print('ntotals =', self._ntotals)
-            print('ComplexGridPointForcesArray.itotal =', self.itotal)
-            self.itotal += 1
-            #raise
-            return
-        self.element_names[self.itotal] = ename
+            self.element_names[self.itotal] = ename
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
@@ -436,47 +473,131 @@ class ComplexGridPointForcesArray(ScalarObject):
 
         ntimes = self.data.shape[0]
 
-        eids = self.node_element[:, 1]
-        nids = self.node_element[:, 0]
-        enames = self.element_names
+        if self.is_unique:
+            for itime in range(ntimes):
+                dt = self._times[itime]
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
+                f.write(''.join(header + msg))
 
-        for itime in range(ntimes):
-            dt = self._times[itime]
-            header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
-            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+                #[t1, t2, t3, r1, r2, r3]
+                t1 = self.data[itime, :, 0]
+                t2 = self.data[itime, :, 1]
+                t3 = self.data[itime, :, 2]
+                r1 = self.data[itime, :, 3]
+                r2 = self.data[itime, :, 4]
+                r3 = self.data[itime, :, 5]
 
-            #[t1, t2, t3, r1, r2, r3]
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
+                eids = self.node_element[itime, :, 1]
+                nids = self.node_element[itime, :, 0]
+                enames = self.element_names[itime, :]
 
-            zero = ' '
-            for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                 nids, eids, enames, t1, t2, t3, r1, r2, r3):
+                zero = ' '
+                ntotal = self._ntotals[itime]
+                for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                     range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
-                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
-                [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
-                if eid == 0:
-                    f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
-                            '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,
-                    ))
-                    zero = '0'
-                else:
-                    f.write('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            zero, nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
-                            '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,))
+                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
+                    if eid == 0:
+                        f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
+                                '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,
+                        ))
+                        zero = '0'
+                    else:
+                        f.write('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                zero, nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
+                                '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,))
+                        zero = ' '
+                f.write(page_stamp % page_num)
+                page_num += 1
+        else:
+            eids = self.node_element[:, 1]
+            nids = self.node_element[:, 0]
+            enames = self.element_names
+            for itime in range(ntimes):
+                dt = self._times[itime]
+                header = _eigenvalue_header(self, header, itime, ntimes, dt)
+                f.write(''.join(header + msg))
+
+                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+                #[t1, t2, t3, r1, r2, r3]
+                t1 = self.data[itime, :, 0]
+                t2 = self.data[itime, :, 1]
+                t3 = self.data[itime, :, 2]
+                r1 = self.data[itime, :, 3]
+                r2 = self.data[itime, :, 4]
+                r3 = self.data[itime, :, 5]
+
+                zero = ' '
+                for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                     nids, eids, enames, t1, t2, t3, r1, r2, r3):
+
+                    vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
+                    if eid == 0:
+                        f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
+                                '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,
+                        ))
+                        zero = '0'
+                    else:
+                        f.write('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                zero, nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
+                                '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,))
+                        zero = ' '
+                f.write(page_stamp % page_num)
+                page_num += 1
+                eids = self.node_element[:, 1]
+                nids = self.node_element[:, 0]
+                enames = self.element_names
+
+                for itime in range(ntimes):
+                    dt = self._times[itime]
+                    header = _eigenvalue_header(self, header, itime, ntimes, dt)
+                    f.write(''.join(header + msg))
+
+                    #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+                    #[t1, t2, t3, r1, r2, r3]
+                    t1 = self.data[itime, :, 0]
+                    t2 = self.data[itime, :, 1]
+                    t3 = self.data[itime, :, 2]
+                    r1 = self.data[itime, :, 3]
+                    r2 = self.data[itime, :, 4]
+                    r3 = self.data[itime, :, 5]
+
                     zero = ' '
-            f.write(page_stamp % page_num)
-            page_num += 1
+                    for (nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                         nids, eids, enames, t1, t2, t3, r1, r2, r3):
+
+                        vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                        (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                        [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
+                        if eid == 0:
+                            f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                    '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                    nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
+                                    '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,
+                            ))
+                            zero = '0'
+                        else:
+                            f.write('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                    '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                    zero, nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
+                                    '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,))
+                            zero = ' '
+                    f.write(page_stamp % page_num)
+                    page_num += 1
         return page_num - 1
 
     def _get_f06_msg(self, is_mag_phase=True, is_sort1=True):
