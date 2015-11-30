@@ -577,3 +577,276 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
         if dt not in self.force:
             self.add_new_transient(dt)
         self.force[dt][eid] = force
+
+
+class ComplexViscForce(ScalarObject):  # 24-CVISC
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.axial_force = {}
+        self.torque = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.torque)
+            time0 = get_key0(self.torque)
+            nelements = len(self.torque[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.torque)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append(' axial_force, torque\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.axial_force[dt] = {}
+        self.torque[dt] = {}
+
+    def add(self, dt, eid, axial_force, torque):
+        self.axial_force[eid] = axial_force
+        self.torque[eid] = torque
+
+    def add_sort1(self, dt, eid, axial_force, torque):
+        if dt not in self.axial_force:
+            self.add_new_transient(dt)
+        self.axial_force[dt][eid] = axial_force
+        self.torque[dt][eid] = torque
+
+    def add_sort2(self, eid, dt, axial_force, torque):
+        if dt not in self.axial_force:
+            self.add_new_transient(dt)
+        self.axial_force[dt][eid] = axial_force
+        self.torque[dt][eid] = torque
+
+
+class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.mx = {}
+        self.my = {}
+        self.mxy = {}
+        self.bmx = {}
+        self.bmy = {}
+        self.bmxy = {}
+        self.tx = {}
+        self.ty = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.mx)
+            time0 = get_key0(self.mx)
+            nelements = len(self.mx[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.mx)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.mx[dt] = {}
+        self.my[dt] = {}
+        self.mxy[dt] = {}
+        self.bmx[dt] = {}
+        self.bmy[dt] = {}
+        self.bmxy[dt] = {}
+        self.tx[dt] = {}
+        self.ty[dt] = {}
+
+    def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        self.mx[eid] = mx
+        self.my[eid] = my
+        self.mxy[eid] = mxy
+        self.bmx[eid] = bmx
+        self.bmy[eid] = bmy
+        self.bmxy[eid] = bmxy
+        self.tx[eid] = tx
+        self.ty[eid] = ty
+
+    def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        if dt not in self.mx:
+            self.add_new_transient(dt)
+        self.mx[dt][eid] = mx
+        self.my[dt][eid] = my
+        self.mxy[dt][eid] = mxy
+        self.bmx[dt][eid] = bmx
+        self.bmy[dt][eid] = bmy
+        self.bmxy[dt][eid] = bmxy
+        self.tx[dt][eid] = tx
+        self.ty[dt][eid] = ty
+
+    def add_sort2(self, eid, dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        if dt not in self.mx:
+            self.add_new_transient(dt)
+        self.mx[dt][eid] = mx
+        self.my[dt][eid] = my
+        self.mxy[dt][eid] = mxy
+        self.bmx[dt][eid] = bmx
+        self.bmy[dt][eid] = bmy
+        self.bmxy[dt][eid] = bmxy
+        self.tx[dt][eid] = tx
+        self.ty[dt][eid] = ty
+
+    def _get_plate_msg(self, is_mag_phase, is_sort1):
+        loads = ['    ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -\n'
+                 '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n',]
+        if is_mag_phase:
+            mag_real = ['                                                         (MAGNITUDE/PHASE)\n \n']
+        else:
+            mag_real = ['                                                          (REAL/IMAGINARY)\n', ' \n']
+
+        cquad4_bilinear = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
+        cquad4_linear = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
+        ctria3 = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']  # good
+        cquad8 = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
+        cquadr = ['                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
+        ctria6 = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
+        ctriar = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
+
+        is_bilinear = False
+        if self.element_type == 144: # CQUAD4
+            msg = cquad4_linear + mag_real + loads
+        elif self.element_type == 33: # CQUAD4
+            msg = cquad4_bilinear + mag_real + loads
+        elif self.element_type == 64:  #CQUAD8
+            msg = cquad8 + mag_real + loads
+        elif self.element_type == 82:  # CQUADR
+            msg = cquadr + mag_real + loads
+        elif self.element_type == 74: # CTRIA3
+            msg = ctria3 + mag_real + loads
+        elif self.element_type == 75:  # CTRIA6
+            msg = ctria6 + mag_real + loads
+        elif self.element_type == 70:  # CTRIAR
+            msg = ctriar + mag_real + loads
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        return msg
+
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_pack = self._get_plate_msg(is_mag_phase, is_sort1)
+        dts = list(self.mx.keys())
+        dts.sort()
+        ntimes = len(dts)
+        dt0 = dts[0]
+        eids = sorted(self.mx[dt0])
+
+        name = self.data_code['name']
+        for dt in dts:
+            header[1] = ' %s = %10.4E\n' % (name, dt)
+            #print(header)
+            #print(msg_pack)
+            msg = header + msg_pack
+            f.write(''.join(msg))
+            for eid in eids:
+                mx = self.mx[dt][eid]
+                my = self.my[dt][eid]
+                mxy = self.mxy[dt][eid]
+
+                bmx = self.bmx[dt][eid]
+                bmy = self.bmy[dt][eid]
+                bmxy = self.bmxy[dt][eid]
+
+                tx = self.tx[dt][eid]
+                ty = self.ty[dt][eid]
+
+                ([mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                  mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_all_zeros) = writeImagFloats13E([mx, my, mxy, bmx, bmy, bmxy, tx, ty], is_mag_phase)
+
+                #"""
+                    #ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
+                      #ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+                #0       564       1.543439E+03  7.311177E+02  1.322702E+02    1.080178E+00  1.699104E+00  2.618547E-01    3.877034E+01  4.518554E+00
+                                  #358.3129      358.0245      177.5593        177.5292      178.2112        0.0907        358.1465      179.4567
+                #"""
+                #                fx     fy     fxy     mx     my     mxy    qx      qy
+                msg = '0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (eid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr)
+                msg += '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % ('', mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi)
+                f.write(msg)
+            msg = page_stamp % page_num
+            f.write(msg)
+            page_num += 1
+        return page_num -1
+
+
+
+
+class ComplexSolidPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.acceleration = {}
+        self.velocity = {}
+        self.pressure = {}
+
+        self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def get_stats(self):
+        msg = ['  '] + self.get_data_code()
+        if self.dt is not None:  # transient
+            ntimes = len(self.acceleration)
+            time0 = get_key0(self.acceleration)
+            nelements = len(self.acceleration[time0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self.acceleration)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  acceleration, velocity, pressure\n')
+        return msg
+
+    def add_new_transient(self, dt):
+        self.dt = dt
+        self.acceleration[dt] = {}
+        self.velocity[dt] = {}
+        self.pressure[dt] = {}
+
+    def add(self, dt, data):
+        [eid, ename, ax, ay, az, vx, vy, vz, pressure] = data
+        self.acceleration[eid] = [ax, ay, az]
+        self.velocity[eid] = [vx, vy, vz]
+        self.pressure[eid] = pressure
+
+    def add_sort1(self, dt, data):
+        [eid, ename, ax, ay, az, vx, vy, vz, pressure] = data
+        if dt not in self.acceleration:
+            self.add_new_transient(dt)
+        self.acceleration[dt][eid] = [ax, ay, az]
+        self.velocity[dt][eid] = [vx, vy, vz]
+        self.pressure[dt][eid] = pressure
+
+    def add_sort2(self, eid, data):
+        [dt, ename, ax, ay, az, vx, vy, vz, pressure] = data
+        if dt not in self.acceleration:
+            self.add_new_transient(dt)
+        self.acceleration[dt][eid] = [ax, ay, az]
+        self.velocity[dt][eid] = [vx, vy, vz]
+        self.pressure[dt][eid] = pressure

@@ -890,7 +890,6 @@ class Tecplot(FortranFormat):
                             for i in range(8)
                             if i in iy])
         #print(slots)
-        #asdf
         #ri, ci = slots
         #ri = unique(hstack([where(element == iy)[0] for element in elements]))
         #ri = [ie for ie, element in enumerate(elements)

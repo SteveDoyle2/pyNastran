@@ -641,6 +641,16 @@ class F06Writer(OP2_F06_Common):
             self.hyperelastic_cquad4_strain,
 
             #------------------------------------------
+            #OEF - Fluxes - tCode=4 thermal=1
+            self.thermalLoad_CONV,
+            self.thermalLoad_CHBDY,
+            self.thermalLoad_1D,
+            self.thermalLoad_2D_3D,
+            self.thermalLoad_VU,
+            self.thermalLoad_VU_3D,
+            self.thermalLoad_VUBeam,
+
+            #------------------------------------------
 
             self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         ]

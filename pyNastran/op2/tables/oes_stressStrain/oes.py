@@ -2619,22 +2619,16 @@ class OES(OP2Common):
             slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 10:  # real
-                # if this isn't vectorized, it will be messed up...
-                RealBar10NodesStress = RealBar10NodesStressArray
-                RealBar10NodesStrain = RealBar10NodesStrainArray
                 if self.is_stress():
-                    obj_real = RealBar10NodesStress
                     obj_vector_real = RealBar10NodesStressArray
                 else:
-                    obj_real = RealBar10NodesStrain
                     obj_vector_real = RealBar10NodesStrainArray
 
                 ntotal = 10 * 4
                 nelements = ndata // ntotal
 
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_real, obj_vector_real)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
                 if auto_return:
                     return ndata
 
@@ -2645,18 +2639,38 @@ class OES(OP2Common):
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
                 obj = self.obj
 
-                s = Struct(b(self._endian + 'i9f'))
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    (eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
-                    n += ntotal
-                    # continue
-                    obj.add_new_eid(self.element_name, dt, eid,
-                                         sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
+                if self.use_vector and is_vectorized:
+                    # self.itime = 0
+                    # self.ielement = 0
+                    # self.itotal = 0
+                    #self.ntimes = 0
+                    #self.nelements = 0
+                    n = nelements * self.num_wide * 4
+
+                    istart = obj.itotal
+                    iend = istart + nelements
+                    obj._times[obj.itime] = dt
+
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 10)
+                        eids = ints[:, 0] // 10
+                        obj.element[istart:iend] = eids
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 10)
+                    #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
+                    obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
+                else:
+                    s = Struct(b(self._endian + 'i9f'))
+                    for i in range(nelements):
+                        edata = data[n:n+ntotal]
+                        out = s.unpack(edata)
+                        (eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        if self.is_debug_file:
+                            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
+                        n += ntotal
+                        obj.add_new_eid(self.element_name, dt, eid,
+                                             sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
             else:
                 raise RuntimeError(self.code_information())
         elif self.element_type == 101:
@@ -3071,93 +3085,6 @@ class OES(OP2Common):
             print("eid=%s strengthRatioPly=%g failureIndexBonding=%s strengthRatioBonding=%s" % (eid, strengthRatioPly, failureIndexBonding, strengthRatioBonding))
             #obj.add_new_eid(element_name, dt, eid, force, stress)
             n += ntotal
-
-    def _create_oes_object3(self, nelements, result_name, slot, obj, obj_vector):
-        """
-        Creates the self.obj parameter based on if this is vectorized or not.
-
-        Parameters
-        ----------
-        self : OES()
-            the object pointer
-        nelements :  int
-            the number of elements to preallocate for vectorization
-        result_name : str
-            unused
-        slot : dict[(int, int, str)=obj
-            the self dictionary that will be filled with a
-            non-vectorized result
-        obj : OES
-            a pointer to the non-vectorized class
-        obj_vector : OESArray
-            a pointer to the vectorized class
-
-        Returns
-        -------
-        auto_return : bool
-            a flag indicating a return n should be called
-        is_vectorized : bool
-            True/False
-
-        Since that's confusing, let's say we have real CTETRA stress data.
-        We're going to fill self.solidStress with the class
-        RealSolidStress.  If it were vectorized, we'd fill
-        self.ctetra_stress. with RealSolidStressArray.  So we call:
-
-        if self._is_vectorized(RealSolidStressArray, self.ctetra_stress):
-            if self._results.is_not_saved(result_vector_name):
-                return ndata
-        else:
-            if self._results.is_not_saved(result_name):
-                return ndata
-
-        auto_return, is_vectorized = self._create_oes_object3(self, nelements,
-                            'ctetra_stress', self.ctetra_stress,
-                            RealSolidStress, RealSolidStressArray)
-        if auto_return:
-            return nelements * ntotal
-        """
-        auto_return = False
-        is_vectorized = self._is_vectorized(obj_vector, slot)
-        #print('is_vectorized=%s result_name=%r' % (is_vectorized, result_name))
-        if is_vectorized:
-            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
-            if self.read_mode == 1:
-                self.create_transient_object(slot, obj_vector)
-                #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
-                self.result_names.add(result_name)
-                #print('self.obj =', self.obj)
-                self.obj.nelements += nelements
-                auto_return = True
-            elif self.read_mode == 2:
-                self.code = self._get_code()
-                #self.log.info("code = %s" % str(self.code))
-
-                # if this is failing, you probably set obj_vector to None...
-                try:
-                    self.obj = slot[self.code]
-                except KeyError:
-                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
-                    msg += "There's probably an extra check for read_mode=1..."
-                    self.log.error(msg)
-                    raise
-                #self.obj.update_data_code(self.data_code)
-                self.obj.build()
-
-        else:  # not vectorized
-            self.code = self._get_code()
-            self.result_names.add(result_name)
-            #print("not vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
-            #self.log.info("code = %s" % str(self.code))
-            if self.read_mode == 1:
-                self.result_names.add(result_name)
-                auto_return = True
-            # pass = 0/2
-            self.create_transient_object(slot, obj)
-
-        if auto_return and self.read_mode == 2:
-            raise RuntimeError('this should never happen...auto_return=True read_mode=2')
-        return auto_return, is_vectorized
 
     def _create_nodes_object(self, nnodes, result_name, slot, obj_vector):
         """same as _create_oes_object4 except it adds to the nnodes parameter"""

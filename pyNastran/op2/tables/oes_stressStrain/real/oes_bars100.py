@@ -210,7 +210,7 @@ class RealBar10NodesStressArray(RealBar10NodesArray, StressObject):
             '                         S T R E S S   D I S T R I B U T I O N   I N   B A R   E L E M E N T S       ( C B A R )\n'
             '0    ELEMENT  STATION    SXC           SXD           SXE           SXF            AXIAL          S-MAX         S-MIN         M.S.-T\n'
             '       ID.     (PCT)                                                                                                         M.S.-C\n'
-            '            1   0.000   4.919032E+05 -4.348710E+05 -4.348710E+05  4.919032E+05   0.0            4.919032E+05 -4.348710E+05 \n'
+            #'            1   0.000   4.919032E+05 -4.348710E+05 -4.348710E+05  4.919032E+05   0.0            4.919032E+05 -4.348710E+05 \n'
         ]
         return msg
 
@@ -238,7 +238,7 @@ class RealBar10NodesStrainArray(RealBar10NodesArray, StrainObject):
             '                         S T R A I N   D I S T R I B U T I O N   I N   B A R   E L E M E N T S       ( C B A R )\n'
             '0    ELEMENT  STATION    SXC           SXD           SXE           SXF            AXIAL          S-MAX         S-MIN         M.S.-T\n'
             '       ID.     (PCT)                                                                                                         M.S.-C\n'
-            '            1   0.000   4.919032E+05 -4.348710E+05 -4.348710E+05  4.919032E+05   0.0            4.919032E+05 -4.348710E+05 \n'
+            #'            1   0.000   4.919032E+05 -4.348710E+05 -4.348710E+05  4.919032E+05   0.0            4.919032E+05 -4.348710E+05 \n'
         ]
         return msg
 

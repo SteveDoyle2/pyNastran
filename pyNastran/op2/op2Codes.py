@@ -357,7 +357,7 @@ class Op2Codes(object):
             76 : 'CHEXPR',
             77 : 'CPENPR',
             78 : 'CTETPR',
-            79 : '',
+            79 : 'CPYRAM',
             80 : '',
             81 : '',
             82 : 'CQUADR',
