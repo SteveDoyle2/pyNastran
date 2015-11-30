@@ -5,9 +5,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import zeros, empty, array_equal
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0, writeFloats13E, _eigenvalue_header
-from pyNastran.op2.resultObjects.element_table_object import RealElementTableArray
+#from pyNastran.op2.resultObjects.element_table_object import RealElementTableArray
 
-
+class RealElementTableArray(object):
+    pass
 
 class Real1DHeatFluxArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
