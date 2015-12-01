@@ -104,6 +104,22 @@ class BDFMethods(BDFAttributes):
            It assumes m*r^2 is the dominant term.
            If you're trying to get the mass of a single element, it
            will be wrong, but for real models will be correct.
+
+        Example 1
+        ---------
+        # mass properties of entire structure
+        mass, cg, I = model.mass_properties()
+        Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+
+
+        Example 2
+        ---------
+        # mass properties of model based on Property ID
+        pids = list(model.pids.keys())
+        pid_eids = self.get_element_ids_dict_with_pids(pids)
+
+        for pid, eids in sorted(iteritems(pid_eids)):
+            mass, cg, I = model.mass_properties(element_ids=eids)
         """
         if reference_point is None:
             reference_point = array([0., 0., 0.])

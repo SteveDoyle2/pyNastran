@@ -363,7 +363,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           pids = [4, 5, 6]
           eids_dict = model.get_element_ids_with_pids(pids, mode='dict')
         """
-        assert isinstance(pids, list), pids
+        assert isinstance(pids, (list, tuple)), pids
         eids2 = {}
         for pid in pids:
             eids2[pid] = []
