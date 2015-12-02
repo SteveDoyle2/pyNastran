@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, integer_types, iterkeys
 from collections import defaultdict
+from numpy import array
 
 from pyNastran.bdf.deprecated import GetMethodsDeprecated
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
@@ -290,7 +291,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             return EPOINT(nid)
         else:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-            raise RuntimeError('nid=%s is not a GRID, SPOINT, or EPOINT%s' % (nid, msg))
+            nid_list = array(self.nodes.keys(), dtype='int32')
+            raise RuntimeError('nid=%s is not a GRID, SPOINT, or EPOINT%s\n%s' % (nid, msg, nid_list))
 
     def Nodes(self, nids, allowEmptyNodes=False, msg=''):
         """

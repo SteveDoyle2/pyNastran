@@ -55,7 +55,7 @@ class BDFMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
-    def mass_properties(self, element_ids=None, reference_point=None,
+    def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
                         sym_axis=None, num_cpus=1, scale=None):
         """
         Caclulates mass properties in the global system about the
@@ -67,6 +67,8 @@ class BDFMethods(BDFAttributes):
             The BDF object.
         element_ids : list[int]; (n, ) ndarray, optional
             An array of element ids.
+        mass_ids : list[int]; (n, ) ndarray, optional
+            An array of mass ids.
         reference_point : ndarray, optional
             An array that defines the origin of the frame.
             default = <0,0,0>.
@@ -126,12 +128,14 @@ class BDFMethods(BDFAttributes):
 
         if element_ids is None:
             elements = self.elements.values()
-            masses = self.masses.values()
-            nelements = len(self.elements) + len(self.masses)
         else:
             elements = [element for eid, element in self.elements.items() if eid in element_ids]
-            masses = [mass for eid, mass in self.masses.items() if eid in element_ids]
-            nelements = len(element_ids)
+
+        if mass_ids is None:
+            masses = self.masses.values()
+        else:
+            masses = [mass for eid, mass in self.masses.items() if eid in mass_ids]
+        nelements = len(elements) + len(masses)
 
         num_cpus = 1
         if num_cpus > 1:

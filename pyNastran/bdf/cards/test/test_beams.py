@@ -2,10 +2,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, StringIO
 import unittest
-
 from itertools import count
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
+from numpy import allclose
+
+from pyNastran.bdf.bdf import BDF, CaseControlDeck, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
 from pyNastran.bdf.bdf import CROD, CONROD
 from pyNastran.bdf.bdf import PELAS
 
@@ -407,6 +408,116 @@ class TestBeams(unittest.TestCase):
             msg = msgA + '\nactual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
+
+    def test_beam_mass_01(self):
+        model = BDF(debug=False)
+        #model.case_control_deck = CaseControlDeck(case_control_lines)
+        spc = ['SPC1', 123456, 123456, 1]
+        grid1 = ['GRID', 1, None, 0., 0., 0.]
+        grid2 = ['GRID', 2, None, 1., 0., 0.]
+        grid3 = ['GRID', 3, None, 1., 0., 0.]
+        force = ['FORCE', 100, 1, 0, 2., 3., 4.]
+        cbeam = [
+            'CBEAM', 10, 11, 1, 2,   0., 1., 0., None,
+        ]
+        nsm_offset_a = [0., 0., 0.]
+        nsm_offset_b = [0., 50., 0.]
+        k1 = k2 = None
+        area1 = 2.0
+        area2 = 1.0
+        rho = 3.
+        nsm_a = 0.
+        nsm_b = 0.
+        nu = 0.3
+        pbeam = ([
+            'PBEAM', 11, 12,
+                        area1, 2.1, 1.2, 1.3, None, nsm_a,
+            None, None, None, None, None, None, None, None,
+
+            'YES', 1.0, area2, 2.1, 1.2, 1.3, None, nsm_b,
+            None, None, None, None, None, None, None, None,
+
+            k1, k2, None, None, 100., 100., None, None] +  # 100s are the NSIa, NSIb (moment of inertia per unit length)
+            nsm_offset_a + nsm_offset_b + [None, None, None, None]) # Nones are neutral axis offset
+        #print('\n' + print_card_8(pbeam))
+
+        mat1 = ['MAT1', 12, 3.0e7, None, nu, rho]
+        model.add_card(grid1, 'GRID')
+        model.add_card(grid2, 'GRID')
+        #model.add_card(grid3, 'GRID')
+        model.add_card(cbeam, 'CBEAM')
+        model.add_card(pbeam, 'PBEAM')
+        model.add_card(mat1, 'MAT1')
+        model.add_card(spc, 'SPC1')
+        model.add_card(force, 'FORCE')
+        model.cross_reference()
+        #print(model.properties[11])
+
+        mass, cg, I = model.mass_properties(
+            element_ids=None, mass_ids=None,
+            reference_point=None,
+            sym_axis=None,
+            num_cpus=1,
+            scale=None)
+        print('cg* =', cg)
+        L = 1.0
+        area = (area1 + area2) / 2.
+        nsm = (nsm_a + nsm_b) / 2.
+        mass_per_length = area * rho + nsm
+        mass = L * mass_per_length
+
+        mass_a = L / 2. * (area1 * rho + nsm_a)
+        mass_b = L / 2. * (area2 * rho + nsm_b)
+        xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
+        #print(mass_a, mass_b, xcg, mass_a + mass_b)
+        from numpy import array
+        #print('mass =', mass)
+        #cbeam = CBEAM()
+        cbeam = model.elements[10]
+        pbeam = model.properties[11]
+        assert pbeam.Nu() == nu, 'pbeam.Nu()=%s nu=%s' % (pbeam.Nu(), nu)
+        assert pbeam.Rho() == rho, 'pbeam.Rho()=%s rho=%s' % (pbeam.Rho(), rho)
+        assert allclose(cbeam.Length(), 1.0), cbeam.Length()
+        #assert allclose(cbeam.Mass(), 10.25), cbeam.Mass()
+        #assert allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
+        #assert allclose(mass, 10.25), mass
+
+        f = open('pbeam12.bdf', 'w')
+        case_control_lines = (
+            'SOL 101\n'
+            'CEND\n'
+            'SUBCASE 1\n'
+            '    STRESS(PLOT,SORT1,REAL) = ALL\n'
+            '    SPC = 123456\n'
+            '    LOAD = 100\n'
+            'BEGIN BULK\n'
+            'PARAM,GRDPNT,0\n'
+            'PARAM,POST,-1\n'
+            'PARAM   POSTEXT YES\n'
+        )
+        f.write(case_control_lines)
+        model.write_bdf(f, enddata=True)
+        f.close()
+        model2 = BDF()
+        model2.read_bdf('pbeam12.bdf')
+        import os
+        if not os.path.exists('pbeam12.op2') and 0:
+            os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
+        #os.remove('pbeam12.bdf')
+
+        if 0:
+            from pyNastran.op2.op2 import OP2
+            op2 = OP2()
+            op2.read_op2('pbeam12.op2')
+            #os.remove('pbeam12.op2')
+            gpw = op2.grid_point_weight
+            op2_mass = gpw.mass.max()
+            assert op2_mass == mass, 'op2_mass=%s mass=%s' % (op2_mass, mass)
+            print('op2_mass=%s mass=%s' % (op2_mass, mass))
+            op2_cg = gpw.cg
+
+            cg = array([0.5, 0., 0.], dtype='float32')
+            print('cg =', op2_cg)
 
 
 if __name__ == '__main__':  # pragma: no cover

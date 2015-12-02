@@ -2587,14 +2587,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 else:
                     break
 
-    def _verify_bdf(self):
+    def _verify_bdf(self, xref=None):
         """
         Cross reference verification method.
         """
-        try:
+        if xref is None:
             xref = self._xref
-        except AttributeError:
-            xref = True
         #for key, card in sorted(iteritems(self.params)):
             #card._verify(xref)
         for key, card in sorted(iteritems(self.nodes)):

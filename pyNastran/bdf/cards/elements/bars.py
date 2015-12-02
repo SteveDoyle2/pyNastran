@@ -303,6 +303,7 @@ class CBAR(LineElement):
         assert self.offt[2] in ['G', 'O', 'E'], msg
 
     def _verify(self, xref=False):
+        eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
         mid = self.Mid()
@@ -314,10 +315,11 @@ class CBAR(LineElement):
             mpl = self.MassPerLength()
             L = self.Length()
             mass = self.Mass()
-            assert isinstance(A, float), 'A=%r' % A
-            assert isinstance(L, float), 'L=%r' % L
-            assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
-            assert isinstance(mass, float), 'nass=%r' % mass
+            assert isinstance(A, float), 'eid=%s A=%r' % (eid, A)
+            assert isinstance(L, float), 'eid=%s L=%r' % (eid, L)
+            assert isinstance(mpl, float), 'eid=%s mass_per_length=%r' % (eid, mpl)
+            assert isinstance(mass, float), 'eid=%s mass=%r' % (eid, mass)
+            assert L > 0.0, 'eid=%s L=%s' % (eid, L)
 
     def Mid(self):
         if isinstance(self.pid, integer_types):

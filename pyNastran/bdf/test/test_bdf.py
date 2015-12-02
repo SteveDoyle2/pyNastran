@@ -406,6 +406,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
             if xref:
                 #fem1.uncross_reference()
                 fem1.cross_reference()
+                fem1._xref = True
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
     except:

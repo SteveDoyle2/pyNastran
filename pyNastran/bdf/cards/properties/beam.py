@@ -102,7 +102,7 @@ class PBEAM(IntegratedLineProperty):
 
             if not (i1a*i2a - i12a **2 > 0.):
                 msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End A\n'
-                msg += 'i1=%s i2=%s i12=%s'  % (i1a, i2a, i12a)
+                msg += 'i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (i1a, i2a, i12a, i1a*i2a-i12a**2)
                 raise ValueError(msg)
 
             # TODO: can you have a single lined PBEAM...I think so...
@@ -465,11 +465,11 @@ class PBEAM(IntegratedLineProperty):
         mass/L = Area*rho+nsm
         """
         rho = self.Rho()
-        massPerLs = []
+        mass_per_lengths = []
         for (area, nsm) in zip(self.A, self.nsm):
-            massPerLs.append(area * rho + nsm)
-        massPerL = integrate_positive_line(self.xxb, massPerLs)
-        return massPerL
+            mass_per_lengths.append(area * rho + nsm)
+        mass_per_length = integrate_positive_line(self.xxb, mass_per_lengths)
+        return mass_per_length
 
     def cross_reference(self, model):
         msg = ' which is required by PBEAM mid=%s' % self.mid

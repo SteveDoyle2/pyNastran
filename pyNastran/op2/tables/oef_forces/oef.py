@@ -52,12 +52,12 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexViscForceArray,
     ComplexPlateForceArray,
     ComplexPlate2ForceArray,
+    ComplexSolidPressureForceArray,
 
     # not vectorized
     # TODO: vectorize 4
     ComplexBendForce,
     ComplexForce_VU_2D, ComplexForce_VU,
-    ComplexSolidPressureForceArray,
 )
 
 # TODO: vectorize 1
