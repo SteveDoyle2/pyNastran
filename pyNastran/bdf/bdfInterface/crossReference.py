@@ -749,3 +749,57 @@ class XrefMesh(BDFAttributes):
             dvmrel.cross_reference(self)
         for key, dvprel in iteritems(self.dvprels):
             dvprel.cross_reference(self)
+
+    def geom_check(self, geom_check, xref):
+        """
+        what about xref?
+        """
+        if geom_check:
+            if xref:
+                for eid, element in iteritems(self.elements):
+                    #element.Mass()
+                    element._verify(xref=True)
+                #if 'GEOMCHECK' in self.params:  # should this be an executive control parameter?
+                    #for eid, element in model.elements:
+                        #element._verify()
+            else:
+                for eid, element in iteritems(self.elements):
+                    element.verify_unique_node_ids()
+                    element._verify(xref=False)
+
+            # aspect ratio - ratio between element edges
+            # warping - how planar is a face
+            # taper - split a quad into 2 triangles and compare the area
+            # skew - an angle, measures how skewed an element face is by drawing lines
+            #        between midpoints of elements edges, finding the smallest angle
+            #        between the intersecting lines and subtracting that from 90 degrees
+            # Jacobian - how much does element deviate from the ideal shape by taking the
+            #            determinant of the Jacobian matrix
+            # quad skew <= 30.
+            # quad warp >= 0.05
+            # quad taper >= 0.5
+            # quad iamin <= 30.
+            # quad iamax >= 150.
+
+            # tria skew <= 10.
+            # tria iamax <= 160.
+
+            # tetra ar >= 100.
+            # tetra elpr <= 0.5
+            # tetra detj <= 0.
+
+            # hex ar >= 100.
+            # hex elpr <= 0.5
+            # hex detj <= 0.
+            # hex warp <= 0.707
+
+            # penta ar >= 100.
+            # penta elpr <= 0.5
+            # penta detj <= 0.
+            # penta warp <= 0.707
+
+            # pyram ar >= 100.
+            # pyram elpr <= 0.5
+            # pyram detj <= 0.
+            # pyram warp <= 0.707
+

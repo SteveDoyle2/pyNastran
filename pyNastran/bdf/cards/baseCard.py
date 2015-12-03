@@ -308,6 +308,24 @@ class Element(BaseCard):
         self.deprecated('nodePositions(nodes)', 'get_node_positions(nodes)', '0.8')
         return self.get_node_positions(nodes=nodes)
 
+    def verify_unique_node_ids(self):
+        node_ids = self.node_ids
+        self._verify_unique_node_ids(node_ids)
+
+    def _verify_unique_node_ids(self, required_node_ids, non_required_node_ids=None):
+        if required_node_ids:
+            if non_required_node_ids:
+                asdf
+            else:
+                urnids = unique(required_node_ids)
+                n_unique_node_ids = len(urnids)
+                n_node_ids = len(required_node_ids)
+                if n_unique_node_ids != n_node_ids:
+                    msg = 'nunique_node_ids=%s nnode_ids=%s' % (n_unique_node_ids, n_node_ids)
+                    raise RuntimeError(msg)
+        else:
+            asdf
+
     def Pid(self):
         """
         Gets the Property ID of an element

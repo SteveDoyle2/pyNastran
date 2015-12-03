@@ -44,7 +44,8 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None, debug=True):
     if fmt2 == 'stl':
         nastran_to_stl(model, fname2, is_binary=data['--binary'])
     elif fmt2 == 'cart3d':
-        nastran_to_cart3d(model, fname2)
+        cart3d = nastran_to_cart3d(model)
+        cart3d.write_cart3d(fname2)
     elif fmt2 == 'tecplot':
         tecplot = nastran_to_tecplot(model)
         tecplot_filename = fname2

@@ -474,7 +474,8 @@ class Cart3dIO(object):
             pink = (0.98, 0.4, 0.93)
             npoints = 2 * nfree_edges
             if 'free_edges' not in self.alt_grids:
-                self.create_alternate_vtk_grid('free_edges', color=pink, line_width=3, opacity=1.0)
+                self.create_alternate_vtk_grid('free_edges', color=pink, line_width=3, opacity=1.0,
+                                               representation='surface')
 
             j = 0
             points = vtk.vtkPoints()

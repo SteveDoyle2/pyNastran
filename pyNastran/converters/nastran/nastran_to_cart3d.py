@@ -34,15 +34,22 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
 
     i = 0
     for node_id, node in sorted(iteritems(bdf.nodes)):
-        elements[i, :] = node.get_position()
+        nodes[i, :] = node.get_position()
+        i += 1
+
+    i = 0
     for element_id, element in sorted(iteritems(bdf.elements)):
         if element.type == 'CTRIA3':
-            elements[i, :] = element.node_ids
+            nids = element.node_ids
+            elements[i, :] = nids
             regions[i] = element.Mid()
         else:
             raise NotImplementedError(element.type)
+        i += 1
 
-    cart3d.nodes = nodes
+
+    assert elements.min() > 0, elements
+    cart3d.points = nodes
     cart3d.elements = elements
     cart3d.regions = regions
     return cart3d
@@ -80,12 +87,13 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
     mids = ''
     j = 0
     for element_id, element in sorted(iteritems(model.elements)):
-        if element.type in ['CQUADR', 'CONM2']:
+        if element.type in ['CQUADR', 'CQUAD4', 'CONM2']:
+            print('element type=%s is not supported' % element.type)
             continue
         assert element.type in ['CTRIA3', 'CTRIAR'], element.type
 
 
-        out = element.node_ids()
+        out = element.node_ids
         try:
             n1, n2, n3 = out
         except:
