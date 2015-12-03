@@ -145,7 +145,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         #}
         self.geometry_properties = {}
 
-        self.magnify = 1
         self.iText = 0
 
         self.pick_state = 'node/centroid' # if self.is_centroidal else 'nodal'
@@ -924,7 +923,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self._simulate_key_press('t') # change mouse style to trackball
         self.build_lookup_table()
 
-        text_size = 14 * self.magnify
+        text_size = 14
         self.createText([5, 50], 'Max  ', text_size)  # text actor 0
         self.createText([5, 35], 'Min  ', text_size)  # text actor 1
         self.createText([5, 20], 'Word1', text_size)  # text actor 2
@@ -1867,13 +1866,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                 render_large.SetInput(self.rend)
 
             if magnification is None:
-                magnify_min = 5
+                magnify_min = 1
                 magnify = self.magnify if self.magnify > magnify_min else magnify_min
             else:
                 magnify = magnification
 
             self._update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
+
+            # multiply linewidth by magnification
+            prop = self.geometry_actors['main'].GetProperty()
+            line_width_0 = prop.GetLineWidth()
+            line_width = line_width_0 * magnify
+            prop.SetLineWidth(line_width)
+            prop.Modified()
+
+            # hide corner axis
+            axes_actor = self.corner_axis.GetOrientationMarker()
+            axes_actor.SetVisibility(False)
 
             nam, ext = os.path.splitext(fname)
             ext = ext.lower()
@@ -1898,6 +1908,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             #self.log_info("Saved screenshot: " + fname)
             self.log_command('on_take_screenshot(%r)' % fname)
             self._update_text_size(magnify=1.0)
+
+            # show corner axes
+            axes_actor.SetVisibility(True)
+
+            # set linewidth back
+            prop.SetLineWidth(line_width_0)
+            prop.Modified()
+
 
     def _update_text_size(self, magnify=1.0):
         text_size = int(14 * magnify)
