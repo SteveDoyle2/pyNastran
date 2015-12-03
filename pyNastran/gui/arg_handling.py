@@ -52,7 +52,7 @@ def run_arg_parse():
     msg += "  -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)\n"
     msg += "  -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)\n"
     msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
-    msg += "  -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified (default=1)\n"
+    msg += "  -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified [default: 5]\n"
     msg += "  -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)\n"
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
@@ -88,6 +88,7 @@ def run_arg_parse():
     magnify = 1
     if '--magnify' in data and data['--magnify'] is not None:
         magnify = int(data['--magnify'])
+        assert magnify == 5
 
     rotation = None
     if '--rotation' in data:
