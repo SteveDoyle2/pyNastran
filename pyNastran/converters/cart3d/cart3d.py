@@ -146,6 +146,10 @@ class Cart3dIO(object):
     def nodes(self):
         return self.points
 
+    @nodes.setter
+    def nodes(self, points):
+        self.points = points
+
     @property
     def nelements(self):
         return self.elements.shape[0]

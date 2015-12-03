@@ -1,5 +1,5 @@
 from six import iteritems
-from numpy import zeros, ones
+from numpy import zeros, ones, arange, array, searchsorted, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D
@@ -33,23 +33,43 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     regions = zeros(nelements, 'int32')
 
     i = 0
-    for node_id, node in sorted(iteritems(bdf.nodes)):
-        nodes[i, :] = node.get_position()
-        i += 1
+    nids = array(bdf.nodes.keys(), dtype='int32')
+    nids_expected = arange(1, len(nids) + 1)
 
-    i = 0
-    for element_id, element in sorted(iteritems(bdf.elements)):
-        if element.type == 'CTRIA3':
-            nids = element.node_ids
-            elements[i, :] = nids
-            regions[i] = element.Mid()
-        else:
-            raise NotImplementedError(element.type)
-        i += 1
+    if array_equal(nids, nids_expected):
+        for node_id, node in sorted(iteritems(bdf.nodes)):
+            nodes[i, :] = node.get_position()
+            i += 1
 
+        i = 0
+        for element_id, element in sorted(iteritems(bdf.elements)):
+            if element.type == 'CTRIA3':
+                nids = element.node_ids
+                elements[i, :] = nids
+                regions[i] = element.Mid()
+            else:
+                raise NotImplementedError(element.type)
+            i += 1
+
+    else:
+        nid_map = {}
+        for node_id, node in sorted(iteritems(bdf.nodes)):
+            nodes[i, :] = node.get_position()
+            i += 1
+            nid_map[node_id] = i
+
+        i = 0
+        for element_id, element in sorted(iteritems(bdf.elements)):
+            if element.type == 'CTRIA3':
+                nids = element.node_ids
+                elements[i, :] = [nid_map[nid] for nid in nids]
+                regions[i] = element.Mid()
+            else:
+                raise NotImplementedError(element.type)
+            i += 1
 
     assert elements.min() > 0, elements
-    cart3d.points = nodes
+    cart3d.nodes = nodes
     cart3d.elements = elements
     cart3d.regions = regions
     return cart3d

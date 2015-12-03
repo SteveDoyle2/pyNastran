@@ -88,7 +88,6 @@ def run_arg_parse():
     magnify = 1
     if '--magnify' in data and data['--magnify'] is not None:
         magnify = int(data['--magnify'])
-        assert magnify == 5
 
     rotation = None
     if '--rotation' in data:
