@@ -1468,6 +1468,21 @@ class BDFMethods(BDFAttributes):
         return nids, comps
 
     def skin_solid_elements(self, element_ids=None):
+        """
+        Gets the elements and faces that are skinned from solid elements
+
+        Parameters
+        ----------
+        element_ids : List[int] / None
+            skin a subset of element faces
+            default=None -> all elements
+
+        Returns
+        -------
+        eid_faces : (int, List[(int, int, ...)])
+           value1 : element id
+           value2 : face
+        """
         if element_ids is None:
             element_ids = self.element_ids
 
@@ -1482,6 +1497,18 @@ class BDFMethods(BDFAttributes):
         return eid_faces
 
     def get_solid_skin_faces(self):
+        """
+        Gets the elements and faces that are skinned from solid elements
+
+        Returns
+        -------
+        eid_set : Dict[tuple(int, int, ...)] = List[int]
+           key : sorted face
+           value : list of element ids with the face
+        face_map : Dict[tuple(int, int, ...)] = List[int]
+           key : sorted face
+           value : unsorted face
+        """
         eid_faces = self.skin_solid_elements()
         face_set = defaultdict(int)
         eid_set = defaultdict(list)
@@ -1509,6 +1536,22 @@ class BDFMethods(BDFAttributes):
     def write_skin_solid_faces(self, skin_filename,
                                write_solids=False, write_shells=True,
                                size=8, is_double=False):
+        """
+        Writes the skinned elements
+
+        Parameters
+        ----------
+        skin_filename : str
+            the file to write
+        write_solids : bool; default=False
+            write solid elements that have skinned faces
+        write_shells : bool; default=False
+            write shell elements
+        size : int; default=8
+            the field width
+        is_double : bool; default=False
+            double precision flag
+        """
         if len(self.element_ids) == 0:
             return
         if len(self.material_ids) == 0:
@@ -1524,9 +1567,9 @@ class BDFMethods(BDFAttributes):
             for face, eids in iteritems(eid_set):
                 eid_set_to_write.update(eids)
                 for eid in eids:
-                    elem = model.elements[eid]
+                    elem = self.elements[eid]
                     pid = elem.Pid()
-                    prop = model.properties[pid] # PSOLID
+                    prop = self.properties[pid] # PSOLID
                     mid = prop.Mid()
                     nid_set_to_write.update(elem.node_ids)
                     mid_set_to_write.add(mid)
@@ -1535,9 +1578,9 @@ class BDFMethods(BDFAttributes):
                 eid_set_to_write.update(eids)
                 nid_set_to_write.update(face)
                 for eid in eids:
-                    elem = model.elements[eid]
+                    elem = self.elements[eid]
                     pid = elem.Pid()
-                    prop = model.properties[pid] # PSOLID
+                    prop = self.properties[pid] # PSOLID
                     mid = prop.Mid()
                     mid_set_to_write.add(mid)
         else:
@@ -1570,8 +1613,9 @@ class BDFMethods(BDFAttributes):
                 for pid, prop in iteritems(self.properties):
                     bdf_file.write(prop.write_card(size=size, is_double=is_double))
                 for mid in sorted(mids_to_write):
-                    material = model.materials[mid]
+                    material = self.materials[mid]
                     bdf_file.write(material.write_card(size=size, is_double=is_double))
+                del eid, pid, mid
 
             if write_shells:
                 mids_to_write.sort()
@@ -1585,9 +1629,13 @@ class BDFMethods(BDFAttributes):
                 for face, eids in iteritems(eid_set):
                     face_raw = face_map[face]
                     nface = len(face)
-                    for eid in eids:
-                        elem = model.elements[eid]
+                    #assert len(eids) == 1, eids
+                    for eid in sorted(eids):
+                        elem = self.elements[eid]
+                        #print(elem)
                         break
+
+                    pid = elem.Pid()
                     prop = self.properties[pid]
                     mid = prop.Mid()
                     imid = mids_to_write.index(mid)
