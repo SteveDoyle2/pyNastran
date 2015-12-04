@@ -11,7 +11,7 @@ Rules:
 7.  The 'def main():' signals the end of the parsing
 8.  All code must have a 'def main():'
 9.  Classes are not supported
-10. The order in the file is the orer that the rst will be written.  Put it in order.
+10. The order in the file is the order that the rst will be written.  Put it in order.
 11. The code in main() is executed when py_to_rst.py is run.
 
 

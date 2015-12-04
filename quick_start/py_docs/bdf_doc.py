@@ -40,6 +40,11 @@ def example1():
     model = BDF()
     model.read_bdf(bdf_filename)
 
+    # For unicode:
+    #   The standard encoding is utf-8, but most English decks should use latin1 and will fail with utf-8.
+    #   If you just have ascii, then you don't need to worry about the encoding.
+    ## >>> model.read_bdf(bdf_filename, encoding='latin1')
+
     # print information about the model
     print(model.get_bdf_stats())
 

@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import shutil
 from importlib import import_module
 
 class Section(object):
@@ -71,7 +72,7 @@ def run_import(fname):
     p = fname[:-3].replace(os.sep, '.')
     print('p = %r' % p)
     m = 'main'
-
+    print(p)
     mod = import_module(p)
     main = getattr(mod, m)
     main()
@@ -87,6 +88,13 @@ def create_html_from_rst(rst_filename, html_filename):
 
 
 def main():
+    pydocs_dir = os.path.join('..', '..', 'quick_start', 'py_docs')
+    if not os.path.exists('py_docs'):
+        os.makedirs('py_docs')
+
+    for fname in os.listdir(pydocs_dir):
+        shutil.copyfile(os.path.join(pydocs_dir, fname), os.path.join('py_docs', fname))
+
     fnames = [os.path.join('py_docs', fname) for fname in os.listdir('py_docs')
               if '__init__' not in fname
               and fname.endswith('.py')

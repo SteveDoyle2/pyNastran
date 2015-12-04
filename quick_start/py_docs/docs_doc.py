@@ -1,3 +1,6 @@
+import os
+from bdf_doc import tail
+
 def introduction():
     """
     Introduction - Level 2
@@ -38,7 +41,7 @@ def read_write():
     # instantiate the model
     from pyNastran.op2.op2 import OP2
     model = OP2()
-    model.read_op2(op2_filename, vectorized=True)
+    model.read_op2(op2_filename)
     print(model.get_op2_stats())
     ## op2.displacements[1]
     ##   type=RealDisplacementArray nnodes=72
@@ -94,7 +97,7 @@ def displacement():
     Example 2: Displacement (static) - Level 2
     """
     # This example will demonstate:
-    #  - calculating total deflection of the nodes for a static case for a vectorized OP2
+    #  - calculating total deflection of the nodes for a static case for an OP2
     #  - calculate von mises stress and max shear
 
     ####.. math:: \sqrt\left(T_x^2 + T_y^2 + T_z^2\right)
@@ -109,7 +112,7 @@ def displacement():
     # instantiate the model
     from pyNastran.op2.op2 import OP2
     model = OP2()
-    model.read_op2(op2_filename, vectorized=True)
+    model.read_op2(op2_filename)
     print(model.get_op2_stats())
 
     # we're analyzing a static problem, so itime=0
@@ -169,7 +172,7 @@ def eigenvector():
     Example 3: Eigenvector (transient) - Level 2
     """
     # This example will demonstate:
-    #  - calculate von mises stress and max shear for solid elements for a static case for a vectorized OP2
+    #  - calculate von mises stress and max shear for solid elements for a static case for an OP2
 
     ####.. math:: \sqrt\left(T_x^2 + T_y^2 + T_z^2\right)
 
@@ -183,7 +186,7 @@ def eigenvector():
     # instantiate the model
     from pyNastran.op2.op2 import OP2
     model = OP2()
-    model.read_op2(op2_filename, vectorized=True)
+    model.read_op2(op2_filename)
     print(model.get_op2_stats())
     ####
     ## op2.ctetra_stress[1]
@@ -238,7 +241,7 @@ def solid_stress():
     Example 4: Solid Stress (static) - Level 2
     """
     # This example will demonstate:
-    #  - calculating total deflection of the nodes for a dynamic case for a vectorized OP2
+    #  - calculating total deflection of the nodes for a dynamic case for an OP2
     ####.. math:: \sqrt\left(T_x^2 + T_y^2 + T_z^2\right)
 
     # our model
@@ -251,7 +254,7 @@ def solid_stress():
     # instantiate the model
     from pyNastran.op2.op2 import OP2
     model = OP2()
-    model.read_op2(op2_filename, vectorized=True)
+    model.read_op2(op2_filename)
     print(model.get_op2_stats())
     ####
     ## op2.eigenvectors[1]
@@ -287,7 +290,7 @@ def isotropic_plate_stress():
     Example 5: Isotropic Plate Stress (static) - Level 2
     """
     # This example will demonstate:
-    #  - print the fiber distance and the max principal stress for a static case for a vectorized OP2
+    #  - print the fiber distance and the max principal stress for a static case for an OP2
 
     # our model
     import pyNastran
@@ -298,7 +301,7 @@ def isotropic_plate_stress():
     # instantiate the model
     from pyNastran.op2.op2 import OP2
     model = OP2()
-    model.read_op2(op2_filename, vectorized=True)
+    model.read_op2(op2_filename)
     print(model.get_op2_stats())
     ####
     ## op2.cquad4_stress[1]
@@ -356,17 +359,17 @@ def composite_plate_stress():
     Example 6: Composite Plate Stress (static) - Level 2
     """
     # This example will demonstate:
-    #  - print the fiber distance and the max principal stress for a static case for a vectorized OP2
+    #  - print the fiber distance and the max principal stress for a static case for an OP2
     # our model
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     test_path = os.path.join(pkg_path, '..', 'models', 'sol_101_elements')
-    op2_filename = os.path.join(test_path, 'static_solid_comp_bar.op2')
+    op2_filename = os.path.join(test_path, 'static_solid_shell_bar.op2')
 
     # instantiate the model
     from pyNastran.op2.op2 import OP2
     model = OP2()
-    model.read_op2(op2_filename, vectorized=True)
+    model.read_op2(op2_filename)
     print(model.get_op2_stats())
     ## op2.ctria3_composite_stress[1]
     ##   type=RealCompositePlateStressArray nelements=4 ntotal=18
