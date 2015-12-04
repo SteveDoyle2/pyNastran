@@ -351,8 +351,10 @@ def isotropic_plate_stress():
     ## 7 16    -0.125 10307.1
     ## 7 16     0.125 10311.1
 
-    # note we have 2 layers (upper and lower surface) for any PSHELL-based elements
-
+    # Note we have 2 layers (upper and lower surface) for any fiber-distance PSHELL-based elements.  These will be the peak max/min stresses.
+    # For a strain-curvature PSHELL (e.g. 'STRAIN(STRCURV)=ALL'), we can have membrane and bending strains, but for STRESS we always have fiber-distance stresses.
+    # zupper = membrane * t/2 * bending
+    # zlower = membrane * -t/2 * bending
 
 def composite_plate_stress():
     """
@@ -393,7 +395,7 @@ def composite_plate_stress():
     if stress.is_fiber_distance():
         fiber_dist = stress.data[itime, :, 0]
     else:
-        raise RuntimeError('found fiber curvature; expected fiber distance')
+        raise RuntimeError('found strain curvature; expected fiber distance')
     maxp = stress.data[itime, :, 5]
 
     for (eid, layer, maxpi) in zip(eids, layers, maxp):
