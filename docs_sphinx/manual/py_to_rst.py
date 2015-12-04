@@ -109,9 +109,16 @@ def main():
 
         rst_filename = base + '.rst'
         html_filename = root + '.html'
+        print(rst_filename)
         #print(py_filename)
         create_rst_from_python(py_filename, rst_filename)
         create_html_from_rst(rst_filename, html_filename)
+    for py_filename in fnames:
+        root = os.path.splitext(py_filename)[0]
+        base = os.path.splitext(os.path.basename(py_filename))[0]
+        rst_filename = base + '.rst'
+        print('ran %s; saved %s' % (py_filename, rst_filename))
+
 
 def create_rst_from_python(py_filename, rst_filename, debug=False):
     sections = []

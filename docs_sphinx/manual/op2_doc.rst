@@ -7,7 +7,7 @@ Introduction
 ------------
 This is meant as a tutorial on how to use the pyNastran ``pyNastran.op2.op2.OP2`` class
 
-This page runs through examples relating to the vectorized OP2.  The vectorized OP2 is preferred as it uses about 20% of the memory as the non-vectorized version of the OP2.  It's slower to parse as it has to do two passes, but calculations will be much faster.
+This page runs through examples relating to the OP2.  The OP2 is preferred as it is much faster and easier to parse.
 
 Note that a static model is a SOL 101 or SOL 144.  A dynamic/"transient" solution is any transient/modal/load step/frequency based solution (e.g. 103, 109, 145).
 
@@ -47,7 +47,7 @@ instantiate the model
 
     >>> from pyNastran.op2.op2 import OP2
     >>> model = OP2()
-    >>> model.read_op2(op2_filename, vectorized=True)
+    >>> model.read_op2(op2_filename)
     >>> print(model.get_op2_stats())
     op2.displacements[1]
       type=RealDisplacementArray nnodes=72
@@ -100,7 +100,7 @@ Example 2: Displacement (static)
 --------------------------------
 This example will demonstate:
 
- - calculating total deflection of the nodes for a static case for a vectorized OP2
+ - calculating total deflection of the nodes for a static case for an OP2
 
  - calculate von mises stress and max shear
 
@@ -123,7 +123,7 @@ instantiate the model
 
     >>> from pyNastran.op2.op2 import OP2
     >>> model = OP2()
-    >>> model.read_op2(op2_filename, vectorized=True)
+    >>> model.read_op2(op2_filename)
     >>> print(model.get_op2_stats())
 
 we're analyzing a static problem, so itime=0
@@ -208,7 +208,7 @@ Example 3: Eigenvector (transient)
 ----------------------------------
 This example will demonstate:
 
- - calculate von mises stress and max shear for solid elements for a static case for a vectorized OP2
+ - calculate von mises stress and max shear for solid elements for a static case for an OP2
 
 
 .. math:: \sqrt\left(T_x^2 + T_y^2 + T_z^2\right)
@@ -229,7 +229,7 @@ instantiate the model
 
     >>> from pyNastran.op2.op2 import OP2
     >>> model = OP2()
-    >>> model.read_op2(op2_filename, vectorized=True)
+    >>> model.read_op2(op2_filename)
     >>> print(model.get_op2_stats())
 
     op2.ctetra_stress[1]
@@ -292,7 +292,7 @@ Example 4: Solid Stress (static)
 --------------------------------
 This example will demonstate:
 
- - calculating total deflection of the nodes for a dynamic case for a vectorized OP2
+ - calculating total deflection of the nodes for a dynamic case for an OP2
 
 
 .. math:: \sqrt\left(T_x^2 + T_y^2 + T_z^2\right)
@@ -314,7 +314,7 @@ instantiate the model
 
     >>> from pyNastran.op2.op2 import OP2
     >>> model = OP2()
-    >>> model.read_op2(op2_filename, vectorized=True)
+    >>> model.read_op2(op2_filename)
     >>> print(model.get_op2_stats())
 
     op2.eigenvectors[1]
@@ -356,7 +356,7 @@ Example 5: Isotropic Plate Stress (static)
 ------------------------------------------
 This example will demonstate:
 
- - print the fiber distance and the max principal stress for a static case for a vectorized OP2
+ - print the fiber distance and the max principal stress for a static case for an OP2
 
 our model
 
@@ -373,7 +373,7 @@ instantiate the model
 
     >>> from pyNastran.op2.op2 import OP2
     >>> model = OP2()
-    >>> model.read_op2(op2_filename, vectorized=True)
+    >>> model.read_op2(op2_filename)
     >>> print(model.get_op2_stats())
 
     op2.cquad4_stress[1]
@@ -430,7 +430,7 @@ Example 6: Composite Plate Stress (static)
 ------------------------------------------
 This example will demonstate:
 
- - print the fiber distance and the max principal stress for a static case for a vectorized OP2
+ - print the fiber distance and the max principal stress for a static case for an OP2
 
 our model
 
@@ -439,7 +439,7 @@ our model
     >>> import pyNastran
     >>> pkg_path = pyNastran.__path__[0]
     >>> test_path = os.path.join(pkg_path, '..', 'models', 'sol_101_elements')
-    >>> op2_filename = os.path.join(test_path, 'static_solid_comp_bar.op2')
+    >>> op2_filename = os.path.join(test_path, 'static_solid_shell_bar.op2')
 
 instantiate the model
 
@@ -447,7 +447,7 @@ instantiate the model
 
     >>> from pyNastran.op2.op2 import OP2
     >>> model = OP2()
-    >>> model.read_op2(op2_filename, vectorized=True)
+    >>> model.read_op2(op2_filename)
     >>> print(model.get_op2_stats())
     op2.ctria3_composite_stress[1]
       type=RealCompositePlateStressArray nelements=4 ntotal=18
