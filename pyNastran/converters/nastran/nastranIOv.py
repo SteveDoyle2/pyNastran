@@ -26,7 +26,7 @@ from collections import defaultdict, OrderedDict
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
-from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
+from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones, int32
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle, hstack, vstack, array_equal
 from numpy.linalg import norm
 import numpy as np
@@ -629,7 +629,7 @@ class NastranIO(object):
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         j = 0
-        nid_to_pid_map, icase, cases, form = self.mapElements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+        nid_to_pid_map, icase, cases, form = self.map_elements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
         if 0:
             nsprings = 0
@@ -1547,8 +1547,8 @@ class NastranIO(object):
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
 
-    def mapElements(self, points, nidMap, model, j, dim_max,
-                    plot=True, xref_loads=True):
+    def map_elements(self, points, nidMap, model, j, dim_max,
+                     plot=True, xref_loads=True):
         sphere_size = self._get_sphere_size(dim_max)
         #self.eidMap = {}
 
@@ -1987,7 +1987,7 @@ class NastranIO(object):
             eidsSet = True
 
         prop_types_with_mid = [
-            'PSHELL', 'PSOLID',
+            'PSOLID',
             'PROD', 'CROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML'
         ]
         # subcase_id, resultType, vector_size, location, dataFormat
@@ -2007,7 +2007,19 @@ class NastranIO(object):
                 if prop.type in prop_types_with_mid:
                     i = where(pids == pid)[0]
                     #print('pid=%s i=%s' % (pid, i))
-                    mids[i] = prop.mid.mid
+                    #if isinstance(prop.mid, (int, int32)):
+                        #mid = prop.mid
+                    #else:
+                        #try:
+                    mid = prop.mid.mid
+                        #except AttributeError:
+                            #print('pid=%s prop.type=%s' % (pid, prop.type))
+                            #raise
+                    mids[i] = mid
+                elif prop.type == 'PSHELL':
+                    i = where(pids == pid)[0]
+                    mid = prop.Mid1()
+                    mids[i] = mid
                 else:
                     print('material for pid=%s type=%s not considered' % (pid, prop.type))
 

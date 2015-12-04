@@ -1519,21 +1519,33 @@ class BDFMethods(BDFAttributes):
 
         eid_set_to_write = set([])
         nid_set_to_write = set([])
+        mid_set_to_write = set([])
         if write_solids:
             for face, eids in iteritems(eid_set):
                 eid_set_to_write.update(eids)
                 for eid in eids:
                     elem = model.elements[eid]
+                    pid = elem.Pid()
+                    prop = model.properties[pid] # PSOLID
+                    mid = prop.Mid()
                     nid_set_to_write.update(elem.node_ids)
+                    mid_set_to_write.add(mid)
         elif write_shells:
             for face, eids in iteritems(eid_set):
                 eid_set_to_write.update(eids)
                 nid_set_to_write.update(face)
+                for eid in eids:
+                    elem = model.elements[eid]
+                    pid = elem.Pid()
+                    prop = model.properties[pid] # PSOLID
+                    mid = prop.Mid()
+                    mid_set_to_write.add(mid)
         else:
             raise RuntimeError('write_solids=False write_shells=False')
 
         eids_to_write = list(eid_set_to_write)
         nids_to_write = list(nid_set_to_write)
+        mids_to_write = list(mid_set_to_write)
 
         #element_ids_to_delete = set(self.element_ids) - eids_to_write
 
@@ -1557,27 +1569,39 @@ class BDFMethods(BDFAttributes):
                     bdf_file.write(elem.write_card(size=size))
                 for pid, prop in iteritems(self.properties):
                     bdf_file.write(prop.write_card(size=size, is_double=is_double))
+                for mid in sorted(mids_to_write):
+                    material = model.materials[mid]
+                    bdf_file.write(material.write_card(size=size, is_double=is_double))
 
             if write_shells:
-                card = ['PSHELL', pid_shell, mid_shell, 0.1]
-                bdf_file.write(print_card_8(card))
+                mids_to_write.sort()
+                for imid, mid in enumerate(mids_to_write):
+                    card = ['PSHELL', pid_shell + imid, mid_shell + imid, 0.1]
+                    bdf_file.write(print_card_8(card))
 
-                card = ['MAT1', mid_shell, 3.e7, None, 0.3]
-                bdf_file.write(print_card_8(card))
+                    card = ['MAT1', mid_shell + imid, 3.e7, None, 0.3]
+                    bdf_file.write(print_card_8(card))
 
                 for face, eids in iteritems(eid_set):
                     face_raw = face_map[face]
                     nface = len(face)
+                    for eid in eids:
+                        elem = model.elements[eid]
+                        break
+                    prop = self.properties[pid]
+                    mid = prop.Mid()
+                    imid = mids_to_write.index(mid)
+
                     if nface == 3:
-                        card = ['CTRIA3', eid_shell, pid_shell] + list(face_raw)
+                        card = ['CTRIA3', eid_shell, pid_shell + imid] + list(face_raw)
                     elif nface == 4:
-                        card = ['CQUAD4', eid_shell, pid_shell] + list(face_raw)
+                        card = ['CQUAD4', eid_shell, pid_shell + imid] + list(face_raw)
                     elif nface == 4:
-                        card = ['CQUAD4', eid_shell, pid_shell] + list(face_raw)
+                        card = ['CQUAD4', eid_shell, pid_shell + imid] + list(face_raw)
                     elif nface == 6:
-                        card = ['CTRIA6', eid_shell, pid_shell] + list(face_raw)
+                        card = ['CTRIA6', eid_shell, pid_shell + imid] + list(face_raw)
                     elif nface == 8:
-                        card = ['CQUAD8', eid_shell, pid_shell] + list(face_raw)
+                        card = ['CQUAD8', eid_shell, pid_shell + imid] + list(face_raw)
                     else:
                         raise NotImplementedError('face=%s len(face)=%s' % (face, nface))
                     bdf_file.write(print_card_8(card))
@@ -1587,5 +1611,4 @@ class BDFMethods(BDFAttributes):
                     #bdf_file.write(elem.write_card(size=size))
                 #for pid, prop in iteritems(self.properties):
                     #bdf_file.write(prop.write_card(size=size, is_double=is_double))
-
             bdf_file.write('ENDDATA\n')
