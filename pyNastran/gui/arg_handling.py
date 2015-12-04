@@ -19,6 +19,8 @@ def determine_format(input):
         'tecplot' : ['.plt'],
         'ugrid' : ['.ugrid'],
         'plot3d' : ['.p3d', '.p3da'],
+        'surf' : ['.surf'],
+        'lawgs' : ['.wgs'],
     }
     ext = os.path.splitext(input)[1].lower()
     extension_to_format = {val : key for key, value in iteritems(format_to_extension)
@@ -26,7 +28,7 @@ def determine_format(input):
     try:
         format = extension_to_format[ext]
     except:
-        msg = 'format=%r was not found; Specify it' % ext
+        msg = 'format=%r was not found; Specify the format' % ext
         raise TypeError(msg)
     return format
 

@@ -258,6 +258,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         fem1 = BDF(debug=debug, log=None)
     fem1.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
                            nxref_errors=100, stop_on_xref_error=True)
+    #fem1.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
+    #                       nxref_errors=0, stop_on_xref_error=True)
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
@@ -404,6 +406,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
         else:
             fem1.read_bdf(bdfModel, xref=False, punch=punch)
             #fem1.geom_check(geom_check=True, xref=False)
+            fem1.write_skin_solid_faces('skin_file.bdf', size=16, is_double=False)
             if xref:
                 #fem1.uncross_reference()
                 fem1.cross_reference()
@@ -478,7 +481,7 @@ def run_fem2(bdfModel, out_model, xref, punch,
 
     outModel2 = bdfModel + '_out2'
 
-    if sum_load:
+    if xref and sum_load:
         p0 = array([0., 0., 0.])
 
         subcase_keys = fem2.case_control_deck.get_subcase_list()

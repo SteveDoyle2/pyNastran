@@ -233,7 +233,7 @@ def to_fields(card_lines, card_name):
 
     if '*' in line:  # large field
         if ',' in line:  # csv
-            new_fields = line[:72].split(',')[:5]
+            new_fields = line.split(',')[:5]
             for i in range(5 - len(new_fields)):
                 new_fields.append('')
         else:  # standard
@@ -243,7 +243,7 @@ def to_fields(card_lines, card_name):
         assert len(fields) == 5, fields
     else:  # small field
         if ',' in line:  # csv
-            new_fields = line[:72].split(',')[:9]
+            new_fields = line.split(',')[:9]
             for i in range(9 - len(new_fields)):
                 new_fields.append('')
         else:  # standard
@@ -265,7 +265,7 @@ def to_fields(card_lines, card_name):
 
         if '*' in line:  # large field
             if ',' in line:  # csv
-                new_fields = line[:72].split(',')[1:5]
+                new_fields = line.split(',')[1:5]
                 for i in range(4 - len(new_fields)):
                     new_fields.append('')
             else:  # standard
@@ -273,7 +273,7 @@ def to_fields(card_lines, card_name):
             assert len(new_fields) == 4, new_fields
         else:  # small field
             if ',' in line:  # csv
-                new_fields = line[:72].split(',')[1:9]
+                new_fields = line.split(',')[1:9]
                 for i in range(8 - len(new_fields)):
                     new_fields.append('')
             else:  # standard

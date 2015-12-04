@@ -1,4 +1,3 @@
-# pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, integer_types, PY2
@@ -35,13 +34,14 @@ else:
     pass
 
 
-class BaseCardDeprecated(object):
-    """
-    Deprecated in:
-      - version 0.7
-    Removed in:
-      - version 0.8
-    """
+class BaseCard(object):
+    def __init__(self):
+        pass
+
+    def deprecated(self, old_name, new_name, deprecated_version):
+        """deprecates methods"""
+        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
+
     def rawFields(self):
         self.deprecated('rawFields()', 'raw_fields()', '0.7')
         return self.raw_fields()
@@ -61,15 +61,6 @@ class BaseCardDeprecated(object):
     def printRawFields(self, size=8):
         self.deprecated('printRawFields(size)', 'print_raw_card(size, is_double)', '0.7')
         return self.print_raw_card(size=size)
-
-
-class BaseCard(BaseCardDeprecated):
-    def __init__(self):
-        pass
-
-    def deprecated(self, old_name, new_name, deprecated_version):
-        """deprecates methods"""
-        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     @property
     def comment(self):
@@ -315,7 +306,7 @@ class Element(BaseCard):
     def _verify_unique_node_ids(self, required_node_ids, non_required_node_ids=None):
         if required_node_ids:
             if non_required_node_ids:
-                asdf
+                raise NotImplementedError('only required nodes implemented')
             else:
                 urnids = unique(required_node_ids)
                 n_unique_node_ids = len(urnids)
@@ -324,7 +315,7 @@ class Element(BaseCard):
                     msg = 'nunique_node_ids=%s nnode_ids=%s' % (n_unique_node_ids, n_node_ids)
                     raise RuntimeError(msg)
         else:
-            asdf
+            raise NotImplementedError('only required nodes implemented')
 
     def Pid(self):
         """
@@ -405,6 +396,7 @@ class Element(BaseCard):
             value = a list of nodes (integer pointers) as the values.
 
         .. note::  The order of the nodes are consistent with ANSYS numbering.
+        .. warning:: higher order element ids not verified with ANSYS.
 
         Example
         =======
@@ -412,38 +404,68 @@ class Element(BaseCard):
         """
         faces = {}
         nodes = self.node_ids
-        if self.type.startswith('CHEX'):  # CHEXA
+        node_ids = nodes
+        nnodes = len(nodes)
+        if self.type.startswith('CQUAD'): # CQUADx
+            # both sides
+            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?
+            faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
+        elif self.type.startswith('CTRI'):  # CTRIAx
+            # both sides
+            faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
+            faces[2] = [nodes[1], nodes[0], nodes[2]]
+        elif nnodes == 4:  # CTETRA4
+            faces[1] = [nodes[0], nodes[1], nodes[2]]
+            faces[2] = [nodes[0], nodes[1], nodes[3]]
+            faces[3] = [nodes[1], nodes[2], nodes[3]]
+            faces[4] = [nodes[2], nodes[0], nodes[3]]
+        elif nnodes == 8: # CHEXA
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
             faces[3] = [nodes[1], nodes[2], nodes[6], nodes[5]]
             faces[4] = [nodes[2], nodes[3], nodes[7], nodes[6]]
             faces[5] = [nodes[3], nodes[0], nodes[4], nodes[7]]
             faces[6] = [nodes[4], nodes[5], nodes[6], nodes[7]]
-        elif self.type.startswith('CTET'):  # CTETRA
-            faces[1] = [nodes[0], nodes[1], nodes[2]]
-            faces[2] = [nodes[0], nodes[1], nodes[3]]
-            faces[3] = [nodes[1], nodes[2], nodes[3]]
-            faces[4] = [nodes[2], nodes[0], nodes[3]]
-        elif self.type.startswith('CPYR'):  # PYRAMID
-            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
-            faces[2] = [nodes[0], nodes[1], nodes[4]]
-            faces[3] = [nodes[1], nodes[2], nodes[4]]
-            faces[4] = [nodes[2], nodes[3], nodes[4]]
-            faces[5] = [nodes[3], nodes[0], nodes[4]]
-        elif self.type.startswith('CPEN'):  # CPENTA
+        elif nnodes == 6:  # CPENTA
             faces[1] = [nodes[0], nodes[1], nodes[2]]
             faces[2] = [nodes[3], nodes[4], nodes[5]]
             faces[3] = [nodes[0], nodes[1], nodes[4], nodes[3]]
             faces[4] = [nodes[1], nodes[2], nodes[5], nodes[4]]
             faces[5] = [nodes[2], nodes[0], nodes[3], nodes[5]]
-        elif self.type.startswith('CQUAD'):  # CQUADx
-            # both sides
+        elif nnodes == 5:  # PYRAMID
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
-            faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
-        elif self.type.startswith('CTRI'):  # CTRIAx
-            # both sides
-            faces[1] = [nodes[0], nodes[1], nodes[2]]
-            faces[2] = [nodes[1], nodes[0], nodes[2]]
+            faces[2] = [nodes[0], nodes[1], nodes[4]]
+            faces[3] = [nodes[1], nodes[2], nodes[4]]
+            faces[4] = [nodes[2], nodes[3], nodes[4]]
+            faces[5] = [nodes[3], nodes[0], nodes[4]]
+        elif nnodes == 10: # CTETRA10
+            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = node_ids
+            faces[1] = [n1, n2, n3, n5, n6, n7]  #More?
+            faces[2] = [n1, n2, n4, n5, n9, n8]
+            faces[3] = [n2, n3, n4, n6, n10, n9]
+            faces[4] = [n3, n1, n4, n7, n8, n10]
+        elif nnodes == 20: # CHEXA20 / SOLID186
+            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20 = node_ids
+            faces[1] = [n1, n2, n3, n4, n9, n10, n11, n12]
+            faces[2] = [n1, n2, n6, n5, n9, n18, n13, n17]
+            faces[3] = [n2, n3, n7, n6, n10, n19, n14, n18]
+            faces[4] = [n3, n4, n8, n7, n11, n10, n15, n19]
+            faces[5] = [n4, n1, n5, n8, n12, n17, n16, n20]
+            faces[6] = [n5, n6, n7, n8, n13, n14, n15, n16]
+        elif nnodes == 15:  # CPENTA15
+            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = node_ids
+            faces[1] = [n1, n2, n3, n7, n8, n9]
+            faces[2] = [n4, n5, n6, n10, n11, n12]
+            faces[3] = [n1, n2, n5, n4, n7, n14, n10, n13]
+            faces[4] = [n2, n3, n6, n5, n8, n15, n11, n14]
+            faces[5] = [n3, n1, n4, n6, n9, n13, n12, n15]
+        elif nnodes == 13:  # PYRAMID
+            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13 = node_ids
+            faces[1] = [n1, n2, n3, n4, n6, n7, n8, n9]
+            faces[2] = [n1, n2, n5, n6, n11, n10]
+            faces[3] = [n2, n3, n5, n7, n12, n11]
+            faces[4] = [n3, n4, n5, n8, n13, n12]
+            faces[5] = [n4, n1, n5, n9, n10, n13]
         else:
             faces = None
         return faces
@@ -851,11 +873,17 @@ def build_thru_float(packs, max_dv=None):
     Takes a pack [1,7,2] and converts it into fields used by a SET card.
     The values correspond to the first value, last value, and delta in the
     list.  This means that [1,1001,2] represents 500 values.
-    [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
+    [1,1001,1] represents 1001 values and will be written as [1,THRU,1001].
 
-    :param packs: list of packs (list of 3 values: [first, last, delta] )
-    :param max_dv: integer defining the max allowable delta between two values
-                   (default=None; no limit)
+    Parameters
+    ----------
+    packs : List[ List[int, int, int], ... ]
+        list of packs
+        pack : List[int, int, int]
+            list of [first, last, delta]
+    max_dv : int/None; default=None
+        integer defining the max allowable delta between two values
+        (default=None; no limit)
     """
     fields = []
     for (first_val, last_val, dv) in packs:

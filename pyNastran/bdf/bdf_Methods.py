@@ -18,6 +18,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, integer_types
 from six.moves import zip
+from collections import defaultdict
+from copy import deepcopy
 import multiprocessing as mp
 
 from numpy import array, cross, zeros, dot, allclose, mean
@@ -26,6 +28,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
+from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 def _mass_properties_mass_mp_func(element):
@@ -1462,5 +1465,127 @@ class BDFMethods(BDFAttributes):
             else:
                 self.log.warning('not considering:\n%s' % str(mpc))
                 #raise NotImplementedError(mpc.type)
-
         return nids, comps
+
+    def skin_solid_elements(self, element_ids=None):
+        if element_ids is None:
+            element_ids = self.element_ids
+
+        eid_faces = []
+        for eid in element_ids:
+            elem = self.elements[eid]
+            if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
+                faces = elem.faces
+                #print(faces)
+                for face_id, face in iteritems(faces):
+                    eid_faces.append((eid, face))
+        return eid_faces
+
+    def get_solid_skin_faces(self):
+        eid_faces = self.skin_solid_elements()
+        face_set = defaultdict(int)
+        eid_set = defaultdict(list)
+        face_map = {}
+        for eid, face in eid_faces:
+            #print(eid, face)
+            raw_face = deepcopy(face)
+            face.sort()
+            tface = tuple(face)
+            #print(tface)
+            face_set[tface] += 1
+            eid_set[tface].append(eid)
+            face_map[tface] = raw_face
+
+        del_faces = []
+        for face, face_count in iteritems(face_set):
+            if face_count == 2:
+                del_faces.append(face)
+
+        for face in del_faces:
+            del face_set[face]
+            del eid_set[face]
+        return eid_set, face_map
+
+    def write_skin_solid_faces(self, skin_filename,
+                               write_solids=False, write_shells=True,
+                               size=8, is_double=False):
+        if len(self.element_ids) == 0:
+            return
+        if len(self.material_ids) == 0:
+            return
+        if len(self.property_ids) == 0:
+            return
+        eid_set, face_map = self.get_solid_skin_faces()
+
+        eid_set_to_write = set([])
+        nid_set_to_write = set([])
+        if write_solids:
+            for face, eids in iteritems(eid_set):
+                eid_set_to_write.update(eids)
+                for eid in eids:
+                    elem = model.elements[eid]
+                    nid_set_to_write.update(elem.node_ids)
+        elif write_shells:
+            for face, eids in iteritems(eid_set):
+                eid_set_to_write.update(eids)
+                nid_set_to_write.update(face)
+        else:
+            raise RuntimeError('write_solids=False write_shells=False')
+
+        eids_to_write = list(eid_set_to_write)
+        nids_to_write = list(nid_set_to_write)
+
+        #element_ids_to_delete = set(self.element_ids) - eids_to_write
+
+        eid_shell = max(self.elements) + 1
+        pid_shell = max(self.properties) + 1
+        mid_shell = max(self.materials) + 1
+        with open(skin_filename, 'w') as bdf_file:
+            bdf_file.write('$ pyNastran: punch=True\n')
+            for nid in sorted(nids_to_write):
+                node = self.nodes[nid]
+                bdf_file.write(node.write_card(size=size, is_double=is_double))
+
+            for cid, coord in iteritems(self.coords):
+                if cid == 0:
+                    continue
+                bdf_file.write(coord.write_card(size=size, is_double=is_double))
+
+            if write_solids:
+                for eid in sorted(eids_to_write):
+                    elem = self.elements[eid]
+                    bdf_file.write(elem.write_card(size=size))
+                for pid, prop in iteritems(self.properties):
+                    bdf_file.write(prop.write_card(size=size, is_double=is_double))
+
+            if write_shells:
+                card = ['PSHELL', pid_shell, mid_shell, 0.1]
+                bdf_file.write(print_card_8(card))
+
+                card = ['MAT1', mid_shell, 3.e7, None, 0.3]
+                bdf_file.write(print_card_8(card))
+
+                for face, eids in iteritems(eid_set):
+                    face_raw = face_map[face]
+                    nface = len(face)
+                    if nface == 3:
+                        card = ['CTRIA3', eid_shell, pid_shell] + list(face_raw)
+                    elif nface == 4:
+                        card = ['CQUAD4', eid_shell, pid_shell] + list(face_raw)
+                    elif nface == 4:
+                        card = ['CQUAD4', eid_shell, pid_shell] + list(face_raw)
+                    elif nface == 6:
+                        card = ['CTRIA6', eid_shell, pid_shell] + list(face_raw)
+                    elif nface == 8:
+                        card = ['CQUAD8', eid_shell, pid_shell] + list(face_raw)
+                    else:
+                        raise NotImplementedError('face=%s len(face)=%s' % (face, nface))
+                    bdf_file.write(print_card_8(card))
+                    eid_shell += 1
+
+                    #elem = self.elements[eid]
+                    #bdf_file.write(elem.write_card(size=size))
+                #for pid, prop in iteritems(self.properties):
+                    #bdf_file.write(prop.write_card(size=size, is_double=is_double))
+
+            bdf_file.write('ENDDATA\n')

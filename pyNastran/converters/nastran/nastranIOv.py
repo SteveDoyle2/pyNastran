@@ -1566,6 +1566,7 @@ class NastranIO(object):
         pids_dict = {}
         nelements = len(model.elements)
         pids = zeros(nelements, 'int32')
+        mids = zeros(nelements, 'int32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -1985,10 +1986,37 @@ class NastranIO(object):
             self.element_ids = eids
             eidsSet = True
 
+        prop_types_with_mid = [
+            'PSHELL', 'PSOLID',
+            'PROD', 'CROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML'
+        ]
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
             cases[(0, icase, 'PropertyID', 1, 'centroid', '%i')] = pids
             form0.append(('PropertyID', icase, []))
+            icase += 1
+
+            upids = unique(pids)
+            mids = zeros(nelements, dtype='int32')
+            for pid in upids:
+                if pid == 0:
+                    print('skipping pid=0')
+                    continue
+                prop = model.properties[pid]
+                #try:
+                if prop.type in prop_types_with_mid:
+                    i = where(pids == pid)[0]
+                    #print('pid=%s i=%s' % (pid, i))
+                    mids[i] = prop.mid.mid
+                else:
+                    print('material for pid=%s type=%s not considered' % (pid, prop.type))
+
+            #print('mids =', mids)
+            if mids.min() == 0:
+                i = where(mids == 0)[0]
+                print('eids=%s dont have materials' % eids[i])
+            cases[(0, icase, 'MaterialID', 1, 'centroid', '%i')] = mids
+            form0.append(('MaterialID', icase, []))
             icase += 1
 
         if 1:
