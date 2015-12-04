@@ -875,7 +875,7 @@ class Cart3D(Cart3dIO):
         ni = norm(n, axis=1)
         assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
 
-        assert ni.min() > 0, ni
+        assert ni.min() > 0.0, ni[where(ni <= 0.0)[0]]
         n /= ni[:, None]  # normal vector
         return n
 
