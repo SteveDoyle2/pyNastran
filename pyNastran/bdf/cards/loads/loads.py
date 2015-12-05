@@ -93,6 +93,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
             loadID2 = model.Load(load_id, msg=msg)
             loadIDs2.append(loadID2)
         self.loadIDs = loadIDs2
+        self.loadIDs_ref = self.loadIDs
 
     def safe_cross_reference(self, model, debug=True):
         loadIDs2 = []
@@ -162,9 +163,11 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
+        self.lid_ref = self.lid
         #self.exciteID = model.Node(self.exciteID, msg=msg)
         if self.tid:
             self.tid = model.Table(self.tid, msg=msg)
+            self.tid_ref = self.tid
 
     def LoadID(self, lid):
         if isinstance(lid, integer_types):
@@ -247,11 +250,13 @@ class DAREA(BaseCard):
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
-        self.p = model.Node(self.p, allowEmptyNodes=False, msg=msg)
+        self.p = model.Node(self.p, allow_empty_nodes=False, msg=msg)
+        self.p_ref = self.p
 
     def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
-        self.p = model.Node(self.p, allowEmptyNodes=False, msg=msg)
+        self.p = model.Node(self.p, allow_empty_nodes=False, msg=msg)
+        self.p_ref = self.p
 
     def uncross_reference(self):
         self.p = self.node_id
@@ -317,15 +322,17 @@ class SPCD(Load):
     @property
     def node_ids(self):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
-        return _node_ids(self, nodes=self.gids, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
-        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
+        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids_ref = self.gids
 
     def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
-        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
+        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids_ref = self.gids
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -383,6 +390,7 @@ class SLOAD(Load):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for (i, nid) in enumerate(self.nids):
             self.nids[i] = model.Node(nid, msg=msg)
+        self.nids_ref = self.nids
 
     def Nid(self, node):
         if isinstance(node, integer_types):
@@ -441,17 +449,19 @@ class RFORCE(Load):
         msg = ' which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
             self.nid = model.Node(self.nid, msg=msg)
+            self.nid_ref = self.nid
         self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
 
     def Nid(self):
         if isinstance(self.nid, integer_types):
             return self.nid
-        return self.nid.nid
+        return self.nid_ref.nid
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -531,6 +541,7 @@ class RANDPS(RandomLoad):
             msg = ' which is required by RANDPS sid=%s' % (self.sid)
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid = model.RandomTable(self.tid, msg=msg)
+            self.tid_ref = self.tid
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')

@@ -111,11 +111,12 @@ class PDAMP5(DamperProperty):
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
+        self.mid_ref = self.mid
 
     def Mid(self):
         if isinstance(self.mid, integer_types):
             return self.mid
-        return self.mid.mid
+        return self.mid_ref.mid
 
     def repr_fields(self):
         return self.raw_fields()
@@ -158,13 +159,14 @@ class PDAMPT(DamperProperty):
 
     def cross_reference(self, model):
         self.tbid = model.Table(self.tbid)
+        self.tbid_ref = self.tbid
 
     def Tbid(self):
         if self.tbid == 0:
             return None
         elif isinstance(self.tbid, integer_types):
             return self.tbid
-        return self.tbid.tid
+        return self.tbid_ref.tid
 
     def repr_fields(self):
         return self.raw_fields()

@@ -49,26 +49,29 @@ class DCONSTR(OptConstraint):
         if isinstance(self.rid, integer_types):
             return self.rid
         else:
-            return self.rid.oid
+            return self.rid_ref.oid
 
     def Lid(self):
         if isinstance(self.lid, (integer_types, float)):
             return self.lid
         else:
-            return self.lid.tid
+            return self.lid_ref.tid
 
     def Uid(self):
         if isinstance(self.uid, (integer_types, float)):
             return self.uid
         else:
-            return self.uid.tid
+            return self.uid_ref.tid
 
     def cross_reference(self, model):
         self.rid = model.dresps[self.Rid()]
+        self.rid_ref = self.rid
         if isinstance(self.lid, integer_types):
             self.lid = model.Table(self.lid)
+            self.lid_ref = self.lid
         if isinstance(self.uid, integer_types):
             self.uid = model.Table(self.uid)
+            self.uid_ref = self.uid
 
 
     def raw_fields(self):
@@ -230,10 +233,11 @@ class DOPTPRM(OptConstraint):
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
 
-        ::
-
-          DOPTPRM PARAM1 VAL1 PARAM2 VAL2 PARAM3 VAL3 PARAM4 VAL4
-                  PARAM5 VAL5 -etc.-
+        +---------+--------+------+--------+------+--------+------+--------+------+
+        | DOPTPRM | PARAM1 | VAL1 | PARAM2 | VAL2 | PARAM3 | VAL3 | PARAM4 | VAL4 |
+        +---------+--------+------+--------+------+--------+------+--------+------+
+        |         | PARAM5 | VAL5 | -etc.- |      |        |      |        |      |
+        +---------+--------+------+--------+------+--------+------+--------+------+
         """
         if comment:
             self._comment = comment
@@ -271,10 +275,13 @@ class DLINK(OptConstraint):
     def __init__(self, card=None, data=None, comment=''):
         """
         Multiple Design Variable Linking
-        Relates one design variable to one or more other design variables.::
+        Relates one design variable to one or more other design variables.
 
-          DLINK ID DDVID C0 CMULT IDV1 C1 IDV2 C2
-                IDV3 C3 -etc.-
+        +-------+------+-------+--------+-------+------+----+------+----+
+        | DLINK |  ID  | DDVID |   C0   | CMULT | IDV1 | C1 | IDV2 | C2 |
+        +-------+------+-------+--------+-------+------+----+------+----+
+        |       | IDV3 |   C3  | -etc.- |       |      |    |      |    |
+        +-------+------+-------+--------+-------+------+----+------+----+
         """
         if comment:
             self._comment = comment
@@ -402,18 +409,22 @@ class DRESP1(OptConstraint):
         msg += '\n' + str(self)
         if self.ptype in ['ELEM']:
             self.atti = model.Elements(self.atti, msg=msg)
+            self.atti_ref = self.atti
         elif self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
                             'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                             'PBEAML', 'PSHEAR', 'PTUBE',]:
             self.atti = model.Properties(self.atti, msg=msg)
+            self.atti_ref = self.atti
         elif self.rtype in ['FRSTRE']:
             self.atti = model.Properties(self.atti, msg=msg)
+            self.atti_ref = self.atti
         elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
             pass
         elif self.rtype in ['DISP', 'FRDISP', 'TDISP',
                             'FRVELO', 'TVELO',
                             'FRACCL', 'PSDACCL']:
             self.atti = model.Nodes(self.atti, msg=msg)
+            self.atti_ref = self.atti
         elif self.rtype in ['VOLUME', 'LAMA', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
                             'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
                             'TACCL', 'RMSACCL',
@@ -434,9 +445,9 @@ class DRESP1(OptConstraint):
             #self.atti = model.Elements(self.atti, msg=msg)
             #pass
         if self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                            'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                            'PBEAML', 'PSHEAR', 'PTUBE',
-                            'FRSTRE']:
+                          'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                          'PBEAML', 'PSHEAR', 'PTUBE',
+                          'FRSTRE']:
             data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
             for value in data:
                 assert not isinstance(value, BaseCard), value
@@ -592,10 +603,12 @@ class DRESP2(OptConstraint):
                     default_values[val] = self.dtable[val]
             else:
                 raise NotImplementedError('  TODO: xref %s' % str(key))
+        self.params_ref = self.params
 
         if isinstance(self.DEquation(), int):
             self.dequation = model.DEQATN(self.dequation, msg=msg)
-            self.func = self.dequation.func
+            self.dequation_ref = self.dequation
+            self.func = self.dequation_ref.func
         elif isinstance(self.dequation, str):
             self.func = fortran_to_python_short(self.dequation, default_values)
         else:
@@ -818,6 +831,7 @@ class DCONADD(OptConstraint):
 
     def cross_reference(self, model):
         self.dconstrs = [model.dconstrs[dcid] for dcid in self.dconstr_ids]
+        self.dconstrs_ref = self.dconstrs
 
     @property
     def dconstr_ids(self):
@@ -924,6 +938,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
+        self.mid_ref = self.mid
 
     def OptID(self):
         return self.oid
@@ -931,7 +946,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
     def Mid(self):
         if isinstance(self.mid, integer_types):
             return self.mid
-        return self.mid.mid
+        return self.mid_ref.mid
 
     def raw_fields(self):
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
@@ -1011,6 +1026,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)
+        self.pid_ref = self.pid
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))
@@ -1018,7 +1034,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
@@ -1142,12 +1158,12 @@ class DVPREL2(OptConstraint):
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def DEquation(self):
         if isinstance(self.dequation, int):
             return self.dequation
-        return self.dequation.equation_id
+        return self.dequation_ref.equation_id
 
     def calculate(self, op2_model, subcase_id):
         """
@@ -1155,8 +1171,8 @@ class DVPREL2(OptConstraint):
         see the PBEAM for an example of get/set_opt_value
         """
         try:
-            get = self.pid.get_optimization_value(self.pNameFid)
-            out = self.pid.set_optimization_value(self.pNameFid, get)
+            get = self.pid_ref.get_optimization_value(self.pNameFid)
+            out = self.pid_ref.set_optimization_value(self.pNameFid, get)
         except:
             print('DVPREL2 calculate : %s[%r] = ???' % (self.Type, self.pNameFid))
             raise
@@ -1184,11 +1200,14 @@ class DVPREL2(OptConstraint):
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         self.pid = model.Property(self.pid)
-        assert self.pid.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
+        assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
         self.dequation = model.DEQATN(self.dequation)
 
+        self.pid_ref = self.pid
+        self.dequation_ref = self.dequation
+
     #def OptValue(self):  #: .. todo:: not implemented
-        #self.pid.OptValue(self.pNameFid)
+        #self.pid_ref.OptValue(self.pNameFid)
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),

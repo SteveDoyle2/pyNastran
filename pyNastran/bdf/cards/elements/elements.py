@@ -6,6 +6,7 @@ All ungrouped elements are defined in this file.  This includes:
  * CGAP
  * CRAC2D
  * CRAC3D
+ * PLOTEL
 
 All ungrouped elements are Element objects.
 """
@@ -50,12 +51,16 @@ class CFAST(Element):
     def cross_reference(self, model):
         msg = ' which is required by CFAST eid=%s' % self.eid
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.pid_ref = self.pid
         if self.gs:
             self.gs = model.Node(self.Gs(), msg=msg)
+            self.gs_ref = self.gs
         if self.ga:
             self.ga = model.Node(self.Ga(), msg=msg)
+            self.ga_ref = self.ga
         if self.gb:
             self.gb = model.Node(self.Gb(), msg=msg)
+            self.gb_ref = self.gb
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
@@ -72,17 +77,17 @@ class CFAST(Element):
     def Gs(self):
         if isinstance(self.gs, integer_types):
             return self.gs
-        return self.gs.nid
+        return self.gs_ref.nid
 
     def Ga(self):
         if isinstance(self.ga, integer_types) or self.ga is None:
             return self.ga
-        return self.ga.nid
+        return self.ga_ref.nid
 
     def Gb(self):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
-        return self.gb.nid
+        return self.gb_ref.nid
 
     @property
     def node_ids(self):
@@ -157,21 +162,26 @@ class CGAP(Element):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PGAP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PGAP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             if self.cid is not None and self.cid != 0:
-                assert self.cid.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C',
-                                         'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid.type)
+                assert self.cid_ref.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C',
+                                         'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid_ref.type)
 
     def cross_reference(self, model):
         msg = ' which is required by CGAP eid=%s' % self.Eid()
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
         if self.g0:
             self.g0 = model.Node(self.g0, msg=msg)
             self.x = self.g0.get_position()
+            self.g0_ref = self.g0
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.pid_ref = self.pid
         if self.cid:
             self.cid = model.Coord(self.Cid(), msg=msg)
+            self.cid_ref = self.cid
 
     def Eid(self):
         return self.eid
@@ -191,24 +201,20 @@ class CGAP(Element):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def Cid(self):
         if isinstance(self.cid, integer_types) or self.cid is None:
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
             return self.ga
-        return self.ga.nid
+        return self.ga_ref.nid
 
     def Gb(self):
         if isinstance(self.gb, integer_types):
             return self.gb
-        return self.gb.nid
+        return self.gb_ref.nid
 
     def raw_fields(self):
         if self.g0 is not None:
@@ -232,8 +238,10 @@ class CrackElement(Element):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self. type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
 
 class CRAC2D(CrackElement):
@@ -291,11 +299,7 @@ class CRAC2D(CrackElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CRAC2D', self.eid, self.Pid()] + self.node_ids
@@ -351,7 +355,7 @@ class CRAC3D(CrackElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.node_ids
@@ -402,6 +406,7 @@ class PLOTEL(BaseCard):
             model.Node(node_ids[0], msg=msg),
             model.Node(node_ids[1], msg=msg),
         ]
+        self.nodes_ref = self.nodes
 
     def uncross_reference(self):
         self.nodes = self.node_ids

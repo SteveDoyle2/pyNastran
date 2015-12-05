@@ -33,6 +33,8 @@ class LineDamper(DamperElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
 
 class CDAMP1(LineDamper):
@@ -87,7 +89,7 @@ class CDAMP1(LineDamper):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an None/integer; nid=%s' %(i, nid)
         if xref:
-            assert self.pid.type in ['PDAMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PDAMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
     def Eid(self):
         return self.eid
@@ -101,7 +103,7 @@ class CDAMP1(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
@@ -113,16 +115,20 @@ class CDAMP1(LineDamper):
         return self._is_same_fields(fields1, fields2)
 
     def B(self):
-        return self.pid.b
+        return self.pid_ref.b
 
     def cross_reference(self, model):
         msg = ' which is required by CDAMP1 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes_ref = self.nodes
+
         pid = self.pid
         if pid in model.properties:
             self.pid = model.Property(pid, msg=msg)
+            self.pid_ref = self.pid
         elif pid in model.pdampt:
             self.pid = model.pdampt[pid]
+            self.pid_ref = self.pid
         else:
             pids = model.properties.keys() + model.pdampt.keys()
             pids.sort()
@@ -201,10 +207,11 @@ class CDAMP2(LineDamper):
 
     def cross_reference(self, model):
         msg = ' which is required by CDAMP2 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes_ref = self.nodes
 
     def get_edge_ids(self):
-        node_ids = self._nodeIDs(allowEmptyNodes=True)
+        node_ids = self._nodeIDs(allow_empty_nodes=True)
         if isinstance(node_ids[0], (int, int32)) and isinstance(node_ids[0], (int, int32)):
             return [tuple(sorted(node_ids))]
         return []
@@ -215,7 +222,7 @@ class CDAMP2(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -270,18 +277,20 @@ class CDAMP3(LineDamper):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
-            assert self.pid.type in ['PDAMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PDAMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
     def Eid(self):
         return self.eid
 
     def B(self):
-        return self.pid.b
+        return self.pid_ref.b
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -289,7 +298,7 @@ class CDAMP3(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CDAMP3', self.eid, self.Pid()] + self.node_ids
@@ -352,7 +361,8 @@ class CDAMP4(LineDamper):
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes_ref = self.nodes
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -360,7 +370,7 @@ class CDAMP4(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CDAMP4', self.eid, self.b] + self.node_ids
@@ -414,18 +424,20 @@ class CDAMP5(LineDamper):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
-            assert self.pid.type in ['PDAMP5'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PDAMP5'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def Eid(self):
         return self.eid
 
     def B(self):
-        return self.pid.b
+        return self.pid_ref.b
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -433,7 +445,7 @@ class CDAMP5(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     @node_ids.setter
     def node_ids(self, value):
@@ -491,13 +503,13 @@ class CVISC(LineDamper):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
-            assert self.pid.type in ['PVISC'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PVISC'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
     def Eid(self):
         return self.eid
 
     def B(self):
-        return self.pid.ce
+        return self.pid_ref.ce
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -508,7 +520,7 @@ class CVISC(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids

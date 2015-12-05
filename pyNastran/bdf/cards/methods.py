@@ -255,7 +255,7 @@ class EIGC(Method):
     def cross_reference(self, model):
         pass
 
-    def rawMethod(self):
+    def raw_method(self):
         list_fields = []
         if self.method in ['HESS', 'INV']:
             for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in zip(
@@ -289,13 +289,13 @@ class EIGC(Method):
             raise RuntimeError(msg)
         return list_fields
 
-    def reprMethod(self):
-        return self.rawMethod()
+    def repr_method(self):
+        return self.raw_method()
 
     def raw_fields(self):
         list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
                        self.E, self.ndo, None]
-        list_fields += self.rawMethod()
+        list_fields += self.raw_method()
         return list_fields
 
     def repr_fields(self):
@@ -305,7 +305,7 @@ class EIGC(Method):
             E = str(self.E)
         list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
                        E, self.ndo, None]
-        list_fields += self.reprMethod()
+        list_fields += self.repr_method()
         return list_fields
 
     def write_card(self, size=8, is_double=False):

@@ -31,7 +31,7 @@ class SpringElement(Element):
         return self.eid
 
     def Centroid(self):
-        p = (self.nodes[1].get_position() - self.nodes[0].get_position()) / 2.
+        p = (self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position()) / 2.
         return p
 
     def Mass(self):
@@ -90,7 +90,7 @@ class CELAS1(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -125,12 +125,14 @@ class CELAS1(SpringElement):
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
-        return self.pid.k
+        return self.pid_ref.k
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def uncross_reference(self, model):
         self.nodes = self.node_ids
@@ -206,14 +208,15 @@ class CELAS2(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes_ref = self.nodes
 
     def uncross_reference(self, model):
         self.nodes = self.node_ids
@@ -282,7 +285,7 @@ class CELAS2(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -343,12 +346,14 @@ class CELAS3(SpringElement):
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
-        return self.pid.k
+        return self.pid_ref.k
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def uncross_reference(self, model):
         self.nodes = self.node_ids
@@ -361,7 +366,7 @@ class CELAS3(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -429,14 +434,15 @@ class CELAS4(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return []
 
     def cross_reference(self, model):
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes_ref = self.nodes
 
     def uncross_reference(self, model):
         self.nodes = self.node_ids

@@ -26,6 +26,8 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def uncross_reference(self, model):
         self.nodes = self.node_ids
@@ -37,14 +39,14 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
     def Rho(self):
         r"""returns the material density  \f$ \rho \f$"""
-        return self.pid.mid.rho
+        return self.pid_ref.mid_ref.rho
 
     def Length(self):
         r"""
@@ -53,7 +55,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
         :param self: the CROD/CONROD/CTUBE element
         """
-        L = norm(self.nodes[1].get_position() - self.nodes[0].get_position())
+        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
 
     def Mass(self):
@@ -127,7 +129,7 @@ class CROD(RodElement):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Centroid(self):
-        return (self.nodes[0].get_position() + self.nodes[1].get_position()) / 2.
+        return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
     def Eid(self):
         return self.eid
@@ -136,49 +138,49 @@ class CROD(RodElement):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid.Mid()
+        return self.pid_ref.Mid()
 
     def Area(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid.A
+        return self.pid_ref.A
 
     def Nsm(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid.nsm
+        return self.pid_ref.nsm
 
     def E(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid.mid.E()
+        return self.pid_ref.mid_ref.E()
 
     def G(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid.mid.G()
+        return self.pid_ref.mid_ref.G()
 
     def J(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid.J()
+        return self.pid_ref.J()
 
     def C(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid.c
+        return self.pid_ref.c
 
     def MassPerLength(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        massPerLength = self.pid.mid.rho * self.pid.A + self.pid.nsm
+        massPerLength = self.pid_ref.mid_ref.rho * self.pid_ref.A + self.pid_ref.nsm
         return massPerLength
 
     def raw_fields(self):
@@ -235,15 +237,15 @@ class CTUBE(RodElement):
             nsm = self.Nsm()
             assert isinstance(L, float), 'L=%r' % L
             assert isinstance(nsm, float), 'nsm=%r' % nsm
-            if self.pid.mid.type == 'MAT1':
-                mpa = self.pid.MassPerLength()
+            if self.pid_ref.mid_ref.type == 'MAT1':
+                mpa = self.pid_ref.MassPerLength()
                 mass = self.Mass()
                 assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
                 assert isinstance(mass, float), 'mass=%r' % mass
-            elif self.pid.mid.type == 'MAT4':
+            elif self.pid_ref.mid_ref.type == 'MAT4':
                 pass
             else:
-                raise NotImplementedError('_verify does not support self.pid.mid.type=%s' % self.pid.mid.type)
+                raise NotImplementedError('_verify does not support self.pid_ref.mid_ref.type=%s' % self.pid_ref.mid_ref.type)
 
         c = self.Centroid()
         for i in range(3):
@@ -253,38 +255,38 @@ class CTUBE(RodElement):
         return self.eid
 
     def Mid(self):
-        return self.pid.Mid()
+        return self.pid_ref.Mid()
 
     def Mass(self):
-        return self.pid.MassPerLength() * self.Length()
+        return self.pid_ref.MassPerLength() * self.Length()
 
     def Nsm(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.Nsm()
+        return self.pid_ref.Nsm()
 
     def Area(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.Area()
+        return self.pid_ref.Area()
 
     def E(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.mid.E()
+        return self.pid_ref.mid_ref.E()
 
     def G(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.mid.G()
+        return self.pid_ref.mid_ref.G()
 
     def J(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.J()
+        return self.pid_ref.J()
 
     def Centroid(self):
-        return (self.nodes[0].get_position() + self.nodes[1].get_position()) / 2.
+        return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
     def raw_fields(self):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.node_ids
@@ -338,6 +340,8 @@ class CONROD(RodElement):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.mid = model.Material(self.mid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.mid_ref = self.mid
 
     def uncross_reference(self, model):
         self.nodes = self.node_ids
@@ -366,7 +370,7 @@ class CONROD(RodElement):
                 assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Centroid(self):
-        return (self.nodes[0].get_position() + self.nodes[1].get_position()) / 2.
+        return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
     def Mid(self):
         if isinstance(self.mid, integer_types):
@@ -375,7 +379,7 @@ class CONROD(RodElement):
             #print ("No material defined for element ", self.eid)
             #return None
         else:
-            return self.mid.mid
+            return self.mid_ref.mid
 
     def Eid(self):
         return self.eid
@@ -386,7 +390,7 @@ class CONROD(RodElement):
     def MassPerLength(self):
         if isinstance(self.mid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        massPerLength = self.mid.rho * self.A + self.nsm
+        massPerLength = self.mid_ref.rho * self.A + self.nsm
         return massPerLength
 
     def C(self):
@@ -408,32 +412,32 @@ class CONROD(RodElement):
         r"""returns the Young's Modulus, :math:`E`$"""
         if isinstance(self.mid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.mid.E()
+        return self.mid_ref.E()
 
     def G(self):
         r"""returns the Shear Modulus, :math:`G`"""
         if isinstance(self.mid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.mid.G()
+        return self.mid_ref.G()
 
     def Rho(self):
         r"""returns the material density, :math:`\rho`"""
         if isinstance(self.mid, integer_types):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.mid.rho
+        return self.mid_ref.rho
 
-    def writeCodeAster(self):
-        msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" % self.eid
-        msg += "              SECTION='CERCLE',  # circular section\n"
-        if self.Thickness():
-            msg += "              CARA=('R','EP'),   # radius, thickness\n"
-            msg += "              VALE=(%g,%g),\n" % (
-                self.Radius(), self.Thickness())
-        else:
-            msg += "              CARA=('R')   # radius\n"
-            msg += "              VALE=(%g),\n" % self.Radius()
-        return msg
+    #def writeCodeAster(self):
+        #msg = ''
+        #msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" % self.eid
+        #msg += "              SECTION='CERCLE',  # circular section\n"
+        #if self.Thickness():
+            #msg += "              CARA=('R','EP'),   # radius, thickness\n"
+            #msg += "              VALE=(%g,%g),\n" % (
+                #self.Radius(), self.Thickness())
+        #else:
+            #msg += "              CARA=('R')   # radius\n"
+            #msg += "              VALE=(%g),\n" % self.Radius()
+        #return msg
 
     def raw_fields(self):
         list_fields = ['CONROD', self.eid] + self.node_ids + [

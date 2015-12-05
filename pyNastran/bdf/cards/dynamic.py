@@ -71,22 +71,23 @@ class DELAY(BaseCard):
         msg = ', which is required by DELAY sid=%s' % self.sid
         for i, nid in enumerate(self.nodes):
             self.nodes[i] = model.Node(self.node_id)
+        self.nodes_ref = self.nodes
 
     @property
     def node_id1(self):
         if isinstance(self.nodes[0], integer_types):
             return self.nodes[0]
-        return self.nodes[0].nid
+        return self.nodes_ref[0].nid
 
     @property
     def node_id2(self):
         if isinstance(self.nodes[1], integer_types):
             return self.nodes[1]
-        return self.nodes[1].nid
+        return self.nodes_ref[1].nid
 
     def raw_fields(self):
         list_fields = ['DELAY', self.sid]
-        for nid, comp, delay in zip(self.nodes, self.components, self.delays):
+        for nid, comp, delay in zip(node_ids, self.components, self.delays):
             if isinstance(nid, integer_types):
                 nidi = nid
             else:
@@ -146,18 +147,19 @@ class DPHASE(BaseCard):
         msg = ', which is required by DPHASE sid=%s' % self.sid
         for i, nid in enumerate(self.nodes):
             self.nodes[i] = model.Node(self.node_id)
+        self.nodes_ref = self.nodes
 
     @property
     def node_id1(self):
         if isinstance(self.nodes[0], integer_types):
             return self.nodes[0]
-        return self.nodes[0].nid
+        return self.nodes_ref[0].nid
 
     @property
     def node_id2(self):
         if isinstance(self.nodes[1], integer_types):
             return self.nodes[1]
-        return self.nodes[1].nid
+        return self.nodes_ref[1].nid
 
     #def raw_fields(self):
         #list_fields = ['DPHASE', self.sid]

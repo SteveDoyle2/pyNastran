@@ -104,11 +104,12 @@ class CREEP(Material):
     def cross_reference(self, model):
         msg = ' which is required by CREEP pid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
 
     def Mid(self):  # links up to MAT1, MAT2, MAT9 or same mid
         if isinstance(self.mid, integer_types):
             return self.mid
-        return self.mid.mid
+        return self.mid_ref.mid
 
     def raw_fields(self):
         list_fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form,
@@ -251,7 +252,7 @@ class MAT1(IsotropicMaterial):
 
     def E_temperature(self, temperature):
         if self.matt1 is not None:
-            E = self.matt1.E(self.e, temperature)
+            E = self.matt1_ref.E(self.e, temperature)
         else:
             E = self.e
         return E
@@ -287,10 +288,10 @@ class MAT1(IsotropicMaterial):
         self.g = G
         self.nu = nu
 
-    def _write_calculix(self, elementSet='ELSetDummyMat'):
+    def _write_calculix(self, element_set='ELSetDummyMat'):
         # default value - same properties for all values
         temperature = self.TRef
-        msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (elementSet)
+        msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (element_set)
         msg += '** E,NU,TEMPERATURE\n'
         msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
 
@@ -318,8 +319,10 @@ class MAT1(IsotropicMaterial):
         #self.Mcsid = model.Coord(self.Mcsid, msg=msg)  # used only for PARAM,CURVPLOT
         if self.mid in model.MATS1:
             self.mats1 = model.MATS1[self.mid]  # not using a method...
+            self.mats1_ref = self.mats1
         if self.mid in model.MATT1:
             self.matt1 = model.MATT1[self.mid]  # not using a method...
+            self.matt1_ref = self.matt1
 
     def Mats1(self):
         return self.mats1
@@ -460,6 +463,7 @@ class MAT2(AnisotropicMaterial):
         msg = ' which is required by MAT2 mid=%s' % self.mid
         if self.mid in model.MATT2:
             self.matt2 = model.MATT2[self.mid]  # not using a method...
+            self.matt2_ref = self.matt2
 
     def _verify(self, xref):
         """
@@ -673,6 +677,7 @@ class MAT3(OrthotropicMaterial):
         #msg = ' which is required by MAT3 mid=%s' % self.mid
         if self.mid in model.MATT3:
             self.matt3 = model.MATT3[self.mid]  # not using a method...
+            self.matt3_ref = self.matt3
 
     def raw_fields(self):
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
@@ -768,6 +773,7 @@ class MAT4(ThermalMaterial):
         #msg = ' which is required by MAT4 mid=%s' % self.mid
         if self.mid in model.MATT4:
             self.matt4 = model.MATT4[self.mid]  # not using a method...
+            self.matt4_ref = self.matt4
 
     def raw_fields(self):
         list_fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu,
@@ -853,6 +859,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         #msg = ' which is required by MAT5 mid=%s' % self.mid
         if self.mid in model.MATT5:
             self.matt5 = model.MATT5[self.mid]  # not using a method...
+            self.matt5_ref = self.matt5
 
     def get_density(self):
         return self.rho
@@ -979,6 +986,7 @@ class MAT8(OrthotropicMaterial):
         #msg = ' which is required by MATT8 mid=%s' % self.mid
         if self.mid in model.MATT8:
             self.matt8 = model.MATT8[self.mid]  # not using a method...
+            self.matt8_ref = self.matt8
 
     def Matt8(self):
         return self.matt8

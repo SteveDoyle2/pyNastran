@@ -42,7 +42,7 @@ class ThermalElement(ThermalCard):
         if isinstance(self.pid, integer_types):
             return self.pid
         else:
-            return self.pid.pid
+            return self.pid_ref.pid
 
 
 class ThermalProperty(ThermalCard):
@@ -134,7 +134,7 @@ class CHBDYE(ThermalElement):
 
     @property
     def node_ids(self):
-        return _node_ids(self, nodes=self.grids, allowEmptyNodes=False, msg='')
+        return _node_ids(self, nodes=self.grids, allow_empty_nodes=False, msg='')
 
     def get_edge_ids(self):
         # TODO: not implemented
@@ -222,13 +222,13 @@ class CHBDYG(ThermalElement):
             # no field 8
 
             #: Grid point IDs of grids bounding the surface (Integer > 0)
-            self.grids = []
+            self.nodes = []
             n = 1
             for i in range(9, len(card)):
                 grid = integer_or_blank(card, i, 'grid%i' % n)
                 if grid is not None:
-                    self.grids.append(grid)
-            assert len(self.grids) > 0, 'card=%s' % card
+                    self.nodes.append(grid)
+            assert len(self.nodes) > 0, 'card=%s' % card
         else:
             self.eid = data[0]
             self.Type = data[1]
@@ -236,7 +236,7 @@ class CHBDYG(ThermalElement):
             self.iViewBack = data[3]
             self.radMidFront = data[4]
             self.radMidBack = data[5]
-            self.grids = data[6:14]
+            self.nodes = data[6:14]
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -245,21 +245,9 @@ class CHBDYG(ThermalElement):
         assert isinstance(pid, int)
 
     @property
-    def nodes(self):
-        return self.grids
-
-    @nodes.setter
-    def nodes(self, nodes):
-        self.grids = nodes
-
-    #@property
-    #def node_ids(self):
-        #return _node_ids(self, nodes=self.grids, allowEmptyNodes=False, msg='')
-
-    @property
     def node_ids(self):
         # TODO: is this correct?
-        return _node_ids(self, nodes=self.grids, allowEmptyNodes=False, msg='')
+        return _node_ids(self, nodes=self.nodes, allow_empty_nodes=False, msg='')
 
     def get_edge_ids(self):
         # TODO: not implemented
@@ -267,9 +255,9 @@ class CHBDYG(ThermalElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CHBDYG eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         #self.pid = model.Phbdy(self.pid, msg=msg)
-        #self.grids
+        self.nodes_ref = self.nodes
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -383,12 +371,12 @@ class CHBDYP(ThermalElement):
 
     @property
     def node_ids(self):
-        return _node_ids(self, nodes=self.nodes, allowEmptyNodes=True, msg='')
+        return _node_ids(self, nodes=self.nodes, allow_empty_nodes=True, msg='')
 
     def cross_reference(self, model):
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -736,9 +724,9 @@ class CONVM(ThermalBC):
             self._comment = comment
         if card:
             self.eid = integer(card, 1, 'eid')
-            self.pconvmID = integer(card, 2, 'pconvmID')
+            self.pconvm = integer(card, 2, 'pconvm')
 
-            self.filmNode = integer_or_blank(card, 3, 'filmNode', 0)
+            self.film_node = integer_or_blank(card, 3, 'film_node', 0)
             assert self.filmNode >= 0
 
             self.cntmdot = integer(card, 4, 'cntmdot')
@@ -755,24 +743,28 @@ class CONVM(ThermalBC):
     def cross_reference(self, model):
         msg = ' which is required by CONVM eid=%s' % self.eid
         self.eid = model.CYBDY(self.eid, msg=msg)
-        self.pconvmID = model.PCONV(self.pconvmID, msg=msg)
-        self.filmNode = model.Grid(self.filmNode, msg=msg)
+        self.pconvm = model.PCONV(self.pconvmID, msg=msg)
+        self.film_node = model.Grid(self.filmNode, msg=msg)
+        self.eid_ref = self.eid
+        self.pconvm_ref = self.pconvm
+        self.film_node_ref = self.film_node
 
-    def film_node(self):
-        if isinstance(self.filmNode, integer_types):
-            return self.filmNode
-        return self.filmNode.nid
+    @property
+    def film_node_id(self):
+        if isinstance(self.film_node, integer_types):
+            return self.film_node
+        return self.film_node.nid
 
     def raw_fields(self):
-        list_fields = ['CONVM', self.eid, self.pconvmID, self.filmNode,
+        list_fields = ['CONVM', self.eid, self.pconvmID, self.film_node_id,
                        self.cntmdot, self.ta1, self.ta2, self.mdot]
         return list_fields
 
     def repr_fields(self):
-        filmNode = set_blank_if_default(self.filmNode, 0)
+        film_node_id = set_blank_if_default(self.film_node_id, 0)
         ta2 = set_blank_if_default(self.ta2, self.ta1)
         mdot = set_blank_if_default(self.mdot, 1.0)
-        list_fields = ['CONVM', self.eid, self.pconvmID, filmNode,
+        list_fields = ['CONVM', self.eid, self.pconvmID, film_node_id,
                        self.cntmdot, self.ta1, ta2, mdot]
         return list_fields
 
@@ -803,7 +795,6 @@ class RADM(ThermalBC):
             assert 0. <= self.absorb <= 1.0
 
             nfields = card.nfields
-
             self.emissivity = fields(double, card, 'emissivity', i=3, j=nfields)
         else:
             raise NotImplementedError(data)
@@ -866,6 +857,7 @@ class RADBC(ThermalBC):
         msg = ' which is required by RADBC pid=%s' % self.nodamb
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid, msg=msg)
+        self.eids_ref = self.eids
 
     def Eids(self):
         eids = []

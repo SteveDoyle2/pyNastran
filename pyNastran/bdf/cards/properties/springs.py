@@ -64,7 +64,7 @@ class PELAS(SpringProperty):
             self.s = data[3]
 
     def cross_reference(self, model):
-        #if self.sol in [108,129]:
+        #if self.sol in [108, 129]:
             #self.pid = self.pelasts[self.pid]
         pass
 
@@ -129,17 +129,21 @@ class PELAST(SpringProperty):
 
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)
+        self.pid_ref = self.pid
         if self.tkid > 0:
             self.tkid = model.Table(self.tkid)
+            self.tkid_ref = self.tkid
         if self.tgeid > 0:
             self.tgeid = model.Table(self.tgeid)
+            self.tgeid_ref = self.tgeid
         if self.tknid > 0:
             self.tknid = model.Table(self.tknid)
+            self.tknid_ref = self.tknid
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def Tkid(self):
         """
@@ -148,7 +152,7 @@ class PELAST(SpringProperty):
         """
         if isinstance(self.tkid, integer_types):
             return self.tkid
-        return self.tkid.tid
+        return self.tkid_ref.tid
 
     def Tknid(self):
         """
@@ -156,7 +160,7 @@ class PELAST(SpringProperty):
         """
         if isinstance(self.tknid, integer_types):
             return self.tknid
-        return self.tknid.tid
+        return self.tknid_ref.tid
 
     def Tgeid(self):
         """
@@ -165,7 +169,7 @@ class PELAST(SpringProperty):
         """
         if isinstance(self.tgeid, integer_types):
             return self.tgeid
-        return self.tgeid.tid
+        return self.tgeid_ref.tid
 
     def raw_fields(self):
         return ['PELAST', self.pid, self.Tkid(), self.Tgeid(), self.Tknid()]

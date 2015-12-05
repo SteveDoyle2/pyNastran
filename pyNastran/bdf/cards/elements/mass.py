@@ -89,7 +89,7 @@ class CMASS1(PointMassElement):
         return self.eid
 
     def Mass(self):
-        return self.pid.mass
+        return self.pid_ref.mass
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -109,23 +109,26 @@ class CMASS1(PointMassElement):
         msg = ' which is required by CMASS1 eid=%s' % self.eid
         if isinstance(self.g1, integer_types):
             self.g1 = model.Node(self.g1, msg=msg)
+            self.g1_ref = self.g1
         if isinstance(self.g2, integer_types):
             self.g2 = model.Node(self.g2, msg=msg)
+            self.g2_ref = self.g2
         self.pid = model.PropertyMass(self.pid, msg=msg)
+        self.pid_ref = self.pid
 
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
         elif self.g1 is None:
             return self.g1
-        return self.g1.nid
+        return self.g1_ref.nid
 
     def G2(self):
         if isinstance(self.g2, integer_types):
             return self.g2
         elif self.g2 is None:
             return self.g2
-        return self.g2.nid
+        return self.g2_ref.nid
 
     def Centroid(self):
         """
@@ -162,7 +165,7 @@ class CMASS1(PointMassElement):
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def raw_fields(self):
         fields = ['CMASS1', self.eid, self.Pid(), self.G1(), self.c1,
@@ -183,7 +186,7 @@ class CMASS2(PointMassElement):
     Defines a scalar mass element without reference to a property entry.
 
     +--------+-----+-----+----+----+----+----+
-    | CMASS2 |   M | PID | G1 | C1 | G2 | C2 |
+    | CMASS2 |  M  | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
     type = 'CMASS2'
@@ -255,10 +258,10 @@ class CMASS2(PointMassElement):
         p1 = array([0., 0., 0.])
         p2 = array([0., 0., 0.])
         if self.g1 is not None:
-            p1 = self.g1.get_position()
+            p1 = self.g1_ref.get_position()
             f += 1.
         if self.g2 is not None:
-            p2 = self.g2.get_position()
+            p2 = self.g2_ref.get_position()
             f += 1.
         c = (p1 + p2) / f
         return c
@@ -267,22 +270,24 @@ class CMASS2(PointMassElement):
         msg = ' which is required by CMASS2 eid=%s' % self.eid
         if isinstance(self.g1, integer_types):
             self.g1 = model.Node(self.g1, msg=msg)
+            self.g1_ref = self.g1
         if isinstance(self.g2, integer_types):
             self.g2 = model.Node(self.g2, msg=msg)
+            self.g2_ref = self.g2
 
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
         elif self.g1 is None:
             return self.g1
-        return self.g1.nid
+        return self.g1_ref.nid
 
     def G2(self):
         if isinstance(self.g2, integer_types):
             return self.g2
         elif self.g2 is None:
             return self.g2
-        return self.g2.nid
+        return self.g2_ref.nid
 
     def raw_fields(self):
         fields = ['CMASS2', self.eid, self.mass, self.G1(),
@@ -338,7 +343,7 @@ class CMASS3(PointMassElement):
         return self.eid
 
     def Mass(self):
-        return self.pid.mass
+        return self.pid_ref.mass
 
     @property
     def node_ids(self):
@@ -361,6 +366,7 @@ class CMASS3(PointMassElement):
         #self.s1 = model.Node(self.s1, msg=msg)
         #self.s2 = model.Node(self.s2, msg=msg)
         self.pid = model.PropertyMass(self.pid, msg=msg)
+        self.pid_ref = self.pid
 
     def raw_fields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -420,15 +426,13 @@ class CMASS4(PointMassElement):
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
-        fields1 = [self.eid, self.Pid(), self.s1, self.s2]
-        fields2 = [elem.eid, elem.Pid(), elem.s1, elem.s2]
+        fields1 = [self.eid, self.mass, self.s1, self.s2]
+        fields2 = [elem.eid, elem.mass, elem.s1, elem.s2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
-        """
-        """
         #self.s1 = model.Node(self.s1)
         #self.s2 = model.Node(self.s2)
         pass
@@ -581,7 +585,7 @@ class CONM1(PointMassElement):
             m[5, 3] = m6d  # M64
             m[5, 4] = m6e  # M65
             m[5, 5] = m6f  # M66
-        self.massMatrix = m
+        self.mass_matrix = m
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -604,29 +608,31 @@ class CONM1(PointMassElement):
     def Nid(self):
         if isinstance(self.nid, integer_types):
             return self.nid
-        return self.nid.nid
+        return self.nid_ref.nid
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def cross_reference(self, model):
         msg = ' which is required by CONM1 eid=%s' % self.eid
         self.nid = model.Node(self.Nid(), msg=msg)
         self.cid = model.Coord(self.Cid(), msg=msg)
+        self.nid_ref = self.nid
+        self.cid_ref = self.cid
 
     def uncross_reference(self, model):
         self.nid = self.Nid()
         self.cid = self.Cid()
 
     def MassMatrix(self):
-        return self.massMatrix
+        return self.mass_matrix
 
     def raw_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
-        m = self.massMatrix
+        m = self.mass_matrix
         list_fields = [
             'CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
             m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
@@ -791,8 +797,8 @@ class CONM2(PointMassElement):
             return A
         else:
             # transform to global
-            #dx = self.cid.transform_node_to_global(self.X)
-            matrix = self.cid.beta()
+            #dx = self.cid_ref.transform_node_to_global(self.X)
+            matrix = self.cid_ref.beta()
             raise NotImplementedError('CONM2 intertia method is not implemented.')
             A2 = A * matrix
             return A2  # correct for offset using dx???
@@ -838,7 +844,9 @@ class CONM2(PointMassElement):
         cid = self.Cid()
         if cid != -1:
             self.cid = model.Coord(cid, msg=msg)
-        self.nid = model.Node(self.Nid(), msg=msg)
+            self.cid_ref = self.cid
+        self.nid = model.Node(self.nid, msg=msg)
+        self.nid_ref = self.nid
 
     @property
     def node_ids(self):
@@ -851,12 +859,12 @@ class CONM2(PointMassElement):
     def Nid(self):
         if isinstance(self.nid, integer_types):
             return self.nid
-        return self.nid.nid
+        return self.nid_ref.nid
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def write_code_aster(self):
         msg = ''

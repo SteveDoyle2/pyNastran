@@ -75,19 +75,20 @@ class PROD(Property):
         return self.nsm
 
     def E(self):
-        return self.mid.E()
+        return self.mid_ref.E()
 
     def G(self):
-        return self.mid.G()
+        return self.mid_ref.G()
 
     def Rho(self):
-        return self.mid.Rho()
+        return self.mid_ref.Rho()
 
     def cross_reference(self, model):
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
 
-    def writeCodeAster(self, iCut, iFace, iStart):  # PROD
+    def write_code_aster(self, icut, iface, istart):  # PROD
         msg = ''
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" % (self.pid)
         msg += "              SECTION='CERCLE',  # circular section\n"
@@ -99,7 +100,7 @@ class PROD(Property):
         msg += "              VALE=(%g, %g),\n"  %(self.Area(), self.J())
         msg += "                    CARA='VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return (msg, iCut, iFace, iStart)
+        return (msg, icut, iface, istart)
 
     def raw_fields(self):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
@@ -165,12 +166,13 @@ class PTUBE(Property):
     def cross_reference(self, model):
         msg = ' which is required by PTUBE mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
 
     def Rho(self):
         """
         Gets the density :math:`\rho` of the CTUBE.
         """
-        return self.mid.Rho()
+        return self.mid_ref.Rho()
 
     def MassPerLength(self):
         r"""
@@ -181,10 +183,10 @@ class PTUBE(Property):
         return self.Area() * self.Rho() + self.nsm
 
     def E(self):
-        return self.mid.E()
+        return self.mid_ref.E()
 
     def G(self):
-        return self.mid.G()
+        return self.mid_ref.G()
 
     def J(self):
         Dout = self.OD1

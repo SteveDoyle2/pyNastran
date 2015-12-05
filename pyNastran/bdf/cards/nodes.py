@@ -554,8 +554,11 @@ class GRDSET(Node):
         """
         msg = ' which is required by the GRDSET'
         self.cp = model.Coord(self.cp, msg=msg)
+        self.cp_ref = self.cp
         self.cd = model.Coord(self.cd, msg=msg)
+        self.cd_ref = self.cd
         #self.seid = model.SuperElement(self.seid, msg)
+        #self.seid_ref = self.seid
 
     def Cd(self):
         """
@@ -787,12 +790,19 @@ class GRIDB(Node):
         """
         The writer method used by BDF.write_card
 
-        :param self:
-          the GRIDB object pointer
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
+        Parameters
+        ----------
+        self : GRIDB()
+            the GRIDB object pointer
+        size : int; default=8
+            the size of the card (8/16)
+        is_double : bool; default=False
+            should this card be written with double precision
+
+        Returns
+        -------
+        msg : str
+            the card as a string
         """
         card = self.repr_fields()
         if size == 8:
@@ -823,6 +833,9 @@ class GRID(Node):
             the GRID object pointer
         n : int
             the field number to update
+
+        Returns
+        -------
         value : float
             the value for the appropriate field
         """
@@ -862,20 +875,16 @@ class GRID(Node):
         """
         Creates the GRID card
 
-        :param self:
-          the GRID object pointer
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the GRID fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        card : BDFCard()
+            a BDFCard object
+        data : List[int/float]; default=None
+            a list with the GRID fields defined in OP2 format
+        comment : str; default=''
           a comment for the card
-        :type comment:
-          string
         """
         if comment:
             self._comment = comment
@@ -941,9 +950,15 @@ class GRID(Node):
         """
         Gets the GRID ID
 
-        :param self: the GRID object pointer
-        :returns nid: node ID
-        :type nid:    int
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        nid : int
+            node ID
         """
         return self.nid
 
@@ -951,8 +966,15 @@ class GRID(Node):
         """
         Gets the GRID-based SPC
 
-        :param self: the GRID object pointer
-        :returns ps: the GRID-based SPC
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        ps : int
+            the GRID-based SPC
         """
         return self.ps
 
@@ -960,10 +982,15 @@ class GRID(Node):
         """
         Gets the output coordinate system
 
-        :param self: the GRID object pointer
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
 
-        :returns cd: the output coordinate system
-        :type cd:    int
+        Returns
+        -------
+        cd : int
+            the output coordinate system
         """
         if isinstance(self.cd, integer_types):
             return self.cd
@@ -974,9 +1001,15 @@ class GRID(Node):
         """
         Gets the analysis coordinate system
 
-        :param self: the GRID object pointer
-        :returns cp: the analysis coordinate system
-        :type cp:    int
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        cp : int
+            the analysis coordinate system
         """
         if isinstance(self.cp, integer_types):
             return self.cp
@@ -987,9 +1020,15 @@ class GRID(Node):
         """
         Gets the Superelement ID
 
-        :param self:   the GRID object pointer
-        :returns seid: the Superelement ID
-        :type seid:    int
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        seid : int
+            the Superelement ID
         """
         if isinstance(self.seid, integer_types):
             return self.seid
@@ -1000,9 +1039,12 @@ class GRID(Node):
         """
         Verifies all methods for this object work
 
-        :param self: the GRID object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        xref : bool
+            has this model been cross referenced
         """
         nid = self.Nid()
         cp = self.Cp()
@@ -1022,9 +1064,15 @@ class GRID(Node):
         """
         Gets the number of degrees of freedom for the GRID
 
-        :param self:  the GRID object pointer
-        :returns six: the value 6
-        :type six:    int
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        six : int
+            the value 6
         """
         return 6
 
@@ -1032,11 +1080,14 @@ class GRID(Node):
         """
         Updates the GRID location
 
-        :param self: the GRID object pointer
-        :param xyz:  the location of the node.
-        :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
-        :param cp:   the analysis coordinate system.  (default=0; global)
-        :type cp:    int
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        xyz : (3, ) float ndarray
+            the location of the node.
+        cp : int; default=0 (global)
+            the analysis coordinate system
         """
         self.xyz = xyz
         msg = ' which is required by GRID nid=%s' % self.nid
@@ -1046,10 +1097,15 @@ class GRID(Node):
         """
         Gets the point in the global XYZ coordinate system.
 
-        :param self:   the GRID object pointer
-        :returns xyz:  the position of the GRID in the globaly
-                       coordinate system
-        :type xyz:     TYPE = NDARRAY.  SIZE=(3,)
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        xyz : (3, ) float ndarray
+            the position of the GRID in the global coordinate system
         """
         xyz = self.cp.transform_node_to_global(self.xyz)
         return xyz
@@ -1059,14 +1115,19 @@ class GRID(Node):
         Gets the location of the GRID which started in some arbitrary
         system and returns it in the desired coordinate system
 
-        :param self:  the object pointer
-        :param model: the BDF model object
-        :type model:  BDF()
-        :param cid:   the desired coordinate ID
-        :type cid:    int
-        :returns xyz: the position of the GRID in an arbitrary
-                      coordinate system
-        :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        model : BDF()
+            the BDF object
+        cid : int
+            the desired coordinate ID
+
+        Returns
+        -------
+        xyz : (3, ) float ndarray
+            the position of the GRID in an arbitrary coordinate system
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
@@ -1084,28 +1145,38 @@ class GRID(Node):
         """
         Cross links the card
 
-        :param self:   the GRID object pointer
-        :param model:  the BDF object
-        :type model:   BDF()
-        :param grdset: a GRDSET if available (default=None)
-        :type grdset:  GRDSET() or None
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        model : BDF()
+            the BDF object
+        grdset : GRDSET / None; default=None
+            a GRDSET if available (default=None)
 
         .. note::  The gridset object will only update the fields that
                    have not been set
         """
-        if grdset:  # update using a gridset object
+        if grdset:
+            # update using a gridset object
             if not self.cp:
                 self.cp = grdset.cp
+                self.cp_ref = self.cp
             if not self.cd:
                 self.cd = grdset.cd
+                self.cd_ref = self.cd
             if not self.ps:
                 self.ps = grdset.ps
+                self.ps_ref = self.ps
             if not self.seid:
                 self.seid = grdset.seid
+                self.seid_ref = self.seid
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
         self.cp = model.Coord(self.cp, msg=msg)
+        self.cp_ref = self.cp
         if self.cd != -1:
             self.cd = model.Coord(self.cd, msg=msg)
+            self.cd_ref = self.cd
 
     def uncross_reference(self):
         self.cp = self.Cp()
@@ -1115,12 +1186,15 @@ class GRID(Node):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the GRID object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         list_fields = ['GRID', self.nid, self.Cp()] + list(self.xyz) + \
                       [self.Cd(), self.ps, self.SEid()]
@@ -1130,12 +1204,15 @@ class GRID(Node):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the GRID object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+
+        Returns
+        -------
+        fields : List[int/float/str]
+            the fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
@@ -1148,16 +1225,19 @@ class GRID(Node):
         """
         The writer method used by BDF.write_card
 
-        :param self:
-          the GRID object pointer
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
-        :param isdouble:
-          should this card be written with double precision (default=False)
-        :type is_double:
-          bool
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        size : int; default=8
+            the size of the card (8/16)
+        is_double : bool; default=False
+            should this card be written with double precision
+
+        Returns
+        -------
+        msg : str
+            the card as a string
         """
         if size == 8:
             return self.write_card_8()
@@ -1421,7 +1501,7 @@ class POINT(Node):
         if isinstance(self.cp, integer_types):
             return self.cp
         else:
-            return self.cp.cid
+            return self.cp_ref.cid
 
     def cross_reference(self, model):
         """
@@ -1432,6 +1512,7 @@ class POINT(Node):
         :type model:   BDF()
         """
         self.cp = model.Coord(self.cp)
+        self.cp_ref = self.cp
 
     def raw_fields(self):
         """

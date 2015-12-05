@@ -330,12 +330,13 @@ class Cord2x(Coord):
         if self.rid != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
             self.rid = model.Coord(self.rid, msg=msg)
+            self.rid_ref = self.rid
 
     def Rid(self):
         """Gets the reference coordinate system self.rid"""
         if isinstance(self.rid, integer_types):
             return self.rid
-        return self.rid.cid
+        return self.rid_ref.cid
 
 
 class Cord1x(Coord):

@@ -1355,7 +1355,7 @@ class NastranIO(object):
                 n1 = elem.ref_grid_id
                 assert isinstance(n1, int), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
                 for (wt, ci, Gij) in elem.WtCG_groups:
-                    Giji = elem._nodeIDs(nodes=Gij, allowEmptyNodes=True)
+                    Giji = elem._nodeIDs(nodes=Gij, allow_empty_nodes=True)
                     # list_fields += [wt, ci] + Giji
                     for n2 in Giji:
                         assert isinstance(n2, int), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)

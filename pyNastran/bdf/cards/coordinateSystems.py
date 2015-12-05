@@ -123,10 +123,10 @@ class Coord(BaseCard):
             e2 = self.e2
             e3 = self.e3
         else:
-            self.origin = self.rid.transform_node_to_global(self.e1)
+            self.origin = self.rid_ref.transform_node_to_global(self.e1)
             e1 = self.origin
-            e2 = self.rid.transform_node_to_global(self.e2)
-            e3 = self.rid.transform_node_to_global(self.e3)
+            e2 = self.rid_ref.transform_node_to_global(self.e2)
+            e3 = self.rid_ref.transform_node_to_global(self.e3)
 
         try:
             # e_{13}
@@ -249,7 +249,7 @@ class Coord(BaseCard):
             if isinstance(self.rid, int) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-                self.rid.setup()
+                self.rid_ref.setup()
             else:
                 self.setup()
 
@@ -398,41 +398,41 @@ class Coord(BaseCard):
         #self.deprecated('T()', 'beta_n(2)', '0.7')
         #return self.beta_n(2)
 
-    def transformToGlobal(self, p, debug=False):
-        """
-        Transforms a node from the local frame to the global frame
+    #def transformToGlobal(self, p, debug=False):
+        #"""
+        #Transforms a node from the local frame to the global frame
 
-        :param p: the xyz point in the local frame
-        :param debug: debug flag (default=False; unused)
+        #:param p: the xyz point in the local frame
+        #:param debug: debug flag (default=False; unused)
 
-        :retval p2: the xyz point in the global frame
-        :retval matrix: the transformation matrix
-        """
-        self.deprecated('(p2,M)=cid.transformToGlobal(p)', 'p2=cid.transform_node_to_global(p); M=cid.beta()', '0.7')
-        if self.cid == 0:
-            return p, array([[1., 0., 0.],
-                             [0., 1., 0.],
-                             [0., 0., 1.]], dtype='float64')
+        #:retval p2: the xyz point in the global frame
+        #:retval matrix: the transformation matrix
+        #"""
+        #self.deprecated('(p2,M)=cid.transformToGlobal(p)', 'p2=cid.transform_node_to_global(p); M=cid.beta()', '0.7')
+        #if self.cid == 0:
+            #return p, array([[1., 0., 0.],
+                             #[0., 1., 0.],
+                             #[0., 0., 1.]], dtype='float64')
 
-        p2 = self.transform_node_to_global(p)
-        matrix = self.beta()
-        return p2, matrix
+        #p2 = self.transform_node_to_global(p)
+        #matrix = self.beta()
+        #return p2, matrix
 
-    def transformVectorToGlobal(self, p):
-        self.deprecated('transformVectorToGlobal(p)', 'transform_vector_to_global(p)', '0.7')
-        return self.transform_vector_to_global(p)
+    #def transformVectorToGlobal(self, p):
+        #self.deprecated('transformVectorToGlobal(p)', 'transform_vector_to_global(p)', '0.7')
+        #return self.transform_vector_to_global(p)
 
-    def transformNodeToGlobal(self, p):
-        self.deprecated('transformNodeToGlobal(p)', 'transform_node_to_global(p)', '0.7')
-        return self.transform_node_to_global(p)
+    #def transformNodeToGlobal(self, p):
+        #self.deprecated('transformNodeToGlobal(p)', 'transform_node_to_global(p)', '0.7')
+        #return self.transform_node_to_global(p)
 
-    def transformToLocal(self, p, beta, debug=False):
-        self.deprecated('transformToLocal(p)', 'transform_node_to_local(p)', '0.7')
-        return self.transform_node_to_local(p, debug)
+    #def transformToLocal(self, p, beta, debug=False):
+        #self.deprecated('transformToLocal(p)', 'transform_node_to_local(p)', '0.7')
+        #return self.transform_node_to_local(p, debug)
 
-    def transform_to_local(self, p, beta, debug=False):
-        self.deprecated('transform_to_local(p)', 'transform_node_to_local(p)', '0.7')
-        return self.transform_node_to_local(p, debug)
+    #def transform_to_local(self, p, beta, debug=False):
+        #self.deprecated('transform_to_local(p)', 'transform_node_to_local(p)', '0.7')
+        #return self.transform_node_to_local(p, debug)
 
     def repr_fields(self):
         return self.raw_fields()
@@ -451,14 +451,14 @@ class Coord(BaseCard):
 
         xyz = _fix_xyz_shape(xyz)
         if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-            e1 = self.rid.transform_node_to_global(self.e1)
-            e2 = self.rid.transform_node_to_global(self.e2)
-            e3 = self.rid.transform_node_to_global(self.e3)
+            e1 = self.rid_ref.transform_node_to_global(self.e1)
+            e2 = self.rid_ref.transform_node_to_global(self.e2)
+            e3 = self.rid_ref.transform_node_to_global(self.e3)
             e12 = e2 - e1
             e13 = e3 - e1
-            self.e1 = self.rid.transform_node_to_local(xyz)
-            self.e2 = self.rid.transform_node_to_local(xyz + e12)
-            self.e3 = self.rid.transform_node_to_local(xyz + e13)
+            self.e1 = self.rid_ref.transform_node_to_local(xyz)
+            self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
+            self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
         else:
             raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
         self.origin = xyz
@@ -884,6 +884,7 @@ class Cord2x(Coord):
         if self.Rid() != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
             self.rid = model.Coord(self.rid, msg=msg)
+            self.rid_ref = self.rid
 
     def uncross_reference(self):
         self.rid = self.Rid()
@@ -892,7 +893,7 @@ class Cord2x(Coord):
         """Gets the reference coordinate system self.rid"""
         if isinstance(self.rid, integer_types):
             return self.rid
-        return self.rid.cid
+        return self.rid_ref.cid
 
 
 class Cord1x(Coord):
@@ -950,17 +951,17 @@ class Cord1x(Coord):
         rid3 = self.g2.Cid()
 
         # assume the points are in rid
-        p1 = self.g1.xyz
-        p2 = self.g2.xyz
-        p3 = self.g3.xyz
+        p1 = self.g1_ref.xyz
+        p2 = self.g2_ref.xyz
+        p3 = self.g3_ref.xyz
 
         # move the nodes in necessary into rid system
         if rid != rid1:
-            p1 = self.g1.get_position_wrt(model, rid)
+            p1 = self.g1_ref.get_position_wrt(model, rid)
         if rid != rid2:
-            p2 = self.g2.get_position_wrt(model, rid)
+            p2 = self.g2_ref.get_position_wrt(model, rid)
         if rid != rid3:
-            p3 = self.g3.get_position_wrt(model, rid)
+            p3 = self.g3_ref.get_position_wrt(model, rid)
 
         type1 = self.type.replace('1', '2')
         data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
@@ -1001,6 +1002,10 @@ class Cord1x(Coord):
         #: grid point 3
         self.g3 = model.Node(self.g3, msg=msg)
 
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+        self.g3_ref = self.g3
+
     def uncross_reference(self):
         self.g1 = self.G1()
         self.g2 = self.G2()
@@ -1017,13 +1022,13 @@ class Cord1x(Coord):
             return
 
         #: the origin in the local frame
-        self.e1 = self.g1.get_position()
+        self.e1 = self.g1_ref.get_position()
 
         #: a point on the z-axis
-        self.e2 = self.g2.get_position()
+        self.e2 = self.g2_ref.get_position()
 
         #: a point on the xz-plane
-        self.e3 = self.g3.get_position()
+        self.e3 = self.g3_ref.get_position()
 
         # rid is resolved b/c e1, e2, & e3 are in global coordinates
         self.isResolved = False
@@ -1034,17 +1039,17 @@ class Cord1x(Coord):
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
-        return self.g1.nid
+        return self.g1_ref.nid
 
     def G2(self):
         if isinstance(self.g2, integer_types):
             return self.g2
-        return self.g2.nid
+        return self.g2_ref.nid
 
     def G3(self):
         if isinstance(self.g3, integer_types):
             return self.g3
-        return self.g3.nid
+        return self.g3_ref.nid
 
     def nodeIDs(self):
         """
@@ -1052,16 +1057,13 @@ class Cord1x(Coord):
 
         :param self: the coordinate system object
         """
+        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
 
     @property
     def node_ids(self):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -1140,11 +1142,12 @@ class CORD3G(Coord):  # not done
     def cross_reference(self, model):
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         self.rid = model.Coord(self.rid, msg=msg)
+        self.rid_ref = self.rid
 
     def Rid(self):
         if isinstance(self.rid, integer_types):
             return self.rid
-        return self.rid.cid
+        return self.rid_ref.cid
 
     def coord3g_transform_to_global(self, p):
         """

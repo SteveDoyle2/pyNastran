@@ -67,6 +67,7 @@ class Property_i(BaseCard):
     def cross_reference(self, model):
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
+        self.mid_ref = self.mid
 
 
 class ShellProperty(Property_i):

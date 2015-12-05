@@ -352,19 +352,23 @@ class GRAV(BaseCard):
         return self.organize_loads(model)
 
     def organize_loads(self, model):
-        typesFound = [self.type]
-        forceLoads = {}
-        momentLoads = {}
-        forceConstraints = {}
-        momentConstraints = {}
-        gravityLoad = self.transformLoad()
-        return (typesFound, forceLoads, momentLoads,
-                forceConstraints, momentConstraints,
-                gravityLoad)
+        types_found = [self.type]
+        force_loads = {}
+        moment_loads = {}
+        force_constraints = {}
+        moment_constraints = {}
+        gravity_load = self.transform_load()
+        return (typesFound, force_loads, moment_loads,
+                force_constraints, moment_constraints,
+                gravity_load)
 
     def transformLoad(self):
+        self.deprecated('transformLoad()', 'transform_load()', '0.8')
+        return self.transform_load()
+
+    def transform_load(self):
         g = self.GravityVector()
-        g2, matrix = self.cid.transformToGlobal(g)
+        g2, matrix = self.cid_ref.transformToGlobal(g)
         return g2
 
     #write_code_aster_load(self,mag):
@@ -380,6 +384,7 @@ class GRAV(BaseCard):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ' which is required by GRAV sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
 
     def uncross_reference(self, model):
         self.cid = self.Cid()
@@ -387,12 +392,12 @@ class GRAV(BaseCard):
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def GravityVector(self):
         """returns the gravity vector in absolute coordinates"""
         ## TODO: shouldn't be scaled by the ???
-        p = self.cid.transform_vector_to_global(self.N)
+        p = self.cid_ref.transform_vector_to_global(self.N)
         return self.scale * p
 
     def raw_fields(self):
@@ -553,7 +558,7 @@ class ACCEL1(BaseCard):
     def cross_reference(self, model):
         msg = ' which is required by ACCEL1 sid=%s' % self.sid
         self.cid = model.Coord(self.Cid(), msg=msg)
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -563,7 +568,7 @@ class ACCEL1(BaseCard):
     @property
     def node_ids(self):
         #msg = ' which is required by ACCEL1 sid=%s' % self.sid
-        #_node_ids(self.nodes, allowEmptyNodes=True, msg=msg)
+        #_node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
         return self._nodeIDs()
 
     def _nodeIDs(self, nodes=None):  # this function comes from BaseCard.py
@@ -797,6 +802,7 @@ class FORCE(Force):
         """
         msg = ' which is required by FORCE sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
 
     def uncross_reference(self):
         self.cid = self.Cid()
@@ -805,6 +811,7 @@ class FORCE(Force):
         msg = ' which is required by FORCE sid=%s' % self.sid
         # try:
         self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
         # except KeyError:
             # pass
 
@@ -873,7 +880,11 @@ class FORCE1(Force):
         self.node = model.Node(self.node, msg=msg)
         self.g1 = model.Node(self.g1, msg=msg)
         self.g2 = model.Node(self.g2, msg=msg)
-        self.xyz = self.g2.get_position() - self.g1.get_position()
+
+        self.node_ref = self.node
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+        self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
 
     def uncross_reference(self):
@@ -979,22 +990,28 @@ class FORCE2(Force):
         self.g3 = model.Node(self.g3, msg=msg)
         self.g4 = model.Node(self.g4, msg=msg)
 
-        v12 = self.g2.get_position() - self.g1.get_position()
-        v34 = self.g4.get_position() - self.g3.get_position()
+        self.node_ref = self.node
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+        self.g3_ref = self.g3
+        self.g4_ref = self.g4
+
+        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
+        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
         try:
             v12 /= norm(v12)
         except FloatingPointError:
             msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
-            msg += 'g1.get_position()=%s\n' % self.g1.get_position()
-            msg += 'g2.get_position()=%s' % self.g2.get_position()
+            msg += 'g1.get_position()=%s\n' % self.g1_ref.get_position()
+            msg += 'g2.get_position()=%s' % self.g2_ref.get_position()
             raise FloatingPointError(msg)
 
         try:
             v34 /= norm(v34)
         except FloatingPointError:
             msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
-            msg += 'g3.get_position()=%s\n' % self.g3.get_position()
-            msg += 'g4.get_position()=%s' % self.g4.get_position()
+            msg += 'g3.get_position()=%s\n' % self.g3_ref.get_position()
+            msg += 'g4.get_position()=%s' % self.g4_ref.get_position()
             raise FloatingPointError(msg)
         self.xyz = cross(v12, v34)
         self.normalize()
@@ -1010,22 +1027,28 @@ class FORCE2(Force):
         self.g3 = model.Node(self.g3, msg=msg)
         self.g4 = model.Node(self.g4, msg=msg)
 
-        v12 = self.g2.get_position() - self.g1.get_position()
-        v34 = self.g4.get_position() - self.g3.get_position()
+        self.node_ref = self.node
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+        self.g3_ref = self.g3
+        self.g4_ref = self.g4
+
+        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
+        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
         try:
             v12 /= norm(v12)
         except FloatingPointError:
             msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
-            msg += 'g1.get_position()=%s\n' % self.g1.get_position()
-            msg += 'g2.get_position()=%s' % self.g2.get_position()
+            msg += 'g1.get_position()=%s\n' % self.g1_ref.get_position()
+            msg += 'g2.get_position()=%s' % self.g2_ref.get_position()
             raise FloatingPointError(msg)
 
         try:
             v34 /= norm(v34)
         except FloatingPointError:
             msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
-            msg += 'g3.get_position()=%s\n' % self.g3.get_position()
-            msg += 'g4.get_position()=%s' % self.g4.get_position()
+            msg += 'g3.get_position()=%s\n' % self.g3_ref.get_position()
+            msg += 'g4.get_position()=%s' % self.g4_ref.get_position()
             raise FloatingPointError(msg)
         self.xyz = cross(v12, v34)
         self.normalize()
@@ -1116,20 +1139,23 @@ class MOMENT(Moment):
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
-        #msg = ' which is required by MOMENT sid=%s' % self.sid
-        pass
+        msg = ' which is required by MOMENT sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
+        self.node_ref = self.node
+        self.cid_ref = self.cid
 
     @property
     def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
-        return self.node.nid
+        return self.node_ref.nid
 
     def safe_cross_reference(self, model, debug=True):
         pass
@@ -1211,7 +1237,12 @@ class MOMENT1(Moment):
         self.node = model.Node(self.node, msg=msg)
         self.g1 = model.Node(self.g1, msg=msg)
         self.g2 = model.Node(self.g2, msg=msg)
-        self.xyz = self.g2.get_position() - self.g1.get_position()
+
+        self.node_ref = self.node
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+
+        self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
 
     def uncross_reference(self):
@@ -1227,23 +1258,28 @@ class MOMENT1(Moment):
         self.node = model.Node(self.node, msg=msg)
         self.g1 = model.Node(self.g1, msg=msg)
         self.g2 = model.Node(self.g2, msg=msg)
-        self.xyz = self.g2.get_position() - self.g1.get_position()
+
+        self.node_ref = self.node
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+
+        self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
 
     def get_node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
-        return self.node.nid
+        return self.node_ref.nid
 
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
-        return self.g1.nid
+        return self.g1_ref.nid
 
     def G2(self):
         if isinstance(self.g2, integer_types):
             return self.g2
-        return self.g2.nid
+        return self.g2_ref.nid
 
     def raw_fields(self):
         node = self.get_node_id()
@@ -1312,8 +1348,14 @@ class MOMENT2(Moment):
         self.g3 = model.Node(self.g3, msg=msg)
         self.g4 = model.Node(self.g4, msg=msg)
 
-        v12 = self.g2.get_position() - self.g1.get_position()
-        v34 = self.g4.get_position() - self.g3.get_position()
+        self.node_ref = self.node
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+        self.g3_ref = self.g3
+        self.g4_ref = self.g4
+
+        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
+        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
         v12 = v12 / norm(v12)
         v34 = v34 / norm(v34)
         self.xyz = cross(v12, v34)
@@ -1336,8 +1378,15 @@ class MOMENT2(Moment):
         self.g3 = model.Node(self.g3, msg=msg)
         self.g4 = model.Node(self.g4, msg=msg)
 
-        v12 = self.g2.get_position() - self.g1.get_position()
-        v34 = self.g4.get_position() - self.g3.get_position()
+
+        self.node_ref = self.node
+        self.g1_ref = self.g1
+        self.g2_ref = self.g2
+        self.g3_ref = self.g3
+        self.g4_ref = self.g4
+
+        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
+        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
         v12 = v12 / norm(v12)
         v34 = v34 / norm(v34)
         self.xyz = cross(v12, v34)
@@ -1345,27 +1394,27 @@ class MOMENT2(Moment):
     def NodeID(self):
         if isinstance(self.node, integer_types):
             return self.node
-        return self.node.nid
+        return self.node_ref.nid
 
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
-        return self.g1.nid
+        return self.g1_ref.nid
 
     def G2(self):
         if isinstance(self.g2, integer_types):
             return self.g2
-        return self.g2.nid
+        return self.g2_ref.nid
 
     def G3(self):
         if isinstance(self.g3, integer_types):
             return self.g3
-        return self.g3.nid
+        return self.g3_ref.nid
 
     def G4(self):
         if isinstance(self.g4, integer_types):
             return self.g4
-        return self.g4.nid
+        return self.g4_ref.nid
 
     def raw_fields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs(nodes=[self.node, self.g1, self.g2,
@@ -1428,6 +1477,7 @@ class GMLOAD(Load):
         """
         msg = ' which is required by GMLOAD sid=%s' % self.sid
         self.cid = model.Coord(self.Cid(), msg=msg)
+        self.cid_ref = self.cid
         #self.node = model.Node(self.node, msg=msg)
         #self.g1 = model.Node(self.g1, msg=msg)
         #self.g2 = model.Node(self.g2, msg=msg)
@@ -1437,17 +1487,17 @@ class GMLOAD(Load):
     #def G1(self):
         #if isinstance(self.g1, (integer_types, float)):
             #return self.g1
-        #return self.g1.nid
+        #return self.g1_ref.nid
 
     #def G2(self):
         #if isinstance(self.g2, (integer_types, float)):
             #return self.g2
-        #return self.g2.nid
+        #return self.g2_ref.nid
 
     #def NodeID(self):
         #if isinstance(self.node, integer_types):
             #return self.node
-        #return self.node.nid
+        #return self.node_ref.nid
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -1581,12 +1631,13 @@ class PLOAD1(Load):
         """
         msg = ' which is required by PLOAD1 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
+        self.eid_ref = self.eid
 
     def transformLoad(self):
-        p1 = self.eid.ga.get_position()
-        p2 = self.eid.gb.get_position()
+        p1 = self.eid_ref.ga_ref.get_position()
+        p2 = self.eid_ref.gb_ref.get_position()
 
-        g0 = self.eid.g0_vector
+        g0 = self.eid_ref.g0_vector
         #if not isinstance(g0, ndarray):
         #    g0 = g0.get_position()
 
@@ -1627,18 +1678,18 @@ class PLOAD1(Load):
         Figures out magnitudes of the loads to be applied to the various nodes.
         This includes figuring out scale factors.
         """
-        forceLoads = {}  # spc enforced displacement (e.g. FORCE=0)
-        momentLoads = {}
-        forceConstraints = {}
-        momentConstraints = {}
-        gravityLoads = []
+        force_loads = {}  # spc enforced displacement (e.g. FORCE=0)
+        moment_loads = {}
+        force_constraints = {}
+        moment_constraints = {}
+        gravity_loads = []
 
-        typesFound = set()
+        types_found = set()
         (scale_factors, loads) = self.get_reduced_loads()
 
         for scale_factor, load in zip(scale_factors, loads):
             out = load.transformLoad()
-            typesFound.add(load.__class__.__name__)
+            types_found.add(load.__class__.__name__)
 
             if isinstance(load, PLOAD1): # CBAR/CBEAM
                 element = load.eid
@@ -1649,8 +1700,8 @@ class PLOAD1(Load):
                 eType = element.type
 
                 if load_type in ['FX', 'FY', 'FZ']:
-                    p1 = element.ga.get_position()
-                    p2 = element.gb.get_position()
+                    p1 = element.ga_ref.get_position()
+                    p2 = element.gb_ref.get_position()
                     r = p2 - p1
 
                 if load_type == 'FX':
@@ -1714,15 +1765,15 @@ class PLOAD1(Load):
 
                         Fv *= F
                         #Mv = M
-                        forceLoads[ga] = Fv
-                        forceLoads[gb] = Fv
-                        momentLoads[ga] = Mv
-                        momentLoads[gb] = Mv
+                        force_loads[ga] = Fv
+                        force_loads[gb] = Fv
+                        moment_loads[ga] = Mv
+                        moment_loads[gb] = Mv
                     elif load_type in ['MX', 'MY', 'MZ']:
                         # these are really moments
                         Mv *= F
-                        momentLoads[ga] = Mv
-                        momentLoads[gb] = Mv
+                        moment_loads[ga] = Mv
+                        moment_loads[gb] = Mv
                     else:
                         raise NotImplementedError(load_type)
                 else:
@@ -1730,8 +1781,8 @@ class PLOAD1(Load):
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
-        return (typesFound, forceLoads, momentLoads, forceConstraints,
-                momentConstraints, gravityLoads)
+        return (types_found, force_loads, moment_loads, force_constraints,
+                moment_constraints, gravity_loads)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -1743,7 +1794,7 @@ class PLOAD1(Load):
     def Eid(self):
         if isinstance(self.eid, integer_types):
             return self.eid
-        return self.eid.eid
+        return self.eid_ref.eid
 
     def raw_fields(self):
         list_fields = ['PLOAD1', self.sid, self.Eid(), self.Type, self.scale,
@@ -1789,7 +1840,8 @@ class PLOAD2(Load):
         """
         .. todo:: cross reference and fix repr function
         """
-        pass
+        self.eids = model.Elements(self.eids, msg=msg)
+        self.eids_ref = self.eids
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -1895,6 +1947,10 @@ class PLOAD4(Load):
         return [self]
 
     def transformLoad(self):
+        self.deprecated('transformLoad()', 'transform_load()', '0.8')
+        return self.transform_load()
+
+    def transform_load(self):
         """
         .. warning:: sorl=SURF is supported (not LINE)
         .. warning:: ldir=NORM is supported (not X,Y,Z)
@@ -1910,11 +1966,11 @@ class PLOAD4(Load):
             raise RuntimeError(msg)
 
         if self.g1 and self.g34:  # solid elements
-            nid = self.g1.nid
-            nidOpposite = self.g34.nid
-            (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid, nidOpposite)
+            nid = self.g1_ref.nid
+            nid_opposite = self.g34_ref.nid
+            (face_node_ids, area) = self.eid.getFaceNodesAndArea(self, nid, nid_opposite)
         else:
-            faceNodeIDs = self.eid.node_ids
+            face_node_ids = self.eid.node_ids
             Area = self.eid.Area()
         n = len(faceNodeIDs)
 
@@ -1924,35 +1980,45 @@ class PLOAD4(Load):
             #: .. warning:: only supports normal pressures
             vectors.append(vector * p * Area / n)  # Force_i
 
-        isLoad = None
-        return (isLoad, faceNodeIDs, vectors)
+        is_load = None
+        return (is_load, faceNodeIDs, vectors)
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def cross_reference(self, model):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
+        self.eid_ref = self.eid
+        self.cid_ref = self.cid
         if self.g1 is not None:
             self.g1 = model.Node(self.g1, msg=msg)
+            self.g1_ref = self.g1
         if self.g34 is not None:
             self.g34 = model.Node(self.g34, msg=msg)
+            self.g34_ref = self.g34
         if self.eids:
             self.eids = model.Elements(self.eids, msg=msg)
+            self.eids_ref = self.eids
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
+        self.eid_ref = self.eid
+        self.cid_ref = self.cid
         if self.g1 is not None:
             self.g1 = model.Node(self.g1, msg=msg)
+            self.g1_ref = self.g1
         if self.g34 is not None:
             self.g34 = model.Node(self.g34, msg=msg)
+            self.g34_ref = self.g34
         if self.eids:
             self.eids = model.Elements(self.eids, msg=msg)
+            self.eids_ref = self.eids
 
     def Eid(self, eid):
         if isinstance(eid, (integer_types, int32)):
@@ -1964,12 +2030,12 @@ class PLOAD4(Load):
         if isinstance(self.g1, integer_types):
             nodeIDs[0] = self.g1
         elif self.g1 is not None:
-            nodeIDs[0] = self.g1.nid
+            nodeIDs[0] = self.g1_ref.nid
 
         if isinstance(self.g34, integer_types):
             nodeIDs[1] = self.g34
         elif self.g34 is not None:
-            nodeIDs[1] = self.g34.nid
+            nodeIDs[1] = self.g34_ref.nid
         return nodeIDs
 
     def getElementIDs(self, eid=None):
@@ -2050,11 +2116,14 @@ class PLOADX1(Load):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
-        #msg = ' which is required by PLOADX1 lid=%s' % self.sid
-        #self.eid = model.Element(self.eid)
-        #self.ga = model.Node(self.ga)
-        #self.gb = model.Node(self.gb)
-        pass
+        msg = ' which is required by PLOADX1 lid=%s' % self.sid
+        self.eid = model.Element(self.eid, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
+
+        self.eid_ref = self.eid
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')

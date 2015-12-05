@@ -1,5 +1,5 @@
 # coding: utf-8
-# pylint: disable=W0212,W0633,W0201,C0301,R0915,R0912
+# pylint: disable=W0201,C0301,R0915,R0912
   #W0611,
 """
 Main BDF class.  Defines:
@@ -2735,6 +2735,7 @@ def main():
     msg = '$ line 1\n'
     msg += 'line 2\n'
     msg += '$ line 3\n'
+    print(msg)
     model.write_bdf('test.bdf')
 
 

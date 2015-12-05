@@ -152,6 +152,7 @@ class DEQATN(BaseCard):  # needs work...
         # TODO: get limits from DCONSTR
         self._setup_equation()
         self.dtable = model.dtable
+        self.dtable_ref = self.dtable
 
     def uncross_reference(self):
         del self.func

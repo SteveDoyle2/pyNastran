@@ -59,6 +59,7 @@ class QVOL(ThermalLoad):
     def cross_reference(self, model):
         msg = ' which is required by QVOL sid=%s' % self.sid
         self.elements = model.Elements(self.elements, msg=msg)
+        self.elements_ref = self.elements
 
     def _eid(self, eid):
         if isinstance(eid, integer_types):
@@ -135,6 +136,7 @@ class QBDY1(ThermalLoad):
     def cross_reference(self, model):
         msg = ' which is required by QBDY1 sid=%s' % self.sid
         self.eids = model.Elements(self.eids, msg=msg)
+        self.eids_ref = self.eids
 
     def _eid(self, eid):
         if isinstance(eid, integer_types):
@@ -272,6 +274,7 @@ class QBDY3(ThermalLoad):
         msg = ' which is required by QBDY3 sid=%s' % self.sid
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid, msg=msg)
+        self.eids_ref = self.eids
 
     def Eids(self):
         eids = []

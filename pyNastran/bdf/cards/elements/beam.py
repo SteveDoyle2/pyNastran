@@ -18,8 +18,8 @@ class CBEAM(CBAR):
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
     |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |       | SA  | SB  |
-    +-------+-----+-----+
+    |       | SA  | SB  |     |     |     |     |     |          |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
     or
 
@@ -28,8 +28,8 @@ class CBEAM(CBAR):
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
     |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |       | SA  | SB  |
-    +-------+-----+-----+
+    |       | SA  | SB  |     |     |     |     |     |          |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
     """
     type = 'CBEAM'
@@ -170,21 +170,21 @@ class CBEAM(CBAR):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.Mid()
+        return self.pid_ref.Mid()
 
     def Area(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.Area()
+        return self.pid_ref.Area()
 
     def Nsm(self):
         if isinstance(self.pid, integer_types):
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
-        return self.pid.Nsm()
+        return self.pid_ref.Nsm()
 
-    def getOfft_Bit_defaults(self):
+    def get_offt_bit_defaults(self):
         """
         offt doesn't exist in NX nastran
         """
@@ -199,6 +199,10 @@ class CBEAM(CBAR):
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
+        self.pid_ref = self.pid
         if self.g0:
             g0 = model.nodes[self.g0]
             self.g0_vector = g0.get_position() - self.ga.get_position()
@@ -209,8 +213,12 @@ class CBEAM(CBAR):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
+
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
         try:
             self.pid = model.Property(self.pid, msg=msg)
+            self.pid_ref = self.pid
         except KeyError:
             model.log.warning('pid=%s%s' % (self.pid, msg))
 
@@ -242,7 +250,7 @@ class CBEAM(CBAR):
         sa = set_blank_if_default(self.sa, 0)
         sb = set_blank_if_default(self.sb, 0)
         (x1, x2, x3) = self.getX_G0_defaults()
-        offt = self.getOfft_Bit_defaults()
+        offt = self.get_offt_bit_defaults()
         ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
                        self.pa, self.pb, w1a, w2a, w3a,
