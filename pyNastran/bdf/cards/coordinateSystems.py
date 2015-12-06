@@ -887,7 +887,10 @@ class Cord2x(Coord):
             self.rid_ref = self.rid
 
     def uncross_reference(self):
+        if self.rid == 0:
+            return
         self.rid = self.Rid()
+        del self.rid_ref
 
     def Rid(self):
         """Gets the reference coordinate system self.rid"""
@@ -1010,6 +1013,7 @@ class Cord1x(Coord):
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.g3 = self.G3()
+        del self.g1_ref, self.g2_ref, self.g3_ref
 
     def setup(self):
         """
@@ -1143,6 +1147,10 @@ class CORD3G(Coord):  # not done
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         self.rid = model.Coord(self.rid, msg=msg)
         self.rid_ref = self.rid
+
+    def uncross_reference(self):
+        self.rid = self.Rid()
+        del self.rid_ref
 
     def Rid(self):
         if isinstance(self.rid, integer_types):

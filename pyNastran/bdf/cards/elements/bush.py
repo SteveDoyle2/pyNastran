@@ -186,6 +186,7 @@ class CBUSH(BushElement):
         self.pid = self.Pid()
         #if self.cid is not None:
         self.cid = self.Cid()
+        del self.ga_ref, self.gb_ref, self.pid_ref, self.cid_ref
 
     def raw_fields(self):
         if self.g0 is not None:
@@ -248,6 +249,13 @@ class CBUSH1D(BushElement):
         if self.cid is not None:
             self.cid = model.Coord(self.cid)
             self.cid_ref = self.cid
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.cid = self.Cid()
+        self.pid = self.Pid()
+        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -377,6 +385,13 @@ class CBUSH2D(BushElement):
             self.cid_ref = self.cid
         if self.sptid is not None:
             pass
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.cid = self.Cid()
+        self.pid = self.Pid()
+        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
 
     def raw_fields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),

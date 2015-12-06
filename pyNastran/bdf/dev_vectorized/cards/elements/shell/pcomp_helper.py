@@ -62,12 +62,16 @@ class Property_i(BaseCard):
         if isinstance(self.mid, integer_types):
             return self.mid
         else:
-            return self.mid.mid
+            return self.mid_ref.mid
 
     def cross_reference(self, model):
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
 
 class ShellProperty(Property_i):

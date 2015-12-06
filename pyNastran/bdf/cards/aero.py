@@ -88,6 +88,10 @@ class AECOMP(BaseCard):
             raise NotImplementedError(self.list_type)
         self.lists_ref = self.lists
 
+    def uncross_reference(self):
+        self.lists = self.get_lists()
+        del self.lists_ref
+
     def get_lists(self):
         if self.list_type == 'SET1':
             lists = [set1 if isinstance(set1, integer_types)
@@ -515,6 +519,16 @@ class AESURF(BaseCard):
             self.alid2 = model.AELIST(self.AELIST_id2())
             self.alid2_ref = self.alid2
 
+    def uncross_reference(self):
+        self.cid1 = self.Cid1()
+        self.cid2 = self.Cid2()
+        self.aelid1 = self.AELIST_id1()
+        self.aelid2 = self.AELIST_id2()
+        del self.cid1_ref
+        del self.cid2_ref
+        del self.alid1_ref
+        del self.alid2_ref
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -898,25 +912,35 @@ class CSSCHD(Aero):
         self.lMach_ref = self.lMach
         self.lSchd_ref = self.lSchd
 
+    def uncross_reference(self):
+        self.aesid = self.AESid()
+        self.LAlpha = self.LAlpha()
+        self.LMach = self.LMach()
+        self.LSchd = self.LSchd()
+        del self.aesid_ref
+        del self.lAlpha_ref
+        del self.lMach_ref
+        del self.lSchd_ref
+
     def AESid(self):
         if isinstance(self.aesid, integer_types):
             return self.aesid
-        return self.aesid.aesid
+        return self.aesid_ref.aesid
 
     def LAlpha(self):
         if isinstance(self.lAlpha, integer_types):
             return self.lAlpha
-        return self.lAlpha.sid
+        return self.lAlpha_ref.sid
 
     def LMach(self):
         if isinstance(self.lMach, integer_types):
             return self.lMach
-        return self.lMach.sid
+        return self.lMach_ref.sid
 
     def LSchd(self):
         if isinstance(self.lSchd, integer_types):
             return self.lSchd
-        return self.lSchd.sid
+        return self.lSchd_ref.sid
 
     def raw_fields(self):
         """
@@ -1168,6 +1192,12 @@ class CAERO1(BaseCard):
             self.lspan = model.AEFact(self.lspan, msg)
             self.lspan_ref = self.lspan
         self._init_ids()
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref
+        del self.pid_ref, self.cp_ref
 
     @property
     def min_max_eid(self):
@@ -1545,6 +1575,11 @@ class CAERO2(BaseCard):
         self.pid_ref = self.pid
         self.cp_ref = self.cp
 
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref, self.cp_ref
+
     def get_points(self):
         (p1, matrix) = self.cp_ref.transformToGlobal(self.p1)
         p2 = p1 + array([self.x12, 0., 0.])
@@ -1651,6 +1686,11 @@ class CAERO3(BaseCard):
 
         self.pid_ref = self.pid
         self.cp_ref = self.cp
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref, self.cp_ref
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
@@ -1761,6 +1801,11 @@ class CAERO4(BaseCard):
 
         self.cp_ref = self.cp
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref, self.cp_ref
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
@@ -1873,6 +1918,12 @@ class CAERO5(BaseCard):
         self.pid_ref = self.pid
         self.cp_ref = self.cp
         self.lspan_ref = self.lspan
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        self.lspan = self.LSpan()
+        del self.pid_ref, self.cp_ref, self.lspan_ref
 
     def get_points(self):
         p1, matrix = self.cp_ref.transformToGlobal(self.p1)
@@ -2091,6 +2142,11 @@ class PAERO5(BaseCard):
 
         self.ltaus_ref = self.ltaus
         self.lxis_ref = self.lxis
+
+    def uncross_reference(self):
+        self.lxis = self.lxis_id
+        self.ltaus = self.ltaus_id
+        del self.ltaus_ref, self.lxis_ref
 
     def raw_fields(self):
         list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
@@ -2319,6 +2375,12 @@ class FLUTTER(BaseCard):
         self.mach_ref = self.mach
         self.rfreq_val = self.rfreq_val
 
+    def uncross_reference(self):
+        self.density = self.get_density()
+        self.mach = self.get_mach()
+        self.rfreq_val = self.get_rfreq_vel()
+        del self.density_ref, self.mach_ref, self.rfreq_val
+
     def get_density(self):
         if isinstance(self.density, integer_types):
             return self.density
@@ -2332,7 +2394,7 @@ class FLUTTER(BaseCard):
     def get_rfreq_vel(self):
         if isinstance(self.rfreq_vel, integer_types):
             return self.rfreq_vel
-        return self.rfreq_vel.sid
+        return self.rfreq_vel_ref.sid
 
     def _get_raw_nvalue_omax(self):
         if self.method in ['K', 'KE']:
@@ -2992,6 +3054,11 @@ class SPLINE1(Spline):
         self.caero_ref = self.caero
         self.setg_ref = self.setg
 
+    def uncross_reference(self):
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        del self.caero_ref, self.setg_ref
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -3090,6 +3157,12 @@ class SPLINE2(Spline):
         self.cid_ref = self.cid
         self.caero_ref = self.caero
         self.setg_ref = self.setg
+
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        del self.cid_ref, self.caero_ref, self.setg_ref
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -3283,6 +3356,12 @@ class SPLINE4(Spline):
         self.setg_ref = self.setg
         self.aelist_ref = self.aelist
 
+    def uncross_reference(self):
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        self.aelist = self.AEList()
+        del  self.caero_ref, self.setg_ref, self.aelist_ref
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -3409,6 +3488,13 @@ class SPLINE5(Spline):
         self.caero_ref = self.caero
         self.setg_ref = self.setg
         self.aelist_ref = self.aelist
+
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        self.aelist = self.AEList()
+        del  self.cid, self.caero_ref, self.setg_ref, self.aelist_ref
 
     def raw_fields(self):
         """

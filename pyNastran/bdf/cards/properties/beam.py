@@ -479,6 +479,10 @@ class PBEAM(IntegratedLineProperty):
             #assert max(self.j) == 0.0, self.j
             #assert min(self.j) == 0.0, self.j
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
@@ -808,6 +812,10 @@ class PBEAML(IntegratedLineProperty):
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
     def verify(self, model, isubcase):
         if model.is_thermal_solution(isubcase):
             assert self.mid_ref.type in ['MAT4', 'MAT5']
@@ -950,6 +958,10 @@ class PBCOMP(LineProperty):
         msg = ' which is required by PBCOMP mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def raw_fields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,

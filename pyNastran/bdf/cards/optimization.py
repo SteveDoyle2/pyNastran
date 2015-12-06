@@ -73,7 +73,6 @@ class DCONSTR(OptConstraint):
             self.uid = model.Table(self.uid)
             self.uid_ref = self.uid
 
-
     def raw_fields(self):
         list_fields = ['DCONSTR', self.oid, self.Rid(), self.Lid(),
                        self.Uid(), self.lowfq, self.highfq]

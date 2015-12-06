@@ -42,6 +42,10 @@ class DLOAD(LoadCombination):
         self.loadIDs = load_ids2
         self.loadIDs_ref = self.loadIDs
 
+    def uncross_reference(self):
+        self.loadIDs = [self.LoadID(load) for load in self.loadIDs]
+        del self.loadIDs_ref
+
     def raw_fields(self):
         list_fields = ['DLOAD', self.sid, self.scale]
         for (scale_factor, load_id) in zip(self.scaleFactors, self.loadIDs):
@@ -115,6 +119,12 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, int) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
+
+    def uncross_reference(self):
+        self.tc = self.Tc()
+        self.td = self.Td()
+        self.delay = self.delay_id
+        del self.tc_ref, self.td_ref, self.delay_ref
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -307,7 +317,6 @@ class RLOAD2(TabularLoad):
             raise
         return out
 
-
     def cross_reference(self, model):
         msg = ' which is required by RLOAD2=%s' % (self.sid)
         if self.tb:
@@ -319,6 +328,12 @@ class RLOAD2(TabularLoad):
         if self.delay and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
+
+    def uncross_reference(self):
+        self.tb = self.Tb()
+        self.tp = self.Tp()
+        self.delay = self.delay_id
+        del self.tb_ref, self.tp_ref, self.delay_ref
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -639,6 +654,10 @@ class TLOAD2(TabularLoad):
         if self.delay and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
         # TODO: exciteID
+
+    def uncross_reference(self):
+        self.delay = self.delay_id
+        del self.delay_ref
 
     @property
     def delay_id(self):

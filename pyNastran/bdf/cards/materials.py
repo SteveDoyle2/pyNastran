@@ -106,6 +106,10 @@ class CREEP(Material):
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
     def Mid(self):  # links up to MAT1, MAT2, MAT9 or same mid
         if isinstance(self.mid, integer_types):
             return self.mid
@@ -324,6 +328,11 @@ class MAT1(IsotropicMaterial):
             self.matt1 = model.MATT1[self.mid]  # not using a method...
             self.matt1_ref = self.matt1
 
+    def uncross_reference(self):
+        self.mats1 = self.Mats1()
+        self.matt1 = self.Matt1()
+        del self.mats1_ref, self.matt1_Ref
+
     def Mats1(self):
         return self.mats1
 
@@ -464,6 +473,10 @@ class MAT2(AnisotropicMaterial):
         if self.mid in model.MATT2:
             self.matt2 = model.MATT2[self.mid]  # not using a method...
             self.matt2_ref = self.matt2
+
+    def uncross_reference(self):
+        self.matt2 = self.Matt2()
+        del self.matt2_Ref
 
     def _verify(self, xref):
         """
@@ -861,6 +874,10 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.matt5 = model.MATT5[self.mid]  # not using a method...
             self.matt5_ref = self.matt5
 
+    def uncross_reference(self):
+        self.matt5 = self.Matt5()
+        del self.matt5_ref, self.matt5_Ref
+
     def get_density(self):
         return self.rho
 
@@ -987,6 +1004,10 @@ class MAT8(OrthotropicMaterial):
         if self.mid in model.MATT8:
             self.matt8 = model.MATT8[self.mid]  # not using a method...
             self.matt8_ref = self.matt8
+
+    def uncross_reference(self):
+        self.matt8 = self.Matt8()
+        del self.matt8_ref
 
     def Matt8(self):
         return self.matt8

@@ -1,6 +1,9 @@
+from __future__ import print_function
 from collections import defaultdict
 
+from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.utils import deprecated
+from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.cards.coordinateSystems import CORD2R
 from pyNastran.bdf.cards.constraints import ConstraintObject
 
@@ -16,6 +19,43 @@ class BDFAttributes(object):
 
     def set_as_nx(self):
         self._nastran_format = 'nx'
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = [
+            #'case_control_deck',
+            'log', 'mpcObject', 'spcObject',
+            'node_ids', 'coord_ids', 'element_ids', 'property_ids',
+            'material_ids', 'caero_ids', 'is_long_ids',
+            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nmaterials', 'ncaeros',
+
+            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
+            'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
+            '_card_parser', '_card_parser_b',
+            'object_methods', 'object_attributes',
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    #def object_methods(self, mode='public', keys_to_skip=None):
+        #if keys_to_skip is None:
+            #keys_to_skip = []
+        #my_keys_to_skip = [
+            #'case_control_deck',
+            #'log', 'mpcObject', 'spcObject',
+            #'node_ids', 'coord_ids', 'element_ids', 'property_ids',
+            #'material_ids', 'caero_ids', 'is_long_ids',
+            #'nnodes', 'ncoords', 'nelements', 'nproperties',
+            #'nmaterials', 'ncaeros',
+
+            #'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
+            #'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
+            #'_card_parser', '_card_parser_b',
+            #'object_methods', 'object_attributes',
+        #]
+        #return object_methods(obj, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""
@@ -602,15 +642,15 @@ class BDFAttributes(object):
             return True
         return False
 
-    @property
-    def caseControlDeck(self):
-        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        return self.case_control_deck
+    #@property
+    #def caseControlDeck(self):
+        #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
+        #return self.case_control_deck
 
-    @caseControlDeck.setter
-    def caseControlDeck(self, value):
-        self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        self.case_control_deck = value
+    #@caseControlDeck.setter
+    #def caseControlDeck(self, value):
+        #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
+        #self.case_control_deck = value
 
     @property
     def subcases(self):

@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,W0231,R0201
+# pylint: disable=R0902,R0904,R0914,W0231,R0201
 """
 All static loads are defined in this file.  This includes:
 
@@ -13,7 +13,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from six.moves import zip, range
 
-from pyNastran.bdf.errors import CrossReferenceError
+#from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -35,7 +35,7 @@ class Load(BaseCard):
         if isinstance(self.cid, integer_types):
             return self.cid
         else:
-            return self.cid.cid
+            return self.cid_ref.cid
 
     @property
     def node_ids(self):
@@ -73,9 +73,9 @@ class LoadCombination(Load):  # LOAD, DLOAD
             self.loadIDs = []
 
             # alternating of scale factor & load set ID
-            nLoads = len(card) - 3
-            assert nLoads % 2 == 0
-            for i in range(nLoads // 2):
+            nloads = len(card) - 3
+            assert nloads % 2 == 0
+            for i in range(nloads // 2):
                 n = 2 * i + 3
                 self.scaleFactors.append(double(card, n, 'scale_factor'))
                 self.loadIDs.append(integer(card, n + 1, 'load_id'))
@@ -87,13 +87,24 @@ class LoadCombination(Load):  # LOAD, DLOAD
             assert len(data) == 4, '%s data=%s' % (self.type, data)
 
     def cross_reference(self, model):
-        loadIDs2 = []
+        load_ids2 = []
+        #print('%s.xref' % self.type)
         msg = ' which is required by %s=%s' % (self.type, self.sid)
+        #print('    loadIDs=%s' % str(self.loadIDs))
         for load_id in self.loadIDs:
-            loadID2 = model.Load(load_id, msg=msg)
-            loadIDs2.append(loadID2)
-        self.loadIDs = loadIDs2
+            load_id2 = model.Load(load_id, msg=msg)
+            assert isinstance(load_id2, list), load_id2
+            load_ids2.append(load_id2)
+        self.loadIDs = load_ids2
+        #print('    loadIDs=%s' % str(self.loadIDs))
+
         self.loadIDs_ref = self.loadIDs
+
+    #def uncross_reference(self):
+        #asdf
+        #self.loadIDs = []
+        #self.pid = self.Pid()
+        #del self.loadIDs_ref
 
     def safe_cross_reference(self, model, debug=True):
         loadIDs2 = []
@@ -126,8 +137,15 @@ class LoadCombination(Load):  # LOAD, DLOAD
         .. note:: requires a cross referenced load
         """
         loads = []
-        for allLoads in self.loadIDs:
-            for load in allLoads:
+        #print('***************************')
+        #print('classname=%s' % self.type)
+        #print('self.loadIDs =', self.loadIDs)
+        #print(self)
+        #print('self.%s.loadIDs = %s' % (self.type, self.loadIDs))
+        for all_loads in self.loadIDs:
+            print('type(all_loads) =', type(all_loads))
+            assert not isinstance(all_loads, int), 'all_loads=%s\n%s' % (str(all_loads), str(self))
+            for load in all_loads:
                 try:
                     loads += load.get_loads()
                 except RuntimeError:
@@ -168,6 +186,11 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         if self.tid:
             self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = self.tid
+
+    def uncross_reference(self):
+        self.lid = self.Lid()
+        self.tid = self.Tid()
+        del self.lid_ref, self.tid_ref
 
     def LoadID(self, lid):
         if isinstance(lid, integer_types):
@@ -259,13 +282,14 @@ class DAREA(BaseCard):
         self.p_ref = self.p
 
     def uncross_reference(self):
-        self.p = self.node_id
+        self.p = self.p
+        del self.p_ref
 
     @property
     def node_id(self):
         if isinstance(self.p, int):
             return self.p
-        return self.p.nid
+        return self.p_ref.nid
 
     def raw_fields(self):
         list_fields = ['DAREA', self.sid, self.node_id, self.c, self.scale]
@@ -392,6 +416,10 @@ class SLOAD(Load):
             self.nids[i] = model.Node(nid, msg=msg)
         self.nids_ref = self.nids
 
+    def uncross_reference(self):
+        self.nids = self.node_ids
+        del self.nids_ref
+
     def Nid(self, node):
         if isinstance(node, integer_types):
             return node
@@ -452,6 +480,11 @@ class RFORCE(Load):
             self.nid_ref = self.nid
         self.cid = model.Coord(self.cid, msg=msg)
         self.cid_ref = self.cid
+
+    def uncross_reference(self):
+        self.nid = self.Nid()
+        self.cid = self.Cid()
+        del self.nid_ref, self.cid_ref
 
     def Nid(self):
         if isinstance(self.nid, integer_types):
@@ -543,6 +576,10 @@ class RANDPS(RandomLoad):
             self.tid = model.RandomTable(self.tid, msg=msg)
             self.tid_ref = self.tid
 
+    def uncross_reference(self):
+        self.tid = self.Tid()
+        del self.tid_ref
+
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
         return self.get_loads()
@@ -555,7 +592,7 @@ class RANDPS(RandomLoad):
             return None
         elif isinstance(self.tid, integer_types):
             return self.tid
-        return self.tid.tid
+        return self.tid_ref.tid
 
     def raw_fields(self):
         list_fields = ['RANDPS', self.sid, self.j, self.k, self.x, self.y,

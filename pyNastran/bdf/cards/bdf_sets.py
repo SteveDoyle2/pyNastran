@@ -124,6 +124,10 @@ class ABCQSet(Set):
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
 
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
+
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
@@ -176,6 +180,10 @@ class SuperABCQSet(Set):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
@@ -300,6 +308,10 @@ class ABQSet1(Set):
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
 
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
+
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
@@ -357,6 +369,10 @@ class SuperABQSet1(Set):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
@@ -438,6 +454,10 @@ class CSET1(Set):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
@@ -875,6 +895,10 @@ class USET(Set):
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
 
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
+
     @property
     def node_ids(self):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
@@ -931,6 +955,10 @@ class USET1(ABQSet1):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):

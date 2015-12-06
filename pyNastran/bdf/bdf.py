@@ -437,18 +437,36 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.specialCards = ['DEQATN', '/']
         self._make_card_parser()
 
-    def save_object(self, obj_filename='model.obj'):
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        #del state['spcObject'], state['mpcObject'],
+        del state['_card_parser'], state['_card_parser_b'], state['log']
+        return state
+
+    def save_object(self, obj_filename='model.obj', unxref=True):
         """
         ..warning:: doesn't work right
         """
         #import cPickle as pickle
         import pickle
-        del self.log
-        del self.spcObject
-        del self.mpcObject
-        self.case_control_lines = str(self.case_control_deck).split('\n')
-        del self.case_control_deck
-        self.uncross_reference()
+        #del self.log
+        #del self.spcObject
+        #del self.mpcObject
+        #del self._card_parser, self._card_parser_b
+
+        #try:
+            #del self.log
+        #except AttributeError:
+            #pass
+        #self.case_control_lines = str(self.case_control_deck).split('\n')
+        #del self.case_control_deck
+
+        if unxref:
+            self.uncross_reference()
         with open(obj_filename, 'w') as obj_file:
             pickle.dump(self, obj_file)
 
@@ -470,23 +488,30 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             obj = pickle.load(obj_file)
 
         keys_to_skip = [
-            'case_control_deck', 'caseControlDeck',
-            'log', 'mpcObject', 'spcObject',
+            'case_control_deck',
+            'log', #'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
+
+            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
+            'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
+            '_card_parser', '_card_parser_b',
         ]
         for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
             if key.startswith('__') and key.endswith('__'):
                 continue
 
+            #print('key =', key)
             val = getattr(obj, key)
             #print(key)
             #if isinstance(val, types.FunctionType):
                 #continue
             setattr(self, key, val)
 
+        print('case control time!')
+        self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         self.log.debug('done loading!')
 
     def disable_cards(self, cards):

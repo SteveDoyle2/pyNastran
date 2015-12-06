@@ -1432,9 +1432,10 @@ class CQUAD4(QuadShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()

@@ -116,6 +116,12 @@ class CMASS1(PointMassElement):
         self.pid = model.PropertyMass(self.pid, msg=msg)
         self.pid_ref = self.pid
 
+    def uncross_reference(self):
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+        self.pid = self.Pid()
+        del self.g1_ref, self.g2_ref, self.pid_ref
+
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
@@ -275,6 +281,11 @@ class CMASS2(PointMassElement):
             self.g2 = model.Node(self.g2, msg=msg)
             self.g2_ref = self.g2
 
+    def uncross_reference(self):
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+        del self.g1_ref, self.g2_ref
+
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
@@ -367,6 +378,10 @@ class CMASS3(PointMassElement):
         #self.s2 = model.Node(self.s2, msg=msg)
         self.pid = model.PropertyMass(self.pid, msg=msg)
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        del self.pid_ref
 
     def raw_fields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -625,6 +640,7 @@ class CONM1(PointMassElement):
     def uncross_reference(self, model):
         self.nid = self.Nid()
         self.cid = self.Cid()
+        del self.nid_ref, self.cid_ref
 
     def MassMatrix(self):
         return self.mass_matrix
@@ -841,12 +857,18 @@ class CONM2(PointMassElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CONM2 eid=%s' % self.eid
+        self.nid = model.Node(self.nid, msg=msg)
+        self.nid_ref = self.nid
+
         cid = self.Cid()
         if cid != -1:
             self.cid = model.Coord(cid, msg=msg)
             self.cid_ref = self.cid
-        self.nid = model.Node(self.nid, msg=msg)
-        self.nid_ref = self.nid
+
+    def uncross_reference(self):
+        self.nid = self.Nid()
+        self.cid = self.Cid()
+        del self.nid_ref, self.cid_ref
 
     @property
     def node_ids(self):

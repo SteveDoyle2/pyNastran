@@ -36,6 +36,10 @@ class LineDamper(DamperElement):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
 class CDAMP1(LineDamper):
     type = 'CDAMP1'
@@ -135,6 +139,11 @@ class CDAMP1(LineDamper):
             msg = 'pid=%i not found which is required by CDAMP1 eid=%i.  Allowed Pids=%s' % (self.pid, self.eid, pids)
             raise KeyError(msg)
 
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
+
     def raw_fields(self):
         nodes = self.node_ids
         fields = ['CDAMP1', self.eid, self.Pid(), nodes[0], self.c1,
@@ -209,6 +218,10 @@ class CDAMP2(LineDamper):
         msg = ' which is required by CDAMP2 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        del self.nodes_ref
 
     def get_edge_ids(self):
         node_ids = self._nodeIDs(allow_empty_nodes=True)
@@ -291,6 +304,11 @@ class CDAMP3(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -432,6 +450,11 @@ class CDAMP5(LineDamper):
         self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Eid(self):
         return self.eid

@@ -73,6 +73,10 @@ class DELAY(BaseCard):
             self.nodes[i] = model.Node(self.node_id)
         self.nodes_ref = self.nodes
 
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        del self.nodes_ref
+
     @property
     def node_id1(self):
         if isinstance(self.nodes[0], integer_types):
@@ -148,6 +152,10 @@ class DPHASE(BaseCard):
         for i, nid in enumerate(self.nodes):
             self.nodes[i] = model.Node(self.node_id)
         self.nodes_ref = self.nodes
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        del self.nodes_ref
 
     @property
     def node_id1(self):

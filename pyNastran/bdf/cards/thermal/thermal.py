@@ -128,6 +128,9 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     @property
     def nodes(self):
         return []
@@ -256,12 +259,14 @@ class CHBDYG(ThermalElement):
     def cross_reference(self, model):
         msg = ' which is required by CHBDYG eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        #self.pid = model.Phbdy(self.pid, msg=msg)
+        self.pid = model.Phbdy(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        #self.pid = self.Pid()
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Eid(self):
         return self.eid
@@ -377,10 +382,13 @@ class CHBDYP(ThermalElement):
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.pid_ref = self.pid
+        self.nodes_ref = self.nodes
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -481,8 +489,11 @@ class PCONV(ThermalProperty):
         else:
             raise NotImplementedError(data)
 
-    #def cross_reference(self,model):
+    #def cross_reference(self, model):
     #    pass
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
@@ -552,8 +563,11 @@ class PCONVM(ThermalProperty):
         else:
             raise NotImplementedError(data)
 
-    #def cross_reference(self,model):
+    #def cross_reference(self, model):
     #    pass
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         list_fields = ['PCONVM', self.pconid, self.mid, self.form,
@@ -608,8 +622,11 @@ class PHBDY(ThermalProperty):
         else:
             raise NotImplementedError(data)
 
-    #def cross_reference(self,model):
-    #    pass
+    #def cross_reference(self, model):
+        #pass
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         list_fields = ['PHBDY', self.pid, self.af, self.d1, self.d2]
@@ -678,9 +695,13 @@ class CONV(ThermalBC):
 
     def cross_reference(self, model):
         msg = ' which is required by CONV eid=%s' % self.eid
-        self.eid = model.Element(self.eid, msg=msg)
+        ## TODO: eid???
+        self.eid_ref = model.Element(self.eid, msg=msg)
         if model._xref == 1:  # True
-            assert self.eid.type in ['CHBDYG', 'CHBDYE', 'CHBDYP']
+            assert self.eid_ref.type in ['CHBDYG', 'CHBDYE', 'CHBDYP']
+
+    def uncross_reference(self):
+        del self.eid_ref
 
     def TA(self, i=None):
         if i is None:

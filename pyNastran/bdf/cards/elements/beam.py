@@ -231,6 +231,11 @@ class CBEAM(CBAR):
         else:
             self.g0_vector = self.x
 
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.nodes = self.node_ids
+        del self.nodes_ref, self.pid_ref
+
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()

@@ -560,6 +560,11 @@ class GRDSET(Node):
         #self.seid = model.SuperElement(self.seid, msg)
         #self.seid_ref = self.seid
 
+    def uncross_reference(self):
+        self.cp = self.Cp()
+        self.cd = self.Cd()
+        del self.cp_ref, self.cd_ref
+
     def Cd(self):
         """
         Gets the output coordinate system
@@ -1181,6 +1186,9 @@ class GRID(Node):
     def uncross_reference(self):
         self.cp = self.Cp()
         self.cd = self.Cd()
+        del self.cp_ref, self.cd_ref
+        if hasattr(self, 'elements'):
+            del self.elements
 
     def raw_fields(self):
         """
@@ -1513,6 +1521,10 @@ class POINT(Node):
         """
         self.cp = model.Coord(self.cp)
         self.cp_ref = self.cp
+
+    def uncross_reference(self):
+        self.cp = self.Cp()
+        del self.cp_ref
 
     def raw_fields(self):
         """

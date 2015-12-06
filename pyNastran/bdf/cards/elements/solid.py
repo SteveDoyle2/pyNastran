@@ -119,6 +119,7 @@ class SolidElement(Element):
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Eid(self):
         return self.eid

@@ -62,6 +62,12 @@ class CFAST(Element):
             self.gb = model.Node(self.Gb(), msg=msg)
             self.gb_ref = self.gb
 
+    def uncross_reference(self):
+        self.gs = self.Gs()
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        del self.gs_ref, self.ga_ref, self.gb_ref
+
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
                        self.Gs(), self.Ga(), self.Gb(), self.xs, self.ys, self.zs]
@@ -183,6 +189,13 @@ class CGAP(Element):
             self.cid = model.Coord(self.Cid(), msg=msg)
             self.cid_ref = self.cid
 
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.cid = self.Cid()
+        self.pid = self.Pid()
+        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
+
     def Eid(self):
         return self.eid
 
@@ -242,6 +255,11 @@ class CrackElement(Element):
         self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
 
 class CRAC2D(CrackElement):
@@ -407,6 +425,10 @@ class PLOTEL(BaseCard):
             model.Node(node_ids[1], msg=msg),
         ]
         self.nodes_ref = self.nodes
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        del self.nodes_ref
 
     def uncross_reference(self):
         self.nodes = self.node_ids

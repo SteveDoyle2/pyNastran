@@ -156,6 +156,11 @@ class MATS1(MaterialDependence):
             self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = self.tid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        self.tid = self.Tid()
+        del self.mid_ref, self.tid_ref
+
     def Tid(self):
         if isinstance(self.tid, Table):
             return self.tid_ref.tid
@@ -241,7 +246,10 @@ class MATT1(MaterialDependence):
         self._xref_table(model, '_sc_table', msg=msg)
         self._xref_table(model, '_ss_table', msg=msg)
 
-        self.mid_ref = self.mid
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        ## TODO: remove refs
+        del self.mid_ref
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
@@ -353,6 +361,11 @@ class MATT2(MaterialDependence):
         self._xref_table(model, '_st_table', msg=msg)
         self._xref_table(model, '_sc_table', msg=msg)
         self._xref_table(model, '_ss_table', msg=msg)
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        ## TODO: remove refs
+        del self.mid_ref
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
@@ -553,7 +566,10 @@ class MATT5(MaterialDependence):
         self._xref_table(model, '_cp_table', msg=msg)
         self._xref_table(model, '_hgen_table', msg=msg)
 
-        self.mid_ref = self.mid
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        ## TODO: remove refs
+        del self.mid_ref
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)

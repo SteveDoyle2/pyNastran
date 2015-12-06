@@ -259,7 +259,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     fem1.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
                            nxref_errors=100, stop_on_xref_error=True)
     #fem1.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
-    #                       nxref_errors=0, stop_on_xref_error=True)
+    #                      nxref_errors=0, stop_on_xref_error=True)
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
@@ -272,7 +272,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #nastran = 'nastran scr=yes bat=no old=no news=no '
         nastran = ''
         #try:
-        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
+        outModel, fem1 = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
         if stop:
             print('card_count:')
             print('-----------')
@@ -280,6 +280,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
                 print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
+
         diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
         #except:
@@ -411,6 +412,27 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
                 #fem1.uncross_reference()
                 fem1.cross_reference()
                 fem1._xref = True
+
+                remake = True
+                if remake:
+                    log = fem1.log
+                    fem1.save_object('model.obj')
+                    fem1.save_object('model.obj', unxref=False)
+                    fem1.write_bdf('spike_out.bdf')
+                    fem1.get_bdf_stats()
+
+                    fem1 = BDF()
+                    fem1.load_object('model.obj')
+                    fem1.write_bdf('spike_in.bdf')
+                    fem1.log = log
+                    fem1.get_bdf_stats()
+
+                    log.info('asfasdf')
+                    fem1.cross_reference()
+                    #fem1.get_bdf_stats()
+                    print('xref-2')
+                    fem1._xref = True
+
                 #fem1.geom_check(geom_check=True, xref=True)
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
@@ -436,7 +458,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
         #fem1.writeAsCTRIA3(out_model)
 
     fem1._get_maps()
-    return out_model
+    return out_model, fem1
 
 
 def run_fem2(bdfModel, out_model, xref, punch,
@@ -777,6 +799,7 @@ def compute(cards1, cards2, quiet=False):
 
 def get_element_stats(fem1, fem2, quiet=False):
     """verifies that the various element methods work"""
+    print('fem1')
     for (key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
             try:

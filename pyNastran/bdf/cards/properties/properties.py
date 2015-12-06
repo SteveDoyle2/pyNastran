@@ -76,6 +76,10 @@ class PFAST(Property):
             self.mcid = model.Coord(self.Mcid(), msg)
             self.mcid_ref = self.mcid_ref
 
+    def uncross_reference(self):
+        self.mcid = self.Mcid()
+        del self.mcid_ref
+
     def Mcid(self):
         if isinstance(self.mcid, integer_types):
             return self.mcid
@@ -166,6 +170,9 @@ class PGAP(Property):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
                   self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
@@ -244,6 +251,10 @@ class PLSOLID(SolidProperty):
         msg = ' which is required by PLSOLID pid=%s' % self.pid
         self.mid = model.HyperelasticMaterial(self.mid, msg)
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def raw_fields(self):
         stress_strain = set_blank_if_default(self.str, 'GRID')
@@ -415,6 +426,10 @@ class PRAC2D(CrackProperty):
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
         self.mid_ref = self.mid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
     def raw_fields(self):
         fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
                   self.iPlane, self.nsm, self.gamma, self.phi]
@@ -467,6 +482,10 @@ class PRAC3D(CrackProperty):
         msg = ' which is required by PRAC3D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def raw_fields(self):
         fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
@@ -540,6 +559,12 @@ class PCONEAX(Property):
         if self.mid3 > 0:
             self.mid3 = model.Material(self.mid3, msg=msg)
             self.mid3_ref = self.mid3
+
+    def uncross_reference(self):
+        self.mid1 = self.Mid1()
+        self.mid2 = self.Mid2()
+        self.mid3 = self.Mid3()
+        del self.mid1_ref, self.mid2_ref, self.mid3_ref
 
     def Mid1(self):
         if isinstance(self.mid1, Material):

@@ -130,6 +130,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_Ref
 
     def Length(self):
         r"""
@@ -397,6 +398,12 @@ class CBAR(LineElement):
         self.gb_ref = self.gb
         self.pid_ref = self.pid
 
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.pid = self.Pid()
+        del self.ga_ref, self.gb_Ref, self.pid
+
     def Ga(self):
         if isinstance(self.ga, integer_types):
             return self.ga
@@ -536,6 +543,13 @@ class CBEAM3(CBAR):
         self.gb_ref = self.gb
         self.gc_ref = self.gc
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.gc = self.Gc()
+        self.pid = self.Pid()
+        del self.ga_ref, self.gb_ref, self.gc_ref, self.pid_ref
 
     def Length(self):
         """
@@ -684,6 +698,11 @@ class CBEND(LineElement):
         #self.g0 = model.nodes[self.g0]
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def write_card(self, size, is_double):
         card = self.repr_fields()

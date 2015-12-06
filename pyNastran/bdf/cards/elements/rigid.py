@@ -110,6 +110,11 @@ class RBAR(RigidElement):
         self.ga_ref = self.ga
         self.gb_ref = self.gb
 
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        del self.ga_ref, self.gb_ref
+
     @property
     def independent_nodes(self):
         """gets the independent node ids"""

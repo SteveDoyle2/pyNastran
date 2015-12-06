@@ -221,6 +221,10 @@ class SUPORT1(Constraint):
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
 
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
+
     def raw_fields(self):
         fields = ['SUPORT1', self.conid]
         for ID, c in zip(self.node_ids, self.Cs):
@@ -279,6 +283,10 @@ class SUPORT(Constraint):
         msg = ', which is required by %s' % self.type
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     def raw_fields(self):
         fields = [self.type]
@@ -362,6 +370,10 @@ class MPC(Constraint):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
+
+    def uncross_reference(self):
+        self.gids = self.node_ids
+        del self.gids_ref
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
@@ -469,6 +481,10 @@ class SPC(Constraint):
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
 
+    def uncross_reference(self):
+        self.gids = self.node_ids
+        del self.gids_ref
+
     def raw_fields(self):
         fields = ['SPC', self.conid]
         for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
@@ -500,6 +516,9 @@ class GMSPC(Constraint):
     def cross_reference(self, model):
         """TODO: xref"""
         msg = ', which is required by %s=%s' % (self.type, self.conid)
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         fields = ['GMSPC', self.conid, self.components, self.entity, self.entity_id]
@@ -549,6 +568,9 @@ class SPCAX(Constraint):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
         #self.rid = model.ring[self.rid]
         #self.hid = model.harmonic[self.hid]
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):
@@ -608,6 +630,10 @@ class SPC1(Constraint):
         msg = ', which is required by SPC1; conid=%s' % self.conid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        del self.nodes_ref
 
     def raw_fields(self):
         fields = ['SPC1', self.conid, self.constraints] + self.node_ids
@@ -674,6 +700,10 @@ class SPCADD(ConstraintADD):
         for i, spc in enumerate(self.sets):
             self.sets[i] = model.SPC(spc, msg=msg)
         self.sets_ref = self.sets
+
+    def uncross_reference(self):
+        self.sets = self.spc_ids
+        del self.sets_ref
 
     def raw_fields(self):
         fields = ['SPCADD', self.conid] + self.spc_ids

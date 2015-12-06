@@ -696,6 +696,10 @@ class PBAR(LineProperty):
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
     def Area(self):
         """
         Gets the area :math:`A` of the CBAR.
@@ -862,6 +866,10 @@ class PBARL(LineProperty):
         msg = ' which is required by PBARL mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1256,6 +1264,10 @@ class PBEAM3(LineProperty):  # not done, cleanup
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
     def repr_fields(self):
         """.. todo:: not done"""
         list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
@@ -1361,6 +1373,10 @@ class PBEND(LineProperty):
         msg = ' which is required by PBEND mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def repr_fields(self):
         list_fields = ['PBEND', self.pid, self.Mid(), ]  # other
