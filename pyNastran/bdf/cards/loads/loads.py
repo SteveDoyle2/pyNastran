@@ -190,7 +190,10 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def uncross_reference(self):
         self.lid = self.Lid()
         self.tid = self.Tid()
-        del self.lid_ref, self.tid_ref
+
+        if self.tid is not None:
+            self.tid_ref
+        del self.lid_ref
 
     def LoadID(self, lid):
         if isinstance(lid, integer_types):
@@ -225,7 +228,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             return None
         elif isinstance(self.tid, integer_types):
             return self.tid
-        return self.tid.tid
+        return self.tid_ref.tid
 
     def raw_fields(self):
         list_fields = ['LSEQ', self.sid, self.exciteID, self.Lid(), self.Tid()]
@@ -282,7 +285,7 @@ class DAREA(BaseCard):
         self.p_ref = self.p
 
     def uncross_reference(self):
-        self.p = self.p
+        self.p = self.node_id
         del self.p_ref
 
     @property
@@ -357,6 +360,10 @@ class SPCD(Load):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
+
+    def uncross_reference(self):
+        self.gids = self.node_ids
+        del self.gids_ref
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -435,6 +442,10 @@ class SLOAD(Load):
         """
         return []
 
+    @property
+    def node_ids(self):
+        return [self.Nid(nid) for nid in self.nids]
+
     def raw_fields(self):
         list_fields = ['SLOAD', self.sid]
         for (nid, mag) in zip(self.nids, self.mags):
@@ -484,7 +495,9 @@ class RFORCE(Load):
     def uncross_reference(self):
         self.nid = self.Nid()
         self.cid = self.Cid()
-        del self.nid_ref, self.cid_ref
+        if self.nid != 0:
+            del self.nid_ref
+        del self.cid_ref
 
     def Nid(self):
         if isinstance(self.nid, integer_types):
@@ -578,7 +591,8 @@ class RANDPS(RandomLoad):
 
     def uncross_reference(self):
         self.tid = self.Tid()
-        del self.tid_ref
+        if self.tid is not None:
+            del self.tid_ref
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')

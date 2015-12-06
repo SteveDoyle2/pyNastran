@@ -197,7 +197,13 @@ class XrefMesh(BDFAttributes):
     def _uncross_reference_properties(self):
         """cross references the property objects"""
         for prop in itervalues(self.properties):
-            prop.uncross_reference()
+            try:
+                prop.uncross_reference()
+            except TypeError:
+                raise NotImplementedError('%s.uncross_reference' % prop.type)
+            except AttributeError:
+                print('%s.uncross_reference error' % prop.type)
+                raise
 
     def _uncross_reference_materials(self):
         """cross references the material objects"""
@@ -238,15 +244,13 @@ class XrefMesh(BDFAttributes):
         SUPORT1, SESUPORT cards.
         """
         for spcadd in itervalues(self.spcadds):
-            print('spcadd.unxref')
             spcadd.uncross_reference()
         for spc in itervalues(self.spcs):
-            print('spc.unxref')
-            print(spc)
             for spci in spc:
                 spci.uncross_reference()
         for mpc in itervalues(self.mpcs):
-            mpc.uncross_reference()
+            for mpci in mpc:
+                mpci.uncross_reference()
         for suport in self.suport:
             suport.uncross_reference()
         for suport1 in itervalues(self.suport1):

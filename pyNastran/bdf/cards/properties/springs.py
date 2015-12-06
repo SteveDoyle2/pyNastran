@@ -68,6 +68,9 @@ class PELAS(SpringProperty):
             #self.pid = self.pelasts[self.pid]
         pass
 
+    def uncross_reference(self):
+        pass
+
     def K(self):
         return self.k
 
@@ -139,6 +142,13 @@ class PELAST(SpringProperty):
         if self.tknid > 0:
             self.tknid = model.Table(self.tknid)
             self.tknid_ref = self.tknid
+
+    def uncross_reference(self, model):
+        self.pid = self.Pid()
+        self.tkid = self.Tkid()
+        self.tgeid = self.Tgeid()
+        self.tknid = self.Tknid()
+        del self.pid_ref, self.tkid_ref, self.tgeid_ref, self.tknid_ref
 
     def Pid(self):
         if isinstance(self.pid, integer_types):

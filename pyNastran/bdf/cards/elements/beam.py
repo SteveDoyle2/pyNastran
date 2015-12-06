@@ -233,8 +233,9 @@ class CBEAM(CBAR):
 
     def uncross_reference(self):
         self.pid = self.Pid()
-        self.nodes = self.node_ids
-        del self.nodes_ref, self.pid_ref
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()

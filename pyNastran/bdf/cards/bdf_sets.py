@@ -575,6 +575,14 @@ class SET1(Set):
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
 
+    def uncross_reference(self):
+        if self.xref_type == 'Node':
+            self.IDs = self.get_IDs()
+            del self.IDs_ref
+            self.xref_type = None
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
+
     def get_IDs(self):
         if self.xref_type is None:
             IDs = self.IDs
@@ -742,6 +750,9 @@ class SESET(SetSuper):
         return ''.join(cards)
 
     def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
 

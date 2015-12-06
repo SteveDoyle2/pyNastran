@@ -252,7 +252,11 @@ class Property(BaseCard):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        try:
+            del self.mid_ref
+        except AttributeError:
+            print('mid =', self.mid)
+            raise
 
     def write_card_8(self):
         return self.write_card()

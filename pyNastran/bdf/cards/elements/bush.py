@@ -184,9 +184,10 @@ class CBUSH(BushElement):
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.pid = self.Pid()
-        #if self.cid is not None:
         self.cid = self.Cid()
-        del self.ga_ref, self.gb_ref, self.pid_ref, self.cid_ref
+        if self.cid is not None:
+            del self.cid_ref
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
     def raw_fields(self):
         if self.g0 is not None:

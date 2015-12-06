@@ -284,7 +284,10 @@ class CMASS2(PointMassElement):
     def uncross_reference(self):
         self.g1 = self.G1()
         self.g2 = self.G2()
-        del self.g1_ref, self.g2_ref
+        if self.g1 is not None:
+            del self.g1_ref
+        if self.g2 is not None:
+            del self.g2_ref
 
     def G1(self):
         if isinstance(self.g1, integer_types):
@@ -450,6 +453,12 @@ class CMASS4(PointMassElement):
     def cross_reference(self, model):
         #self.s1 = model.Node(self.s1)
         #self.s2 = model.Node(self.s2)
+        pass
+
+    def safe_cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):
@@ -637,7 +646,7 @@ class CONM1(PointMassElement):
         self.nid_ref = self.nid
         self.cid_ref = self.cid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nid = self.Nid()
         self.cid = self.Cid()
         del self.nid_ref, self.cid_ref

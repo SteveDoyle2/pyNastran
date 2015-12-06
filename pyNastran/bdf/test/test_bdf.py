@@ -22,7 +22,7 @@ import traceback
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
-#from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
+from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
 from pyNastran.bdf.bdf import BDF, DLOAD
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_replacer import BDFReplacer
@@ -290,12 +290,12 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except IOError:  # only temporarily uncomment this when running lots of tests
-        #pass
-    #except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
-        #print('failed test because CardParseSyntaxError...ignoring')
-    #except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
-        #print('failed test because DuplicateIDsError...ignoring')
+    except IOError:  # only temporarily uncomment this when running lots of tests
+        pass
+    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because CardParseSyntaxError...ignoring')
+    except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because DuplicateIDsError...ignoring')
     #except RuntimeError:  # only temporarily uncomment this when running lots of tests
         #if 'GRIDG' in fem1.card_count:
             #print('failed test because mesh adaption (GRIDG)...ignoring')
@@ -427,10 +427,8 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
                     fem1.log = log
                     fem1.get_bdf_stats()
 
-                    log.info('asfasdf')
                     fem1.cross_reference()
                     #fem1.get_bdf_stats()
-                    print('xref-2')
                     fem1._xref = True
 
                 #fem1.geom_check(geom_check=True, xref=True)
@@ -614,7 +612,11 @@ def run_fem2(bdfModel, out_model, xref, punch,
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for
                         #print(load2)
-                        force = load2.get_load_at_freq(100.) * scale_factor
+                        freq_id = subcase.get_parameter('FREQ')[0]
+                        freq = fem2.frequencies[freq_id]
+                        #print('freqs =', freq.freqs)
+                        fmax = freq.freqs[-1]
+                        force = load2.get_load_at_freq(fmax) * scale_factor
                 elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
                     for load2, scale_factor in zip(loads2, scale_factors2):
                         # for

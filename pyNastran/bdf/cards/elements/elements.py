@@ -194,7 +194,9 @@ class CGAP(Element):
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
+        if self.cid:
+            del self.cid_ref
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
     def Eid(self):
         return self.eid

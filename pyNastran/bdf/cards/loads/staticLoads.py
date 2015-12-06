@@ -389,6 +389,7 @@ class GRAV(BaseCard):
     def cross_reference(self, model):
         msg = ' which is required by GRAV sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
 
     def safe_cross_reference(self, model, debug=True):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
@@ -396,8 +397,9 @@ class GRAV(BaseCard):
         self.cid = model.Coord(self.cid, msg=msg)
         self.cid_ref = self.cid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.cid = self.Cid()
+        del self.cid_ref
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -494,8 +496,9 @@ class ACCEL(BaseCard):
         msg = ' which is required by ACCEL sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.cid = self.Cid()
+        del self.cid_ref
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by ACCEL sid=%s' % self.sid
@@ -1196,27 +1199,27 @@ class MOMENT(Moment):
 
     def repr_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
-        list_fields = ['MOMENT', self.sid, self.node, cid,
+        list_fields = ['MOMENT', self.sid, self.node_id, cid,
                        self.mag] + list(self.xyz)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
         if size == 8:
-            cids = set_string8_blank_if_default(self.Cid(), 0)
-            msg = 'MOMENT  %8i%8i%8s%8s%8s%8s%8s\n' % (self.sid, self.node,
-                cids, print_float_8(self.mag), print_float_8(self.xyz[0]),
+            scid = set_string8_blank_if_default(self.Cid(), 0)
+            msg = 'MOMENT  %8i%8i%8s%8s%8s%8s%8s\n' % (self.sid, self.node_id,
+                scid, print_float_8(self.mag), print_float_8(self.xyz[0]),
                 print_float_8(self.xyz[1]), print_float_8(self.xyz[2]))
         else:
-            cids = set_string16_blank_if_default(self.Cid(), 0)
+            scid = set_string16_blank_if_default(self.Cid(), 0)
             if is_double:
                 msg = ('MOMENT* %16i%16i%16s%s\n'
-                       '*       %16s%16s%16s\n') % (self.sid, self.node,
-                    cids, print_scientific_double(self.mag), print_scientific_double(self.xyz[0]),
+                       '*       %16s%16s%16s\n') % (self.sid, self.node_id,
+                    scid, print_scientific_double(self.mag), print_scientific_double(self.xyz[0]),
                     print_scientific_double(self.xyz[1]), print_scientific_double(self.xyz[2]))
             else:
                 msg = ('MOMENT* %16i%16i%16s%s\n'
-                       '*       %16s%16s%16s\n') % (self.sid, self.node,
-                    cids, print_float_16(self.mag), print_float_16(self.xyz[0]),
+                       '*       %16s%16s%16s\n') % (self.sid, self.node_id,
+                    scid, print_float_16(self.mag), print_float_16(self.xyz[0]),
                     print_float_16(self.xyz[1]), print_float_16(self.xyz[2]))
         return self.comment + msg
 
@@ -1889,22 +1892,38 @@ class PLOAD2(Load):
         self.eids_ref = self.eids
 
     def uncross_reference(self):
-        self.eids = self.Eids()
+        self.eids = self.element_ids
         del self.eids_ref
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
         return self.get_loads()
 
+    @property
+    def element_ids(self):
+        if isinstance(self.eids[0], int):
+            eids = self.eids
+        else:
+            eids = [elem.Eid() for elem in self.eids]
+        return eids
+
     def get_loads(self):
         return [self]
 
     def raw_fields(self):
         list_fields = ['PLOAD2', self.sid, self.pressure]
-        if len(self.eids) > 6:
-            list_fields += [self.eids[0], 'THRU', self.eids[-1]]
-        else:
+        eids = self.element_ids
+        if len(eids) == 1:
             list_fields += self.eids
+        else:
+            eids.sort()
+            delta_eid = eids[-1] - eids[0] + 1
+            if delta_eid != len(eids):
+                msg = 'eids=%s len(eids)=%s delta_eid=%s must be continuous' % (
+                    eids, len(eids), delta_eid)
+                raise RuntimeError(msg)
+            #list_fields += eids
+            list_fields += [eids[0], 'THRU', eids[-1]]
         return list_fields
 
     def repr_fields(self):
@@ -1921,6 +1940,14 @@ class PLOAD2(Load):
 
 class PLOAD4(Load):
     type = 'PLOAD4'
+
+    def getLoads(self):
+        self.deprecated('getLoads()', 'get_loads()', '0.8')
+        return self.get_loads()
+
+    def transformLoad(self):
+        self.deprecated('transformLoad()', 'transform_load()', '0.8')
+        return self.transform_load()
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -1987,17 +2014,8 @@ class PLOAD4(Load):
         if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
             raise RuntimeError(self.ldir)
 
-
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
-
     def get_loads(self):
         return [self]
-
-    def transformLoad(self):
-        self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        return self.transform_load()
 
     def transform_load(self):
         """
@@ -2072,20 +2090,24 @@ class PLOAD4(Load):
     def uncross_reference(self):
         self.eid = self.Eid(self.eid)
         self.cid = self.Cid()
-        self.g1 = self.G1()
-        self.g34 = self.G34()
+        if self.g1 is not None:
+            self.g1 = self.G1()
+            del self.g1_ref
+        if self.g34 is not None:
+            self.g34 = self.G34()
+            del self.g34_ref
         self.eids = self.element_ids
-        del self.eid_ref, self.cid_ref, self.g1_ref, self.g34_ref, self.eids_ref
+        del self.eid_ref, self.cid_ref, self.eids_ref
 
     def G1(self):
         if isinstance(self.g1, (integer_types, int32)):
             return self.g1
-        return self.g1.nid
+        return self.g1_ref.nid
 
     def G34(self):
         if isinstance(self.g34, (integer_types, int32)):
             return self.g34
-        return self.g34.nid
+        return self.g34_ref.nid
 
     def Eid(self, eid):
         if isinstance(eid, (integer_types, int32)):
@@ -2115,7 +2137,7 @@ class PLOAD4(Load):
 
     @property
     def element_ids(self):
-        self.getElementIDs()
+        return self.getElementIDs()
 
     def raw_fields(self):
         eid = self.Eid(self.eid)
@@ -2203,9 +2225,9 @@ class PLOADX1(Load):
         del self.eid_ref, self.ga_ref, self.gb_ref
 
     def Eid(self):
-            if isinstance(self.eid, (integer_types, int32)):
-                return self.eid
-            return self.eid_ref.eid
+        if isinstance(self.eid, (integer_types, int32)):
+            return self.eid
+        return self.eid_ref.eid
 
     def Ga(self):
         if isinstance(self.ga, (integer_types, int32)):

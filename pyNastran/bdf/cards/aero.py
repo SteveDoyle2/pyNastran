@@ -1164,7 +1164,7 @@ class CAERO1(BaseCard):
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self._ref.pid
+        return self.pid_ref.pid
 
     def cross_reference(self, model):
         """

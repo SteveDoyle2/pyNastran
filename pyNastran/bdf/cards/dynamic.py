@@ -20,6 +20,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from six.moves import zip, range
 from math import log, exp, ceil
+from numpy import unique, hstack
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -210,13 +211,12 @@ class FREQ(BaseCard):
             self._comment = comment
         self.sid = integer(card, 1, 'sid')
         self.freqs = fields(double, card, 'freq', i=2, j=len(card))
-        self.cleanFreqs()
+        self.clean_freqs()
 
-    def cleanFreqs(self):
-        self.freqs = list(set(self.freqs))
-        self.freqs.sort()
+    def clean_freqs(self):
+        self.freqs = unique(self.freqs)
 
-    def getFreqs(self):
+    def get_freqs(self):
         return self.freqs
 
     def add_frequencies(self, freqs):
@@ -234,8 +234,8 @@ class FREQ(BaseCard):
         """
         #print("self.freqs = ",self.freqs)
         #print("freqs = ",freqs)
-        self.freqs += freqs
-        self.cleanFreqs()
+        self.freqs = unique(hstack([self.freqs, freqs]))
+        self.clean_freqs()
 
     def add_frequency_object(self, freq):
         """
@@ -247,7 +247,7 @@ class FREQ(BaseCard):
         self.add_frequencies(freq.freqs)
 
     def raw_fields(self):
-        list_fields = ['FREQ', self.sid] + self.freqs
+        list_fields = ['FREQ', self.sid] + list(self.freqs)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -285,7 +285,7 @@ class FREQ1(FREQ):
         self.freqs = []
         for i in range(ndf):
             self.freqs.append(f1 + i * df)
-        self.cleanFreqs()
+        self.clean_freqs()
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -323,7 +323,7 @@ class FREQ2(FREQ):
         self.freqs = []
         for i in range(nf):
             self.freqs.append(f1 * exp(i * d))  # 0 based index
-        self.cleanFreqs()
+        self.clean_freqs()
 
 
 class FREQ3(FREQ):

@@ -391,18 +391,18 @@ class CBAR(LineElement):
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
         self.ga_ref = self.ga
         self.gb_ref = self.gb
         self.pid_ref = self.pid
 
     def uncross_reference(self):
+        self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        self.pid = self.Pid()
-        del self.ga_ref, self.gb_Ref, self.pid
+        del self.pid_ref, self.ga_ref, self.gb_ref
 
     def Ga(self):
         if isinstance(self.ga, integer_types):

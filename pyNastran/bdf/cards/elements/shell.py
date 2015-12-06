@@ -250,8 +250,9 @@ class TriShell(ShellElement):
         return centroid
 
     def uncross_reference(self):
-        self.pid = self.Pid()
         self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
 
 class CTRIA3(TriShell):
@@ -334,9 +335,10 @@ class CTRIA3(TriShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -501,9 +503,10 @@ class CTRIA6(TriShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -669,9 +672,10 @@ class CTRIAR(TriShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     #def _verify(self, xref=False):
         #eid = self.Eid()
@@ -853,9 +857,10 @@ class CTRIAX(TriShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -932,9 +937,10 @@ class CTRIAX6(TriShell):
         self.nodes_ref = self.nodes
         self.mid_ref = self.mid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.mid = self.Mid()
+        del self.nodes_ref, self.mid_ref
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -1183,8 +1189,9 @@ class QuadShell(ShellElement):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3, T4)
 
     def uncross_reference(self):
-        self.pid = self.Pid()
         self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
 
 class CSHEAR(QuadShell):
@@ -1218,9 +1225,10 @@ class CSHEAR(QuadShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Normal(self):
         (n1, n2, n3, n4) = self.get_node_positions()
@@ -1600,9 +1608,10 @@ class CQUADR(QuadShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1710,9 +1719,10 @@ class CQUAD(QuadShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Thickness(self):
         """
@@ -1832,9 +1842,10 @@ class CQUAD8(QuadShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1988,9 +1999,10 @@ class CQUADX(QuadShell):
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Thickness(self):
         """

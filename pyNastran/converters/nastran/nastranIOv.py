@@ -167,6 +167,7 @@ class NastranDisplacementResults(object):
                 raise RuntimeError(method)
 
     def get_scalar(self, i, name):
+        print(self.dxyz_norm)
         return self.dxyz_norm
 
     def get_vector_result(self, i, name):
@@ -1194,7 +1195,7 @@ class NastranIO(object):
             else:
                 raise NotImplementedError(elem.offt)
 
-            assert elem.offt in ['GGG', 'BGG'], elem.offt
+            #assert elem.offt in ['GGG', 'BGG'], elem.offt
             vhat = v / norm(v) # i
             try:
                 z = cross(ihat, vhat) # k

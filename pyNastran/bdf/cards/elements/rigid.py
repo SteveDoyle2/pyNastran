@@ -188,6 +188,11 @@ class RBAR1(RigidElement):
         self.ga_ref = self.ga
         self.gb_ref = self.gb
 
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        del self.ga_ref, self.gb_ref
+
     def raw_fields(self):
         list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, self.alpha]
         return list_fields
@@ -272,6 +277,11 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
         self.Gni_ref = self.Gni
         self.Gmi_ref = self.Gmi
+
+    def uncross_reference(self):
+        self.Gni = self.Gni_node_ids()
+        self.Gmi = self.Gmi_node_ids()
+        del self.Gni_ref, self.Gmi_ref
 
     @property
     def Gni_node_ids(self):
@@ -493,6 +503,11 @@ class RBE2(RigidElement):
         self.Gmi_ref = self.Gmi
         self.gn_ref = self.gn
 
+    def uncross_reference(self):
+        self.Gmi = self.Gmi_node_ids
+        self.gn = self.Gn()
+        del self.Gmi_ref, self.gn_ref
+
     def Gn(self):
         if isinstance(self.gn, integer_types) or self.gn is None:
             return self.gn
@@ -604,9 +619,9 @@ class RBE3(RigidElement):
                 assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
-                wtCG_group = [wt, compi, Gij]
-                self.WtCG_groups.append(wtCG_group)
-                #print('----finished a group=%r----' % wtCG_group)
+                weight_cg_group = [wt, compi, Gij]
+                self.WtCG_groups.append(weight_cg_group)
+                #print('----finished a group=%r----' % weight_cg_group)
             else:
                 i += 1
 
@@ -680,6 +695,18 @@ class RBE3(RigidElement):
         ## TODO: add refs
         for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
             self.WtCG_groups[i][2] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+
+    def uncross_reference(self):
+        self.Gmi = self.Gmi_node_ids
+        self.refgrid = self.ref_grid_id
+
+        weight_cg_groups2 = []
+        for (wt, compi, Gij) in self.WtCG_groups:
+            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
+            weight_cg_groups2.append([wt, compi, Giji])
+
+        self.WtCG_groups = weight_cg_groups2
+        del self.Gmi_ref, self.refgrid_ref
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)

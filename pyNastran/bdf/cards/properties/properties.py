@@ -78,7 +78,8 @@ class PFAST(Property):
 
     def uncross_reference(self):
         self.mcid = self.Mcid()
-        del self.mcid_ref
+        if self.mcid != -1:
+            del self.mcid_ref
 
     def Mcid(self):
         if isinstance(self.mcid, integer_types):

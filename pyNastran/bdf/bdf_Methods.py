@@ -429,7 +429,7 @@ class BDFMethods(BDFAttributes):
         """
         debug = False
         for (nid, node_old) in iteritems(model_old.nodes):
-            coord = node_old.cp
+            coord = node_old.cp_ref
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
             p2 = coord.transformToLocal(p, matrix, debug=debug)
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
@@ -759,7 +759,7 @@ class BDFMethods(BDFAttributes):
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale
-                for eid in load.eids:
+                for eid in load.element_ids:
                     if eid not in eids:
                         continue
                     elem = self.elements[eid]
@@ -1198,7 +1198,7 @@ class BDFMethods(BDFAttributes):
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale
-                for eid in load.eids:
+                for eid in load.element_ids:
                     elem = self.elements[eid]
                     if elem.type in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
                         n = elem.Normal()
@@ -1429,7 +1429,7 @@ class BDFMethods(BDFAttributes):
 
         return nids, comps
 
-    def get_mpcs(self, spc_id):
+    def get_mpcs(self, mpc_id):
         """
         Gets the MPCs in a semi-usable form.
 
@@ -1449,7 +1449,7 @@ class BDFMethods(BDFAttributes):
           - MPC
           - MPCADD
         """
-        mpcs = self.mpcs[spc_id]
+        mpcs = self.mpcs[mpc_id]
         nids = []
         comps = []
         for mpc in mpcs:

@@ -397,6 +397,9 @@ class QHBDY(ThermalLoad):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         list_fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
         return list_fields
@@ -464,6 +467,9 @@ class TEMP(ThermalLoad):
     def safe_cross_reference(self, model, debug=True):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         """Writes the TEMP card"""
         list_fields = ['TEMP', self.sid]
@@ -527,6 +533,9 @@ class TEMPD(BaseCard):
             self.temperatures[lid] = tempd
 
     def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):

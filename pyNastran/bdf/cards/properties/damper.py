@@ -27,6 +27,9 @@ class DamperProperty(Property):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
 
 class PDAMP(DamperProperty):
     type = 'PDAMP'
@@ -210,6 +213,9 @@ class PVISC(DamperProperty):
             self.cr = data[2]
 
     def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self, model):
         pass
 
     def _verify(self, xref=False):

@@ -73,6 +73,17 @@ class DCONSTR(OptConstraint):
             self.uid = model.Table(self.uid)
             self.uid_ref = self.uid
 
+    def uncross_reference(self):
+        self.rid = self.Rid()
+        self.lid = self.Lid()
+        self.uid = self.Uid()
+
+        if isinstance(self.lid, integer_types):
+            del self.lid
+        if isinstance(self.uid, integer_types):
+            del self.uid_ref
+        del self.rid_ref
+
     def raw_fields(self):
         list_fields = ['DCONSTR', self.oid, self.Rid(), self.Lid(),
                        self.Uid(), self.lowfq, self.highfq]
@@ -303,6 +314,7 @@ class DLINK(OptConstraint):
                 self.Ci.append(Ci)
         else:
             raise RuntimeError(data)
+
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
         for (idv, ci) in zip(self.IDv, self.Ci):
@@ -438,6 +450,11 @@ class DRESP1(OptConstraint):
             msg += str(self)
             raise NotImplementedError(msg)
 
+    def uncross_reference(self):
+        self.atti = self.atti_values()
+        if hasattr(self, 'atti_ref'):
+            del self.atti_ref
+
     def atti_values(self):
         #return self.atti
         #if self.rtype in ['ELEM']:
@@ -453,7 +470,7 @@ class DRESP1(OptConstraint):
         elif self.rtype in ['FRSTRE']:
             data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
             for value in data:
-                print('atti =', value, type(value))
+                #print('atti =', value, type(value))
                 assert not isinstance(value, BaseCard), value
         elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'EIGN', 'FREQ']:
             data = self.atti
@@ -471,8 +488,12 @@ class DRESP1(OptConstraint):
                             'TSPCF',
                             ]:
             data = self.atti
+            for value in data:
+                assert not isinstance(value, BaseCard), 'rtype=%s value=%s' % (self.rtype, value)
         elif self.rtype in ['GPFORCP']: # MSC Nastran specific
             data = self.atti
+            for value in data:
+                assert not isinstance(value, BaseCard), value
         else:
             msg = 'rtype=%s ptype=%s\n' % (self.rtype, self.ptype)
             #msg += str(self)
@@ -482,6 +503,8 @@ class DRESP1(OptConstraint):
     def raw_fields(self):
         list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
                        self.region, self.atta, self.attb] + self.atti_values()
+        #for val in self.atti_values():
+            #print(val)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -616,12 +639,15 @@ class DRESP2(OptConstraint):
     def uncross_reference(self):
         if hasattr(self, 'func'):
             del self.func
-            del self.dequation
+
+        self.dequation = self.DEquation()
+        if isinstance(self.dequation, int):
+            del self.dequation_ref
 
     def DEquation(self):
         if isinstance(self.dequation, (int, string_types)):
             return self.dequation
-        return self.dequation.equation_id
+        return self.dequation_ref.equation_id
 
     def _get_values(self, name, values_list):
         out = []
@@ -832,6 +858,10 @@ class DCONADD(OptConstraint):
         self.dconstrs = [model.dconstrs[dcid] for dcid in self.dconstr_ids]
         self.dconstrs_ref = self.dconstrs
 
+    def uncross_reference(self):
+        self.dconstrs = self.dconstr_ids
+        del self.dconstrs_ref
+
     @property
     def dconstr_ids(self):
         return [dconstr if isinstance(dconstr, integer_types) else dconstr.oid
@@ -915,17 +945,17 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
             self.dvids = []
             self.coeffs = []
-            endFields = [interpret_value(field) for field in card[9:]]
-            #print "endFields = ",endFields
-            nfields = len(endFields) - 1
+            end_fields = [interpret_value(field) for field in card[9:]]
+            #print "end_fields = ",end_fields
+            nfields = len(end_fields) - 1
             if nfields % 2 == 1:
-                endFields.append(None)
+                end_fields.append(None)
                 nfields += 1
 
             i = 0
             for i in range(0, nfields, 2):
-                self.dvids.append(endFields[i])
-                self.coeffs.append(endFields[i + 1])
+                self.dvids.append(end_fields[i])
+                self.coeffs.append(end_fields[i + 1])
             if nfields % 2 == 1:
                 print(card)
                 print("dvids = %s" % (self.dvids))
@@ -938,6 +968,10 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def OptID(self):
         return self.oid
@@ -1026,6 +1060,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        del self.pid_ref
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))
@@ -1199,11 +1237,16 @@ class DVPREL2(OptConstraint):
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         self.pid = model.Property(self.pid)
-        assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
         self.dequation = model.DEQATN(self.dequation)
 
         self.pid_ref = self.pid
         self.dequation_ref = self.dequation
+        assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.dequation = self.DEquation()
+        del self.pid_ref, self.dequation_ref
 
     #def OptValue(self):  #: .. todo:: not implemented
         #self.pid_ref.OptValue(self.pNameFid)

@@ -29,9 +29,10 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -343,9 +344,10 @@ class CONROD(RodElement):
         self.nodes_ref = self.nodes
         self.mid_ref = self.mid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.mid = self.Mid()
+        del self.nodes_ref, self.mid_ref
 
     def _verify(self, xref=False):
         pid = self.Pid()
