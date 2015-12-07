@@ -1001,14 +1001,6 @@ class PSHELL(ShellProperty):
         #assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
                               #' card (Ti field not supported)')
 
-    @property
-    def mid(self):
-        raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
-
-    @mid.setter
-    def mid(self, value):
-        raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
-
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
@@ -1072,6 +1064,15 @@ class PSHELL(ShellProperty):
     def materials(self):
         return [self.mid1, self.mid2, self.mid3, self.mid4]
 
+    #@property
+    #def mid(self):
+        #raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
+
+    #@mid.setter
+    #def mid(self, value):
+        #raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
+
+    @property
     def mid(self):
         if isinstance(self.mid1, Material):
             return self.mid1
