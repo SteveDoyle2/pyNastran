@@ -280,8 +280,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             nids2.update(nids)
         return nids2
 
-    def Node(self, nid, allowEmptyNodes=False, msg=''):
-        if (nid == 0 or nid is None) and allowEmptyNodes:
+    def Node(self, nid, allow_empty_nodes=False, msg=''):
+        if (nid == 0 or nid is None) and allow_empty_nodes:
             return None
         elif nid in self.nodes:
             return self.nodes[nid]
@@ -294,13 +294,13 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             nid_list = array(self.nodes.keys(), dtype='int32')
             raise RuntimeError('nid=%s is not a GRID, SPOINT, or EPOINT%s\n%s' % (nid, msg, nid_list))
 
-    def Nodes(self, nids, allowEmptyNodes=False, msg=''):
+    def Nodes(self, nids, allow_empty_nodes=False, msg=''):
         """
         Returns a series of node objects given a list of node IDs
         """
         nodes = []
         for nid in nids:
-            nodes.append(self.Node(nid, allowEmptyNodes, msg))
+            nodes.append(self.Node(nid, allow_empty_nodes, msg))
         return nodes
 
     #--------------------

@@ -396,9 +396,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
     def deprecated(self, old_name, new_name, deprecated_version):
         deprecated(old_name, new_name, deprecated_version, levels=[-1])
 
-    def add_tools(self, tools):
-        self.deprecated('add_tools', 'removed...', '0.7')
-        self.tools += tools
+    #def add_tools(self, tools):
+        #self.deprecated('add_tools', 'removed...', '0.7')
+        #self.tools += tools
 
     def on_flip_picker(self):
         return
@@ -2786,6 +2786,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             (obj, (i, res_name)) = self.resultCases[key]
             subcase_id = obj.subcase_id
             plot_value = obj.get_plot_value(i, res_name) # vector
+            print('plot_value =', plot_value)
 
             result_type = obj.get_title(i, res_name)
             vector_size = obj.get_vector_size(i, res_name)
@@ -2808,6 +2809,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
         assert vector_size1 == 1, vector_size1
 
+
+        #if isinstance(key, (int, int32)):  # vector 3
+            #norm_plot_value = norm(plot_value, axis=1)
+            #min_value = norm_plot_value.min()
+            #max_value = norm_plot_value.max()
+            #print('norm_plot_value =', norm_plot_value)
+
         if update_3d:
             self.is_horizontal_scalar_bar = is_horizontal
             self._set_case(self.result_name, self.iCase,
@@ -2816,11 +2824,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
         subtitle, label = self.get_subtitle_label(subcase_id)
         scale1 = 0.0
-        name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
         # if vector_size == 3:
 
+        name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
+
+        #if isinstance(key, (int, int32)):  # vector 3
+            #norm_plot_value = norm(plot_value, axis=1)
+            #grid_result = self.set_grid_values(name, norm_plot_value, vector_size1,
+                                               #min_value, max_value, norm_value,
+                                               #is_blue_to_red=is_blue_to_red)
+        #else:
         grid_result = self.set_grid_values(name, plot_value, vector_size1,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)

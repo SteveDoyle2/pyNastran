@@ -45,11 +45,11 @@ class NSM(PointProperty):
         if comment:
             self._comment = comment
         if card:
-            nOffset = 2 * icard
+            noffset = 2 * icard
             self.sid = integer(card, 1, 'sid')
             self.Type = string(card, 2, 'Type')
-            self.id = integer(card, 3 + nOffset, 'id')
-            self.value = double(card, 4 + nOffset, 'value')
+            self.id = integer(card, 3 + noffset, 'id')
+            self.value = double(card, 4 + noffset, 'value')
         else:
             self.sid = data[0]
             #sid=9  propSet=PBEA ID=538976333 value=0.0

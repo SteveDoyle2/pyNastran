@@ -244,5 +244,5 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
     if nspaces == 0:
         msg = msg[:-2]
     if debug:
-        print("|%r|" % msg)
+        print("%r" % msg)
     return msg

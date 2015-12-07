@@ -121,12 +121,17 @@ class ABCQSet(Set):
 
     def cross_reference(self, model):
         msg = ' which is required by %s' % self.type
-        self.IDs = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
-        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -173,12 +178,17 @@ class SuperABCQSet(Set):
 
     def cross_reference(self, model):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.IDs = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -295,12 +305,17 @@ class ABQSet1(Set):
 
     def cross_reference(self, model):
         msg = ' which is required by %s' % self.type
-        self.IDs = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
-        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -352,12 +367,17 @@ class SuperABQSet1(Set):
 
     def cross_reference(self, model):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.IDs = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -432,12 +452,17 @@ class CSET1(Set):
 
     def cross_reference(self, model):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        self.IDs = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -549,6 +574,14 @@ class SET1(Set):
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
+
+    def uncross_reference(self):
+        if self.xref_type == 'Node':
+            self.IDs = self.get_IDs()
+            del self.IDs_ref
+            self.xref_type = None
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
 
     def get_IDs(self):
         if self.xref_type is None:
@@ -719,6 +752,9 @@ class SESET(SetSuper):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
 
 class SEBSET(SuperABCQSet):
     """
@@ -867,12 +903,17 @@ class USET(Set):
 
     def cross_reference(self, model):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        self.IDs = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """
@@ -923,12 +964,17 @@ class USET1(ABQSet1):
 
     def cross_reference(self, model):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        self.IDs = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        return _node_ids(self, self.IDs, allowEmptyNodes=True, msg=msg)
+        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""

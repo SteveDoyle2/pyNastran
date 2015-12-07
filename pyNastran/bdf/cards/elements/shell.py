@@ -24,7 +24,6 @@ from six.moves import range
 from numpy import cross, allclose
 from numpy.linalg import norm
 
-from pyNastran.bdf.deprecated import ShellElementDeprecated
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.utils.mathematics import Area, centroid_triangle
@@ -87,11 +86,18 @@ def _normal(a, b):
     return normal
 
 
-class ShellElement(Element, ShellElementDeprecated):
+class ShellElement(Element):
     type = 'ShellElement'
 
     def __init__(self, card, data):
         Element.__init__(self, card, data)
+
+    def Rho(self):
+        """
+        Returns the density
+        """
+        self.deprecated('Rho()', 'pid.mid().rho', '0.8')
+        return self.pid_ref.mid().rho
 
     def Eid(self):
         return self.eid
@@ -103,7 +109,7 @@ class ShellElement(Element, ShellElementDeprecated):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def mid(self):
         """
@@ -111,7 +117,7 @@ class ShellElement(Element, ShellElementDeprecated):
 
         .. todo:: possibly remove this
         """
-        return self.pid.mid()
+        return self.pid_ref.mid()
 
     def Mid(self):
         """
@@ -119,30 +125,30 @@ class ShellElement(Element, ShellElementDeprecated):
 
         .. todo:: possibly remove this
         """
-        return self.pid.Mid()
+        return self.pid_ref.Mid()
 
     def Nsm(self):
         """
         Returns the non-structural mass
         """
-        return self.pid.Nsm()
+        return self.pid_ref.Nsm()
 
     def MassPerArea(self):
         """
         Returns the mass per area
         """
-        return self.pid.MassPerArea()
+        return self.pid_ref.MassPerArea()
 
     def Mass(self):
         r"""
         .. math:: m = \frac{m}{A} A  \f]
         """
         A = self.Area()
-        mpa = self.pid.MassPerArea()
+        mpa = self.pid_ref.MassPerArea()
         try:
             return mpa * A
         except TypeError:
-            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid.type)
+            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
     def flipNormal(self):
@@ -165,7 +171,7 @@ class TriShell(ShellElement):
         ]
 
     def get_edge_axes(self):
-        n1, n2, n3 = self.nodes
+        n1, n2, n3 = self.nodes_ref
         g1 = n1.get_position()
         g2 = n2.get_position()
         g3 = n3.get_position()
@@ -179,7 +185,7 @@ class TriShell(ShellElement):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def AreaCentroidNormal(self):
         """
@@ -244,8 +250,9 @@ class TriShell(ShellElement):
         return centroid
 
     def uncross_reference(self):
-        self.pid = self.Pid()
         self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
 
 class CTRIA3(TriShell):
@@ -325,10 +332,13 @@ class CTRIA3(TriShell):
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -342,8 +352,8 @@ class CTRIA3(TriShell):
             assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if not self.pid.type in ['PLPLANE']:
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            if not self.pid_ref.type in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
@@ -357,7 +367,7 @@ class CTRIA3(TriShell):
     #def Thickness(self):
         #if self.T1 + self.T2 + self.T3 > 0.0:
         #    if self.TFlag == 0:
-        #        t = self.pid.Thickness()
+        #        t = self.pid_ref.Thickness()
         #        T1 = self.T1 / t
         #        T2 = self.T2 / t
         #        T3 = self.T3 / t
@@ -367,7 +377,7 @@ class CTRIA3(TriShell):
         #        T3 = self.T3
         #    t = (T1+T2+T3)/3.
         #else:
-        #    t = self.pid.Thickness()
+        #    t = self.pid_ref.Thickness()
         #return t
 
     def flipNormal(self):
@@ -400,7 +410,7 @@ class CTRIA3(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
@@ -488,12 +498,15 @@ class CTRIA6(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -507,8 +520,8 @@ class CTRIA6(TriShell):
             assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if not self.pid.type in ['PLPLANE']:
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            if not self.pid_ref.type in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
@@ -523,7 +536,7 @@ class CTRIA6(TriShell):
         """
         Returns the thickness, :math:`t`
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def AreaCentroidNormal(self):
         """
@@ -597,7 +610,7 @@ class CTRIA6(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
@@ -656,10 +669,13 @@ class CTRIAR(TriShell):
         msg = ' which is required by CTRIAR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     #def _verify(self, xref=False):
         #eid = self.Eid()
@@ -672,7 +688,7 @@ class CTRIAR(TriShell):
             #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         #if xref:
-            #assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            #assert self.pid_ref.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             #t = self.Thickness()
             #a,c,n = self.AreaCentroidNormal()
             #for i in range(3):
@@ -683,7 +699,7 @@ class CTRIAR(TriShell):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def flipNormal(self):
         r"""
@@ -720,7 +736,7 @@ class CTRIAR(TriShell):
 
         if xref:
             # PSHELL/PCOMP
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             t = self.Thickness()
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -737,7 +753,7 @@ class CTRIAR(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.node_ids +
@@ -803,8 +819,8 @@ class CTRIAX(TriShell):
                 assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer or None nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if not self.pid.type in ['PLPLANE']:
+            assert self.pid_ref.type in ['PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            if not self.pid_ref.type in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
@@ -836,12 +852,15 @@ class CTRIAX(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -849,7 +868,7 @@ class CTRIAX(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids + [self.thetaMcid]
@@ -913,12 +932,15 @@ class CTRIAX6(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.mid = model.Material(self.mid)
+        self.nodes_ref = self.nodes
+        self.mid_ref = self.mid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.mid = self.Mid()
+        del self.nodes_ref, self.mid_ref
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -978,7 +1000,7 @@ class CTRIAX6(TriShell):
     def Mid(self):
         if isinstance(self.mid, integer_types):
             return self.mid
-        return self.mid.mid
+        return self.mid_ref.mid
 
     def flipNormal(self):
         r"""
@@ -999,7 +1021,7 @@ class CTRIAX6(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
@@ -1047,7 +1069,7 @@ class QuadShell(ShellElement):
         return iedge
 
     def get_edge_axes(self):
-        n1, n2, n3, n4 = self.nodes
+        n1, n2, n3, n4 = self.nodes_ref
 
         g1 = n1.get_position()
         g2 = n2.get_position()
@@ -1067,7 +1089,7 @@ class QuadShell(ShellElement):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def Normal(self):
         (n1, n2, n3, n4) = self.get_node_positions()
@@ -1167,8 +1189,9 @@ class QuadShell(ShellElement):
         return (thetaMcid, zOffset, TFlag, T1, T2, T3, T4)
 
     def uncross_reference(self):
-        self.pid = self.Pid()
         self.nodes = self.node_ids
+        self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
 
 class CSHEAR(QuadShell):
@@ -1197,12 +1220,15 @@ class CSHEAR(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CSHEAR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Normal(self):
         (n1, n2, n3, n4) = self.get_node_positions()
@@ -1248,6 +1274,10 @@ class CSHEAR(QuadShell):
 
     def Centroid(self):
         (area, centroid) = self.AreaCentroid()
+
+        (n1, n2, n3, n4) = self.get_node_positions()
+        centroid2 = (n1 + n2 + n3 + n4) / 4.
+        assert centroid == centroid2, 'CSHEAR eid=%s centroid=%s centroid2=%s' % (self.eid, centroid, centroid2)
         return centroid
 
     def _verify(self, xref=True):
@@ -1262,8 +1292,8 @@ class CSHEAR(QuadShell):
             assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHEAR'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if self.pid.type in ['PSHEAR']:
+            assert self.pid_ref.type in ['PSHEAR'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            if self.pid_ref.type in ['PSHEAR']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
@@ -1302,7 +1332,7 @@ class CSHEAR(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
     @node_ids.setter
     def node_ids(self, value):
@@ -1323,10 +1353,10 @@ class CSHEAR(QuadShell):
         return msg
 
     def G(self):
-        return self.pid.mid.G()
+        return self.pid_ref.mid_ref.G()
 
     def Thickness(self):
-        return self.pid.t
+        return self.pid_ref.t
 
 
 class CQUAD4(QuadShell):
@@ -1407,10 +1437,13 @@ class CQUAD4(QuadShell):
         msg = ' which is required by CQUAD4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1423,8 +1456,8 @@ class CQUAD4(QuadShell):
             assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            if not self.pid.type in ['PLPLANE']:
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            if not self.pid_ref.type in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
@@ -1453,9 +1486,9 @@ class CQUAD4(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
-    def writeAsCTRIA3(self, newID):
+    def writeAs_ctria3(self, newID):
         """
         triangle - 012
         triangle - 023
@@ -1570,12 +1603,15 @@ class CQUADR(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUADR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1588,7 +1624,7 @@ class CQUADR(QuadShell):
             #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             t = self.Thickness()
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -1603,7 +1639,7 @@ class CQUADR(QuadShell):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def flipNormal(self):
         r"""
@@ -1623,7 +1659,7 @@ class CQUADR(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     @node_ids.setter
     def node_ids(self, value):
@@ -1678,18 +1714,21 @@ class CQUAD(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUAD eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Thickness(self):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def flipNormal(self):
         r"""
@@ -1711,7 +1750,7 @@ class CQUAD(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.node_ids
@@ -1798,12 +1837,15 @@ class CQUAD8(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1817,7 +1859,7 @@ class CQUAD8(QuadShell):
             assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             t = self.Thickness()
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -1832,7 +1874,7 @@ class CQUAD8(QuadShell):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def flipNormal(self):
         r"""
@@ -1899,7 +1941,7 @@ class CQUAD8(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.node_ids + [
@@ -1952,18 +1994,21 @@ class CQUADX(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUADX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Thickness(self):
         """
         Returns the thickness
         """
-        return self.pid.Thickness()
+        return self.pid_ref.Thickness()
 
     def flipNormal(self):
         r"""
@@ -1984,7 +2029,7 @@ class CQUADX(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CQUADX', self.eid, self.Pid()] + self.node_ids

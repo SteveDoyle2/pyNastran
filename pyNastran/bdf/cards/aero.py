@@ -86,6 +86,11 @@ class AECOMP(BaseCard):
             self.lists = [model.CAero(key, msg) for key in self.lists]
         else:
             raise NotImplementedError(self.list_type)
+        self.lists_ref = self.lists
+
+    def uncross_reference(self):
+        self.lists = self.get_lists()
+        del self.lists_ref
 
     def get_lists(self):
         if self.list_type == 'SET1':
@@ -485,30 +490,44 @@ class AESURF(BaseCard):
     def Cid1(self):
         if isinstance(self.cid1, integer_types):
             return self.cid1
-        return self.cid1.cid
+        return self.cid1_ref.cid
 
     def Cid2(self):
         if isinstance(self.cid2, integer_types) or self.cid2 is None:
             return self.cid2
-        return self.cid2.cid
+        return self.cid2_ref.cid
 
     def AELIST_id1(self):
         if isinstance(self.alid1, integer_types):
             return self.alid1
-        return self.alid1.sid
+        return self.alid1_ref.sid
 
     def AELIST_id2(self):
         if isinstance(self.alid2, integer_types) or self.alid2 is None:
             return self.alid2
-        return self.alid2.sid
+        return self.alid2_ref.sid
 
     def cross_reference(self, model):
         self.cid1 = model.Coord(self.Cid1())
+        self.cid1_ref = self.cid1
         if self.cid2 is not None:
             self.cid2 = model.Coord(self.Cid2())
+            self.cid2_ref = self.cid2
         self.alid1 = model.AELIST(self.AELIST_id1())
+        self.alid1_ref = self.alid1
         if self.alid2:
             self.alid2 = model.AELIST(self.AELIST_id2())
+            self.alid2_ref = self.alid2
+
+    def uncross_reference(self):
+        self.cid1 = self.Cid1()
+        self.cid2 = self.Cid2()
+        self.aelid1 = self.AELIST_id1()
+        self.aelid2 = self.AELIST_id2()
+        del self.cid1_ref
+        del self.cid2_ref
+        del self.alid1_ref
+        del self.alid2_ref
 
     def raw_fields(self):
         """
@@ -627,29 +646,29 @@ class Aero(BaseCard):
         self.symXY = None
         self.symXZ = None
 
-    def IsSymmetricalXY(self):
-        self.deprecated('IsSymmetricalXY()', 'is_symmetric_xy()', '0.7')
-        return self.is_symmetric_xy()
+    #def IsSymmetricalXY(self):
+        #self.deprecated('IsSymmetricalXY()', 'is_symmetric_xy()', '0.7')
+        #return self.is_symmetric_xy()
 
-    def IsSymmetricalXZ(self):
-        self.deprecated('IsSymmetricalXZ()', 'is_symmetric_xz()', '0.7')
-        return self.is_symmetric_xz()
+    #def IsSymmetricalXZ(self):
+        #self.deprecated('IsSymmetricalXZ()', 'is_symmetric_xz()', '0.7')
+        #return self.is_symmetric_xz()
 
-    def IsAntiSymmetricalXY(self):
-        self.deprecated('IsAntiSymmetricalXY()', 'is_anti_symmetric_xy()', '0.7')
-        return self.is_anti_symmetric_xy()
+    #def IsAntiSymmetricalXY(self):
+        #self.deprecated('IsAntiSymmetricalXY()', 'is_anti_symmetric_xy()', '0.7')
+        #return self.is_anti_symmetric_xy()
 
-    def IsAntiSymmetricalXZ(self):
-        self.deprecated('IsAntiSymmetricalXZ()', 'is_anti_symmetric_xz()', '0.7')
-        return self.is_anti_symmetric_xz()
+    #def IsAntiSymmetricalXZ(self):
+        #self.deprecated('IsAntiSymmetricalXZ()', 'is_anti_symmetric_xz()', '0.7')
+        #return self.is_anti_symmetric_xz()
 
-    def EnableGroundEffect(self):
-        self.deprecated('EnableGroundEffect()', 'set_ground_effect(True)', '0.7')
-        self.set_ground_effect(True)
+    #def EnableGroundEffect(self):
+        #self.deprecated('EnableGroundEffect()', 'set_ground_effect(True)', '0.7')
+        #self.set_ground_effect(True)
 
-    def DisableGroundEffect(self):
-        self.deprecated('DisableGroundEffect()', 'set_ground_effect(False)', '0.7')
-        self.set_ground_effect(False)
+    #def DisableGroundEffect(self):
+        #self.deprecated('DisableGroundEffect()', 'set_ground_effect(False)', '0.7')
+        #self.set_ground_effect(False)
 
     def is_symmetric_xy(self):
         if self.symXY == 1:
@@ -888,25 +907,40 @@ class CSSCHD(Aero):
         self.lMach = model.AEFact(self.lMach, msg=msg)
         self.lSchd = model.AEFact(self.lSchd, msg=msg)
 
+        self.aesid_ref = self.aesid
+        self.lAlpha_ref = self.lAlpha
+        self.lMach_ref = self.lMach
+        self.lSchd_ref = self.lSchd
+
+    def uncross_reference(self):
+        self.aesid = self.AESid()
+        self.LAlpha = self.LAlpha()
+        self.LMach = self.LMach()
+        self.LSchd = self.LSchd()
+        del self.aesid_ref
+        del self.lAlpha_ref
+        del self.lMach_ref
+        del self.lSchd_ref
+
     def AESid(self):
         if isinstance(self.aesid, integer_types):
             return self.aesid
-        return self.aesid.aesid
+        return self.aesid_ref.aesid
 
     def LAlpha(self):
         if isinstance(self.lAlpha, integer_types):
             return self.lAlpha
-        return self.lAlpha.sid
+        return self.lAlpha_ref.sid
 
     def LMach(self):
         if isinstance(self.lMach, integer_types):
             return self.lMach
-        return self.lMach.sid
+        return self.lMach_ref.sid
 
     def LSchd(self):
         if isinstance(self.lSchd, integer_types):
             return self.lSchd
-        return self.lSchd.sid
+        return self.lSchd_ref.sid
 
     def raw_fields(self):
         """
@@ -1114,23 +1148,23 @@ class CAERO1(BaseCard):
             for ispan in range(nspan):
                 self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
 
-    def Points(self):
-        self.deprecated('Points()', 'get_points()', '0.7')
-        return self.get_points()
+    #def Points(self):
+        #self.deprecated('Points()', 'get_points()', '0.7')
+        #return self.get_points()
 
-    def SetPoints(self, points):
-        self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
-        return self.set_points(points)
+    #def SetPoints(self, points):
+        #self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
+        #return self.set_points(points)
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
-        return self.cp.cid
+        return self.cp_ref.cid
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def cross_reference(self, model):
         """
@@ -1146,13 +1180,24 @@ class CAERO1(BaseCard):
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
         self.cp = model.Coord(self.cp, msg=msg)
+        self.pid_ref = self.pid
+        self.cp_ref = self.cp
+
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord
             self.lchord = model.AEFact(self.lchord, msg)
+            self.lchord_ref = self.lchord
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan = model.AEFact(self.lspan, msg)
+            self.lspan_ref = self.lspan
         self._init_ids()
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref
+        del self.pid_ref, self.cp_ref
 
     @property
     def min_max_eid(self):
@@ -1186,8 +1231,8 @@ class CAERO1(BaseCard):
         p1234 : (4, 3) list
              List of 4 corner points in the global frame
         """
-        p1 = self.cp.transform_node_to_global(self.p1)
-        p4 = self.cp.transform_node_to_global(self.p4)
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
+        p4 = self.cp_ref.transform_node_to_global(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
@@ -1195,13 +1240,13 @@ class CAERO1(BaseCard):
     @property
     def shape(self):
         if self.nchord == 0:
-            x = self.lchord.Di
+            x = self.lchord_ref.Di
             nchord = len(x) - 1
         else:
             nchord = self.nchord
 
         if self.nspan == 0:
-            y = self.lspan.Di
+            y = self.lspan_ref.Di
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -1249,14 +1294,14 @@ class CAERO1(BaseCard):
             The percentage y location in the span-wise direction of each panel
         """
         if self.nchord == 0:
-            x = self.lchord.Di
+            x = self.lchord_ref.Di
             nchord = len(x) - 1
         else:
             nchord = self.nchord
             x = linspace(0., 1., nchord + 1)
 
         if self.nspan == 0:
-            y = self.lspan.Di
+            y = self.lspan_ref.Di
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -1328,12 +1373,12 @@ class CAERO1(BaseCard):
     def get_LChord(self):
         if isinstance(self.lchord, integer_types):
             return self.lchord
-        return self.lchord.sid
+        return self.lchord_ref.sid
 
     def get_LSpan(self):
         if isinstance(self.lspan, integer_types):
             return self.lspan
-        return self.lspan.sid
+        return self.lspan_ref.sid
 
     def repr_fields(self):
         """
@@ -1488,28 +1533,28 @@ class CAERO2(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def Points(self):
-        self.deprecated('Points()', 'get_points()', '0.7')
-        return self.get_points()
+    #def Points(self):
+        #self.deprecated('Points()', 'get_points()', '0.7')
+        #return self.get_points()
 
-    def SetPoints(self, points):
-        self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
-        return self.set_points(points)
+    #def SetPoints(self, points):
+        #self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
+        #return self.set_points(points)
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
-        return self.cp.cid
+        return self.cp_ref.cid
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def Lsb(self):  # AEFACT
         if isinstance(self.lsb, integer_types):
             return self.lsb
-        return self.lsb.sid
+        return self.lsb_ref.sid
 
     def cross_reference(self, model):
         """
@@ -1527,8 +1572,16 @@ class CAERO2(BaseCard):
         self.cp = model.Coord(self.cp, msg=msg)
         #self.lsb = model.AeFact(self.lsb, msg=msg) # not added
 
+        self.pid_ref = self.pid
+        self.cp_ref = self.cp
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref, self.cp_ref
+
     def get_points(self):
-        (p1, matrix) = self.cp.transformToGlobal(self.p1)
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + array([self.x12, 0., 0.])
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
@@ -1631,15 +1684,23 @@ class CAERO3(BaseCard):
         #self.list_c1 = model.AEFact(self.list_c1, msg=msg) # not added
         #self.list_c2 = model.AEFact(self.list_c2, msg=msg) # not added
 
+        self.pid_ref = self.pid
+        self.cp_ref = self.cp
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref, self.cp_ref
+
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
-        return self.cp.cid
+        return self.cp_ref.cid
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def raw_fields(self):
         """
@@ -1716,8 +1777,8 @@ class CAERO4(BaseCard):
             raise NotImplementedError(msg)
 
     def get_points(self):
-        p1, matrix = self.cp.transformToGlobal(self.p1)
-        p4, matrix = self.cp.transformToGlobal(self.p4)
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
+        p4 = self.cp_ref.transform_node_to_global(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
@@ -1734,18 +1795,27 @@ class CAERO4(BaseCard):
             The BDF object.
         """
         msg = ' which is required by CAERO4 eid=%s' % self.eid
-        #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
+
+        self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         self.cp = model.Coord(self.cp, msg=msg)
+
+        self.cp_ref = self.cp
+        self.pid_ref = self.pid
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        del self.pid_ref, self.cp_ref
 
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
-        return self.cp.cid
+        return self.cp_ref.cid
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def raw_fields(self):
         """
@@ -1841,24 +1911,32 @@ class CAERO5(BaseCard):
             The BDF object.
         """
         msg = ' which is required by CAERO5 eid=%s' % self.eid
-        #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO5 (not added)
+        self.pid = model.PAero(self.pid, msg=msg)
         self.cp = model.Coord(self.cp, msg=msg)
         self.lspan = model.AEFact(self.lspan, msg=msg)
 
+        self.pid_ref = self.pid
+        self.cp_ref = self.cp
+        self.lspan_ref = self.lspan
+
+    def uncross_reference(self):
+        self.pid = self.Pid()
+        self.cp = self.Cp()
+        self.lspan = self.LSpan()
+        del self.pid_ref, self.cp_ref, self.lspan_ref
+
     def get_points(self):
-        p1, matrix = self.cp.transformToGlobal(self.p1)
-        p4, matrix = self.cp.transformToGlobal(self.p4)
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
+        p4 = self.cp_ref.transform_node_to_global(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
     def get_npanel_points_elements(self):
-        msg = '%s eid=%s nspan=%s lspan=%s' % (self.type,
-                                               self.eid,
-                                               self.nspan,
-                                               self.lspan)
+        msg = '%s eid=%s nspan=%s lspan=%s' % (
+            self.type, self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
-            y = self.lspan.Di
+            y = self.lspan_ref.Di
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -1872,12 +1950,10 @@ class CAERO5(BaseCard):
     def panel_points_elements(self):
         p1, p2, p3, p4 = self.get_points()
 
-        msg = '%s eid=%s nspan=%s lspan=%s' % (self.type,
-                                               self.eid,
-                                               self.nspan,
-                                               self.lspan)
+        msg = '%s eid=%s nspan=%s lspan=%s' % (
+            self.type, self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
-            y = self.lspan.Di
+            y = self.lspan_ref.Di
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -1933,12 +2009,12 @@ class CAERO5(BaseCard):
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
-        return self.cp.cid
+        return self.cp_ref.cid
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        return self.pid.pid
+        return self.pid_ref.pid
 
     def repr_fields(self):
         """
@@ -2010,7 +2086,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     return points, elements
 
 
-class PAERO5(BaseCard):  ## TODO: not integrated
+class PAERO5(BaseCard):
     def __init__(self, card=None, data=None):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
@@ -2054,15 +2130,23 @@ class PAERO5(BaseCard):  ## TODO: not integrated
 
     @property
     def lxis_id(self):
-        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis.aid
+        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis_ref.aid
 
     @property
     def ltaus_id(self):
-        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus.aid
+        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.aid
 
     def cross_reference(self, model):
-        self.ltaus = model.AEFACT(self.lxis_id)
+        self.lxis = model.AEFACT(self.lxis_id)
         self.ltaus = model.AEFACT(self.ltaus_id)
+
+        self.ltaus_ref = self.ltaus
+        self.lxis_ref = self.lxis
+
+    def uncross_reference(self):
+        self.lxis = self.lxis_id
+        self.ltaus = self.ltaus_id
+        del self.ltaus_ref, self.lxis_ref
 
     def raw_fields(self):
         list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
@@ -2287,20 +2371,30 @@ class FLUTTER(BaseCard):
         self.mach = model.FLFACT(self.density, msg=msg)
         self.rfreq_val = model.FLFACT(self.density, msg=msg)
 
+        self.density_ref = self.density
+        self.mach_ref = self.mach
+        self.rfreq_val = self.rfreq_val
+
+    def uncross_reference(self):
+        self.density = self.get_density()
+        self.mach = self.get_mach()
+        self.rfreq_val = self.get_rfreq_vel()
+        del self.density_ref, self.mach_ref, self.rfreq_val
+
     def get_density(self):
         if isinstance(self.density, integer_types):
             return self.density
-        return self.density.sid
+        return self.density_ref.sid
 
     def get_mach(self):
         if isinstance(self.mach, integer_types):
             return self.mach
-        return self.mach.sid
+        return self.mach_ref.sid
 
     def get_rfreq_vel(self):
         if isinstance(self.rfreq_vel, integer_types):
             return self.rfreq_vel
-        return self.rfreq_vel.sid
+        return self.rfreq_vel_ref.sid
 
     def _get_raw_nvalue_omax(self):
         if self.method in ['K', 'KE']:
@@ -2937,12 +3031,12 @@ class SPLINE1(Spline):
     def CAero(self):
         if isinstance(self.caero, integer_types):
             return self.caero
-        return self.caero.eid
+        return self.caero_ref.eid
 
     def Set(self):
         if isinstance(self.setg, integer_types):
             return self.setg
-        return self.setg.sid
+        return self.setg_ref.sid
 
     def cross_reference(self, model):
         """
@@ -2956,6 +3050,14 @@ class SPLINE1(Spline):
         self.caero = model.CAero(self.CAero(), msg=msg)
         self.setg = model.Set(self.Set(), msg=msg)
         self.setg.cross_reference(model, 'Node')
+
+        self.caero_ref = self.caero
+        self.setg_ref = self.setg
+
+    def uncross_reference(self):
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        del self.caero_ref, self.setg_ref
 
     def raw_fields(self):
         """
@@ -3052,20 +3154,30 @@ class SPLINE2(Spline):
         self.setg = model.Set(self.Set(), msg=msg)
         self.setg.cross_reference(model, 'Node')
 
+        self.cid_ref = self.cid
+        self.caero_ref = self.caero
+        self.setg_ref = self.setg
+
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        del self.cid_ref, self.caero_ref, self.setg_ref
+
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def CAero(self):
         if isinstance(self.caero, integer_types):
             return self.caero
-        return self.caero.eid
+        return self.caero_ref.eid
 
     def Set(self):
         if isinstance(self.setg, integer_types):
             return self.setg
-        return self.setg.sid
+        return self.setg_ref.sid
 
     def raw_fields(self):
         """
@@ -3214,17 +3326,17 @@ class SPLINE4(Spline):
     def CAero(self):
         if isinstance(self.caero, integer_types):
             return self.caero
-        return self.caero.eid
+        return self.caero_ref.eid
 
     def AEList(self):
         if isinstance(self.aelist, integer_types):
             return self.aelist
-        return self.aelist.sid
+        return self.aelist_ref.sid
 
     def Set(self):
         if isinstance(self.setg, integer_types):
             return self.setg
-        return self.setg.sid
+        return self.setg_ref.sid
 
     def cross_reference(self, model):
         """
@@ -3239,6 +3351,16 @@ class SPLINE4(Spline):
         self.setg = model.Set(self.Set(), msg=msg)
         self.aelist = model.AEList(self.aelist, msg=msg)
         self.setg.cross_reference(model, 'Node')
+
+        self.caero_ref = self.caero
+        self.setg_ref = self.setg
+        self.aelist_ref = self.aelist
+
+    def uncross_reference(self):
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        self.aelist = self.AEList()
+        del  self.caero_ref, self.setg_ref, self.aelist_ref
 
     def raw_fields(self):
         """
@@ -3330,22 +3452,22 @@ class SPLINE5(Spline):
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def CAero(self):
         if isinstance(self.caero, integer_types):
             return self.caero
-        return self.caero.eid
+        return self.caero_ref.eid
 
     def AEList(self):
         if isinstance(self.aelist, integer_types):
             return self.aelist
-        return self.aelist.sid
+        return self.aelist_ref.sid
 
     def Set(self):
         if isinstance(self.setg, integer_types):
             return self.setg
-        return self.setg.sid
+        return self.setg_ref.sid
 
     def cross_reference(self, model):
         """
@@ -3361,6 +3483,18 @@ class SPLINE5(Spline):
         self.setg = model.Set(self.Set(), msg=msg)
         self.aelist = model.AEList(self.AEList(), msg=msg)
         self.setg.cross_reference(model, 'Node')
+
+        self.cid_ref = self.cid
+        self.caero_ref = self.caero
+        self.setg_ref = self.setg
+        self.aelist_ref = self.aelist
+
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        self.aelist = self.AEList()
+        del  self.cid, self.caero_ref, self.setg_ref, self.aelist_ref
 
     def raw_fields(self):
         """

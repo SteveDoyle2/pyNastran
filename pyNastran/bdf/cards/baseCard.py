@@ -42,25 +42,25 @@ class BaseCard(object):
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    def rawFields(self):
-        self.deprecated('rawFields()', 'raw_fields()', '0.7')
-        return self.raw_fields()
+    #def rawFields(self):
+        #self.deprecated('rawFields()', 'raw_fields()', '0.7')
+        #return self.raw_fields()
 
-    def reprFields(self):
-        self.deprecated('reprFields()', 'repr_fields()', '0.7')
-        return self.repr_fields()
+    #def reprFields(self):
+        #self.deprecated('reprFields()', 'repr_fields()', '0.7')
+        #return self.repr_fields()
 
-    def reprCard(self):
-        self.deprecated('reprCard()', 'print_repr_card(size, is_double)', '0.7')
-        return self.print_repr_card()
+    #def reprCard(self):
+        #self.deprecated('reprCard()', 'print_repr_card(size, is_double)', '0.7')
+        #return self.print_repr_card()
 
-    def repr_card(self):
-        self.deprecated('repr_card()', 'print_repr_card(size, is_double)', '0.7')
-        return self.print_repr_card()
+    #def repr_card(self):
+        #self.deprecated('repr_card()', 'print_repr_card(size, is_double)', '0.7')
+        #return self.print_repr_card()
 
-    def printRawFields(self, size=8):
-        self.deprecated('printRawFields(size)', 'print_raw_card(size, is_double)', '0.7')
-        return self.print_raw_card(size=size)
+    #def printRawFields(self, size=8):
+        #self.deprecated('printRawFields(size)', 'print_raw_card(size, is_double)', '0.7')
+        #return self.print_raw_card(size=size)
 
     @property
     def comment(self):
@@ -248,9 +248,15 @@ class Property(BaseCard):
         """dummy cross reference method for a Property"""
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
+        self.mid_ref = self.mid
 
     def uncross_reference(self):
         self.mid = self.Mid()
+        try:
+            del self.mid_ref
+        except AttributeError:
+            print('mid =', self.mid)
+            raise
 
     def write_card_8(self):
         return self.write_card()
@@ -334,14 +340,14 @@ class Element(BaseCard):
         if isinstance(self.pid, integer_types):
             return self.pid
         else:
-            return self.pid.pid
+            return self.pid_ref.pid
 
     def get_node_positions(self, nodes=None):
         """returns the positions of multiple node objects"""
         if not nodes:
-            nodes = self.nodes
+            nodes = self.nodes_ref
 
-        nnodes = len(self.nodes)
+        nnodes = len(self.nodes_ref)
         positions = empty((nnodes, 3), dtype='float64')
         positions.fill(nan)
         for i, node in enumerate(nodes):
@@ -349,9 +355,9 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position()
         return positions
 
-    def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
+    def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):
         """returns nodeIDs for repr functions"""
-        return _node_ids(self, nodes, allowEmptyNodes, msg)
+        return _node_ids(self, nodes, allow_empty_nodes, msg)
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
         """Verifies all node IDs exist and that they're integers"""
@@ -497,13 +503,13 @@ class Element(BaseCard):
         return face
 
 
-def _node_ids(card, nodes=None, allowEmptyNodes=False, msg=''):
+def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:
         if not nodes:
             nodes = card.nodes
             assert nodes is not None, card.__dict__
 
-        if allowEmptyNodes:
+        if allow_empty_nodes:
             nodes2 = []
             for i, node in enumerate(nodes):
                 #print("node=%r type=%r" % (node, type(node)))
@@ -529,14 +535,14 @@ def _node_ids(card, nodes=None, allowEmptyNodes=False, msg=''):
                 #else:
                     #nodeIDs = [node.nid for node in nodes]
             except:
-                print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-                    card.type, nodes, allowEmptyNodes, msg))
+                print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
+                    card.type, nodes, allow_empty_nodes, msg))
                 raise
             assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
             return nodeIDs
     except:
-        print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
-            card.type, nodes, allowEmptyNodes, msg))
+        print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
+            card.type, nodes, allow_empty_nodes, msg))
         raise
 
 def expand_thru(fields, set_fields=True, sort_fields=False):

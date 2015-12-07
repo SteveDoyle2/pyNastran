@@ -61,8 +61,8 @@ class ConstraintObject(object):
         #return
         #add_constraints2 = {}
         for key, add_constraint in sorted(iteritems(self.add_constraints)):
-            for i, spcID in enumerate(add_constraint.sets):
-                add_constraint.sets[i] = self._spc(spcID)
+            for i, spc_id in enumerate(add_constraint.sets):
+                add_constraint.sets[i] = self._spc(spc_id)
             self.add_constraints[key] = add_constraint
         #self.add_constraints = add_constraints2
 
@@ -161,9 +161,9 @@ class Constraint(BaseCard):
         fields = [self.type, self.conid]
         return fields
 
-    def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
+    def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):
         """returns nodeIDs for repr functions"""
-        return _node_ids(self, nodes, allowEmptyNodes, msg)
+        return _node_ids(self, nodes, allow_empty_nodes, msg)
 
 
 class SUPORT1(Constraint):
@@ -214,11 +214,16 @@ class SUPORT1(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT1'
-        return self._nodeIDs(nodes=self.IDs, allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         msg = ', which is required by SUPORT1'
-        self.IDs = model.Nodes(self.IDs, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     def raw_fields(self):
         fields = ['SUPORT1', self.conid]
@@ -272,11 +277,16 @@ class SUPORT(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by %s' % self.type
-        return self._nodeIDs(nodes=self.IDs, allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         msg = ', which is required by %s' % self.type
-        self.IDs = model.Nodes(self.IDs, allowEmptyNodes=True, msg=msg)
+        self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def uncross_reference(self):
+        self.IDs = self.node_ids
+        del self.IDs_ref
 
     def raw_fields(self):
         fields = [self.type]
@@ -354,11 +364,16 @@ class MPC(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
-        return self._nodeIDs(nodes=self.gids, allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
-        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
+        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids_ref = self.gids
+
+    def uncross_reference(self):
+        self.gids = self.node_ids
+        del self.gids_ref
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
@@ -459,11 +474,16 @@ class SPC(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
-        return self._nodeIDs(nodes=self.gids, allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
-        self.gids = model.Nodes(self.gids, allowEmptyNodes=True, msg=msg)
+        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids_ref = self.gids
+
+    def uncross_reference(self):
+        self.gids = self.node_ids
+        del self.gids_ref
 
     def raw_fields(self):
         fields = ['SPC', self.conid]
@@ -496,6 +516,9 @@ class GMSPC(Constraint):
     def cross_reference(self, model):
         """TODO: xref"""
         msg = ', which is required by %s=%s' % (self.type, self.conid)
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         fields = ['GMSPC', self.conid, self.components, self.entity, self.entity_id]
@@ -545,6 +568,9 @@ class SPCAX(Constraint):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
         #self.rid = model.ring[self.rid]
         #self.hid = model.harmonic[self.hid]
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):
@@ -598,11 +624,16 @@ class SPC1(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SPC1; conid=%s' % self.conid
-        return self._nodeIDs(self.nodes, allowEmptyNodes=True, msg=msg)
+        return self._nodeIDs(self.nodes, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         msg = ', which is required by SPC1; conid=%s' % self.conid
-        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes_ref = self.nodes
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        del self.nodes_ref
 
     def raw_fields(self):
         fields = ['SPC1', self.conid, self.constraints] + self.node_ids
@@ -668,6 +699,11 @@ class SPCADD(ConstraintADD):
         msg = ', which is required by %s=%s' % (self.type, self.conid)
         for i, spc in enumerate(self.sets):
             self.sets[i] = model.SPC(spc, msg=msg)
+        self.sets_ref = self.sets
+
+    def uncross_reference(self):
+        self.sets = self.spc_ids
+        del self.sets_ref
 
     def raw_fields(self):
         fields = ['SPCADD', self.conid] + self.spc_ids
@@ -722,6 +758,7 @@ class MPCADD(ConstraintADD):
     def cross_reference(self, model):
         for i, mpc in enumerate(self.sets):
             self.sets[i] = model.MPC(mpc)
+        self.sets_ref = self.sets
 
     def raw_fields(self):
         fields = ['MPCADD', self.conid]  # +self.sets

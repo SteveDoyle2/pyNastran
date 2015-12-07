@@ -185,7 +185,10 @@ class XrefMesh(BDFAttributes):
     def _uncross_reference_elements(self):
         """cross references the element objects"""
         for element in itervalues(self.elements):
-            element.uncross_reference()
+            try:
+                element.uncross_reference()
+            except TypeError:
+                raise NotImplementedError('%s.uncross_reference' % element.type)
         for element in itervalues(self.rigid_elements):
             element.uncross_reference()
         for element in itervalues(self.plotels):
@@ -194,7 +197,13 @@ class XrefMesh(BDFAttributes):
     def _uncross_reference_properties(self):
         """cross references the property objects"""
         for prop in itervalues(self.properties):
-            prop.uncross_reference()
+            try:
+                prop.uncross_reference()
+            except TypeError:
+                raise NotImplementedError('%s.uncross_reference' % prop.type)
+            except AttributeError:
+                print('%s.uncross_reference error' % prop.type)
+                raise
 
     def _uncross_reference_materials(self):
         """cross references the material objects"""
@@ -234,13 +243,20 @@ class XrefMesh(BDFAttributes):
         Unlinks the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        self.spcacdds = {}
-        self.spcs = {}
-        self.mpcadds = {}
-        self.mpcs = {}
-        self.suport = []
-        self.suport1 = {}
-        self.se_suport = []
+        for spcadd in itervalues(self.spcadds):
+            spcadd.uncross_reference()
+        for spc in itervalues(self.spcs):
+            for spci in spc:
+                spci.uncross_reference()
+        for mpc in itervalues(self.mpcs):
+            for mpci in mpc:
+                mpci.uncross_reference()
+        for suport in self.suport:
+            suport.uncross_reference()
+        for suport1 in itervalues(self.suport1):
+            suport1.uncross_reference()
+        for se_suport in self.se_suport:
+            se_suport.uncross_reference()
 
     def _uncross_reference_loads(self):
         """
@@ -639,6 +655,7 @@ class XrefMesh(BDFAttributes):
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    raise
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))
@@ -651,6 +668,7 @@ class XrefMesh(BDFAttributes):
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    raise
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))

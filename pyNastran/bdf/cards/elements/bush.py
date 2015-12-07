@@ -29,7 +29,7 @@ class BushElement(Element):
             return None
         elif isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def Mass(self):
         return 0.
@@ -146,42 +146,48 @@ class CBUSH(BushElement):
     def Ga(self):
         if isinstance(self.ga, integer_types):
             return self.ga
-        return self.ga.nid
+        return self.ga_ref.nid
 
     def Gb(self):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
-        return self.gb.nid
+        return self.gb_ref.nid
 
     def OCid(self):
         if self.ocid is None:
             return None
         elif isinstance(self.ocid, integer_types):
             return self.ocid
-        return self.ocid.cid
+        return self.ocid_ref.cid
 
     def Cid(self):
         if self.cid is None:
             return None
         elif isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
+        self.ga_ref = self.ga
         if self.gb is not None:
             self.gb = model.Node(self.gb, msg=msg)
+            self.gb_ref = self.gb
         self.pid = model.Property(self.pid, msg=msg)
+        self.pid_ref = self.pid
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
+            self.cid_ref = self.cid
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.pid = self.Pid()
-        #if self.cid is not None:
         self.cid = self.Cid()
+        if self.cid is not None:
+            del self.cid_ref
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
     def raw_fields(self):
         if self.g0 is not None:
@@ -235,11 +241,22 @@ class CBUSH1D(BushElement):
     def cross_reference(self, model):
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
+        self.ga_ref = self.ga
         if self.gb:
             self.gb = model.Node(self.gb, msg=msg)
+            self.gb_ref = self.gb
         self.pid = model.Property(self.pid, msg=msg)
+        self.pid_ref = self.pid
         if self.cid is not None:
             self.cid = model.Coord(self.cid)
+            self.cid_ref = self.cid
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.cid = self.Cid()
+        self.pid = self.Pid()
+        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -256,14 +273,14 @@ class CBUSH1D(BushElement):
             return self.ga
         #elif self.ga is None:
             #return None
-        return self.ga.nid
+        return self.ga_ref.nid
 
     def Gb(self):
         if isinstance(self.gb, integer_types):
             return self.gb
         elif self.gb is None:
             return None
-        return self.gb.nid
+        return self.gb_ref.nid
 
     @property
     def nodes(self):
@@ -336,12 +353,12 @@ class CBUSH2D(BushElement):
     def Ga(self):
         if isinstance(self.ga, integer_types):
             return self.ga
-        return self.ga.nid
+        return self.ga_ref.nid
 
     def Gb(self):
         if isinstance(self.gb, integer_types):
             return self.gb
-        return self.gb.nid
+        return self.gb_ref.nid
 
     @property
     def nodes(self):
@@ -359,11 +376,23 @@ class CBUSH2D(BushElement):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
-        #self.pid = model.Property(self.pid)
+        self.pid = model.Property(self.pid)
+
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
+        self.pid_ref = self.pid
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
+            self.cid_ref = self.cid
         if self.sptid is not None:
             pass
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.cid = self.Cid()
+        self.pid = self.Pid()
+        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
 
     def raw_fields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),

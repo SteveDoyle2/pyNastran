@@ -733,8 +733,8 @@ class Subcase(object):
         #print("keys = %s" % (sorted(self.params.keys())))
         if 'LOAD' in self.params:
             load_id = self.params['LOAD'][0]
-            loadObj = model.loads[load_id]
-            loadObj.cross_reference(model)
+            load_obj = model.loads[load_id]
+            load_obj.cross_reference(model)
         if 'SUPORT' in self.params:
             pass
         if 'MPC' in self.params:
@@ -749,21 +749,21 @@ class Subcase(object):
             #spcObj.cross_reference(spcID, model)
             pass
         if 'TSTEPNL' in self.params:
-            tstepnlID = self.params['TSTEPNL'][0]
-            tstepnlObj = model.tstepnl[tstepnlID]
-            tstepnlObj.cross_reference(model)
+            tstepnl_id = self.params['TSTEPNL'][0]
+            tstepnl_obj = model.tstepnl[tstepnl_id]
+            tstepnl_obj.cross_reference(model)
         if 'NLPARM' in self.params:
-            nlparmID = self.params['NLPARM'][0]
-            nlparmObj = model.nlparms[nlparmID]
-            nlparmObj.cross_reference(model)
+            nlparm_id = self.params['NLPARM'][0]
+            nlparm_obj = model.nlparms[nlparm_id]
+            nlparm_obj.cross_reference(model)
         if 'TRIM' in self.params:
-            trimID = self.params['TRIM'][0]
-            trimObj = model.trims[trimID]
-            trimObj.cross_reference(model)
+            trim_id = self.params['TRIM'][0]
+            trim_obj = model.trims[trim_id]
+            trim_obj.cross_reference(model)
         if 'GUST' in self.params:
-            gustID = self.params['GUST'][0]
-            gustObj = model.gusts[gustID]
-            gustObj.cross_reference(model)
+            gust_id = self.params['GUST'][0]
+            gust_obj = model.gusts[gust_id]
+            gust_obj.cross_reference(model)
         if 'DLOAD' in self.params:  # ???
             pass
 
@@ -819,18 +819,23 @@ class Subcase(object):
         numerical order.  Also puts the sets first.
 
         :param self:    the Subcase object
-        :param lst:     the list of subcase list objects
-        :returns listB: the sorted version of listA
+        :param lst : List[str]
+            the list of subcase list objects (list_a)
+
+        Returns
+        -------
+        list_b : List[str]
+            the sorted version of list_a
         """
         # presort the list to put all the SET cards next to each other
-        # instead of listA.sort() as it allows lst to be any iterable
+        # instead of list_a.sort() as it allows lst to be any iterable
         lst = sorted(lst)
 
         i = 0  # needed in case the loop doesn't execute
-        iSet = None  # index of first SET card in the deck
-        setDict = {}
-        listBefore = []
-        setKeys = []
+        iset = None  # index of first SET card in the deck
+        set_dict = {}
+        list_before = []
+        set_keys = []
         for (i, entry) in enumerate(lst):
             key = entry[0]
             if 'SET' in key[0:3]:
@@ -845,25 +850,25 @@ class Subcase(object):
                         raise RuntimeError(msg)
 
                 # store the integer ID and the SET-type list
-                setDict[key] = entry
-                setKeys.append(key)
+                set_dict[key] = entry
+                set_keys.append(key)
             else:
                 # only store the entries before the SET cards
-                listBefore.append(entry)
-                if iSet:
+                list_before.append(entry)
+                if iset:
                     break
 
         # grab the other entries
-        listAfter = lst[i + 1:]
+        list_after = lst[i + 1:]
 
         # write the SET cards in a sorted order
-        setList = []
-        for key in sorted(setKeys):
-            setList.append(setDict[key])
+        set_list = []
+        for key in sorted(set_keys):
+            set_list.append(set_dict[key])
 
         # combine all the cards
-        listB = setList + listBefore + listAfter
-        return listB
+        list_b = set_list + list_before + list_after
+        return list_b
 
     def __repr__(self):
         """
@@ -1081,6 +1086,15 @@ def write_set(value, options, spaces=''):
     SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,
          4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
          3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
+
+
+    Example
+    -------
+    value = 80
+    options = [1, 2, 3, 4, 5, 7]
+    set = write_set(value, options, spaces='')
+    print(set)
+    >>> SET 80 = 1 THRU 5, 7
     """
     value.sort()
     starter = 'SET %s = ' % (options)

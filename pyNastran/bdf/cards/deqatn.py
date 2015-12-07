@@ -135,7 +135,7 @@ class DEQATN(BaseCard):  # needs work...
     def _setup_equation(self):
         default_values = {}
         if self.dtable is not None:
-            self.dtable.default_values = {}
+            self.dtable_ref.default_values = {}
         func_name, nargs, func_str = fortran_to_python(self.eqs, default_values)
         self.func_name = func_name
         #print('**************', func_str)
@@ -150,11 +150,13 @@ class DEQATN(BaseCard):  # needs work...
     def cross_reference(self, model):
         # TODO: get deafults from DTABLE
         # TODO: get limits from DCONSTR
-        self._setup_equation()
         self.dtable = model.dtable
+        self.dtable_ref = self.dtable
+        self._setup_equation()
 
     def uncross_reference(self):
         del self.func
+        del self.f
         # del getattr(self, self.func_name)
         del self.func_name
         del self.nargs
@@ -169,6 +171,7 @@ class DEQATN(BaseCard):  # needs work...
 
     def raw_fields(self):
         return [self.write_card()]
+
     def repr_fields(self):
         return self.raw_fields()
 

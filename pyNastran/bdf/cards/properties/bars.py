@@ -112,7 +112,7 @@ class LineProperty(Property):
         #pass
 
     def Rho(self):
-        return self.mid.rho
+        return self.mid_ref.rho
 
     def Area(self):
         return self.A
@@ -130,15 +130,15 @@ class LineProperty(Property):
         return self.i2
 
     def E(self):
-        return self.mid.E
+        return self.mid_ref.E
 
     def G(self):
-        return self.mid.G
+        return self.mid_ref.G
 
     def Nu(self):
-        return self.mid.nu
+        return self.mid_ref.nu
 
-    def CA_Section(self, iFace, iStart, dims):
+    def CA_Section(self, iface, istart, dims):
         """
         ::
 
@@ -157,12 +157,12 @@ class LineProperty(Property):
           geompy.addToStudy( Face_1, 'Face_1' )
         """
         msg1 = ''
-        msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iFace + 1)
+        msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iface + 1)
         for (i, dim) in enumerate(dims):
-            msg1 += 'D%s = %s\n' % (iStart + i, dim)
-            msg2 += 'D%s,' % (iStart + i)
+            msg1 += 'D%s = %s\n' % (istart + i, dim)
+            msg2 += 'D%s,' % (istart + i)
         msg2 += '1)\n'
-        msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" % (iFace, iFace)
+        msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" % (iface, iface)
         return msg1 + msg2
 
     def IAreaL(self, dim):
@@ -230,8 +230,8 @@ class LineProperty(Property):
             Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
 
         else:
-            msg = 'Type=%s is not supported for %s class...' % (self.Type,
-                                                                self.type)
+            msg = 'Type=%s is not supported for %s class...' % (
+                self.Type, self.type)
             raise NotImplementedError(msg)
         return (A, Iyy, Izz, Iyz)
 
@@ -524,8 +524,8 @@ def _bar_areaL(class_name, Type, dim):
         A = (h1 * w1 + h2 * w2 + h3 * w3 + h4 * w4 +
              h5 * w5 + h6 * w6 + h7 * w7)
     else:
-        msg = 'areaL; Type=%s is not supported for %s class...' % (Type,
-                                                            class_name)
+        msg = 'areaL; Type=%s is not supported for %s class...' % (
+            Type, class_name)
         raise NotImplementedError(msg)
     return A
 
@@ -694,6 +694,11 @@ class PBAR(LineProperty):
     def cross_reference(self, model):
         msg = ' which is required by PBAR mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def Area(self):
         """
@@ -860,6 +865,11 @@ class PBARL(LineProperty):
     def cross_reference(self, model):
         msg = ' which is required by PBARL mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1178,21 +1188,21 @@ class PBARL(LineProperty):
     def I22(self):
         return self.I2()
 
-    def write_code_aster(self, iCut=0, iFace=0, iStart=0):  # PBARL
+    def write_code_aster(self, icut=0, iface=0, istart=0):  # PBARL
         msg = '# BAR Type=%s pid=%s\n' % (self.type, self.pid)
         msg2 = ''
-        msg += self.CA_Section(iFace, iStart, self.dim)
-        iFace += 1
-        iStart += len(self.dim)
+        msg += self.CA_Section(iface, istart, self.dim)
+        iface += 1
+        istart += len(self.dim)
 
-        msg += self.CA_Section(iFace, iStart, self.dim)
+        msg += self.CA_Section(iface, istart, self.dim)
         iFace += 1
         msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' % (
-            iCut + 1, iFace + 1, iFace + 2)
+            icut + 1, iface + 1, iface + 2)
         msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
-            iCut + 1, iCut + 1)
-        iStart += len(self.dim)
-        return msg + msg2, iCut, iFace, iStart
+            icut + 1, icut + 1)
+        istart += len(self.dim)
+        return msg + msg2, icut, iface, istart
 
     def raw_fields(self):
         list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type,
@@ -1252,6 +1262,11 @@ class PBEAM3(LineProperty):  # not done, cleanup
     def cross_reference(self, model):
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def repr_fields(self):
         """.. todo:: not done"""
@@ -1357,6 +1372,11 @@ class PBEND(LineProperty):
     def cross_reference(self, model):
         msg = ' which is required by PBEND mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def repr_fields(self):
         list_fields = ['PBEND', self.pid, self.Mid(), ]  # other

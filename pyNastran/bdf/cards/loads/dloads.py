@@ -40,6 +40,11 @@ class DLOAD(LoadCombination):
             load_id2 = model.get_dload_entries(load_id, msg=msg)
             load_ids2.append(load_id2)
         self.loadIDs = load_ids2
+        self.loadIDs_ref = self.loadIDs
+
+    def uncross_reference(self):
+        self.loadIDs = [self.LoadID(load) for load in self.loadIDs]
+        del self.loadIDs_ref
 
     def raw_fields(self):
         list_fields = ['DLOAD', self.sid, self.scale]
@@ -105,12 +110,26 @@ class RLOAD1(TabularLoad):
 
     def cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
-        if self.tc:
+        if self.tc > 0:
             self.tc = model.Table(self.tc, msg=msg)
-        if self.td:
+            self.tc_ref = self.tc
+        if self.td > 0:
             self.td = model.Table(self.td, msg=msg)
-        if isinstance(self.delay, int) and self.delay > 0:
+            self.td_ref = self.td
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
+            self.delay_ref = self.delay
+
+    def uncross_reference(self):
+        self.tc = self.Tc()
+        self.td = self.Td()
+        self.delay = self.delay_id
+        if self.tc > 0:
+            del self.tc_ref
+        if self.td > 0:
+            del self.td_ref
+        if isinstance(self.delay, integer_types) and self.delay > 0:
+            del self.delay_ref
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -121,14 +140,14 @@ class RLOAD1(TabularLoad):
 
     def Tc(self):
         if self.tc in [0, 0.0]:
-            return None
+            return 0
         elif isinstance(self.tc, integer_types):
             return self.tc
         return self.tc.tid
 
     def Td(self):
         if self.td in [0, 0.0]:
-            return None
+            return 0
         elif isinstance(self.td, integer_types):
             return self.td
         return self.td.tid
@@ -136,16 +155,16 @@ class RLOAD1(TabularLoad):
     @property
     def delay_id(self):
         if self.delay in [0, 0.0]:
-            return None
+            return 0
         elif isinstance(self.delay, (integer_types, float)):
             return self.delay
-        return self.delay.sid
+        return self.delay_ref.sid
 
     def get_load_at_freq(self, freq, scale=1.):
         # A = 1. # points to DAREA or SPCD
         if isinstance(self.tc, float):
             c = float(self.tc)
-        elif self.tc == 0 or self.tc is None:
+        elif self.tc == 0:
             c = 0.
         else:
             cxy = array(self.tc.table.table)
@@ -156,7 +175,7 @@ class RLOAD1(TabularLoad):
 
         if isinstance(self.td, float):
             d = float(self.td)
-        elif self.td == 0 or self.td is None:
+        elif self.td == 0:
             d = 0.
         else:
             dxy = array(self.td.table.table)
@@ -180,7 +199,6 @@ class RLOAD1(TabularLoad):
         elif self.delay == 0 or self.dphase is None:
             tau = 0.0
         else:
-            #print('DELAY is not supported')
             tau = self.delay.get_delay_at_freq(freq)
 
         out = (c + 1.j * d) * exp(dphase - 2 * pi * freq * tau)
@@ -257,7 +275,7 @@ class RLOAD2(TabularLoad):
         elif self.tb == 0:
             b = 0.0
         else:
-            bxy = array(self.tb.table.table)
+            bxy = array(self.tb_ref.table.table)
             fb = bxy[:, 0]
             yb = bxy[:, 1]
             assert fb.shape == yb.shape, 'fb.shape=%s yb.shape=%s' % (str(fb.shape), str(yb.shape))
@@ -265,10 +283,10 @@ class RLOAD2(TabularLoad):
 
         if isinstance(self.tp, float):
             p = self.tp
-        elif self.tp == 0 or self.tp is None:
+        elif self.tp == 0:
             p = 0.0
         else:
-            pxy = array(self.tp.table.table)
+            pxy = array(self.tp_ref.table.table)
             fp = pxy[:, 0]
             yp = pxy[:, 1]
             assert fp.shape == yp.shape, 'fp.shape=%s yp.shape=%s' % (str(fp.shape), str(yp.shape))
@@ -280,15 +298,15 @@ class RLOAD2(TabularLoad):
             dphase = 0.0
         else:
             #raise NotImplementedError('DPHASE is not supported')
-            dphase = self.dphase.get_dphase_at_freq(freq)
+            dphase = self.dphase_ref.get_dphase_at_freq(freq)
 
         if isinstance(self.delay, float):
             tau = self.delay
-        elif self.delay == 0 or self.delay is None:
+        elif self.delay == 0:
             tau = 0.0
         else:
             #raise NotImplementedError('DELAY is not supported')
-            nids, comps, taus = self.delay.get_delay_at_freq(freq)
+            nids, comps, taus = self.delay_ref.get_delay_at_freq(freq)
             assert len(taus) == 1, taus
             tau = taus[0]
 
@@ -303,15 +321,28 @@ class RLOAD2(TabularLoad):
             raise
         return out
 
-
     def cross_reference(self, model):
         msg = ' which is required by RLOAD2=%s' % (self.sid)
         if self.tb:
             self.tb = model.Table(self.tb, msg=msg)
+            self.tb_ref = self.tb
         if self.tp:
             self.tp = model.Table(self.tp, msg=msg)
-        if self.delay and self.delay > 0:
-            self.delay = model.DELAY(self.delay_id, msg=msg)
+            self.tp_ref = self.tp
+        if self.delay > 0:
+            self.delay = model.DELAY(self.delay, msg=msg)
+            self.delay_ref = self.delay
+
+    def uncross_reference(self):
+        self.tb = self.Tb()
+        self.tp = self.Tp()
+        self.delay = self.delay_id
+        if self.tb > 0:
+            del self.tb_ref
+        if self.tp > 0:
+            del self.tp_ref
+        if self.delay > 0:
+            del self.delay_ref
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -325,22 +356,22 @@ class RLOAD2(TabularLoad):
 
     def Tb(self):
         if self.tb == 0:
-            return None
+            return 0
         elif isinstance(self.tb, integer_types):
             return self.tb
-        return self.tb.tid
+        return self.tb_ref.tid
 
     def Tp(self):
         if self.tp == 0:
-            return None
+            return 0
         elif isinstance(self.tp, integer_types):
             return self.tp
-        return self.tp.tid
+        return self.tp_ref.tid
 
     @property
     def delay_id(self):
-        if self.delay == 0:
-            return None
+        if self.delay in [0, 0.]:
+            return 0
         elif isinstance(self.delay, integer_types):
             return self.delay
         return self.delay.sid
@@ -437,8 +468,18 @@ class TLOAD1(TabularLoad):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         if self.tid:
             self.tid = model.Table(self.tid, msg=msg)
-        if self.delay and self.delay > 0:
-            self.delay = model.DELAY(self.delay_id, msg=msg)
+            self.tid_ref = self.tid
+        if isinstance(self.delay, integer_types) and self.delay > 0:
+            self.delay = model.DELAY(self.delay, msg=msg)
+            self.delay_ref = self.delay
+
+    def uncross_reference(self):
+        self.tid = self.Tid()
+        self.delay = self.delay_id
+        if self.tid > 0:
+            del self.tid_ref
+        if self.delay > 0:
+            del self.delay_ref
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
@@ -446,23 +487,23 @@ class TLOAD1(TabularLoad):
             #try:
             self.tid = model.Table(self.tid, msg=msg)
             #except
-        if self.delay and self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def Tid(self):
         if self.tid == 0:
-            return None
+            return 0
         elif isinstance(self.tid, integer_types):
             return self.tid
-        return self.tid.tid
+        return self.tid_ref.tid
 
     @property
     def delay_id(self):
-        if self.delay == 0:
-            return None
+        if self.delay in [0, 0.]:
+            return 0
         elif isinstance(self.delay, integer_types):
             return self.delay
-        return self.delay.sid
+        return self.delay_ref.sid
 
     def get_load_at_time(self, time, scale=1.):
         # A = 1. # points to DAREA or SPCD
@@ -622,23 +663,29 @@ class TLOAD2(TabularLoad):
 
     def cross_reference(self, model):
         msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
-        if self.delay and self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
+            self.delay_ref = self.delay
         # TODO: exciteID
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
-        if self.delay and self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
         # TODO: exciteID
+
+    def uncross_reference(self):
+        self.delay = self.delay_id
+        if isinstance(self.delay, integer_types) and self.delay > 0:
+            del self.delay_ref
 
     @property
     def delay_id(self):
         if self.delay == 0:
-            return None
+            return 0
         elif isinstance(self.delay, integer_types):
             return self.delay
-        return self.delay.sid
+        return self.delay_ref.sid
 
     def raw_fields(self):
         list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay_id, self.Type,

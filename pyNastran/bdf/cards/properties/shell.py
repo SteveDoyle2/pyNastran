@@ -42,6 +42,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param self:  the PCOMP/PCOMPG object
         :param model: a BDF object
         """
+        ## TODO: add refs
         for iply in range(len(self.plies)):
             mid = self.plies[iply][0]
             msg = ' which is required by PLPCOMP/G pid=%s iply=%s' % (self.pid, iply)
@@ -787,6 +788,8 @@ class PLPLANE(ShellProperty):
         msg = ' which is required by PLPLANE pid=%s' % self.pid
         self.mid = model.HyperelasticMaterial(self.mid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
+        self.mid_ref = self.mid
+        self.cid_ref = self.cid
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -802,12 +805,12 @@ class PLPLANE(ShellProperty):
     def Mid(self):
         if isinstance(self.mid, integer_types):
             return self.mid
-        return self.mid.mid
+        return self.mid_ref.mid
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
-        return self.cid.cid
+        return self.cid_ref.cid
 
     def raw_fields(self):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
@@ -871,14 +874,15 @@ class PSHEAR(ShellProperty):
     def cross_reference(self, model):
         msg = ' which is required by PSHEAR pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)
+        self.mid_ref = self.mid
 
     def Rho(self):
-        return self.mid.Rho()
+        return self.mid_ref.Rho()
 
     def Mid(self):
         if isinstance(self.mid, integer_types):
             return self.mid
-        return self.mid.mid
+        return self.mid_ref.mid
 
     def MassPerArea(self):
         """
@@ -897,15 +901,15 @@ class PSHEAR(ShellProperty):
         assert isinstance(midi, integer_types), 'mid=%r' % midi
 
         if xref:
-            assert isinstance(self.mid, Material), 'mid=%r' % self.mid
+            assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref
 
-            assert isinstance(self.mid, Material), 'mid=%r' % self.mid
-            assert self.mid.type in ['MAT1', ], 'pid.type=%s mid.type=%s' % (self.type, self.mid.type)
+            assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref
+            assert self.mid_ref.type in ['MAT1', ], 'pid.type=%s mid.type=%s' % (self.type, self.mid_ref.type)
             if self.mid.type == 'MAT1':
-                E = self.mid.E()
-                G = self.mid.G()
-                nu = self.mid.Nu()
-                rho = self.mid.Rho()
+                E = self.mid_ref.E()
+                G = self.mid_ref.G()
+                nu = self.mid_ref.Nu()
+                rho = self.mid_ref.Rho()
                 assert isinstance(E, float), 'E=%r' % E
                 assert isinstance(G, float), 'G=%r' % G
                 assert isinstance(nu, float), 'nu=%r' % nu
@@ -1075,32 +1079,32 @@ class PSHELL(ShellProperty):
     @property
     def mid(self):
         if isinstance(self.mid1, Material):
-            return self.mid1
+            return self.mid1_ref
         return self.mid2
 
     def Mid(self):
         if isinstance(self.mid1, Material):
-            return self.mid1.mid
+            return self.mid1_ref.mid
         return self.Mid2()
 
     def Mid1(self):
         if isinstance(self.mid1, Material):
-            return self.mid1.mid
+            return self.mid1_ref.mid
         return self.mid1
 
     def Mid2(self):
         if isinstance(self.mid2, Material):
-            return self.mid2.mid
+            return self.mid2_ref.mid
         return self.mid2
 
     def Mid3(self):
         if isinstance(self.mid3, Material):
-            return self.mid3.mid
+            return self.mid3_ref.mid
         return self.mid3
 
     def Mid4(self):
         if isinstance(self.mid4, Material):
-            return self.mid4.mid
+            return self.mid4_ref.mid
         return self.mid4
 
     def Thickness(self):
@@ -1129,12 +1133,16 @@ class PSHELL(ShellProperty):
         msg = ' which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
             self.mid1 = model.Material(self.mid1, msg)
+            self.mid1_ref = self.mid1
         if self.mid2 and self.mid2 != -1:
             self.mid2 = model.Material(self.mid2, msg)
+            self.mid2_ref = self.mid2
         if self.mid3:
             self.mid3 = model.Material(self.mid3, msg)
+            self.mid3_ref = self.mid3
         if self.mid4:
             self.mid4 = model.Material(self.mid4, msg)
+            self.mid4_ref = self.mid4
 
     def uncross_reference(self):
         self.mid1 = self.Mid1()

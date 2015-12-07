@@ -74,11 +74,17 @@ class PFAST(Property):
         msg = ' which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
             self.mcid = model.Coord(self.Mcid(), msg)
+            self.mcid_ref = self.mcid_ref
+
+    def uncross_reference(self):
+        self.mcid = self.Mcid()
+        if self.mcid != -1:
+            del self.mcid_ref
 
     def Mcid(self):
         if isinstance(self.mcid, integer_types):
             return self.mcid
-        return self.mcid.cid
+        return self.mcid_ref.cid
 
     def Mass(self):
         return self.mass
@@ -165,6 +171,9 @@ class PGAP(Property):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
                   self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
@@ -199,7 +208,7 @@ class SolidProperty(Property):
         Property.__init__(self, card, data)
 
     def Rho(self):
-        return self.mid.rho
+        return self.mid_ref.rho
 
 
 class PLSOLID(SolidProperty):
@@ -242,6 +251,11 @@ class PLSOLID(SolidProperty):
     def cross_reference(self, model):
         msg = ' which is required by PLSOLID pid=%s' % self.pid
         self.mid = model.HyperelasticMaterial(self.mid, msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def raw_fields(self):
         stress_strain = set_blank_if_default(self.str, 'GRID')
@@ -257,9 +271,15 @@ class PLSOLID(SolidProperty):
 
 class PSOLID(SolidProperty):
     """
-    PSOLID PID MID CORDM IN STRESS ISOP FCTN
-    PSOLID   1       1       0
-    PSOLID 2 100 6 TWO GRID REDUCED
+    +--------+-----+-----+-------+-----+--------+---------+------+
+    | PSOLID | PID | MID | CORDM | IN  | STRESS |   ISOP  | FCTN |
+    +--------+-----+-----+-------+-----+--------+---------+------+
+
+    +--------+-----+-----+-------+-----+--------+---------+------+
+    | PSOLID |  1  |     |   1   | 0   |        |         |      |
+    +--------+-----+-----+-------+-----+--------+---------+------+
+    | PSOLID |  2  | 100 |   6   | TWO |  GRID  | REDUCED |      |
+    +--------+-----+-----+-------+-----+--------+---------+------+
     """
     type = 'PSOLID'
     _field_map = {
@@ -297,13 +317,13 @@ class PSOLID(SolidProperty):
                 self.fctn = 'SMECH'
 
     def E(self):
-        return self.mid.E()
+        return self.mid_ref.E()
 
     def G(self):
-        return self.mid.G()
+        return self.mid_ref.G()
 
     def Nu(self):
-        return self.mid.Nu()
+        return self.mid_ref.Nu()
 
     def materials(self):
         return [self.mid]
@@ -315,13 +335,13 @@ class PSOLID(SolidProperty):
         assert isinstance(mid, int), 'mid=%r' % mid
 
         if xref:
-            if self.mid.type not in ['MAT1', 'MAT4', 'MAT5', 'MAT9', 'MAT10', 'MAT11']:
-                msg = 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
+            if self.mid_ref.type not in ['MAT1', 'MAT4', 'MAT5', 'MAT9', 'MAT10', 'MAT11']:
+                msg = 'mid=%i self.mid_ref.type=%s' % (mid, self.mid_ref.type)
                 raise TypeError(msg)
 
-    def _write_calculix(self, elementSet=999):
+    def _write_calculix(self, element_set=999):
         msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (
-            self.mid, elementSet)
+            self.mid, element_set)
         return msg
 
     def raw_fields(self):
@@ -348,7 +368,7 @@ class CrackProperty(Property):
     def Mid(self):
         if isinstance(self.mid, int):
             return self.mid
-        return self.mid.mid
+        return self.mid_ref.mid
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -405,6 +425,11 @@ class PRAC2D(CrackProperty):
     def cross_reference(self, model):
         msg = ' which is required by PRAC2D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def raw_fields(self):
         fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
@@ -457,6 +482,11 @@ class PRAC3D(CrackProperty):
     def cross_reference(self, model):
         msg = ' which is required by PRAC3D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def raw_fields(self):
         fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
@@ -523,24 +553,33 @@ class PCONEAX(Property):
         msg = ' which is required by %s=%s' %(self.type, self.pid)
         if self.mid1 > 0:
             self.mid1 = model.Material(self.mid1, msg=msg)
+            self.mid1_ref = self.mid1
         if self.mid2 > 0:
             self.mid2 = model.Material(self.mid2, msg=msg)
+            self.mid2_ref = self.mid2
         if self.mid3 > 0:
             self.mid3 = model.Material(self.mid3, msg=msg)
+            self.mid3_ref = self.mid3
+
+    def uncross_reference(self):
+        self.mid1 = self.Mid1()
+        self.mid2 = self.Mid2()
+        self.mid3 = self.Mid3()
+        del self.mid1_ref, self.mid2_ref, self.mid3_ref
 
     def Mid1(self):
         if isinstance(self.mid1, Material):
-            return self.mid1.mid
+            return self.mid1_ref.mid
         return self.mid1
 
     def Mid2(self):
         if isinstance(self.mid2, Material):
-            return self.mid2.mid
+            return self.mid2_ref.mid
         return self.mid2
 
     def Mid3(self):
         if isinstance(self.mid3, Material):
-            return self.mid3.mid
+            return self.mid3_ref.mid
         return self.mid3
 
     def raw_fields(self):

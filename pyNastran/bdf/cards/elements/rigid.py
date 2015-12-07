@@ -96,17 +96,24 @@ class RBAR(RigidElement):
     def Ga(self):
         if isinstance(self.ga, integer_types):
             return self.ga
-        return self.ga.nid
+        return self.ga_ref.nid
 
     def Gb(self):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
-        return self.gb.nid
+        return self.gb_ref.nid
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        del self.ga_ref, self.gb_ref
 
     @property
     def independent_nodes(self):
@@ -167,17 +174,24 @@ class RBAR1(RigidElement):
     def Ga(self):
         if isinstance(self.ga, integer_types):
             return self.ga
-        return self.ga.nid
+        return self.ga_ref.nid
 
     def Gb(self):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
-        return self.gb.nid
+        return self.gb_ref.nid
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        del self.ga_ref, self.gb_ref
 
     def raw_fields(self):
         list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, self.alpha]
@@ -259,20 +273,27 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.Gni = model.Nodes(self.Gni, allowEmptyNodes=True, msg=msg)
-        self.Gmi = model.Nodes(self.Gmi, allowEmptyNodes=True, msg=msg)
+        self.Gni = model.Nodes(self.Gni, allow_empty_nodes=True, msg=msg)
+        self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
+        self.Gni_ref = self.Gni
+        self.Gmi_ref = self.Gmi
+
+    def uncross_reference(self):
+        self.Gni = self.Gni_node_ids()
+        self.Gmi = self.Gmi_node_ids()
+        del self.Gni_ref, self.Gmi_ref
 
     @property
     def Gni_node_ids(self):
         if len(self.Gni) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gni, allowEmptyNodes=True)
+        return self._nodeIDs(nodes=self.Gni, allow_empty_nodes=True)
 
     @property
     def Gmi_node_ids(self):
         if len(self.Gmi) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
+        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):
@@ -477,19 +498,26 @@ class RBE2(RigidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.Gmi = model.Nodes(self.Gmi_node_ids, allowEmptyNodes=True, msg=msg)
+        self.Gmi = model.Nodes(self.Gmi_node_ids, allow_empty_nodes=True, msg=msg)
         self.gn = model.Node(self.Gn(), msg=msg)
+        self.Gmi_ref = self.Gmi
+        self.gn_ref = self.gn
+
+    def uncross_reference(self):
+        self.Gmi = self.Gmi_node_ids
+        self.gn = self.Gn()
+        del self.Gmi_ref, self.gn_ref
 
     def Gn(self):
         if isinstance(self.gn, integer_types) or self.gn is None:
             return self.gn
-        return self.gn.nid
+        return self.gn_ref.nid
 
     @property
     def Gmi_node_ids(self):
         if len(self.Gmi) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
+        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):
@@ -591,9 +619,9 @@ class RBE3(RigidElement):
                 assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
-                wtCG_group = [wt, compi, Gij]
-                self.WtCG_groups.append(wtCG_group)
-                #print('----finished a group=%r----' % wtCG_group)
+                weight_cg_group = [wt, compi, Gij]
+                self.WtCG_groups.append(weight_cg_group)
+                #print('----finished a group=%r----' % weight_cg_group)
             else:
                 i += 1
 
@@ -652,25 +680,46 @@ class RBE3(RigidElement):
     def Gmi_node_ids(self):
         if len(self.Gmi) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allowEmptyNodes=True)
+        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         assert self.Gmi is not None
-        self.Gmi = model.Nodes(self.Gmi, allowEmptyNodes=True, msg=msg)
+        self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
+        self.Gmi_ref = self.Gmi
+
         assert self.Gmi is not None
         self.refgrid = model.Node(self.ref_grid_id, msg=msg)
+        self.refgrid_ref = self.refgrid
+
+        ## TODO: add refs
         for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
-            self.WtCG_groups[i][2] = model.Nodes(Gij, allowEmptyNodes=True, msg=msg)
+            self.WtCG_groups[i][2] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+
+    def uncross_reference(self):
+        self.Gmi = self.Gmi_node_ids
+        self.refgrid = self.ref_grid_id
+
+        weight_cg_groups2 = []
+        for (wt, compi, Gij) in self.WtCG_groups:
+            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
+            weight_cg_groups2.append([wt, compi, Giji])
+
+        self.WtCG_groups = weight_cg_groups2
+        del self.Gmi_ref, self.refgrid_ref
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         assert self.Gmi is not None
-        self.Gmi = model.Nodes(self.Gmi, allowEmptyNodes=True, msg=msg)
+        self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
+        self.Gmi_ref = self.Gmi
+
         assert self.Gmi is not None
         self.refgrid = model.Node(self.ref_grid_id, msg=msg)
+        self.refgrid_ref = self.refgrid
+
         for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
-            self.WtCG_groups[i][2] = model.Nodes(Gij, allowEmptyNodes=True, msg=msg)
+            self.WtCG_groups[i][2] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
 
     @property
     def independent_nodes(self):
@@ -680,7 +729,7 @@ class RBE3(RigidElement):
         """
         nodes = []
         for (wt, compi, Gij) in self.WtCG_groups:
-            Giji = self._nodeIDs(nodes=Gij, allowEmptyNodes=True)
+            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
             nodes += Giji
         return nodes
 
@@ -697,7 +746,7 @@ class RBE3(RigidElement):
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]
         for (wt, ci, Gij) in self.WtCG_groups:
-            Giji = self._nodeIDs(nodes=Gij, allowEmptyNodes=True)
+            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
             list_fields += [wt, ci] + Giji
         nspaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 

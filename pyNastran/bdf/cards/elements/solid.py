@@ -119,18 +119,19 @@ class SolidElement(Element):
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        del self.nodes_ref, self.pid_ref
 
     def Eid(self):
         return self.eid
 
     def E(self):
-        return self.pid.mid.E()
+        return self.pid_ref.mid_ref.E()
 
     def G(self):
-        return self.pid.mid.G()
+        return self.pid_ref.mid_ref.G()
 
     def Nu(self):
-        return self.pid.mid.Nu()
+        return self.pid_ref.mid_ref.Nu()
 
     def Volume(self):
         """
@@ -149,17 +150,17 @@ class SolidElement(Element):
         """
         Returns the material ID as an integer
         """
-        return self.pid.Mid()
+        return self.pid_ref.Mid()
 
     def Rho(self):
         """
         Returns the density
         """
         try:
-            return self.pid.mid.rho
+            return self.pid_ref.mid_ref.rho
         except AttributeError:
             print("self.pid = %s" % (self.pid))
-            print("self.pid.mid = %s" % (str(self.pid.mid)))
+            print("self.pid_ref.mid_ref = %s" % (str(self.pid_ref.mid_ref)))
             raise
 
     def _is_same_card(self, elem, debug=False):
@@ -238,8 +239,10 @@ class CHEXA8(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -278,7 +281,7 @@ class CHEXA8(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
     def get_face(self, nid_opposite, nid):
         nids = self.node_ids[:8]
@@ -402,8 +405,10 @@ class CHEXA20(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def get_edge_ids(self):
         """
@@ -493,7 +498,7 @@ class CHEXA20(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
 
 class CPENTA6(SolidElement):
@@ -557,8 +562,10 @@ class CPENTA6(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def get_edge_ids(self):
         """
@@ -625,9 +632,9 @@ class CPENTA6(SolidElement):
             n1i = nids.index(n1 - 1)
             n2i = nids.index(n2 - 1)
             n3i = nids.index(n3 - 1)
-            p1 = self.nodes[n1i].get_position()
-            p2 = self.nodes[n2i].get_position()
-            p3 = self.nodes[n3i].get_position()
+            p1 = self.nodes_ref[n1i].get_position()
+            p2 = self.nodes_ref[n2i].get_position()
+            p3 = self.nodes_ref[n3i].get_position()
             a = p1 - p2
             b = p1 - p3
             A = Area(a, b)
@@ -638,10 +645,10 @@ class CPENTA6(SolidElement):
             n3i = nids.index(n3 - 1)
             n4i = nids.index(n4 - 1)
             faceNodeIDs = [n1, n2, n3, n4]
-            p1 = self.nodes[n1i].get_position()
-            p2 = self.nodes[n2i].get_position()
-            p3 = self.nodes[n3i].get_position()
-            p4 = self.nodes[n4i].get_position()
+            p1 = self.nodes_ref[n1i].get_position()
+            p2 = self.nodes_ref[n2i].get_position()
+            p3 = self.nodes_ref[n3i].get_position()
+            p4 = self.nodes_ref[n4i].get_position()
             a = p1 - p3
             b = p2 - p4
             A = Area(a, b)
@@ -675,12 +682,11 @@ class CPENTA6(SolidElement):
         A2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-
         V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
     def raw_fields(self):
-        list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allowEmptyNodes=False)
+        list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allow_empty_nodes=False)
         return list_fields
 
     def nodeIDs(self):
@@ -689,7 +695,7 @@ class CPENTA6(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
 def cpenta_face(nid, nid_opposite, nids):
     assert len(nids) == 6, nids
@@ -736,7 +742,7 @@ def cpenta_face(nid, nid_opposite, nids):
         pack2 = [i - 1 for i in pack2]
     return pack2
 
-def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
+def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
     """
     Parameters
     ----------
@@ -749,18 +755,18 @@ def cpenta_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
 
     if nid_opposite is None:
         n1i, n2i, n3i = face
-        p1 = nodes[n1i].get_position()
-        p2 = nodes[n2i].get_position()
-        p3 = nodes[n3i].get_position()
+        p1 = nodes_ref[n1i].get_position()
+        p2 = nodes_ref[n2i].get_position()
+        p3 = nodes_ref[n3i].get_position()
         a = p3 - p1
         b = p2 - p1
         centroid = (p1 + p2 + p3) / 3.
     else:
         n1i, n2i, n3i, n4i = face
-        p1 = nodes[n1i].get_position()
-        p2 = nodes[n2i].get_position()
-        p3 = nodes[n3i].get_position()
-        p4 = nodes[n4i].get_position()
+        p1 = nodes_ref[n1i].get_position()
+        p2 = nodes_ref[n2i].get_position()
+        p3 = nodes_ref[n3i].get_position()
+        p4 = nodes_ref[n4i].get_position()
         a = p1 - p3
         b = p2 - p4
         centroid = (p1 + p2 + p3 + p4) / 4.
@@ -777,11 +783,10 @@ def chexa_face(nid_opposite, nid, nids):
     for face in _chexa_faces:
         if g1i in face and g3i in face:
             found_face = face
-
     found_face = _chexa_mapper[tuple([g1i, g3i])]
     return found_face
 
-def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
+def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
     """
     Parameters
     ----------
@@ -799,10 +804,10 @@ def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
     """
     face = chexa_face(nid_opposite, nid, nids)
     nid1, nid2, nid3, nid4 = face
-    n1 = nodes[nid1].get_position()
-    n2 = nodes[nid2].get_position()
-    n3 = nodes[nid3].get_position()
-    n4 = nodes[nid4].get_position()
+    n1 = nodes_ref[nid1].get_position()
+    n2 = nodes_ref[nid2].get_position()
+    n3 = nodes_ref[nid3].get_position()
+    n4 = nodes_ref[nid4].get_position()
 
     axb = cross(n3 - n1, n4 - n2)
     areai = norm(axb)
@@ -884,8 +889,10 @@ class CPENTA15(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def get_face(self, nid, nid_opposite):
         nids = self.node_ids[:6]
@@ -965,7 +972,7 @@ class CPENTA15(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
 
 class CPYRAM5(SolidElement):
@@ -1015,8 +1022,10 @@ class CPYRAM5(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def get_edge_ids(self):
         """
@@ -1076,7 +1085,7 @@ class CPYRAM5(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
 
 class CPYRAM13(SolidElement):
@@ -1143,8 +1152,10 @@ class CPYRAM13(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def get_edge_ids(self):
         """
@@ -1208,7 +1219,7 @@ class CPYRAM13(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 
 
 class CTETRA4(SolidElement):
@@ -1258,8 +1269,10 @@ class CTETRA4(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1322,7 +1335,7 @@ class CTETRA4(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=False)
+        return self._nodeIDs(allow_empty_nodes=False)
 
 def ctetra_face(nid, nid_opposite, nids):
     assert len(nids) == 4, nids
@@ -1340,7 +1353,7 @@ def ctetra_face(nid, nid_opposite, nids):
             found_face = face
     return found_face
 
-def ctetra_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
+def ctetra_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
     """
     Parameters
     ----------
@@ -1351,9 +1364,9 @@ def ctetra_face_area_centroid_normal(nid, nid_opposite, nids, nodes):
     """
     face = ctetra_face(nid, nid_opposite, nids)
     nid1, nid2, nid3 = face
-    n1 = nodes[nid1].get_position()
-    n2 = nodes[nid2].get_position()
-    n3 = nodes[nid3].get_position()
+    n1 = nodes_ref[nid1].get_position()
+    n2 = nodes_ref[nid2].get_position()
+    n3 = nodes_ref[nid3].get_position()
 
     axb = cross(n2 - n1, n3 - n1)
     normi = norm(axb)
@@ -1434,8 +1447,10 @@ class CTETRA10(SolidElement):
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid_ref = self.pid
 
     def get_edge_ids(self):
         """
@@ -1461,7 +1476,7 @@ class CTETRA10(SolidElement):
         assert isinstance(eid, int)
         assert isinstance(pid, int)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' % (i, nid)
         if xref:
             c = self.Centroid()
             v = self.Volume()
@@ -1512,5 +1527,5 @@ class CTETRA10(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True)
+        return self._nodeIDs(allow_empty_nodes=True)
 

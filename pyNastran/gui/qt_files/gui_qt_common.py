@@ -367,8 +367,10 @@ class GuiCommon(object):
 
             point_data = self.grid.GetPointData()
             if vector_size == 1:
+                print('name_str=%r' % name_str)
                 point_data.SetActiveScalars(name_str)
             elif vector_size == 3:
+                print('name_str=%r' % name_str)
                 point_data.SetActiveVectors(name_str)
             else:
                 raise RuntimeError(vector_size)

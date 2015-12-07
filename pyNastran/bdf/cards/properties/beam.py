@@ -474,9 +474,14 @@ class PBEAM(IntegratedLineProperty):
     def cross_reference(self, model):
         msg = ' which is required by PBEAM mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
         #if model.sol != 600:
             #assert max(self.j) == 0.0, self.j
             #assert min(self.j) == 0.0, self.j
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -495,7 +500,7 @@ class PBEAM(IntegratedLineProperty):
         assert isinstance(J, float), 'cid=%r' % J
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid.type=%s' % (self.type, self.mid.type)
+            assert self.mid_ref.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid_ref.type=%s' % (self.type, self.mid_ref.type)
             #self.MassPerLength()
 
     def _write_code_aster(self):  # PBEAM
@@ -805,12 +810,17 @@ class PBEAML(IntegratedLineProperty):
         """
         msg = ' which is required by PBEAML mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def verify(self, model, isubcase):
         if model.is_thermal_solution(isubcase):
-            assert self.mid.type in ['MAT4', 'MAT5']
+            assert self.mid_ref.type in ['MAT4', 'MAT5']
         else:
-            assert self.mid.type in ['MAT1']
+            assert self.mid_ref.type in ['MAT1']
 
     def _J(self):
         j = []
@@ -842,21 +852,21 @@ class PBEAML(IntegratedLineProperty):
         i12 = None
         return i12
 
-    def _write_code_aster(self, iCut=0, iFace=0, iStart=0):  # PBEAML
+    def _write_code_aster(self, icut=0, iface=0, istart=0):  # PBEAML
         msg = ''
-        msg2 = 'Cut_%s = geompy.MakeCut(' % (iCut + 1)
+        msg2 = 'Cut_%s = geompy.MakeCut(' % (icut + 1)
         for xxb, dim, nsm in zip(self.xxb, self.dim, self.nsm):
-            msg += self.CA_Section(iFace, iStart, self.dim)
-            msg2 += 'Face_%i, ' % (iFace + 1)
-            iFace += 1
-            iStart += len(self.dim)
+            msg += self.CA_Section(iface, istart, self.dim)
+            msg2 += 'Face_%i, ' % (iface + 1)
+            iface += 1
+            istart += len(self.dim)
         msg2 = msg2[-2:]
         msg2 += ')\n'
 
         msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
-            iCut + 1, iCut + 1)
-        iCut += 1
-        return (msg + msg2, iCut, iFace, iStart)
+            icut + 1, icut + 1)
+        icut += 1
+        return (msg + msg2, icut, iface, istart)
 
     def raw_fields(self):
         list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type,
@@ -942,11 +952,16 @@ class PBCOMP(LineProperty):
         assert isinstance(pid, int)
 
     def MassPerLength(self):
-        return self.nsm + self.mid.Rho() * self.A
+        return self.nsm + self.mid_ref.Rho() * self.A
 
     def cross_reference(self, model):
         msg = ' which is required by PBCOMP mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
 
     def raw_fields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,
