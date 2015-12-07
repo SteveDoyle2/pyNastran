@@ -5,6 +5,7 @@ from six.moves import zip, range
 import os
 from itertools import count
 from math import ceil
+from collections import defaultdict
 
 from numpy import (array, unique, where, arange, hstack, searchsorted,
                    setdiff1d, intersect1d, asarray)
@@ -345,11 +346,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     return model
 
 
-def slice_model(model):
-    """
-
-    """
-    pass
+#def slice_model(model):
+    #"""
+    #"""
+    #pass
 
 def cut_model(model, axis='-y'):
     """
@@ -1294,7 +1294,6 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     .. warning :: only supports CTRIA3 & CQUAD4
     """
     from numpy import zeros, float32, arccos, dot, degrees
-    from collections import defaultdict
 
     if isinstance(theta_tols, (float, float32)):
         theta_tols = [theta_tols] * len(starting_eids)
@@ -1390,3 +1389,81 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
             check.remove(eid)
         groups.append(group)
     return model, groups
+
+
+def split_model_by_material_id(bdf_filename, bdf_filename_base, encoding=None, size=8, is_double=False):
+    """
+    Splits a model based on the material ID
+
+    Parameters
+    ----------
+    bdf_filename : str
+        the filename to read (e.g. fem.bdf)
+    bdf_filename_base : str
+        the prefix to the output file (e.g. fem)
+    encoding : str
+        the unicode encoding
+    size : int; default=8
+        the field width to write
+    is__double : bool; default=False
+        should double precision be used
+
+    .. warning :: only considers elements with materials (so no CBUSH, but yes to CONROD)
+    .. warning :: PSHELL only considers mid1 (not mid2, mid3, mid4)
+    .. warning :: doesn't consider PCOMPs
+    .. warning :: doesn't consider SPCs/loads/etc.
+
+    .. warning :: hasn't really been tested
+    """
+    model = BDF()
+    model.read_bdf(bdf_filename, xref=True, encoding=encoding)
+
+    mid_to_eids_map = defaultdict(set)
+    #nids_to_write = set([])
+    elements_with_properties = [
+        'CQUAD4', 'CQUAD', 'CQUAD8',
+        'TRIA3', 'CTRIA6', 'CTRIAX', 'CTRIAX6',
+        'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+        'CROD', 'CONROD', 'CBEAM', 'CBEND',
+    ]
+
+    elements_without_properties_with_materials = [
+        'CONROD',
+    ]
+    #invalid_properties = ['PCOMP', 'PCOMPG']
+    for eid, elem in iteritems(model.elements):
+        etype = elem.type
+        if etype in elements_with_properties:
+            pid = elem.pid
+            ptype = pid.type
+            if ptype == 'PSHELL':
+                mid1 = pid.Mid1()
+                mid_to_eids_map[mid1].add(eid)
+            else:
+                model.log.warning('skipping eid=%s elem.type=%s pid=%s prop.type=%s' % (eid, etype, pid.pid, ptype))
+        elif etype in elements_without_properties_with_materials:
+            mid = elem.Mid()
+            mid_to_eids_map[mid].add(eid)
+        else:
+            model.log.warning('skipping eid=%s elem.type=%s' % (eid, etype))
+
+    for mid, eids in iteritems(mid_to_eids_map):
+        if not eids:
+            continue
+        bdf_filename_out = bdf_filename_base + '_mid=%s.bdf' % mid
+
+        with open(bdf_filename_out, 'w') as bdf_file:
+            bdf_file.write('$ pyNastran : punch=True\n')
+            mat = model.materials[mid]
+            bdf_file.write(mat.write_card(size=size, is_double=is_double))
+
+            nids_to_write = set([])
+            for eid in eids:
+                elem = model.elements[eid]
+                nids_to_write.update(elem.node_ids)
+                bdf_file.write(elem.write_card(size=size, is_double=is_double))
+
+            for nid in nids_to_write:
+                node = model.nodes[nid]
+                bdf_file.write(node.write_card(size=size, is_double=is_double))
+            bdf_file.write('ENDDATA\n')

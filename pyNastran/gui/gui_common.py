@@ -2243,7 +2243,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         points = cell.GetPoints()
         cell_type = cell.GetCellType()
 
-        if cell_type in [5, 9]:  # CTRIA3, CQUAD4
+        if cell_type in [5, 9, 22, 23]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8
             node_xyz = zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)
@@ -2263,7 +2263,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             xyz = world_position
         else:
             #self.log.error(msg)
-            msg = 'cell_type=%s nnodes=%s' % (cell_type, nnodes)
+            msg = 'cell_type=%s nnodes=%s; result_name=%s result_values=%s' % (cell_type, nnodes, result_name, result_values)
+            self.log.error(msg)
             raise NotImplementedError(msg)
         return result_name, result_values, xyz
 
