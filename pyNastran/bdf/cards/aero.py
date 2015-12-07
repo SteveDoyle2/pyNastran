@@ -1581,7 +1581,7 @@ class CAERO2(BaseCard):
         del self.pid_ref, self.cp_ref
 
     def get_points(self):
-        (p1, matrix) = self.cp_ref.transformToGlobal(self.p1)
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + array([self.x12, 0., 0.])
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
@@ -1777,8 +1777,8 @@ class CAERO4(BaseCard):
             raise NotImplementedError(msg)
 
     def get_points(self):
-        p1, matrix = self.cp_ref.transformToGlobal(self.p1)
-        p4, matrix = self.cp_ref.transformToGlobal(self.p4)
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
+        p4 = self.cp_ref.transform_node_to_global(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
@@ -1926,8 +1926,8 @@ class CAERO5(BaseCard):
         del self.pid_ref, self.cp_ref, self.lspan_ref
 
     def get_points(self):
-        p1, matrix = self.cp_ref.transformToGlobal(self.p1)
-        p4, matrix = self.cp_ref.transformToGlobal(self.p4)
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
+        p4 = self.cp_ref.transform_node_to_global(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]

@@ -1145,6 +1145,30 @@ class NastranIO(object):
                 msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
                 raise NotImplementedError(msg)
 
+
+            # OFFT flag
+            # ---------
+            # ABC or A-B-C (an example is G-G-G or B-G-G)
+            # while the slots are:
+            #  - A -> orientation; values=[G, B]
+            #  - B -> End A; values=[G, O]
+            #  - C -> End B; values=[G, 0]
+            #
+            # and the values for A,B,C mean:
+            #  - B -> basic
+            #  - G -> global
+            #  - O -> orientation
+            #
+            # so for example G-G-G, that's global for all terms.
+            # BOG means basic orientation, orientation end A, global end B
+            #
+            # so now we're left with what does basic/global/orientation mean?
+            # - basic -> the glboal coordinate system defined by cid=0
+            # - global -> the local coordinate system defined by the
+            #             CD field on the GRID card, but referenced by
+            #             the CBAR/CBEAM
+            # - orientation -> ???
+            #
             if elem.g0:
                 n0 = model.nodes[elem.g0].get_position()
                 v = n0 - n1
@@ -1158,8 +1182,8 @@ class NastranIO(object):
                 # end A
                 # global - cid != 0
                 if node1.Cp() != 0:
-                    v = node1.cp.transform_node_to_global(v)
-                    if node1.cp.type not in ['CORD2R', 'CORD1R']:
+                    v = node1.cp_ref.transform_node_to_global(v)
+                    if node1.cp_ref.type not in ['CORD2R', 'CORD1R']:
                         raise NotImplementedError(node1.cp)
             elif offt_vector == 'B':
                 # basic - cid = 0
@@ -1195,7 +1219,12 @@ class NastranIO(object):
             else:
                 raise NotImplementedError(elem.offt)
 
-            #assert elem.offt in ['GGG', 'BGG'], elem.offt
+            ## concept has a GOO
+            if not elem.offt in ['GGG', 'BGG']:
+                msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (elem.offt, eid)
+                self.log.debug(msg)
+                continue
+
             vhat = v / norm(v) # i
             try:
                 z = cross(ihat, vhat) # k
@@ -3377,7 +3406,8 @@ class NastranIO(object):
         assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), type(icase)
         is_data, is_static, is_real, times = self._get_stress_times(model, subcase_id)
-
+        print('subcase_id=%s - is_data=%s is_static=%s is_real=%s times=%s' % (
+            subcase_id, is_data, is_static, is_real, times))
         if not is_data:
             times = []
 
@@ -3391,7 +3421,7 @@ class NastranIO(object):
                 formi = form_time[2]
             is_form_time = False
 
-            if 0:
+            if 1:
                 # stress
                 icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
                     cases, model, subcase_id, form, icase, itime, dt,
@@ -3863,7 +3893,7 @@ class NastranIO(object):
                 sminb = case.data[itime, :, 13]
                 #MSc   = case.data[itime, :, 14]
 
-                eidsi = case.elements # [:, 0]
+                eidsi = case.element # [:, 0]
 
                 i = searchsorted(eids, eidsi)
                 if len(i) != len(unique(i)):
@@ -3919,7 +3949,7 @@ class NastranIO(object):
                 sminb = case.data[itime, :, 13]
                 #MSc   = case.data[itime, :, 14]
 
-                eidsi = case.elements # [:, 0]
+                eidsi = case.element # [:, 0]
 
                 i = searchsorted(eids, eidsi)
                 if len(i) != len(unique(i)):

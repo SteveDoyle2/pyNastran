@@ -397,6 +397,8 @@ class CBAR(LineElement):
         self.ga_ref = self.ga
         self.gb_ref = self.gb
         self.pid_ref = self.pid
+        if model.is_nx:
+            assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
     def uncross_reference(self):
         self.pid = self.Pid()

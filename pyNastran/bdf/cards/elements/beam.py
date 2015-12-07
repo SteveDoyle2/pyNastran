@@ -208,6 +208,8 @@ class CBEAM(CBAR):
             self.g0_vector = g0.get_position() - self.ga.get_position()
         else:
             self.g0_vector = self.x
+        if model.is_nx:
+            assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
     def safe_cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)

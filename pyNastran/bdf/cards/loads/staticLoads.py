@@ -378,7 +378,7 @@ class GRAV(BaseCard):
 
     def transform_load(self):
         g = self.GravityVector()
-        g2, matrix = self.cid_ref.transformToGlobal(g)
+        g2 = self.cid_ref.transform_node_to_global(g)
         return g2
 
     #write_code_aster_load(self,mag):
@@ -648,7 +648,7 @@ class Force(Load):
         return self.transform_load()
 
     def transform_load(self):
-        (xyz, matrix) = self.cid.transformToGlobal(self.xyz)
+        xyz = self.cid_ref.transform_node_to_global(self.xyz)
         if self.mag > 0.:
             return (True, self.node, self.mag * xyz)  # load
         return (False, self.node, xyz)  # enforced displacement
@@ -721,7 +721,7 @@ class Moment(Load):
 
     def transform_load(self):
         #print("self.xyz = ",self.xyz)
-        (xyz, matrix) = self.cid_ref.transformToGlobal(self.xyz)
+        xyz = self.cid_ref.transform_node_to_global(self.xyz)
         if self.mag > 0.:
             #print("mag=%s xyz=%s" % (self.mag, xyz))
             return (True, self.node, self.mag * xyz)  # load

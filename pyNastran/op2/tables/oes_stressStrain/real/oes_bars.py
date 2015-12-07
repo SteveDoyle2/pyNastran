@@ -8,6 +8,12 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject,
 from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
+#oxx = 0. # max from bending and axial
+#txz = 1. # from transverse shear; txz=Vz/(Kz*A)
+#txy = 1. # from transverse shear; txy=Vz/(Ky*A)
+#t = 2. # from torsional stress; t=T*C/J
+#ovm = (oxx**2 + 3 * (txy**2 + txz**2 + t**2))**0.5
+
 class RealBarArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)

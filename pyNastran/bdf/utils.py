@@ -59,7 +59,7 @@ def _clean_comment(comment, end=-1):
     return comment
 
 
-def _to_fields_mntpnt1(card_lines, card_name):
+def _to_fields_mntpnt1(card_lines):
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 
@@ -115,7 +115,7 @@ def to_fields_long(card_lines, card_name):
     fields = []
 
     if card_name == 'MONPNT1':
-        return _to_fields_mntpnt1(card_lines, card_name)
+        return _to_fields_mntpnt1(card_lines)
 
     # first line
     line = card_lines.pop(0)
@@ -217,7 +217,7 @@ def to_fields(card_lines, card_name):
     fields = []
 
     if card_name == 'MONPNT1':
-        return _to_fields_mntpnt1(card_lines, card_name)
+        return _to_fields_mntpnt1(card_lines)
 
     # first line
     line = card_lines.pop(0)
@@ -427,6 +427,8 @@ def parse_patran_syntax(node_sets, pound=None):
     ----------
     node_sets : str
         the node_set to parse
+    pound : int / str
+        value : the pound value (e.g. # in 1:#, which means all)
 
     Returns
     -------
@@ -445,8 +447,8 @@ def parse_patran_syntax(node_sets, pound=None):
       |"12:20:2"   | [12, 14, 16, 18, 20] |
       +------------+----------------------+
 
-    Example
-    -------
+    Example 1
+    ----------
     .. code-block:: python
 
       >>> node_sets = "1 2 3 5:10 12:20:2"
@@ -454,10 +456,19 @@ def parse_patran_syntax(node_sets, pound=None):
       >>> data
       data = [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20]
 
-    .. warning::
-      Don't include the n/node or e/element or any other identifier,
-      just a string of "1 2 3 5:10 12:20:2".
-      Use parse_patran_syntax_dict to consider the identifier.
+    Example 2
+    ----------
+    .. code-block:: python
+
+      >>> node_sets = "1 2 3:#"
+      >>> data = parse_patran_syntax(node_sets, pound=10)
+      >>> data
+      data = [1, 2, 3, 5, 6, 7, 8, 9, 10]
+
+
+    .. warning::  Don't include the n/node or e/element or any other
+                  identifier, just a string of "1 2 3 5:10 12:20:2".
+                  Use parse_patran_syntax_dict to consider the identifier.
     """
     assert isinstance(node_sets, string_types), type(node_sets)
     if pound is not None:
@@ -470,10 +481,13 @@ def parse_patran_syntax(node_sets, pound=None):
         if ':' in snode:
             ssnode = snode.split(':')
             if len(ssnode) == 2:
-                nmin, nmax = int(ssnode[0]), int(ssnode[1])
+                nmin = int(ssnode[0])
+                nmax = int(ssnode[1])
                 new_set = list(range(nmin, nmax + 1))
             elif len(ssnode) == 3:
-                nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
+                nmin = int(ssnode[0])
+                nmax = int(ssnode[1])
+                delta = int(ssnode[2])
                 nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
                 if delta > 0:
                     new_set = list(range(nmin, nmax + 1, delta))
@@ -487,7 +501,7 @@ def parse_patran_syntax(node_sets, pound=None):
     return unique(nodes)
 
 
-def parse_patran_syntax_dict(node_sets):
+def parse_patran_syntax_dict(node_sets, pound_dict=None):
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -495,6 +509,9 @@ def parse_patran_syntax_dict(node_sets):
     ----------
     node_sets : str
         the node_set to parse
+    pound_dict : List[str] : int
+        key : the string
+        value : the pound value (e.g. 1:#)
 
     Returns
     -------
@@ -502,6 +519,8 @@ def parse_patran_syntax_dict(node_sets):
         str : the key
         values : the integer values for that key
 
+    Example 1
+    ---------
     .. code-block:: python
 
       node_sets = "e 1:3 n 2:6:2 Node 10:13"
@@ -512,10 +531,25 @@ def parse_patran_syntax_dict(node_sets):
           'Node' : [10, 11, 12, 13],
       }
 
-    .. note::
-      the identifier (e.g. "e") must be used.  Use parse_patran_syntax to skip the identifier.
-    .. note::
-      doesn't support "1:#"
+    Example 2
+    ---------
+    .. code-block:: python
+
+      node_sets = "e 1:3 n 2:6:2 Node 10:#"
+
+      # a pound character will be set to 20, but only for 'Node', but not 'n'
+      # so define it twice if needed
+      pounds = {'Node' : 20}
+      data = parse_patran_syntax_dict(node_sets, pounds=pounds)
+      data = {
+          'e'    : [1, 2, 3],
+          'n'    : [2, 4, 6],
+          'Node' : [10, 11, 12, 13],
+      }
+
+    .. note:: an identifier (e.g. "e") must be used.
+              Use parse_patran_syntax to skip the identifier.
+    .. warning :: case sensitive
     """
     data = {}
     try:
@@ -526,15 +560,42 @@ def parse_patran_syntax_dict(node_sets):
     except TypeError:
         print('node_sets =', node_sets, type(node_sets))
         raise
+
+    if pound_dict is None:
+        pound_dict = {}
+
     key = None
     for snode in snodes:
         if ':' in snode:
             ssnode = snode.split(':')
             if len(ssnode) == 2:
-                nmin, nmax = int(ssnode[0]), int(ssnode[1])
+                if ssnode[0].isdigit():
+                    nmin = int(ssnode[0])
+                else:
+                    raise NotImplementedError('ssnode=%s must be int,int' % ssnode)
+
+                if ssnode[1].isdigit():
+                    nmax = int(ssnode[1])
+                elif ssnode[1] == '#' and key in pound_dict:
+                    nmax = int(pound_dict[key])
+                else:
+                    raise NotImplementedError('ssnode=%s must be int,int' % ssnode)
+
                 new_set = list(range(nmin, nmax + 1))
             elif len(ssnode) == 3:
-                nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
+                if ssnode[0].isdigit():
+                    nmin = int(ssnode[0])
+                else:
+                    raise NotImplementedError('ssnode=%s must be int,int,int' % ssnode)
+
+                if ssnode[1].isdigit():
+                    nmax = int(ssnode[1])
+                elif ssnode[1] == '#' and key in pound_dict:
+                    nmax = int(pound_dict[key])
+                else:
+                    raise NotImplementedError('ssnode=%s must be int,int,int' % ssnode)
+
+                delta = int(ssnode[2])
                 nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
                 if delta > 0:
                     new_set = list(range(nmin, nmax + 1, delta))
@@ -581,10 +642,10 @@ def Position(xyz, cid, model, is_cid_int=True):
         the position of the GRID in an arbitrary coordinate system
     """
     if is_cid_int:
-        cp = model.Coord(cid)
+        cp_ref = model.Coord(cid)
     else:
-        cp = cid
-    xyz2, matrix = cp.transformToGlobal(xyz)
+        cp_ref = cid
+    xyz2 = cp_ref.transform_node_to_global(xyz)
     return xyz2
 
 
@@ -621,16 +682,16 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     # find the vector r for doing:
     #     M = r x F
     if is_cid_int:
-        cp = model.Coord(cid)
-        coord_to = model.Coord(cid_new)
+        cp_ref = model.Coord(cid)
+        coord_to_ref = model.Coord(cid_new)
     else:
-        cp = cid
-        coord_to = cid_new
-    r = cp.origin - coord_to.origin
+        cp_ref = cid
+        coord_to_ref = cid_new
+    r = cp_ref.origin - coord_to_ref.origin
 
     # change R-theta-z to xyz
-    Fxyz_local_1 = cp.coordToXYZ(F)
-    Mxyz_local_1 = cp.coordToXYZ(M)
+    Fxyz_local_1 = cp_ref.coordToXYZ(F)
+    Mxyz_local_1 = cp_ref.coordToXYZ(M)
 
     # pGlobal = pLocal1 * beta1 + porigin1
     # pGlobal = pLocal2 * beta2 + porigin2
@@ -642,8 +703,8 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     # Fglobal = Flocal1 * beta1
     # Flocal2 = (Flocal1 * beta1) * beta2.T
 
-    Fxyz_global = dot(Fxyz_local_1, cp.beta())
-    Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coord_to.beta().T)
+    Fxyz_global = dot(Fxyz_local_1, cp_ref.beta())
+    Fxyz_local_2 = dot(dot(Fxyz_local_1, cp_ref.beta()), coord_to_ref.beta().T)
 
     # find the moment about the new origin due to the force
     Mxyz_global = cross(r, Fxyz_global)
@@ -651,7 +712,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
 
     # rotate the delta moment into the local frame
-    M_local = coord_to.XYZtoCoord(Mxyz_local_2)
+    M_local = coord_to_ref.XYZtoCoord(Mxyz_local_2)
 
     return Fxyz_local_2, Mxyz_local_2
 
@@ -678,11 +739,11 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         return xyz
 
     if is_cid_int:
-        cp = model.Coord(cid)
-        coord_to = model.Coord(cid_new)
+        cp_ref = model.Coord(cid)
+        coord_to_ref = model.Coord(cid_new)
     else:
-        cp = cid
-        coord_to = cid_new
+        cp_ref = cid
+        coord_to_ref = cid_new
 
     if 0:
         # pGlobal = pLocal1 * beta1 + porigin1
@@ -692,20 +753,22 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         # (plocal1 * beta1 + porigin1 - porigin2) * beta2.T = plocal2
 
         # convert R-Theta-Z_1 to xyz_1
-        p1_local = cp.coordToXYZ(xyz)
+        p1_local = cp_ref.coordToXYZ(xyz)
 
         # transform xyz_1 to xyz_2
-        p2_local = dot(dot(p1_local, cp.beta()) + cp.origin - coord_to.origin, coord_to.beta().T)
+        p2_local = dot(
+            dot(p1_local, cp_ref.beta()) + cp_ref.origin - coord_to_ref.origin,
+                coord_to_ref.beta().T)
 
         # convert xyz_2 to R-Theta-Z_2
-        xyz_local = coord_to.XYZtoCoord(p2_local)
+        xyz_local = coord_to_ref.XYZtoCoord(p2_local)
     else:
         # converting the xyz point arbitrary->global
-        xyz_global, matrix_dum = cp.transformToGlobal(xyz)
+        xyz_global = cp_ref.transform_node_to_global(xyz)
 
         # a matrix global->local matrix is found
-        matrix = coord_to.beta()
-        xyz_local = coord_to.transformToLocal(xyz_global, matrix)
+        matrix = coord_to_ref.beta()
+        xyz_local = coord_to_ref.transformToLocal(xyz_global, matrix)
     return xyz_local
 
 

@@ -10,15 +10,19 @@ from pyNastran.bdf.cards.constraints import ConstraintObject
 class BDFAttributes(object):
 
     def __init__(self):
-        self._nastran_format = 'msc'
         self.__init_attributes()
         self._is_cards_dict = False
+        self.set_as_msc()
 
     def set_as_msc(self):
         self._nastran_format = 'msc'
+        self.is_nx = False
+        self.is_msc = True
 
     def set_as_nx(self):
         self._nastran_format = 'nx'
+        self.is_nx = True
+        self.is_msc = False
 
     def object_attributes(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:
