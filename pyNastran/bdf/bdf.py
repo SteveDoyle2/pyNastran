@@ -123,6 +123,113 @@ from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
 from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
 from pyNastran.bdf.field_writer_16 import print_field_16
 
+
+
+def _read_bdf(bdf_filename=None,
+              xref=True, punch=False, encoding=None,
+              log=None, debug=True, mode='msc'):
+    """
+    Creates the BDF object without all the read methods
+
+    Parameters
+    ----------
+    bdf_filename : str (default=None -> popup)
+        the bdf filename
+    debug : bool/None
+        used to set the logger if no logger is passed in
+            True:  logs debug/info/error messages
+            False: logs info/error messages
+            None:  logs error messages
+    log : logging module object / None
+        if log is set, debug is ignored and uses the
+        settings the logging object has
+    xref :  bool
+        should the bdf be cross referenced (default=True)
+    punch : bool
+        indicates whether the file is a punch file (default=False)
+    encoding : str
+        the unicode encoding (default=None; system default)
+
+    Returns
+    -------
+    model : BDF()
+        an BDF object
+
+    .. code-block:: python
+
+        >>> bdf = BDF()
+        >>> bdf.read_bdf(bdf_filename, xref=True)
+        >>> g1 = bdf.Node(1)
+        >>> print(g1.get_position())
+        [10.0, 12.0, 42.0]
+        >>> bdf.write_card(bdf_filename2)
+        >>> print(bdf.card_stats())
+
+        ---BDF Statistics---
+        SOL 101
+        bdf.nodes = 20
+        bdf.elements = 10
+        etc.
+
+    .. note :: this method will change in order to return an object that
+               does not have so many methods
+    .. todo :: finish this
+    """
+    model = BDF(log=log, debug=debug)
+    model.read_bdf(bdf_filename=bdf_filename, xref=xref)
+
+    ## TODO: remove all the extra methods
+
+    keys_to_suppress = ['convectionProperties', 'creepMaterials', 'hyperelasticMaterials', 'rigidElements', 'thermalMaterials']
+    method_names = model.object_methods(keys_to_skip=keys_to_suppress)
+
+    methods_to_remove = [
+        ''
+        'process_card', 'read_bdf', 'fill_dmigs', 'disable_cards', 'set_dynamic_syntax',
+        'create_card_object', 'create_card_object_fields', 'create_card_object_list',
+
+        'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
+        'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
+        'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
+        'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
+        'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
+        'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
+        'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+        'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
+        'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
+        'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
+        'add_SEUSET', 'add_SPLINE', 'add_SPOINT', 'add_TEMPD', 'add_TF', 'add_TRIM',
+        'add_TSTEP', 'add_TSTEPNL', 'add_USET',
+
+        'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
+        'add_constraint_MPC', 'add_constraint_MPCADD', 'add_constraint_SPC', 'add_constraint_SPCADD',
+        'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper', 'add_dload',
+        'add_dload_entry', 'add_element', 'add_hyperelastic_material', 'add_load', 'add_mass',
+        'add_material_dependence', 'add_method', 'add_node', 'add_plotel', 'add_property',
+        'add_property_mass', 'add_random_table', 'add_rigid_element', 'add_structural_material',
+        'add_suport', 'add_suport1', 'add_table', 'add_table_sdamping', 'add_thermal_BC',
+        'add_thermal_element', 'add_thermal_load', 'add_thermal_material',
+
+        'set_as_msc',
+        'set_as_nx',
+
+        'pop_parse_errors',
+        #'pop_xref_errors',
+        'set_error_storage',
+        'is_reject',
+    ]
+    for method_name in method_names:
+        if method_name not in methods_to_remove + keys_to_suppress:
+            #print(method_name)
+            pass
+        else:
+            ## TODO: doesn't work...
+            #delattr(model, method_name)
+            pass
+    model.get_bdf_stats()
+    return model
+
+
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
@@ -133,7 +240,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug=True, log=None):
+    def __init__(self, debug=True, log=None, mode='msc'):
         """
         Initializes the BDF object
 
@@ -434,8 +541,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._unique_bulk_data_cards = self.cards_to_read.difference(case_control_cards)
 
         #: / is the delete from restart card
-        self.specialCards = ['DEQATN', '/']
+        self.special_cards = ['DEQATN', '/']
         self._make_card_parser()
+
+        if self.is_msc:
+            self.set_as_msc()
+        elif self.is_nx:
+            self.set_as_nx()
+        else:
+            raise NotImplementedError('mode=%r is not supported; modes=[msc, nx]' % self._nastran_format)
 
     def __getstate__(self):
         """clears out a few variables in order to pickle the object"""
@@ -448,7 +562,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         del state['_card_parser'], state['_card_parser_b'], state['log']
         return state
 
-    def save_object(self, obj_filename='model.obj', unxref=True):
+    def save(self, obj_filename='model.obj', unxref=True):
         """
         ..warning:: doesn't work right
         """
@@ -471,7 +585,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         with open(obj_filename, 'w') as obj_file:
             pickle.dump(self, obj_file)
 
-    def load_object(self, obj_filename='model.obj'):
+    def load(self, obj_filename='model.obj'):
         """
         ..warning:: doesn't work right
         """

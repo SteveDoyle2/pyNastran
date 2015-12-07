@@ -378,7 +378,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             assert isinstance(debug_file, string_types), debug_file
             self.debug_file = debug_file
-        self.make_geom = False
 
     def set_as_vectorized(self, vectorized=False, ask=False):
         """don't call this...testing"""
@@ -849,7 +848,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #self.binary_debug = TrashWriter('debug.out', wb)
             self.is_debug_file = False
 
-    def read_op2(self, op2_filename=None):
+    def read_op2(self, op2_filename=None, combine=False):
         """
         Starts the OP2 file reading
 
@@ -1282,7 +1281,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             itable -= 1
             niter += 1
         raise RuntimeError('this should never happen; n=%s' % niter_max)
-        print('------------')
+        #print('------------')
         #self.show(100)
         #asdf
 

@@ -1,3 +1,6 @@
+#import warnings
+#warnings.filterwarnings('ignore', 'missing __init__.py*')
+
 #bdf
 from pyNastran.bdf.test.all_tests import *
 

@@ -8,7 +8,7 @@ import pyNastran
 test_path = pyNastran.__path__[0]
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.op2.op2 import OP2, FatalError
+from pyNastran.op2.op2 import OP2, FatalError, read_op2
 from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
@@ -53,6 +53,8 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
+
+        read_op2(op2_filename)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -82,6 +84,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
+        read_op2(op2_filename)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -140,6 +143,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
+        read_op2(op2_filename)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -198,6 +202,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
+        read_op2(op2_filename)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -263,6 +268,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
+        read_op2(op2_filename)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -329,6 +335,7 @@ class TestOP2(Tester):
         write_f06 = False
         debug = False
         op2file = os.path.join(folder, op2_filename)
+        read_op2(op2file)
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, quiet=True)
@@ -348,6 +355,7 @@ class TestOP2(Tester):
         write_f06 = False
         debug = False
         op2file = os.path.join(folder, op2_filename)
+        read_op2(op2file)
         op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                   write_f06=write_f06,
                                   debug=debug, stop_on_failure=True,
@@ -391,6 +399,7 @@ class TestOP2(Tester):
         debug = False
         debug_file = 'debug.out'
 
+        read_op2(op2_filename)
         op2 = OP2(debug=debug, debug_file=debug_file)
         op2.read_op2(op2_filename)
         assert os.path.exists(debug_file), os.listdir('.')
@@ -411,6 +420,7 @@ class TestOP2(Tester):
 
         debug = False
         debug_file = 'debug.out'
+        read_op2(op2_filename)
         op2 = OP2(debug=debug, debug_file=debug_file)
         op2.read_op2(op2_filename)
         assert os.path.exists(debug_file), os.listdir('.')
@@ -511,8 +521,6 @@ class TestOP2(Tester):
             eids = unique(case.element)
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-
-
 
 
     def test_op2_dmi(self):

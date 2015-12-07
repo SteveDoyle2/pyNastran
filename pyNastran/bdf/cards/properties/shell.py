@@ -427,12 +427,15 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
 class PCOMP(CompositeShellProperty):
     """
-    ::
-
-      PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
-                300704   3.7-2   0.0+0     YES  300704   3.7-2     45.     YES
-                300704   3.7-2    -45.     YES  300704   3.7-2     90.     YES
-                300705      .5   0.0+0     YES
+    +-------+--------+-------+---------+-----+--------+-------+-------+-----+
+    | PCOMP | 701512 | 0.0+0 | 1.549-2 |     |        | 0.0+0 | 0.0+0 | SYM |
+    +-------+--------+-------+---------+-----+--------+-------+-------+-----+
+    |       | 300704 | 3.7-2 | 0.0+0   | YES | 300704 | 3.7-2 |   45. | YES |
+    +-------+--------+-------+---------+-----+--------+-------+-------+-----+
+    |       | 300704 | 3.7-2 |  -45.   | YES | 300704 | 3.7-2 |   90. | YES |
+    +-------+--------+-------+---------+-----+--------+-------+-------+-----+
+    |       | 300705 |    .5 | 0.0+0   \ YES |        |       |       |     |
+    +-------+--------+-------+---------+-----+--------+-------+-------+-----+
     """
     type = 'PCOMP'
     _field_map = {
@@ -1024,7 +1027,7 @@ class PSHELL(ShellProperty):
                 if mid is not None]
         assert len(mids) > 0
         if xref:
-            assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
+            assert isinstance(self.mid, Material), 'mid=%r' % self.mid
 
             for i, mid in enumerate(mids):
                 if i == 1: # mid2
@@ -1080,7 +1083,7 @@ class PSHELL(ShellProperty):
     def mid(self):
         if isinstance(self.mid1, Material):
             return self.mid1_ref
-        return self.mid2
+        return self.mid2_ref
 
     def Mid(self):
         if isinstance(self.mid1, Material):
@@ -1111,7 +1114,7 @@ class PSHELL(ShellProperty):
         return self.t
 
     def Rho(self):
-        return self.mid().rho
+        return self.mid.rho
 
     def Nsm(self):
         return self.nsm

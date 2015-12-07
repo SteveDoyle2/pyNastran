@@ -14,9 +14,51 @@ from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
-
-
 #from pyNastran.op2.op2_writer import OP2Writer
+from pyNastran.op2.op2_f06_common import OP2_F06_Attributes
+
+
+def read_op2(op2_filename=None, combine=True,
+             log=None, debug=True, debug_file=None, mode='msc'):
+    """
+    Creates the OP2 object without all the read methods
+
+    Parameters
+    ----------
+    op2_filename : str (default=None -> popup)
+        the op2_filename
+    combine : bool; default=True
+        True : objects are isubcase based
+        False : objects are (isubcase, subtitle) based;
+                will be used for superelements regardless of the option
+    debug : bool; default=False
+        enables the debug log and sets the debug in the logger
+    log : Log()
+        a logging object to write debug messages to
+     (.. seealso:: import logging)
+    debug_file : str; default=None (No debug)
+        sets the filename that will be written to
+
+    Returns
+    -------
+    model : OP2()
+        an OP2 object
+
+    .. note :: this method will change in order to return an object that
+               does not have so many methods
+    """
+    model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
+    model.read_op2(op2_filename=op2_filename, combine=combine)
+
+    ## TODO: this will go away when OP2 is refactored
+    ## TODO: many methods will be missing, but it's a start...
+    obj = OP2_F06_Attributes()
+    attr_names = object_attributes(obj, mode="public", keys_to_skip=None)
+    for attr_name in attr_names:
+        attr = getattr(model, attr_name)
+        setattr(obj, attr_name, attr)
+    obj.get_op2_stats()
+    return obj
 
 #class OP2(OP2_Scalar, OP2Writer):
 class OP2(OP2_Scalar):
@@ -40,7 +82,7 @@ class OP2(OP2_Scalar):
         self.set_mode(mode)
         make_geom = False
         assert make_geom == False, make_geom
-        OP2_Scalar.__init__(self,debug=debug, log=log, debug_file=debug_file)
+        OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False
 
     @property
@@ -357,24 +399,26 @@ class OP2(OP2_Scalar):
             Dictionary from coordinate id to 3 x 3 transformation
             matrix for that coordinate system.
         """
-        output = {}
-        disp_like_dicts = [self.displacements,
-                           self.displacementsATO,
-                           self.displacementsCRM,
-                           self.displacementsPSD,
-                           self.displacementsRMS,
-                           self.displacements_scaled,
-                           self.displacement_scaled_response_spectra_ABS,
-                           self.displacement_scaled_response_spectra_NRL,
+        #output = {}
+        disp_like_dicts = [
+            self.displacements,
+            self.displacementsATO,
+            self.displacementsCRM,
+            self.displacementsPSD,
+            self.displacementsRMS,
+            self.displacements_scaled,
+            self.displacement_scaled_response_spectra_ABS,
+            self.displacement_scaled_response_spectra_NRL,
 
-                           self.velocities,
-                           self.velocity_scaled_response_spectra_ABS,
+            self.velocities,
+            self.velocity_scaled_response_spectra_ABS,
 
-                           self.accelerations,
-                           self.acceleration_scaled_response_spectra_ABS,
-                           self.acceleration_scaled_response_spectra_NRL,
+            self.accelerations,
+            self.acceleration_scaled_response_spectra_ABS,
+            self.acceleration_scaled_response_spectra_NRL,
 
-                           self.eigenvectors]
+            self.eigenvectors
+        ]
 
         for disp_like_dict in disp_like_dicts:
             if disp_like_dict:

@@ -16,7 +16,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import iteritems, integer_types, string_types
 from six.moves import zip
 from collections import defaultdict
 from copy import deepcopy
@@ -183,24 +183,25 @@ class BDFMethods(BDFAttributes):
         # precompute the CG location and make it the reference point
         I = array([0., 0., 0., 0., 0., 0., ])
         cg = array([0., 0., 0.])
-        if reference_point is 'cg':
-            mass = 0.
-            for pack in [elements, masses]:
-                for element in pack:
-                    try:
-                        p = element.Centroid()
-                        m = element.Mass()
-                        mass += m
-                        cg += m * p
-                    except:
-                        pass
-            if mass == 0.0:
-                return mass, cg, I
+        if isinstance(reference_point, string_types):
+            if reference_point == 'cg':
+                mass = 0.
+                for pack in [elements, masses]:
+                    for element in pack:
+                        try:
+                            p = element.Centroid()
+                            m = element.Mass()
+                            mass += m
+                            cg += m * p
+                        except:
+                            pass
+                if mass == 0.0:
+                    return mass, cg, I
 
-            reference_point = cg / mass
-        else:
-            # reference_point = [0.,0.,0.] or user-defined array
-            pass
+                reference_point = cg / mass
+            else:
+                # reference_point = [0.,0.,0.] or user-defined array
+                pass
 
         mass = 0.
         cg = array([0., 0., 0.])
@@ -228,7 +229,12 @@ class BDFMethods(BDFAttributes):
                 except:
                     #raise
                     # PLPLANE
-                    self.log.warning("could not get the inertia for element\n%s" % element)
+                    if element.pid_ref.type == 'PSHELL':
+                        self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (p, reference_point, type(reference_point)))
+                        raise
+                    self.log.warning("could not get the inertia for element/property\n%s%s" % (
+                        element, element.pid_ref))
+
                     continue
         if mass:
             cg = cg / mass

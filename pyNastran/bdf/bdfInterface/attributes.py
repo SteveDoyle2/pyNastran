@@ -43,12 +43,17 @@ class BDFAttributes(object):
         ]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    #def object_methods(self, mode='public', keys_to_skip=None):
-        #if keys_to_skip is None:
-            #keys_to_skip = []
-        #my_keys_to_skip = [
+    def object_methods(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []
+
+        # remove these
+        my_keys_to_skip = [
             #'case_control_deck',
-            #'log', 'mpcObject', 'spcObject',
+            'log',
+            #'mpcObject', 'spcObject',
+
             #'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             #'material_ids', 'caero_ids', 'is_long_ids',
             #'nnodes', 'ncoords', 'nelements', 'nproperties',
@@ -56,10 +61,10 @@ class BDFAttributes(object):
 
             #'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
             #'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
-            #'_card_parser', '_card_parser_b',
+            '_card_parser', '_card_parser_b',
             #'object_methods', 'object_attributes',
-        #]
-        #return object_methods(obj, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        ]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""

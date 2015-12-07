@@ -18,6 +18,8 @@ class OP2_F06_Common(object):
         self.subtitles = defaultdict(list)
         self.labels = {}
 
+        self.make_geom = False
+
         #: BDF Title
         self.Title = None
 
@@ -727,3 +729,7 @@ class OP2_F06_Common(object):
                 print(msgi.rstrip())
                 assert isinstance(msgi, string_types), msgi
             raise
+
+class OP2_F06_Attributes(OP2_F06_Common):
+    def __init__(self):
+        OP2_F06_Common.__init__(self)
