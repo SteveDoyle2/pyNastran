@@ -7,7 +7,7 @@ Main BDF class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, itervalues, iterkeys
+from six import string_types, iteritems, itervalues, iterkeys, PY2
 from collections import defaultdict
 
 from codecs import open as codec_open
@@ -15,6 +15,11 @@ from codecs import open as codec_open
 import os
 import sys
 import traceback
+
+if PY2:
+    import cPickle as pickle
+else:
+    import pickle
 
 from numpy import unique, array, where, in1d
 
@@ -566,8 +571,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         ..warning:: doesn't work right
         """
-        #import cPickle as pickle
-        import pickle
         #del self.log
         #del self.spcObject
         #del self.mpcObject
@@ -589,8 +592,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         ..warning:: doesn't work right
         """
-        #import cPickle as pickle
-        import pickle
         #del self.log
         #del self.spcObject
         #del self.mpcObject
