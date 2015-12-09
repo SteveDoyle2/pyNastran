@@ -85,7 +85,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric
         all the elements on the edges
     patches : List[List[int]]
         the patches
-    is_symmetric : bool
+    is_symmetric : bool; default=True
         enables yz symmetry
 
     .. note :: We're only considering shell elements, which probably is a poor
@@ -209,6 +209,9 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric
         patch_len = 1
         # old_patch_len = 0
 
+        # TODO: on only the first loop of the upper level while loop,
+        #       downselect the edges to make sure that there are no
+        #       edges that cross boundary lines.
         edges_to_check_all = set(eid_to_edge_map[eid0])
         i = 0
         # see docstring for an explanation of this "big giant for loop"
@@ -344,7 +347,12 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
             each patch and constrain a boundary node
         'displacement' : extract displacements from the op2 and apply
             interface displacements for each patch
+    is_symmetric : bool; default=True
+        is the model symmetric (???)
+        full model : set to False (???)
+        half model : set to True (???)
     """
+    # TODO: add ability to start from existing patch/edge files
     import glob
     patch_filenames = glob.glob('patch_*.bdf')
     edge_filenames = glob.glob('edge_*.bdf')
@@ -356,8 +364,10 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     out = model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
     (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
     xyz_cid0 = {}
+    cds = {}
     for nid, node in iteritems(model.nodes):
         xyz_cid0[nid] = node.get_position()
+        cds[nid] = node.Cd()
     patch_edges, eids_on_edge, patches = find_ribs_and_spars(
         xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric=is_symmetric)
 
@@ -370,8 +380,8 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     header += 'ECHO = NONE\n'
     header += 'SUBCASE 1\n'
     # header += '  SUPORT = 1\n'
-    if mode == 'load':
-        header += '  LOAD = 55\n'
+    #if mode == 'load':
+    header += '  LOAD = 55\n'
     header += '  METHOD = 42\n'
     header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
     header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
@@ -385,7 +395,7 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     header += 'PARAM,COUPMASS,1\n'
     header += 'PARAM,AUNITS,0.00259\n'
     header += 'PARAM,WTMASS,0.00259\n'
-    header += 'PARAM,BAILOUT,-1\n'
+    #header += 'PARAM,BAILOUT,-1\n'
     header += 'PARAM,PRTMAXIM,YES\n'
     header += 'PARAM,POST,-1    \n'
 
@@ -404,6 +414,7 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
         #print('out_model.displacements =', out_model.displacements)
         displacements = out_model.displacements[isubcase]
         node_ids_full_model = displacements.node_gridtype[:, 0]
+        ## TODO: check for cd != 0
     elif mode == 'load':
         nodal_forces = out_model.grid_point_forces[isubcase]
     else:
@@ -479,6 +490,9 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
             #print('idisp_full_model = %s' % idisp_full_model)
             #print('nids2 = %s' % nids2)
             #print('delta = %s' % (node_ids_full_model[idisp_full_model] - patch_edge_nids))
+
+
+            # make sure we're in Cd == 0
             disp = displacements.data[0, idisp_full_model, :]
             #disp = displacements.data[:, 3]
 
@@ -553,17 +567,22 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
 def main():
     """prevents bleedover of data"""
     model = BDF()
-    bdf_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.bdf'
-    op2_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.op2'
+    #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.bdf'
+    #op2_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.op2'
+
+    bdf_filename = 'model_144.bdf'
+    op2_filename = 'model_144.op2'
+
     #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\models\solid_bending\solid_bending.bdf'
-    if not os.path.exists(bdf_filename):
-        bdf_filename = os.path.join(os.path.expanduser('~'),
-                                    'Desktop', 'move', '3_LoadCases_Final',
-                                    'BWB_afl_static_analysis_short.bdf')
-        op2_filename = os.path.join(os.path.expanduser('~'),
-                                    'Desktop', 'move', '3_LoadCases_Final',
-                                    'BWB_afl_static_analysis_short.op2')
-        assert os.path.exists(bdf_filename), bdf_filename
+    if 0:
+        if not os.path.exists(bdf_filename):
+            bdf_filename = os.path.join(os.path.expanduser('~'),
+                                        'Desktop', 'move', '3_LoadCases_Final',
+                                        'BWB_afl_static_analysis_short.bdf')
+            op2_filename = os.path.join(os.path.expanduser('~'),
+                                        'Desktop', 'move', '3_LoadCases_Final',
+                                        'BWB_afl_static_analysis_short.op2')
+            assert os.path.exists(bdf_filename), bdf_filename
 
     if not os.path.exists('model.obj') or 1:
         model.read_bdf(bdf_filename)
