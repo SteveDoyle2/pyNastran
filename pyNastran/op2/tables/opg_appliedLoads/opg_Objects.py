@@ -95,7 +95,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m3 = self.data[itime, :, 5]
             for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         node_id, eid, source, dx, dy, dz, rx, ry, rz))
@@ -132,7 +132,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m3 = self.data[itime, :, 5]
             for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (

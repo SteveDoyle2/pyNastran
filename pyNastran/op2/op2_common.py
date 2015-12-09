@@ -187,7 +187,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 assert self.format_code in [1], self.code_information()
             elif self.analysis_code == 11:  # old geometric nonlinear statics
                 assert self.format_code in [1], self.code_information()
-            elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            elif self.analysis_code == 12:
+                # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
                 assert self.format_code in [4], self.code_information() # invalid value
             else:
                 msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
@@ -220,24 +221,25 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             pass
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             pass
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif self.analysis_code == 12:
+            # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             pass
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
     def add_data_parameter(self, data, var_name, Type, field_num,
-                           applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
+                           apply_nonlinear_factor=True, fix_device_code=False, add_to_dict=True):
         datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)
         value, = unpack(b(self._endian + Type), datai)
-        if fixDeviceCode:
+        if fix_device_code:
             value = (value - self.device_code) // 10
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
 
-        if applyNonlinearFactor:
+        if apply_nonlinear_factor:
             self.nonlinear_factor = value
             #if self.table_name == b'OUGV2':
                 #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
@@ -258,15 +260,16 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         self.data_code[name] = value
 
     def setNullNonlinearFactor(self):
+        raise RuntimeError('is this used???')
         self.nonlinear_factor = None
         self.data_code['nonlinear_factor'] = None
 
     def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
-        Title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
+        title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
 
-        self.Title = Title.strip()
+        self.Title = title.strip()
 
         #: the subtitle of the subcase
         self.subtitle = subtitle.strip()

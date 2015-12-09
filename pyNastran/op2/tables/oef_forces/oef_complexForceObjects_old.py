@@ -1,6 +1,6 @@
 from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, writeFloats13E
+from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, write_floats_13e
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -513,7 +513,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                 forces.append(force)
                 #pack.append(eid)
                 #pack.append(f)
-                ([forceReal, forceImag], is_all_zeros) = writeFloats13E([force.real, force.imag])
+                [forceReal, forceImag] = write_floats_13e([force.real, force.imag])
 
                 line += '          %13s      %-13s / %-13s' % (eid, forceReal, forceImag)
                 if len(forces) == 2:

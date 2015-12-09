@@ -5,7 +5,7 @@ from six import iteritems
 from itertools import count
 from numpy import zeros, searchsorted, ravel
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
 class RealBar10NodesArray(OES_Object):
@@ -175,7 +175,7 @@ class RealBar10NodesArray(OES_Object):
                      count(), eids, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
 
                 vals = [sdi, sxci, sxdi, sxei, sxfi, axiali, smaxi, smini, MSi]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [sdi, sxci, sxdi, sxei, sxfi, axiali, smaxi, smini, MSi] = vals2
                 f06_file.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s %s\n'
                                % (eid, sdi, sxci, sxdi, sxei, sxfi, axiali, smaxi, smini, MSi))

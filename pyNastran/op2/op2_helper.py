@@ -1,5 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+"""
+defines:
+ - polar_to_real_imag
+ - real_imag_to_mag_phase
+"""
 
 from numpy import radians, abs, angle  # ,sin, cos
 from cmath import rect  # polar

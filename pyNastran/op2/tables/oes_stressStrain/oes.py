@@ -45,8 +45,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpr
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (NonlinearRod, NonlinearQuad, HyperelasticQuad,  # TODO: vectorize 3
                                                                  RealNonlinearPlateArray)
-ComplexShearStressArray = None
-ComplexShearStrainArray = None
+#ComplexShearStressArray = None
+#ComplexShearStrainArray = None
 
 
 class OES(OP2Common):
@@ -2333,32 +2333,55 @@ class OES(OP2Common):
             slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 7:  # real
-                self.create_transient_object(slot, NonlinearRod)
-                s = Struct(b(self._endian + 'i6f'))  # 1+6=7
                 ntotal = 28  #  7*4 = 28
                 nelements = ndata // ntotal
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealNonlinearRodArray)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
                 obj = self.obj
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    #self.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
+                if self.use_vector and is_vectorized:
+                    n = nelements * self.num_wide * 4
+                    istart = obj.itotal
+                    iend = istart + nelements
+                    obj._times[obj.itime] = dt
 
-                    (eid_device, axial, equivStress, totalStrain, effPlasticCreepStrain,
-                     effCreepStrain, linearTorsionalStresss) = out
-                    #eid = (eid_device - self.device_code) // 10
-                    eid = self._check_id(eid_device, flag, stress_name, out)
-                    if self.is_debug_file:
-                        self.binary_debug.write('%s - %s\n' % (name, str(out)))
-                    indata = (eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss)
-                    obj.add(self.element_type, dt, indata)
-                    n += ntotal
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 7)
+                        eids = ints[:, 0] // 10
+                        obj.element_layer[istart:iend, 0] = eids
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 7)
+                    #[axial, equiv_stress, total_strain,
+                    # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
+                    obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
+                else:
+                    s = Struct(b(self._endian + 'i6f'))  # 1+6=7
+                    for i in range(nelements):
+                        edata = data[n:n+ntotal]
+                        out = s.unpack(edata)
+
+                        (eid, axial, equiv_stress, total_strain,
+                         eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss) = out
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        if self.is_debug_file:
+                            self.binary_debug.write('%s - %s\n' % (name, str(out)))
+                        obj.add(self.element_type, dt, eid, axial, equiv_stress, total_strain,
+                                eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss)
+                        n += ntotal
             else:
                 raise RuntimeError(self.code_information())
 
         elif self.element_type in [224, 225]: # nonlinear spring
             # 224-CELAS1
             # 225-CELAS3
-            # nonlinearSpringStress
+            # NonlinearSpringStress
             numwide_real = 3
             if self.read_mode == 1:
                 return ndata
@@ -2606,8 +2629,6 @@ class OES(OP2Common):
 
         elif self.element_type == 100:  # bars
             # 100-BARS
-            if self.read_mode == 0:
-                return ndata
             if self.is_stress():
                 result_name = 'cbar_stress_10nodes'
             else:

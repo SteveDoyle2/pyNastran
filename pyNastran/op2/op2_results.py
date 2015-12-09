@@ -29,6 +29,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
     TODO: add 'sum', 'difference' for 'layers'?
     TODO: hasn't been tested
     """
+    raise NotImplementedError()
     assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']
     assert options['layers'] in ['max', 'min', 'avg'], options['layers']
     assert options['location'] in ['node', 'centroid'], options['location']

@@ -1,7 +1,7 @@
 from numpy import array
 from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, get_key0, writeFloats12E
+from pyNastran.f06.f06_formatting import write_floats_13e, get_key0, writeFloats12E
 from pyNastran.f06.f06_formatting import _eigenvalue_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
 
@@ -128,7 +128,7 @@ class RealRodForce(ScalarObject):
         for eid in sorted(self.axial_force):
             axial = self.axial_force[eid]
             torsion = self.torque[eid]
-            (vals2, is_all_zeros) = writeFloats13E([axial, torsion])
+            vals2 = write_floats_13e([axial, torsion])
             (axial, torsion) = vals2
             out.append([eid, axial, torsion])
 
@@ -394,7 +394,7 @@ class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
                 bmxyi = self.bmxy[eid][i]
                 txi = self.tx[eid][i]
                 tyi = self.ty[eid][i]
-                (vals2, is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                vals2 = write_floats_13e([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                 [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = vals2
                 if i == 0:
                     f.write('0  %8i    CEN/4 %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
@@ -525,8 +525,8 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             ty = self.ty[eid]
             #Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
 
-            ([mx, my, mxy, bmx, bmy, bmxy, tx, ty],
-             is_all_zeros) = writeFloats13E([mx, my, mxy, bmx, bmy, bmxy, tx, ty])
+            [mx, my, mxy, bmx, bmy, bmxy, tx, ty] = write_floats_13e(
+                [mx, my, mxy, bmx, bmy, bmxy, tx, ty])
             Fmt = '% 8i   ' + '%s ' * 8 + '\n'
             f.write(Fmt % (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty))
         return page_num
@@ -944,7 +944,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
             ts1, ts2 = self.shear[eid]
             af = self.axial[eid]
             trq = self.torque[eid]
-            (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+            vals2 = write_floats_13e([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
             [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
             f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
             #1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
@@ -967,7 +967,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
                 ts1, ts2 = self.shear[dt][eid]
                 af = self.axial[dt][eid]
                 trq = self.torque[dt][eid]
-                (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+                vals2 = write_floats_13e([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
                 [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
                 f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
                 #1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
@@ -1432,7 +1432,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
                 vx, vy, vz = self.velocity[dt][eid]
                 pressure = self.pressure[dt][eid]
                 vals = [ax, ay, az, pressure]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [ax, ay, az, pressure] = vals2
                 etype = 'PENPR'
                 msg.append('0%13s    %5s               %-13s             %-13s             %-13s             %s\n' % (eid, etype, ax, ay, az, pressure))

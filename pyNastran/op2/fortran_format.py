@@ -27,7 +27,7 @@ class FortranFormat(object):
         self.table_name = None
         self.isubcase = None
         self.binary_debug = None
-        self.read_mode = None
+        self.read_mode = 1
         self._endian = None
         self._table_mapper = {}
 
@@ -296,14 +296,14 @@ class FortranFormat(object):
         # back at table 3 (with isubtable=-5), which will occur in the case of multiple
         # times/element types/results in a single macro table (e.g. OUG, OES).
         if self.table_name in table_mapper:
-            #if self.read_mode in [0, 2]:
+            #if self.read_mode == 2:
                 #self.log.debug("table_name = %r" % self.table_name)
 
             table3_parser, table4_parser = table_mapper[self.table_name]
             passer = False
         else:
             if self.is_debug_file:
-                if self.read_mode in [0, 2]:
+                if self.read_mode == 2:
                     self.log.debug("skipping table_name = %r" % self.table_name)
                     #raise NotImplementedError(self.table_name)
             table3_parser = None
@@ -379,7 +379,6 @@ class FortranFormat(object):
     def _read_subtable_results(self, table4_parser, record_len):
         """
         # if reading the data
-        # 0 - non-vectorized
         # 1 - 1st pass to size the array (vectorized)
         # 2 - 2nd pass to read the data  (vectorized)
 
@@ -394,7 +393,7 @@ class FortranFormat(object):
         """
         datai = b''
         n = 0
-        if self.read_mode in [0, 2]:
+        if self.read_mode ==2:
             self.ntotal = 0
 
             if 0:

@@ -47,7 +47,7 @@ class RealMPCForces(RealTableObject):
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            vals2 = write_floats_13e(vals)
             dx, dy, dz, rx, ry, rz = vals2
             msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
@@ -70,7 +70,7 @@ class RealMPCForces(RealTableObject):
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 #if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
@@ -107,7 +107,7 @@ class ComplexMPCForces(ComplexTableObject):
 
             #vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
             vals = list(translation) + list(rotation)
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            vals2 = write_floats_13e(vals)
             #if not is_all_zeros:
             [dx, dy, dz, rx, ry, rz] = vals2
             msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))

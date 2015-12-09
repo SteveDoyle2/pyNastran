@@ -73,14 +73,14 @@ class OP2Geom(OP2, BDF,
         table_mapper['GEOM3OLD'] = [self._read_geom3_4, self._read_geom3_4]
         table_mapper['GEOM4OLD'] = [self._read_geom4_4, self._read_geom4_4]
 
-        table_mapper['EPT']    = [self._read_ept_4, self._read_ept_4]
-        table_mapper['EPTS']   = [self._read_ept_4, self._read_ept_4]
+        table_mapper['EPT'] = [self._read_ept_4, self._read_ept_4]
+        table_mapper['EPTS'] = [self._read_ept_4, self._read_ept_4]
         table_mapper['EPTOLD'] = [self._read_ept_4, self._read_ept_4]
 
         table_mapper['MPT']  = [self._read_mpt_4, self._read_mpt_4]
         table_mapper['MPTS'] = [self._read_mpt_4, self._read_mpt_4]
 
-        table_mapper['DYNAMIC']  = [self._read_dynamics_4, self._read_dynamics_4]
+        table_mapper['DYNAMIC'] = [self._read_dynamics_4, self._read_dynamics_4]
         table_mapper['DYNAMICS'] = [self._read_dynamics_4, self._read_dynamics_4]
-        table_mapper['DIT']      = [self._read_dit_4, self._read_dit_4]   # table objects (e.g. TABLED1)
+        table_mapper['DIT'] = [self._read_dit_4, self._read_dit_4]   # table objects (e.g. TABLED1)
         return table_mapper

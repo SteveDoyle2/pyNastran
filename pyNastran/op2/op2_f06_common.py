@@ -31,6 +31,7 @@ class OP2_F06_Common(object):
         self.__objects_common_init__()
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        """allows for simple OP2 vectorization"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def __objects_vector_init__(self):
@@ -730,6 +731,6 @@ class OP2_F06_Common(object):
                 assert isinstance(msgi, string_types), msgi
             raise
 
-class OP2_F06_Attributes(OP2_F06_Common):
+class Op2F06Attributes(OP2_F06_Common):
     def __init__(self):
         OP2_F06_Common.__init__(self)

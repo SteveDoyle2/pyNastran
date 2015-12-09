@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from numpy import zeros, empty, array_equal
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import get_key0, writeFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import get_key0, write_floats_13e, _eigenvalue_header
 from pyNastran.op2.resultObjects.element_table_object import RealElementTableArray
 
 
@@ -175,7 +175,7 @@ class Real1DHeatFluxArray(ScalarObject):
             #zflux = self.data[itime, :, 5]
 
             for (eid, etypei, xgradi, xfluxi) in zip(eids, etype, xgrad, xflux):
-                ((sxgradi, sxfluxi), is_all_zeros) = writeFloats13E([xgradi, xfluxi])
+                (sxgradi, sxfluxi) = write_floats_13e([xgradi, xfluxi])
 
                 # TODO: hopa is probably the wrong type
                 f.write(' %8i  %8s %-13s %-13s %-13s %s\n' % (
@@ -741,7 +741,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
             for (eid, fappliedi, free_convi, force_convi, fradi, ftotali) in zip(
                 eids, fapplied, free_conv, force_conv, frad, ftotal):
-                (vals2, is_all_zeros) = writeFloats13E(
+                vals2 = write_floats_13e(
                     [fappliedi, free_convi, force_convi, fradi, ftotali])
                 [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
 

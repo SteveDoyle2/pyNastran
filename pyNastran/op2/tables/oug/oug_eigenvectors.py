@@ -124,7 +124,7 @@ class RealEigenvectorArray(RealTableArray):
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
 
@@ -250,7 +250,7 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz))
             msg.append(page_stamp % page_num)
@@ -359,7 +359,7 @@ class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 if grid_type == 'S':
                     msg.append('%14i %6s     %s\n' % (node_id, grid_type, dx))

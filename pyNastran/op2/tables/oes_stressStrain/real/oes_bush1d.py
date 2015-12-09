@@ -156,7 +156,7 @@ class RealBush1DStressArray(OES_Object):
                 count(), eids, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed):
 
                 vals = [element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi] = vals2
                 f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         % (eid, element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi))
@@ -349,7 +349,7 @@ class RealBush1DStress(StressObject):
                 plastic_strain = self.plastic_strain[dt][eid]
                 is_failed = self.is_failed[dt][eid]
                 vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
 
                 msg.append(' %-13s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid,

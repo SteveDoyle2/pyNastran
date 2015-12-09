@@ -4,7 +4,7 @@ from itertools import count
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
 class NonlinearGapStressArray(OES_Object):
@@ -140,7 +140,7 @@ class NonlinearGapStressArray(OES_Object):
                 count(), eids, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW):
 
                 vals = [compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi] = vals2
                 f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
                     % (eid, compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi))

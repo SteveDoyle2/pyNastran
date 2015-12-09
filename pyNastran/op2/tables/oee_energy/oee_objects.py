@@ -294,7 +294,7 @@ class RealStrainEnergyArray(ScalarObject):
             density = self.data[itime, :, 2]
 
             for (eid, energyi, percenti, densityi) in zip(eids, energy, percent, density):
-                ((senergyi, sdensityi), is_all_zeros) = writeFloats13E([energyi, densityi])
+                (senergyi, sdensityi) = write_floats_13e([energyi, densityi])
 
                 f.write(' %8i  %-13s %.4fs %s\n' % (
                     eid, senergyi, percenti, sdensityi))

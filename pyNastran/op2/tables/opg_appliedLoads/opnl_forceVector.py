@@ -45,7 +45,7 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            vals2 = write_floats_13e(vals)
             if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
@@ -71,7 +71,7 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 if not is_all_zeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
@@ -115,7 +115,7 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
             rzi = rz.imag
 
             vals = [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi, dzi, rxi, ryi, rzi]
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            vals2 = write_floats_13e(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
             msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
@@ -156,7 +156,7 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
 
                 vals = [dxr, dyr, dzr, rxr, ryr, rzr, dxi,
                         dyi, dzi, rxi, ryi, rzi]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))

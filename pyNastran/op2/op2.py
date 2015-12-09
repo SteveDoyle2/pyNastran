@@ -15,7 +15,7 @@ from pyNastran.op2.op2_scalar import OP2_Scalar
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
 #from pyNastran.op2.op2_writer import OP2Writer
-from pyNastran.op2.op2_f06_common import OP2_F06_Attributes
+from pyNastran.op2.op2_f06_common import Op2F06Attributes
 
 
 def read_op2(op2_filename=None, combine=True,
@@ -52,7 +52,7 @@ def read_op2(op2_filename=None, combine=True,
 
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
-    obj = OP2_F06_Attributes()
+    obj = Op2F06Attributes()
     attr_names = object_attributes(obj, mode="public", keys_to_skip=None)
     for attr_name in attr_names:
         attr = getattr(model, attr_name)
@@ -160,22 +160,18 @@ class OP2(OP2_Scalar):
                           It limits the node IDs to all be integers (e.g. element
                           centroid).  Composite plate elements (even for just CTRIA3s)
                           with an inconsistent number of layers will have a more
-                          difficult data structure.  Models with solid elements of
-                          mixed type will also be more complicated (or potentially
-                          split up).
+                          difficult data structure.
           Scanning   - a quick check used to figure out how many results to process
                       that takes almost no time
           Reading    - process the op2 data
-          Build      - call the __init__ on a results object (e.g. DisplacementObject)
+          Build      - call the __init__ on a results object (e.g. RealDisplacementArray)
           Start Over - Go to the start of the op2 file
           Ask        - launch a GUI dialog to let the user click which results to load
 
         Read Mode Definitions
         =====================
-          0.   The default OP2 dictionary based-approach with no asking GUI
+          0.   The default OP2 dictionary based-approach with no asking GUI (removed)
           1.   The first read of a result to get the shape of the data
-               (and result types if vectorization=True or result types
-               if vectorization=False)
           2.   The second read of a result to get the results
 
         Cases
@@ -189,7 +185,7 @@ class OP2(OP2_Scalar):
                start over, fill the objects (read_mode=2).
           3.   Scan the block to get the object types (read_mode=1), ask the user,
                build the object & fill it (read_mode=2)
-          4.   Read the block to get the size, build the object & fill it (read_mode=0)
+          4.   Read the block to get the size, build the object & fill it (read_mode=0; removed)
         """
         self.ask = ask
 
@@ -425,17 +421,19 @@ class OP2(OP2_Scalar):
                 for subcase, result in iteritems(disp_like_dict):
                     data = result.data
                     for cid, transform in iteritems(transforms):
-                        it = i_transform[cid]
-                        t = data[:, it, :3]
-                        r = data[:, it, 3:]
-                        data[:, it, :3] = t.dot(transform)
-                        data[:, it, 3:] = r.dot(transform)
+                        inode = i_transform[cid]
+                        translation = data[:, inode, :3]
+                        rotation = data[:, inode, 3:]
+                        data[:, inode, :3] = translation.dot(transform)
+                        data[:, inode, 3:] = rotation.dot(transform)
 def main():
+    """testing new ideas"""
     import pyNastran
     pkg_path = pyNastran.__path__[0]
 
     # we don't want the variable name to get picked up by the class
-    _op2_filename = os.path.join(pkg_path, '..', 'models', 'sol_101_elements', 'solid_shell_bar.op2')
+    _op2_filename = os.path.join(pkg_path, '..', 'models',
+                                 'sol_101_elements', 'solid_shell_bar.op2')
 
     model = OP2()
     model.set_as_vectorized(ask=False)

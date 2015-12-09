@@ -230,7 +230,7 @@ class GridPointStresses(ScalarObject):
                     eid = self.eids[eKey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
-                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
@@ -429,7 +429,7 @@ class GridPointStressesVolume(ScalarObject):
                     eid = self.eids[eKey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
-                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''

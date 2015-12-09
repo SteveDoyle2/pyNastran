@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from numpy import zeros, array_equal, searchsorted, allclose
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, _eigenvalue_header
 
 class ComplexCBushArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -529,7 +529,7 @@ class ComplexBushStrain(StrainObject):
             e4 = self.e4[eid]
             vals = [e1[0], e2[0], e3[0], e4[0], axial,
                     e1[1], e2[1], e3[1], e4[1]]
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            vals2 = write_floats_13e(vals)
             [e10, e20, e30, e40, axial,
              e11, e21, e31, e41] = vals2
 
@@ -560,7 +560,7 @@ class ComplexBushStrain(StrainObject):
                 e4 = self.e4[eid]
                 vals = [e1[0], e2[0], e3[0], e4[0], axial,
                         e1[1], e2[1], e3[1], e4[1]]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [e10, e20, e30, e40,
                  e11, e21, e31, e41] = vals2
 

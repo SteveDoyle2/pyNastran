@@ -7,7 +7,7 @@ from numpy import array, zeros, abs, angle, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, write_float_12E
+from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, write_float_12E
 
 
 class ElementTableArray(ScalarObject):  # displacement style table
@@ -322,7 +322,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         r3 = self.data[0, :, 5]
         for element_id, etypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(element, element_type, t1, t2, t3, r1, r2, r3):
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            (vals2, is_all_zeros) = write_floats_13e(vals)
             (dx, dy, dz, rx, ry, rz) = vals2
             f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (element_id, etypei, dx, dy, dz, rx, ry, rz))
         f.write(page_stamp % page_num)
@@ -345,7 +345,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             f.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
                         etypei, dx, dy, dz, rx, ry, rz))
@@ -374,7 +374,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             f.write(''.join(header + words))
             for element_id, etypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(element, element_type, t1, t2, t3, r1, r2, r3):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (element_id, etypei, dx, dy, dz, rx, ry, rz))
             f.write(page_stamp % page_num)
@@ -397,7 +397,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             f.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
                         etypei, dx, dy, dz, rx, ry, rz))

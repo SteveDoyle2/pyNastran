@@ -142,7 +142,7 @@ class RealTriaxArray(OES_Object):
                 count(), eids, nids, radial, azimuthal, axial, shear, omax, oms, ovm):
 
                 vals = [radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi] = vals2
                 f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
                     % (eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi))

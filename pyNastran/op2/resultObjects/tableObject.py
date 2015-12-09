@@ -480,7 +480,7 @@ class RealTableArray(TableArray):  # displacement style table
         for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
             sgridtype = self.recast_gridtype_as_string(gridtypei)
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            vals2 = write_floats_13e(vals)
             (dx, dy, dz, rx, ry, rz) = vals2
             f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
         f.write(page_stamp % page_num)
@@ -504,7 +504,7 @@ class RealTableArray(TableArray):  # displacement style table
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype == 'G':
                     f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
@@ -545,7 +545,7 @@ class RealTableArray(TableArray):  # displacement style table
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nodes, gridtypes, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype == 'G':
                     f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
@@ -578,7 +578,7 @@ class RealTableArray(TableArray):  # displacement style table
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype == 'G':
                     f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
@@ -1001,7 +1001,7 @@ class RealTableObject(ScalarObject):  # displacement style table
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, is_all_zeros) = writeFloats13E(vals)
+            vals2 = write_floats_13e(vals)
             #if not is_all_zeros:
             (dx, dy, dz, rx, ry, rz) = vals2
             if grid_type == 'G':
@@ -1044,7 +1044,7 @@ class RealTableObject(ScalarObject):  # displacement style table
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 #if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 if grid_type == 'G':

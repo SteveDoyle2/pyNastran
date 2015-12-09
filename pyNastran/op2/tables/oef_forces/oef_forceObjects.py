@@ -7,7 +7,7 @@ from numpy import zeros, searchsorted, array_equal, allclose
 from itertools import cycle
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header, get_key0, write_float_13E
+from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats12E, _eigenvalue_header, get_key0, write_float_13E
 
 
 class RealForceObject(ScalarObject):
@@ -364,7 +364,7 @@ class RealRodForceArray(RealForceObject):
             # loop over all the elements
             out = []
             for eid, axiali, torsioni in zip(eids, axial, torsion):
-                ([axiali, torsioni], is_all_zeros) = writeFloats13E([axiali, torsioni])
+                [axiali, torsioni] = write_floats_13e([axiali, torsioni])
                 out.append([eid, axiali, torsioni])
 
             for i in range(0, nwrite, 2):
@@ -561,7 +561,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                     af = self.axial[dt][eid][sd]
                     ttrq = self.totalTorque[dt][eid][sd]
                     wtrq = self.warpingTorque[dt][eid][sd]
-                    (vals2, is_all_zeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
+                    vals2 = write_floats_13e([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                     [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
 
                     if sd == 0.:
@@ -591,7 +591,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                 af = self.axial[eid][sd]
                 ttrq = self.totalTorque[eid][sd]
                 wtrq = self.warpingTorque[eid][sd]
-                (vals2, is_all_zeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
+                vals2 = write_floats_13e([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                 [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
                 msg.append('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
 
@@ -947,7 +947,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             # loop over all the elements
             out = []
             for eid, axiali, torsioni in zip(eids, axial, torsion):
-                ([axiali, torsioni], is_all_zeros) = writeFloats13E([axiali, torsioni])
+                [axiali, torsioni] = write_floats_13e([axiali, torsioni])
                 out.append([eid, axiali, torsioni])
 
             for i in range(0, nwrite, 2):
@@ -1148,16 +1148,16 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             # loop over all the elements
             if self.element_type == 74:
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                    ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
-                    is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
+                     [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     # ctria3
                     #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
                     f.write('   %8i %18s %13s %13s   %13s %13s %13s   %13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
 
             elif self.element_type == 33:
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                    ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
-                    is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
+                        [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     # cquad4
                     #0         6    CEN/4  1.072685E+01  2.504399E+03 -2.455727E+01 -5.017930E+00 -2.081427E+01 -5.902618E-01 -9.126162E+00  4.194400E+01#
                     #Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
@@ -1423,8 +1423,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             # loop over all the elements
             #if self.element_type in 144:
             for i, eid, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(cyc, eids, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
-                is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
+                    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                 # ctria3
                 #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
                 if i == 0:
@@ -1571,8 +1571,8 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             af = self.data[itime, :, 6]
             trq = self.data[itime, :, 7]
             for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
-                ([bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi], is_all_zeros) = writeFloats13E([
-                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi])
+                [bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = write_floats_13e([
+                 bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi])
             f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
             f.write(page_stamp % page_num)
         return page_num
@@ -1856,7 +1856,7 @@ class RealConeAxForceArray(ScalarObject):
                 if hopai > 0.1:
                     raise NotImplementedError(hopai)
 
-                (vals2, is_all_zeros) = writeFloats13E(
+                vals2 = write_floats_13e(
                     [hopai, bmui, bmvi, tmi, sui, svi])
                 [hopai, bmui, bmvi, tmi, sui, svi] = vals2
 
@@ -2000,8 +2000,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             af = self.data[itime, :, 6]
             trq = self.data[itime, :, 7]
             for eid, bm1i, bm2i, ts1i, ts2i, afi, trqi in zip(eids, sd, bm1, bm2, ts1, ts2, af, trq):
-                ([bm1i, bm2i, ts1i, ts2i, afi, trqi], is_all_zeros) = writeFloats13E([
-                  bm1i, bm2i, ts1i, ts2i, afi, trqi])
+                [bm1i, bm2i, ts1i, ts2i, afi, trqi] = write_floats_13e([
+                 bm1i, bm2i, ts1i, ts2i, afi, trqi])
             f.write('     %8i  %4.3f  %-13s  %-13s     %-13s  %-13s     %-13s     %s\n' % (eid, sd, bm1i, bm2i, ts1i, ts2i, afi, trqi))
             f.write(page_stamp % page_num)
         return page_num
@@ -2481,8 +2481,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
             for (eid, vxi, vyi, vzi, axi, ayi, azi, pressurei) in zip(
                 eids, vx, vy, vz, ax, ay, az, pressure):
 
-                (vals2, is_all_zeros) = writeFloats13E(
-                    [axi, ayi, azi, pressurei])
+                vals2 = write_floats_13e([axi, ayi, azi, pressurei])
                 [sax, say, saz, spressure] = vals2
 
                 #etype = 'PENPR'
@@ -2516,8 +2515,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
             for (eid, vxi, vyi, vzi, axi, ayi, azi, pressurei) in zip(
                 eids, vx, vy, vz, ax, ay, az, pressure):
 
-                (vals2, is_all_zeros) = writeFloats13E(
-                    [axi, ayi, azi, pressurei])
+                vals2 = write_floats_13e([axi, ayi, azi, pressurei])
                 [sax, say, saz, spressure] = vals2
 
                 #etype = 'PENPR'
@@ -2712,7 +2710,7 @@ class RealCBushForceArray(ScalarObject):
 
             # loop over all the elements
             for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
-                ([fxi, fyi, fzi, mxi, myi, mzi], is_all_zeros) = writeFloats13E([fxi, fyi, fzi, mxi, myi, mzi])
+                [fxi, fyi, fzi, mxi, myi, mzi] = write_floats_13e([fxi, fyi, fzi, mxi, myi, mzi])
                 f.write('                    %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, fxi, fyi, fzi, mxi, myi, mzi))
                 #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
             f.write(page_stamp % page_num)

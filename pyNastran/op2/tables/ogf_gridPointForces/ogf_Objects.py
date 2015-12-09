@@ -222,7 +222,7 @@ class RealGridPointForcesArray(ScalarObject):
                      range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
@@ -259,7 +259,7 @@ class RealGridPointForcesArray(ScalarObject):
                      nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
@@ -753,7 +753,7 @@ class RealGridPointForces(ScalarObject):
                 elemName = self.elemName[eKey][iLoad]
                 eid = self.eids[eKey][iLoad]
                 vals = [f1, f2, f3, m1, m2, m3]
-                (vals2, is_all_zeros) = writeFloats13E(vals)
+                vals2 = write_floats_13e(vals)
                 [f1, f2, f3, m1, m2, m3] = vals2
                 if eid == 0:
                     eid = ''
@@ -787,7 +787,7 @@ class RealGridPointForces(ScalarObject):
                     eid = self.eids[dt][eKey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
-                    (vals2, is_all_zeros) = writeFloats13E(vals)
+                    vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''

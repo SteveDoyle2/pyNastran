@@ -360,7 +360,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         OGPWG.__init__(self)
         FortranFormat.__init__(self)
 
-        self.read_mode = 0
         self.is_vectorized = False
         self._close_op2 = True
 
@@ -789,9 +788,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """auto-table skipper"""
         return ndata
 
-    #def _table_crash(self, data, ndata):
-        #sys.exit('asdf')
-
     def _table_passer_r1tabrg(self, data, ndata):
         """auto-table skipper"""
         if self._table4_count == 0:
@@ -868,7 +864,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         +--------------+-----------------------+
         """
         self._count = 0
-        if self.read_mode in [0, 1]:
+        if self.read_mode == 1:
             #sr = list(self._results.saved)
             #sr.sort()
             #self.log.debug('_results.saved = %s' % str(sr))
@@ -929,9 +925,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #raise FatalError("The OP2 is empty.")
             #raise
         if self.is_debug_file:
-            if self.read_mode == 0:
-                self.binary_debug.write('read_mode = %s (not vectorized)\n' % self.read_mode)
-            elif self.read_mode == 1:
+            if self.read_mode == 1:
                 self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % self.read_mode)
             elif self.read_mode == 2:
                 self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % self.read_mode)

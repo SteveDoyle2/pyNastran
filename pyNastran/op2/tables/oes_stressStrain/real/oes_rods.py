@@ -5,7 +5,7 @@ from six.moves import zip, range
 from numpy import zeros, searchsorted, array_equal, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, get_key0
 
 
 # there is a bug for mode_solid_shell_bar.op2 for multiple times
@@ -204,8 +204,7 @@ class RealRodArray(OES_Object):
             # loop over all the elements
             out = []
             for eid, axiali, SMai, torsioni, SMti in zip(eids, axial, SMa, torsion, SMt):
-                ([axiali, torsioni, SMai, SMti],
-                is_all_zeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
+                [axiali, torsioni, SMai, SMti] = write_floats_13e([axiali, torsioni, SMai, SMti])
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
             for i in range(0, nwrite, 2):
@@ -281,29 +280,3 @@ class RealRodStrainArray(RealRodArray, StrainObject):
         conrod_msg += base_msg
         ctube_msg += base_msg
         return crod_msg, conrod_msg, ctube_msg
-
-
-class RodDamper(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        StressObject.__init__(self, data_code, isubcase)
-        self.eType = 'CBUSH'
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.axial = {}
-        self.torsion = {}
-
-    def get_stats(self):
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.axial)
-            a0 = get_key0(self.stress)
-            nelements = len(self.axial[a0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.axial)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, axial, torsion\n')
-        msg.append('  eTypes = %s\n' % self.element_name)
-        return msg
