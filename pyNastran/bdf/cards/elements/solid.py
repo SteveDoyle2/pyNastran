@@ -68,7 +68,7 @@ def volume4(n1, n2, n3, n4):
 
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
-    V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
+    V = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
     return V
 
 
@@ -81,14 +81,10 @@ def area_centroid(n1, n2, n3, n4):
       | /   |
       4-----3
     """
-    a = n1 - n2
-    b = n2 - n4
-    area1 = Area(a, b)
+    area1 = 0.5 * norm(cross(n1 - n2, n2 - n4))
     c1 = (n1 + n2 + n4) / 3.
 
-    a = n2 - n4
-    b = n2 - n3
-    area2 = Area(a, b)
+    area2 = 0.5 * norm(cross(n2 - n4, n2 - n3))
     c2 = (n2 + n3 + n4) / 3.
 
     area = area1 + area2
@@ -635,9 +631,7 @@ class CPENTA6(SolidElement):
             p1 = self.nodes_ref[n1i].get_position()
             p2 = self.nodes_ref[n2i].get_position()
             p3 = self.nodes_ref[n3i].get_position()
-            a = p1 - p2
-            b = p1 - p3
-            A = Area(a, b)
+            A = 0.5 * norm(cross(p1 - p2, p1 - p3))
         else:
             (n1, n2, n3, n4) = pack2
             n1i = nids.index(n1 - 1)
@@ -649,9 +643,7 @@ class CPENTA6(SolidElement):
             p2 = self.nodes_ref[n2i].get_position()
             p3 = self.nodes_ref[n3i].get_position()
             p4 = self.nodes_ref[n4i].get_position()
-            a = p1 - p3
-            b = p2 - p4
-            A = Area(a, b)
+            A = 0.5 * norm(cross(p1 - p3, p2 - p4))
         return [faceNodeIDs, A]
 
     def _verify(self, xref=False):
@@ -678,11 +670,11 @@ class CPENTA6(SolidElement):
 
     def Volume(self):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        A1 = Area(n3 - n1, n2 - n1)
-        A2 = Area(n6 - n4, n5 - n4)
+        area1 = 0.5 * norm(cross(n3 - n1, n2 - n1))
+        area2 = 0.5 * norm(cross(n6 - n4, n5 - n4))
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        V = (A1 + A2) / 2. * norm(c1 - c2)
+        V = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(V)
 
     def raw_fields(self):

@@ -712,12 +712,20 @@ class CONM2(PointMassElement):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        :param self: the CONM2 object
-        :param eid:  element ID
-        :param nid:  node ID
-        :param cid:  coordinate frame of the offset (-1=absolute coordinates)
-        :param X:    offset vector relative to nid
-        :param I:    mass moment of inertia matrix about the CG
+        Parameters
+        ----------
+        self : CONM2
+           the CONM2 object
+        eid : int
+           element ID
+        nid : int
+           node ID
+        cid : int
+           coordinate frame of the offset (-1=absolute coordinates)
+        X : ???
+            offset vector relative to nid
+        I : ???
+            mass moment of inertia matrix about the CG
 
         +-------+--------+-------+-------+---------+------+------+------+-----+
         |   1   |    2   |    3  |   4   |    5    |  6   |  7   |   8  |  9  |

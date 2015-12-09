@@ -62,7 +62,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self._stop_after_reading_mass = False
         self.stored_lines = []
         self.i = 0
-        self.is_vectorized = False
 
         #: the TITLE in the Case Control Deck
         self.Title = ''

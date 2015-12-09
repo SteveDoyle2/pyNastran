@@ -227,7 +227,6 @@ class BDFMethods(BDFAttributes):
                     mass += m
                     cg += m * p
                 except:
-                    #raise
                     # PLPLANE
                     if element.pid_ref.type == 'PSHELL':
                         self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (p, reference_point, type(reference_point)))
@@ -236,9 +235,188 @@ class BDFMethods(BDFAttributes):
                         element, element.pid_ref))
 
                     continue
+
         if mass:
-            cg = cg / mass
+            cg /= mass
         return (mass, cg, I)
+
+    def _mass_properties_new(self, reference_point=None,
+                        sym_axis=None, scale=None, xyz_cid0=None):
+        """
+        half implemented, not tested, should be faster someday...
+        don't use this
+        """
+        # element_ids=None, mass_ids=None,
+        if reference_point is None:
+            reference_point = array([0., 0., 0.])
+
+        if xyz_cid0 is None:
+            xyz = {}
+            for nid, node in iteritems(self.nodes):
+                xyz[nid] = node.get_position()
+        else:
+            xyz = xyz_cid0
+
+        if isinstance(reference_point, string_types):
+            if reference_point == 'cg':
+                mass = 0.
+                for pack in [elements, masses]:
+                    for element in pack:
+                        try:
+                            p = element.Centroid()
+                            m = element.Mass()
+                            mass += m
+                            cg += m * p
+                        except:
+                            pass
+                if mass == 0.0:
+                    return mass, cg, I
+
+                reference_point = cg / mass
+            else:
+                # reference_point = [0.,0.,0.] or user-defined array
+                pass
+
+        mass = 0.
+        cg = array([0., 0., 0.])
+        I = array([0., 0., 0., 0., 0., 0., ])
+        for eid, elem in iteritems(self.elements):
+            if elem.type in ['CQUAD4', 'CQUAD8']:
+                n1, n2, n3, n4 = elem.node_ids[:4]
+                prop = elem.pid_ref
+                centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
+                mpa = elem.pid_ref.MassPerArea()
+                area = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+                m = mpa * area
+            elif elem.type in ['CTRIA3', 'CTRIA6']:
+                n1, n2, n3 = elem.node_ids[:3]
+                T1, T2, T3 = elem.T1, elem.T2, elem.T3
+                tflag = elem.tflag
+                if tflag == 0:
+                    t1 = self.T1
+                    t2 = self.T2
+                    t3 = self.T3
+                elif tflag == 1:
+                    ti = elem.pid_ref.Thickness()
+                    t1 = self.T1 * ti
+                    t2 = self.T2 * ti
+                    t3 = self.T3 * ti
+                else:
+                    raise RuntimeError('tflag=%r' % tflag)
+                assert t1 + t2 + t3 > 0., 't1=%s t2=%s t3=%s' % (t1, t2, t3)
+                t = (t1 + t2 + t3) / 3.
+
+                # m/A = rho * A * t + nsm
+                #mass_per_area = self.nsm + rho * self.t
+                prop = elem.pid_ref
+
+                # PSHELL only?
+                mpa = elem.pid_ref.nsm + elem.pid_ref.Rho() * t
+                centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
+                #mpa = elem.pid_ref.MassPerArea()
+                area = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
+                m = mpa * area
+            elif elem.type == 'CROD':
+                n1, n2 = elem.node_ids
+                length = norm(xyz[n2] - xyz[n1])
+                centroid = (xyz[n1] + xyz[n2]) / 2.
+                mpl = elem.pid_ref.MassPerLength()
+                m = mpl * length
+            elif elem.type == 'CONROD':
+                n1, n2 = elem.node_ids
+                length = norm(xyz[n2] - xyz[n1])
+                centroid = (xyz[n1] + xyz[n2]) / 2.
+                mpl = elem.pid_ref.MassPerLength()
+                m = mpl * length
+            elif elem.type in ['CBAR', 'CBEAM']:
+                n1, n2 = elem.node_ids
+                centroid = (xyz[n1] + xyz[n2]) / 2.
+                length = norm(xyz[n2] - xyz[n1])
+                mpl = elem.pid_ref.MassPerLength()
+                m = mpl * length
+            elif elem.type == 'CTETRA':
+                n1, n2, n3, n4 = elem.node_ids[:4]
+                centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
+                #V = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
+                volume = -dot(xyz[n1] - xyz[n4], cross(xyz[n2] - xyz[n4], xyz[n3] - xyz[n4])) / 6.
+                m = elem.Rho() * volume
+            elif elem.type == 'CPYRAM':
+                n1, n2, n3, n4, n5 = elem.node_ids[:5]
+                centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
+                area1 = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+                centroid5 = xyz[n5]
+                centroid = (centroid1 + centroid5) / 2.
+                volume = area1 / 3. * norm(centroid1 - centroid5)
+                m = elem.Rho() * volume
+
+            elif elem.type == 'CHEXA':
+                n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:8]
+                #(A1, c1) = area_centroid(n1, n2, n3, n4)
+                centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
+                area1 = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+                #(A2, c2) = area_centroid(n5, n6, n7, n8)
+                centroid2 = (xyz[n5] + xyz[n6] + xyz[n7] + xyz[n8]) / 4.
+                area2 = 0.5 * norm(cross(xyz[n7]-xyz[n5], xyz[n8]-xyz[n6]))
+
+                volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
+                m = elem.Rho() * volume
+            elif elem.type == 'CPENTA':
+                n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:6]
+                area1 = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n2] - xyz[n1]))
+                area2 = 0.5 * norm(cross(xyz[n6] - xyz[n4], xyz[n5] - xyz[n4]))
+                centroid1 = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
+                centroid2 = (xyz[n4] + xyz[n5] + xyz[n6]) / 3.
+                volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
+                m = elem.Rho() * volume
+            elif elem.type in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+                               'CBUSH', 'CBUSH1D', 'CBUSH2D']:
+                continue
+            else:
+                m = elem.Mass()
+                centroid = elem.Centroid()
+                if mass > 0.0:
+                    self.log.info('elem.type=%s is not supported in new mass properties method' % elem.type)
+                else:
+                    self.log.info('elem.type=%s doesnt have mass' % elem.type)
+            (x, y, z) = centroid - reference_point
+            x2 = x * x
+            y2 = y * y
+            z2 = z * z
+            I[0] += m * (y2 + z2)  # Ixx
+            I[1] += m * (x2 + z2)  # Iyy
+            I[2] += m * (x2 + y2)  # Izz
+            I[3] += m * x * y      # Ixy
+            I[4] += m * x * z      # Ixz
+            I[5] += m * y * z      # Iyz
+            mass += m
+            cg += m * centroid
+            del m, centroid
+
+        for eid, elem in iteritems(self.masses):
+            try:
+                m = elem.Mass()
+                centroid = elem.Centroid()
+            except:
+                continue
+            (x, y, z) = centroid - reference_point
+            x2 = x * x
+            y2 = y * y
+            z2 = z * z
+            I[0] += m * (y2 + z2)  # Ixx
+            I[1] += m * (x2 + z2)  # Iyy
+            I[2] += m * (x2 + y2)  # Izz
+            I[3] += m * x * y      # Ixy
+            I[4] += m * x * z      # Ixz
+            I[5] += m * y * z      # Iyz
+            mass += m
+            cg += m * centroid
+            del m, centroid
+
+        if mass:
+            cg /= mass
+        mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
+        return mass, cg, I
 
     def _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I):
         """

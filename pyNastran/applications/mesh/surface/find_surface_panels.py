@@ -456,7 +456,7 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
                     elem_name = self.elemName[ekey][iLoad]
                     eid = self.eids[ekey][iLoad]
                     # vals = [f1, f2, f3, m1, m2, m3]
-                    # (vals2, is_all_zeros) = writeFloats13E(vals)
+                    # vals2 = write_floats_13e(vals)
                     # [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''

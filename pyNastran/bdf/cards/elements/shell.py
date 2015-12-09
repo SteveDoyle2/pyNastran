@@ -212,10 +212,11 @@ class TriShell(ShellElement):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_0-n_1) \times (n_0-n_2) \rvert"""
-        (n0, n1, n2) = self.get_node_positions()
-        a = n0 - n1
-        b = n0 - n2
+        (n1, n2, n3) = self.get_node_positions()
+        a = n1 - n2
+        b = n1 - n3
         area = Area(a, b)
+        0.5 * norm(cross(a, b))
         return area
 
     def Normal(self):

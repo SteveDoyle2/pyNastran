@@ -143,7 +143,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
         #print(self)
         #print('self.%s.loadIDs = %s' % (self.type, self.loadIDs))
         for all_loads in self.loadIDs:
-            print('type(all_loads) =', type(all_loads))
             assert not isinstance(all_loads, int), 'all_loads=%s\n%s' % (str(all_loads), str(self))
             for load in all_loads:
                 try:

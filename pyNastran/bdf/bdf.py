@@ -1,6 +1,5 @@
 # coding: utf-8
-# pylint: disable=W0201,C0301,R0915,R0912
-  #W0611,
+# pylint: disable=W0201,C0301,R0915,R0912, W0611
 """
 Main BDF class.  Defines:
   - BDF
