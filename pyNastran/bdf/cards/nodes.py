@@ -1112,7 +1112,7 @@ class GRID(Node):
         xyz : (3, ) float ndarray
             the position of the GRID in the global coordinate system
         """
-        xyz = self.cp.transform_node_to_global(self.xyz)
+        xyz = self.cp_ref.transform_node_to_global(self.xyz)
         return xyz
 
     def get_position_wrt(self, model, cid):
@@ -1138,12 +1138,12 @@ class GRID(Node):
             return self.xyz
 
         # converting the xyz point arbitrary->global
-        p = self.cp.transform_node_to_global(self.xyz)
+        p = self.cp_ref.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
-        coordB = model.Coord(cid, msg=msg)
-        xyz = coordB.transform_node_to_local(p)
+        coord_b = model.Coord(cid, msg=msg)
+        xyz = coord_b.transform_node_to_local(p)
         return xyz
 
     def cross_reference(self, model, grdset=None):
