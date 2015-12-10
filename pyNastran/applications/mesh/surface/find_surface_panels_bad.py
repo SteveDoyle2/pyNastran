@@ -57,7 +57,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
                      if allclose(xyz_cid0[nid][0], 0.0)]
 
             if consider_pids:
-                pids = unique([model.elements[eid].Pid() for eid in eids])
+                pids = unique([model.elements[eid] for eid in eids])
 
             if len(eids) != 2 or len(yedge) > 1 or len(pids) > 1:
                 patch_edges.append(edge)
@@ -68,7 +68,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
     else:
         for edge, eids in iteritems(edge_to_eid_map):
             if consider_pids:
-                pids = unique([model.elements[eid].Pid() for eid in eids])
+                pids = unique([model.elements[eid] for eid in eids])
 
             if len(eids) != 2 or len(pids):
                 patch_edges.append(edge)
@@ -111,7 +111,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
     Explanation of Approach
     =======================
     In the following case, we'll assume that line 6-7-8-9-10-11 is
-    a hard spar (=) and 10-15 is a rib (#).  '|' is an element bounadary.
+    a hard spar (=) and 10-15 is a rib (#).
 
     1    2    3    4    5
     +----+----+----+----+
@@ -260,7 +260,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
         if 1:
             # this sometimes leads to patch joining
 
-            if len(used_edges) == 0 and 0:
+            if len(used_edges) == 0:
                 # clean out patch edges if we're starting a new patch
                 edges_to_check = []
                 for edge in edges_to_check_all:
@@ -310,15 +310,15 @@ def get_next_edges(eid_to_edge_map, edge_to_eid_map,
     for edge in edges_to_check:
         print('  edge =', edge)
         edges_to_check_next.remove(edge)
-        #if edge in used_edges:
-            #print('    continuing on used edge')
-            #continue
+        if edge in used_edges:
+            print('    continuing on used edge')
+            continue
         if edge in all_patch_edges:
             print('    continuing on patch edge=%s' % str(edge))
             continue
-        #if edge in free_edges:
-            #print('    continuing on free edge=%s' % str(edge))
-            #continue
+        if edge in free_edges:
+            print('    continuing on free edge=%s' % str(edge))
+            continue
 
         eids_to_check = [eid for eid in edge_to_eid_map[edge]
                          if eid not in used_eids]
@@ -339,9 +339,9 @@ def get_next_edges(eid_to_edge_map, edge_to_eid_map,
                 if edgei in all_patch_edges:
                     print('    continuing on patch edge=%s' % str(edgei))
                     continue
-                #if edgei in free_edges:
-                    #print('    continuing on free edge=%s' % str(edgei))
-                    #continue
+                if edgei in free_edges:
+                    print('    continuing on free edge=%s' % str(edgei))
+                    continue
                 used_edges.add(edgei)
                 #edges_to_check_next.add(edgei)
                 #edges_to_check_next.remove(edge)
@@ -353,12 +353,12 @@ def get_next_edges(eid_to_edge_map, edge_to_eid_map,
                     #edges_temp2 = set([])
                     iedge_count = 0
                     for edge_temp in edges_temp:
-                        #if edge_temp in used_edges:  # new
-                            #continue
-                        if edge_temp in all_patch_edges:  # new
+                        if edge_temp in used_edges:
                             continue
-                        #if edge_temp in free_edges:  new
-                            #continue
+                        if edge_temp in all_patch_edges:
+                            continue
+                        if edge_temp in free_edges:
+                            continue
                         #eid0 = 97112
                         #assert (53480, 53481) != edge_temp, edges_temp
                         edges_to_check_next.add(edge_temp)
@@ -385,7 +385,7 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches,
     unique_nids = unique(array(patch_edges, dtype='int32').ravel())
     print('unique_nids =', unique_nids)
 
-    nodal_edges_filename = os.path.join(workpath, 'nodal_edges.csv')
+    nodal_edges_filename = os.path.join(workpath, 'nodal_edges.txt')
     element_edges_filename = os.path.join(workpath, 'element_edges.txt')
     element_patches_filename = os.path.join(workpath, 'element_patches.txt')
 
@@ -453,8 +453,8 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
 
     patch_filenames = glob.glob('patch_*.bdf')
     edge_filenames = glob.glob('edge_*.csv')
-    for fname in patch_filenames + edge_filenames:
-        os.remove(fname)
+    #for fname in patch_filenames + edge_filenames:
+        #os.remove(fname)
 
     #-------------------------
     assert mode in ['load', 'displacement'], 'mode=%r' % mode

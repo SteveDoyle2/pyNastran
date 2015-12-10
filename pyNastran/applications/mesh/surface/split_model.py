@@ -115,7 +115,7 @@ def split_model_by_pid_panel():
 
 
 
-if __name__ == '__main__':
+def main():
     """
     key=AELINK   value=8
     key=AELIST   value=4
@@ -145,3 +145,6 @@ if __name__ == '__main__':
     """
     #split_model_by_pid_panel()
     load_regions_and_create_eigenvalue_csv('regions.txt')
+
+if __name__ == '__main__':
+    main()
