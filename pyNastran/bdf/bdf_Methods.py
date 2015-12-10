@@ -1541,6 +1541,7 @@ class BDFMethods(BDFAttributes):
 
     def write_skin_solid_faces(self, skin_filename,
                                write_solids=False, write_shells=True,
+                               encoding=None,
                                size=8, is_double=False):
         """
         Writes the skinned elements
@@ -1558,11 +1559,8 @@ class BDFMethods(BDFAttributes):
         is_double : bool; default=False
             double precision flag
         """
-        if len(self.element_ids) == 0:
-            return
-        if len(self.material_ids) == 0:
-            return
-        if len(self.property_ids) == 0:
+        if (len(self.element_ids) == 0 or len(self.material_ids) == 0 or
+            len(self.property_ids) == 0):
             return
         eid_set, face_map = self.get_solid_skin_faces()
 
@@ -1630,16 +1628,17 @@ class BDFMethods(BDFAttributes):
                     bdf_file.write(print_card_8(card))
 
                     card = ['MAT1', mid_shell + imid, 3.e7, None, 0.3]
+                    #bdf_file.write(self.materials[mid].comment)
                     bdf_file.write(print_card_8(card))
 
                 for face, eids in iteritems(eid_set):
                     face_raw = face_map[face]
                     nface = len(face)
                     #assert len(eids) == 1, eids
-                    for eid in sorted(eids):
-                        elem = self.elements[eid]
+                    #for eid in sorted(eids):
+                        #elem = self.elements[eid]
                         #print(elem)
-                        break
+                        #break
 
                     pid = elem.Pid()
                     prop = self.properties[pid]

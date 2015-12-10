@@ -75,6 +75,7 @@ def run_arg_parse():
         format = determine_format(input)
 
 
+
     shots = []
     if '--shots' in data:
         shots = data['--shots']

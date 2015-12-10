@@ -299,16 +299,16 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
     savetxt('nodal_edges.txt', [xyz_cid0[nid] for nid in unique_nids], delimiter=',')
 
     eids_all = model.element_ids
-    pids_all = [-10] * len(eids_all)
+    patch_ids_all = [-10] * len(eids_all)
     npatches = len(patches)
 
-    ipatch = 1
+    ipatch = 0
     for eids in patches:
         if len(eids) == 1:
             continue
         for eid in eids:
             i = eids_all.index(eid)
-            pids_all[i] = ipatch
+            patch_ids_all[i] = ipatch
         ipatch += 1
 
     element_edges_file = open('element_edges.txt', 'wb')
@@ -322,8 +322,8 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
 
     element_patches_file = open('element_patches.txt', 'wb')
     element_patches_file.write('# patch\n')
-    for pid in pids_all:
-        element_patches_file.write('%s\n' % pid)
+    for patch_id in patch_ids_all:
+        element_patches_file.write('%s\n' % patch_id)
     element_patches_file.close()
 
    # these should be the same if we did this right
@@ -383,9 +383,9 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     #if mode == 'load':
     header += '  LOAD = 55\n'
     header += '  METHOD = 42\n'
-    header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
-    header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
-    header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
+    #header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
+    #header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
+    #header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
     header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
     header += '  SPC = 100\n'
     #header += '  MPC = 1\n'

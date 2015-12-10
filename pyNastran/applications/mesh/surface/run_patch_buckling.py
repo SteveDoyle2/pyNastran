@@ -4,16 +4,26 @@ from six import iteritems, string_types
 from glob import glob
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-
+import subprocess
 
 def run_bdfs():
-    patch_files = glob('patch_*.bdf')
+    bdf_filenames = glob('patch_*.bdf')
     print 'Start running patch jobs.'
-    for patch_file in patch_files:
-        os.system('nastran {} old=no'.format(patch_file))
+    for bdf_filename in bdf_filenames:
+        patch_id_str = bdf_filename.split('_')[1].split('.')[0]
+        patch_id = int(patch_id_str)
+        op2_filename = 'patch_%s.op2' % patch_id
+        if not os.path.exists(op2_filename):
+            print('working on %s' % bdf_filename)
+            #cmd = 'nastran {} scr=yes bat=no mem=100MB old=no'.format(patch_file)
+            subprocess.call(['nastran', bdf_filename, 'scr=yes', 'bat=no', 'old=no'])
+            time.sleep(10)
+            #print('cmd = %r' % cmd)
+            #os.system(cmd)
     print 'Done running patch jobs.'
 
 
@@ -49,8 +59,9 @@ def get_eigs():
     plt.close()
 
 def main():
-    # run_bdfs()
-    get_eigs()
+    #if not os.path.exists('patch_0.op2'):
+    run_bdfs()
+    #get_eigs()
 
 
 if __name__ == '__main__':

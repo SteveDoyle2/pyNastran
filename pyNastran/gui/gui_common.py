@@ -291,24 +291,28 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self.lock_dock.enter_data.clear()
 
     def load_batch_inputs(self, inputs):
+        geom_script = inputs['geomscript']
+        if geom_script is not None:
+            self.on_run_script(geom_script)
+
         if not inputs['format']:
             return
         form = inputs['format'].lower()
         input_filename = inputs['input']
         results_filename = inputs['output']
-        geom_script = inputs['geomscript']
         plot = True
         if results_filename:
             plot = False
-
-        if geom_script is not None:
-            self.on_run_script(geom_script)
 
         is_failed = self.on_load_geometry(input_filename, form, plot=plot)
         if is_failed:
             return
         if results_filename:
             self.on_load_results(results_filename)
+
+        post_script = inputs['postscript']
+        if post_script is not None:
+            self.on_run_script(post_script)
         self.on_reset_camera()
         self.vtk_interactor.Modified()
 
