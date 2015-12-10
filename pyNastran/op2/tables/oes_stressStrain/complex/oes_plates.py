@@ -6,7 +6,7 @@ from six.moves import range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, get_key0, write_float_13e
 
 
 class ComplexPlateArray(OES_Object):

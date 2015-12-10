@@ -1,6 +1,11 @@
 from copy import deepcopy
 
 class ResultSet(object):
+    """
+    This class is private storage interface class.
+
+    It's an interface tool between the code and the results the user requests.
+    """
     def __init__(self, allowed_results):
         # the full set of allowable results
         self.allowed = set(allowed_results)

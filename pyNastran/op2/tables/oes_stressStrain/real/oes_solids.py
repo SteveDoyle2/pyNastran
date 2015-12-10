@@ -10,7 +10,7 @@ from numpy import sqrt, zeros, where, searchsorted, array_equal
 from numpy.linalg import eigh
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
 class RealSolidArray(OES_Object):
@@ -248,9 +248,8 @@ class RealSolidArray(OES_Object):
                      [dtxz, dtyz, dozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi],
-                 is_all_zeros) = writeFloats13E([doxx, doyy, dozz, dtxy, dtyz, dtxz,
-                                                 do1, do2, do3, dp, dovm])
+                [oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi] = write_floats_13e(
+                    [doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm])
 
                 if i % cnnodes == 0:
                     f.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))

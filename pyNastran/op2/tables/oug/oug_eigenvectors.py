@@ -6,7 +6,7 @@ from numpy import array, pi
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
+from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E
 
 class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):

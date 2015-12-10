@@ -7,7 +7,7 @@ from numpy import zeros, searchsorted, array_equal, allclose
 from itertools import cycle
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats12E, _eigenvalue_header, get_key0, write_float_13E
+from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats12E, _eigenvalue_header, get_key0, write_float_13e
 
 
 class RealForceObject(ScalarObject):
@@ -150,7 +150,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
             out = []
             for eid, stressi in zip(eids, stress):
-                out.append([eid, write_float_13E(stressi)])
+                out.append([eid, write_float_13e(stressi)])
 
             for i in range(0, nrows * 4, 4):
                 f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (

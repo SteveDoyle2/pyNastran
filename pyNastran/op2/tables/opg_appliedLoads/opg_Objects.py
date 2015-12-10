@@ -1,7 +1,7 @@
 from six.moves import zip
 from numpy import array, zeros
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
+from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E
 
 
 class AppliedLoadsVectorArray(ScalarObject):

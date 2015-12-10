@@ -5,7 +5,7 @@ from six.moves import zip
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, write_float_13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header
 
 class RealSpringArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -138,7 +138,7 @@ class RealSpringArray(OES_Object):
 
             out = []
             for eid, stressi in zip(eids, stress):
-                out.append([eid, write_float_13E(stressi)])
+                out.append([eid, write_float_13e(stressi)])
 
             for i in range(0, nrows * 4, 4):
                 f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
@@ -340,7 +340,7 @@ def _write_f06_springs_transient(f, stress, header, words, name):
             eids.append(eid)
             stresses.append(stress)
             if len(stresses) == 4:
-                stresses, is_all_zeros = writeFloats13E(stresses)
+                stresses = write_floats_13e(stresses)
                 f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
                     eids[0], stresses[0],
                     eids[1], stresses[1],
@@ -351,7 +351,7 @@ def _write_f06_springs_transient(f, stress, header, words, name):
 
         if stresses:
             line = '    '
-            stresses, is_all_zeros = writeFloats13E(stresses)
+            stresses = write_floats_13e(stresses)
             for eid, stress in zip(eids, stresses):
                 line += '%10i  %13s    ' % (eid, stress)
             f.write(line.rstrip() + '\n')
@@ -371,7 +371,7 @@ def _write_f06_springs(f, data):
         eids.append(eid)
         stresses.append(stress)
         if len(stresses) == 4:
-            stresses, is_all_zeros = writeFloats13E(stresses)
+            stresses = write_floats_13e(stresses)
             f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
                 eids[0], stresses[0],
                 eids[1], stresses[1],
@@ -382,7 +382,7 @@ def _write_f06_springs(f, data):
 
     if stresses:
         line = '    '
-        stresses, is_all_zeros = writeFloats13E(stresses)
+        stresses = write_floats_13e(stresses)
         for eid, stress in zip(eids, stresses):
             line += '%10i  %13s    ' % (eid, stress)
         f.write(line.rstrip() + '\n')

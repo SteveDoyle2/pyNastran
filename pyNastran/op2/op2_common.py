@@ -260,7 +260,10 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         self.data_code[name] = value
 
     def setNullNonlinearFactor(self):
-        raise RuntimeError('is this used???')
+        """
+        initializes the nonlinear factor, which lets us know if
+        this is a transient solution or not
+        """
         self.nonlinear_factor = None
         self.data_code['nonlinear_factor'] = None
 

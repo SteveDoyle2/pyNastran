@@ -5,7 +5,7 @@ from itertools import count
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, get_key0
 
 
 class RealTriaxArray(OES_Object):
@@ -383,7 +383,7 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
                     #Eid = eid
                 #else:
                     #Eid = ''
-                #([rad, azimuth, axial, shear, omax, oms, ovm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
+                #[rad, azimuth, axial, shear, omax, oms, ovm] = write_floats_13e([rad, azimuth, axial, shear, omax, oms, ovm])
                 #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, omax, oms, ovm.rstrip()))
             #msg.append('\n')
 
@@ -416,7 +416,7 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
                         #Eid = eid
                     #else:
                         #Eid = ''
-                    #([rad, azimuth, axial, shear, omax, oms, ovm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
+                    #[rad, azimuth, axial, shear, omax, oms, ovm] = write_floats_13e([rad, azimuth, axial, shear, omax, oms, ovm])
                     #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, rad, azimuth, axial, shear, omax, oms, ovm.rstrip()))
                 #msg.append('\n')
 
@@ -572,7 +572,7 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
                     #Eid = eid
                 #else:
                     #Eid = ''
-                #([rad, azimuth, axial, shear, emax, ems, evm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
+                #[rad, azimuth, axial, shear, emax, ems, evm] = write_floats_13e([rad, azimuth, axial, shear, emax, ems, evm])
                 #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, emax, ems, evm.rstrip()))
             #msg.append('\n')
 
@@ -605,7 +605,7 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
                         #Eid = eid
                     #else:
                         #Eid = ''
-                    #([rad, azimuth, axial, shear, emax, ems, evm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
+                    #[rad, azimuth, axial, shear, emax, ems, evm] = write_floats_13e([rad, azimuth, axial, shear, emax, ems, evm])
                     #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n'
                                #% (Eid, nid, rad, azimuth, axial, shear, emax,
                                   #ems, evm.rstrip()))

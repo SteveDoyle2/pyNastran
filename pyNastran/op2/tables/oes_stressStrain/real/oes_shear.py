@@ -176,8 +176,7 @@ class RealShearArray(OES_Object):
             # loop over all the elements
             out = []
             for eid, max_sheari, avg_sheari, margini in zip(eids, max_shear, avg_shear, margin):
-                #([max_sheari, avg_sheari, margini],
-                #is_all_zeros) = writeFloats13E([max_sheari, avg_sheari, margini])
+                #[max_sheari, avg_sheari, margini] = write_floats_13e([max_sheari, avg_sheari, margini])
                 out.append([eid, max_sheari, avg_sheari, margini])
 
             for i in range(0, nwrite, 2):

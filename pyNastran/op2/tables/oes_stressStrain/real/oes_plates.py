@@ -245,8 +245,8 @@ class RealPlateArray(OES_Object):
             # loop over all the elements
             for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-                ([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
-                 is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
+                [fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
+                    [fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 ilayer = i % 2
                 # tria3
                 if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
@@ -614,8 +614,8 @@ class RealCPLSTRNPlateArray(OES_Object):
             ## loop over all the elements
             #for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  #count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-                #([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
-                 #is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
+                #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
+                #[fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 #ilayer = i % 2
                 ## tria3
                 #if self.element_type in [33, 74]:  # CQUAD4, CTRIA3

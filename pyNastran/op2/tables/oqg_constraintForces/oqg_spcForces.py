@@ -1,5 +1,5 @@
 from six import  iteritems
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import write_floats_13e
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 
 class RealSPCForcesArray(RealTableArray):

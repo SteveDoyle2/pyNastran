@@ -77,7 +77,7 @@ class OP2Geom(OP2, BDF,
         table_mapper['EPTS'] = [self._read_ept_4, self._read_ept_4]
         table_mapper['EPTOLD'] = [self._read_ept_4, self._read_ept_4]
 
-        table_mapper['MPT']  = [self._read_mpt_4, self._read_mpt_4]
+        table_mapper['MPT'] = [self._read_mpt_4, self._read_mpt_4]
         table_mapper['MPTS'] = [self._read_mpt_4, self._read_mpt_4]
 
         table_mapper['DYNAMIC'] = [self._read_dynamics_4, self._read_dynamics_4]

@@ -16,33 +16,20 @@ from pyNastran import is_release
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
-    RealDisplacementArray,
-    ComplexDisplacementArray,
-    RealDisplacement,          # table_code=1     format_code=1 sort_code=0
-    ComplexDisplacement)       # analysis_code=5  format_code=3 sort_code=1
+    RealDisplacementArray, ComplexDisplacementArray)
 
-# table_code=10 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_velocities import (
-    RealVelocityArray, ComplexVelocityArray,
-    RealVelocity, ComplexVelocity)
+    RealVelocityArray, ComplexVelocityArray)
 
-# table_code=11 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_accelerations import (
-    RealAccelerationArray, ComplexAccelerationArray,
-    RealAcceleration, ComplexAcceleration)
+    RealAccelerationArray, ComplexAccelerationArray)
 
-# table_code=1 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_temperatures import (
-    RealTemperatureArray, RealTemperature)
+    RealTemperatureArray)
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
-    RealEigenvectorArray,
-    ComplexEigenvectorArray,
-
-    #ComplexEigenvector              # analysis_code=5, sort_code=1 format_code=1 table_code=7
-     Eigenvector,                    # analysis_code=2, sort_code=0 format_code   table_code=7
-     ComplexEigenvector,             # analysis_code=5, sort_code=1 format_code=1 table_code=7
-    #RealEigenvector,                # analysis_code=9, sort_code=1 format_code=1 table_code=7
+    RealEigenvectorArray, ComplexEigenvectorArray,
+     Eigenvector, ComplexEigenvector,
 )
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVectorArray # RealThermalVelocityVector

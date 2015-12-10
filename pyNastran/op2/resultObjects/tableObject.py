@@ -7,7 +7,7 @@ from numpy import array, zeros, abs, angle, float32, searchsorted
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, write_float_12E
+from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, write_float_12E
 
 
 def append_sort1_sort2(data1, data2, to_sort1=True):
