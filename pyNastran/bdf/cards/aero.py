@@ -148,6 +148,9 @@ class AEFACT(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -212,6 +215,9 @@ class AELINK(BaseCard):
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         """
@@ -283,6 +289,9 @@ class AELIST(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def clean_ids(self):
         self.elements = list(set(self.elements))
         self.elements.sort()
@@ -340,6 +349,9 @@ class AEPARM(BaseCard):
             self.units = data[2]
             assert len(data) == 3, 'data = %s' % data
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -391,6 +403,9 @@ class AESTAT(BaseCard):
             assert len(data) == 2, 'data = %s' % data
 
     def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):
@@ -525,9 +540,11 @@ class AESURF(BaseCard):
         self.aelid1 = self.AELIST_id1()
         self.aelid2 = self.AELIST_id2()
         del self.cid1_ref
-        del self.cid2_ref
+        if self.cid2:
+            del self.cid2_ref
         del self.alid1_ref
-        del self.alid2_ref
+        if self.aelid2:
+            del self.alid2_ref
 
     def raw_fields(self):
         """
@@ -616,6 +633,9 @@ class AESURFS(BaseCard):  # not integrated
             self.list1 = data[2]
             self.list2 = data[3]
             assert len(data) == 4, 'data = %s' % data
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         """
@@ -739,6 +759,9 @@ class AERO(Aero):
         # T is the tabular function
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -821,6 +844,9 @@ class AEROS(Aero):
             self.symXZ = data[5]
             self.symXY = data[6]
             assert len(data) == 7, 'data = %s' % data
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         """
@@ -2237,6 +2263,9 @@ class FLFACT(BaseCard):
             self.sid = data[0]
             self.factors = data[1:]
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2482,6 +2511,9 @@ class GUST(BaseCard):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
         #return angle
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2535,6 +2567,9 @@ class MKAERO1(BaseCard):
 
         #print("machs  = ",self.machs)
         #print("rFreqs = ",self.rFreqs)
+
+    def uncross_reference(self):
+        pass
 
     def addFreqs(self, mkaero):
         self.getMach_rFreqs()
@@ -2602,6 +2637,9 @@ class MKAERO2(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def uncross_reference(self):
+        pass
+
     def addFreqs(self, mkaero):
         self.getMach_rFreqs()
         for m in mkaero.machs:
@@ -2654,6 +2692,9 @@ class MONPNT1(BaseCard):
             ]
         else:
             raise NotImplementedError(card)
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         list_fields = [
@@ -2727,6 +2768,9 @@ class PAERO1(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
     def Bodies(self):
@@ -2847,6 +2891,9 @@ class PAERO2(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2944,6 +2991,9 @@ class PAERO3(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):
@@ -3262,6 +3312,9 @@ class SPLINE3(Spline):
             raise NotImplementedError()
 
     def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):

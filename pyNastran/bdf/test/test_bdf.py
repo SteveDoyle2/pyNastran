@@ -414,7 +414,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
                 fem1._xref = True
                 spike_fem = _read_bdf(fem1.bdf_filename)
 
-                remake = True
+                remake = False
                 if remake:
                     log = fem1.log
                     fem1.save('model.obj')

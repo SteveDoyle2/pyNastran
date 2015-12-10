@@ -2028,6 +2028,7 @@ class NastranIO(object):
 
             upids = unique(pids)
             mids = zeros(nelements, dtype='int32')
+            thickness = zeros(nelements, dtype='float32')
             for pid in upids:
                 if pid == 0:
                     print('skipping pid=0')
@@ -2041,7 +2042,7 @@ class NastranIO(object):
                         #mid = prop.mid
                     #else:
                         #try:
-                    mid = prop.mid.mid
+                    mid = prop.mid_ref.mid
                         #except AttributeError:
                             #print('pid=%s prop.type=%s' % (pid, prop.type))
                             #raise
@@ -2049,7 +2050,9 @@ class NastranIO(object):
                 elif prop.type == 'PSHELL':
                     i = where(pids == pid)[0]
                     mid = prop.Mid1()
+                    t = prop.Thickness()
                     mids[i] = mid
+                    thickness[i] = t
                 else:
                     print('material for pid=%s type=%s not considered' % (pid, prop.type))
 
@@ -2057,6 +2060,11 @@ class NastranIO(object):
             if mids.min() == 0:
                 i = where(mids == 0)[0]
                 print('eids=%s dont have materials' % eids[i])
+
+            cases[(0, icase, 'Thickness', 1, 'centroid', '%.3f')] = thickness
+            form0.append(('Thickness', icase, []))
+            icase += 1
+
             cases[(0, icase, 'MaterialID', 1, 'centroid', '%i')] = mids
             form0.append(('MaterialID', icase, []))
             icase += 1
