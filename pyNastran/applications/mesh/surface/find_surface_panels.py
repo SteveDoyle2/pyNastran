@@ -4,11 +4,12 @@ in order to do a buckling analysis.
 """
 from __future__ import print_function
 import os
+import glob
 from copy import deepcopy
 from six import iteritems, string_types
 
 from numpy import hstack, unique, allclose, savetxt, array
-from numpy import zeros, abs
+from numpy import zeros, abs as npabs
 from numpy import searchsorted, vstack
 
 from pyNastran.bdf.bdf import BDF
@@ -63,7 +64,8 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True):
                 eids_on_edge.update(eids)
     return patch_edges, eids_on_edge, free_edges, free_eids
 
-def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric=True):
+def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
+                        is_symmetric=True):
     """
     Extracts rib/spar/skin patches based on geometry.  You can have a
     single property id and this will still work.
@@ -76,6 +78,10 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric
         maps edges to element ids
     eid_to_edge_map : dict[int] = [(int, int), (int, int), ...]
         maps element ids to edges
+    workpath : str; default='results'
+        the results directory
+    is_symmetric : bool; default=True
+        enables yz symmetry
 
     Returns
     -------
@@ -85,8 +91,6 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric
         all the elements on the edges
     patches : List[List[int]]
         the patches
-    is_symmetric : bool; default=True
-        enables yz symmetry
 
     .. note :: We're only considering shell elements, which probably is a poor
                assumption given the stiffness of ring frames/longerons, which are
@@ -181,7 +185,8 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric
             used_eids = set(unique(hstack(patches)))
         else:
             used_eids = set([])
-        print('new_patch_edge_count=%s patch_edge_count=%s' % (new_patch_edge_count, patch_edge_count))
+        print('new_patch_edge_count=%s patch_edge_count=%s' % (
+            new_patch_edge_count, patch_edge_count))
         patch_edge_count = new_patch_edge_count
         if len(patch_edges) == 0:
             break
@@ -291,12 +296,17 @@ def get_next_edges(eid_to_edge_map, edge_to_eid_map,
         print()
     return edges_to_check_next, patch_len
 
-def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
+def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches,
+                    workpath='results'):
     """saves the patch data"""
     unique_nids = unique(array(patch_edges, dtype='int32').ravel())
     print('unique_nids =', unique_nids)
 
-    savetxt('nodal_edges.txt', [xyz_cid0[nid] for nid in unique_nids], delimiter=',')
+    nodal_edges_filename = os.path.join(workpath, 'nodal_edges.txt')
+    element_edges_filename = os.path.join(workpath, 'element_edges.txt')
+    element_patches_filename = os.path.join(workpath, 'element_patches.txt')
+
+    savetxt(nodal_edges_filename, [xyz_cid0[nid] for nid in unique_nids], delimiter=',')
 
     eids_all = model.element_ids
     patch_ids_all = [-10] * len(eids_all)
@@ -311,20 +321,18 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
             patch_ids_all[i] = ipatch
         ipatch += 1
 
-    element_edges_file = open('element_edges.txt', 'wb')
-    element_edges_file.write('# is_edge\n')
-    for eid in eids_all:
-        if eid in eids_on_edge:
-            element_edges_file.write('1\n')
-        else:
-            element_edges_file.write('0\n')
-    element_edges_file.close()
+    with open(element_edges_filename, 'wb') as element_edges_file:
+        element_edges_file.write('# is_edge\n')
+        for eid in eids_all:
+            if eid in eids_on_edge:
+                element_edges_file.write('1\n')
+            else:
+                element_edges_file.write('0\n')
 
-    element_patches_file = open('element_patches.txt', 'wb')
-    element_patches_file.write('# patch\n')
-    for patch_id in patch_ids_all:
-        element_patches_file.write('%s\n' % patch_id)
-    element_patches_file.close()
+    with open(element_edges_filename, 'wb') as element_patches_file:
+        element_patches_file.write('# patch\n')
+        for patch_id in patch_ids_all:
+            element_patches_file.write('%s\n' % patch_id)
 
    # these should be the same if we did this right
     counter = [1 for patch in patches
@@ -332,7 +340,9 @@ def save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches):
     print('npatches=%s npids=%s' % (npatches, sum(counter)))
 
 
-def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
+def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
+                                 workpath='results', is_symmetric=True,
+                                 reload_patches=True):
     """
     Create the input decks for buckling
 
@@ -352,26 +362,39 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
         full model : set to False (???)
         half model : set to True (???)
     """
-    # TODO: add ability to start from existing patch/edge files
-    import glob
+    # cleanup
+    if not os.path.exists(workpath):
+        os.makedirs(workpath)
+    os.chdir(workpath)
+
     patch_filenames = glob.glob('patch_*.bdf')
     edge_filenames = glob.glob('edge_*.bdf')
     for fname in patch_filenames + edge_filenames:
         os.remove(fname)
 
+    #-------------------------
     assert mode in ['load', 'displacement'], 'mode=%r' % mode
     assert isinstance(op2_filename, string_types), 'op2_filename=%r' % op2_filename
     out = model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
     (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
     xyz_cid0 = {}
-    cds = {}
+    #cds = {}
     for nid, node in iteritems(model.nodes):
         xyz_cid0[nid] = node.get_position()
-        cds[nid] = node.Cd()
-    patch_edges, eids_on_edge, patches = find_ribs_and_spars(
-        xyz_cid0, edge_to_eid_map, eid_to_edge_map, is_symmetric=is_symmetric)
+        #cds[nid] = node.Cd()
 
-    save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches)
+    #if os.path.exists(path):
+        #pass
+    if reload_patches:
+        patch_edges, eids_on_edge, patches = find_ribs_and_spars(
+            xyz_cid0, edge_to_eid_map, eid_to_edge_map,
+            is_symmetric=is_symmetric)
+
+        save_patch_info(model, xyz_cid0, patch_edges, eids_on_edge, patches,
+                        workpath=workpath)
+    else:
+        msg = 'add ability to start from existing patch/edge files; reload_patches=%s' % reload_patches
+        raise NotImplementedError(msg)
 
     header = ''
     header += 'SOL 105\n'
@@ -393,8 +416,8 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     header += 'BEGIN BULK\n'
     header += 'PARAM,GRDPNT,0\n'
     header += 'PARAM,COUPMASS,1\n'
-    header += 'PARAM,AUNITS,0.00259\n'
-    header += 'PARAM,WTMASS,0.00259\n'
+    #header += 'PARAM,AUNITS,0.00259\n'
+    #header += 'PARAM,WTMASS,0.00259\n'
     #header += 'PARAM,BAILOUT,-1\n'
     header += 'PARAM,PRTMAXIM,YES\n'
     header += 'PARAM,POST,-1    \n'
@@ -407,7 +430,6 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     load_id = 55
     header += 'EIGB,%s,INV,%s,%s,%s\n' % (method, eig1, eig2, nroots)
 
-    isubcase = 1
     out_model = OP2()
     out_model.read_op2(op2_filename)
     if mode == 'displacement':
@@ -423,8 +445,10 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
     for ipatch, patch in enumerate(patches):
         patch = array(patch, dtype='int32')
         eids = patch
-        patch_file = open('patch_%i.bdf' % ipatch, 'w')
-        edge_file = open('edge_%i.bdf' % ipatch, 'w')
+        patch_filename = os.path.join(workpath, 'patch_%i.bdf' % ipatch)
+        edge_filename = os.path.join(workpath, 'edge_%i.bdf' % ipatch)
+        patch_file = open(patch_filename, 'w')
+        edge_file = open(edge_filename, 'w')
         patch_file.write(header)
 
         # get list of all nodes on patch; write elements
@@ -461,22 +485,25 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
         if 0:
             msg = []
             self = nodal_forces
-            for ekey, Force in sorted(iteritems(self.force_moment)):
-                for iLoad, force in enumerate(Force):
-                    (f1, f2, f3, m1, m2, m3) = force
-                    elem_name = self.elemName[ekey][iLoad]
-                    eid = self.eids[ekey][iLoad]
+            for ekey, force in sorted(iteritems(self.force_moment)):
+                for iload, forcei in enumerate(force):
+                    (f1, f2, f3, m1, m2, m3) = forcei
+                    elem_name = self.elemName[ekey][iload]
+                    eid = self.eids[ekey][iload]
                     # vals = [f1, f2, f3, m1, m2, m3]
                     # vals2 = write_floats_13e(vals)
                     # [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elem_name,
-                                                                                                         f1, f2, f3, m1, m2, m3))
+                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        zero, ekey, eid, elem_name, f1, f2, f3, m1, m2, m3))
                     zero = ' '
                 zero = '0'
 
         if mode == 'displacement':
+            # the displacement are in the Cd coordinate frame
+            # because we're just carrying along the GRID cards
+            # we shouldn't need to do anything
             patch_edge_nids = []
             for edge in patch_edges:
                 n1, n2 = edge
@@ -498,7 +525,6 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
 
             ipack = 0
             spc_pack = []
-
             #$SPCD         100   20028       1.0009906   20028       24.3233-4
             #$SPCD         100   20028       3.3169889   20028       41.6345-4
             #$SPCD         100   20028       5.0004592   20028       6-2.092-3
@@ -518,7 +544,7 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
                 assert nids2[i] == nid, 'nid=%s nid2=%s' % (nid, node_ids_full_model[i])
                 for j in range(6):
                     dispi = disp[i, j]
-                    if abs(dispi) > 0.0:
+                    if npabs(dispi) > 0.0:
                         # SPCD, sid, g1, c1, d1
                         #patch_file.write(print_card_8(['SPCD', spc_id, nid, j + 1, dispi]))
                         if ipack == 0:
@@ -534,19 +560,20 @@ def create_plate_buckling_models(model, op2_filename, mode, is_symmetric=True):
                 patch_file.write(print_card_8(spc_pack))
 
         elif mode == 'load':
+            # TODO: does this work for vectorized classes?
             for node_id, cdi in zip(all_nids[1:], cd[1:]):
-                Force = nodal_forces.force_moment[node_id]
+                force = nodal_forces.force_moment[node_id]
                 force_moment_sum = zeros(6, dtype='float32')
-                for iload, force in enumerate(Force):
+                for iload, forcei in enumerate(force):
                     eid = nodal_forces.eids[node_id][iload]
                     element_name = nodal_forces.elemName[node_id][iload]
                     if eid not in eids: # neighboring element
-                        force_moment_sum += Force[iload]
+                        force_moment_sum += force[iload]
                     elif eid == 0 and element_name != '*TOTALS*':
                         print(element_name)
-                        force_moment_sum += Force[iload]
+                        force_moment_sum += force[iload]
 
-                abs_force_moment_sum = abs(force_moment_sum)
+                abs_force_moment_sum = npabs(force_moment_sum)
                 forcei = abs_force_moment_sum[:3]
                 momenti = abs_force_moment_sum[3:]
                 if forcei.sum() > 0.0:
@@ -586,12 +613,14 @@ def main():
 
     if not os.path.exists('model.obj') or 1:
         model.read_bdf(bdf_filename)
-        # model.save_object('model.obj')
+        # model.save('model.obj')
     else:
-        model.load_object('model.obj')
+        model.load('model.obj')
         model.cross_reference()
     #create_plate_buckling_models(model, op2_filename, 'load')
-    create_plate_buckling_models(model, op2_filename, 'displacement')
+    isubcase = 4
+    create_plate_buckling_models(model, op2_filename, 'displacement',
+                                 workpath='results', isubcase=isubcase)
 
 
 if __name__ == '__main__':
