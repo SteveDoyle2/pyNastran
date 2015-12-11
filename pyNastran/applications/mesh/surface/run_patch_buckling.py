@@ -67,17 +67,20 @@ def run_bdfs(bdf_filenames, workpath='results'):
 
 
 def load_sym_regions_map(sym_regions_filename):
+    print(os.getcwd())
     with open(sym_regions_filename, 'r') as sym_regions_file:
         lines = sym_regions_file.readlines()
 
     region_to_symregion_map = {}
+    symregion_to_region_map = {}
     for line in lines[1:]:
         sline = line.strip().split(',')
         values = [int(val) for val in sline]
         region_id = values[0]
         sym_region_id = values[1]
         region_to_symregion_map[region_id] = sym_region_id
-    return region_to_symregion_map
+        symregion_to_region_map[sym_region_id] = region_id
+    return region_to_symregion_map, symregion_to_region_map
 
 
 def get_eigs():

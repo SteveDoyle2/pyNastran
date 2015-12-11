@@ -6,7 +6,7 @@ from collections import defaultdict
 from numpy import where, unique, array, zeros, searchsorted, log10, array_equal
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, FatalError
 from pyNastran.applications.mesh.surface.run_patch_buckling import load_sym_regions_map
 
 
@@ -33,9 +33,11 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
     #evals = []
 
     min_eigenvalue_by_patch_id = {}
-    if os.path.exists(sym_regions_filename):
+    is_sym_regions = False
+    if sym_regions_filename is not None:
         is_sym_regions = True
-        region_to_symregion_map = load_sym_regions_map(sym_regions_filename)
+        region_to_symregion_map, symregion_to_region_map = load_sym_regions_map(sym_regions_filename)
+    msg = ''
     for op2_filename in op2_filenames:
         if not os.path.exists(op2_filename):
             print(op2_filename)
@@ -50,7 +52,12 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
         # eids = model.elements.keys()
         model2 = OP2(debug=False)
         #op2_path = '%s_.op2' % patch_id)
-        model2.read_op2(op2_filename)
+        try:
+            model2.read_op2(op2_filename)
+        except FatalError:
+            #os.remove(op2_filename)
+            msg += '%s\n' % op2_filename
+            continue
         cases = model2.eigenvectors.keys()
         isubcase = cases[0]
         d = model2.eigenvectors[isubcase]
@@ -67,9 +74,15 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
         print('Patch:', patch_id, 'Min eigenvalue: ', min_eigenvalue)
         min_eigenvalue_by_patch_id[patch_id] = min_eigenvalue
         if is_sym_regions:
-            sym_patch_id = region_to_symregion_map[patch_id]
-            min_eigenvalue_by_patch_id[sym_patch_id] = min_eigenvalue
 
+            if patch_id in symregion_to_region_map:
+                sym_patch_id = symregion_to_region_map[patch_id]
+            elif patch_id in region_to_symregion_map:
+                sym_patch_id = region_to_symregion_map[patch_id]
+            else:
+                asdf
+            min_eigenvalue_by_patch_id[sym_patch_id] = min_eigenvalue
+    print(msg)
     model = BDF()
     model.read_bdf('model_144.bdf')
     all_eids = unique(model.elements.keys())
