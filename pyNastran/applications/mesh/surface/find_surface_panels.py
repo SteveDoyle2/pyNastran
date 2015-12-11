@@ -177,7 +177,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
         edge_to_eid_map, xyz_cid0, is_symmetric=is_symmetric,
         model=model, consider_pids=consider_pids)
 
-    free_edge_nodes_filename = os.path.join(workpath, 'free_edge_nodes.txt')
+    free_edge_nodes_filename = os.path.join(workpath, 'free_edge_nodes.csv')
     with open(free_edge_nodes_filename, 'w') as free_edge_nodes_file:
         _free_edges = array(free_edges, dtype='int32')
         for nid in unique(_free_edges.ravel()):
@@ -616,17 +616,21 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
             #SPC1,100,123456,20028
             n1 = patch_edge_nids[0]
             n2 = patch_edge_nids[1]
-            patch_file.write('SPC1,%i,123456,%i\n' % (spc_id, n1))
+
+            spc1 = ['SPC1', spc_id, 123] + list(patch_edge_nids)
+            #patch_file.write('SPC1,%i,123456,%i\n' % (spc_id, n1))
+            patch_file.write(print_card_8(spc1))
 
             # dummy load
             patch_file.write('FORCE,%i,%i,0,0.000001,1.0,1.0,1.0\n' % (load_id, n2))
             for i, nid in enumerate(patch_edge_nids):
-                if i == 0:
-                    continue
+                #if i == 0:
+                    #continue
                 xyz = xyz_cid0[nid]
                 edge_file.write('%f, %f, %f\n' % (xyz[0], xyz[1], xyz[2]))
                 assert nids2[i] == nid, 'nid=%s nid2=%s' % (nid, node_ids_full_model[i])
-                for j in range(6):
+                for j in range(3):
+                #for j in range(6):
                     dispi = disp[i, j]
                     if npabs(dispi) > 0.0:
                         # SPCD, sid, g1, c1, d1
@@ -675,14 +679,17 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
         edge_file.close()
     return
 
-def main():
+def find_surface_panels(bdf_filename=None, op2_filename=None, isubcase=1,
+                        consider_pids=False, workpath='results'):
     """prevents bleedover of data"""
     model = BDF()
     #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.bdf'
     #op2_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.op2'
 
-    bdf_filename = 'model_144.bdf'
-    op2_filename = 'model_144.op2'
+    if bdf_filename is None:
+        bdf_filename = 'model_144.bdf'
+    if op2_filename is None:
+        op2_filename = 'model_144.op2'
 
     #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\models\solid_bending\solid_bending.bdf'
     if 0:
@@ -704,12 +711,10 @@ def main():
 
     #create_plate_buckling_models(model, op2_filename, 'load')
     isubcase = 4
-    workpath = ''
-    consider_pids = True
     create_plate_buckling_models(model, op2_filename, 'displacement',
                                  workpath=workpath, isubcase=isubcase,
                                  consider_pids=consider_pids)
 
 
 if __name__ == '__main__':
-    main()
+    find_surface_panels()

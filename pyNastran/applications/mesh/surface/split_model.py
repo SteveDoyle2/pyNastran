@@ -1,3 +1,4 @@
+from __future__ import print_function
 import glob
 import os
 from six import iteritems
@@ -6,13 +7,35 @@ from numpy import where, unique, array, zeros, searchsorted, log10, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
+from pyNastran.applications.mesh.surface.run_patch_buckling import load_sym_regions_map
 
-def load_regions_and_create_eigenvalue_csv(regions_filename):
+
+def load_regions(regions_filename):
+    with open(regions_filename, 'r') as regions_file:
+        lines = regions_file.readlines()
+
+    regions_to_pid_map = {}
+    regions_to_eids_map = {}
+    for line in lines[1:]:
+        sline = line.strip().split(',')
+        values = [int(val) for val in sline]
+        pid = values[0]
+        regions_patch_id = values[1]
+        eids = values[2:]
+        regions_to_eids_map[regions_patch_id] = eids
+        regions_to_pid_map[regions_patch_id] = pid
+    return regions_to_pid_map, regions_to_eids_map
+
+
+def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filename=None):
     op2_filenames = glob.glob('patch_*.op2')
     #patch_numbers = []
     #evals = []
 
     min_eigenvalue_by_patch_id = {}
+    if os.path.exists(sym_regions_filename):
+        is_sym_regions = True
+        region_to_symregion_map = load_sym_regions_map(sym_regions_filename)
     for op2_filename in op2_filenames:
         if not os.path.exists(op2_filename):
             print(op2_filename)
@@ -39,9 +62,13 @@ def load_regions_and_create_eigenvalue_csv(regions_filename):
             min_eigenvalue = 0.  # TODO: no buckling eigenvalue...wat?
         else:
             min_eigenvalue = log10(eigrs[i].min())
+
         #evals.append(min_eval)
-        print 'Patch:', patch_id, 'Min eigenvalue: ', min_eigenvalue
+        print('Patch:', patch_id, 'Min eigenvalue: ', min_eigenvalue)
         min_eigenvalue_by_patch_id[patch_id] = min_eigenvalue
+        if is_sym_regions:
+            sym_patch_id = region_to_symregion_map[patch_id]
+            min_eigenvalue_by_patch_id[sym_patch_id] = min_eigenvalue
 
     model = BDF()
     model.read_bdf('model_144.bdf')
@@ -73,13 +100,15 @@ def load_regions_and_create_eigenvalue_csv(regions_filename):
         for eig in eigenvalues:
             eigenvalue_file.write('%f\n' % eig)
 
-def split_model_by_pid_panel():
-    patch_filenames = glob.glob('patch_*.bdf')
+
+def split_model_by_pid_panel(workpath='results'):
+    patch_filenames = glob.glob('%s/patch_*.bdf' % workpath)
 
     pid_panel = defaultdict(list)
     for patch_filename in patch_filenames:
         #print(patch_filename)
-        sline = patch_filename.split('.')[0].split('_')[1]
+        basename = os.path.basename(patch_filename)
+        sline = basename.split('.')[0].split('_')[1]
         #print('sline', sline)
         ipanel = int(sline)
         #print('ipanel = %s' % ipanel)
@@ -93,14 +122,16 @@ def split_model_by_pid_panel():
             key = (pid, ipanel)
             pid_panel[key].append(eid)
             eids[pid].append(eid)
-        for pid, eidsi in sorted(iteritems(eids)):
-            pid_filename = 'pid_%i_ipanel_%i.txt' % (pid, ipanel)
-            out = str(eidsi)
-            with open(pid_filename, 'w') as pid_file:
-                pid_file.write('# PSHELL pid\n')
-                pid_file.write('# eids\n')
-                pid_file.write('%s\n' % pid)
-                pid_file.write('%s\n' % out[1:-1])
+
+        if 0:
+            for pid, eidsi in sorted(iteritems(eids)):
+                pid_filename = os.path.join(workpath, 'pid_%i_ipanel_%i.txt' % (pid, ipanel))
+                out = str(eidsi)
+                with open(pid_filename, 'w') as pid_file:
+                    pid_file.write('# PSHELL pid\n')
+                    pid_file.write('# eids\n')
+                    pid_file.write('%s\n' % pid)
+                    pid_file.write('%s\n' % out[1:-1])
 
     regions_filename = 'regions.txt'
     with open(regions_filename, 'w') as regions_file:
@@ -143,8 +174,11 @@ def main():
     key=SUPORT   value=1
     key=TRIM     value=4
     """
-    #split_model_by_pid_panel()
-    load_regions_and_create_eigenvalue_csv('regions.txt')
+    workpath = 'results'
+    #split_model_by_pid_panel(workpath)
+
+    sym_regions_filename = 'sym_regions_map.csv'
+    load_regions_and_create_eigenvalue_csv('regions.txt', sym_regions_filename=sym_regions_filename)
 
 if __name__ == '__main__':
     main()

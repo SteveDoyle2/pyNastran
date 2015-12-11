@@ -516,10 +516,10 @@ class SET1(Set):
         self.IDs = []
         IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
 
-        self.isSkin = False
+        self.is_skin = False
         i = 0
         if isinstance(IDs[0], string_types) and IDs[0] == 'SKIN':
-            self.isSkin = True
+            self.is_skin = True
             i += 1
 
         #:  List of structural grid point or element identification numbers.
@@ -547,12 +547,13 @@ class SET1(Set):
         self.clean_ids()
 
     def IsSkin(self):
-        return self.isSkin
+        return self.is_skin
 
     def raw_fields(self):
         skin = []
-        if self.isSkin:
+        if self.is_skin:
             skin = ['SKIN']
+        ids = self.get_IDs()
         return ['SET1', self.sid] + skin + self.get_IDs()
 
     def cross_reference(self, model, xref_type, allow_empty_nodes=False):

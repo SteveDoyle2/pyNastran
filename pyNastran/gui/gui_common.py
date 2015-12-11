@@ -248,7 +248,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
         #=========== Logging widget ===================
         if self.html_logging:
-            self.log_dock = ApplicationLogDockWidget(self, execute_python=True)
+            execute_python = True
+            self.log_dock = ApplicationLogDockWidget(self, execute_python=execute_python)
             #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
         #===============================================
 
@@ -2823,7 +2824,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         if update_3d:
             self.is_horizontal_scalar_bar = is_horizontal
             self._set_case(self.result_name, self.iCase,
-                           explicit=False, cycle=False, skip_click_check=True)
+                           explicit=False, cycle=False, skip_click_check=True, min_value=min_value, max_value=max_value)
             return
 
         subtitle, label = self.get_subtitle_label(subcase_id)

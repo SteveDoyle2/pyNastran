@@ -5,7 +5,6 @@ class ApplicationLogDockWidget(QtGui.QDockWidget):
     def __init__(self, parent, execute_python=True):
         self.parent = parent
         QtGui.QDockWidget.__init__(self, parent)
-        execute_python = False
         self.dock_widget = QtGui.QDockWidget("Application log", parent)
         self.dock_widget.setObjectName("application_log")
         self.log_widget = QtGui.QTextEdit()

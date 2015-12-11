@@ -6,6 +6,7 @@ from copy import deepcopy
 
 import numpy
 from numpy import ndarray, full, int32, float32, issubdtype
+from numpy.linalg import norm
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
@@ -105,7 +106,8 @@ class GuiCommon(object):
             #self.log_command(""didn't find case...")
         return result_type
 
-    def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False):
+    def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
+                  min_value=None, max_value=None):
         if not skip_click_check:
             if not cycle and icase == self.iCase:
                 # don't click the button twice
@@ -146,11 +148,18 @@ class GuiCommon(object):
               % (subcase_id, result_type, subtitle, label))
 
         #================================================
+
         if isinstance(case, ndarray):
-            max_value = case.max()
-            min_value = case.min()
+            if len(case.shape) == 1:
+                normi = case
+            else:
+                normi = norm(case, axis=1)
         else:
             raise RuntimeError('list-based results have been removed; use numpy.array')
+
+        if min_value is None and max_value is None:
+            max_value = normi.max()
+            min_value = normi.min()
 
         # flips sign to make colors go from blue -> red
         norm_value = float(max_value - min_value)
@@ -160,7 +169,7 @@ class GuiCommon(object):
         if self._names_storage.has_exact_name(name):
             grid_result = None
         else:
-            grid_result = self.set_grid_values(name, case, vector_size,
+            grid_result = self.set_grid_values(name, normi, vector_size,
                                                min_value, max_value, norm_value)
 
         vector_size = 3
@@ -181,7 +190,8 @@ class GuiCommon(object):
 
         is_blue_to_red = True
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
-                               data_format, is_blue_to_red=is_blue_to_red, is_horizontal=self.is_horizontal_scalar_bar)
+                               data_format, is_blue_to_red=is_blue_to_red,
+                               is_horizontal=self.is_horizontal_scalar_bar)
         self.update_legend(result_type, min_value, max_value, data_format,
                            is_blue_to_red, self.is_horizontal_scalar_bar, scale)
         location = self.get_case_location(key)
@@ -197,7 +207,7 @@ class GuiCommon(object):
         """
         if self._names_storage.has_exact_name(name):
             return
-
+        #print('name, case =', name, case)
         if issubdtype(case.dtype, numpy.integer):
             data_type = vtk.VTK_INT
             self.aQuadMapper.InterpolateScalarsBeforeMappingOn()
@@ -217,31 +227,15 @@ class GuiCommon(object):
         if vector_size == 1:
             if is_blue_to_red:
                 if norm_value == 0:
-                    #for i, value in enumerate(case):
-                        #grid_result.InsertNextValue(1 - min_value)
                     nvalues = len(case)
                     case2 = full((nvalues), 1.0 - min_value, dtype='float32')
-                    #case2 = 1 - ones(nvalues) * min_value
                 else:
-                    #for i, value in enumerate(case):
-                        #grid_result.InsertNextValue(1.0 - (value - min_value) / norm_value)
                     case2 = 1.0 - (case - min_value) / norm_value
             else:
                 if norm_value == 0:
-                    # how do you even get a constant nodal result on a surface?
-                    # nodal normals on a constant surface, but that's a bit of an edge case
-                    #for i, value in enumerate(case):
-                        #grid_result.InsertNextValue(min_value)
                     case2 = full((nvalues), min_value, dtype='float32')
-                    #case2 = case
                 else:
-                    #for i, value in enumerate(case):
-                        #grid_result.InsertNextValue((value - min_value) / norm_value)
                     case2 = (case - min_value) / norm_value
-
-            #scalar_range = self.grid.GetScalarRange()
-            #print(scalar_range)
-            #self.aQuadMapper.SetScalarRange(scalar_range)
 
             if case.flags.contiguous:
                 case2 = case
@@ -256,8 +250,6 @@ class GuiCommon(object):
             #print('max2 =', grid_result.GetRange())
         else:
             # vector_size=3
-            #for value in case:
-                #grid_result.InsertNextTuple3(*value)  # x, y, z
             if case.flags.contiguous:
                 case2 = case
             else:
@@ -290,6 +282,8 @@ class GuiCommon(object):
         else:
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
 
+        #if vector_size == 3:
+            #print('name, grid_result, vector_size=3', name, grid_result)
         self._final_grid_update(name, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
                                 revert_displaced=True)
@@ -392,7 +386,7 @@ class GuiCommon(object):
 
     def _get_icase(self, result_name):
         found_case = False
-        print(self.resultCases.keys())
+        print('resultCases.keys() =', self.resultCases.keys())
         i = 0
         for icase, cases in sorted(iteritems(self.resultCases)):
             if result_name == icase[1]:
