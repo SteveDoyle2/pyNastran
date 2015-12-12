@@ -1880,11 +1880,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             render_large.SetMagnification(magnify)
 
             # multiply linewidth by magnification
-            prop = self.geometry_actors['main'].GetProperty()
-            line_width_0 = prop.GetLineWidth()
-            line_width = line_width_0 * magnify
-            prop.SetLineWidth(line_width)
-            prop.Modified()
+            line_widths0 = {}
+            point_sizes0 = {}
+            for key, geom_actor in iteritems(self.geometry_actors):
+                prop = geom_actor.GetProperty()
+                line_width0 = prop.GetLineWidth()
+                point_size0 = prop.GetPointSize()
+                line_widths0[key] = line_width0
+                point_sizes0[key] = point_size0
+                line_width = line_width0 * magnify
+                point_size = point_size0 * magnify
+                prop.SetLineWidth(line_width)
+                prop.SetPointSize(point_size)
+                prop.Modified()
 
             # hide corner axis
             axes_actor = self.corner_axis.GetOrientationMarker()
@@ -1918,8 +1926,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             axes_actor.SetVisibility(True)
 
             # set linewidth back
-            prop.SetLineWidth(line_width_0)
-            prop.Modified()
+            for key, geom_actor in iteritems(self.geometry_actors):
+                prop = geom_actor.GetProperty()
+                prop.SetLineWidth(line_widths0[key])
+                prop.SetPointSize(point_sizes0[key])
+                prop.Modified()
 
 
     def _update_text_size(self, magnify=1.0):

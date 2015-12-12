@@ -404,9 +404,19 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
     unique_nids = unique(array(patch_edges_array, dtype='int32').ravel())
     #patch_edges_array_filename = os.path.join(workpath, 'patch_edges.csv')
 
+    # xyz points of patch
     nodal_edges_filename = os.path.join(workpath, 'nodal_edges.csv')
+
+    # is the element flagged as an edge
     element_edges_filename = os.path.join(workpath, 'element_edges.txt')
+
+    # what patch is each element part of
     element_patches_filename = os.path.join(workpath, 'element_patches.txt')
+
+    # what are the element ids in each patch
+    patches_filename = os.path.join(workpath, 'patches.txt')
+
+    # what elements are on the edge of a patch
     eids_on_edge_filename = os.path.join(workpath, 'eids_on_edge.txt')
 
 
@@ -446,6 +456,12 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
         for patch_id in patch_ids_all:
             element_patches_file.write('%s %s\n' % (patch_id, len(patches[patch_id])))
 
+    with open(patches_filename, 'wb') as patches_file:
+        patches_file.write('# patch_id, eids\n')
+        for patch_id, patch in enumerate(patches):
+            patches_file.write('%s, ' % patch_id)
+            patches_file.write(str(patch)[1:-1])
+            patches_file.write('\n')
    # these should be the same if we did this right
     counter = [1 for patch in patches
                if len(patch) > 1]
@@ -483,9 +499,14 @@ def load_patch_info(workpath='results'):
     #element_edges_filename = os.path.join(workpath, 'element_edges.txt')
     #element_edges = load_element_edges(element_edges_filename)
 
-    element_patches_filename = os.path.join(workpath, 'element_patches.txt')
-    element_patches, _patch_counter = load_element_patches(element_patches_filename)
-    return patch_edges_array, eids_on_edge, element_patches
+    #element_patches_filename = os.path.join(workpath, 'element_patches.txt')
+    #element_patches, _patch_counter = load_element_patches(element_patches_filename)
+    #print('patches/element_patches =', element_patches)
+
+    # this is patches
+    patches_filename = os.path.join(workpath, 'patches.txt')
+    patches = load_patches(patches_filename)
+    return patch_edges_array, eids_on_edge, patches
 
 #def load_nodal_edges_file(nodal_edges_filename):
 
@@ -497,9 +518,22 @@ def load_element_patches(element_patches_filename):
     counter = A[:, 1]
     return element_patches, counter
 
+def load_patches(patches_filename):
+    with open(patches_filename, 'r') as patches_file:
+        lines = patches_file.readlines()
+
+    patches = []
+    for line in lines[1:]:
+        sline = line.strip().split(',')
+        vals = [int(val) for val in sline]
+        patch_id = vals[0]
+        patch = vals[1:]
+        patches.append(patch)
+    return patches
+
 def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
                                  workpath='results', is_symmetric=True,
-                                 reload_patches=True, consider_pids=False):
+                                 rebuild_patches=True, consider_pids=False):
     """
     Create the input decks for buckling
 
@@ -542,8 +576,8 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
         xyz_cid0[nid] = node.get_position()
         #cds[nid] = node.Cd()
 
-    reload_patches = True
-    if reload_patches:
+    #rebuild_patches = False
+    if rebuild_patches:
         patch_edges_array, eids_on_edge, patches = find_ribs_and_spars(
             xyz_cid0, edge_to_eid_map, eid_to_edge_map,
             workpath=workpath, is_symmetric=is_symmetric,
@@ -552,7 +586,7 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
         save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
                         workpath=workpath)
     else:
-        #msg = 'add ability to start from existing patch/edge files; reload_patches=%s' % reload_patches
+        #msg = 'add ability to start from existing patch/edge files; rebuild_patches=%s' % rebuild_patches
         #raise NotImplementedError(msg)
 
         #workpath = 'results'
@@ -564,15 +598,25 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
 
 def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_array,
                         isubcase=1, mode='displacement', workpath='results'):
+
+    # TODO: Create 'BDF' of deflected shape that doesn't include the wing up bend from the CAERO1
+    #       boxes.  This will allow you to visually see where the wing undulates relative to the
+    #       center plane of the wing
     assert mode in ['load', 'displacement'], 'mode=%r' % mode
     model = bdf_model
 
+    subcase = bdf_model.subcases[isubcase]
     # TODO: add title, subtitle from the actual load case for cross validation
     header = ''
     header += 'SOL 105\n'
     header += 'CEND\n'
-    header += 'TITLE = BUCKLING\n'
     header += 'ECHO = NONE\n'
+
+    if subcase.has_parameter('TITLE'):
+        header += '  TITLE = %s\n' % subcase.get_parameter('TITLE')[0]
+        print(subcase.get_parameter('TITLE'))
+    else:
+        header += 'TITLE = BUCKLING\n'
     header += 'SUBCASE 1\n'
     # header += '  SUPORT = 1\n'
     #if mode == 'load':
@@ -583,6 +627,9 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     #header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
     header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
     header += '  SPC = 100\n'
+    if subcase.has_parameter('SUBTITLE'):
+        header += '  SUBTITLE = %s\n' % subcase.get_parameter('SUBTITLE')[0]
+
     #header += '  MPC = 1\n'
     #header += '  TRIM = 1\n'
     header += 'BEGIN BULK\n'
@@ -615,24 +662,48 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
         raise RuntimeError(mode)
 
     edge_nids = unique(patch_edges_array.ravel())
-    free_nodes = setdiff1d(node_ids_full_model, edge_nids) # A-B
+    #free_nodes = setdiff1d(node_ids_full_model, edge_nids) # A-B
 
+    # TODO: support excluded pids
+    excluded_pids = []
+
+    patch_dir = os.path.join(workpath, 'patches')
+    edge_dir = os.path.join(workpath, 'edges')
+    if not os.path.exists(patch_dir):
+        os.makedirs(patch_dir)
+    if not os.path.exists(edge_dir):
+        os.makedirs(edge_dir)
     for ipatch, patch_eids in enumerate(patches):
         patch_eids_array = array(patch_eids, dtype='int32')
 
-        patch_filename = os.path.join(workpath, 'patch_%i.bdf' % ipatch)
-        edge_filename = os.path.join(workpath, 'edge_%i.csv' % ipatch)
+        patch_filename = os.path.join(patch_dir, 'patch_%i.bdf' % ipatch)
+        edge_filename = os.path.join(edge_dir, 'edge_%i.csv' % ipatch)
         patch_file = open(patch_filename, 'w')
         edge_file = open(edge_filename, 'w')
         patch_file.write(header)
 
         # get list of all nodes on patch_eids_array; write elements
         all_nids_on_patch = []
+        pids_on_patch = set([])
         for eid in patch_eids_array:
             elem = model.elements[eid]
             node_ids = elem.node_ids
+
             all_nids_on_patch.append(node_ids)
             patch_file.write(str(elem))
+            pids_on_patch.add(elem.Pid())
+
+        # TODO: assumes a patch has only one property region
+        pid = elem.Pid()
+
+        if pid in excluded_pids:
+            print('pid=%s is excluded; patch_filename=%s' % patch_filename)
+            patch_file.close()
+            edge_file.close()
+            os.remove(patch_filename)
+            os.remove(edge_filename)
+            continue
+
         all_nids_on_patch = unique(hstack(all_nids_on_patch))
 
         nnodes = len(all_nids_on_patch)
@@ -657,7 +728,11 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
         is_double = False
         model._write_coords(patch_file, size, is_double)
         model._write_materials(patch_file, size, is_double)
-        model._write_properties(patch_file, size, is_double)
+
+        for pid in pids_on_patch:
+            prop = model.properties[pid]
+            patch_file.write(prop.write_card(size=size, is_double=is_double))
+            #model._write_properties(patch_file, size, is_double)
 
         # msg = ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
             # '  POINT-ID    ELEMENT-ID    SOURCE         T1             T2             T3             R1             R2             R3\n', ]
@@ -727,13 +802,20 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
             # TODO: figure out free node
             #edge_nids = unique(patch_edges_array.ravel())
             #free_nodes = setdiff1d(node_ids_full_model, edge_nids) # A-B
-            free_nodes_on_patch = setdiff1d(free_nodes, all_nids_on_patch) # A-B
+            #free_nodes_on_patch = setdiff1d(free_nodes, all_nids_on_patch) # A-B
+            #free_nodes_on_patch = in1d(free_nodes, all_nids_on_patch) # A and B
+
+            free_nodes_on_patch = setdiff1d(all_nids_on_patch, edge_nids)
+            #print('free_nodes_on_patch =', free_nodes_on_patch)
             if len(free_nodes_on_patch) == 0:
                 print('couldnt find free node for patch_filename=%s' % patch_filename)
                 patch_file.close()
                 edge_file.close()
+                #os.remove(patch_filename)
+                #os.remove(edge_filename)
                 continue
             free_node = free_nodes_on_patch[0]
+            assert free_node in all_nids_on_patch, 'free_node=%s is not patch_filename=in %s' % (free_node, patch_filename)
             patch_file.write('FORCE,%i,%i,0,0.000001,1.0,1.0,1.0\n' % (load_id, free_node))
 
             for i, nid in enumerate(patch_edge_nids):
@@ -749,7 +831,8 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
                         # SPCD, sid, g1, c1, d1
                         #patch_file.write(print_card_8(['SPCD', spc_id, nid, j + 1, dispi]))
                         if ipack == 0:
-                            spc_pack = ['SPCD', spc_id, nid, j + 1, dispi]
+                            # SPCDs are loads, not SPCs.  Don't change this!!!
+                            spc_pack = ['SPCD', load_id, nid, j + 1, dispi]
                             ipack += 1
                         else:
                             # ipack = 1
@@ -793,7 +876,8 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     return
 
 def find_surface_panels(bdf_filename=None, op2_filename=None, isubcase=1,
-                        consider_pids=False, workpath='results'):
+                        consider_pids=False, rebuild_patches=True,
+                        workpath='results'):
     """prevents bleedover of data"""
     model = BDF()
     #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.bdf'
@@ -825,7 +909,8 @@ def find_surface_panels(bdf_filename=None, op2_filename=None, isubcase=1,
     #create_plate_buckling_models(model, op2_filename, 'load')
     create_plate_buckling_models(model, op2_filename, 'displacement',
                                  workpath=workpath, isubcase=isubcase,
-                                 consider_pids=consider_pids)
+                                 consider_pids=consider_pids,
+                                 rebuild_patches=rebuild_patches)
 
 
 if __name__ == '__main__':

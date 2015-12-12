@@ -27,8 +27,7 @@ def load_regions(regions_filename):
     return regions_to_pid_map, regions_to_eids_map
 
 
-def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filename=None):
-    op2_filenames = glob.glob('patch_*.op2')
+def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_filename, sym_regions_filename=None):
     #patch_numbers = []
     #evals = []
 
@@ -74,7 +73,6 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
         print('Patch:', patch_id, 'Min eigenvalue: ', min_eigenvalue)
         min_eigenvalue_by_patch_id[patch_id] = min_eigenvalue
         if is_sym_regions:
-
             if patch_id in symregion_to_region_map:
                 sym_patch_id = symregion_to_region_map[patch_id]
             elif patch_id in region_to_symregion_map:
@@ -84,7 +82,7 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
             min_eigenvalue_by_patch_id[sym_patch_id] = min_eigenvalue
     print(msg)
     model = BDF()
-    model.read_bdf('model_144.bdf')
+    model.read_bdf(bdf_filename)
     all_eids = unique(model.elements.keys())
     neids = len(all_eids)
 
@@ -92,7 +90,7 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
     with open(regions_filename, 'r') as regions_file:
         lines = regions_file.readlines()
 
-        for line in lines[1:]:
+        for iline, line in enumerate(lines[1:]):
             sline = line.strip().split(',')
             #print(sline)
             values = [int(val) for val in sline]
@@ -100,7 +98,7 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
             regions_patch_id = values[1]
             eids = values[2:]
             i  = searchsorted(all_eids, eids) # [0] ???
-            assert array_equal(all_eids[i], eids)
+            assert array_equal(all_eids[i], eids), 'iline=%s pid=%s patch_id=%s' % (iline, pid, regions_patch_id)
             if regions_patch_id not in min_eigenvalue_by_patch_id:
                 print('missing pid=%s' % pid)
                 continue
@@ -109,13 +107,19 @@ def load_regions_and_create_eigenvalue_csv(regions_filename, sym_regions_filenam
 
     eigenvalue_filename = 'eigenvalues_output.csv'
     with open(eigenvalue_filename, 'w') as eigenvalue_file:
-        eigenvalue_file.write('# log(Eigenvalue)\n')
-        for eig in eigenvalues:
-            eigenvalue_file.write('%f\n' % eig)
+        eigenvalue_file.write('# log(Eigenvalue), eigenvalue, is_buckled\n')
+        for log10_eig in eigenvalues:
+            if log10_eig < 0:
+                is_buckled = 1.
+            else:
+                is_buckled = 0
+            eig = 10 ** log10_eig
+            eig = min([eig, 1.1])
+            eigenvalue_file.write('%f, %f, %i\n' % (log10_eig, eig, is_buckled))
 
 
 def split_model_by_pid_panel(workpath='results'):
-    patch_filenames = glob.glob('%s/patch_*.bdf' % workpath)
+    patch_filenames = glob.glob('%s/patches/patch_*.bdf' % workpath)
 
     pid_panel = defaultdict(list)
     for patch_filename in patch_filenames:
@@ -147,6 +151,7 @@ def split_model_by_pid_panel(workpath='results'):
                     pid_file.write('%s\n' % out[1:-1])
 
     regions_filename = 'regions.txt'
+    nregions = 0
     with open(regions_filename, 'w') as regions_file:
         regions_file.write('# pid, ipanel, eids\n')
         for key, eidsi in iteritems(pid_panel):
@@ -155,6 +160,8 @@ def split_model_by_pid_panel(workpath='results'):
 
             regions_file.write('%s, %s, ' % (pid, ipanel))
             regions_file.write('%s\n' % out[1:-1])
+            nregions += 1
+    assert nregions > 0, nregions
     # done
 
 
@@ -191,7 +198,7 @@ def main():
     #split_model_by_pid_panel(workpath)
 
     sym_regions_filename = 'sym_regions_map.csv'
-    load_regions_and_create_eigenvalue_csv('regions.txt', sym_regions_filename=sym_regions_filename)
+    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, 'regions.txt', sym_regions_filename=sym_regions_filename)
 
 if __name__ == '__main__':
     main()

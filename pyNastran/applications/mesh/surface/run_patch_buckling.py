@@ -28,6 +28,7 @@ def run_nastran(fname, keywords=None):
     return subprocess.call(['nastran', fname] + keywords)
 
 def run_bdfs(bdf_filenames, workpath='results'):
+    #print(bdf_filenames)
     print('Start running patch jobs.')
 
     run_filename = os.path.join(workpath, 'run_jobs.sh')
@@ -46,7 +47,8 @@ def run_bdfs(bdf_filenames, workpath='results'):
         patch_id = int(patch_id_str)
         op2_filename = 'patch_%s.op2' % patch_id
         if not os.path.exists(op2_filename):
-            shutil.copyfile(bdf_filename, os.path.join('linux', basename))
+            #print(bdf_filename)
+            #shutil.copyfile(bdf_filename, os.path.join('linux', basename))
             #print('working on %s' % bdf_filename)
             #cmd = 'nastran {} scr=yes bat=no mem=100MB old=no'.format(bdf_filename)  # subprocess/os.system version
             #cmd = 'nastran results/%s scr=yes' % (basename) # shell version
@@ -116,7 +118,7 @@ def get_eigs():
 
 def main():
     #if not os.path.exists('patch_0.op2'):
-    bdf_filenames = glob.glob('%s/patch_*.bdf' % workpath)
+    bdf_filenames = glob.glob('%s/patches/patch_*.bdf' % workpath)
     run_bdfs(bdf_filenames)
     #get_eigs()
 
