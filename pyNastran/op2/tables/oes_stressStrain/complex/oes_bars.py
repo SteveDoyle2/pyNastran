@@ -31,6 +31,12 @@ class ComplexBarArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
+
     #def get_nnodes(self):
         #if self.element_type == 39: # CTETRA
             #nnodes = 5

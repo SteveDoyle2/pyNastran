@@ -269,8 +269,8 @@ class OP2(OP2_Scalar):
             for key, value in iteritems(self.subcase_key):
                 subcase_key2[key] = value
             self.subcase_key = subcase_key2
-            print('self.subcase_key =', self.subcase_key)
-            print('skipping combine results')
+            #print('self.subcase_key =', self.subcase_key)
+            #print('skipping combine results')
             return
         del result, case_keys
         isubcases = unique(list(self.subcase_key.keys()))

@@ -2611,7 +2611,7 @@ class NastranIO(object):
 
         for key in keys:
 
-            header_dict[(key, 0)] = 'Static'
+            header_dict[(key, 0)] = '; Static'
 
             formi = []
             form_time = []
@@ -2648,9 +2648,11 @@ class NastranIO(object):
         form_resultsi_subcase = []
         basename = os.path.basename(op2_filename).rstrip()
         form_results = (basename + '-Results', None, form_resultsi)
-        print('header_dict =', header_dict)
-        print('key_itime =', key_itime)
 
+        if len(key_itime) == 0:
+            print('header_dict =', header_dict)
+            print('key_itime =', key_itime)
+            return form
         key_itime0 = key_itime[0]
         subcase_id_old = key_itime0[0][2]
         for key, itime in key_itime:
@@ -2693,10 +2695,6 @@ class NastranIO(object):
                 form_out[2].append(('Strain Energy', None, strain_energy_formi))
                 is_results = True
 
-            #if header is None:
-                #header = 'Static'
-                #is_results = True
-                #form_resultsi.append(form_out)
             if form_outi:
                 is_results = True
                 form_resultsi_subcase.append(form_out)
@@ -2792,37 +2790,37 @@ class NastranIO(object):
         # isubcase, analysis_code, sort_method, count, subtitle
         #(1, 2, 1, 0, 'SUPERELEMENT 0') : result1
 
-        subcase_ids = subcase_ids
-        if subcase_ids[0] == 0:
-            asdf
-        else:
-            print('subcase_idsB =' % subcase_ids)
-            for isubcase in sorted(subcase_ids):
+        #subcase_ids = subcase_ids
+        print('subcase_idsB =' % subcase_ids)
+        for isubcase in sorted(subcase_ids):
+            if isubcase == 0:
+                # beam_modes
+                print('*****isubcase=0')
+                continue
+            # value = (analysis_codei, sort_methodi, counti, isubtitle)
+            print('subcase_key =', model.subcase_key)
+            keys = model.subcase_key[isubcase]
+            #print('keys[%s] =%s' % (isubcase, keys))
+            key0 = keys[0]
 
-                # value = (analysis_codei, sort_methodi, counti, isubtitle)
-                print('subcase_key =', model.subcase_key)
-                keys = model.subcase_key[isubcase]
-                print('keys[%s] =%s' % (isubcase, keys))
-                key0 = keys[0]
-
-                # this while loop lets us make sure we pull the analysis codes in the expected order
-                # TODO: doesn't pull count in the right order
-                # TODO: doesn't pull subtitle in right order
-                keys2 = deepcopy(keys)
-                while keys2:
-                    key = keys2[-1]
-                    #print('while keys ->', key)
-                    (analysis_code, sort_method, count, subtitle) = key
-                    #assert isubcase == isubcasei, 'isubcase=%s isubcasei=%s' % (isubcase, isubcasei)
-                    assert analysis_code < 12, analysis_code
-                    for ianalysis_code in range(12):
-                        keyi = (ianalysis_code, sort_method, count, subtitle)
-                        if keyi in keys2:
-                            #print(keyi)
-                            keyi2 = (isubcase, ianalysis_code, sort_method, count, subtitle)
-                            print(keyi2)
-                            keys_order.append(keyi2)
-                            keys2.remove(keyi)
+            # this while loop lets us make sure we pull the analysis codes in the expected order
+            # TODO: doesn't pull count in the right order
+            # TODO: doesn't pull subtitle in right order
+            keys2 = deepcopy(keys)
+            while keys2:
+                key = keys2[-1]
+                #print('while keys ->', key)
+                (analysis_code, sort_method, count, subtitle) = key
+                #assert isubcase == isubcasei, 'isubcase=%s isubcasei=%s' % (isubcase, isubcasei)
+                assert analysis_code < 12, analysis_code
+                for ianalysis_code in range(12):
+                    keyi = (ianalysis_code, sort_method, count, subtitle)
+                    if keyi in keys2:
+                        #print(keyi)
+                        keyi2 = (isubcase, ianalysis_code, sort_method, count, subtitle)
+                        #print(keyi2)
+                        keys_order.append(keyi2)
+                        keys2.remove(keyi)
                 #keys_order += keys
         print('_get_nastran_key_order*')
         return keys_order
@@ -2929,7 +2927,7 @@ class NastranIO(object):
 
                 for itime in range(ntimes):
                     dt = case._times[itime]
-                    header =  self._get_nastran_header(case, dt, itime)
+                    header = self._get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
 
                     tnorm_abs_max = tnorm.max()
@@ -2949,7 +2947,7 @@ class NastranIO(object):
             else:
                 for itime in range(ntimes):
                     dt = case._times[itime]
-                    header =  self._get_nastran_header(case, dt, itime)
+                    header = self._get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
 
                     loads = case.data[itime, :, :]
@@ -2982,10 +2980,10 @@ class NastranIO(object):
             subcase_idi = case.isubcase
             if not hasattr(case, 'data'):
                 continue
-            #if case.nonlinear_factor is not None or 1:
+
             for itime in range(ntimes):
                 dt = case._times[itime]
-                header =  self._get_nastran_header(case, dt, itime)
+                header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
 
                 loads = case.data[itime, :, :]
@@ -2996,13 +2994,6 @@ class NastranIO(object):
                 cases[(subcase_idi, icase, name, 1, 'node', '%g', header)] = loads[:, 0]
                 form_dict[(key, itime)].append((name, icase, []))
                 icase += 1
-            #else:
-                ## transient
-                #temperatures = case.data[0, :, 0]
-                #cases[(subcase_idi, icase, name, 1, 'node', '%g', header)] = temperatures
-                #formii = (name, icase, [])
-                #form_dict[(key, 0)] = formii
-                #icase += 1
 
         return icase
 
@@ -3308,11 +3299,11 @@ class NastranIO(object):
             table = getattr(model, table_type)
             if len(table) == 0:
                 continue
-            print(table)
+            #print(table)
             if isubcase in table:
                 is_data = True
                 case = table[isubcase]
-                print(case)
+                #print(case)
                 is_real = case.is_real()
                 if case.nonlinear_factor is not None:
                     times = case._times
@@ -3477,7 +3468,7 @@ class NastranIO(object):
             #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
             cycle = sqrt(abs(freq)) / (2. * pi)
             header += '; freq=%g' % cycle
-        return header
+        return header.strip('; ')
 
     def _fill_op2_time_centroidal_strain_energy(self, cases, model,
                                                 key, icase, itime,
@@ -3499,9 +3490,9 @@ class NastranIO(object):
         case = None
         subcase_id = key[2]
         if key in model.strain_energy:
-            print('key =', key)
+            #print('key =', key)
             ese = model.strain_energy[key]
-            print(ese)
+            #print(ese)
             times = sorted(ese.energy.keys())  # TODO: not vectorized
             #assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
             dt = times[itime]
@@ -3577,6 +3568,8 @@ class NastranIO(object):
             if key in res_type:
                 found_force = True
                 case = res_type[key]
+                if case.is_complex():
+                    continue
                 data = case.data
                 if case.nonlinear_factor is None:
                     ntimes = data.shape[:1]
@@ -3600,41 +3593,42 @@ class NastranIO(object):
             found_force = True
             ## CBAR-34
             case = model.cbar_force[key]
-            eids = case.element
-            i = searchsorted(self.element_ids, eids)
-            is_element_on[i] = 1.
+            if case.is_real():
+                eids = case.element
+                i = searchsorted(self.element_ids, eids)
+                is_element_on[i] = 1.
 
-            dt = case._times[itime]
-            header = self._get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
+                dt = case._times[itime]
+                header = self._get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
 
-            #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-            #fx[i] = case.data[:, :, 6]
-            #fy[i] = case.data[:, :, 4]
-            #fz[i] = case.data[:, :, 5]
+                #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+                #fx[i] = case.data[:, :, 6]
+                #fy[i] = case.data[:, :, 4]
+                #fz[i] = case.data[:, :, 5]
 
 
-            if i.size == 1:
-                rxi = case.data[itime, :, 7].max()
-                ryi = vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max()
-                rzi = vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max()
-            else:
-                rxi = case.data[itime, :, 7]#.max(axis=0)
-                ryi = vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max(axis=0)
-                rzi = vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max(axis=0)
-                rzv = rzi
+                if i.size == 1:
+                    rxi = case.data[itime, :, 7].max()
+                    ryi = vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max()
+                    rzi = vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max()
+                else:
+                    rxi = case.data[itime, :, 7]#.max(axis=0)
+                    ryi = vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max(axis=0)
+                    rzi = vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max(axis=0)
+                    rzv = rzi
 
-                # rza = array([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
-                # rzh = hstack([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
+                    # rza = array([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
+                    # rzh = hstack([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
 
-                # print(rzv.shape, rzv.shape, rzv.shape)
-            assert rxi.size == i.size, 'rx.size=%s i.size=%s rx=%s' % (rxi.size, i.size, rxi)
-            assert ryi.size == i.size, 'ry.size=%s i.size=%s ry=%s' % (ryi.size, i.size, ryi)
-            assert rzi.size == i.size, 'rz.size=%s i.size=%s rz=%s' % (rzi.size, i.size, rzi)
+                    # print(rzv.shape, rzv.shape, rzv.shape)
+                assert rxi.size == i.size, 'rx.size=%s i.size=%s rx=%s' % (rxi.size, i.size, rxi)
+                assert ryi.size == i.size, 'ry.size=%s i.size=%s ry=%s' % (ryi.size, i.size, ryi)
+                assert rzi.size == i.size, 'rz.size=%s i.size=%s rz=%s' % (rzi.size, i.size, rzi)
 
-            rx[i] = rxi
-            ry[i] = ryi
-            rz[i] = rzi
+                rx[i] = rxi
+                ry[i] = ryi
+                rz[i] = rzi
 
         if key in model.cbar_force_10nodes:
             found_force = True
@@ -3790,6 +3784,7 @@ class NastranIO(object):
         eids = self.element_ids
         assert len(eids) > 0, eids
         nelements = self.nElements
+        dt = None
 
         is_element_on = zeros(nelements, dtype='int8')  # is the element supported
         oxx = zeros(nelements, dtype='float32')
@@ -3828,7 +3823,7 @@ class NastranIO(object):
 
             is_element_on[i] = 1
             dt = case._times[itime]
-            header =  self._get_nastran_header(case, dt, itime)
+            header = self._get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
 
             # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
@@ -4273,6 +4268,9 @@ class NastranIO(object):
         #            oxx    <--- formis - form_itime_stress
         #            oyy
         #            ozz
+
+        if dt is None:
+            return icase
 
         header = ''
         if not is_static:

@@ -1458,6 +1458,12 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         self.itotal = 0
         self.ielement = 0
 
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
     def get_headers(self):
         #self.bendingMomentA = {}
         #self.bendingMomentB = {}

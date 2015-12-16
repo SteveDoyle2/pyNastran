@@ -29,6 +29,12 @@ class ComplexRodForceArray(ScalarObject):
         headers = ['axial_force', 'torque']
         return headers
 
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
     #def get_headers(self):
         #headers = ['axial', 'torque']
         #return headers
@@ -1517,6 +1523,12 @@ class ComplexCBarForceArray(ScalarObject):
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
+
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
 
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))

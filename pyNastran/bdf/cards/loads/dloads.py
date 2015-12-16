@@ -333,6 +333,18 @@ class RLOAD2(TabularLoad):
             self.delay = model.DELAY(self.delay, msg=msg)
             self.delay_ref = self.delay
 
+    def safe_cross_reference(self, model):
+        msg = ' which is required by RLOAD2=%s' % (self.sid)
+        if self.tb:
+            self.tb = model.Table(self.tb, msg=msg)
+            self.tb_ref = self.tb
+        if self.tp:
+            self.tp = model.Table(self.tp, msg=msg)
+            self.tp_ref = self.tp
+        if self.delay > 0:
+            self.delay = model.DELAY(self.delay, msg=msg)
+            self.delay_ref = self.delay
+
     def uncross_reference(self):
         self.tb = self.Tb()
         self.tp = self.Tp()
