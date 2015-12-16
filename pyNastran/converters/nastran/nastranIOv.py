@@ -85,7 +85,7 @@ class NastranComplexDisplacementResults(object):
                         np.imag(eigvs[:, :3]) * np.sin(theta))
 
 class NastranDisplacementResults(object):
-    def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
+    def __init__(self, subcase_id, titles, headers, xyz, dxyz, scalar,
                  scales, deflects=True, uname='NastranGeometry'):
         self.subcase_id = subcase_id
         assert self.subcase_id > 0, self.subcase_id
@@ -96,6 +96,7 @@ class NastranDisplacementResults(object):
 
         self.deflects = deflects
         self.titles = titles
+        self.headers = headers
         self.scales = scales
         self.subcase_id = subcase_id
         self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
@@ -105,6 +106,7 @@ class NastranDisplacementResults(object):
     def save_defaults(self):
         self.data_formats = ['%g'] * len(self.titles)
         self.titles_default = deepcopy(self.titles)
+        self.headers_default = deepcopy(self.headers)
         self.data_formats_default = deepcopy(self.data_formats)
         self.scales_default = deepcopy(self.scales)
 
@@ -118,6 +120,11 @@ class NastranDisplacementResults(object):
         #j = self.titles_default.index(name)
         #return self.titles[j]
         return self.titles[i]
+
+    def get_header(self, i, name):
+        #j = self.titles_default.index(name)
+        #return self.titles[j]
+        return self.headers[i]
 
     def get_default_title(self, i, name):
         #j = self.titles_default.index(name)
@@ -2547,25 +2554,10 @@ class NastranIO(object):
         # self.iSubcaseNameMap = {subcase_id : label for
                                 # in iteritems(model.iSubcaseNameMap)}
 
-        form = self._fill_op2_output(cases, model, form, icase)
-
-        #for subcase_id in subcase_ids:
-            #if subcase_id == 0:
-                ## subcase id can be 0...what...see ISAT....
-                #continue
-            #subcase_name = 'Subcase %i' % subcase_id
-            #form0 = (subcase_name, None, [])
-            #formi = form0[2]
-            #icase = self.fill_stress(cases, model, subcase_id, formi, icase, itime)
-            #if len(formi):
-                #form.append(form0)
-
-        #if len(formi):
-            #form.append(form0)
-
+        form = self._fill_op2_output(op2_filename, cases, model, form, icase)
         self._finish_results_io2(form, cases)
 
-    def _fill_op2_output(self, cases, model, form, icase):
+    def _fill_op2_output(self, op2_filename, cases, model, form, icase):
         """
         SOL 101 (Static)
         ----------------
@@ -2649,14 +2641,13 @@ class NastranIO(object):
             #print('******', form_time)
             #print(header)
 
-
-
         form_out = []
         is_results = False
 
         form_resultsi = []
         form_resultsi_subcase = []
-        form_results = ('Results', None, form_resultsi)
+        basename = os.path.basename(op2_filename).rstrip()
+        form_results = (basename + '-Results', None, form_resultsi)
         print('header_dict =', header_dict)
         print('key_itime =', key_itime)
 
@@ -2665,7 +2656,7 @@ class NastranIO(object):
         for key, itime in key_itime:
             subcase_id = key[2]
             if subcase_id != subcase_id_old:
-                res = ('Subcase %s;' % subcase_id_old, None, form_resultsi_subcase)
+                res = ('Subcase %s' % subcase_id_old, None, form_resultsi_subcase)
                 form_resultsi.append(res)
                 form_resultsi_subcase = []
                 subcase_id_old = subcase_id
@@ -2712,7 +2703,7 @@ class NastranIO(object):
                 #break
 
         if subcase_id:
-            res = ('Subcase %s;' % subcase_id, None, form_resultsi_subcase)
+            res = ('Subcase %s' % subcase_id, None, form_resultsi_subcase)
             form_resultsi.append(res)
             assert len(form_out) > 0, form_out
             form_resultsi_subcase = []
@@ -2929,8 +2920,9 @@ class NastranIO(object):
             ntimes = case.ntimes
             titles = []
             scales = []
+            headers = []
             if deflects:
-                nastran_res = NastranDisplacementResults(subcase_idi, titles,
+                nastran_res = NastranDisplacementResults(subcase_idi, titles, headers,
                                                          self.xyz_cid0, t123, tnorm,
                                                          scales, deflects=deflects,
                                                          uname='NastranResult')
@@ -2948,6 +2940,7 @@ class NastranIO(object):
                     scale = self.dim_max / tnorm_abs_max * 0.25
                     scales.append(scale)
                     titles.append(title)
+                    headers.append(header)
                     cases[icase] = (nastran_res, (itime, title))
                     formii = (title, icase, [])
                     form_dict[(key, itime)].append(formii)
@@ -2965,13 +2958,13 @@ class NastranIO(object):
                         len(nxyz), nnodes)
 
                     #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
-                    cases[(subcase_idi, icase,     name + 'Tx', 1, 'node', '%g')] = loads[:, 0]
-                    cases[(subcase_idi, icase + 1, name + 'Ty', 1, 'node', '%g')] = loads[:, 1]
-                    cases[(subcase_idi, icase + 2, name + 'Tz', 1, 'node', '%g')] = loads[:, 2]
-                    cases[(subcase_idi, icase + 3, name + 'Rx', 1, 'node', '%g')] = loads[:, 3]
-                    cases[(subcase_idi, icase + 4, name + 'Ry', 1, 'node', '%g')] = loads[:, 4]
-                    cases[(subcase_idi, icase + 5, name + 'Rz', 1, 'node', '%g')] = loads[:, 5]
-                    cases[(subcase_idi, icase + 6, title, 1, 'node', '%g')] = nxyz
+                    cases[(subcase_idi, icase,     name + 'Tx', 1, 'node', '%g', header)] = loads[:, 0]
+                    cases[(subcase_idi, icase + 1, name + 'Ty', 1, 'node', '%g', header)] = loads[:, 1]
+                    cases[(subcase_idi, icase + 2, name + 'Tz', 1, 'node', '%g', header)] = loads[:, 2]
+                    cases[(subcase_idi, icase + 3, name + 'Rx', 1, 'node', '%g', header)] = loads[:, 3]
+                    cases[(subcase_idi, icase + 4, name + 'Ry', 1, 'node', '%g', header)] = loads[:, 4]
+                    cases[(subcase_idi, icase + 5, name + 'Rz', 1, 'node', '%g', header)] = loads[:, 5]
+                    cases[(subcase_idi, icase + 6, title, 1, 'node', '%g', header)] = nxyz
 
                     form_dict[(key, itime)].append((name + 'Tx', icase, []))
                     form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
@@ -2989,27 +2982,27 @@ class NastranIO(object):
             subcase_idi = case.isubcase
             if not hasattr(case, 'data'):
                 continue
-            if case.nonlinear_factor is not None or 1:
-                for itime in range(ntimes):
-                    dt = case._times[itime]
-                    header =  self._get_nastran_header(case, dt, itime)
-                    header_dict[(key, itime)] = header
+            #if case.nonlinear_factor is not None or 1:
+            for itime in range(ntimes):
+                dt = case._times[itime]
+                header =  self._get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
 
-                    loads = case.data[itime, :, :]
-                    nxyz = norm(loads[:, :3], axis=1)
-                    assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
-                        len(nxyz), nnodes)
+                loads = case.data[itime, :, :]
+                nxyz = norm(loads[:, :3], axis=1)
+                assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
+                    len(nxyz), nnodes)
 
-                    cases[(subcase_idi, icase, name, 1, 'node', '%g')] = loads[:, 0]
-                    form_dict[(key, itime)].append((name, icase, []))
-                    icase += 1
-            else:
-                # transient
-                temperatures = case.data[0, :, 0]
-                cases[(subcase_idi, icase, name, 1, 'node', '%g')] = temperatures
-                formii = (name, icase, [])
-                form_dict[(key, 0)] = formii
+                cases[(subcase_idi, icase, name, 1, 'node', '%g', header)] = loads[:, 0]
+                form_dict[(key, itime)].append((name, icase, []))
                 icase += 1
+            #else:
+                ## transient
+                #temperatures = case.data[0, :, 0]
+                #cases[(subcase_idi, icase, name, 1, 'node', '%g', header)] = temperatures
+                #formii = (name, icase, [])
+                #form_dict[(key, 0)] = formii
+                #icase += 1
 
         return icase
 

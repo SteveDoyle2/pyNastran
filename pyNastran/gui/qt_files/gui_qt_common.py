@@ -132,6 +132,7 @@ class GuiCommon(object):
             location = obj.get_location(i, name)
             data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
+            label2 = obj.get_header(i, name)
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
             scale = 0.0
