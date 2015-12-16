@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 from copy import deepcopy
 from PyQt4 import QtGui
@@ -231,24 +232,24 @@ class Sidebar(QtGui.QWidget):
 
     def on_apply(self, event):
         data = self.result_case_window.data
-        validA, keysA = self.result_case_window.treeView.get_row()
+        valid_a, keys_a = self.result_case_window.treeView.get_row()
 
         data = self.result_data_window.data
-        validB, keysB = self.result_data_window.treeView.get_row()
-        if validA and validB:
+        valid_b, keys_b = self.result_data_window.treeView.get_row()
+        if valid_a and valid_b:
             if self.debug:
                 print('  rows1 = %s' % self.result_case_window.treeView.old_rows)
-                print('        = %s' % str(keysA))
+                print('        = %s' % str(keys_a))
                 print('  rows2 = %s' % self.result_data_window.treeView.old_rows)
-                print('        = %s' % str(keysB))
+                print('        = %s' % str(keys_b))
             else:
-                self.update_vtk_window(keysA, keysB)
+                self.update_vtk_window(keys_a, keys_b)
 
-    def update_vtk_window(self, keysA, keysB):
+    def update_vtk_window(self, keys_a, keys_b):
         if 0:
-            #print('keysA = %s' % str(keysA))
+            #print('keys_a = %s' % str(keys_a))
             for i, key in enumerate(self.parent.caseKeys):
-                if key[1] == keysA[0]:
+                if key[1] == keys_a[0]:
                     break
             #print('*i=%s key=%s' % (i, str(key)))
             #self.parent.update_vtk_window_by_key(i)
@@ -256,7 +257,7 @@ class Sidebar(QtGui.QWidget):
             #self.parent.cycleResults_explicit(result_name=result_name, explicit=True)
             #j = self.parent._get_icase(result_name)
             #j = i
-        i = keysA
+        i = keys_a
         result_name = None
         self.parent._set_case(result_name, i, explicit=True)
 
@@ -300,13 +301,17 @@ class ResultsWindow(QtGui.QWidget):
         redo = False
         #print(elements[0])
         try:
-            for text, i, children in elements:
+            #if len(elements):
+                #assert len(elements[0]) == 3, 'len=%s elements[0]=%s\nelements=\n%s\n' % (
+                    #len(elements[0]), elements[0], elements)
+            for element in elements:
+                text, i, children = element
                 #print('text=%s' % text)
                 item = QtGui.QStandardItem(text)
                 parent.appendRow(item)
 
                 # TODO: count_check and ???
-                if nelements == 1 and len(children)==0 and level==0:
+                if nelements == 1 and len(children) == 0 and level == 0:
                     #self.result_data_window.setEnabled(False)
                     item.setEnabled(False)
                     #print(dir(self.treeView))
@@ -322,7 +327,9 @@ class ResultsWindow(QtGui.QWidget):
             is_single = redo
             return is_single
         except ValueError:
-            print(elements)
+            print()
+            print('elements =', elements)
+            print('element =', element)
             print('len(elements)=%s' % len(elements))
             for e in elements:
                 print('  e = %s' % str(e))

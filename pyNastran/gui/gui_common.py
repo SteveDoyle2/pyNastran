@@ -2706,10 +2706,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
             default_title = obj.get_default_title(i, res_name)
             default_scale = obj.get_default_scale(i, res_name)
-        elif len(key) == 5:
-            (subcase_id, result_type, vector_size, location, data_format) = key
-            default_title = result_type
-            scale = 0.0
+        #elif len(key) == 5:
+            #(subcase_id, result_type, vector_size, location, data_format) = key
+            #default_title = result_type
+            #scale = 0.0
         elif len(key) == 6:
             (subcase_id, i, result_type, vector_size, location, data_format) = key
             default_title = result_type

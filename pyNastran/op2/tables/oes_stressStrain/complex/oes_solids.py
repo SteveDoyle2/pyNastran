@@ -29,6 +29,12 @@ class ComplexSolidArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
+
     def combine(self, results):
         #print('ComplexSolid combine')
         #print('data.shape1 =', self.data.shape)

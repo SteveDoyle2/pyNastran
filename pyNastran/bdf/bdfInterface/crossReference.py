@@ -712,19 +712,19 @@ class XrefMesh(BDFAttributes):
         """
         for (lid, sid) in iteritems(self.loads):
             for load in sid:
-                load.safe_cross_reference(self, debug=debug)
+                load.safe_cross_reference(self)
 
         for (lid, sid) in iteritems(self.dloads):
             for load in sid:
-                load.safe_cross_reference(self, debug=debug)
+                load.safe_cross_reference(self)
         for (lid, sid) in iteritems(self.dload_entries):
             for load in sid:
-                load.safe_cross_reference(self, debug=debug)
+                load.safe_cross_reference(self)
 
         for key, darea in iteritems(self.dareas):
-            darea.safe_cross_reference(self, debug=debug)
+            darea.safe_cross_reference(self)
         for key, dphase in iteritems(self.dphases):
-            dphase.safe_cross_reference(self, debug=debug)
+            dphase.safe_cross_reference(self)
 
     def _cross_reference_sets(self):
         """cross references the SET objects"""

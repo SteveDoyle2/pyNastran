@@ -132,6 +132,7 @@ class GuiCommon(object):
             location = obj.get_location(i, name)
             data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
+            label2 = obj.get_header(i, name)
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
             scale = 0.0
@@ -143,7 +144,8 @@ class GuiCommon(object):
             scale = 0.0
 
         subtitle, label = self.get_subtitle_label(subcase_id)
-        label += label2
+        if label2:
+            label += '; ' + label2
         print("subcase_id=%s result_type=%r subtitle=%r label=%r"
               % (subcase_id, result_type, subtitle, label))
 
