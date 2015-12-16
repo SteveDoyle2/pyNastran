@@ -252,9 +252,9 @@ class OP2(OP2_Scalar):
         for result_type in result_types:
             result = getattr(self, result_type)
             case_keys = sorted(result.keys())
-
             unique_isubcases = []
             for case_key in case_keys:
+                #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
                     isubcasei, analysis_codei, sort_methodi, counti, isubtitle = case_key
                     value = (analysis_codei, sort_methodi, counti, isubtitle)
@@ -262,8 +262,15 @@ class OP2(OP2_Scalar):
                         #print('isubcase=%s value=%s' % (isubcasei, value))
                         self.subcase_key[isubcasei].append(value)
                 else:
+                    #print('combine - case_key =', case_keys)
                     break
         if not combine:
+            subcase_key2 = {}
+            for key, value in iteritems(self.subcase_key):
+                subcase_key2[key] = value
+            self.subcase_key = subcase_key2
+            print('self.subcase_key =', self.subcase_key)
+            print('skipping combine results')
             return
         del result, case_keys
         isubcases = unique(list(self.subcase_key.keys()))
@@ -361,6 +368,7 @@ class OP2(OP2_Scalar):
                         if case_key not in subcase_key2[subcasei]:
                             subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
+        print('subcase_key =', self.subcase_key)
 
     def print_subcase_key(self):
         self.log.info('---self.subcase_key---')

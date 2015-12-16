@@ -27,7 +27,7 @@ from collections import defaultdict, OrderedDict
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones, int32
-from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32, cross, angle, hstack, vstack, array_equal
+from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, cross, angle, array_equal
 from numpy.linalg import norm
 import numpy as np
 
@@ -52,7 +52,7 @@ from pyNastran.bdf.cards.elements.bars import LineElement
 from pyNastran.bdf.cards.elements.springs import SpringElement
 
 from pyNastran.op2.op2 import OP2
-from pyNastran.f06.f06_formatting import get_key0
+#from pyNastran.f06.f06_formatting import get_key0
 try:
     from pyNastran.op2.op2_geom import OP2Geom
     is_geom = True
@@ -86,12 +86,15 @@ class NastranComplexDisplacementResults(object):
 
 class NastranDisplacementResults(object):
     def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
-                 scales, uname='NastranGeometry'):
+                 scales, deflects=True, uname='NastranGeometry'):
         self.subcase_id = subcase_id
         assert self.subcase_id > 0, self.subcase_id
+
         self.xyz = xyz
         self.dxyz = dxyz
         self.dxyz_norm = norm(dxyz, axis=1)
+
+        self.deflects = deflects
         self.titles = titles
         self.scales = scales
         self.subcase_id = subcase_id
@@ -380,46 +383,6 @@ class NastranIO(object):
             self.TurnTextOff()
             self.grid.Reset()
             #self.grid2.Reset()
-
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
-            #self.eidMap = {}
-            #self.nidMap = {}
-
-            self.resultCases = {}
-            self.nCases = 0
-        for i in ('caseKeys', 'iCase', 'iSubcaseNameMap'):
-            if hasattr(self, i):  # TODO: is this correct???
-                del i
-        return skip_reading
-
-    def _remove_old_geometry_old(self, filename, alt_grids):
-        skip_reading = False
-        if filename is None or filename is '':
-            #self.grid = vtk.vtkUnstructuredGrid()
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
-            #self.grid2 = vtk.vtkUnstructuredGrid()
-            #self.scalarBar.VisibilityOff()
-            skip_reading = True
-            return skip_reading
-        else:
-            self.TurnTextOff()
-            self.grid.Reset()
-
-            # create alt grids
-            yellow = (1., 1., 0.)
-            pink = (0.98, 0.4, 0.93)
-            if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='surface')
-            if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='surface')
-            if 'conm' not in self.alt_grids:
-                self.create_alternate_vtk_grid('conm', color=orange, line_width=3, opacity=1.0, point_size=4, representation='point')
-
-            #print('alt_grids', self.alt_grids.keys())
 
             #self.gridResult = vtk.vtkFloatArray()
             #self.gridResult.Reset()
@@ -1067,7 +1030,7 @@ class NastranIO(object):
         }  # for GROUP="MSCBML0"
 
         found_bar_types = set([])
-        neids = len(self.element_ids)
+        #neids = len(self.element_ids)
         for Type, data in iteritems(bar_types):
             eids = []
             lines_bar_y = []
@@ -1120,7 +1083,7 @@ class NastranIO(object):
             elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
                 no_bending[ieid] = 1
                 no_0_56[ieid] = 1
-                print(elem)
+                #print(elem)
             elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
                 no_bending[ieid] = 1
                 no_torsion[ieid] = 1
@@ -1132,7 +1095,7 @@ class NastranIO(object):
             elif elem.pa == 6 and elem.pb == 0:
                 no_bending_bad[ieid] = 1
                 no_0_6[ieid] = 1
-                print(elem)
+                #print(elem)
             elif elem.pa == 0 and elem.pb == 16 or elem.pb == 0 and elem.pa == 16:
                 no_axial[ieid] = 1
                 no_bending_bad[ieid] = 1
@@ -1384,7 +1347,7 @@ class NastranIO(object):
                 # list_fields = ['RBE3', elem.eid, None, elem.ref_grid_id, elem.refc]
                 n1 = elem.ref_grid_id
                 assert isinstance(n1, int), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
-                for (wt, ci, Gij) in elem.WtCG_groups:
+                for (_weight, ci, Gij) in elem.WtCG_groups:
                     Giji = elem._nodeIDs(nodes=Gij, allow_empty_nodes=True)
                     # list_fields += [wt, ci] + Giji
                     for n2 in Giji:
@@ -1526,7 +1489,7 @@ class NastranIO(object):
         if nquads == 0:
             return
 
-        print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
+        #print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
         for nid, node in enumerate(nodes):
@@ -2017,8 +1980,8 @@ class NastranIO(object):
             eidsSet = True
 
         prop_types_with_mid = [
-            'PSOLID',
-            'PROD', 'CROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML'
+            'PSOLID', 'PSHEAR',
+            'PROD', 'CROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
         ]
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
@@ -2053,6 +2016,8 @@ class NastranIO(object):
                     t = prop.Thickness()
                     mids[i] = mid
                     thickness[i] = t
+                elif prop.type in ['PELAS', 'PBUSH']:
+                    pass
                 else:
                     print('material for pid=%s type=%s not considered' % (pid, prop.type))
 
@@ -2324,7 +2289,7 @@ class NastranIO(object):
         return loads2, scale_factors2
 
     def _get_temperatures_array(self, model, load_case_id):
-        print('  _get_forces_moments_array')
+        #print('  _get_forces_moments_array')
         nids = sorted(model.nodes.keys())
         nnodes = len(nids)
 
@@ -2344,7 +2309,7 @@ class NastranIO(object):
         return temperatures
 
     def _get_forces_moments_array(self, model, p0, load_case_id, include_grav=False):
-        print('  NastranIOv _get_forces_moments_array')
+        #print('  NastranIOv _get_forces_moments_array')
         nids = sorted(model.nodes.keys())
         nnodes = len(nids)
 
@@ -2517,7 +2482,7 @@ class NastranIO(object):
                 for result in desired_results:
                     if result in all_results:
                         model._results.saved.add(result)
-            model.read_op2(op2_filename, combine=True)
+            model.read_op2(op2_filename, combine=False)
 
             if not self.is_testing:
                 self.log.info(model.get_op2_stats())
@@ -2530,7 +2495,7 @@ class NastranIO(object):
             #model.set_vectorization(True)
             #model.read_f06(op2_filename)
         else:
-            print("error...")
+            #print("error...")
             msg = 'extension=%r is not supported; filename=%r' % (ext, op2_filename)
             raise NotImplementedError(msg)
 
@@ -2542,7 +2507,7 @@ class NastranIO(object):
             i_transform = self.i_transform
             transforms = self.transforms
         except AttributeError:
-            print('Skipping displacment transformation')
+            self.log.error('Skipping displacment transformation')
         else:
             model.transform_displacements_to_global(i_transform, transforms)
 
@@ -2582,23 +2547,25 @@ class NastranIO(object):
         # self.iSubcaseNameMap = {subcase_id : label for
                                 # in iteritems(model.iSubcaseNameMap)}
 
-        self._fill_nastran_output(cases, model, form, icase)
+        form = self._fill_op2_output(cases, model, form, icase)
 
-        for subcase_id in subcase_ids:
-            if subcase_id == 0:
-                # subcase id can be 0...what...see ISAT....
-                continue
-            subcase_name = 'Subcase %i' % subcase_id
-            form0 = (subcase_name, None, [])
-            formi = form0[2]
-            icase = self.fill_oug_oqg(cases, model, subcase_id, formi, icase)
-            icase = self.fill_stress(cases, model, subcase_id, formi, icase)
-            if len(formi):
-                form.append(form0)
+        #for subcase_id in subcase_ids:
+            #if subcase_id == 0:
+                ## subcase id can be 0...what...see ISAT....
+                #continue
+            #subcase_name = 'Subcase %i' % subcase_id
+            #form0 = (subcase_name, None, [])
+            #formi = form0[2]
+            #icase = self.fill_stress(cases, model, subcase_id, formi, icase, itime)
+            #if len(formi):
+                #form.append(form0)
+
+        #if len(formi):
+            #form.append(form0)
 
         self._finish_results_io2(form, cases)
 
-    def _fill_nastran_output(self, cases, model, form, icase):
+    def _fill_op2_output(self, cases, model, form, icase):
         """
         SOL 101 (Static)
         ----------------
@@ -2638,11 +2605,131 @@ class NastranIO(object):
         """
         keys = self._get_nastran_key_order(model)
         assert keys is not None, keys
-        print('keys_order =', keys)
-        return
-        # for key in keys:
-            # self.fill_oug_oqg(cases, model, subcase_id, formi, icase)
-            # self.fill_stress(cases, model, subcase_id, formi, icase)
+        #print('keys_order =', keys)
+
+        disp_dict = defaultdict(list)
+        stress_dict = defaultdict(list)
+        strain_dict = defaultdict(list)
+        force_dict = defaultdict(list)
+        strain_energy_dict = defaultdict(list)
+
+        header_dict = {}
+        key_itime = []
+
+
+        for key in keys:
+
+            header_dict[(key, 0)] = 'Static'
+
+            formi = []
+            form_time = []
+            is_data, is_static, is_real, times = self._get_times(model, key)
+
+            icase = self._fill_op2_oug_oqg(cases, model, key, icase,
+                                           disp_dict, header_dict)
+            for itime, dt in enumerate(times):
+                ncases_old = icase
+                icase = self._fill_op2_stress(
+                    cases, model, key, icase, itime,
+                    stress_dict, header_dict, is_static)
+                icase = self._fill_op2_strain(
+                    cases, model, key, icase, itime,
+                    strain_dict, header_dict, is_static)
+                icase = self._fill_op2_force(
+                    cases, model, key, icase, itime,
+                    force_dict, header_dict, is_static)
+                icase = self._fill_op2_time_centroidal_strain_energy(
+                    cases, model, key, icase, itime,
+                    strain_energy_dict, header_dict, is_static)
+                ncases = icase - ncases_old
+                if ncases:
+                    key_itime.append((key, itime))
+            #icase = self._fill_op2_oug_oqg(cases, model, key, icase,
+                                           #disp_dict, header_dict)
+            #print('******', form_time)
+            #print(header)
+
+
+
+        form_out = []
+        is_results = False
+
+        form_resultsi = []
+        form_resultsi_subcase = []
+        form_results = ('Results', None, form_resultsi)
+        print('header_dict =', header_dict)
+        print('key_itime =', key_itime)
+
+        key_itime0 = key_itime[0]
+        subcase_id_old = key_itime0[0][2]
+        for key, itime in key_itime:
+            subcase_id = key[2]
+            if subcase_id != subcase_id_old:
+                res = ('Subcase %s;' % subcase_id_old, None, form_resultsi_subcase)
+                form_resultsi.append(res)
+                form_resultsi_subcase = []
+                subcase_id_old = subcase_id
+
+
+            header = header_dict[(key, itime)]
+            try:
+                header = header.strip()
+            except:
+                print('header =', header)
+                raise
+
+
+            form_outi = []
+            form_out = (header, None, form_outi)
+            disp_formi = disp_dict[(key, itime)]
+            stress_formi = stress_dict[(key, itime)]
+            strain_formi = strain_dict[(key, itime)]
+            force_formi = force_dict[(key, itime)]
+            strain_energy_formi = strain_energy_dict[(key, itime)]
+            if disp_formi:
+                form_outi += disp_formi
+                #form_outi.append(('Disp', None, disp_formi))
+            if stress_formi:
+                form_outi.append(('Stress', None, stress_formi))
+                is_results = True
+            if strain_formi:
+                form_out[2].append(('Strain', None, strain_formi))
+                is_results = True
+            if force_formi:
+                form_out[2].append(('Force', None, force_formi))
+                is_results = True
+            if strain_energy_formi:
+                form_out[2].append(('Strain Energy', None, strain_energy_formi))
+                is_results = True
+
+            #if header is None:
+                #header = 'Static'
+                #is_results = True
+                #form_resultsi.append(form_out)
+            if form_outi:
+                is_results = True
+                form_resultsi_subcase.append(form_out)
+                #break
+
+        if subcase_id:
+            res = ('Subcase %s;' % subcase_id, None, form_resultsi_subcase)
+            form_resultsi.append(res)
+            assert len(form_out) > 0, form_out
+            form_resultsi_subcase = []
+
+        if is_results:
+            form.append(form_results)
+            assert len(form_out) > 0, form_out
+            #print('formi =', formi)
+            #print('form_out =', form_out)
+        #print('form_resultsi =', form_resultsi)
+        #print('form_results =', form_results)
+            #print(form)
+        #if len(formi):
+            #form.append(form0)
+        #print(form)
+        #aa
+        return form
 
 
     def _get_nastran_key_order(self, model):
@@ -2701,37 +2788,52 @@ class NastranIO(object):
         eids = self.element_ids
         keys_order = []
         # model = OP2()
-
+        print('_get_nastran_key_order')
 
         # subcase_ids = model.subcase_key.keys()
+
+        #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
         subcase_ids = model.iSubcaseNameMap.keys()
         subcase_ids.sort()
         #print('subcase_ids =', subcase_ids)
-        if subcase_ids[0] == 0:
-            subcase_ids = subcase_ids[1:]
 
-            for isubcase in subcase_ids:
+
+        # isubcase, analysis_code, sort_method, count, subtitle
+        #(1, 2, 1, 0, 'SUPERELEMENT 0') : result1
+
+        subcase_ids = subcase_ids
+        if subcase_ids[0] == 0:
+            asdf
+        else:
+            print('subcase_idsB =' % subcase_ids)
+            for isubcase in sorted(subcase_ids):
+
+                # value = (analysis_codei, sort_methodi, counti, isubtitle)
+                print('subcase_key =', model.subcase_key)
                 keys = model.subcase_key[isubcase]
+                print('keys[%s] =%s' % (isubcase, keys))
                 key0 = keys[0]
-                if isinstance(key0, (int, int32)):
-                    keys_order += keys
-                    continue
 
                 # this while loop lets us make sure we pull the analysis codes in the expected order
                 # TODO: doesn't pull count in the right order
                 # TODO: doesn't pull subtitle in right order
-                while keys:
-                    key = keys[-1]
+                keys2 = deepcopy(keys)
+                while keys2:
+                    key = keys2[-1]
                     #print('while keys ->', key)
-                    (isubcasei, analysis_code, sort_method, count, subtitle) = key
-                    assert isubcase == isubcasei, 'isubcase=%s isubcasei=%s' % (isubcase, isubcasei)
+                    (analysis_code, sort_method, count, subtitle) = key
+                    #assert isubcase == isubcasei, 'isubcase=%s isubcasei=%s' % (isubcase, isubcasei)
                     assert analysis_code < 12, analysis_code
                     for ianalysis_code in range(12):
-                        keyi = (isubcasei, ianalysis_code, sort_method, count, subtitle)
-                        if keyi in keys:
-                            keys_order.append(keyi)
-                            keys.remove(keyi)
-                keys_order += keys
+                        keyi = (ianalysis_code, sort_method, count, subtitle)
+                        if keyi in keys2:
+                            #print(keyi)
+                            keyi2 = (isubcase, ianalysis_code, sort_method, count, subtitle)
+                            print(keyi2)
+                            keys_order.append(keyi2)
+                            keys2.remove(keyi)
+                #keys_order += keys
+        print('_get_nastran_key_order*')
         return keys_order
 
         # for i, result_group in enumerate(result_groups): # result_group = displacement_like
@@ -2754,265 +2856,253 @@ class NastranIO(object):
 
 
 
-    def fill_oug_oqg(self, cases, model, subcase_id, formi, icase):
+    def _fill_op2_oug_oqg(self, cases, model, key, icase,
+                          form_dict, header_dict):
         """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
         nnodes = self.nNodes
         displacement_like = [
-            (model.displacements, 'Displacement'),
-            (model.velocities, 'Velocity'),
-            (model.accelerations, 'Acceleration'),
-            (model.eigenvectors, 'Eigenvectors'),
-            (model.spc_forces, 'SPC Forces'),
-            (model.mpc_forces, 'MPC Forces'),
+            # slot, name, deflects
+            (model.displacements, 'Displacement', True),
+            (model.velocities, 'Velocity', False),
+            (model.accelerations, 'Acceleration', False),
+            (model.eigenvectors, 'Eigenvectors', True),
+            (model.spc_forces, 'SPC Forces', False),
+            (model.mpc_forces, 'MPC Forces', False),
 
             # untested
-            (model.load_vectors, 'LoadVectors'),
-            (model.applied_loads, 'AppliedLoads'),
-            (model.force_vectors, 'ForceVectors'),
+            (model.load_vectors, 'LoadVectors', False),
+            (model.applied_loads, 'AppliedLoads', False),
+            (model.force_vectors, 'ForceVectors', False),
             #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
         ]
         temperature_like = [
             (model.temperatures, 'Temperature'),
         ]
         nids = self.node_ids
-
-        keys2 = []
-        for (result, name) in displacement_like:
-            keys = result.keys()
-            if len(keys) == 0:
+        for (result, name, deflects) in displacement_like:
+            if key not in result:
                 continue
 
-            for key in keys:
-                if isinstance(key, (int, int32)):
-                    if key != subcase_id:
-                        continue
-                else:
-                    subcase_idi = key[0]
-                    if subcase_id != subcase_idi:
-                        continue
-
-                if key not in result:
-                    continue
-                if key not in keys2:
-                    keys2.append(key)
-
-        for key in keys2:
-            for (result, name) in displacement_like:
-                if key not in result:
-                    continue
-                if isinstance(key, (int, int32)):
-                    if key != subcase_id:
-                        continue
-                else:
-                    subcase_idi = key[0]
-                    if subcase_id != subcase_idi:
-                        continue
-
-                #print('dkey =', key)
-                if key not in result:
-                    continue
-                case = result[key]
-                subcase_idi = case.isubcase
-                if not hasattr(case, 'data'):
-                    continue
-                if not case.is_real():
-                    continue
-                if case.nonlinear_factor is not None: # transient
+            title = name + 'XYZ'
+            case = result[key]
+            subcase_idi = case.isubcase
+            if not hasattr(case, 'data'):
+                print('str(%s) has no data...' % case.__class.__name__)
+                continue
+            if not case.is_real():
+                continue
+            if case.nonlinear_factor is not None or 1:
+                # transient
+                if case.nonlinear_factor is not None:
                     code_name = case.data_code['name']
                     has_cycle = hasattr(case, 'mode_cycle')
-                    assert case.is_sort1(), case.is_sort1()
-
-                    itime0 = 0
-                    t1 = case.data[itime0, :, 0]
-                    ndata = t1.shape[0]
-                    if nnodes != ndata:
-                        nidsi = case.node_gridtype[:, 0]
-                        assert len(nidsi) == nnodes
-                        j = searchsorted(nids, nidsi)  # searching for nidsi
-
-                        try:
-                            if not allclose(nids[j], nidsi):
-                                msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
-                                raise RuntimeError(msg)
-                        except IndexError:
-                            msg = 'node_ids = %s\n' % list(nids)
-                            msg += 'nidsi in disp = %s\n' % list(nidsi)
-                            raise IndexError(msg)
-
-
-                    if name in ['Displacement', 'Eigenvectors']:
-                        assert case.is_sort1(), case.is_sort1()
-                        # we'll pass all the times in
-                        t123 = case.data[:, :, :3]
-                        if nnodes != ndata:
-                            t123i = zeros((nnodes, 3), dtype='float32')
-                            t123i[j, :] = t123
-                            t123 = t123i
-                        tnorm = norm(t123, axis=1)
-                        assert len(tnorm) == t123.shape[0]
-                        ntimes = case.ntimes
-                        titles = []
-                        scales = []
-                        nastran_res = NastranDisplacementResults(subcase_idi, titles,
-                                                                 self.xyz_cid0, t123, tnorm,
-                                                                 scales,
-                                                                 uname='NastranResult')
-
-                        for itime in range(ntimes):
-                            dt = case._times[itime]
-
-                            if isinstance(dt, float):
-                                header = ' %s = %.4E' % (code_name, dt)
-                            else:
-                                header = ' %s = %i' % (code_name, dt)
-
-                            if has_cycle:
-                                freq = case.eigrs[itime]
-                                #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-                                cycle = sqrt(abs(freq)) / (2. * pi)
-                                header += '; freq=%g' % cycle
-
-                            form0 = (header, None, [])
-                            formi2 = form0[2]
-
-                            #print('*name = %r' % name)
-                            tnorm_abs_max = tnorm.max()
-                            scale = self.displacement_scale_factor / tnorm_abs_max
-
-                            scale = self.dim_max / tnorm_abs_max * 0.25
-                            scales.append(scale)
-
-                            title = name + 'XYZ'
-                            titles.append(title)
-
-                            cases[icase] = (nastran_res, (itime, title))
-                            formi2.append((title, icase, []))
-                            icase += 1
-                            formi.append(form0)
-                        nastran_res.save_defaults()
-                    else:
-                        # print('name=%r' % name)
-                        assert case.is_sort1(), case.is_sort1()
-                        for itime in range(case.ntimes):
-                            dt = case._times[itime]
-                            t1 = case.data[itime, :, 0]
-                            t2 = case.data[itime, :, 1]
-                            t3 = case.data[itime, :, 2]
-
-                            t123 = case.data[itime, :, :3]
-                            #tnorm = norm(t123, axis=1)
-
-                            if(t1.min() == t1.max() and t2.min() == t2.max() and
-                               t3.min() == t3.max()):
-                                continue
-                            if nnodes != ndata:
-                                t1i = zeros(nnodes, dtype='float32')
-                                t2i = zeros(nnodes, dtype='float32')
-                                t3i = zeros(nnodes, dtype='float32')
-                                t1i[j] = t1
-                                t2i[j] = t2
-                                t3i[j] = t3
-                                t1 = t1i
-                                t2 = t2i
-                                t3 = t3i
-
-                            if isinstance(dt, float):
-                                header = ' %s = %.4E' % (code_name, dt)
-                            else:
-                                header = ' %s = %i' % (code_name, dt)
-
-                            if has_cycle:
-                                freq = case.eigrs[itime]
-                                #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-                                cycle = sqrt(abs(freq)) / (2. * pi)
-                                header += '; freq=%g' % cycle
-
-                            form0 = (header, None, [])
-                            formi2 = form0[2]
-
-                            if 1:
-                                cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g', header)] = t1
-                                formi2.append((name + 'X', icase, []))
-                                icase += 1
-
-                                cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g', header)] = t2
-                                formi2.append((name + 'Y', icase, []))
-                                icase += 1
-
-                                cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                                formi2.append((name + 'Z', icase, []))
-                                icase += 1
-
-                            cases[(subcase_idi, icase, name + 'XYZ', 3, 'node', '%g', header)] = t123
-                            formi2.append((name + 'XYZ', icase, []))
-                            icase += 1
-
-                            formi.append(form0)
                 else:
-                    assert case.is_sort1(), case.is_sort1()
+                    has_cycle = False
+                    code_name = None
+                assert case.is_sort1(), case.is_sort1()
 
-                    if name == 'Displacement' and 1:
-                        t123 = case.data[:, :, :3]
-                        tnorm = norm(t123, axis=1)
-                        #print('*name = %r' % name)
-                        titles = [name + 'XYZ']
+                itime0 = 0
+                t1 = case.data[itime0, :, 0]
+                ndata = t1.shape[0]
+                if nnodes != ndata:
+                    nidsi = case.node_gridtype[:, 0]
+                    assert len(nidsi) == nnodes
+                    j = searchsorted(nids, nidsi)  # searching for nidsi
+
+                    try:
+                        if not allclose(nids[j], nidsi):
+                            msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                            raise RuntimeError(msg)
+                    except IndexError:
+                        msg = 'node_ids = %s\n' % list(nids)
+                        msg += 'nidsi in disp = %s\n' % list(nidsi)
+                        raise IndexError(msg)
+
+                t123 = case.data[:, :, :3]
+                if nnodes != ndata:
+                    t123i = zeros((nnodes, 3), dtype='float32')
+                    t123i[j, :] = t123
+                    t123 = t123i
+                tnorm = norm(t123, axis=1)
+                assert len(tnorm) == t123.shape[0]
+                ntimes = case.ntimes
+                titles = []
+                scales = []
+                if deflects:
+                    nastran_res = NastranDisplacementResults(subcase_idi, titles,
+                                                             self.xyz_cid0, t123, tnorm,
+                                                             scales, deflects=deflects,
+                                                             uname='NastranResult')
+
+                    for itime in range(ntimes):
+                        dt = case._times[itime]
+                        header =  self._get_nastran_header(case, dt, itime)
+                        header_dict[(key, itime)] = header
 
                         tnorm_abs_max = tnorm.max()
-                        scale = self.displacement_scale_factor / tnorm_abs_max
-                        scales = [scale]
-                        nastran_res = NastranDisplacementResults(subcase_idi, titles,
-                                                                 self.xyz_cid0, t123, tnorm,
-                                                                 scales=scales,
-                                                                 uname='NastranResult')
-                        nastran_res.save_defaults()
-                        cases[icase] = (nastran_res, (0, name + 'XYZ'))
-                        formi.append((name + 'XYZ', icase, []))
+                        if tnorm_abs_max == 0.0:
+                            scale = self.displacement_scale_factor
+                        else:
+                            scale = self.displacement_scale_factor / tnorm_abs_max
+                        scale = self.dim_max / tnorm_abs_max * 0.25
+                        scales.append(scale)
+                        titles.append(title)
+                        cases[icase] = (nastran_res, (itime, title))
+                        formii = (title, icase, [])
+                        form_dict[(key, itime)].append(formii)
                         icase += 1
+                    nastran_res.save_defaults()
+                else:
+                    for itime in range(ntimes):
+                        dt = case._times[itime]
+                        header =  self._get_nastran_header(case, dt, itime)
+                        header_dict[(key, itime)] = header
+
+                        #tnorm_abs_max = tnorm.max()
+                        #scale = self.displacement_scale_factor / tnorm_abs_max
+                        #scale = self.dim_max / tnorm_abs_max * 0.25
+                        #scales.append(scale)
+                        #titles.append(title)
+                        #cases[icase] = (nastran_res, (itime, title))
+                        loads = case.data[itime, :, :]
+                        nxyz = norm(loads[:, :3], axis=1)
+                        assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
+                            len(nxyz), nnodes)
+
+                        #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
+                        cases[(subcase_idi, icase,     name + 'Tx', 1, 'node', '%g')] = loads[:, 0]
+                        cases[(subcase_idi, icase + 1, name + 'Ty', 1, 'node', '%g')] = loads[:, 1]
+                        cases[(subcase_idi, icase + 2, name + 'Tz', 1, 'node', '%g')] = loads[:, 2]
+                        cases[(subcase_idi, icase + 3, name + 'Rx', 1, 'node', '%g')] = loads[:, 3]
+                        cases[(subcase_idi, icase + 4, name + 'Ry', 1, 'node', '%g')] = loads[:, 4]
+                        cases[(subcase_idi, icase + 5, name + 'Rz', 1, 'node', '%g')] = loads[:, 5]
+                        cases[(subcase_idi, icase + 6, title, 1, 'node', '%g')] = nxyz
+
+                        form_dict[(key, itime)].append((name + 'Tx', icase, []))
+                        form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
+                        form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
+                        form_dict[(key, itime)].append((name + 'Rx', icase + 3, []))
+                        form_dict[(key, itime)].append((name + 'Ry', icase + 4, []))
+                        form_dict[(key, itime)].append((name + 'Rz', icase + 5, []))
+                        form_dict[(key, itime)].append((name + 'Txyz', icase + 6, []))
+                        icase += 7
+            else:
+                ntimes = case.ntimes
+                # static
+                header = 'Static'
+                header_dict[(key, 0)] = header
+                assert case.is_sort1(), case.is_sort1()
+
+                t123 = case.data[0, :, :3]
+                ndata = t1.shape[0]
+                if nnodes != ndata:
+                    nidsi = case.node_gridtype[:, 0]
+                    assert len(nidsi) == nnodes
+                    j = searchsorted(nids, nidsi)  # searching for nidsi
+
+                    try:
+                        if not allclose(nids[j], nidsi):
+                            msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                            raise RuntimeError(msg)
+                    except IndexError:
+                        msg = 'node_ids = %s\n' % list(nids)
+                        msg += 'nidsi in disp = %s\n' % list(nidsi)
+                        raise IndexError(msg)
+
+                tnorm = norm(t123, axis=1)
+                assert len(tnorm) == nnodes, 'len(tnorm)=%s nnodes=%s' % (
+                    len(tnorm), nnodes)
+                #titles = [name + 'XYZ']
+                asdf
+
+                if deflects:
+                    tnorm_abs_max = tnorm.max()
+                    if tnorm_abs_max == 0.0:
+                        scale = self.displacement_scale_factor
                     else:
-                        t123 = case.data[0, :, :3]
-                        tnorm = norm(t123, axis=1)
-                        #print('name = %r' % name)
-                        t1 = case.data[0, :, 0]
-                        t2 = case.data[0, :, 1]
-                        t3 = case.data[0, :, 2]
+                        scale = self.displacement_scale_factor / tnorm_abs_max
+                    #scales = [scale]
 
-                        if(t1.min() == t1.max() and t2.min() == t2.max() and
-                           t3.min() == t3.max() and t123.min() == t123.max()):
-                            continue
-                        #if t1.min() != t1.max():
-                        cases[(subcase_idi, icase, name + 'X', 1, 'node', '%g')] = t1
-                        formi.append((name + 'X', icase, []))
+                    titles = []
+                    scales = []
+                    nastran_res = NastranDisplacementResults(subcase_idi, titles,
+                                                             self.xyz_cid0, t123, tnorm,
+                                                             scales=scales,
+                                                             uname='NastranResult')
+                    for itime in range(ntimes):
+                        dt = case._times[itime]
+                        #header =  self._get_nastran_header(case, dt, itime)
+                        #header_dict[(key, itime)] = header
+
+                        tnorm_abs_max = tnorm.max()
+                        if tnorm_abs_max == 0.0:
+                            scale = self.displacement_scale_factor
+                        else:
+                            scale = self.displacement_scale_factor / tnorm_abs_max
+                        #scale = self.dim_max / tnorm_abs_max * 0.25
+                        print('scale =', scale)
+                        #asdf
+                        scales.append(scale)
+                        titles.append(title)
+                        cases[icase] = (nastran_res, (itime, title))
+                        formii = (title, icase, [])
+                        form_dict[(key, itime)].append(formii)
                         icase += 1
-
-                        #if t2.min() != t2.max():
-                        cases[(subcase_idi, icase, name + 'Y', 1, 'node', '%g')] = t2
-                        formi.append((name + 'Y', icase, []))
-                        icase += 1
-
-                        #if t3.min() != t3.max():
-                        cases[(subcase_idi, icase, name + 'Z', 1, 'node', '%g')] = t3
-                        formi.append((name + 'Z', icase, []))
-                        icase += 1
-
-                        #if t123.min() != t123.max():
-                        cases[(subcase_idi, icase, name + 'XYZ', 1, 'node', '%g')] = case.data[0, :, :3]
-                        #cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = tnorm
-                        formi.append((name + 'XYZ', icase, []))
-                        icase += 1
-
-        for (result, name) in temperature_like:
-            if subcase_id in result:
-                case = result[subcase_id]
-                subcase_idi = case.isubcase
-                if not hasattr(case, 'data'):
-                    continue
-                if case.nonlinear_factor is not None: # transient
-                    temperatures = case.data[0, :, 0]
-                    cases[(subcase_idi, name, 1, 'node', '%g')] = temperatures
-                    formi.append((name, icase, []))
+                    nastran_res.save_defaults()
+                    #cases[icase] = (nastran_res, (0, name + 'XYZ'))
+                    #formii = (name + 'XYZ', icase, [])
+                    #form_dict[(key, 0)].append(formii)
                     icase += 1
+                else:
+                    #ntimes = case.ntimes
+                    #print('ntimes =', ntimes)
+                    #for itime in range(ntimes):
+                    #dt = case._times[itime]
+                    #header =  self._get_nastran_header(case, dt, itime)
+                    #header_dict[(key, itime)] = header
+                    itime = 0
+
+                    loads = case.data[0, :, :]
+                    nxyz = norm(loads[:, :3], axis=1)
+                    assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
+                        len(nxyz), nnodes)
+
+                    #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
+                    cases[(subcase_idi, icase,     name + 'Tx', 1, 'node', '%g')] = loads[:, 0]
+                    cases[(subcase_idi, icase + 1, name + 'Ty', 1, 'node', '%g')] = loads[:, 1]
+                    cases[(subcase_idi, icase + 2, name + 'Tz', 1, 'node', '%g')] = loads[:, 2]
+                    cases[(subcase_idi, icase + 3, name + 'Rx', 1, 'node', '%g')] = loads[:, 3]
+                    cases[(subcase_idi, icase + 4, name + 'Ry', 1, 'node', '%g')] = loads[:, 4]
+                    cases[(subcase_idi, icase + 5, name + 'Rz', 1, 'node', '%g')] = loads[:, 5]
+                    cases[(subcase_idi, icase + 6, title, 1, 'node', '%g')] = nxyz
+
+                    form_dict[(key, itime)].append((name + 'Tx', icase, []))
+                    form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
+                    form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
+                    form_dict[(key, itime)].append((name + 'Rx', icase + 3, []))
+                    form_dict[(key, itime)].append((name + 'Ry', icase + 4, []))
+                    form_dict[(key, itime)].append((name + 'Rz', icase + 5, []))
+                    form_dict[(key, itime)].append((name + 'Txyz', icase + 6, []))
+                    icase += 7
+        for (result, name) in temperature_like:
+            if key not in result:
+                continue
+            case = result[key]
+            subcase_idi = case.isubcase
+            if not hasattr(case, 'data'):
+                continue
+            if case.nonlinear_factor is not None:
+                self.log.error('Transient temperatures are not supported.')
+            else:
+                # transient
+                temperatures = case.data[0, :, 0]
+                cases[(subcase_idi, icase, name, 1, 'node', '%g')] = temperatures
+                formii = (name, icase, [])
+                form_dict[(key, 0)] = formii
+                icase += 1
+
         return icase
 
     def clear_nastran(self):
@@ -3022,15 +3112,34 @@ class NastranIO(object):
         self.element_ids = None
         self.node_ids = None
 
-    def fill_stress(self, cases, model, subcase_id, formi, icase):
-        icase = self._fill_stress_centroidal(cases, model, subcase_id, formi, icase)
-        #elif self.is_nodal:
-            #icase = self._fill_stress_nodal(cases, model, subcase_id, formi, icase)
-        #else:
-            #raise RuntimeError('this shouldnt happen...')
+    def _fill_op2_force(self, cases, model, key, icase, itime,
+                         form_dict, header_dict, is_static):
+        #assert isinstance(key, int), key
+        assert isinstance(icase, int), icase
+        assert isinstance(form_dict, dict), form_dict
+        icase = self._fill_op2_time_centroidal_force(
+            cases, model, key, icase, itime,
+            form_dict, header_dict, is_static)
+        #icase = self._fill_stress_nodal(cases, model, key, formi, icase)
         return icase
 
-    def _fill_stress_nodal(self, cases, model, subcase_id, formi, icase):
+    def _fill_op2_stress(self, cases, model, key, icase, itime,
+                         form_dict, header_dict, is_static, is_stress=True):
+        assert isinstance(icase, int), icase
+        assert isinstance(form_dict, dict), form_dict
+        icase = self._fill_op2_time_centroidal_stress(
+            cases, model, key, icase, itime, form_dict, header_dict,
+            is_static, is_stress=is_stress)
+        #icase = self._fill_stress_nodal(cases, model, key, formi, icase)
+        return icase
+
+    def _fill_op2_strain(self, cases, model, key, icase, itime,
+                         form_dict, header_dict, is_static):
+        return self._fill_op2_stress(cases, model, key, icase, itime,
+                                     form_dict, header_dict,
+                                     is_static, is_stress=False)
+
+    def _fill_op2_stress_nodal(self, cases, model, subcase_id, formi, icase, itime):
         """
         disabled...
         """
@@ -3282,6 +3391,40 @@ class NastranIO(object):
                     return False
         raise RuntimeError('self._is_nonlinear(...) failed')
 
+    def _get_times(self, model, isubcase):
+        table_types = model.get_table_types()
+        is_real = True
+        is_data = False
+        is_static = False
+        times = None
+        #print('isubcase =', isubcase)
+        #print('table_types =', table_types)
+        #print('model.eigenvectors.keys() =', model.eigenvectors.keys())
+        for table_type in table_types:
+            if not hasattr(model, table_type):
+                print('no table_type=%s' % table_type)
+                continue
+            table = getattr(model, table_type)
+            if len(table) == 0:
+                continue
+            print(table)
+            if isubcase in table:
+                is_data = True
+                case = table[isubcase]
+                print(case)
+                is_real = case.is_real()
+                if case.nonlinear_factor is not None:
+                    times = case._times
+                    is_static = False
+                else:
+                    is_static = True
+                    times = zeros(1, dtype='int32')
+                #print('times = ', times)
+                break
+                #return is_data, is_static, is_real, times
+        #print('isubcase =', isubcase)
+        return is_data, is_static, is_real, times
+
     def _get_stress_times(self, model, isubcase):
         table_types = self._get_stress_table_types()
         is_real = True
@@ -3410,88 +3553,13 @@ class NastranIO(object):
         ]
         return table_types
 
-    def _fill_stress_centroidal(self, cases, model, subcase_id, form, icase):
-        assert isinstance(subcase_id, int), type(subcase_id)
-        assert isinstance(icase, int), type(icase)
-        is_data, is_static, is_real, times = self._get_stress_times(model, subcase_id)
-        print('subcase_id=%s - is_data=%s is_static=%s is_real=%s times=%s' % (
-            subcase_id, is_data, is_static, is_real, times))
-        if not is_data:
-            times = []
-
-        #print('times = %s' % times)
-        for itime, dt in enumerate(times):
-            if is_static:
-                formi = form
-            else:
-                header = 'dummy'
-                form_time = [header, None, []]
-                formi = form_time[2]
-            is_form_time = False
-
-            if 1:
-                # stress
-                icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
-                    cases, model, subcase_id, form, icase, itime, dt,
-                    is_stress=True, is_real=is_real, is_static=is_static)
-                if ncase:
-                    assert ncase > 0, ncase
-                    if is_static:
-                        formi.append(form0)
-                    else:
-                        form_time[0] = header
-                        form_time[2].append(form0)
-                        is_form_time = True
-
-                # strain
-                icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
-                    cases, model, subcase_id, form, icase, itime, dt,
-                    is_stress=False, is_real=is_real, is_static=is_static)
-                if ncase:
-                    assert ncase > 0, ncase
-                    if is_static:
-                        formi.append(form0)
-                    else:
-                        form_time[0] = header
-                        form_time[2].append(form0)
-                        is_form_time = True
-
-                # ese
-                icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_strain_energy(
-                    cases, model, subcase_id, form, icase, itime, dt,
-                    is_real=is_real, is_static=is_static)
-                if ncase:
-                    assert ncase > 0, ncase
-                    if is_static:
-                        formi.append(form0)
-                    else:
-                        #form_time[0] = header
-                        form_time[2].append(form0)
-                        is_form_time = True
-
-            # force
-            icase, ncase, header, form0 = self._get_nastran_time_centroidal_force(
-                cases, model, subcase_id, form, icase, itime, dt,
-                is_real=is_real, is_static=is_static)
-            if ncase:
-                assert ncase > 0, ncase
-                if is_static:
-                    formi.append(form0)
-                else:
-                    #form_time[0] = header
-                    form_time[2].append(form0)
-                    is_form_time = True
-
-            #--------------------------
-            if is_form_time:
-                form.append(form_time)
-
-        return icase
-
     def _get_nastran_header(self, case, dt, itime):
-        if case is None:
-            return None
-        code_name = case.data_code['name']
+        #if case is None:
+            #return None
+        try:
+            code_name = case.data_code['name']
+        except KeyError:
+            return 'Static'
 
         if isinstance(dt, float):
             header = ' %s = %.4E' % (code_name, dt)
@@ -3510,9 +3578,9 @@ class NastranIO(object):
             header += '; freq=%g' % cycle
         return header
 
-    def _get_nastran_time_centroidal_strain_energy(self, cases, model,
-                                                   subcase_id, form, icase, itime, dt,
-                                                   is_real=True, is_static=False):
+    def _fill_op2_time_centroidal_strain_energy(self, cases, model,
+                                                key, icase, itime,
+                                                form_dict, header_dict, is_static):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -3521,7 +3589,6 @@ class NastranIO(object):
         ozz = zeros(self.nElements, dtype='float32')
         fmt = '%g'
         header = ''
-        ncase = 0
         form0 = ('Element Strain Energy', None, [])
 
         #op2.strain_energy[1]
@@ -3529,10 +3596,20 @@ class NastranIO(object):
           #energy, percent, density
           #modes = [1, 2, 3]
         case = None
-        if subcase_id in model.strain_energy:
-            ese = model.strain_energy[subcase_id]
+        subcase_id = key[2]
+        if key in model.strain_energy:
+            print('key =', key)
+            ese = model.strain_energy[key]
+            print(ese)
             times = sorted(ese.energy.keys())  # TODO: not vectorized
-            assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
+            #assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
+            dt = times[itime]
+
+            try:
+                header = self._get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
+            except AttributeError:
+                pass
 
             if is_static:
                 percent = ese.percent
@@ -3552,41 +3629,41 @@ class NastranIO(object):
 
             case = ese
             fmt = '%.4f'
-            header = self._get_nastran_header(case, dt, itime)
             cases[(subcase_id, icase, 'StrainEnergy', 1, 'centroid', fmt, header)] = oxx
-            form0[2].append(('StrainEnergy', icase, []))
+            form_dict[(key, itime)].append(('StrainEnergy', icase, []))
             icase += 1
-            ncase += 1
 
             cases[(subcase_id, icase, 'PercentOfTotal', 1, 'centroid', fmt, header)] = oyy
-            form0[2].append(('PercentOfTotal', icase, []))
+            form_dict[(key, itime)].append(('PercentOfTotal', icase, []))
             icase += 1
-            ncase += 1
 
             cases[(subcase_id, icase, 'Density', 1, 'centroid', fmt, header)] = ozz
-            form0[2].append(('Density', icase, []))
+            form_dict[(key, itime)].append(('Density', icase, []))
             icase += 1
-            ncase += 1
-        return icase, ncase, case, header, form0
+        return icase
 
-    def _get_nastran_time_centroidal_force(self, cases, model,
-                                           subcase_id, form, icase, itime, dt,
-                                           is_real=True, is_static=False):
+    #icase = self._fill_op2_time_centroidal_force(
+        #cases, model, subcase_id, icase, itime, form_dict,
+        #is_static)
+
+    def _fill_op2_time_centroidal_force(self, cases, model,
+                                        key, icase, itime,
+                                        form_dict, header_dict, is_static):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
-        fx = zeros(self.nElements, dtype='float32') # axial
-        fy = zeros(self.nElements, dtype='float32') # shear_y
-        fz = zeros(self.nElements, dtype='float32') # shear_z
+        nelements = self.nElements
+        fx = zeros(nelements, dtype='float32') # axial
+        fy = zeros(nelements, dtype='float32') # shear_y
+        fz = zeros(nelements, dtype='float32') # shear_z
 
-        rx = zeros(self.nElements, dtype='float32') # torque
-        ry = zeros(self.nElements, dtype='float32') # bending_y
-        rz = zeros(self.nElements, dtype='float32') # bending_z
+        rx = zeros(nelements, dtype='float32') # torque
+        ry = zeros(nelements, dtype='float32') # bending_y
+        rz = zeros(nelements, dtype='float32') # bending_z
 
-        is_element_on = zeros(self.nElements, dtype='float32') # torque
+        is_element_on = zeros(nelements, dtype='float32') # torque
         fmt = '%g'
         header = ''
-        ncase = 0
         form0 = ('Force', None, [])
 
         #op2.strain_energy[1]
@@ -3596,23 +3673,21 @@ class NastranIO(object):
         case = None
         found_force = False
         for res_type in (model.conrod_force, model.crod_force, model.ctube_force):
-            if subcase_id in res_type:
+            if key in res_type:
                 found_force = True
-                force = res_type[subcase_id]
-                #print(dir(force))
-                data = force.data
-                if force.nonlinear_factor is None:
+                case = res_type[key]
+                data = case.data
+                if case.nonlinear_factor is None:
                     ntimes = data.shape[:1]
-                    eids = force.element
-                    from numpy import intersect1d
+                    eids = case.element
+                    dt = case._times[itime]
+                    header = self._get_nastran_header(case, dt, itime)
+                    header_dict[(key, itime)] = header
                     #eids_to_find = intersect1d(self.element_ids, eids)
                     i = searchsorted(self.element_ids, eids)
                     assert array_equal(self.element_ids[i], eids)
-                    #print(data[0, :, 0])
-                    print(data.shape)
-                    print(force)
-                    fxi = data[0, :, 0]
-                    rxi = data[0, :, 1]
+                    fxi = data[itime, :, 0]
+                    rxi = data[itime, :, 1]
                     assert fxi.size == i.size, 'fx.size=%s i.size=%s fx=%s eids_to_find=%s' % (fxi.size, i.size, fxi, eids)
                     fx[i] = fxi
                     rx[i] = rxi
@@ -3620,14 +3695,17 @@ class NastranIO(object):
                 else:
                     continue
 
-        if subcase_id in model.cbar_force:
+        if key in model.cbar_force:
             found_force = True
             ## CBAR-34
-            case = model.cbar_force[subcase_id]
+            case = model.cbar_force[key]
             eids = case.element
-            # print('eids =', eids)
             i = searchsorted(self.element_ids, eids)
             is_element_on[i] = 1.
+
+            dt = case._times[itime]
+            header = self._get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
 
             #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
             #fx[i] = case.data[:, :, 6]
@@ -3636,7 +3714,6 @@ class NastranIO(object):
 
 
             if i.size == 1:
-                print(case.element)
                 rxi = case.data[itime, :, 7].max()
                 ryi = vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max()
                 rzi = vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max()
@@ -3658,12 +3735,17 @@ class NastranIO(object):
             ry[i] = ryi
             rz[i] = rzi
 
-        if subcase_id in model.cbar_force_10nodes:
+        if key in model.cbar_force_10nodes:
             found_force = True
             ## CBAR-100
-            case = model.cbar_force_10nodes[subcase_id]
+            case = model.cbar_force_10nodes[key]
             eids = case.element
             ueids = unique(eids)
+
+            dt = case._times[itime]
+            header = self._get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
+
             #print('eids =', eids[:12])
             #i = searchsorted(self.element_ids, eids)
             j = searchsorted(self.element_ids, ueids)
@@ -3712,40 +3794,48 @@ class NastranIO(object):
                 ry[i] = array([case.data[itime, ::-1, 1], case.data[itime, 1::-1, 1]]).max(axis=0)
                 rz[i] = array([case.data[itime, ::-1, 2], case.data[itime, 1::-1, 2]]).max(axis=0)
 
+        subcase_id = key[2]
         if found_force:
             fmt = '%.4f'
             # header = self._get_nastran_header(case, dt, itime)
 
-            if fx.min() != fx.max() or rx.min() != rx.max() or 1:
-                cases[(subcase_id, icase, 'Axial', 1, 'centroid', fmt, header)] = fx
-                form0[2].append(('Axial', icase, []))
+            non = nelements
+            noff = 0
+            if itime == 0 and is_element_on.min() == 0.0:
+                ioff = where(is_element_on == 0)[0]
+                noff = len(ioff)
+                print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
+                self.log_error('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
+                cases[(subcase_id, icase, 'Force\nIsElementOn', 1, 'centroid', '%i', header)] = is_element_on
+                form_dict[(key, itime)].append(('Force - IsElementOn', icase, []))
+                non -= noff
                 icase += 1
-                ncase += 1
+
+
+            if fx.min() != fx.max() or rx.min() != rx.max() and not noff == nelements:
+                cases[(subcase_id, icase, 'Axial', 1, 'centroid', fmt, header)] = fx
+                form_dict[(key, itime)].append(('Axial', icase, []))
+                icase += 1
 
                 cases[(subcase_id, icase, 'ShearY', 1, 'centroid', fmt, header)] = fy
-                form0[2].append(('ShearY', icase, []))
+                form_dict[(key, itime)].append(('ShearY', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'ShearZ', 1, 'centroid', fmt, header)] = fz
-                form0[2].append(('ShearZ', icase, []))
+                form_dict[(key, itime)].append(('ShearZ', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'Torsion', 1, 'centroid', fmt, header)] = rx
-                form0[2].append(('Torque', icase, []))
+                form_dict[(key, itime)].append(('Torque', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'BendingY', 1, 'centroid', fmt, header)] = ry
-                form0[2].append(('BendingY', icase, []))
+                form_dict[(key, itime)].append(('BendingY', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'BendingZ', 1, 'centroid', fmt, header)] = rz
-                form0[2].append(('BendingZ', icase, []))
+                form_dict[(key, itime)].append(('BendingZ', icase, []))
                 icase += 1
-                ncase += 1
 
                 is_axial = zeros(self.nElements, dtype='int8')
                 is_shear_y = zeros(self.nElements, dtype='int8')
@@ -3762,65 +3852,45 @@ class NastranIO(object):
                 #is_bending[where(abs(rx) > 0.0)[0]] = 1
 
                 cases[(subcase_id, icase, 'IsAxial', 1, 'centroid', fmt, header)] = is_axial
-                form0[2].append(('IsAxial', icase, []))
+                form_dict[(key, itime)].append(('IsAxial', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'IsShearY', 1, 'centroid', fmt, header)] = is_shear_y
-                form0[2].append(('IsShearY', icase, []))
+                form_dict[(key, itime)].append(('IsShearY', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'IsShearZ', 1, 'centroid', fmt, header)] = is_shear_z
-                form0[2].append(('IsShearZ', icase, []))
+                form_dict[(key, itime)].append(('IsShearZ', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'IsTorsion', 1, 'centroid', fmt, header)] = is_torsion
-                form0[2].append(('IsTorsion', icase, []))
+                form_dict[(key, itime)].append(('IsTorsion', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'IsBendingY', 1, 'centroid', fmt, header)] = is_bending_y
-                form0[2].append(('IsBendingY', icase, []))
+                form_dict[(key, itime)].append(('IsBendingY', icase, []))
                 icase += 1
-                ncase += 1
 
                 cases[(subcase_id, icase, 'IsBendingZ', 1, 'centroid', fmt, header)] = is_bending_z
-                form0[2].append(('IsBendingZ', icase, []))
+                form_dict[(key, itime)].append(('IsBendingZ', icase, []))
                 icase += 1
-                ncase += 1
+        return icase
 
-                if is_element_on.min() == 0.0:
-                    ioff = where(is_element_on == 0)[0]
-                    noff = len(ioff)
-                    # print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
-                    self.log_error('force_eids_off = %s; n=%s' % (self.element_ids[ioff], noff))
-                    cases[(subcase_id, icase, 'IsElementOn', 1, 'centroid', fmt, header)] = is_element_on
-                    form0[2].append(('IsElementOn', icase, []))
-                    icase += 1
-                    ncase += 1
-
-        return icase, ncase, header, form0
-
-    def _get_nastran_time_centroidal_stress(self, cases, model, subcase_id, form, icase, itime, dt,
-                                            is_stress=True, is_real=True, is_static=False):
+    def _fill_op2_time_centroidal_stress(self, cases, model, key, icase, itime,
+                                         form_dict, header_dict, is_static, is_stress=True):
         """
         Creates the time accurate stress objects for the pyNastranGUI
         """
-        ncase = 0
         case = None
-        assert isinstance(subcase_id, int), type(subcase_id)
+        #assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), icase
-        assert isinstance(itime, int), type(itime)
-        assert is_real in [True, False], is_real
+        #assert isinstance(itime, int), type(itime)
         assert is_stress in [True, False], is_stress
-        assert is_static in [True, False], is_static
         eids = self.element_ids
         assert len(eids) > 0, eids
         nelements = self.nElements
 
-        isElementOn = zeros(nelements, dtype='int8')  # is the element supported
+        is_element_on = zeros(nelements, dtype='int8')  # is the element supported
         oxx = zeros(nelements, dtype='float32')
         oyy = zeros(nelements, dtype='float32')
         ozz = zeros(nelements, dtype='float32')
@@ -3841,10 +3911,10 @@ class NastranIO(object):
             rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
 
         for result in rods:
-            if subcase_id not in result:
+            if key not in result:
                 continue
 
-            case = result[subcase_id]
+            case = result[key]
             if case.is_complex():
                 continue
             eidsi = case.element
@@ -3855,7 +3925,10 @@ class NastranIO(object):
                 print('eidsi = %s\n' % str(list(eidsi)))
                 raise RuntimeError(msg)
 
-            isElementOn[i] = 1
+            is_element_on[i] = 1
+            dt = case._times[itime]
+            header =  self._get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
 
             # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
             oxx[i] = case.data[itime, :, 0]
@@ -3877,11 +3950,14 @@ class NastranIO(object):
         else:
             bars = model.cbar_strain
 
-        if subcase_id in bars:  # vectorized....
-            case = bars[subcase_id]
+        if key in bars:  # vectorized....
+            case = bars[key]
             if case.is_complex():
                 pass
             else:
+                dt = case._times[itime]
+                header = self._get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
                 #s1a = case.data[itime, :, 0]
                 #s2a = case.data[itime, :, 1]
                 #s3a = case.data[itime, :, 2]
@@ -3910,7 +3986,7 @@ class NastranIO(object):
                     msg = 'ibar=%s is not unique' % str(i)
                     raise RuntimeError(msg)
 
-                isElementOn[i] = 1.
+                is_element_on[i] = 1.
                 oxx[i] = axial
 
                 ## TODO :not sure if this block is general for multiple CBAR elements
@@ -3933,11 +4009,14 @@ class NastranIO(object):
         else:
             bars2 = model.cbar_strain_10nodes
 
-        if subcase_id in bars2 and 0:  # vectorized....
-            case = bars[subcase_id]
+        if key in bars2 and 0:  # vectorized....
+            case = bars[key]
             if case.is_complex():
                 pass
             else:
+                dt = case._times[itime]
+                header = self._get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
                 #s1a = case.data[itime, :, 0]
                 #s2a = case.data[itime, :, 1]
                 #s3a = case.data[itime, :, 2]
@@ -3966,7 +4045,7 @@ class NastranIO(object):
                     msg = 'ibar=%s is not unique' % str(i)
                     raise RuntimeError(msg)
 
-                isElementOn[i] = 1.
+                is_element_on[i] = 1.
                 oxx[i] = axial
 
                 ## TODO :not sure if this block is general for multiple CBAR elements
@@ -3989,8 +4068,8 @@ class NastranIO(object):
         else:
             beams = model.cbeam_strain
 
-        if subcase_id in beams:  # vectorized
-            case = beams[subcase_id]
+        if key in beams:  # vectorized
+            case = beams[key]
             if case.is_complex():
                 pass
             else:
@@ -4001,6 +4080,9 @@ class NastranIO(object):
                 j = 0
                 # sxc, sxd, sxe, sxf
                 # smax, smin, MSt, MSc
+                dt = case._times[itime]
+                header = self._get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
                 sxc = case.data[itime, :, 0]
                 sxd = case.data[itime, :, 1]
                 sxe = case.data[itime, :, 2]
@@ -4012,7 +4094,7 @@ class NastranIO(object):
                     smaxi = 0.
                     smini = 0.
                     eid2 = self.eidMap[eid]
-                    isElementOn[eid2] = 1.
+                    is_element_on[eid2] = 1.
                     for i in range(11):
                         oxxi = max(sxc[j], sxd[j], sxe[j], sxf[j], oxxi)
                         smaxi = max(smax[j], smaxi)
@@ -4042,9 +4124,9 @@ class NastranIO(object):
 
         for result in plates:
             ## TODO: is tria6, quad8, bilinear quad handled?
-            if subcase_id not in result:
+            if key not in result:
                 continue
-            case = result[subcase_id]
+            case = result[key]
             if case.is_complex():
                 continue
 
@@ -4068,7 +4150,7 @@ class NastranIO(object):
             #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
             #                                         txy, angle,
             #                                         majorP, minorP, ovm]
-            isElementOn[i] = 1.
+            is_element_on[i] = 1.
             ntotal = case.data.shape[1]  # (ndt, ntotal, nresults)
             if nlayers_per_element == 1:
                 j = None
@@ -4078,6 +4160,9 @@ class NastranIO(object):
             #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
             #                                         txy, angle,
             #                                         majorP, minorP, ovm]
+            dt = case._times[itime]
+            header = self._get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
             oxxi = case.data[itime, j, 1]
             oyyi = case.data[itime, j, 2]
             txyi = case.data[itime, j, 3]
@@ -4117,9 +4202,9 @@ class NastranIO(object):
             ]
 
         for cell_type, result in cplates:
-            if subcase_id not in result:
+            if key not in result:
                 continue
-            case = result[subcase_id]
+            case = result[key]
             if case.is_complex():
                 continue
 
@@ -4128,6 +4213,9 @@ class NastranIO(object):
             else:
                 vm_word = 'maxShear'
 
+            dt = case._times[itime]
+            header = self._get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
             eidsi = case.element_layer[:, 0]
             layers = case.element_layer[:, 1]
             ntotal = case.data.shape[1]
@@ -4149,7 +4237,7 @@ class NastranIO(object):
                 ieid.sort()
                 layersi = layers[ieid]
                 eid2 = self.eidMap[eid]
-                isElementOn[eid2] = 1.
+                is_element_on[eid2] = 1.
 
                 oxxi = 0.
                 oyyi = 0.
@@ -4194,9 +4282,9 @@ class NastranIO(object):
                       (model.chexa_strain),]
 
         for result in solids:
-            if subcase_id not in result:
+            if key not in result:
                 continue
-            case = result[subcase_id]
+            case = result[key]
             if case.is_complex():
                 continue
 
@@ -4216,7 +4304,7 @@ class NastranIO(object):
                 print('eidsi = %s' % eidsi)
                 assert len(i) == len(unique(i)), 'isolid=%s is not unique' % str(i)
 
-            isElementOn[i] = 1
+            is_element_on[i] = 1
             #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
             #                                         txy, tyz, txz,
             #                                         o1, o2, o3, ovm]
@@ -4228,6 +4316,9 @@ class NastranIO(object):
                 ueidsi = unique(eidsi)
                 assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
 
+            dt = case._times[itime]
+            header = self._get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
             oxxi = case.data[itime, j, 0]
             oyyi = case.data[itime, j, 1]
             ozzi = case.data[itime, j, 2]
@@ -4287,7 +4378,7 @@ class NastranIO(object):
             #print('is_static = %s' % is_static)
             if case is None:
                 formis = None
-                return icase, ncase, case, header, formis
+                return icase
             header = self._get_nastran_header(case, dt, itime)
             #form_time[0] = header
 
@@ -4295,70 +4386,60 @@ class NastranIO(object):
         formis = form0[2]
         # subcase_id, icase, resultType, vector_size, location, dataFormat
         if is_stress and itime == 0:
-            if isElementOn.min() == 0:  # if all elements aren't on
-                ioff = where(isElementOn == 0)[0]
-                print('eids_off = %s' % self.element_ids[ioff])
-                self.log_error('eids_off = %s' % self.element_ids[ioff])
-                cases[(1, icase, 'isElementOn', 1, 'centroid', '%i')] = isElementOn
-                form.append(('IsElementOn', icase, []))
+            if is_element_on.min() == 0:  # if all elements aren't on
+                ioff = where(is_element_on == 0)[0]
+                print('stress_eids_off = %s' % self.element_ids[ioff])
+                self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
+                cases[(1, icase, 'Stress\nisElementOn', 1, 'centroid', '%i')] = is_element_on
+                form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
-                ncase += 1
 
+        subcase_id = key[2]
         if oxx.min() != oxx.max():
             cases[(subcase_id, icase, word + 'XX', 1, 'centroid', fmt, header)] = oxx
-            formis.append((word + 'XX', icase, []))
+            form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
-            ncase += 1
         if oyy.min() != oyy.max():
             cases[(subcase_id, icase, word + 'YY', 1, 'centroid', fmt, header)] = oyy
-            formis.append((word + 'YY', icase, []))
+            form_dict[(key, itime)].append((word + 'YY', icase, []))
             icase += 1
-            ncase += 1
         if ozz.min() != ozz.max():
             cases[(subcase_id, icase, word + 'ZZ', 1, 'centroid', fmt, header)] = ozz
-            formis.append((word + 'ZZ', icase, []))
-            ncase += 1
+            form_dict[(key, itime)].append((word + 'ZZ', icase, []))
             icase += 1
-
         if txy.min() != txy.max():
             cases[(subcase_id, icase, word + 'XY', 1, 'centroid', fmt, header)] = txy
-            formis.append((word + 'XY', icase, []))
+            form_dict[(key, itime)].append((word + 'XY', icase, []))
             icase += 1
-            ncase += 1
         if tyz.min() != tyz.max():
             cases[(subcase_id, icase, word + 'YZ', 1, 'centroid', fmt, header)] = tyz
-            formis.append((word + 'YZ', icase, []))
+            form_dict[(key, itime)].append((word + 'YZ', icase, []))
             icase += 1
-            ncase += 1
         if txz.min() != txz.max():
             cases[(subcase_id, icase, word + 'XZ', 1, 'centroid', fmt, header)] = txz
-            formis.append((word + 'XZ', icase, []))
+            form_dict[(key, itime)].append((word + 'XZ', icase, []))
             icase += 1
-            ncase += 1
-
         if max_principal.min() != max_principal.max():
             cases[(subcase_id, icase, 'MaxPrincipal', 1, 'centroid', fmt, header)] = max_principal
-            formis.append(('Max Principal', icase, []))
+            form_dict[(key, itime)].append(('Max Principal', icase, []))
             icase += 1
-            ncase += 1
         if mid_principal.min() != mid_principal.max():
             cases[(subcase_id, icase, 'MidPrincipal', 1, 'centroid', fmt, header)] = mid_principal
-            formis.append(('Mid Principal', icase, []))
+            form_dict[(key, itime)].append(('Mid Principal', icase, []))
             icase += 1
-            ncase += 1
         if min_principal.min() != min_principal.max():
             cases[(subcase_id, icase, 'MinPrincipal', 1, 'centroid', fmt, header)] = min_principal
-            formis.append(('Min Principal', icase, []))
+            form_dict[(key, itime)].append(('Min Principal', icase, []))
             icase += 1
-            ncase += 1
         if vm_word is not None:
             if not is_stress:
                 max_min = max(ovm.max(), abs(ovm.min()))
                 if max_min > 100:
                     raise RuntimeError('vm strain = %s' % ovm)
             cases[(subcase_id, icase, vm_word, 1, 'centroid', fmt, header)] = ovm
-            formis.append((vm_word, icase, []))
+            form_dict[(key, itime)].append((vm_word, icase, []))
             icase += 1
-            ncase += 1
-        return icase, ncase, case, header, form0
+
+        #, case, header, form0
+        return icase
 
