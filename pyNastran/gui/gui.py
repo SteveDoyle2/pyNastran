@@ -141,6 +141,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.setup_post(inputs)
 
     def mousePressEvent(self, ev):
+        if not self.run_vtk:
+            return
         #print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
         if self.is_pick:
             #self.___saveX = ev.x()
