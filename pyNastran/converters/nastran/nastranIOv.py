@@ -2893,178 +2893,73 @@ class NastranIO(object):
                 continue
             if not case.is_real():
                 continue
-            if case.nonlinear_factor is not None or 1:
-                # transient
-                if case.nonlinear_factor is not None:
-                    code_name = case.data_code['name']
-                    has_cycle = hasattr(case, 'mode_cycle')
-                else:
-                    has_cycle = False
-                    code_name = None
-                assert case.is_sort1(), case.is_sort1()
-
-                itime0 = 0
-                t1 = case.data[itime0, :, 0]
-                ndata = t1.shape[0]
-                if nnodes != ndata:
-                    nidsi = case.node_gridtype[:, 0]
-                    assert len(nidsi) == nnodes
-                    j = searchsorted(nids, nidsi)  # searching for nidsi
-
-                    try:
-                        if not allclose(nids[j], nidsi):
-                            msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
-                            raise RuntimeError(msg)
-                    except IndexError:
-                        msg = 'node_ids = %s\n' % list(nids)
-                        msg += 'nidsi in disp = %s\n' % list(nidsi)
-                        raise IndexError(msg)
-
-                t123 = case.data[:, :, :3]
-                if nnodes != ndata:
-                    t123i = zeros((nnodes, 3), dtype='float32')
-                    t123i[j, :] = t123
-                    t123 = t123i
-                tnorm = norm(t123, axis=1)
-                assert len(tnorm) == t123.shape[0]
-                ntimes = case.ntimes
-                titles = []
-                scales = []
-                if deflects:
-                    nastran_res = NastranDisplacementResults(subcase_idi, titles,
-                                                             self.xyz_cid0, t123, tnorm,
-                                                             scales, deflects=deflects,
-                                                             uname='NastranResult')
-
-                    for itime in range(ntimes):
-                        dt = case._times[itime]
-                        header =  self._get_nastran_header(case, dt, itime)
-                        header_dict[(key, itime)] = header
-
-                        tnorm_abs_max = tnorm.max()
-                        if tnorm_abs_max == 0.0:
-                            scale = self.displacement_scale_factor
-                        else:
-                            scale = self.displacement_scale_factor / tnorm_abs_max
-                        scale = self.dim_max / tnorm_abs_max * 0.25
-                        scales.append(scale)
-                        titles.append(title)
-                        cases[icase] = (nastran_res, (itime, title))
-                        formii = (title, icase, [])
-                        form_dict[(key, itime)].append(formii)
-                        icase += 1
-                    nastran_res.save_defaults()
-                else:
-                    for itime in range(ntimes):
-                        dt = case._times[itime]
-                        header =  self._get_nastran_header(case, dt, itime)
-                        header_dict[(key, itime)] = header
-
-                        #tnorm_abs_max = tnorm.max()
-                        #scale = self.displacement_scale_factor / tnorm_abs_max
-                        #scale = self.dim_max / tnorm_abs_max * 0.25
-                        #scales.append(scale)
-                        #titles.append(title)
-                        #cases[icase] = (nastran_res, (itime, title))
-                        loads = case.data[itime, :, :]
-                        nxyz = norm(loads[:, :3], axis=1)
-                        assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
-                            len(nxyz), nnodes)
-
-                        #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
-                        cases[(subcase_idi, icase,     name + 'Tx', 1, 'node', '%g')] = loads[:, 0]
-                        cases[(subcase_idi, icase + 1, name + 'Ty', 1, 'node', '%g')] = loads[:, 1]
-                        cases[(subcase_idi, icase + 2, name + 'Tz', 1, 'node', '%g')] = loads[:, 2]
-                        cases[(subcase_idi, icase + 3, name + 'Rx', 1, 'node', '%g')] = loads[:, 3]
-                        cases[(subcase_idi, icase + 4, name + 'Ry', 1, 'node', '%g')] = loads[:, 4]
-                        cases[(subcase_idi, icase + 5, name + 'Rz', 1, 'node', '%g')] = loads[:, 5]
-                        cases[(subcase_idi, icase + 6, title, 1, 'node', '%g')] = nxyz
-
-                        form_dict[(key, itime)].append((name + 'Tx', icase, []))
-                        form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
-                        form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
-                        form_dict[(key, itime)].append((name + 'Rx', icase + 3, []))
-                        form_dict[(key, itime)].append((name + 'Ry', icase + 4, []))
-                        form_dict[(key, itime)].append((name + 'Rz', icase + 5, []))
-                        form_dict[(key, itime)].append((name + 'Txyz', icase + 6, []))
-                        icase += 7
+            # transient
+            if case.nonlinear_factor is not None:
+                code_name = case.data_code['name']
+                has_cycle = hasattr(case, 'mode_cycle')
             else:
-                ntimes = case.ntimes
-                # static
-                header = 'Static'
-                header_dict[(key, 0)] = header
-                assert case.is_sort1(), case.is_sort1()
+                has_cycle = False
+                code_name = None
+            assert case.is_sort1(), case.is_sort1()
 
-                t123 = case.data[0, :, :3]
-                ndata = t1.shape[0]
-                if nnodes != ndata:
-                    nidsi = case.node_gridtype[:, 0]
-                    assert len(nidsi) == nnodes
-                    j = searchsorted(nids, nidsi)  # searching for nidsi
+            itime0 = 0
+            t1 = case.data[itime0, :, 0]
+            ndata = t1.shape[0]
+            if nnodes != ndata:
+                nidsi = case.node_gridtype[:, 0]
+                assert len(nidsi) == nnodes
+                j = searchsorted(nids, nidsi)  # searching for nidsi
 
-                    try:
-                        if not allclose(nids[j], nidsi):
-                            msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
-                            raise RuntimeError(msg)
-                    except IndexError:
-                        msg = 'node_ids = %s\n' % list(nids)
-                        msg += 'nidsi in disp = %s\n' % list(nidsi)
-                        raise IndexError(msg)
+                try:
+                    if not allclose(nids[j], nidsi):
+                        msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                        raise RuntimeError(msg)
+                except IndexError:
+                    msg = 'node_ids = %s\n' % list(nids)
+                    msg += 'nidsi in disp = %s\n' % list(nidsi)
+                    raise IndexError(msg)
 
-                tnorm = norm(t123, axis=1)
-                assert len(tnorm) == nnodes, 'len(tnorm)=%s nnodes=%s' % (
-                    len(tnorm), nnodes)
-                #titles = [name + 'XYZ']
-                asdf
+            t123 = case.data[:, :, :3]
+            if nnodes != ndata:
+                t123i = zeros((nnodes, 3), dtype='float32')
+                t123i[j, :] = t123
+                t123 = t123i
+            tnorm = norm(t123, axis=1)
+            assert len(tnorm) == t123.shape[0]
+            ntimes = case.ntimes
+            titles = []
+            scales = []
+            if deflects:
+                nastran_res = NastranDisplacementResults(subcase_idi, titles,
+                                                         self.xyz_cid0, t123, tnorm,
+                                                         scales, deflects=deflects,
+                                                         uname='NastranResult')
 
-                if deflects:
+                for itime in range(ntimes):
+                    dt = case._times[itime]
+                    header =  self._get_nastran_header(case, dt, itime)
+                    header_dict[(key, itime)] = header
+
                     tnorm_abs_max = tnorm.max()
                     if tnorm_abs_max == 0.0:
                         scale = self.displacement_scale_factor
                     else:
                         scale = self.displacement_scale_factor / tnorm_abs_max
-                    #scales = [scale]
-
-                    titles = []
-                    scales = []
-                    nastran_res = NastranDisplacementResults(subcase_idi, titles,
-                                                             self.xyz_cid0, t123, tnorm,
-                                                             scales=scales,
-                                                             uname='NastranResult')
-                    for itime in range(ntimes):
-                        dt = case._times[itime]
-                        #header =  self._get_nastran_header(case, dt, itime)
-                        #header_dict[(key, itime)] = header
-
-                        tnorm_abs_max = tnorm.max()
-                        if tnorm_abs_max == 0.0:
-                            scale = self.displacement_scale_factor
-                        else:
-                            scale = self.displacement_scale_factor / tnorm_abs_max
-                        #scale = self.dim_max / tnorm_abs_max * 0.25
-                        print('scale =', scale)
-                        #asdf
-                        scales.append(scale)
-                        titles.append(title)
-                        cases[icase] = (nastran_res, (itime, title))
-                        formii = (title, icase, [])
-                        form_dict[(key, itime)].append(formii)
-                        icase += 1
-                    nastran_res.save_defaults()
-                    #cases[icase] = (nastran_res, (0, name + 'XYZ'))
-                    #formii = (name + 'XYZ', icase, [])
-                    #form_dict[(key, 0)].append(formii)
+                    scale = self.dim_max / tnorm_abs_max * 0.25
+                    scales.append(scale)
+                    titles.append(title)
+                    cases[icase] = (nastran_res, (itime, title))
+                    formii = (title, icase, [])
+                    form_dict[(key, itime)].append(formii)
                     icase += 1
-                else:
-                    #ntimes = case.ntimes
-                    #print('ntimes =', ntimes)
-                    #for itime in range(ntimes):
-                    #dt = case._times[itime]
-                    #header =  self._get_nastran_header(case, dt, itime)
-                    #header_dict[(key, itime)] = header
-                    itime = 0
+                nastran_res.save_defaults()
+            else:
+                for itime in range(ntimes):
+                    dt = case._times[itime]
+                    header =  self._get_nastran_header(case, dt, itime)
+                    header_dict[(key, itime)] = header
 
-                    loads = case.data[0, :, :]
+                    loads = case.data[itime, :, :]
                     nxyz = norm(loads[:, :3], axis=1)
                     assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
                         len(nxyz), nnodes)
@@ -3086,6 +2981,7 @@ class NastranIO(object):
                     form_dict[(key, itime)].append((name + 'Rz', icase + 5, []))
                     form_dict[(key, itime)].append((name + 'Txyz', icase + 6, []))
                     icase += 7
+
         for (result, name) in temperature_like:
             if key not in result:
                 continue
@@ -3093,8 +2989,20 @@ class NastranIO(object):
             subcase_idi = case.isubcase
             if not hasattr(case, 'data'):
                 continue
-            if case.nonlinear_factor is not None:
-                self.log.error('Transient temperatures are not supported.')
+            if case.nonlinear_factor is not None or 1:
+                for itime in range(ntimes):
+                    dt = case._times[itime]
+                    header =  self._get_nastran_header(case, dt, itime)
+                    header_dict[(key, itime)] = header
+
+                    loads = case.data[itime, :, :]
+                    nxyz = norm(loads[:, :3], axis=1)
+                    assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
+                        len(nxyz), nnodes)
+
+                    cases[(subcase_idi, icase, name, 1, 'node', '%g')] = loads[:, 0]
+                    form_dict[(key, itime)].append((name, icase, []))
+                    icase += 1
             else:
                 # transient
                 temperatures = case.data[0, :, 0]
