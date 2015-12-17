@@ -1378,6 +1378,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         out_filename : str / None
             the path to the results file
         """
+        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
+        # dtype=[('f0', '<f8'), ('f1', '<i4')])
+        # A['f0']
+        # A['f1']
         geometry_format = self.format
         if self.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
