@@ -133,13 +133,14 @@ class GuiCommon(object):
             data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
             label2 = obj.get_header(i, name)
-        elif len(key) == 5:
-            (subcase_id, result_type, vector_size, location, data_format) = key
-            scale = 0.0
+        #elif len(key) == 5:
+            #(subcase_id, result_type, vector_size, location, data_format) = key
+            #scale = 0.0
         #elif len(key) == 6:
             #(subcase_id, j, result_type, vector_size, location, data_format) = key
             #scale = 0.0
         else:
+            assert len(key) == 7, key
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
             scale = 0.0
 
@@ -277,11 +278,12 @@ class GuiCommon(object):
             #print('res_name=%s vector_size=%s' % (res_name, vector_size))
             location = obj.get_location(i, res_name)
             data_format = obj.get_data_format(i, res_name)
-        elif len(key) == 5:
-            (subcase_id, result_type, vector_size, location, data_format) = key
+        #elif len(key) == 5:
+            #(subcase_id, result_type, vector_size, location, data_format) = key
         #elif len(key) == 6:
             #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
+            assert len(key) == 7, key
             # j is icase? and is used to...
             # label2 defaults to ''
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
@@ -446,11 +448,12 @@ class GuiCommon(object):
         if isinstance(key, int):
             (obj, (i, name)) = self.resultCases[key]
             return name
-        elif len(key) == 5:
-            (subcase_id, result_type, vector_size, location, data_format) = key
+        #elif len(key) == 5:
+            #(subcase_id, result_type, vector_size, location, data_format) = key
         #elif len(key) == 6:
             #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
+            assert len(key) == 7, key
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
         return result_type
 
@@ -458,11 +461,12 @@ class GuiCommon(object):
         if isinstance(key, int):
             (obj, (i, name)) = self.resultCases[key]
             return obj.get_location(i, name)
-        elif len(key) == 5:
-            (subcase_id, result_type, vector_size, location, data_format) = key
+        #elif len(key) == 5:
+            #(subcase_id, result_type, vector_size, location, data_format) = key
         #elif len(key) == 6:
             #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
+            assert len(key) == 7, key
             try:
                 (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
             except:

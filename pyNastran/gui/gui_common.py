@@ -36,8 +36,9 @@ from pyNastran.gui.menus.clipping import ClippingPropertiesWindow
 from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import ApplicationLogDockWidget
 from pyNastran.gui.menus.manage_actors import EditGroupProperties
-from pyNastran.gui.menus.multidialog import MultiFileDialog
+#from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.testing_methods import TestGuiCommon
+from pyNastran.gui.utils import load_csv
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -283,7 +284,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         return self.log_dock.log_widget
 
     def _on_execute_python_button(self, clear=False):
-        txt = str(self.log_dock.enter_data.toPlainText())
+        txt = str(self.log_dock.enter_data.toPlainText()).rstrip()
+        if len(txt) == 0:
+            return
         self.log_command(txt)
         try:
             exec(txt)
@@ -1158,20 +1161,20 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self, title, self.last_dir, qt_wildcard)
         return str(wildcard_level), str(fname)
 
-    def _create_load_file_dialog2(self, qt_wildcard, title):
-        # getOpenFileName return QString and we want Python string
-        #title = 'Load a Tecplot Geometry/Results File'
-        last_dir = ''
-        #qt_wildcard = ['Tecplot Hex Binary (*.tec; *.dat)']
-        dialog = MultiFileDialog()
-        dialog.setWindowTitle(title)
-        dialog.setDirectory(self.last_dir)
-        dialog.setFilters(qt_wildcard.split(';;'))
-        if dialog.exec_() == QtGui.QDialog.Accepted:
-            outfiles = dialog.selectedFiles()
-            wildcard_level = dialog.selectedFilter()
-            return str(wildcard_level), str(fname)
-        return None, None
+    #def _create_load_file_dialog2(self, qt_wildcard, title):
+        ## getOpenFileName return QString and we want Python string
+        ##title = 'Load a Tecplot Geometry/Results File'
+        #last_dir = ''
+        ##qt_wildcard = ['Tecplot Hex Binary (*.tec; *.dat)']
+        #dialog = MultiFileDialog()
+        #dialog.setWindowTitle(title)
+        #dialog.setDirectory(self.last_dir)
+        #dialog.setFilters(qt_wildcard.split(';;'))
+        #if dialog.exec_() == QtGui.QDialog.Accepted:
+            #outfiles = dialog.selectedFiles()
+            #wildcard_level = dialog.selectedFilter()
+            #return str(wildcard_level), str(fname)
+        #return None, None
 
     def start_logging(self):
         if self.html_logging:
@@ -1323,15 +1326,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
 
             # inspect the load_geometry method to see what version it's using
-            args, varargs, keywords, defaults = inspect.getargspec(load_function)
+            #args, varargs, keywords, defaults = inspect.getargspec(load_function)
             try:
-                if args[-1] == 'plot':
-                    has_results = load_function(infile_name, self.last_dir, plot=plot)
-                else:
-                    name = load_function.__name__
-                    self.log_error(str(args))
-                    self.log_error("'plot' needs to be added to %r; args[-1]=%r" % (name, args[-1]))
-                    has_results = load_function(infile_name, self.last_dir)
+                #if args[-1] == 'plot':
+                has_results = load_function(infile_name, self.last_dir, plot=plot)
+                #else:
+                    #name = load_function.__name__
+                    #self.log_error(str(args))
+                    #self.log_error("'plot' needs to be added to %r; args[-1]=%r" % (name, args[-1]))
+                    #has_results = load_function(infile_name, self.last_dir)
                     #form, cases = load_function(infile_name, self.last_dir)
             except Exception as e:
                 msg = traceback.format_exc()
@@ -1450,87 +1453,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
     def _load_csv(self, Type, out_filename):
         out_filename_short = os.path.basename(out_filename)
-
-        ext = os.path.splitext(out_filename)[1].lower()
-        if ext not in ['.csv', '.dat', '.txt']:
-            raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
-
-        file_obj = open(out_filename, 'r')
-        header_line = file_obj.readline().strip()
-        if not header_line.startswith('#'):
-            msg = 'Expected file of the form:\n'
-            if ext in ['.dat', '.txt']:
-                msg += '# var1 var2\n'
-                msg += '1 2\n'
-                msg += '3 4\n'
-            elif ext == '.csv':
-                msg += '# var1, var2\n'
-                msg += '1, 2\n'
-                msg += '3, 4\n'
-            else:
-                raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
-            raise SyntaxError(msg)
-
-        header_line = header_line.lstrip('# \t').strip()
-        if ext in ['.dat', '.txt']:
-            headers = header_line.split(' ')
-        elif ext == '.csv':
-            headers = header_line.split(',')
-        else:
-            raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
-
-        headers2 = []
-        fmts = []
-        dtype_fmts = []
-        #ints = ('(int32)', '(int64)')
-        #floats = ('(float32)', '(float64)')
-        for header in headers:
-            header = header.strip()
-            header2 = header
-            dtype_fmt = 'float'
-            fmti = '%.3f'
-            if header.endswith(')') and '%' in header:
-                header2, fmt = header[:-1].rsplit('(', 1)
-                header2 = header2.strip()
-                is_float = True
-                if '%' in fmt:
-                    if 'i' in fmt:
-                        fmt % 5
-                        is_int = True
-                        dtype_fmt = 'int'
-                        #fmti = fmt
-                    elif 'g' in fmt or 'e' in fmt or 'f' in fmt or 's' in fmt:
-                        fmt % 1.1
-                        is_float = True
-                        dtype_fmt = 'float'
-                        #fmti = fmt
-
-            ##print('header2 = %r' % header)
-            dtype_fmts.append(dtype_fmt)
-            fmts.append(fmt)
-            headers2.append(header2)
-        headers = headers2
-        del headers2
-        print('fmts =', fmts)
-        print('headers2 =', headers)
-
-        formats = ','.join(dtype_fmts)
-        if ext in ['.dat', '.txt']:
-            A = loadtxt(file_obj, dtype=formats)
-        elif ext == '.csv':
-            A = loadtxt(file_obj, dtype=formats, delimiter=',')
-        else:
-            raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
-        file_obj.close()
-
-        if len(A.shape) == 1:
-            A = A.reshape(A.shape[0], 1)
-        nrows, ncols = A.shape
-        if ncols != len(headers):
-            msg = 'Error loading csv/txt file\n'
-            msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n' % (ncols, len(headers))
-            msg += 'headers = %s' % headers
-            raise SyntaxError(msg)
+        A, nrows, ncols, fmts, headers = load_csv(out_filename)
 
         if Type == 'Nodal':
             assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
@@ -1541,19 +1464,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         else:
             raise NotImplementedError('Type=%r' % Type)
 
-        print('A =', A)
+        #print('A =', A)
         formi = []
         form = self.get_form()
         icase = len(self.caseKeys)
         islot = self.caseKeys[0][0]
         for icol in range(ncols):
             datai = A[:, icol]
-            print('datai =', datai)
+            #print('datai =', datai)
             fmti = fmts[icol]
-            print('fmti = %r' % fmti)
+            #print('fmti = %r' % fmti)
             header = headers[icol].strip()
 
-            key = (islot, icase, header, 1, type2, fmti)
+            key = (islot, icase, header, 1, type2, fmti, '')
             self.caseKeys.append(key)
             self.resultCases[key] = datai
             formi.append((header, icase, []))
@@ -1561,7 +1484,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self.label_actors[header] = []
             self.label_ids[header] = set([])
             icase += 1
-        form.append((out_filename_short, None, formi, ''))
+        form.append((out_filename_short, None, formi))
 
         self.nCases += ncols
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
@@ -2415,8 +2338,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
         .. python ::
 
-          if len(key) == 5:
-              (subcase_id, result_type, vector_size, location, data_format) = key
+          #if len(key) == 5:
+              #(subcase_id, result_type, vector_size, location, data_format) = key
           #elif len(key) == 6:
               #(subcase_id, j, result_type, vector_size, location, data_format) = key
           else:
@@ -2428,10 +2351,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             obj, (i, name) = self.resultCases[case_key]
             value = name
         else:
-            if len(case_key) == 5:
-                value = case_key[1]
-            else:
-                value = case_key[2]
+            assert len(case_key) == 7, case_key
+            #if len(case_key) == 5:
+                #value = case_key[1]
+            #else:
+            value = case_key[2]
         return value
 
     def finish_io(self, cases):
@@ -2549,9 +2473,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.label_actors[result_name] = []
         self.label_ids[result_name] = set([])
 
-    def resize_labels(self):
+    def resize_labels(self, result_names=None, show_msg=True):
         """
         This resizes labels for all result cases.
+        TODO: not done...
         """
         if result_names is None:
             names = 'None)  # None -> all'
@@ -2640,9 +2565,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
     # CAMERA MENU
     def view_camera(self):
         camera = self.rend.GetActiveCamera()
-        position = camera.GetPosition()
-        clip_range = camera.GetClippingRange()
-        focal_point = camera.GetFocalPoint()
+        #position = camera.GetPosition()
+        #clip_range = camera.GetClippingRange()
+        #focal_point = camera.GetFocalPoint()
 
         data = {'cameras' : self.cameras}
         window = CameraWindow(data, win_parent=self)
@@ -2839,7 +2764,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
             'is_blue_to_red' : True,
             'is_discrete': True,
-            'is_horizontal': False,
+            'is_horizontal': self.scalar_bar.is_horizontal,
             'is_shown' : self.scalar_bar.is_shown,
             'clicked_ok' : False,
             'close' : False,
@@ -2919,8 +2844,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             subtitle, label = self.get_subtitle_label(subcase_id)
             name_vector = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale)
             update_3d = True
-        elif len(key) == 5:
-            (subcase_id, result_type, vector_size1, location, _data_format) = key
+        #elif len(key) == 5:
+            #(subcase_id, result_type, vector_size1, location, _data_format) = key
         #elif len(key) == 6:
             #(subcase_id, i, result_type, vector_size1, location, _data_format) = key
         else:
@@ -3150,7 +3075,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         Ly = norm(dy, axis=1)
         # v = dy / Ly *  bar_scale
         # n2 = n1 + v
-        print(Ly)
+        #print(Ly)
         nnodes = len(Ly)
         points = self.alt_grids[name].GetPoints()
         for i in range(nnodes):

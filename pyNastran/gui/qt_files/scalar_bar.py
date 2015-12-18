@@ -27,7 +27,7 @@ class ScalarBar(object):
         self.scalar_bar = vtk.vtkScalarBarActor()
         self.color_function = vtk.vtkColorTransferFunction()
         self.is_shown = True
-        #aaaa
+        self.is_horizontal = False
 
         self.color_function.SetColorSpaceToHSV()
         self.color_function.HSVWrapOff()
@@ -116,6 +116,7 @@ class ScalarBar(object):
 
         if is_horizontal:
             # put the scalar bar at the top
+            self.is_horizontal = True
             self.scalar_bar.SetOrientationToHorizontal()
             width = 0.95
             height = 0.15
@@ -123,6 +124,7 @@ class ScalarBar(object):
             y = 1 - 0.02 - height
         else:
             # put the scalar bar at the right side
+            self.is_horizontal = False
             self.scalar_bar.SetOrientationToVertical()
             width = 0.2
             height = 0.9
