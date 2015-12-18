@@ -984,7 +984,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #=================
         table_name = self.read_table_name(rewind=True, stop_on_failure=False)
         if table_name is None:
-            raise FatalError('no tables exists...')
+            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
 
         self._make_tables()
         table_names = self._read_tables(table_name)
@@ -1540,7 +1540,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self.read_markers([0], macro_rewind=rewind)
                 except:
                     # if we hit this block, we have a FATAL error
-                    raise FatalError('last table=%r' % self.table_name)
+                    raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nlast table=%r' % self.table_name)
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind
