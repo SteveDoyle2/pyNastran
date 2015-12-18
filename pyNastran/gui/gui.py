@@ -103,7 +103,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     http://vtk.1045678.n5.nabble.com/Speed-up-cell-allocation-td5733208.html#a5733214
     """
     def __init__(self, inputs):
-        html_logging = True
+        html_logging = inputs['console']
         fmt_order = [
             # results
             'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', 'tecplot',
@@ -141,6 +141,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.setup_post(inputs)
 
     def mousePressEvent(self, ev):
+        if not self.run_vtk:
+            return
         #print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
         if self.is_pick:
             #self.___saveX = ev.x()

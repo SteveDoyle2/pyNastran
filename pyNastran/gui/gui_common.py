@@ -253,12 +253,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
         #===============================================
 
-        self._create_vtk_objects()
+        self.run_vtk = True
+        if self.run_vtk:
+            self._create_vtk_objects()
         self._build_menubar()
 
         # right sidebar
         self.res_dock.hide()
-        self.build_vtk_frame()
+        if self.run_vtk:
+            self.build_vtk_frame()
 
         #compassRepresentation = vtk.vtkCompassRepresentation()
         #compassWidget = vtk.vtkCompassWidget()
@@ -818,6 +821,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def create_corner_axis(self):
+        if not self.run_vtk:
+            return
         axes = vtk.vtkAxesActor()
         self.corner_axis = vtk.vtkOrientationMarkerWidget()
         self.corner_axis.SetOrientationMarker(axes)
@@ -829,6 +834,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         """
         show/hide axes
         """
+        if not self.run_vtk:
+            return
         # this method should handle all the coords when
         # there are more then one
         if self._is_axes_shown:
@@ -1371,6 +1378,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         out_filename : str / None
             the path to the results file
         """
+        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
+        # dtype=[('f0', '<f8'), ('f1', '<i4')])
+        # A['f0']
+        # A['f1']
         geometry_format = self.format
         if self.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
@@ -1666,6 +1677,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
     def init_cell_picker(self):
         self.is_pick = False
+        if not self.run_vtk:
+            return
 
         self.vtk_interactor.SetPicker(self.cell_picker)
         def annotate_cell_picker(object, event):

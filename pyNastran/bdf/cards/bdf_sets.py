@@ -596,7 +596,7 @@ class SET1(Set):
 
     def write_card(self, size=8, is_double=False):
         skin = []
-        if self.isSkin:
+        if self.is_skin:
             skin = ['SKIN']
 
         # checked in NX 2014 / MSC 2005.1

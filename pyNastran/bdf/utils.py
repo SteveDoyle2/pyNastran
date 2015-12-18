@@ -19,6 +19,9 @@ from numpy import unique, cross, dot, array
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
 
+is_windows = 'nt' in os.name
+#is_linux = 'posix' in os.name
+#is_mac = 'darwin' in os.name
 
 _REMOVED_LINES = [
     '$EXECUTIVE CONTROL DECK',
@@ -316,7 +319,10 @@ def get_include_filename(card_lines, include_dir=''):
     if ':' in filename:
         ifilepaths = filename.split(':')
         filename = os.path.join(*ifilepaths)
-    filename = os.path.join(include_dir, filename).replace('/', '\\')
+    if is_windows:
+        filename = os.path.join(include_dir, filename).replace('/', '\\')
+    else:
+        filename = os.path.join(include_dir, filename).replace('\\', '/')
     return filename
 
 

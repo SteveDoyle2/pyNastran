@@ -42,7 +42,7 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, nastran='',
-                      size=None, is_double=None, post=None, sum_load=True):
+                      size=None, is_double=None, post=None, sum_load=True, dev=True):
     """
     Runs multiple BDFs
 
@@ -135,7 +135,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                                                   xref=xref, check=check, punch=punch,
                                                   cid=cid, isFolder=True, dynamic_vars={},
                                                   nastran=nastran, size=size, is_double=is_double,
-                                                  post=post, sum_load=sum_load)
+                                                  post=post, sum_load=sum_load, dev=dev)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -188,7 +188,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
             reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False):
+            quiet=False, dumplines=False, dictsort=False, dev=False):
     """
     Runs a single BDF
 
@@ -291,10 +291,15 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
     except IOError:  # only temporarily uncomment this when running lots of tests
-        pass
+        if not dev:
+            raise
     except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        if not dev:
+            raise
         print('failed test because CardParseSyntaxError...ignoring')
     except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
+        if not dev:
+            raise
         print('failed test because DuplicateIDsError...ignoring')
     #except RuntimeError:  # only temporarily uncomment this when running lots of tests
         #if 'GRIDG' in fem1.card_count:
@@ -517,6 +522,35 @@ def run_fem2(bdfModel, out_model, xref, punch,
                 sol = sol_200_map[analysis]
             else:
                 sol = sol_base
+
+            if sol == 101:
+                assert subcase.has_parameter('SPC'), subcase
+                assert subcase.has_parameter('LOAD'), subcase
+            elif sol == 103:
+                assert subcase.has_parameter('METHOD'), subcase
+            elif sol == 109: # freq?
+                assert subcase.has_parameter('FREQUENCY'), subcase
+            elif sol == 111:  # time?
+                assert subcase.has_parameter('TIME'), subcase
+
+            elif sol == 129:  # nonlinear transient
+                assert subcase.has_parameter('TIME'), subcase
+            elif sol == 159:  # thermal transient
+                assert subcase.has_parameter('TIME'), subcase
+
+            elif sol == 144:
+                assert subcase.has_parameter('SUPORT') or len(model.suports), subcase
+                assert subcase.has_parameter('TRIM'), subcase
+            elif sol == 145:
+                assert subcase.has_parameter('METHOD'), subcase
+                assert subcase.has_parameter('FMETHOD'), subcase  # FLUTTER
+            elif sol == 146:
+                assert subcase.has_parameter('METHOD'), subcase
+                assert subcase.has_parameter('FREQUENCY') or subcase.has_parameter('TIME'), subcase
+                assert subcase.has_parameter('GUST') or subcase.has_parameter('LOAD'), subcase
+            elif sol == 200:
+                assert subcase.has_parameter('DESOBJ'), subcase
+                assert subcase.has_parameter('ANALYSIS'), subcase
 
             if subcase.has_parameter('METHOD'):
                 method_id = subcase.get_parameter('METHOD')[0]

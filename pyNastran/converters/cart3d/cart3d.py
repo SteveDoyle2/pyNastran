@@ -589,21 +589,20 @@ class Cart3D(Cart3dIO):
 
         self.infilename = infilename
         if is_binary_file(infilename):
-            self.infile = open(infilename, 'rb')
-            npoints, nelements, nresults = self._read_header_binary()
-            self.points = self._read_points_binary(npoints)
-            self.elements = self._read_elements_binary(nelements)
-            self.regions = self._read_regions_binary(nelements)
-            # TODO: loads
+            with open(infilename, 'rb') as self.infile:
+                npoints, nelements, nresults = self._read_header_binary()
+                self.points = self._read_points_binary(npoints)
+                self.elements = self._read_elements_binary(nelements)
+                self.regions = self._read_regions_binary(nelements)
+                # TODO: loads
         else:
-            self.infile = open(infilename, 'r')
-            npoints, nelements, nresults = self._read_header_ascii()
-            self.points = self._read_points_ascii(npoints)
-            self.elements = self._read_elements_ascii(nelements)
-            self.regions = self._read_regions_ascii(nelements)
-            self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
+            with open(infilename, 'r') as self.infile:
+                npoints, nelements, nresults = self._read_header_ascii()
+                self.points = self._read_points_ascii(npoints)
+                self.elements = self._read_elements_ascii(nelements)
+                self.regions = self._read_regions_ascii(nelements)
+                self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
 
-        self.infile.close()
         self.log.debug("npoints=%s nelements=%s" % (self.npoints, self.nelements))
         self.log.info("---finished reading cart3d file...%r---" % self.infilename)
         assert self.npoints > 0, 'npoints=%s' % self.npoints

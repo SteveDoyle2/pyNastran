@@ -15,7 +15,7 @@ from pyNastran.op2.op2Codes import Op2Codes
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
-from pyNastran.op2.xlsx_writer import XlsxWriter
+from pyNastran.op2.dev.xlsx_writer import XlsxWriter
 
 class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     def __init__(self):

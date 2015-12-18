@@ -130,7 +130,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       is_vector=False, vector_stop=True,
                       debug=True, saveCases=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000, binary_debug=False,
-                      compare=True, quiet=False):
+                      compare=True, quiet=False, dev=True):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
         skip_files = []
@@ -169,7 +169,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                       isubcases=isubcases, debug=debug,
                                       stop_on_failure=stop_on_failure,
                                       binary_debug=binary_debug,
-                                      compare=True)[1]
+                                      compare=True, dev=dev)[1]
                 if not is_passed_i and vector_stopi:
                     is_passed = False
                 if not is_passed_i:
@@ -208,7 +208,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             is_mag_phase=False, is_sort2=False,
             delete_f06=False,
             isubcases=None, exclude=None, compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True):
+            quiet=False, check_memory=False, stop_on_failure=True, dev=False):
     """
     Runs an OP2
 
@@ -392,6 +392,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     except IOError: # missing file; this block should be commented
         #if stopOnFailure:
             #raise
+        if not dev:
+            raise
         is_passed = True
     #except UnicodeDecodeError:  # this block should be commented
         #is_passed = True
@@ -400,6 +402,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     except FatalError:  # this block should be commented
         #if stopOnFailure:
             #raise
+        if not dev:
+            raise
         is_passed = True
     #except KeyError:  # this block should be commented
         #is_passed = True
