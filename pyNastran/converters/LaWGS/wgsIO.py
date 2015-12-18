@@ -132,12 +132,12 @@ class LaWGS_IO(object):
         assert normals.shape[0] == neids, normals.shape
         assert normals.shape[1] == 3, normals.shape
 
-        cases[(ID, icase + 3, 'X', 1, 'node', '%.3f')] = nodes[:, 0]
-        cases[(ID, icase + 4, 'Y', 1, 'node', '%.3f')] = nodes[:, 1]
-        cases[(ID, icase + 5, 'Z', 1, 'node', '%.3f')] = nodes[:, 2]
+        cases[(ID, icase + 3, 'X', 1, 'node', '%.3f', '')] = nodes[:, 0]
+        cases[(ID, icase + 4, 'Y', 1, 'node', '%.3f', '')] = nodes[:, 1]
+        cases[(ID, icase + 5, 'Z', 1, 'node', '%.3f', '')] = nodes[:, 2]
 
-        cases[(ID, icase + 6, 'NormalX', 1, 'centroid', '%.3f')] = normals[:, 0]
-        cases[(ID, icase + 7, 'NormalY', 1, 'centroid', '%.3f')] = normals[:, 1]
-        cases[(ID, icase + 8, 'NormalZ', 1, 'centroid', '%.3f')] = normals[:, 2]
+        cases[(ID, icase + 6, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
+        cases[(ID, icase + 7, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
+        cases[(ID, icase + 8, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
         return geometry_form, cases
 

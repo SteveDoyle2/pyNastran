@@ -642,9 +642,9 @@ class Cart3dIO(object):
             if result_name in loads:
                 nodal_data = loads[result_name]
                 if new:
-                    cases_new[icase] = (nodal_data, result_name, 1, 'node', '%.3f')
+                    cases_new[icase] = (nodal_data, result_name, 1, 'node', '%.3f', '')
                 else:
-                    cases[(ID, icase, result_name, 1, 'node', '%.3f')] = nodal_data
+                    cases[(ID, icase, result_name, 1, 'node', '%.3f', '')] = nodal_data
                 results_form.append((result_name, icase, []))
                 icase += 1
 
