@@ -62,6 +62,7 @@ BDF:
    $ pyNastran: encoding=latin1
    $ pyNastran: punch=True
    $ pyNastran: version=nx
+   $ pyNastran: skip_cards=PBEAM,CBEAM
  - self.set_as_msc() / self.set_as_nx()
  - added bdf.get_cards_by_card_types to get list of cards by card type easily
   - self._type_to_id_map
@@ -120,9 +121,8 @@ BDF:
 
 OP2:
  - automatically identifying NX vs MSC Nastran if header table found
- - RealCRodForce, RealCTubeForce, RealConrodForce not identified separately
-   - RealRodForceArray headers bug
-   - added write_f06
+ - RealRodForceArray headers bug
+ - write_f06 for all classes
  - using _eigenvalue header across all transient results
  - CBushStrain/CBush1dStrain f06 writing
  - element_names removed from objects (element_name is used instead)
@@ -131,7 +131,7 @@ OP2:
  - improved catching of SORT1 vs. SORT2
  - improved catching of REAL vs. IMAG
  - better SOL200 support
- - read_op2 is ~5x faster
+ - read_op2 is ~500x faster
  - removed non-vectorized OP2
 
 OP2 Issues:

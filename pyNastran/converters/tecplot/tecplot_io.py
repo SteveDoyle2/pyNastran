@@ -260,12 +260,12 @@ class TecplotIO(object):
 
 
         if new:
-            cases_new[0] = (ID, nids, 'NodeID', 'node', '%i')
-            cases_new[1] = (ID, eids, element_id, 'centroid', '%i')
+            cases_new[0] = (ID, nids, 'NodeID', 'node', '%i', '')
+            cases_new[1] = (ID, eids, element_id, 'centroid', '%i', '')
             #cases_new[2] = (ID, regions, 'Region', 'centroid', '%i')
         else:
-            cases[(ID, 0, 'NodeID', 1, 'node', '%i')] = nids
-            cases[(ID, 1, element_id, 1, 'centroid', '%i')] = eids
+            cases[(ID, 0, 'NodeID', 1, 'node', '%i', '')] = nids
+            cases[(ID, 1, element_id, 1, 'centroid', '%i', '')] = eids
             #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
 
         results = model.results
@@ -279,9 +279,9 @@ class TecplotIO(object):
                     nodal_data = results[:, iresult]
 
                 if new:
-                    cases_new[i] = (result, i, result_name, 1, 'node', '%.3f')
+                    cases_new[i] = (result, i, result_name, 1, 'node', '%.3f', '')
                 else:
-                    cases[(ID, i, result_name, 1, 'node', '%.3f')] = nodal_data
+                    cases[(ID, i, result_name, 1, 'node', '%.3f', '')] = nodal_data
                 results_form.append((result_name, i, []))
                 i += 1
         form = [

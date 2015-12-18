@@ -368,7 +368,7 @@ class OP2(OP2_Scalar):
                         if case_key not in subcase_key2[subcasei]:
                             subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
-        print('subcase_key =', self.subcase_key)
+        #print('subcase_key =', self.subcase_key)
 
     def print_subcase_key(self):
         self.log.info('---self.subcase_key---')

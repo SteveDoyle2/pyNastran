@@ -53,8 +53,8 @@ class NastranIO(NastranIO_xref):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        #skipReading = self.removeOldGeometry(bdf_filename)
-        #if skipReading:
+        #skip_reading = self.removeOldGeometry(bdf_filename)
+        #if skip_reading:
             #return
         if bdf_filename is None or bdf_filename is '':
             #self.grid = vtk.vtkUnstructuredGrid()

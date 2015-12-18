@@ -135,10 +135,10 @@ class ShabpIO(object):
         form = [
             ('Geometry', None, geometry_form),
         ]
-        cases[(ID, icase, 'Component', 1, 'centroid', '%i')] = components
-        cases[(ID, icase + 1, 'PatchID', 1, 'centroid', '%i')] = patches
-        cases[(ID, icase + 2, 'Impact', 1, 'centroid', '%i')] = impact
-        cases[(ID, icase + 3, 'Shadow', 1, 'centroid', '%i')] = shadow
+        cases[(ID, icase, 'Component', 1, 'centroid', '%i', '')] = components
+        cases[(ID, icase + 1, 'PatchID', 1, 'centroid', '%i', '')] = patches
+        cases[(ID, icase + 2, 'Impact', 1, 'centroid', '%i', '')] = impact
+        cases[(ID, icase + 3, 'Shadow', 1, 'centroid', '%i', '')] = shadow
 
         XYZc = zeros((len(elements), 3), dtype='float32')
         #Normal = zeros((len(elements),3), dtype='float32')
@@ -161,9 +161,9 @@ class ShabpIO(object):
             #Normal[i, :] = normal
             area[i] = A
         cases[(ID, icase + 4, 'Area', 1, 'centroid', '%.2f')] = area
-        cases[(ID, icase + 5, 'centroidX', 1, 'centroid', '%.2f')] = XYZc[:, 0]
-        cases[(ID, icase + 6, 'centroidY', 1, 'centroid', '%.2f')] = XYZc[:, 1]
-        cases[(ID, icase + 7, 'centroidZ', 1, 'centroid', '%.2f')] = XYZc[:, 2]
+        cases[(ID, icase + 5, 'centroidX', 1, 'centroid', '%.2f', '')] = XYZc[:, 0]
+        cases[(ID, icase + 6, 'centroidY', 1, 'centroid', '%.2f', '')] = XYZc[:, 1]
+        cases[(ID, icase + 7, 'centroidZ', 1, 'centroid', '%.2f', '')] = XYZc[:, 2]
 
         #cases[(ID, 'normalX', 1, 'centroid', '%.2f')] = Normal[:,0]
         #cases[(ID, 'normalY', 1, 'centroid', '%.2f')] = Normal[:,1]
@@ -176,9 +176,9 @@ class ShabpIO(object):
             Xn[i] = node[0]
             Yn[i] = node[1]
             Zn[i] = node[2]
-        cases[(ID, icase + 8, 'nodeX', 1, 'node', '%.2f')] = Xn
-        cases[(ID, icase + 9, 'nodeY', 1, 'node', '%.2f')] = Yn
-        cases[(ID, icase + 10, 'nodeZ', 1, 'node', '%.2f')] = Zn
+        cases[(ID, icase + 8, 'nodeX', 1, 'node', '%.2f', '')] = Xn
+        cases[(ID, icase + 9, 'nodeY', 1, 'node', '%.2f', '')] = Yn
+        cases[(ID, icase + 10, 'nodeZ', 1, 'node', '%.2f', '')] = Zn
         return form, cases
 
     def load_shabp_results(self, shabp_filename, dirname):
@@ -198,7 +198,7 @@ class ShabpIO(object):
             mach, alpha, beta = self.model.shabp_cases[case_id]
             #name = 'Mach=%g Alpha=%g' % (mach, alpha)
             name = 'Mach=%g Alpha=%g' % (mach, alpha)
-            cases[(name, icase, 'Cp', 1, 'centroid', '%.3f')] = Cp
+            cases[(name, icase, 'Cp', 1, 'centroid', '%.3f', '')] = Cp
             cp_form = [
                 ('Cp', icase, [])
             ]

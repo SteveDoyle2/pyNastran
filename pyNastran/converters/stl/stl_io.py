@@ -26,7 +26,7 @@ class STL_IO(object):
         self.nidMap = {}
         if fileName is None:
             self.scalarBar.VisibilityOff()
-            skipReading = True
+            skip_reading = True
         else:
             self.TurnTextOff()
             self.grid.Reset()
@@ -42,15 +42,15 @@ class STL_IO(object):
                 pass
 
             #print(dir(self))
-            skipReading = False
+            skip_reading = False
         #self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
-        return skipReading
+        return skip_reading
 
     def load_stl_geometry(self, stl_filename, dirname, plot=True):
         print("load_stl_geometry...")
-        skipReading = self.removeOldGeometry(stl_filename)
-        if skipReading:
+        skip_reading = self.removeOldGeometry(stl_filename)
+        if skip_reading:
             return
 
         model = STL(log=self.log, debug=False)
@@ -141,12 +141,12 @@ class STL_IO(object):
         nnodes = nodes.shape[0]
         icase = 0
         #cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
-        cases[(ID, icase, 'ElementID', 1, 'centroid', '%i')] = arange(1, nelements + 1, dtype='int32')
-        cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i')] = arange(1, nnodes+1, dtype='int32')
-        cases[(ID, icase + 2, 'Area', 1, 'centroid', '%.4e')] = areas
-        cases[(ID, icase + 3, 'NormalX', 1, 'centroid', '%.3f')] = normals[:, 0]
-        cases[(ID, icase + 4, 'NormalY', 1, 'centroid', '%.3f')] = normals[:, 1]
-        cases[(ID, icase + 5, 'NormalZ', 1, 'centroid', '%.3f')] = normals[:, 2]
+        cases[(ID, icase, 'ElementID', 1, 'centroid', '%i', '')] = arange(1, nelements + 1, dtype='int32')
+        cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i', '')] = arange(1, nnodes+1, dtype='int32')
+        cases[(ID, icase + 2, 'Area', 1, 'centroid', '%.4e', '')] = areas
+        cases[(ID, icase + 3, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
+        cases[(ID, icase + 4, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
+        cases[(ID, icase + 5, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
 
         #cases[(ID, 'NormalX', 1, 'node', '%.3f')] = normals[:, 0]
         #cases[(ID, 'NormalY', 1, 'node', '%.3f')] = normals[:, 1]

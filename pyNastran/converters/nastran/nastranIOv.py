@@ -2812,14 +2812,14 @@ class NastranIO(object):
         #(1, 2, 1, 0, 'SUPERELEMENT 0') : result1
 
         #subcase_ids = subcase_ids
-        print('subcase_idsB =' % subcase_ids)
+        #print('subcase_idsB =' % subcase_ids)
         for isubcase in sorted(subcase_ids):
             if isubcase == 0:
                 # beam_modes
                 print('*****isubcase=0')
                 continue
             # value = (analysis_codei, sort_methodi, counti, isubtitle)
-            print('subcase_key =', model.subcase_key)
+            #print('subcase_key =', model.subcase_key)
             keys = model.subcase_key[isubcase]
             #print('keys[%s] =%s' % (isubcase, keys))
             key0 = keys[0]

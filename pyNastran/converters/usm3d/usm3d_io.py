@@ -84,8 +84,8 @@ class Usm3dIO(object):
 
     def load_usm3d_geometry(self, cogsg_filename, dirname, plot=True):
         #print("load_usm3d_geometry...")
-        skipReading = self.removeOldGeometry(cogsg_filename)
-        if skipReading:
+        skip_reading = self.removeOldGeometry(cogsg_filename)
+        if skip_reading:
             return
 
         model = Usm3dReader(log=self.log, debug=False)
@@ -248,6 +248,6 @@ class Usm3dIO(object):
         ID = 2
         if len(loads):
             for key, load in iteritems(loads):
-                cases[(ID, key, 1, 'node', '%.3f')] = load
+                cases[(ID, key, 1, 'node', '%.3f', '')] = load
             self.scalarBar.VisibilityOn()
         return cases

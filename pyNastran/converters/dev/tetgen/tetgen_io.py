@@ -21,8 +21,8 @@ class TetgenIO(object):
 
     def load_tetgen_geometry(self, smesh_filename, dirname, plot=True):
         print("load_tetgen_geometry...")
-        skipReading = self.removeOldGeometry(smesh_filename)
-        if skipReading:
+        skip_reading = self.removeOldGeometry(smesh_filename)
+        if skip_reading:
             return
 
         model = TetgenReader(log=self.log, debug=False)

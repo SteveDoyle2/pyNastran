@@ -6,6 +6,10 @@ import vtk
 from vtk import vtkQuad
 from pyNastran.converters.dev.plot3d.plot3d import Plot3d
 
+from numpy import zeros, array, cross, dot
+from numpy.linalg import det, norm
+
+
 class Plot3d_io(object):
     def __init__(self):
         pass
@@ -23,8 +27,8 @@ class Plot3d_io(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.removeOldGeometry(p3d_filename)
-        if skipReading:
+        skip_reading = self.removeOldGeometry(p3d_filename)
+        if skip_reading:
             return
 
         model = Plot3d(log=self.log, debug=self.debug)
@@ -143,10 +147,8 @@ class Plot3d_io(object):
                                       #'rhoU', 'rhoV', 'rhoW', 'rhoE']
         #nelements, three = elements.shape
         #print regions
-        cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
-
-        from numpy import zeros, array, cross, dot
-        from numpy.linalg import det, norm
+        cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = regions
+        icase += 1
 
         # centroidal
         Xc = zeros(len(elements), 'float64')
@@ -177,15 +179,16 @@ class Plot3d_io(object):
             Yn[i] = node[1]
             Zn[i] = node[2]
 
-        cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
-        cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
-        cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
+        cases[(ID, icase, 'node_x', 1, 'node', '%.2f', '')] = Xn
+        cases[(ID, icase + 1, 'node_y', 1, 'node', '%.2f', '')] = Yn
+        cases[(ID, icase + 2, 'node_z', 1, 'node', '%.2f', '')] = Zn
 
-        cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = Xc
-        cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = Yc
-        cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
+        cases[(ID, icase + 3, 'centroid_x', 1, 'centroid', '%.2f', '')] = Xc
+        cases[(ID, icase + 4, 'centroid_y', 1, 'centroid', '%.2f', '')] = Yc
+        cases[(ID, icase + 5, 'centroid_z', 1, 'centroid', '%.2f', '')] = Zc
 
-        cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
+        cases[(ID, icase + 6, 'Area', 1, 'centroid', '%.2f', '')] = area
+        icase += 7
 
         #print("load.keys() = ", loads.keys())
         #for key in result_names:

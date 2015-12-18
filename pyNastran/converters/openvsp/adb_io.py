@@ -28,7 +28,7 @@ class ADB_IO(object):
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
-            skipReading = True
+            skip_reading = True
         else:
             self.TurnTextOff()
             self.grid.Reset()
@@ -49,17 +49,17 @@ class ADB_IO(object):
                 pass
 
             #print(dir(self))
-            skipReading = False
+            skip_reading = False
         #self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
-        return skipReading
+        return skip_reading
 
     def load_vsp_aero_geometry(self, adb_filename, dirname, plot=True):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self._remove_old_adb_geometry(adb_filename)
-        if skipReading:
+        skip_reading = self._remove_old_adb_geometry(adb_filename)
+        if skip_reading:
             return
 
         if self.is_centroidal:
@@ -218,14 +218,14 @@ class ADB_IO(object):
             assert len(surf_id) == nelements, len(surf_id)
             assert len(area) == nelements, len(area)
             if new:
-                cases_new[0] = (ID, surf_id, 'Region', 'centroid', '%i')
-                cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i')
-                cases_new[2] = (ID, area, 'Area', 'centroid', '%.3f')
+                cases_new[0] = (ID, surf_id, 'Region', 'centroid', '%i', '')
+                cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i', '')
+                cases_new[2] = (ID, area, 'Area', 'centroid', '%.3f', '')
             else:
                 # this one...
-                cases[(ID, 0, 'Region', 1, 'centroid', '%i')] = surf_id
-                cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
-                cases[(ID, 2, 'Area', 1, 'centroid', '%.3f')] = area
+                cases[(ID, 0, 'Region', 1, 'centroid', '%i', '')] = surf_id
+                cases[(ID, 1, 'ElementID', 1, 'centroid', '%i', '')] = eids
+                cases[(ID, 2, 'Area', 1, 'centroid', '%.3f', '')] = area
 
             i = 3
             if is_normals:
@@ -238,19 +238,19 @@ class ADB_IO(object):
                 assert cnnodes == nelements, len(cnnodes)
 
                 if new:
-                    cases_new[i] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
-                    cases_new[i + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
-                    cases_new[i + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
+                    cases_new[i] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f', '')
+                    cases_new[i + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f', '')
+                    cases_new[i + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f', '')
                 else:
-                    cases[(ID, i, 'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
-                    cases[(ID, i + 1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
-                    cases[(ID, i + 2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
+                    cases[(ID, i, 'Normal X', 1, 'centroid', '%.3f', '')] = cnormals[:, 0]
+                    cases[(ID, i + 1, 'Normal Y', 1, 'centroid', '%.3f', '')] = cnormals[:, 1]
+                    cases[(ID, i + 2, 'Normal Z', 1, 'centroid', '%.3f', '')] = cnormals[:, 2]
                 i += 3
 
             if new:
-                cases_new[i] = (Cp, 'Cp', 1, 'centroid', '%.3f')
+                cases_new[i] = (Cp, 'Cp', 1, 'centroid', '%.3f', '')
             else:
-                cases[(ID, 3, 'Cp', 1, 'centroid', '%.3f')] = Cp
+                cases[(ID, 3, 'Cp', 1, 'centroid', '%.3f', '')] = Cp
             results_form.append(('Cp', i, []))
             i += 1
 
@@ -263,9 +263,9 @@ class ADB_IO(object):
             nids = arange(1, nnodes+1)
             if new:
                 #cases_new[0] = (regions, 'Region', 'centroid', '%i')
-                cases_new[0] = (ID, nids, 'NodeID', 'node', '%i')
+                cases_new[0] = (ID, nids, 'NodeID', 'node', '%i', '')
             else:
-                cases[(ID, 0, 'NodeID', 1, 'node', '%i')] = nids
+                cases[(ID, 0, 'NodeID', 1, 'node', '%i', '')] = nids
             i += 1
 
             if is_normals:
@@ -281,9 +281,9 @@ class ADB_IO(object):
                     cases_new[i + 1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')
                     cases_new[i + 2] = (ID, nnormals[:, 2], 'Normal Z', 'node', '%.3f')
                 else:
-                    cases[(ID, i, 'Normal X', 1, 'node', '%.3f')] = nnormals[:, 0]
-                    cases[(ID, i + 1, 'Normal Y', 1, 'node', '%.3f')] = nnormals[:, 1]
-                    cases[(ID, i + 2, 'Normal Z', 1, 'node', '%.3f')] = nnormals[:, 2]
+                    cases[(ID, i, 'Normal X', 1, 'node', '%.3f', '')] = nnormals[:, 0]
+                    cases[(ID, i + 1, 'Normal Y', 1, 'node', '%.3f', '')] = nnormals[:, 1]
+                    cases[(ID, i + 2, 'Normal Z', 1, 'node', '%.3f', '')] = nnormals[:, 2]
                 i += 3
 
             # convert element data to nodal data
@@ -327,13 +327,13 @@ class ADB_IO(object):
             assert len(area_nodes) == nnodes, 'len(area)=%s nnodes=%s' % (len(area_nodes), nnodes)
             assert len(region_nodes) == nnodes, 'len(surf_id)=%s nnodes=%s' % (len(region_nodes), nnodes)
             if new:
-                cases_new[i] = (Cp_nodes, 'Cp', 1, 'node', '%.3f')
-                cases_new[i + 1] = (area_nodes, 'Area', 1, 'node', '%.3f')
-                cases_new[i + 2] = (region_nodes, 'SurfaceID', 1, 'node', '%i')
+                cases_new[i] = (Cp_nodes, 'Cp', 1, 'node', '%.3f', '')
+                cases_new[i + 1] = (area_nodes, 'Area', 1, 'node', '%.3f', '')
+                cases_new[i + 2] = (region_nodes, 'SurfaceID', 1, 'node', '%i', '')
             else:
-                cases[(ID, i, 'Cp', 1, 'node', '%.3f')] = Cp_nodes
-                cases[(ID, i + 1, 'Area', 1, 'node', '%.3f')] = area_nodes
-                cases[(ID, i + 2, 'SurfaceID', 1, 'node', '%i')] = region_nodes
+                cases[(ID, i, 'Cp', 1, 'node', '%.3f', '')] = Cp_nodes
+                cases[(ID, i + 1, 'Area', 1, 'node', '%.3f', '')] = area_nodes
+                cases[(ID, i + 2, 'SurfaceID', 1, 'node', '%i', '')] = region_nodes
             results_form.append(('Cp', i, []))
             results_form.append(('Area', i  + 1, []))
             geometry_form.append(('SurfaceID', i + 2, []))

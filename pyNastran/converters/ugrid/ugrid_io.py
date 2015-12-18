@@ -29,8 +29,8 @@ class UGRID_IO(object):
         return data
 
     def load_ugrid_geometry(self, ugrid_filename, dirname, plot=True):
-        #skipReading = self.remove_old_openfoam_geometry(openfoam_filename)
-        #if skipReading:
+        #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
+        #if skip_reading:
         #    return
         if is_binary_file(ugrid_filename):
             model = UGRID(log=self.log, debug=True)
@@ -197,8 +197,8 @@ class UGRID_IO(object):
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
 
-        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i')] = eids
-        cases[(ID, 1, 'NodeID', 1, 'node', '%i')] = nids
+        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
+        cases[(ID, 1, 'NodeID', 1, 'node', '%i', '')] = nids
 
         form = [
             ('Geometry', None, geometry_form),
@@ -243,9 +243,9 @@ class UGRID_IO(object):
 
         #npids = len(model.pids)
         pids = model.pids
-        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i')] = eids
-        cases[(ID, 1, 'NodeID', 1, 'node', '%i')] = nids
-        cases[(ID, 2, 'SurfaceID', 1, 'centroid', '%i')] = pids
+        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
+        cases[(ID, 1, 'NodeID', 1, 'node', '%i', '')] = nids
+        cases[(ID, 2, 'SurfaceID', 1, 'centroid', '%i', '')] = pids
 
         n = 3
         if os.path.exists(tag_filename):
@@ -280,17 +280,17 @@ class UGRID_IO(object):
             tag_form.append( ('bl_spacing',   n+8, []) )
             tag_form.append( ('bl_thickness', n+9, []) )
 
-            cases[(ID, n, 'is_visc',      1, 'centroid', '%i')] = int_data[:, 0]
-            cases[(ID, n + 1, 'is_recon',   1, 'centroid', '%i')] = int_data[:, 1]
-            cases[(ID, n + 2, 'is_rebuild', 1, 'centroid', '%i')] = int_data[:, 2]
-            cases[(ID, n + 3, 'is_fixed',   1, 'centroid', '%i')] = int_data[:, 3]
-            cases[(ID, n + 4, 'is_source',  1, 'centroid', '%i')] = int_data[:, 4]
-            cases[(ID, n + 5, 'is_trans',   1, 'centroid', '%i')] = int_data[:, 5]
-            cases[(ID, n + 6, 'is_delete',  1, 'centroid', '%i')] = int_data[:, 6]
-            cases[(ID, n + 7, 'nlayers',    1, 'centroid', '%i')] = int_data[:, 7]
+            cases[(ID, n, 'is_visc',      1, 'centroid', '%i', '')] = int_data[:, 0]
+            cases[(ID, n + 1, 'is_recon',   1, 'centroid', '%i', '')] = int_data[:, 1]
+            cases[(ID, n + 2, 'is_rebuild', 1, 'centroid', '%i', '')] = int_data[:, 2]
+            cases[(ID, n + 3, 'is_fixed',   1, 'centroid', '%i', '')] = int_data[:, 3]
+            cases[(ID, n + 4, 'is_source',  1, 'centroid', '%i', '')] = int_data[:, 4]
+            cases[(ID, n + 5, 'is_trans',   1, 'centroid', '%i', '')] = int_data[:, 5]
+            cases[(ID, n + 6, 'is_delete',  1, 'centroid', '%i', '')] = int_data[:, 6]
+            cases[(ID, n + 7, 'nlayers',    1, 'centroid', '%i', '')] = int_data[:, 7]
 
-            cases[(ID, n + 8, 'bl_spacing',   1, 'centroid', '%.3e')] = float_data[:, 0]
-            cases[(ID, n + 9, 'bl_thickness', 1, 'centroid', '%.3e')] = float_data[:, 1]
+            cases[(ID, n + 8, 'bl_spacing',   1, 'centroid', '%.3e', '')] = float_data[:, 0]
+            cases[(ID, n + 9, 'bl_thickness', 1, 'centroid', '%.3e', '')] = float_data[:, 1]
             n += 10
         else:
             self.log_info('tag_filename=%r could not be found' % tag_filename)
@@ -317,15 +317,15 @@ class UGRID_IO(object):
                 mapbcs[islot] = bc_num
                 print(line)
             mapbc_form.append(('Map BC', n, []))
-            cases[(ID, n, 'Map BC', 1, 'centroid', '%i')] = mapbcs
+            cases[(ID, n, 'Map BC', 1, 'centroid', '%i', '')] = mapbcs
         else:
             self.log_info('mapbc_filename=%r could not be found' % mapbc_filename)
 
 
         #norm_spacing = model.node_props[:, 0]
         #bl_thickness = model.node_props[:, 1]
-        #cases[(ID, 1, 'normSpacing', 1, 'node', '%.3e')] = norm_spacing
-        #cases[(ID, 2, 'BL_thick',    1, 'node', '%.3e')] = bl_thickness
+        #cases[(ID, 1, 'normSpacing', 1, 'node', '%.3e', '')] = norm_spacing
+        #cases[(ID, 2, 'BL_thick',    1, 'node', '%.3e', '')] = bl_thickness
 
         form = [
             ('Geometry', None, geometry_form),

@@ -118,9 +118,9 @@ class LaWGS_IO(object):
             ('NormalY', icase + 7, []),
             ('NormalZ', icase + 8, []),
         ]
-        cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
-        cases[(ID, icase + 1, 'ElementID', 1, 'centroid', '%i')] = eids
-        cases[(ID, icase + 2, 'NodeID', 1, 'node', '%i')] = nids
+        cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = regions
+        cases[(ID, icase + 1, 'ElementID', 1, 'centroid', '%i', '')] = eids
+        cases[(ID, icase + 2, 'NodeID', 1, 'node', '%i', '')] = nids
 
         #nnids = len(nids)
         neids = len(elements)

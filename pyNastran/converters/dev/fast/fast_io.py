@@ -33,8 +33,8 @@ class FastIO(object):
         self._fill_fast_results(cases, model)
 
     def load_fast_geometry(self, fgrid_filename, dirname, plot=True):
-        skipReading = self.removeOldGeometry(fgrid_filename)
-        if skipReading:
+        skip_reading = self.removeOldGeometry(fgrid_filename)
+        if skip_reading:
             return
 
         model = FGridReader(log=self.log, debug=False)
@@ -160,7 +160,8 @@ class FastIO(object):
         if results:
             ID = 1
             if bcs is not None:
-                cases[(ID, 'Region', 1, 'centroid', '%i')] = bcs
+                cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = bcs
+                icase += 1
 
                 mapbc_print = defaultdict(list)
                 for region, bcnum in sorted(iteritems(mapbc)):
@@ -183,6 +184,7 @@ class FastIO(object):
             ID = 2
             if len(loads):
                 for key, load in iteritems(loads):
-                    cases[(ID, key, 1, 'node', '%.3f')] = load
+                    cases[(ID, icase, key, 1, 'node', '%.3f')] = load
+                    icase += 1
                 self.scalarBar.VisibilityOn()
         return cases

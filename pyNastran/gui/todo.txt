@@ -43,7 +43,7 @@ PyQt4 unique (PySide is broken)
    - can't move legend
      - horizontal/veterical
      - TODO: can't explicitly place it
-   - TODO: can't show/hide legend
+   - show/hide legend
    - TODO: Cancel button doesn't go to original settings if you click apply
      - TODO: should maybe remove the OK button and rename Cancel to Close
 
@@ -76,8 +76,7 @@ PyQt4 unique (PySide is broken)
    - loading of geometry/results from command line
    - python scripting
    - edges
-   - nodal or centroidal
-      - TODO: remove option
+   - disable HTML output (useful for when PyQt is buggy)
 
  - picking
    - cell/node picking based on result type
@@ -88,7 +87,8 @@ PyQt4 unique (PySide is broken)
 
  - results sidebar
    - data is put in a nested tree and cycleResults works (Control+L)
-   - TODO: does multiple static nastran subcases work?
+   - multiple nastran subcases
+   - load in secondary CSV results
 
 
 ----------------------------------------------------
@@ -121,11 +121,11 @@ Nastran
      - rodForce
  - transient-style results (no complex data)
 
- - TODO: rotate loads based on local coordinate system
-   - displacement (e.g. force, displacement, velocity)
-   - stress (y/z vs. hoop)
+ - rotate loads based on local coordinate system
+   - displacement (e.g. force, displacement, velocity) done
+   - TODO: stress (y/z vs. hoop)
 
- - TODO: multiple op2 files
+ - multiple op2 files
  - TODO: show/hide elements based on picking
  - TODO: different nodal averaging methods (e.g.derive/avg, avg/derive)
  - TODO: interface loads
@@ -136,6 +136,7 @@ Nastran
  - secondary actors
    - wireframes/surfaces - CAEROx panels; CAEROx subpanels; CAEROx flaps
    - points - SPC; MPC; SUPORT1; CONM2
+   - lines - bars orientation
 
 Cart3d
 ======
@@ -250,7 +251,7 @@ Qt
 - results selector window doesn't update on cycling
 - loading a new geometry over a result doesn't overwrite the old name
 - legend cancel doesn't return to baseline state (should it?)
-- self.cycleResults('resultName') doesn't return correct result
+- self.cycle_results('resultName') doesn't return correct result
 
 nastran
 =======
@@ -292,7 +293,6 @@ surf
 
 ----------------------------------------------------
 ---NOT DONE---
- - make vector results work
  - marker plots (arrows) & scale
  - usm3d surface/boundary layer/incomplete volume
  - load file from * with a specific file type

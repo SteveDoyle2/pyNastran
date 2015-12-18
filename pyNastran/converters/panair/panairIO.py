@@ -159,13 +159,13 @@ class PanairIO(object):
             Zc[i] = z
             area[i] = A
 
-        cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
-        cases[(ID, icase + 1, 'ElementID', 1, 'centroid', '%i')] = eids
-        cases[(ID, icase + 2, 'NodeID', 1, 'node', '%i')] = nids
-        cases[(ID, icase + 3, 'Area', 1, 'centroid', '%i')] = area
-        cases[(ID, icase + 4, 'centroid_x', 1, 'centroid', '%.2f')] = Xc
-        cases[(ID, icase + 5, 'centroid_y', 1, 'centroid', '%.2f')] = Yc
-        cases[(ID, icase + 6, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
+        cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = regions
+        cases[(ID, icase + 1, 'ElementID', 1, 'centroid', '%i', '')] = eids
+        cases[(ID, icase + 2, 'NodeID', 1, 'node', '%i', '')] = nids
+        cases[(ID, icase + 3, 'Area', 1, 'centroid', '%i', '')] = area
+        cases[(ID, icase + 4, 'centroid_x', 1, 'centroid', '%.2f', '')] = Xc
+        cases[(ID, icase + 5, 'centroid_y', 1, 'centroid', '%.2f', '')] = Yc
+        cases[(ID, icase + 6, 'centroid_z', 1, 'centroid', '%.2f', '')] = Zc
 
         # nodal
         Xn = zeros(len(nodes), dtype='float32')
@@ -175,9 +175,9 @@ class PanairIO(object):
             Xn[i] = node[0]
             Yn[i] = node[1]
             Zn[i] = node[2]
-        cases[(ID, icase + 7, 'node_x', 1, 'node', '%.2f')] = Xn
-        cases[(ID, icase + 8, 'node_y', 1, 'node', '%.2f')] = Yn
-        cases[(ID, icase + 9, 'node_z', 1, 'node', '%.2f')] = Zn
+        cases[(ID, icase + 7, 'node_x', 1, 'node', '%.2f', '')] = Xn
+        cases[(ID, icase + 8, 'node_y', 1, 'node', '%.2f', '')] = Yn
+        cases[(ID, icase + 9, 'node_z', 1, 'node', '%.2f', '')] = Zn
 
         return form, cases
 
@@ -218,10 +218,10 @@ class PanairIO(object):
             ('Cp_centroidal', icase + 1, [],),
         ]
         form.append(('Results', None, results_form))
-        key = (1, icase, 'Cp', 1, 'node', '%.3f')
+        key = (1, icase, 'Cp', 1, 'node', '%.3f', '')
         self.result_cases[key] = Cp_array
 
-        key = (1, icase + 1, 'Cp_centroidal', 1, 'centroid', '%.3f')
+        key = (1, icase + 1, 'Cp_centroidal', 1, 'centroid', '%.3f', '')
         self.result_cases[key] = Cp_array2
 
         self._finish_results_io2(form, cases)

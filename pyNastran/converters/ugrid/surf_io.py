@@ -25,8 +25,8 @@ class SurfIO(object):
         return data
 
     def load_surf_geometry(self, surf_filename, dirname, plot=True):
-        #skipReading = self.remove_old_openfoam_geometry(openfoam_filename)
-        #if skipReading:
+        #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
+        #if skip_reading:
         #    return
 
         model = SurfReader()
@@ -212,16 +212,16 @@ class SurfIO(object):
         print(unique(grid_bcs))
 
         normals = model.get_normals()
-        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i')] = eids
-        cases[(ID, 1, 'NodeID',    1, 'node', '%i')] = nids
-        cases[(ID, 2, 'SurfaceID', 1, 'centroid', '%i')] = surf_ids
-        cases[(ID, 3, 'ReconFlag', 1, 'centroid', '%i')] = recon_flags
-        cases[(ID, 4, 'GridBC',    1, 'centroid', '%i')] = grid_bcs
-        cases[(ID, 5, 'NormalX',   1, 'centroid', '%.3f')] = normals[:, 0]
-        cases[(ID, 6, 'NormalY',   1, 'centroid', '%.3f')] = normals[:, 1]
-        cases[(ID, 7, 'NormalZ',   1, 'centroid', '%.3f')] = normals[:, 2]
-        cases[(ID, 8, 'normSpacing', 1, 'node', '%.3e')] = norm_spacing
-        cases[(ID, 9, 'BL_thick',    1, 'node', '%.3e')] = bl_thickness
+        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
+        cases[(ID, 1, 'NodeID',    1, 'node', '%i', '')] = nids
+        cases[(ID, 2, 'SurfaceID', 1, 'centroid', '%i', '')] = surf_ids
+        cases[(ID, 3, 'ReconFlag', 1, 'centroid', '%i', '')] = recon_flags
+        cases[(ID, 4, 'GridBC',    1, 'centroid', '%i', '')] = grid_bcs
+        cases[(ID, 5, 'NormalX',   1, 'centroid', '%.3f', '')] = normals[:, 0]
+        cases[(ID, 6, 'NormalY',   1, 'centroid', '%.3f', '')] = normals[:, 1]
+        cases[(ID, 7, 'NormalZ',   1, 'centroid', '%.3f', '')] = normals[:, 2]
+        cases[(ID, 8, 'normSpacing', 1, 'node', '%.3e', '')] = norm_spacing
+        cases[(ID, 9, 'BL_thick',    1, 'node', '%.3e', '')] = bl_thickness
 
         if os.path.exists(tag_filename):
             tagger = TagReader()
@@ -251,17 +251,17 @@ class SurfIO(object):
             tag_form.append( ('bl_spacing',  i + 8, []) )
             tag_form.append( ('bl_thickness', i + 9, []) )
 
-            cases[(ID, i, 'is_visc',    1, 'centroid', '%i')] = int_data[:, 0]
-            cases[(ID, i + 1, 'is_recon',   1, 'centroid', '%i')] = int_data[:, 1]
-            cases[(ID, i + 2, 'is_rebuild', 1, 'centroid', '%i')] = int_data[:, 2]
-            cases[(ID, i + 3, 'is_fixed',   1, 'centroid', '%i')] = int_data[:, 3]
-            cases[(ID, i + 4, 'is_source',  1, 'centroid', '%i')] = int_data[:, 4]
-            cases[(ID, i + 5, 'is_trans',   1, 'centroid', '%i')] = int_data[:, 5]
-            cases[(ID, i + 6, 'is_delete', 1, 'centroid', '%i')] = int_data[:, 6]
-            cases[(ID, i + 7, 'nlayers',   1, 'centroid', '%i')] = int_data[:, 7]
+            cases[(ID, i, 'is_visc',    1, 'centroid', '%i', '')] = int_data[:, 0]
+            cases[(ID, i + 1, 'is_recon',   1, 'centroid', '%i', '')] = int_data[:, 1]
+            cases[(ID, i + 2, 'is_rebuild', 1, 'centroid', '%i', '')] = int_data[:, 2]
+            cases[(ID, i + 3, 'is_fixed',   1, 'centroid', '%i', '')] = int_data[:, 3]
+            cases[(ID, i + 4, 'is_source',  1, 'centroid', '%i', '')] = int_data[:, 4]
+            cases[(ID, i + 5, 'is_trans',   1, 'centroid', '%i', '')] = int_data[:, 5]
+            cases[(ID, i + 6, 'is_delete', 1, 'centroid', '%i', '')] = int_data[:, 6]
+            cases[(ID, i + 7, 'nlayers',   1, 'centroid', '%i', '')] = int_data[:, 7]
 
-            cases[(ID, i + 8, 'bl_spacing', 1, 'centroid', '%.3e')] = float_data[:, 0]
-            cases[(ID, i + 9, 'bl_thickness', 1, 'centroid', '%.3e')] = float_data[:, 1]
+            cases[(ID, i + 8, 'bl_spacing', 1, 'centroid', '%.3e', '')] = float_data[:, 0]
+            cases[(ID, i + 9, 'bl_thickness', 1, 'centroid', '%.3e', '')] = float_data[:, 1]
 
         form = [
             ('Geometry', None, geometry_form),
