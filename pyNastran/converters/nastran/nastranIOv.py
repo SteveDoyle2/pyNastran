@@ -74,13 +74,14 @@ class NastranComplexDisplacementResults(object):
         self.default_scale = default_scale
         self.titles_default = deepcopy(titles)
         self.data_formats_default = deepcopy(self.data_formats)
-        self.default_scale = default_scales
+        #self.default_scale = default_scales
 
         #theta = (2*np.pi * i/frame) % (2 * pi)
         theta = 0.0
 
         # calculate deflections
         eigvs = model.eigenvectors[1000].data[6, :, :]
+        scale = 1.0
         defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
                         np.imag(eigvs[:, :3]) * np.sin(theta))
 
@@ -150,31 +151,32 @@ class NastranDisplacementResults(object):
     def get_plot_value(self, i, name):
         if self.is_real:
             return self.dxyz[i, :]
-        if method == 'real':
-            return self.dxyz[i, :].real
-        elif method == 'imag':
-            return self.dxyz[i, :].imag
-        elif method == 'magnitude':
-            return abs(self.dxyz[i, :])
-        elif method == 'phase':
-            return angle(self.dxyz[i, :], deg=True)
-        else:
-            raise RuntimeError(method)
+        #if method == 'real':
+            #return self.dxyz[i, :].real
+        #elif method == 'imag':
+            #return self.dxyz[i, :].imag
+        #elif method == 'magnitude':
+            #return abs(self.dxyz[i, :])
+        #elif method == 'phase':
+            #return angle(self.dxyz[i, :], deg=True)
+        #else:
+            #raise RuntimeError(method)
 
     def get_result(self, i, name):
         if self.is_real:
             return self.dxyz[i, :]
         else:
-            if method == 'real':
-                return self.dxyz[i, :].real
-            elif method == 'imag':
-                return self.dxyz[i, :].imag
-            elif method == 'magnitude':
-                return abs(self.dxyz[i, :])
-            elif method == 'phase':
-                return angle(self.dxyz[i, :], deg=True)
-            else:
-                raise RuntimeError(method)
+            raise NotImplementedError(self.is_real)
+            #if method == 'real':
+                #return self.dxyz[i, :].real
+            #elif method == 'imag':
+                #return self.dxyz[i, :].imag
+            #elif method == 'magnitude':
+                #return abs(self.dxyz[i, :])
+            #elif method == 'phase':
+                #return angle(self.dxyz[i, :], deg=True)
+            #else:
+                #raise RuntimeError(method)
 
     def get_scalar(self, i, name):
         print(self.dxyz_norm)
@@ -1259,50 +1261,50 @@ class NastranIO(object):
                 is_type[i] = 1.
                 # print('is-type =', is_type.max())
                 bar_form[2].append(['is_%s' % Type, icase, []])
-                cases[(0, icase, 'is_%s' % Type, 1, 'centroid', '%i')] = is_type
+                cases[(0, icase, 'is_%s' % Type, 1, 'centroid', '%i', '')] = is_type
                 icase += 1
 
         if no_axial.max() == 1:
             bar_form[2].append(['No Axial', icase, []])
-            cases[(0, icase, 'No Axial', 1, 'centroid', '%i')] = no_axial
+            cases[(0, icase, 'No Axial', 1, 'centroid', '%i', '')] = no_axial
             icase += 1
         if no_torsion.max() == 1:
             bar_form[2].append(['No Torsion', icase, []])
-            cases[(0, icase, 'No Torsion', 1, 'centroid', '%i')] = no_torsion
+            cases[(0, icase, 'No Torsion', 1, 'centroid', '%i', '')] = no_torsion
             icase += 1
         if no_bending.max() == 1:
             bar_form[2].append(['No Bending', icase, []])
-            cases[(0, icase, 'No Bending', 1, 'centroid', '%i')] = no_bending
+            cases[(0, icase, 'No Bending', 1, 'centroid', '%i', '')] = no_bending
             icase += 1
         if no_bending_bad.max() == 1:
             bar_form[2].append(['No Bending (Bad)', icase, []])
-            cases[(0, icase, 'No Bending (Bad)', 1, 'centroid', '%i')] = no_bending_bad
+            cases[(0, icase, 'No Bending (Bad)', 1, 'centroid', '%i', '')] = no_bending_bad
             icase += 1
 
 
         if no_6_16.max() == 1:
             bar_form[2].append(['no_6_16', icase, []])
-            cases[(0, icase, 'no_6_16', 1, 'centroid', '%i')] = no_6_16
+            cases[(0, icase, 'no_6_16', 1, 'centroid', '%i', '')] = no_6_16
             icase += 1
         if no_0_56.max() == 1:
             bar_form[2].append(['no_0_56', icase, []])
-            cases[(0, icase, 'no_0_56', 1, 'centroid', '%i')] = no_0_56
+            cases[(0, icase, 'no_0_56', 1, 'centroid', '%i', '')] = no_0_56
             icase += 1
         if no_0_456.max() == 1:
             bar_form[2].append(['no_0_456', icase, []])
-            cases[(0, icase, 'no_0_456', 1, 'centroid', '%i')] = no_0_456
+            cases[(0, icase, 'no_0_456', 1, 'centroid', '%i', '')] = no_0_456
             icase += 1
         if no_56_456.max() == 1:
             bar_form[2].append(['no_56_456', icase, []])
-            cases[(0, icase, 'no_56_456', 1, 'centroid', '%i')] = no_56_456
+            cases[(0, icase, 'no_56_456', 1, 'centroid', '%i', '')] = no_56_456
             icase += 1
         if no_0_6.max() == 1:
             bar_form[2].append(['no_0_6', icase, []])
-            cases[(0, icase, 'no_0_6', 1, 'centroid', '%i')] = no_0_6
+            cases[(0, icase, 'no_0_6', 1, 'centroid', '%i', '')] = no_0_6
             icase += 1
         if no_0_16.max() == 1:
             bar_form[2].append(['no_0_16)', icase, []])
-            cases[(0, icase, 'no_0_16', 1, 'centroid', '%i')] = no_0_16
+            cases[(0, icase, 'no_0_16', 1, 'centroid', '%i', '')] = no_0_16
             icase += 1
 
         # print(geo_form)
@@ -1968,7 +1970,7 @@ class NastranIO(object):
             nids = zeros(self.nNodes, dtype='int32')
             for (nid, nid2) in iteritems(self.nidMap):
                 nids[nid2] = nid
-            cases[(0, icase, 'NodeID', 1, 'node', '%i')] = nids
+            cases[(0, icase, 'NodeID', 1, 'node', '%i', '')] = nids
             form0.append(('NodeID', icase, []))
             icase += 1
             self.node_ids = nids
@@ -1980,7 +1982,7 @@ class NastranIO(object):
             eids = zeros(nelements, dtype='int32')
             for (eid, eid2) in iteritems(self.eidMap):
                 eids[eid2] = eid
-            cases[(0, icase, 'ElementID', 1, 'centroid', '%i')] = eids
+            cases[(0, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
             form0.append(('ElementID', icase, []))
             icase += 1
             self.element_ids = eids
@@ -1992,7 +1994,7 @@ class NastranIO(object):
         ]
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
-            cases[(0, icase, 'PropertyID', 1, 'centroid', '%i')] = pids
+            cases[(0, icase, 'PropertyID', 1, 'centroid', '%i', '')] = pids
             form0.append(('PropertyID', icase, []))
             icase += 1
 
@@ -2033,11 +2035,11 @@ class NastranIO(object):
                 i = where(mids == 0)[0]
                 print('eids=%s dont have materials' % eids[i])
 
-            cases[(0, icase, 'Thickness', 1, 'centroid', '%.3f')] = thickness
+            cases[(0, icase, 'Thickness', 1, 'centroid', '%.3f', '')] = thickness
             form0.append(('Thickness', icase, []))
             icase += 1
 
-            cases[(0, icase, 'MaterialID', 1, 'centroid', '%i')] = mids
+            cases[(0, icase, 'MaterialID', 1, 'centroid', '%i', '')] = mids
             form0.append(('MaterialID', icase, []))
             icase += 1
 
@@ -2099,33 +2101,33 @@ class NastranIO(object):
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
             # subcase_id, resultType, vector_size, location, dataFormat
-            cases[(0, icase, 'ElementDim', 1, 'centroid', '%i')] = element_dim
+            cases[(0, icase, 'ElementDim', 1, 'centroid', '%i', '')] = element_dim
             form0.append(('ElementDim', icase, []))
             icase += 1
 
-            cases[(0, icase, 'NormalX', 1, 'centroid', '%.1f')] = normals[:, 0]
+            cases[(0, icase, 'NormalX', 1, 'centroid', '%.1f', '')] = normals[:, 0]
             form0.append(('NormalX', icase, []))
             icase += 1
 
-            cases[(0, icase, 'NormalY', 1, 'centroid', '%.1f')] = normals[:, 1]
+            cases[(0, icase, 'NormalY', 1, 'centroid', '%.1f', '')] = normals[:, 1]
             form0.append(('NormalY', icase, []))
             icase += 1
 
-            cases[(0, icase, 'NormalZ', 1, 'centroid', '%.1f')] = normals[:, 2]
+            cases[(0, icase, 'NormalZ', 1, 'centroid', '%.1f', '')] = normals[:, 2]
             form0.append(('NormalZ', icase, []))
             icase += 1
 
             if abs(xoffset).max() > 0.0 or abs(yoffset).max() > 0.0 or abs(zoffset).max() > 0.0:
                 # offsets
-                cases[(0, icase, 'OffsetX', 1, 'centroid', '%.1f')] = xoffset
+                cases[(0, icase, 'OffsetX', 1, 'centroid', '%.1f', '')] = xoffset
                 form0.append(('OffsetX', icase, []))
                 icase += 1
 
-                cases[(0, icase, 'OffsetY', 1, 'centroid', '%.1f')] = yoffset
+                cases[(0, icase, 'OffsetY', 1, 'centroid', '%.1f', '')] = yoffset
                 form0.append(('OffsetY', icase, []))
                 icase += 1
 
-                cases[(0, icase, 'OffsetZ', 1, 'centroid', '%.1f')] = zoffset
+                cases[(0, icase, 'OffsetZ', 1, 'centroid', '%.1f', '')] = zoffset
                 form0.append(('OffsetZ', icase, []))
                 icase += 1
 
@@ -2654,14 +2656,28 @@ class NastranIO(object):
             print('key_itime =', key_itime)
             return form
         key_itime0 = key_itime[0]
-        subcase_id_old = key_itime0[0][2]
+        key0 = key_itime0[0]
+        # isubcase, analysis_code, sort_method, count, subtitle
+        subcase_id_old = key0[0]
+        count_old = key0[3]
+        subtitle_old = key0[4]
         for key, itime in key_itime:
-            subcase_id = key[2]
-            if subcase_id != subcase_id_old:
-                res = ('Subcase %s' % subcase_id_old, None, form_resultsi_subcase)
+            print('key =', key)
+            subcase_id = key[0]
+            count = key[3]
+            subtitle = key[4]
+            if subcase_id != subcase_id_old or subtitle != subtitle_old:
+                count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+                res = (
+                    'Subcase %s; %s%s' % (subcase_id_old, subtitle_old, count_str),
+                    None,
+                    form_resultsi_subcase
+                )
                 form_resultsi.append(res)
                 form_resultsi_subcase = []
                 subcase_id_old = subcase_id
+                subtitle_old = subtitle
+                count_old = count
 
 
             header = header_dict[(key, itime)]
@@ -2701,7 +2717,12 @@ class NastranIO(object):
                 #break
 
         if subcase_id:
-            res = ('Subcase %s' % subcase_id, None, form_resultsi_subcase)
+            count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+            res = (
+                'Subcase %s; %s%s' % (subcase_id, subtitle, count_str),
+                None,
+                form_resultsi_subcase
+            )
             form_resultsi.append(res)
             assert len(form_out) > 0, form_out
             form_resultsi_subcase = []
@@ -3005,7 +3026,7 @@ class NastranIO(object):
         self.node_ids = None
 
     def _fill_op2_force(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, is_static):
+                        form_dict, header_dict, is_static):
         #assert isinstance(key, int), key
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict

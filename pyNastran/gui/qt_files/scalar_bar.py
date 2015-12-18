@@ -2,9 +2,32 @@ import vtk
 
 
 class ScalarBar(object):
+
+    def set_visibility(self, is_visible):
+        if is_visible:
+            self.VisibilityOn()
+        else:
+            self.VisibilityOff()
+
+    def VisibilityOn(self):
+        print('_is_shown3 = %s' % self.is_shown)
+        if not self.is_shown:
+            self.scalar_bar.VisibilityOn()
+            self.scalar_bar.Modified()
+            self.is_shown = True
+
+    def VisibilityOff(self):
+        print('_is_shown4 = %s' % self.is_shown)
+        if self.is_shown:
+            self.scalar_bar.VisibilityOff()
+            self.scalar_bar.Modified()
+            self.is_shown = False
+
     def __init__(self, is_horizontal):
         self.scalar_bar = vtk.vtkScalarBarActor()
         self.color_function = vtk.vtkColorTransferFunction()
+        self.is_shown = True
+        #aaaa
 
         self.color_function.SetColorSpaceToHSV()
         self.color_function.HSVWrapOff()
@@ -157,6 +180,7 @@ class ScalarBar(object):
             #self.scalar_bar.VisibilityOn()
         #else:
             #self.scalar_bar.VisibilityOff()
+        self.set_visibility(is_shown)
         self.scalar_bar.Modified()
 
 def _is_int_result(data_format):

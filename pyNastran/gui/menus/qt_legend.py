@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import string_types
 from PyQt4 import QtCore, QtGui
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
@@ -42,7 +43,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_is_blue_to_red = is_blue_to_red
         self._default_is_discrete = True
         self._default_is_horizontal = is_horizontal_scalar_bar
-        self._default_is_shown = True
+        #self._default_is_shown = True
         self._default_scale = scale
         if self._default_scale == 0.0:
             self.scale_edit.setEnabled(False)
@@ -56,8 +57,6 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.on_default_max()
         self.on_default_format()
         self.on_default_scale()
-
-
 
     def create_widgets(self):
         # Name
@@ -112,8 +111,9 @@ class LegendPropertiesWindow(QtGui.QDialog):
         # on / off
         self.checkbox_show = QtGui.QCheckBox("Show")
         self.checkbox_hide = QtGui.QCheckBox("Hide")
+        print('_default_is_shown =', self._default_is_shown)
         self.checkbox_show.setChecked(self._default_is_shown)
-        self.checkbox_show.setChecked(not self._default_is_shown)
+        self.checkbox_hide.setChecked(not self._default_is_shown)
 
         #checkbox3.setChecked(False)
 
@@ -129,6 +129,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
         checkboxs3 = QtGui.QButtonGroup(self)
         checkboxs3.addButton(self.checkbox_vertical)
         checkboxs3.addButton(self.checkbox_horizontal)
+
+        checkboxs4 = QtGui.QButtonGroup(self)
+        checkboxs4.addButton(self.checkbox_show)
+        checkboxs4.addButton(self.checkbox_hide)
 
         # closing
         self.apply_button = QtGui.QPushButton("Apply")
@@ -192,6 +196,9 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
             grid2.addWidget(self.checkbox_vertical, 1, 2)
             grid2.addWidget(self.checkbox_horizontal, 2, 2)
+
+            grid2.addWidget(self.checkbox_show, 1, 3)
+            grid2.addWidget(self.checkbox_hide, 2, 3)
             #grid2.setSpacing(0)
 
         vbox = QtGui.QVBoxLayout()

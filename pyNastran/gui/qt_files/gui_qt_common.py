@@ -97,7 +97,7 @@ class GuiCommon(object):
     def cycleResults_explicit(self, result_name=None, explicit=True):
         #if explicit:
             #self.log_command('cycleResults(result_name=%r)' % result_name)
-        found_cases = self.incrementCycle(result_name)
+        found_cases = self.increment_cycle(result_name)
         if found_cases:
             result_type = self._set_case(result_name, self.iCase, explicit=explicit, cycle=True)
         else:
@@ -136,9 +136,9 @@ class GuiCommon(object):
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
             scale = 0.0
-        elif len(key) == 6:
-            (subcase_id, j, result_type, vector_size, location, data_format) = key
-            scale = 0.0
+        #elif len(key) == 6:
+            #(subcase_id, j, result_type, vector_size, location, data_format) = key
+            #scale = 0.0
         else:
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
             scale = 0.0
@@ -279,9 +279,11 @@ class GuiCommon(object):
             data_format = obj.get_data_format(i, res_name)
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
-        elif len(key) == 6:
-            (subcase_id, j, result_type, vector_size, location, data_format) = key
+        #elif len(key) == 6:
+            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
+            # j is icase? and is used to...
+            # label2 defaults to ''
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
 
         #if vector_size == 3:
@@ -399,7 +401,7 @@ class GuiCommon(object):
         assert found_case == True, 'result_name=%r' % result_name
         return iCase
 
-    def incrementCycle(self, result_name=False):
+    def increment_cycle(self, result_name=False):
         found_case = False
         if result_name is not False and result_name is not None:
             for icase, cases in sorted(iteritems(self.resultCases)):
@@ -425,7 +427,7 @@ class GuiCommon(object):
             location = self.get_case_location(key)
             print("key = %s" % str(key))
             #if key[2] == 3:  # vector size=3 -> vector, skipping ???
-                #self.incrementCycle()
+                #self.increment_cycle()
             found_cases = True
         else:
             # key = self.caseKeys[self.iCase]
@@ -446,10 +448,10 @@ class GuiCommon(object):
             return name
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
-        elif len(key) == 6:
-            (subcase_id, i, result_type, vector_size, location, data_format) = key
+        #elif len(key) == 6:
+            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
-            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
         return result_type
 
     def get_case_location(self, key):
@@ -458,9 +460,13 @@ class GuiCommon(object):
             return obj.get_location(i, name)
         elif len(key) == 5:
             (subcase_id, result_type, vector_size, location, data_format) = key
-        elif len(key) == 6:
-            (subcase_id, i, result_type, vector_size, location, data_format) = key
+        #elif len(key) == 6:
+            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
-            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
+            try:
+                (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+            except:
+                self.log.error(key)
+                return
         return location
 

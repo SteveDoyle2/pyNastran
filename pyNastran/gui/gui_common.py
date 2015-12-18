@@ -18,7 +18,7 @@ from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import eye, array, zeros, loadtxt, int32
+from numpy import ndarray, eye, array, zeros, loadtxt, int32
 from numpy.linalg import norm
 
 import pyNastran
@@ -83,10 +83,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.nvalues = 9
         self.is_wireframe = False
         #-------------
+
         # window variables
-        self._legend_shown = False
-        self._clipping_shown = False
-        self._edit_group_properties_shown = False
+        self._legend_window_shown = False
+        self._clipping_window_shown = False
+        self._edit_group_properties_window_shown = False
         #-------------
         # inputs dict
         self.is_edges = False
@@ -171,6 +172,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
     #def dropEvent(self, e):
         #print(e)
         #print('drop event')
+
+    @property
+    def legend_shown(self):
+        return self.scalar_bar.is_shown
 
     @property
     def scalarBar(self):
@@ -307,6 +312,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         plot = True
         if results_filename:
             plot = False
+
+        #print('input_filename =', input_filename)
+        if input_filename is not None:
+            if not os.path.exists(input_filename):
+                msg = '%s does not exist\n%s' % (
+                    input_filename, print_bad_path(input_filename))
+                self.log.error(msg)
+                if self.html_logging:
+                    print(msg)
+                return
+            for results_filenamei in results_filename:
+                #print('results_filenamei =', results_filenamei)
+                if results_filenamei is not None:
+                    if not os.path.exists(results_filenamei):
+                        msg = '%s does not exist\n%s' % (
+                            results_filenamei, print_bad_path(results_filenamei))
+                        self.log.error(msg)
+                        if self.html_logging:
+                            print(msg)
+                        return
 
         is_failed = self.on_load_geometry(input_filename, form, plot=plot)
         if is_failed:
@@ -956,9 +981,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
     def on_run_script(self, python_file=False):
         print('python_file =', python_file)
         if python_file in [None, False]:
-            Title = 'Choose a Python Script to Run'
+            title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
-            wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
+            wildcard_index, infile_name = self._create_load_file_dialog(wildcard, title)
             if not infile_name:
                 is_failed = True
                 return is_failed # user clicked cancel
@@ -1127,19 +1152,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self.aQuadMapper.SetLookupTable(self.colorFunction)
         self.rend.AddActor(self.scalarBar)
 
-    def _create_load_file_dialog(self, qt_wildcard, Title):
+    def _create_load_file_dialog(self, qt_wildcard, title):
         # getOpenFileName return QString and we want Python string
         fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
-            self, Title, self.last_dir, qt_wildcard)
+            self, title, self.last_dir, qt_wildcard)
         return str(wildcard_level), str(fname)
 
-    def _create_load_file_dialog2(self, qt_wildcard, Title):
+    def _create_load_file_dialog2(self, qt_wildcard, title):
         # getOpenFileName return QString and we want Python string
-        #Title = 'Load a Tecplot Geometry/Results File'
+        #title = 'Load a Tecplot Geometry/Results File'
         last_dir = ''
         #qt_wildcard = ['Tecplot Hex Binary (*.tec; *.dat)']
         dialog = MultiFileDialog()
-        dialog.setWindowTitle(Title)
+        dialog.setWindowTitle(title)
         dialog.setDirectory(self.last_dir)
         dialog.setFilters(qt_wildcard.split(';;'))
         if dialog.exec_() == QtGui.QDialog.Accepted:
@@ -1307,6 +1332,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                     self.log_error(str(args))
                     self.log_error("'plot' needs to be added to %r; args[-1]=%r" % (name, args[-1]))
                     has_results = load_function(infile_name, self.last_dir)
+                    #form, cases = load_function(infile_name, self.last_dir)
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
@@ -1455,44 +1481,44 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
         headers2 = []
         fmts = []
-        fmtis = []
-        ints = ('(int32)', '(int64)')
-        floats = ('(float32)', '(float64)')
+        dtype_fmts = []
+        #ints = ('(int32)', '(int64)')
+        #floats = ('(float32)', '(float64)')
         for header in headers:
             header = header.strip()
-            if header.lower().endswith('(int)'):
-                header2 = header[:6].strip()
-                fmt = '<i8'
-                fmti = '%i'
-            elif header.lower().endswith(ints):
-                header2 = header[:8].strip()
-                fmt = '<i8'
-                fmti = '%i'
-            elif header.lower().endswith('(float)'):
-                header2 = header[:8].strip()
-                fmt = np.float
-                fmti = '%.3f'
-            elif header.lower().endswith(floats):
-                header2 = header[:10].strip()
-                fmt = np.float
-                fmti = '%.3f'
-            else:
-                header2 = header
-                fmt = np.float
-                fmti = '%.3f'
-            #print('header2 = %r' % header)
-            fmts.append((header2, fmt))
-            fmtis.append(fmti)
+            header2 = header
+            dtype_fmt = 'float'
+            fmti = '%.3f'
+            if header.endswith(')') and '%' in header:
+                header2, fmt = header[:-1].rsplit('(', 1)
+                header2 = header2.strip()
+                is_float = True
+                if '%' in fmt:
+                    if 'i' in fmt:
+                        fmt % 5
+                        is_int = True
+                        dtype_fmt = 'int'
+                        #fmti = fmt
+                    elif 'g' in fmt or 'e' in fmt or 'f' in fmt or 's' in fmt:
+                        fmt % 1.1
+                        is_float = True
+                        dtype_fmt = 'float'
+                        #fmti = fmt
+
+            ##print('header2 = %r' % header)
+            dtype_fmts.append(dtype_fmt)
+            fmts.append(fmt)
             headers2.append(header2)
         headers = headers2
         del headers2
         print('fmts =', fmts)
         print('headers2 =', headers)
 
+        formats = ','.join(dtype_fmts)
         if ext in ['.dat', '.txt']:
-            A = loadtxt(file_obj, dtype=fmts)
+            A = loadtxt(file_obj, dtype=formats)
         elif ext == '.csv':
-            A = loadtxt(file_obj, dtype=fmts, delimiter=',')
+            A = loadtxt(file_obj, dtype=formats, delimiter=',')
         else:
             raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
         file_obj.close()
@@ -1515,13 +1541,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         else:
             raise NotImplementedError('Type=%r' % Type)
 
+        print('A =', A)
         formi = []
         form = self.get_form()
         icase = len(self.caseKeys)
         islot = self.caseKeys[0][0]
         for icol in range(ncols):
             datai = A[:, icol]
-            fmti = fmtis[icol]
+            print('datai =', datai)
+            fmti = fmts[icol]
+            print('fmti = %r' % fmti)
             header = headers[icol].strip()
 
             key = (islot, icase, header, 1, type2, fmti)
@@ -1833,7 +1862,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
             textActor = vtk.vtkActor2D()
             textActor.GetPositionCoordinate().SetCoordinateSystemToWorld()
-            textActor.SetPosition(world_position[:2])
+            #textActor.SetPosition(world_position[:2])
             textActor.SetMapper(textMapper)
             follower = textActor
 
@@ -2388,8 +2417,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
           if len(key) == 5:
               (subcase_id, result_type, vector_size, location, data_format) = key
-          elif len(key) == 6:
-              (subcase_id, j, result_type, vector_size, location, data_format) = key
+          #elif len(key) == 6:
+              #(subcase_id, j, result_type, vector_size, location, data_format) = key
           else:
               (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
         """
@@ -2568,7 +2597,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
         count = 0
         for key in result_names:
-            actors = self.label_actors[key]
+            try:
+                actors = self.label_actors[key]
+            except KeyError:
+                msg = 'Cant find label_actors; keys=%s' % self.label_actors.keys()
+                self.log.error(msg)
+                continue
             for actor in actors:
                 actor.VisibilityOn()
                 count += 1
@@ -2577,7 +2611,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self.log_command('show_labels(%s' % names)
 
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
-                        data_format, is_blue_to_red=True, is_horizontal=True, is_shown=True):
+                        data_format, is_blue_to_red=True, is_horizontal=True,
+                        is_shown=True):
         """
         Parameters
         ----------
@@ -2645,7 +2680,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         distance = camera.GetDistance()
 
         # clip_range, view_up, distance
-        camera_data = [position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance]
+        camera_data = [
+            position, focal_point, view_angle, view_up, clip_range,
+            parallel_scale, parallel_proj, distance
+        ]
         return camera_data
 
     def set_camera_data(self, camera_data, show_log=True):
@@ -2694,10 +2732,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             'clicked_ok' : False,
             'close' : False,
         }
-        if not self._clipping_shown:
+        if not self._clipping_window_shown:
             self._clipping_window = ClippingPropertiesWindow(data, win_parent=self)
             self._clipping_window.show()
-            self._clipping_shown = True
+            self._clipping_window_shown = True
             self._clipping_window.exec_()
         else:
             self._clipping_window.activateWindow()
@@ -2705,7 +2743,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         if data['close']:
             self._apply_clipping(data)
             del self._clipping_window
-            self._clipping_shown = False
+            self._clipping_window_shown = False
         else:
             self._clipping_window.activateWindow()
 
@@ -2765,10 +2803,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             #default_title = result_type
             #scale = 0.0
-        elif len(key) == 6:
-            (subcase_id, i, result_type, vector_size, location, data_format) = key
-            default_title = result_type
-            scale = 0.0
+        #elif len(key) == 6:
+            #(subcase_id, i, result_type, vector_size, location, data_format) = key
+            #default_title = result_type
+            #scale = 0.0
         else:
             (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
             default_title = result_type
@@ -2780,10 +2818,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             default_scale = 0.0
         print(key)
 
+        if isinstance(case, ndarray):
+            if len(case.shape) == 1:
+                normi = case
+            else:
+                normi = norm(case, axis=1)
+        else:
+            raise RuntimeError('list-based results have been removed; use numpy.array')
+
         data = {
             'name' : result_type,
-            'min' : case.min(),
-            'max' : case.max(),
+            'min' : normi.min(),
+            'max' : normi.max(),
             'scale' : scale,
             'format' : data_format,
 
@@ -2794,14 +2840,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             'is_blue_to_red' : True,
             'is_discrete': True,
             'is_horizontal': False,
-            'is_shown' : True,
+            'is_shown' : self.scalar_bar.is_shown,
             'clicked_ok' : False,
             'close' : False,
         }
-        if not self._legend_shown:
+        print(data)
+        if not self._legend_window_shown:
             self._legend_window = LegendPropertiesWindow(data, win_parent=self)
             self._legend_window.show()
-            self._legend_shown = True
+            self._legend_window_shown = True
             self._legend_window.exec_()
         else:
             self._legend_window.activateWindow()
@@ -2809,21 +2856,20 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         if data['close']:
             if not self._legend_window._updated_legend:
                 self._apply_legend(data)
-            self._legend_shown = False
+            self._legend_window_shown = False
             del self._legend_window
         else:
             self._legend_window.activateWindow()
 
     def update_legend(self, name, min_value, max_value, data_format,
                       is_blue_to_red, is_horizontal_scalar_bar, scale):
-        if self._legend_shown:
+        if self._legend_window_shown:
             self._legend_window._updated_legend = True
             self._legend_window.update_legend(name,
                     min_value, max_value, data_format,
                     is_blue_to_red, is_horizontal_scalar_bar, scale)
-
-
-
+        #self.scalar_bar.set_visibility(self._legend_shown)
+        #self.vtk_interactor.Render()
 
     def _apply_legend(self, data):
         title = data['name']
@@ -2835,18 +2881,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         is_discrete = data['is_discrete']
         is_horizontal = data['is_horizontal']
         is_shown = data['is_shown']
-        self.on_update_legend(Title=title, min_value=min_value, max_value=max_value, scale=scale_value,
+        print('is_shown1 =', is_shown)
+        self.on_update_legend(title=title, min_value=min_value, max_value=max_value, scale=scale_value,
                               data_format=data_format,
                               is_blue_to_red=is_blue_to_red,
                               is_discrete=is_discrete, is_horizontal=is_horizontal,
                               is_shown=is_shown)
 
-    def on_update_legend(self, Title='Title', min_value=0., max_value=1., scale=0.0,
+    def on_update_legend(self, title='Title', min_value=0., max_value=1., scale=0.0,
                          data_format='%.0f',
                          is_blue_to_red=True, is_discrete=True, is_horizontal=True,
                          is_shown=True):
-
-
+        #print('is_shown2 =', is_shown)
+        #assert is_shown == False, is_shown
         key = self.caseKeys[self.iCase]
         name_vector = None
         plot_value = self.resultCases[key] # scalar
@@ -2857,7 +2904,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             (obj, (i, res_name)) = self.resultCases[key]
             subcase_id = obj.subcase_id
             plot_value = obj.get_plot_value(i, res_name) # vector
-            print('plot_value =', plot_value)
+            #print('plot_value =', plot_value)
 
             result_type = obj.get_title(i, res_name)
             vector_size = obj.get_vector_size(i, res_name)
@@ -2874,8 +2921,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             update_3d = True
         elif len(key) == 5:
             (subcase_id, result_type, vector_size1, location, _data_format) = key
-        elif len(key) == 6:
-            (subcase_id, i, result_type, vector_size1, location, _data_format) = key
+        #elif len(key) == 6:
+            #(subcase_id, i, result_type, vector_size1, location, _data_format) = key
         else:
             (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
         assert vector_size1 == 1, vector_size1
@@ -2890,7 +2937,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         if update_3d:
             self.is_horizontal_scalar_bar = is_horizontal
             self._set_case(self.result_name, self.iCase,
-                           explicit=False, cycle=False, skip_click_check=True, min_value=min_value, max_value=max_value)
+                           explicit=False, cycle=False, skip_click_check=True,
+                           min_value=min_value, max_value=max_value)
             return
 
         subtitle, label = self.get_subtitle_label(subcase_id)
@@ -2918,7 +2966,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                                                       min_value, max_value, norm_value,
                                                       is_blue_to_red=is_blue_to_red)
 
-        self.update_scalar_bar(Title, min_value, max_value, norm_value,
+        self.update_scalar_bar(title, min_value, max_value, norm_value,
                                data_format, is_blue_to_red=is_blue_to_red,
                                is_horizontal=is_horizontal, is_shown=is_shown)
 
@@ -2942,10 +2990,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                                 #revert_displaced=revert_displaced)
 
         #self.is_horizontal_scalar_bar = is_horizontal
-        self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
+        self.log_command('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
                          '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
-                         % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
-
+                         % (title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
+        #if is_shown:
+            #pass
     #---------------------------------------------------------------------------------------
     # EDIT ACTOR PROPERTIES
     def set_actor_properties(self):
@@ -2979,10 +3028,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             #(subcase_id, i, result_type, vector_size, location, data_format, label2) = key
 
         data = deepcopy(self.geometry_properties)
-        if not self._edit_group_properties_shown:
+        if not self._edit_group_properties_window_shown:
             self._edit_group_properties = EditGroupProperties(data, win_parent=self)
             self._edit_group_properties.show()
-            self._edit_group_properties_shown = True
+            self._edit_group_properties_window_shown = True
             self._edit_group_properties.exec_()
         else:
             self._edit_group_properties.activateWindow()
@@ -2994,11 +3043,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self.on_update_geometry_properties(data)
             self._save_geometry_properties(data)
             del self._edit_group_properties
-            self._edit_group_properties_shown = False
+            self._edit_group_properties_window_shown = False
         elif data['clicked_cancel']:
             self.on_update_geometry_properties(self.geometry_properties)
             del self._edit_group_properties
-            self._edit_group_properties_shown = False
+            self._edit_group_properties_window_shown = False
 
     def _save_geometry_properties(self, out_data):
         for name, group in iteritems(out_data):
