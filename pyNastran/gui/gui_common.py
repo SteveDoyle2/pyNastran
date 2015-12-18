@@ -1426,22 +1426,62 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                 msg += '# var1 var2\n'
                 msg += '1 2\n'
                 msg += '3 4\n'
-            elif ext in ['.csv']:
-                # csv
+            elif ext == '.csv':
                 msg += '# var1, var2\n'
                 msg += '1, 2\n'
                 msg += '3, 4\n'
             else:
                 raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
             raise SyntaxError(msg)
-        header_line = header_line.lstrip('# \t').strip()
 
+        header_line = header_line.lstrip('# \t').strip()
         if ext in ['.dat', '.txt']:
             headers = header_line.split(' ')
-            A = loadtxt(file_obj)
-        elif ext in ['.csv']:
+        elif ext == '.csv':
             headers = header_line.split(',')
-            A = loadtxt(file_obj, delimiter=',')
+        else:
+            raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
+
+        headers2 = []
+        fmts = []
+        fmtis = []
+        ints = ('(int32)', '(int64)')
+        floats = ('(float32)', '(float64)')
+        for header in headers:
+            header = header.strip()
+            if header.lower().endswith('(int)'):
+                header2 = header[:6].strip()
+                fmt = '<i8'
+                fmti = '%i'
+            elif header.lower().endswith(ints):
+                header2 = header[:8].strip()
+                fmt = '<i8'
+                fmti = '%i'
+            elif header.lower().endswith('(float)'):
+                header2 = header[:8].strip()
+                fmt = np.float
+                fmti = '%.3f'
+            elif header.lower().endswith(floats):
+                header2 = header[:10].strip()
+                fmt = np.float
+                fmti = '%.3f'
+            else:
+                header2 = header
+                fmt = np.float
+                fmti = '%.3f'
+            #print('header2 = %r' % header)
+            fmts.append((header2, fmt))
+            fmtis.append(fmti)
+            headers2.append(header2)
+        headers = headers2
+        del headers2
+        print('fmts =', fmts)
+        print('headers2 =', headers)
+
+        if ext in ['.dat', '.txt']:
+            A = loadtxt(file_obj, dtype=fmts)
+        elif ext == '.csv':
+            A = loadtxt(file_obj, dtype=fmts, delimiter=',')
         else:
             raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
         file_obj.close()
@@ -1457,12 +1497,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
 
         if Type == 'Nodal':
             assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
-            Type2 = 'node'
+            type2 = 'node'
         elif Type == 'Elemental':
             assert nrows == self.nElements, 'nrows=%s nelements=%s' % (nrows, self.nElements)
-            Type2 = 'centroid'
+            type2 = 'centroid'
         else:
-            raise NotImplementedError(Type)
+            raise NotImplementedError('Type=%r' % Type)
 
         formi = []
         form = self.get_form()
@@ -1470,8 +1510,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         islot = self.caseKeys[0][0]
         for icol in range(ncols):
             datai = A[:, icol]
+            fmti = fmtis[icol]
             header = headers[icol].strip()
-            key = (islot, icase, header, 1, Type2, '%.3f')
+
+            key = (islot, icase, header, 1, type2, fmti)
             self.caseKeys.append(key)
             self.resultCases[key] = datai
             formi.append((header, icase, []))
@@ -1479,7 +1521,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
             self.label_actors[header] = []
             self.label_ids[header] = set([])
             icase += 1
-        form.append((out_filename_short, None, formi))
+        form.append((out_filename_short, None, formi, ''))
 
         self.nCases += ncols
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
