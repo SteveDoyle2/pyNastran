@@ -5,8 +5,8 @@ from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
 
 class NastranGUI(NastranIO, GUIMethods):
-    def __init__(self):
-        GUIMethods.__init__(self)
+    def __init__(self, inputs=None):
+        GUIMethods.__init__(self, inputs=inputs)
         NastranIO.__init__(self)
 
 pkg_path = pyNastran.__path__[0]

@@ -10,14 +10,12 @@ class ScalarBar(object):
             self.VisibilityOff()
 
     def VisibilityOn(self):
-        print('_is_shown3 = %s' % self.is_shown)
         if not self.is_shown:
             self.scalar_bar.VisibilityOn()
             self.scalar_bar.Modified()
             self.is_shown = True
 
     def VisibilityOff(self):
-        print('_is_shown4 = %s' % self.is_shown)
         if self.is_shown:
             self.scalar_bar.VisibilityOff()
             self.scalar_bar.Modified()
@@ -160,10 +158,30 @@ class ScalarBar(object):
         if data_format == '%i':
             data_format_display = '%.0f'
             nvalues = int(max_value - min_value) + 1
+
+            # old
             if nvalues < 7:
                 nvalues = 7
             elif nvalues > 30:
                 nvalues = 11
+
+            # new
+            if 0:
+                text_prop = self.scalar_bar.GetLabelTextProperty()
+                #font_size = text_prop.GetFontSize()
+                nvalues_max = 11
+                nvalues_min = 7
+                if nvalues > nvalues_max:
+                    font_size = 4
+                    nvalues = nvalues_max
+                    font_size = text_prop.SetFontSize(font_size)
+                    text_prop.Modified()
+                elif nvalues < nvalues_min:
+                    nvalues = nvalues_min
+                    font_size = 12
+                    font_size = text_prop.SetFontSize(font_size)
+                    text_prop.Modified()
+
         self.scalar_bar.SetLabelFormat(data_format_display)
 
         #if title in ['ElementID', 'Eids', 'Region'] and norm_value < 11:

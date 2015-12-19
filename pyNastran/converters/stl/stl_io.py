@@ -7,6 +7,7 @@ import vtk
 from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import STL
+from pyNastran.gui.gui_result import GuiResult
 
 
 class STL_IO(object):
@@ -18,34 +19,6 @@ class STL_IO(object):
                 'STereoLithography (*.STL)', self.load_stl_geometry,
                 None, None)
         return data
-
-
-    def _removeOldGeometry(self, fileName):
-        # unused...
-        self.eidMap = {}
-        self.nidMap = {}
-        if fileName is None:
-            self.scalarBar.VisibilityOff()
-            skip_reading = True
-        else:
-            self.TurnTextOff()
-            self.grid.Reset()
-
-            self.resultCases = {}
-            self.nCases = 0
-            try:
-                del self.caseKeys
-                del self.iCase
-                del self.iSubcaseNameMap
-            except:
-                # print("cant delete geo")
-                pass
-
-            #print(dir(self))
-            skip_reading = False
-        #self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
-        return skip_reading
 
     def load_stl_geometry(self, stl_filename, dirname, plot=True):
         print("load_stl_geometry...")
@@ -141,13 +114,36 @@ class STL_IO(object):
         nnodes = nodes.shape[0]
         icase = 0
         #cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
-        cases[(ID, icase, 'ElementID', 1, 'centroid', '%i', '')] = arange(1, nelements + 1, dtype='int32')
-        cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i', '')] = arange(1, nnodes+1, dtype='int32')
-        cases[(ID, icase + 2, 'Area', 1, 'centroid', '%.4e', '')] = areas
-        cases[(ID, icase + 3, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
-        cases[(ID, icase + 4, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
-        cases[(ID, icase + 5, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
-
+        itime = 0
+        eids = arange(1, nelements + 1, dtype='int32')
+        nids = arange(1, nnodes+1, dtype='int32')
+        if 0:
+            cases[(ID, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
+            cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i', '')] = nids
+            cases[(ID, icase + 2, 'Area', 1, 'centroid', '%.4e', '')] = areas
+            cases[(ID, icase + 3, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
+            cases[(ID, icase + 4, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
+            cases[(ID, icase + 5, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
+        else:
+            eid_res = GuiResult(ID, header='ElementID', title='ElementID',
+                                location='centroid', scalar=eids)
+            nid_res = GuiResult(ID, header='NodeID', title='NodeID',
+                                location='node', scalar=nids)
+            area_res = GuiResult(ID, header='Area', title='Area',
+                                 location='centroid', scalar=areas)
+            nx_res = GuiResult(ID, header='NormalX', title='NormalX',
+                               location='centroid', scalar=normals[:, 0])
+            ny_res = GuiResult(ID, header='NormalY', title='NormalY',
+                               location='centroid', scalar=normals[:, 1])
+            nz_res = GuiResult(ID, header='NormalZ', title='NormalZ',
+                               location='centroid', scalar=normals[:, 2])
+            cases[icase] = (eid_res, (itime, 'ElementID'))
+            cases[icase + 1] = (nid_res, (itime, 'NodeID'))
+            cases[icase + 2] = (area_res, (itime, 'Area'))
+            cases[icase + 3] = (nx_res, (itime, 'NormalX'))
+            cases[icase + 4] = (ny_res, (itime, 'NormalY'))
+            cases[icase + 5] = (nz_res, (itime, 'NormalZ'))
+        #GuiResult(ID, title='ElementID', header='ElementID', scalar, location, uname='GuiResult'):
         #cases[(ID, 'NormalX', 1, 'node', '%.3f')] = normals[:, 0]
         #cases[(ID, 'NormalY', 1, 'node', '%.3f')] = normals[:, 1]
         #cases[(ID, 'NormalZ', 1, 'node', '%.3f')] = normals[:, 2]

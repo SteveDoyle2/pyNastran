@@ -440,7 +440,7 @@ class NastranIO(object):
             punch = True
 
         xref_loads = True
-        print('ext=%r is_geom=%s' % (ext, is_geom))
+        #print('ext=%r is_geom=%s' % (ext, is_geom))
         if ext == '.op2' and is_geom:
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
                             debug_file=None)
@@ -2798,7 +2798,6 @@ class NastranIO(object):
         eids = self.element_ids
         keys_order = []
         # model = OP2()
-        print('_get_nastran_key_order')
 
         # subcase_ids = model.subcase_key.keys()
 
@@ -2816,7 +2815,7 @@ class NastranIO(object):
         for isubcase in sorted(subcase_ids):
             if isubcase == 0:
                 # beam_modes
-                print('*****isubcase=0')
+                self.log.error('*****isubcase=0')
                 continue
             # value = (analysis_codei, sort_methodi, counti, isubtitle)
             #print('subcase_key =', model.subcase_key)
@@ -2843,7 +2842,6 @@ class NastranIO(object):
                         keys_order.append(keyi2)
                         keys2.remove(keyi)
                 #keys_order += keys
-        print('_get_nastran_key_order*')
         return keys_order
 
         # for i, result_group in enumerate(result_groups): # result_group = displacement_like
@@ -2960,7 +2958,7 @@ class NastranIO(object):
                     scales.append(scale)
                     titles.append(title)
                     headers.append(header)
-                    cases[icase] = (nastran_res, (itime, title))
+                    cases[icase] = (nastran_res, (itime, title))  # do I keep this???
                     formii = (title, icase, [])
                     form_dict[(key, itime)].append(formii)
                     icase += 1

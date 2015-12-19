@@ -11,21 +11,19 @@ import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.gui.names_storage import NamesStorage
+from pyNastran.gui.testing_methods import GuiAttributes
 
 
-class GuiCommon(object):
-    def __init__(self):
-        self._is_displaced = False
-        self._xyz_nominal = None
+class GuiCommon(GuiAttributes):
+    def __init__(self, inputs):
+        GuiAttributes.__init__(self, inputs, res_widget=None)
 
-        self.nvalues = 9
         self.groups = set([])
         self._group_elements = {}
         self._group_coords = {}
         self._group_shown = {}
         self._names_storage = NamesStorage()
 
-        self.dim_max = 1.0
         self.vtk_version = [int(i) for i in vtk.VTK_VERSION.split('.')[:1]]
         print('vtk_version = %s' % (self.vtk_version))
 
@@ -52,19 +50,6 @@ class GuiCommon(object):
         if hasattr(self, 'axes'):
             for cid, axes in iteritems(self.axes):
                 axes.SetTotalLength(dim_max, dim_max, dim_max)
-
-    @property
-    def displacement_scale_factor(self):
-        """
-        # dim_max = max_val * scale
-        # scale = dim_max / max_val
-        # 0.25 added just cause
-
-        scale = self.displacement_scale_factor / tnorm_abs_max
-        """
-        #scale = self.dim_max / tnorm_abs_max * 0.25
-        scale = self.dim_max * 0.25
-        return scale
 
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         self.text_actors[0].SetInput('Max:  %g' % max_value)  # max
@@ -397,11 +382,11 @@ class GuiCommon(object):
         for icase, cases in sorted(iteritems(self.resultCases)):
             if result_name == icase[1]:
                 found_case = True
-                iCase = i
+                icase = i
                 break
             i += 1
         assert found_case == True, 'result_name=%r' % result_name
-        return iCase
+        return icase
 
     def increment_cycle(self, result_name=False):
         found_case = False
