@@ -13,6 +13,7 @@ class BDFAttributes(object):
         self.__init_attributes()
         self._is_cards_dict = False
         self.set_as_msc()
+        self.units = []
 
     def set_as_msc(self):
         self._nastran_format = 'msc'

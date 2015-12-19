@@ -326,6 +326,155 @@ class XrefMesh(BDFAttributes):
             dvprel.uncross_reference()
 
 
+    def convert(self, units_to):
+        """
+        Parameters
+        ----------
+        xref : bool
+           cross references the model (default=True)
+
+        TODO: not done...
+        """
+        # units_start = 'in'
+        # units_end = 'mm'
+        # xyz_scale = in_to_mm
+        # xyz_scale = 25.4
+        xyz_scale, mass_scale, weight_scale = get_scale_factors(self.units, units_to)
+        self._convert_nodes(xyz_scale)
+        self._convert_coordinates(xyz_scale)
+        self._convert_elements(xyz_scale, mass_scale)
+        self._convert_properties(xyz_scale, mass_scale)
+        #self._convert_masses()
+        self._convert_materials(xyz_scale, mass_scale, weight_scale)
+
+        #self._convert_aero()
+        #self._convert_constraints()
+        self._convert_loads(xyz_scale, weight_scale)
+        #self._convert_sets()
+        #self._convert_optimization()
+
+    def _convert_nodes(self, xyz_scale):
+        for node in itervalues(self.nodes):
+            if node.cp_ref.type in ['CORD1R', 'CORD2R']:
+                node.xyz *= xyz_scale
+            else:
+                # only scale R
+                node.xyz[0] *= xyz_scale
+
+    def _convert_coordinates(self, xyz_scale):
+        for cid, coord in iteritems(self.coords):
+            if cid == 0:
+                continue
+            #print(coord.object_methods())
+            #print(dir(coord))
+            if coord.rid_ref.type in ['CORD1R', 'CORD2R']:
+                coord.origin *= xyz_scale
+            else:
+                # only scale R
+                coord.origin[0] *= xyz_scale
+
+    def _convert_elements(self, xyz_scale, mass_scale):
+        area_scale = xyz_scale ** 2
+        moi_scale = xyz_scale ** 4
+        nsm_scale = mass_scale
+        tri_shells = ['CTRIA3', 'CTRIAX', 'CTRIAX6']
+        quad_shells = ['CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADX', 'CQUADX8']
+        skip_elements = ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM', 'CROD']
+        spring_elements  = ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']
+        for elem in itervalues(self.elements):
+            elem_type = elem.type
+            if elem_type in skip_elements:
+                continue
+            if elem_type in spring_elements:
+                # TODO: scale k from lb/in to N/in
+                continue
+            elif elem_type in tri_shells:
+                # thickness
+                elem.T1 *= xyz_scale
+                elem.T2 *= xyz_scale
+                elem.T3 *= xyz_scale
+
+                # nsm
+                elem.nsm *= nsm_scale
+            elif elem_type in quad_shells:
+                # thickness
+                elem.T1 *= xyz_scale
+                elem.T2 *= xyz_scale
+                elem.T3 *= xyz_scale
+                elem.T4 *= xyz_scale
+                # nsm
+                elem.nsm *= nsm_scale
+            elif elem_type == 'CONROD':
+                elem.area *= area_scale
+                elem.nsm *= nsm_scale
+            elif elem_type == 'CBAR':
+                # vector
+                pass
+            elif elem_type == 'CBEAM':
+                # vector
+                pass
+            else:
+                raise NotImplementedError(elem)
+
+    def _convert_properties(self, xyz_scale, mass_scale):
+        area_scale = xyz_scale ** 2
+        moi_scale = xyz_scale ** 4
+        nsm_scale = mass_scale
+
+        skip_properties = ['PSOLID']
+        for prop in itervalues(self.properties):
+            prop_type = prop.type
+            if prop_type in skip_properties:
+                continue
+            elif prop_type == 'PELAS':
+                # TODO: stiffness
+                pass
+            elif prop_type == 'PROD':
+                prop.area *= area_scale
+                prop.moi *= moi_scale
+            elif prop_type == 'PBAR':
+                prop.area *= area_scale
+                prop.moi *= moi_scale
+            elif prop_type == 'PBEAM':
+                prop.area *= area_scale
+                prop.moi *= moi_scale
+            elif prop_type == 'PSHELL':
+                prop.t *= xyz_scale
+            elif prop_type in ['PCOMP', 'PCOMPG']:
+                for layer in prop.layers:
+                    layer.t *= xyz_scale
+            else:
+                raise NotImplementedError(prop_type)
+
+    def _convert_materials(self, xyz_scale, mass_scale, weight_scale):
+        pressure_scale = weight_scale / xyz_scale ** 2
+        density_scale = mass_scale / xyz_scale ** 3
+        for mat in itervalues(self.materials):
+            mat_type = mat.type
+            if mat_type == 'MAT1':
+                mat.e *= pressure_scale
+                mat.g *= pressure_scale
+                mat.rho *= density_scale
+            else:
+                raise NotImplementedError(mat)
+
+    def _convert_loads(self, xyz_scale, weight_scale):
+        force_scale = weight_scale
+        moment_scale = xyz_scale * weight_scale
+        pressure_scale = weight_scale / xyz_scale ** 2
+        for loads in itervalues(self.loads):
+            assert isinstance(loads, list), loads
+            for load in loads: # list
+                load_type = load.type
+                if load_type in ['LOAD']:
+                    pass
+                elif load_type == 'FORCE':
+                    load.mag *= force_scale
+                elif load_type == 'MOMENT':
+                    load.mag *= moment_scale
+                else:
+                    raise NotImplementedError(load)
+
     def cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,
@@ -821,3 +970,75 @@ class XrefMesh(BDFAttributes):
             # pyram detj <= 0.
             # pyram warp <= 0.707
 
+def get_scale_factors(units_from, units_to):
+    scales = []
+    # in-lb-s
+    # m-kg-s
+    length_from = units_from[0]
+    length_to = units_to[0]
+
+    mass_from = units_from[1]
+    mass_to = units_to[1]
+
+    time_from = units_from[2]
+    time_to = units_to[2]
+    assert time_from == time_to, 'units_from=%s units_to=%s time_from=%r time_to=%r' % (
+        units_from, units_to, time_from, time_to)
+    time_scale = 1.0
+    xyz_scale = convert_length(length_from, length_to)
+
+    mass_scale = convert_mass(mass_from, mass_to)
+    weight_scale = mass_scale * xyz_scale / time_scale ** 2
+    return xyz_scale, mass_scale, weight_scale
+
+
+def convert_length(length_from, length_to):
+    xyz_scale = 1.0
+    if length_from != length_to:
+        if length_from == 'in':
+            xyz_scale *= 0.0254
+        elif length_from == 'ft':
+            xyz_scale *= 0.3048
+        elif length_from == 'm':
+            #xyz_scale *= 1.0
+            pass
+        elif length_from == 'cm':
+            xyz_scale *= 100.0
+        elif length_from == 'mm':
+            xyz_scale *= 1000.0
+        else:
+            raise NotImplementedError(length_from)
+
+        if length_to == 'in':
+            xyz_scale /= 0.0254
+        elif length_to == 'ft':
+            xyz_scale /= 0.3048
+        elif length_to == 'm':
+            #xyz_scale /= 1.0
+            pass
+        elif length_to == 'cm':
+            xyz_scale /= 100.0
+        elif length_to == 'mm':
+            xyz_scale /= 1000.0
+        else:
+            raise NotImplementedError(length_to)
+    return xyz_scale
+
+def convert_mass(mass_from, mass_to):
+    mass_scale = 1.0
+    if mass_from != mass_to:
+        if mass_from == 'kg':
+            pass
+        elif mass_from == 'lb':
+            mass_scale *= 0.453592
+        else:
+            raise NotImplementedError(mass_from)
+
+        if mass_to == 'kg':
+            pass
+        elif mass_to == 'lb':
+            mass_scale /= 0.453592
+        else:
+            raise NotImplementedError(mass_to)
+
+    return mass_scale

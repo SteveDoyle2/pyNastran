@@ -2690,6 +2690,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             $ pyNastran: version=NX
             $ pyNastran: encoding=latin-1
             $ pyNastran: punch=True
+            $ pyNastran: dumplines=True
+            $ pyNastran: nnodes=10
+            $ pyNastran: nelements=100
+            $ pyNastran:skip_cards=PBEAM,CBEAM
+            $ pyNastran: units=in,lb,s
 
         ..warning :: pyNastran lines must be at the top of the file
         """
@@ -2719,6 +2724,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                         elif key == 'skip_cards':
                             cards = {value.strip() for value in value.upper().split(',')}
                             self.cards_to_read = self.cards_to_read - cards
+                        #elif key == 'skip_elements'
+                        #elif key == 'skip_properties'
+                        elif key == 'units':
+                            self.units = [value.strip() for value in value.upper().split(',')]
                         else:
                             raise NotImplementedError(key)
                     else:

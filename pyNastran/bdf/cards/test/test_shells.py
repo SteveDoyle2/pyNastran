@@ -346,8 +346,9 @@ class TestShells(unittest.TestCase):
         m = MAT1(data=mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
-            p.plies[iply][0] = m # MAT1
+            p.mids[iply] = m # MAT1
             #p.mids = [m, m, m]
+        p.mids_ref = p.mids
 
         #Rho
         self.assertAlmostEqual(p.Rho(0), 1.0)
@@ -472,7 +473,8 @@ class TestShells(unittest.TestCase):
         m = MAT1(data=mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
-            p.plies[iply][0] = m # MAT1
+            p.mids[iply] = m # MAT1
+        p.mids_ref = p.mids
 
         #Rho
         self.assertAlmostEqual(p.Rho(0), 1.0)

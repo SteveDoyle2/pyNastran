@@ -199,6 +199,12 @@ class DeprecatedCompositeShellProperty(object):
     def nPlies(self):
         return self.get_nplies()
 
+    def get_nplies(self):
+        return self.nplies
+
+    def get_material_ids(self):
+        return self.material_ids
+
     def Nsm(self):
         return self.get_nonstructural_mass()
 
