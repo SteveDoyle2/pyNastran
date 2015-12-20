@@ -2809,7 +2809,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.is_horizontal_scalar_bar = is_horizontal
             self._set_case(self.result_name, self.iCase,
                            explicit=False, cycle=False, skip_click_check=True,
-                           min_value=min_value, max_value=max_value)
+                           min_value=min_value, max_value=max_value,
+                           is_legend_shown=is_shown)
             return
 
         subtitle, label = self.get_subtitle_label(subcase_id)

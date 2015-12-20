@@ -4,6 +4,7 @@ import vtk
 class ScalarBar(object):
 
     def set_visibility(self, is_visible):
+        #print('is_visible=%s; is_shown=%s' % (is_visible, self.is_shown))
         if is_visible:
             self.VisibilityOn()
         else:

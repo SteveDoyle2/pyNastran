@@ -92,7 +92,7 @@ class GuiCommon(GuiAttributes):
         return result_type
 
     def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
-                  min_value=None, max_value=None):
+                  min_value=None, max_value=None, is_legend_shown=None):
         if not skip_click_check:
             if not cycle and icase == self.iCase:
                 # don't click the button twice
@@ -179,9 +179,12 @@ class GuiCommon(GuiAttributes):
                                key, subtitle, label)
 
         is_blue_to_red = True
+        if is_legend_shown is None:
+            is_legend_shown = self.scalar_bar.is_shown
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
                                data_format, is_blue_to_red=is_blue_to_red,
-                               is_horizontal=self.is_horizontal_scalar_bar)
+                               is_horizontal=self.is_horizontal_scalar_bar,
+                               is_shown=is_legend_shown)
         self.update_legend(result_type, min_value, max_value, data_format,
                            is_blue_to_red, self.is_horizontal_scalar_bar, scale)
         location = self.get_case_location(key)
