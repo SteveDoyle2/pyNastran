@@ -2769,29 +2769,33 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.resultCases[key]
             subcase_id = obj.subcase_id
-            plot_value = obj.get_plot_value(i, res_name) # vector
             #print('plot_value =', plot_value)
 
             result_type = obj.get_title(i, res_name)
             vector_size = obj.get_vector_size(i, res_name)
-            scalar = obj.get_scalar(i, res_name)
+            if vector_size == 3:
+                plot_value = obj.get_plot_value(i, res_name) # vector
+                update_3d = True
+                obj.set_scale(i, res_name, scale)
+            else:
+                scalar_result = obj.get_scalar(i, res_name)
 
             location = obj.get_location(i, res_name)
 
             #data_format = obj.get_data_format(i, res_name)
-            obj.set_scale(i, res_name, scale)
             #obj.set_format(i, res_name, data_format)
             #obj.set_data_format(i, res_name, data_format)
             subtitle, label = self.get_subtitle_label(subcase_id)
             name_vector = (vector_size1, subcase_id, result_type, label,
                            min_value, max_value, scale)
-            update_3d = True
+
         #elif len(key) == 5:
             #(subcase_id, result_type, vector_size1, location, _data_format) = key
         #elif len(key) == 6:
             #(subcase_id, i, result_type, vector_size1, location, _data_format) = key
         else:
             (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
+            scalar_result = plot_value
         assert vector_size1 == 1, vector_size1
 
 
@@ -2822,7 +2826,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                                #min_value, max_value, norm_value,
                                                #is_blue_to_red=is_blue_to_red)
         #else:
-        grid_result = self.set_grid_values(name, plot_value, vector_size1,
+        grid_result = self.set_grid_values(name, scalar_result, vector_size1,
                                            min_value, max_value, norm_value,
                                            is_blue_to_red=is_blue_to_red)
 

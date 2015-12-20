@@ -143,7 +143,9 @@ class GuiCommon(GuiAttributes):
             else:
                 normi = norm(case, axis=1)
         else:
-            raise RuntimeError('list-based results have been removed; use numpy.array')
+            msg = 'list-based results have been removed; use numpy.array; name=%s case=%s' % (
+                result_name, case)
+            raise RuntimeError(msg)
 
         if min_value is None and max_value is None:
             max_value = normi.max()
@@ -196,6 +198,10 @@ class GuiCommon(GuiAttributes):
         if self._names_storage.has_exact_name(name):
             return
         #print('name, case =', name, case)
+
+        if not hasattr(case, 'dtype'):
+            raise RuntimeError('name=%s case=%s' % (name, case))
+
         if issubdtype(case.dtype, numpy.integer):
             data_type = vtk.VTK_INT
             self.aQuadMapper.InterpolateScalarsBeforeMappingOn()

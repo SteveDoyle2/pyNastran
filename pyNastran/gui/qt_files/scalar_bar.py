@@ -182,6 +182,7 @@ class ScalarBar(object):
                     font_size = text_prop.SetFontSize(font_size)
                     text_prop.Modified()
 
+        assert data_format_display is not None, 'data_format is invalid = %r' % data_format_display
         self.scalar_bar.SetLabelFormat(data_format_display)
 
         #if title in ['ElementID', 'Eids', 'Region'] and norm_value < 11:

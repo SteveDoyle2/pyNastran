@@ -10,9 +10,10 @@ class AGPS(object):
         self.debug = False
 
     def read_agps(self, infilename):
+        """Loads an AGPS file"""
         self.infilename = infilename
-        with open(self.infilename, 'r') as f:
-            lines = f.readlines()
+        with open(self.infilename, 'r') as agps_file:
+            lines = agps_file.readlines()
 
         i = 0
         while i < len(lines):
@@ -104,6 +105,9 @@ class AGPS(object):
         #for ipatch, Cp in sorted(iteritems(self.pressures)):
             #print(Cp)
 
+def main():
+    agps = AGPS()
+    agps.read_agps('agps')
+
 if __name__ == '__main__':  # pragma: no cover
-    a = AGPS()
-    a.read_agps('agps')
+    main()

@@ -38,8 +38,8 @@ class STL_IO(object):
         self.nNodes = nodes.shape[0]
         self.nElements = elements.shape[0]
 
-        print("nNodes = %s" % self.nNodes)
-        print("nElements = %s" % self.nElements)
+        print("nnodes = %s" % self.nNodes)
+        print("nelements = %s" % self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)

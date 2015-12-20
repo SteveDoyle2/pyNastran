@@ -21,10 +21,12 @@ class GuiResult(object):
         self.is_complex = not self.is_real
 
 
-        if self.data_type in ['<i4', '<f4']:
+        if data_format is None:
+            self.data_format = '%g'
+        elif self.data_type in ['<i4', '<i8']:
             self.data_format = '%i'
         else:
-            self.data_format = '%g'
+            self.data_format = data_format
 
         self.title_default = deepcopy(self.title)
         self.header_default = deepcopy(self.header)
@@ -70,8 +72,8 @@ class GuiResult(object):
         else:
             raise NotImplementedError('title=%s is not real; fmt=%s' % (self.title, self.data_type))
 
-    #def get_scalar(self, i, name):
-        #return self.dxyz_norm
+    def get_scalar(self, i, name):
+        return self.scalar
 
     #def get_vector_result(self, i, name):
         #if self.is_real:

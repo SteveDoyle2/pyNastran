@@ -120,11 +120,11 @@ class PanairWrite(object):
         self.nStreamlines = 0
         msg += '        1               ***  quick summary of a502 input  ***\n'
 
-        for i, titleLine in enumerate(self.titleLines):
-            msg += "title%s:%s\n" % (i + 1, titleLine)
+        for i, title_line in enumerate(self.title_lines):
+            msg += "title%s:%s\n" % (i + 1, title_line)
 
         msg += '0               processing options\n'
-        msg += '            %i = datacheck.   (0=regular run,1=full datacheck,2=short datacheck)\n' % (self.dataCheck)
+        msg += '            %i = datacheck.   (0=regular run,1=full datacheck,2=short datacheck)\n' % (self.data_check)
         msg += '            0 = s.p. flag.   (0 ==> no s.p. file (ft09) provided, 1 ==> local file ft09 with singularity values is provided)\n'
         msg += '            0 = aic flag.    (0 ==>  no aic file (ft04) provided, 1 ==> local file ft04 with aic-s is provided by the user)\n'
         msg += '            0 = b.l. flag    (0 ==> no boundary layer file requested, 1 ==> boundary layer data will be written to file ft17)\n'
@@ -147,21 +147,21 @@ class PanairWrite(object):
         msg3 += '0network id&index   #rows   #cols  kt  src  dblt  nlopt1  nropt1  nlopt2  nropt2    ipot   # pts  # pans  cpnorm  cum pt  cum pn\n'
         msg3 += '---------- -----   -----   -----  --  ---  ----  ------  ------  ------  ------    ----    ----    ----  ------  ------  ------\n'
 
-        totalPoints = 0
-        totalPanels = 0
-        for patchID in range(self.nPatches()):
-            patch = self.patch(patchID)
-            msg3 += patch.quick_summary(totalPoints, totalPanels)
-            totalPanels += patch.nPanels()
-            totalPoints += patch.nPoints()
+        total_points = 0
+        total_panels = 0
+        for patch_id in range(self.nPatches()):
+            patch = self.patch(patch_id)
+            msg3 += patch.quick_summary(total_points, total_panels)
+            total_panels += patch.nPanels()
+            total_points += patch.nPoints()
 
         msg2 += '0  case       alpha          beta      mag(f-s-v)\n'
         msg2 += ' ------    ----------    ----------   -----------\n'
-        for iCase in range(self.ncases):
-            alpha = self.alphas[iCase]
-            beta = self.betas[iCase]
+        for icase in range(self.ncases):
+            alpha = self.alphas[icase]
+            beta = self.betas[icase]
             msg2 += '     %2s      %f      %f      1.000000\n' % (
-                iCase + 1, alpha, beta)
+                icase + 1, alpha, beta)
 
         msg2 += '0               symmetry options\n'
         msg2 += '            %s = number of planes of symmetry\n' % (
@@ -171,8 +171,8 @@ class PanairWrite(object):
         msg2 += '0               configuration summary\n'
         msg2 += '          %3s = total number of networks read in\n' % (
             self.nNetworks)
-        msg2 += '         %4s = total number of mesh points\n' % (totalPoints)
-        msg2 += '         %4s = total number of panels\n' % (totalPanels)
+        msg2 += '         %4s = total number of mesh points\n' % (total_points)
+        msg2 += '         %4s = total number of panels\n' % (total_panels)
 
         return msg + msg2 + msg3
 
