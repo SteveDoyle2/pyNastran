@@ -32,9 +32,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def __init__(self, card, data):
         ShellProperty.__init__(self, card, data)
 
-        #: list of plies
-        self.plies = []
-
     def cross_reference(self, model):
         """
         Links the Material IDs to the materials.
@@ -42,16 +39,17 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param self:  the PCOMP/PCOMPG object
         :param model: a BDF object
         """
-        ## TODO: add refs
-        for iply in range(len(self.plies)):
-            mid = self.plies[iply][0]
-            msg = ' which is required by PLPCOMP/G pid=%s iply=%s' % (self.pid, iply)
-            self.plies[iply][0] = model.Material(mid, msg)  # mid
+        for iply in range(len(self.thicknesses)):
+            mid = self.mids[iply]
+            msg = ' which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
+            self.mids[iply] = model.Material(mid, msg)
+        self.mids_ref = self.mids
 
     def uncross_reference(self):
-        for iply in range(len(self.plies)):
+        for iply in range(len(self.thicknesses)):
             mid = self.Mid(iply)
-            self.plies[iply][0] = mid
+            self.mids[iply] = mid
+        del self.mids_ref
 
     def is_symmetrical(self):
         """
@@ -73,9 +71,16 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         symmetrical ply, the element will always have an even number of
         layers.
 
-        :param self: the PCOMP object
-        :param iply: the ply ID
-        :raises: IndexError if iply is invalid
+        Parameters
+        ----------
+        self : PCOMP()
+            the PCOMP object
+        iply : int
+            the ply ID
+
+        Raises
+        ------
+         - IndexError if iply is invalid
 
         ::
 
@@ -103,9 +108,9 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         if iply == 'all':
             return iply
 
-        nplies = len(self.plies)
+        nplies = len(self.thicknesses)
         if iply >= nplies:
-            if iply < self.get_nplies():
+            if iply < self.nplies:
                 iply = iply - nplies
             else:
                 raise IndexError('invalid value for iply=%r' % iply)
@@ -121,32 +126,30 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param iply: the string **'all'** (default) or the mass per area of
                      the :math:`i^{th}` ply
         """
-        nplies = len(self.plies)
+        nplies = len(self.thicknesses)
         if iply == 'all':  # get all layers
-            thick = 0.
-            for iply in range(nplies):
-                thick += self.get_thickness(iply)
-
+            thick = sum(self.thicknesses)
             if self.isSymmetrical():
                 return thick * 2.
             return thick
         else:
             iply = self._adjust_ply_id(iply)
-            thick = self.plies[iply][1]
+            thick = self.thicknesses[iply]
             return thick
 
-    def get_nplies(self):
+    @property
+    def nplies(self):
         r"""
-        Gets the number of plies including the core.
+            Gets the number of plies including the core.
 
-        ::
+            ::
 
-          if Lam=SYM:
-            returns nPlies*2   (even)
-          else:
-            returns nPlies
-        """
-        nplies = len(self.plies)
+              if Lam=SYM:
+                returns nplies * 2   (even)
+              else:
+                returns nplies
+            """
+        nplies = len(self.thicknesses)
         if self.is_symmetrical():
             return nplies * 2
         return nplies
@@ -172,21 +175,20 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             return Mid
         return Mid.mid
 
-    def get_material_ids(self):
-        return self.Mids()
-
     def Mids(self):
-        """
-        Gets the material IDs of all the plies
+        return self.material_ids
 
-        :param self: the PCOMP/PCOMPG object
-        :returns mids: the material IDs
+    @property
+    def material_ids(self):
         """
+            Gets the material IDs of all the plies
+
+            :param self: the PCOMP/PCOMPG object
+            :returns mids: the material IDs
+            """
         mids = []
-        for iply in range(self.nPlies()):
+        for iply in range(self.nplies):
             mids.append(self.Mid(iply))
-            #theta = self.get_theta(iply)
-            #sout = self.get_sout(iply)
         return mids
 
     def get_density(self, iply):
@@ -197,9 +199,8 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
-        mid = self.Material(iply)
-        #print("rho =", mid.rho)
-        return mid.rho
+        mid_ref = self.mids_ref[iply]
+        return mid_ref.rho
 
     def Material(self, iply):
         """
@@ -210,8 +211,8 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
-        Mid = self.plies[iply][0]
-        return Mid
+        mid = self.mids[iply]
+        return mid
 
     def get_theta(self, iply):
         """
@@ -221,8 +222,8 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
-        Theta = self.plies[iply][2]
-        return Theta
+        theta = self.thetas[iply]
+        return theta
 
     def get_sout(self, iply):
         """
@@ -233,7 +234,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
-        sout = self.plies[iply][3]
+        sout = self.souts[iply]
         return sout
 
     def get_z_locations(self):
@@ -250,7 +251,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         zi = self.z0
         z = [zi]
-        for i in range(self.get_nplies()):
+        for i in range(self.nplies):
             thick = self.get_thickness(i)
             zi += thick
             z.append(zi)
@@ -304,7 +305,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
         .. note:: final mass calculation will be done later
         """
-        rhos = [ply[0].get_density() for ply in self.plies]
+        rhos = [mat.get_density() for mat in self.mids]
         return self.get_mass_per_area_rho(rhos, iply, method)
 
     def get_mass_per_area_rho(self, rhos, iply='all', method='nplies'):
@@ -356,7 +357,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         .. note:: final mass calculation will be done later
         """
         assert method in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
-        nplies = len(self.plies)
+        nplies = len(self.thicknesses)
         iply = self._adjust_ply_id(iply)
         if iply == 'all':  # get all layers
             #mass_per_area_total = m/A = sum(rho*t) + nsm
@@ -364,11 +365,11 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             #(m/A)i = rho*t + nsmi
             # where nsmi has two methods
             mass_per_area = 0.
-            nplies = len(self.plies)
+            #nplies = len(self.thicknesses)
             for iply in range(nplies):
                 #rho = self.get_density(iply)
                 rho = rhos[iply]
-                t = self.plies[iply][1]
+                t = self.thicknesses[iply]
                 mass_per_area += rho * t
 
             if self.is_symmetrical():
@@ -378,13 +379,13 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
             #rho = self.get_density(iply)
             rho = rhos[iply]
-            t = self.plies[iply][1]
+            t = self.thicknesses[iply]
 
             if method == 'nplies':
                 # we divide by nplies b/c it's nsm per area and
                 # we're working on a per ply basis
                 # nsmi = nsmi/n  # smear based on nplies
-                mass_per_area = rho * t + self.nsm / self.get_nplies()
+                mass_per_area = rho * t + self.nsm / self.nplies
             elif method == 'rho*t':
                 # assume you smear the nsm mass based on rho*t distribution
                 #nsmi = rho*t / sum(rho*t) * nsm
@@ -460,11 +461,33 @@ class PCOMP(CompositeShellProperty):
         slot = nnew % 4
         ply[slot] = value
 
+    @property
+    def plies(self):
+        plies = []
+        for mid, t, theta, sout in zip(self.mids, self.thicknesses, self.thetas, self.souts):
+            plies.append([mid, t, theta, sout])
+        return plies
+
+    #@plies.setter
+    #def plies(self, plies):
+        #i = 0
+        #for mid, t, theta, sout in zip(plies):
+            #self.mids[i] = mid
+            #self.thicknesses[i] = t
+            #self.thetas[i] = theta
+            #self.souts[i] = sout
+            #i += 1
+
     def __init__(self, card=None, data=None, comment=''):  # not done, cleanup
         CompositeShellProperty.__init__(self, card, data)
 
         if comment:
             self._comment = comment
+
+        self.mids = []
+        self.thicknesses = []
+        self.thetas = []
+        self.souts = []
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
@@ -500,7 +523,6 @@ class PCOMP(CompositeShellProperty):
             if nleftover:
                 nmajor += 1
             nplies = nmajor
-            #print("nplies = ",nplies)
 
             mid_last = None
             thick_last = None
@@ -523,9 +545,10 @@ class PCOMP(CompositeShellProperty):
 
                 # if this card has 2 plies on the line
                 if actual != [None, None, None, None]:
-                    ply = [mid, t, theta, sout]
-                    #print('ply =', ply)
-                    self.plies.append(ply)
+                    self.mids.append(mid)
+                    self.thicknesses.append(t)
+                    self.thetas.append(theta)
+                    self.souts.append(sout)
                     iply += 1
                 mid_last = mid
                 thick_last = t
@@ -557,7 +580,6 @@ class PCOMP(CompositeShellProperty):
             Theta = data[10]
             Sout = data[11]
 
-            self.plies = []
             #ply = [mid,t,theta,sout]
             for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
                 if sout == 0:
@@ -567,7 +589,10 @@ class PCOMP(CompositeShellProperty):
                 else:
                     raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
                                        '\nPCOMP = %s' % (sout, data))
-                self.plies.append([mid, t, theta, sout])
+                self.mids.append(mid)
+                self.thicknesses.append(t)
+                self.thetas.append(theta)
+                self.souts.append(sout)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -595,13 +620,13 @@ class PCOMP(CompositeShellProperty):
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(rho, float), 'rho=%r' % rho
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+        for ply in self.plies:
+            assert len(ply) == 4, ply
 
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                        self.TRef, self.ge, self.lam, ]
-        for (iply, ply) in enumerate(self.plies):
-            (_mid, t, theta, sout) = ply
-            mid = self.Mid(iply)
+        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
@@ -613,12 +638,10 @@ class PCOMP(CompositeShellProperty):
         z0 = set_blank_if_default(self.z0, -0.5 * self.get_thickness())
 
         list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
-        for (iply, ply) in enumerate(self.plies):
-            (_mid, t, theta, sout) = ply
-            mid = self.Mid(iply)
+        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts):
             #theta = set_blank_if_default(theta,0.0)
-            sout = set_blank_if_default(sout, 'NO')
-            list_fields += [mid, t, theta, sout]
+            str_sout = set_blank_if_default(sout, 'NO')
+            list_fields += [mid, t, theta, str_sout]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -652,10 +675,34 @@ class PCOMPG(CompositeShellProperty):
         slot = nnew % 5
         ply[slot] = value
 
+    @property
+    def plies(self):
+        plys = []
+        for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses, self.thetas, self.souts, self.global_ply_ids):
+            ply.append((mid, t, theta, sout, global_ply_id))
+        return ply
+
+    #@plies.setter
+    #def plies(self, plies):
+        #i = 0
+        #for mid, t, theta, sout, global_ply_id in zip(plies):
+            #self.mids[i] = mid
+            #self.thicknesses[i] = t
+            #self.thetas[i] = theta
+            #self.souts[i] = sout
+            #self.global_ply_ids[i] = global_ply_id
+            #i += 1
+
     def __init__(self, card=None, data=None, comment=''):
         CompositeShellProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
+
+        self.mids = []
+        self.thicknesses = []
+        self.thetas = []
+        self.souts = []
+        self.global_ply_ids = []
         if card:
             self.pid = integer(card, 1, 'pid')
             # z0 will be calculated later
@@ -686,10 +733,11 @@ class PCOMPG(CompositeShellProperty):
                 #print('n=%s global_ply_id=%s mid=%s thickness=%s len=%s' %(
                 #    n,global_ply_id,mid,thickness,len(fields)))
 
-                ply = [mid, thickness, theta, sout, global_ply_id]
-                #print("ply = %s" %(ply))
-                self.plies.append(ply)
-                #[mid,t,theta,sout] # PCOMP
+                self.mids.append(mid)
+                self.thicknesses.append(thickness)
+                self.thetas.append(theta)
+                self.souts.append(sout)
+                self.global_ply_ids.append(global_ply_id)
 
                 assert mid is not None
                 assert thickness is not None
@@ -700,14 +748,14 @@ class PCOMPG(CompositeShellProperty):
                 T += thickness
                 i += 8
                 #n += 1
-                self.z0 = double_or_blank(card, 2, 'z0', -0.5 * T)
+            self.z0 = double_or_blank(card, 2, 'z0', -0.5 * T)
         else:
             raise NotImplementedError('PCOMPG data')
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        is_sym = self.isSymmetrical()
-        nplies = self.nPlies()
+        is_sym = self.is_symmetrical()
+        nplies = self.nplies
         nsm = self.Nsm()
         mids = self.Mids()
 
@@ -734,15 +782,13 @@ class PCOMPG(CompositeShellProperty):
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
 
     def GlobalPlyID(self, iply):
-        global_ply_id = self.plies[iply][4]
+        global_ply_id = self.global_ply_ids[iply]
         return global_ply_id
 
     def raw_fields(self):
         list_fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
                        self.TRef, self.ge, self.lam, ]
-        for (iply, ply) in enumerate(self.plies):
-            (_mid, t, theta, sout, global_ply_id) = ply
-            mid = self.Mid(iply)
+        for (mid, t, theta, sout, global_ply_id) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts, self.global_ply_ids):
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
 
@@ -755,10 +801,7 @@ class PCOMPG(CompositeShellProperty):
 
         list_fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge,
                        self.lam]
-        for (iply, ply) in enumerate(self.plies):
-            (_mid, t, theta, sout, global_ply_id) = ply
-            mid = self.Mid(iply)
-            #theta = set_blank_if_default(theta,0.0)
+        for (mid, t, theta, sout, global_ply_id) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts, self.global_ply_ids):
             sout = set_blank_if_default(sout, 'NO')
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
