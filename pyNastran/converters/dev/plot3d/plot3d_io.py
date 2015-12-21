@@ -24,15 +24,15 @@ class Plot3d_io(object):
         print("load_plot3d_geometry")
         self.nidMap = {}
 
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self.removeOldGeometry(p3d_filename)
         if skip_reading:
             return
 
         model = Plot3d(log=self.log, debug=self.debug)
-        #self.modelType = model.modelType
+        #self.model_type = model.model_type
         model.read_plot3d(p3d_filename)
 
         npoints = 0
@@ -130,13 +130,13 @@ class Plot3d_io(object):
 
         #cases = self._fill_stl_case(cases, ID, elements)
         #self.finish_io()
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        #print "caseKeys = ",self.caseKeys
-        #print "type(caseKeys) = ",type(self.caseKeys)
-        self.nCases = min(0, len(self.resultCases) - 1)  # number of keys in dictionary
-        self.iCase = 0 if self.nCases == 0 else -1
-        self.cycleResults()  # start at nCase=0
+        self.result_cases = cases
+        self.case_keys = sorted(cases.keys())
+        #print "case_keys = ",self.case_keys
+        #print "type(case_keys) = ",type(self.case_keys)
+        self.ncases = min(0, len(self.result_cases) - 1)  # number of keys in dictionary
+        self.icase = 0 if self.ncases == 0 else -1
+        self.cycle_results()  # start at nCase=0
 
     def fill_plot3d_geometry_case(self, cases, ID, nodes, elements, regions, loads):
         #print "regions**** = ",regions
@@ -198,7 +198,7 @@ class Plot3d_io(object):
         return cases
 
     def load_panair_results(self, panairFileName, dirname):
-        #self.resultCases = {}
+        #self.result_cases = {}
         pass
 
 if __name__ == '__main__':  # pragma: no cover

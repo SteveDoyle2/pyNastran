@@ -185,6 +185,7 @@ class Sidebar(QtGui.QWidget):
             #('C', 3, []),
         ]
         self.result_data_window = ResultsWindow('Method', data)
+        self.result_data_window.setVisible(False)
 
         if 0:
             combo_options = ['a1', 'a2', 'a3']
@@ -248,13 +249,13 @@ class Sidebar(QtGui.QWidget):
     def update_vtk_window(self, keys_a, keys_b):
         if 0:
             #print('keys_a = %s' % str(keys_a))
-            for i, key in enumerate(self.parent.caseKeys):
+            for i, key in enumerate(self.parent.case_keys):
                 if key[1] == keys_a[0]:
                     break
             #print('*i=%s key=%s' % (i, str(key)))
             #self.parent.update_vtk_window_by_key(i)
             result_name = key[1]
-            #self.parent.cycleResults_explicit(result_name=result_name, explicit=True)
+            #self.parent.cycle_results_explicit(result_name=result_name, explicit=True)
             #j = self.parent._get_icase(result_name)
             #j = i
         i = keys_a

@@ -27,7 +27,7 @@ class STL_IO(object):
             return
 
         model = STL(log=self.log, debug=False)
-        #self.modelType = model.modelType
+        #self.model_type = model.model_type
         model.read_stl(stl_filename)
         nodes = model.nodes
         elements = model.elements

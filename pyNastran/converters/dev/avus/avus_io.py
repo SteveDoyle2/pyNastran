@@ -25,8 +25,8 @@ class AvusIO(object):
         #self._remove_old_cart3d_geometry(filename)
 
     def load_avus_geometry(self, avus_filename, dirname, plot=True):
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self._remove_old_cart3d_geometry(avus_filename)
         if skip_reading:
@@ -35,8 +35,8 @@ class AvusIO(object):
         model = AvusGrid(log=self.log, debug=False)
         model.read_avus_grid(avus_filename)
 
-        self.modelType = 'avus'
-        #self.modelType = model.modelType
+        self.model_type = 'avus'
+        #self.model_type = model.model_type
         self.nNodes = model.nnodes
 
         #self._make_tecplot_geometry(model, self.nNodes, quads_only=True) # cart3d

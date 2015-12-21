@@ -28,7 +28,7 @@ def fortran_value(value):
 
 
 class PanairGrid(object):
-    modelType = 'panair'
+    model_type = 'panair'
 
     def __init__(self, log=None, debug=True):
         self.nnetworks = 0
@@ -811,7 +811,7 @@ class PanairGrid(object):
         #self.Streamlines = []
         #self.Trailing = []
 
-        #self.Title = None
+        #self.title = None
         #self.dataCheck = None
         #self.symmetry = None
         #self.mach = None

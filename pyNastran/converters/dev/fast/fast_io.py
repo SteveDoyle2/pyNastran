@@ -22,11 +22,11 @@ class FastIO(object):
 
     def load_fast_results(self, flo_filename, dirname):
         model = Usm3dReader(log=self.log, debug=False)
-        #self.resultCases = {}
+        #self.result_cases = {}
         npoints = self.nNodes
         node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
 
-        cases = self.resultCases
+        cases = self.result_cases
         bcs = None
         mapbc = None
         bcmap_to_bc_name = None
@@ -126,7 +126,7 @@ class FastIO(object):
         self.scalarBar.Modified()
 
         cases = {}
-        #cases = self.resultCases
+        #cases = self.result_cases
         self._fill_fast_results(cases, model, results=False)
         self._finish_results_io(cases)
 

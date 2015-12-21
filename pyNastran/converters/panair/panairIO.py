@@ -26,15 +26,15 @@ class PanairIO(object):
     def load_panair_geometry(self, panair_filename, dirname, plot=True):
         self.nidMap = {}
 
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self.removeOldGeometry(panair_filename)
         if skip_reading:
             return
 
         model = PanairGrid(log=self.log, debug=self.debug)
-        self.modelType = model.modelType
+        self.model_type = model.model_type
         model.read_panair(panair_filename)
 
         nodes, elements, regions = model.get_points_elements_regions()

@@ -105,7 +105,7 @@ def test_bottle():
     test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
     test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
 
-    keys = test.resultCases.keys()
+    keys = test.result_cases.keys()
     assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
 
 if __name__ == '__main__':  # pragma: no cover

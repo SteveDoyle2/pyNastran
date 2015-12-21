@@ -239,7 +239,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     NASTRAN BDF Reader/Writer/Editor class.
     """
     #: this is a nastran model
-    modelType = 'nastran'
+    model_type = 'nastran'
 
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
@@ -2138,7 +2138,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'debug', 'executive_control_lines',
             'case_control_lines', 'cards_to_read', 'card_count',
             'isStructured', 'uniqueBulkDataCards',
-            'nCardLinesMax', 'modelType', 'includeDir',
+            'nCardLinesMax', 'model_type', 'includeDir',
             'cardsToWrite', 'solMethod', 'log', 'doneReading',
             'linesPack', 'lineNumbers', 'iSolLine',
             'reject_count', '_relpath', 'isOpened',

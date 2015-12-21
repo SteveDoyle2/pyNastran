@@ -51,6 +51,9 @@ from pyNastran.bdf.cards.elements.shell import ShellElement
 from pyNastran.bdf.cards.elements.bars import LineElement
 from pyNastran.bdf.cards.elements.springs import SpringElement
 
+from pyNastran.converters.nastran.displacements import NastranDisplacementResults
+from pyNastran.gui.gui_result import GuiResult
+
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
 try:
@@ -60,157 +63,6 @@ except ImportError:
     is_geom = False
 #from pyNastran.f06.f06 import F06
 
-class NastranComplexDisplacementResults(object):
-    def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
-                 default_scale=40., uname='NastranGeometry'):
-        self.subcase_id = subcase_id
-        self.data_formats = ['%g'] * len(titles)
-        self.xyz = xyz
-        self.dxyz = dxyz
-        self.dxyz_norm = norm(dxyz, axis=1)
-        self.titles = titles
-        self.scale = default_scale
-
-        self.default_scale = default_scale
-        self.titles_default = deepcopy(titles)
-        self.data_formats_default = deepcopy(self.data_formats)
-        #self.default_scale = default_scales
-
-        #theta = (2*np.pi * i/frame) % (2 * pi)
-        theta = 0.0
-
-        # calculate deflections
-        eigvs = model.eigenvectors[1000].data[6, :, :]
-        scale = 1.0
-        defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
-                        np.imag(eigvs[:, :3]) * np.sin(theta))
-
-class NastranDisplacementResults(object):
-    def __init__(self, subcase_id, titles, headers, xyz, dxyz, scalar,
-                 scales, deflects=True, uname='NastranGeometry'):
-        self.subcase_id = subcase_id
-        assert self.subcase_id > 0, self.subcase_id
-
-        self.xyz = xyz
-        self.dxyz = dxyz
-        self.dxyz_norm = norm(dxyz, axis=1)
-
-        self.deflects = deflects
-        self.titles = titles
-        self.headers = headers
-        self.scales = scales
-        self.subcase_id = subcase_id
-        self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
-        self.is_real = True if self.data_type == '<f4' else False
-        self.is_complex = not self.is_real
-
-    def save_defaults(self):
-        self.data_formats = ['%g'] * len(self.titles)
-        self.titles_default = deepcopy(self.titles)
-        self.headers_default = deepcopy(self.headers)
-        self.data_formats_default = deepcopy(self.data_formats)
-        self.scales_default = deepcopy(self.scales)
-
-    def get_data_type(self, i, name):
-        return self.data_type
-
-    def get_location(self, i, name):
-        return 'node'
-
-    def get_title(self, i, name):
-        #j = self.titles_default.index(name)
-        #return self.titles[j]
-        return self.titles[i]
-
-    def get_header(self, i, name):
-        #j = self.titles_default.index(name)
-        #return self.titles[j]
-        return self.headers[i]
-
-    def get_default_title(self, i, name):
-        #j = self.titles_default.index(name)
-        return self.titles_default[i]
-
-    def get_data_format(self, i, name):
-        #print(self.titles_default, i)
-        #j = self.titles_default.index(name)
-        #return self.data_formats[j]
-        return self.data_formats[i]
-
-    def get_vector_size(self, i, name):
-        #print(i)
-        #j = self.titles_default.index(name)
-        return 3
-
-    def get_methods(self, i):
-        if self.is_real:
-            return ['node']
-        else:
-            return ['node real', 'node imag', 'node magnitude', 'node phase']
-
-    def get_plot_value(self, i, name):
-        if self.is_real:
-            return self.dxyz[i, :]
-        #if method == 'real':
-            #return self.dxyz[i, :].real
-        #elif method == 'imag':
-            #return self.dxyz[i, :].imag
-        #elif method == 'magnitude':
-            #return abs(self.dxyz[i, :])
-        #elif method == 'phase':
-            #return angle(self.dxyz[i, :], deg=True)
-        #else:
-            #raise RuntimeError(method)
-
-    def get_result(self, i, name):
-        if self.is_real:
-            return self.dxyz[i, :]
-        else:
-            raise NotImplementedError(self.is_real)
-            #if method == 'real':
-                #return self.dxyz[i, :].real
-            #elif method == 'imag':
-                #return self.dxyz[i, :].imag
-            #elif method == 'magnitude':
-                #return abs(self.dxyz[i, :])
-            #elif method == 'phase':
-                #return angle(self.dxyz[i, :], deg=True)
-            #else:
-                #raise RuntimeError(method)
-
-    def get_scalar(self, i, name):
-        print(self.dxyz_norm)
-        return self.dxyz_norm
-
-    def get_vector_result(self, i, name):
-        if self.is_real:
-            xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
-        else:
-            # z = x + i*y
-            #
-            phase = self.phase
-        return self.xyz, xyz
-
-    def get_scale(self, i, name):
-        #j = self.titles_default.index(name)
-        return self.scales[i]
-
-    def get_default_scale(self, i, name):
-        #j = self.titles_default.index(name)
-        return self.scales_default[i]
-
-    def set_scale(self, i, name, scale):
-        j = self.titles_default.index(name)
-        self.scales[i] = scale
-
-    def set_phase(self, i, name, phase):
-        j = self.titles_default.index(name)
-        self.phase[i] = phase
-
-    def __repr__(self):
-        msg = 'NastranDisplacementResults\n'
-        msg += '    uname=%r\n' % self.uname
-        return msg
 
 class NastranIO(object):
     """
@@ -236,7 +88,7 @@ class NastranIO(object):
         self.eidMap = None
         self.nNodes = None
         self.nElements = None
-        self.modelType = None
+        self.model_type = None
         self.iSubcaseNameMap = None
         self.has_caero = False
         self.dependents_nodes = set([])
@@ -399,9 +251,9 @@ class NastranIO(object):
             #self.eidMap = {}
             #self.nidMap = {}
 
-            self.resultCases = {}
-            self.nCases = 0
-        for i in ('caseKeys', 'iCase', 'iSubcaseNameMap'):
+            self.result_cases = {}
+            self.ncases = 0
+        for i in ('case_keys', 'icase', 'iSubcaseNameMap'):
             if hasattr(self, i):  # TODO: is this correct???
                 del i
         return skip_reading
@@ -412,8 +264,8 @@ class NastranIO(object):
         self.i_transform = {}
         self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self._remove_old_nastran_geometry(bdf_filename)
         pink = (0.98, 0.4, 0.93)
@@ -450,7 +302,7 @@ class NastranIO(object):
                                   xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
-            self.modelType = model.modelType
+            self.model_type = model.model_type
             model.read_bdf(bdf_filename,
                            punch=punch, xref=False)
             # model.cross_reference(xref=True, xref_loads=xref_loads,
@@ -511,7 +363,9 @@ class NastranIO(object):
             ncaeros_cs = 0
             ncaero_cs_points = 0
             if 'caero_cs' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_cs', color=pink, line_width=5, opacity=1.0, representation='surface')
+                self.create_alternate_vtk_grid(
+                    'caero_cs', color=pink, line_width=5, opacity=1.0,
+                    representation='surface')
             for aid, aesurf in iteritems(model.aesurfs):
                 aelist = aesurf.alid1
                 ncaeros_cs += len(aelist.elements)
@@ -537,16 +391,22 @@ class NastranIO(object):
             nCONM2 = 0
         #self.gridResult.SetNumberOfComponents(self.nElements)
         if nCONM2 > 0:
-            self.create_alternate_vtk_grid('conm', color=orange, line_width=5, opacity=1., point_size=4, representation='point')
+            self.create_alternate_vtk_grid(
+                'conm', color=orange, line_width=5, opacity=1., point_size=4,
+                representation='point')
 
         # Allocate grids
         self.grid.Allocate(self.nElements, 1000)
         if self.has_caero:
             yellow = (1., 1., 0.)
             if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero', color=yellow, line_width=3, opacity=1.0, representation='toggle', is_visible=True)
+                self.create_alternate_vtk_grid(
+                    'caero', color=yellow, line_width=3, opacity=1.0,
+                    representation='toggle', is_visible=True)
             if 'caero_sub' not in self.alt_grids:
-                self.create_alternate_vtk_grid('caero_sub', color=yellow, line_width=3, opacity=1.0, representation='toggle', is_visible=False)
+                self.create_alternate_vtk_grid(
+                    'caero_sub', color=yellow, line_width=3, opacity=1.0,
+                    representation='toggle', is_visible=False)
 
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
             self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
@@ -602,7 +462,8 @@ class NastranIO(object):
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         j = 0
-        nid_to_pid_map, icase, cases, form = self.map_elements(points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+        nid_to_pid_map, icase, cases, form = self.map_elements(
+            points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
         if 0:
             nsprings = 0
@@ -622,7 +483,8 @@ class NastranIO(object):
             self.set_caero_grid(ncaeros_points, model)
             self.set_caero_subpanel_grid(ncaero_sub_points, model)
             if has_control_surface:
-                self.set_caero_control_surface_grid(cs_box_ids, box_id_to_caero_element_map, caero_points)
+                self.set_caero_control_surface_grid(
+                    cs_box_ids, box_id_to_caero_element_map, caero_points)
 
         if nCONM2 > 0:
             self.set_conm_grid(nCONM2, dim_max, model)
@@ -1220,7 +1082,8 @@ class NastranIO(object):
                 # print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
 
             if norm(yhat) == 0.0 or norm(z) == 0.0:
-                print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+                print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+                    eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
             elif not allclose(norm(yhat), 1.0) or not allclose(norm(zhat), 1.0) or Li == 0.0:
                 print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                     eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
@@ -1232,8 +1095,9 @@ class NastranIO(object):
 
         bar_nids = list(bar_nids)
         red = (1., 0., 0.)
-        self.create_alternate_vtk_grid('Bar Nodes', color=red, line_width=1, opacity=1.,
-                                       point_size=5, representation='point', bar_scale=scale, is_visible=True)
+        self.create_alternate_vtk_grid(
+            'Bar Nodes', color=red, line_width=1, opacity=1.,
+            point_size=5, representation='point', bar_scale=scale, is_visible=True)
         self._add_nastran_nodes_to_grid('Bar Nodes', bar_nids, model)
 
 
@@ -1247,10 +1111,12 @@ class NastranIO(object):
                 bar_y = Type + '_y'
                 bar_z = Type + '_z'
 
-                self.create_alternate_vtk_grid(bar_y, color=green, line_width=5, opacity=1.,
-                                               point_size=5, representation='wire', bar_scale=scale, is_visible=False)
-                self.create_alternate_vtk_grid(bar_z, color=blue, line_width=5, opacity=1.,
-                                               point_size=5, representation='wire', bar_scale=scale, is_visible=False)
+                self.create_alternate_vtk_grid(
+                    bar_y, color=green, line_width=5, opacity=1.,
+                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
+                self.create_alternate_vtk_grid(
+                    bar_z, color=blue, line_width=5, opacity=1.,
+                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
 
                 self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
                 self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
@@ -1433,6 +1299,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(0, j)
             else:
                 elem = vtk.vtkSphere()
+                dim_max = 1.0
                 sphere_size = self._get_sphere_size(dim_max)
                 elem.SetRadius(sphere_size)
                 elem.SetCenter(points.GetPoint(j))
@@ -1964,29 +1831,41 @@ class NastranIO(object):
         form = ['Geometry', None, []]
         form0 = form[2]
 
+        new_cases = True
         # set to True to enable nodeIDs as an result
-        nidsSet = True
-        if nidsSet:
+        nids_set = True
+        if nids_set:
             nids = zeros(self.nNodes, dtype='int32')
             for (nid, nid2) in iteritems(self.nidMap):
                 nids[nid2] = nid
-            cases[(0, icase, 'NodeID', 1, 'node', '%i', '')] = nids
+
+            if new_cases:
+                nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                                    location='node', scalar=nids)
+                cases[icase] = (nid_res, (0, 'NodeID'))
+            else:
+                cases[(0, icase, 'NodeID', 1, 'node', '%i', '')] = nids
+
             form0.append(('NodeID', icase, []))
             icase += 1
             self.node_ids = nids
-            nidsSet = True
 
         # set to True to enable elementIDs as a result
-        eidsSet = True
-        if eidsSet:
+        eids_set = True
+        if eids_set:
             eids = zeros(nelements, dtype='int32')
             for (eid, eid2) in iteritems(self.eidMap):
                 eids[eid2] = eid
-            cases[(0, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
+
+            if new_cases:
+                eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                                    location='centroid', scalar=eids)
+                cases[icase] = (eid_res, (0, 'ElementID'))
+            else:
+                cases[(0, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
             form0.append(('ElementID', icase, []))
             icase += 1
             self.element_ids = eids
-            eidsSet = True
 
         prop_types_with_mid = [
             'PSOLID', 'PSHEAR',
@@ -2526,7 +2405,7 @@ class NastranIO(object):
             form = []
             icase = 0
         else:
-            cases = self.resultCases
+            cases = self.result_cases
             form = self.get_form()
             icase = len(cases)
             # form = self.res_widget.get_form()
@@ -2975,7 +2854,7 @@ class NastranIO(object):
                         len(nxyz), nnodes)
 
                     #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
-                    cases[(subcase_idi, icase,     name + 'Tx', 1, 'node', '%g', header)] = loads[:, 0]
+                    cases[(subcase_idi, icase, name + 'Tx', 1, 'node', '%g', header)] = loads[:, 0]
                     cases[(subcase_idi, icase + 1, name + 'Ty', 1, 'node', '%g', header)] = loads[:, 1]
                     cases[(subcase_idi, icase + 2, name + 'Tz', 1, 'node', '%g', header)] = loads[:, 2]
                     cases[(subcase_idi, icase + 3, name + 'Rx', 1, 'node', '%g', header)] = loads[:, 3]
@@ -4105,14 +3984,18 @@ class NastranIO(object):
 
         if is_stress:
             cplates = [
-                ('CTRIA3', model.ctria3_composite_stress), ('CQUAD4', model.cquad4_composite_stress),
-                ('CTRIA6', model.ctria6_composite_stress), ('CQUAD8', model.cquad8_composite_stress),
+                ('CTRIA3', model.ctria3_composite_stress),
+                ('CQUAD4', model.cquad4_composite_stress),
+                ('CTRIA6', model.ctria6_composite_stress),
+                ('CQUAD8', model.cquad8_composite_stress),
                 #model.ctriar_composite_stress, model.cquadr_composite_stress,
             ]
         else:
             cplates = [
-                ('CTRIA3', model.ctria3_composite_strain), ('CQUAD4', model.cquad4_composite_strain),
-                ('CTRIA6', model.ctria6_composite_strain), ('CQUAD8', model.cquad8_composite_strain),
+                ('CTRIA3', model.ctria3_composite_strain),
+                ('CQUAD4', model.cquad4_composite_strain),
+                ('CTRIA6', model.ctria6_composite_strain),
+                ('CQUAD8', model.cquad8_composite_strain),
                 #model.ctriar_composite_strain, model.cquadr_composite_strain,
             ]
 

@@ -38,11 +38,11 @@ class ADB_IO(object):
             #self.gridResult.Reset()
             #self.gridResult.Modified()
 
-            self.resultCases = {}
-            self.nCases = 0
+            self.result_cases = {}
+            self.ncases = 0
             try:
-                del self.caseKeys
-                del self.iCase
+                del self.case_keys
+                del self.icase
                 del self.iSubcaseNameMap
             except:
                 # print("cant delete geo")
@@ -55,8 +55,8 @@ class ADB_IO(object):
         return skip_reading
 
     def load_vsp_aero_geometry(self, adb_filename, dirname, plot=True):
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self._remove_old_adb_geometry(adb_filename)
         if skip_reading:
@@ -69,8 +69,8 @@ class ADB_IO(object):
             plot_wakes = True # doesn't work perfectly
 
         model = ADB_Reader(log=self.log, debug=False)
-        self.modelType = 'vspaero'
-        #self.modelType = model.modelType
+        self.model_type = 'vspaero'
+        #self.model_type = model.model_type
         (nodes, elements) = model.read_adb(adb_filename)
         nxyz_nodes = nodes.shape[0]
         nwake_nodes = model.wake_xyz.shape[0]

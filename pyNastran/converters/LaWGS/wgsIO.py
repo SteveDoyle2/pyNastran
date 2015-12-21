@@ -20,15 +20,15 @@ class LaWGS_IO(object):
         return data
 
     def load_lawgs_geometry(self, lawgsFileName, dirname, plot=True):
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self.removeOldGeometry(lawgsFileName)
         if skip_reading:
             return
 
         model = LaWGS(lawgsFileName)
-        self.modelType = model.modelType
+        self.model_type = model.model_type
         model.readLaWGS()
 
         nodes, elements, regions = model.get_points_elements_regions()

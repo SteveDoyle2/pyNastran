@@ -10,6 +10,7 @@ class GuiAttributes(object):
         These variables are common between the GUI and
         the batch mode testing that fakes the GUI
         """
+        self.case_keys = {}
         self.res_widget = res_widget
 
         self.is_testing = False
@@ -60,13 +61,13 @@ class GuiAttributes(object):
         self.show_command = True
         self.coord_id = 0
 
-        self.nCases = 0
-        self.iCase = 0
+        self.ncases = 0
+        self.icase = 0
         self.nNodes = 0
         self.nElements = 0
 
         self.supported_formats = []
-        self.modelType = None
+        self.model_type = None
 
         self.tools = []
         self.checkables = []
@@ -103,16 +104,6 @@ class GuiAttributes(object):
         self.dim_max = 1.0
 
     @property
-    def resultCases(self):
-        return self.result_cases
-
-    @resultCases.setter
-    def resultCases(self, value):
-        assert isinstance(value, dict), type(value)
-        self.result_cases = value
-
-
-    @property
     def displacement_scale_factor(self):
         """
         # dim_max = max_val * scale
@@ -143,10 +134,10 @@ class GuiAttributes(object):
     def set_form(self, formi):
         self._form = formi
         data = []
-        for key in self.caseKeys:
+        for key in self.case_keys:
             print(key)
             if isinstance(key, int):
-                obj, (i, name) = self.resultCases[key]
+                obj, (i, name) = self.result_cases[key]
                 t = (i, [])
             else:
                 t = (key[1], [])
@@ -154,7 +145,7 @@ class GuiAttributes(object):
 
         self.res_widget.update_results(formi)
 
-        key = self.caseKeys[0]
+        key = self.case_keys[0]
         location = self.get_case_location(key)
         method = 'centroid' if location else 'nodal'
 
@@ -299,9 +290,9 @@ class GUIMethods(GuiAttributes):
     #test.log_error = log_error
     #test.log_info = print
     #test.log_info = log_info
-    #test.cycleResults = cycleResults
+    #test.cycle_results = cycle_results
     #test.TurnTextOn = TurnTextOn
     #test.TurnTextOff = TurnTextOff
     #test.update_axes_length = update_axes_length
-    #test.cycleResults_explicit = passer
+    #test.cycle_results_explicit = passer
 

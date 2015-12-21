@@ -23,15 +23,15 @@ class ShabpIO(object):
     def load_shabp_geometry(self, shabpFilename, dirname, plot=True):
         self.nidMap = {}
 
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self.removeOldGeometry(shabpFilename)
         if skip_reading:
             return
 
         self.model = SHABP(log=self.log, debug=self.debug)
-        self.modelType = 'shabp' # model.modelType
+        self.model_type = 'shabp' # model.model_type
         self.model.read_shabp(shabpFilename)
 
         nodes, elements, patches, components, impact, shadow = self.model.getPointsElementsRegions()
@@ -189,7 +189,7 @@ class ShabpIO(object):
         mach_results = []
         form = self.form
         form.append(('Results', None, mach_results))
-        #self.resultCases = {}
+        #self.result_cases = {}
         mach_forms = {}
         for case_id, Cp in sorted(iteritems(Cpd)):
             Cp = Cpd[case_id]
@@ -203,7 +203,7 @@ class ShabpIO(object):
                 ('Cp', icase, [])
             ]
             mach_forms[mach].append(('Cp', None, cp_form))
-            #self.resultCases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
+            #self.result_cases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
 
         for mach, mach_form in sorted(iteritems(mach_forms)):
             mach_results.append(mach_form)

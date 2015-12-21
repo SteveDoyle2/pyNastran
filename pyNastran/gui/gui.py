@@ -223,7 +223,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         a job.
         """
         camera = self.get_camera_data()
-        Title = self.Title
+        Title = self.title
         if self.format == 'usm3d':
             self.step_results_usm3d()
         else:
@@ -235,10 +235,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         self.set_window_title(msg)
         self.log_command('on_reload()')
-        #self.cycleResults(Title)
+        #self.cycle_results(Title)
         for i in range(10):  #  limit on number of cycles
-            if self.Title != Title:
-                self.cycleResults(Title)
+            if self.title != Title:
+                self.cycle_results(Title)
             else:
                 break
         self.set_camera_data(camera, show_log=False)

@@ -41,7 +41,7 @@ class UGRID_IO(object):
             model = UGRID2D_Reader(log=self.log, debug=True)
             is_2d = True
 
-        self.modelType = 'ugrid'
+        self.model_type = 'ugrid'
         print('ugrid_filename = %s' % ugrid_filename)
 
 

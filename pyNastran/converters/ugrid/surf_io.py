@@ -31,7 +31,7 @@ class SurfIO(object):
 
         model = SurfReader()
 
-        self.modelType = 'surf'
+        self.model_type = 'surf'
         print('surf_filename = %s' % surf_filename)
 
         model.read_surf(surf_filename)
@@ -145,7 +145,7 @@ class SurfIO(object):
 
     def _load_surf_results(self, openfoam_filename, dirname):
         model = Cart3DReader(log=self.log, debug=False)
-        #self.modelType = model.modelType
+        #self.model_type = model.model_type
         #(nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
 
         model.infilename = cart3d_filename

@@ -62,14 +62,14 @@ class GuiCommon(GuiAttributes):
         else:
             self.text_actors[3].VisibilityOff()
 
-    def cycleResults(self, result_name=None):
-        if self.nCases <= 1:
-            self.log.warning('cycleResults(result_name=%r); nCases=%i' % (result_name, self.nCases))
-            if self.nCases == 0:
+    def cycle_results(self, result_name=None):
+        if self.ncases <= 1:
+            self.log.warning('cycle_results(result_name=%r); ncases=%i' % (result_name, self.ncases))
+            if self.ncases == 0:
                 self.scalarBar.SetVisibility(False)
             return
-        result_type = self.cycleResults_explicit(result_name, explicit=False)
-        self.log_command('cycleResults(result_name=%r)' % result_type)
+        result_type = self.cycle_results_explicit(result_name, explicit=False)
+        self.log_command('cycle_results(result_name=%r)' % result_type)
 
     def get_subtitle_label(self, subcase_id):
         try:
@@ -79,12 +79,12 @@ class GuiCommon(GuiAttributes):
             label = 'label=NA'
         return subtitle, label
 
-    def cycleResults_explicit(self, result_name=None, explicit=True):
+    def cycle_results_explicit(self, result_name=None, explicit=True):
         #if explicit:
-            #self.log_command('cycleResults(result_name=%r)' % result_name)
+            #self.log_command('cycle_results(result_name=%r)' % result_name)
         found_cases = self.increment_cycle(result_name)
         if found_cases:
-            result_type = self._set_case(result_name, self.iCase, explicit=explicit, cycle=True)
+            result_type = self._set_case(result_name, self.icase, explicit=explicit, cycle=True)
         else:
             result_type = None
         #else:
@@ -94,22 +94,22 @@ class GuiCommon(GuiAttributes):
     def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
                   min_value=None, max_value=None, is_legend_shown=None):
         if not skip_click_check:
-            if not cycle and icase == self.iCase:
+            if not cycle and icase == self.icase:
                 # don't click the button twice
                 # cycle=True means we're cycling
                 # cycle=False skips that check
                 return
 
         try:
-            key = self.caseKeys[icase]
+            key = self.case_keys[icase]
         except:
-            print('icase=%s caseKeys=%s' % (icase, str(self.caseKeys)))
+            print('icase=%s case_keys=%s' % (icase, str(self.case_keys)))
             raise
-        self.iCase = icase
-        case = self.resultCases[key]
+        self.icase = icase
+        case = self.result_cases[key]
         label2 = ''
         if isinstance(key, (int, int32)):
-            (obj, (i, name)) = self.resultCases[key]
+            (obj, (i, name)) = self.result_cases[key]
             subcase_id = obj.subcase_id
             case = obj.get_result(i, name)
             result_type = obj.get_title(i, name)
@@ -118,6 +118,9 @@ class GuiCommon(GuiAttributes):
             data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
             label2 = obj.get_header(i, name)
+            #default_max, default_min = obj.get_default_min_max(i, name)
+            if min_value is None and max_value is None:
+                min_value, max_value = obj.get_min_max(i, name)
         #elif len(key) == 5:
             #(subcase_id, result_type, vector_size, location, data_format) = key
             #scale = 0.0
@@ -127,7 +130,11 @@ class GuiCommon(GuiAttributes):
         else:
             assert len(key) == 7, key
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+            #normi = case
             scale = 0.0
+            if min_value is None and max_value is None:
+                max_value = case.max()
+                min_value = case.min()
 
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
@@ -147,10 +154,11 @@ class GuiCommon(GuiAttributes):
                 result_name, case)
             raise RuntimeError(msg)
 
-        if min_value is None and max_value is None:
-            max_value = normi.max()
-            min_value = normi.min()
+        #if min_value is None and max_value is None:
+            #max_value = normi.max()
+            #min_value = normi.min()
 
+        #================================================
         # flips sign to make colors go from blue -> red
         norm_value = float(max_value - min_value)
 
@@ -173,7 +181,6 @@ class GuiCommon(GuiAttributes):
         self.update_text_actors(subcase_id, subtitle,
                                 min_value, max_value, label)
 
-        # TODO: results can only go from centroid->node and not back to centroid
         self.final_grid_update(name, grid_result,
                                name_vector, grid_result_vector,
                                key, subtitle, label)
@@ -185,12 +192,13 @@ class GuiCommon(GuiAttributes):
                                data_format, is_blue_to_red=is_blue_to_red,
                                is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
-        self.update_legend(result_type, min_value, max_value, data_format,
-                           is_blue_to_red, self.is_horizontal_scalar_bar, scale)
+        self.update_legend(icase,
+                           result_type, min_value, max_value, data_format, scale,
+                           is_blue_to_red, self.is_horizontal_scalar_bar)
         location = self.get_case_location(key)
         self.res_widget.update_method(location)
         if explicit:
-            self.log_command('cycleResults(result_name=%r)' % result_type)
+            self.log_command('cycle_results(result_name=%r)' % result_type)
         return result_type
 
     def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
@@ -264,14 +272,14 @@ class GuiCommon(GuiAttributes):
 
         obj = None
         if isinstance(key, int):
-            (obj, (i, res_name)) = self.resultCases[key]
+            (obj, (i, res_name)) = self.result_cases[key]
             subcase_id = obj.subcase_id
             #case = obj.get_result(i, name)
             result_type = obj.get_title(i, res_name)
             vector_size = obj.get_vector_size(i, res_name)
             #print('res_name=%s vector_size=%s' % (res_name, vector_size))
             location = obj.get_location(i, res_name)
-            data_format = obj.get_data_format(i, res_name)
+            #data_format = obj.get_data_format(i, res_name)
         #elif len(key) == 5:
             #(subcase_id, result_type, vector_size, location, data_format) = key
         #elif len(key) == 6:
@@ -386,9 +394,9 @@ class GuiCommon(GuiAttributes):
 
     def _get_icase(self, result_name):
         found_case = False
-        print('resultCases.keys() =', self.resultCases.keys())
+        print('result_cases.keys() =', self.result_cases.keys())
         i = 0
-        for icase, cases in sorted(iteritems(self.resultCases)):
+        for icase, cases in sorted(iteritems(self.result_cases)):
             if result_name == icase[1]:
                 found_case = True
                 icase = i
@@ -400,22 +408,22 @@ class GuiCommon(GuiAttributes):
     def increment_cycle(self, result_name=False):
         found_case = False
         if result_name is not False and result_name is not None:
-            for icase, cases in sorted(iteritems(self.resultCases)):
+            for icase, cases in sorted(iteritems(self.result_cases)):
                 if result_name == cases[1]:
                     found_case = True
-                    self.iCase = icase  # no idea why this works...if it does...
+                    self.icase = icase  # no idea why this works...if it does...
 
         if not found_case:
-            if self.iCase is not self.nCases:
-                self.iCase += 1
+            if self.icase is not self.ncases:
+                self.icase += 1
             else:
-                self.iCase = 0
-        if self.iCase == len(self.caseKeys):
-            self.iCase = 0
+                self.icase = 0
+        if self.icase == len(self.case_keys):
+            self.icase = 0
 
-        if len(self.caseKeys) > 0:
+        if len(self.case_keys) > 0:
             try:
-                key = self.caseKeys[self.iCase]
+                key = self.case_keys[self.icase]
             except IndexError:
                 found_cases = False
                 return found_cases
@@ -426,7 +434,7 @@ class GuiCommon(GuiAttributes):
                 #self.increment_cycle()
             found_cases = True
         else:
-            # key = self.caseKeys[self.iCase]
+            # key = self.case_keys[self.icase]
             # location = self.get_case_location(key)
             location = 'N/A'
             #result_type = 'centroidal' if location == 'centroid' else 'nodal'
@@ -435,12 +443,12 @@ class GuiCommon(GuiAttributes):
                            % result_type)
             self.scalarBar.SetVisibility(False)
             found_cases = False
-        #print("next iCase=%s key=%s" % (self.iCase, key))
+        #print("next icase=%s key=%s" % (self.icase, key))
         return found_cases
 
     def get_result_name(self, key):
         if isinstance(key, int):
-            (obj, (i, name)) = self.resultCases[key]
+            (obj, (i, name)) = self.result_cases[key]
             return name
         #elif len(key) == 5:
             #(subcase_id, result_type, vector_size, location, data_format) = key
@@ -453,7 +461,7 @@ class GuiCommon(GuiAttributes):
 
     def get_case_location(self, key):
         if isinstance(key, int):
-            (obj, (i, name)) = self.resultCases[key]
+            (obj, (i, name)) = self.result_cases[key]
             return obj.get_location(i, name)
         #elif len(key) == 5:
             #(subcase_id, result_type, vector_size, location, data_format) = key
