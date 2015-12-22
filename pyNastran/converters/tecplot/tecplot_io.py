@@ -26,8 +26,8 @@ class TecplotIO(object):
         #self._remove_old_cart3d_geometry(filename)
 
     def load_tecplot_geometry(self, tecplot_filename, dirname, plot=True):
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self._remove_old_cart3d_geometry(tecplot_filename)
         if skip_reading:
@@ -41,8 +41,8 @@ class TecplotIO(object):
             model = Tecplot(log=self.log, debug=False)
             model.read_tecplot(tecplot_filename)
 
-        self.modelType = 'tecplot'
-        #self.modelType = model.modelType
+        self.model_type = 'tecplot'
+        #self.model_type = model.model_type
         self.nNodes = model.nnodes
 
         #self._make_tecplot_geometry(model, self.nNodes, quads_only=True) # cart3d

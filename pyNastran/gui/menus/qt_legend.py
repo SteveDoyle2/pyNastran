@@ -5,11 +5,34 @@ from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 
 class LegendPropertiesWindow(QtGui.QDialog):
+    """
+    +-------------------+
+    | Legend Properties |
+    +-----------------------+
+    | Title  ______ Default |
+    | Min    ______ Default |
+    | Max    ______ Default |
+    | Format ______ Default |
+    | Scale  ______ Default |
+    | Number of Colors ____ | (TODO)
+    | Number of Labels ____ | (TODO)
+    | Label Size       ____ | (TODO)
+    |                       |
+    | x Min/Max (Blue->Red) |
+    | o Max/Min (Red->Blue) |
+    |                       |
+    | x Vertical/Horizontal |
+    | x Show/Hide           |
+    |                       |
+    |    Apply OK Cancel    |
+    +-----------------------+
+    """
 
     def __init__(self, data, win_parent=None):
         self.win_parent = win_parent
         #Init the base class
         self._updated_legend = False
+        self._icase = data['icase']
         self._default_name = data['name']
         self._default_min = data['min']
         self._default_max = data['max']
@@ -22,6 +45,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
         self._default_format = data['default_format']
         self._default_scale = data['default_scale']
+        self._default_icase = self._icase
 
         self.out_data = data
 
@@ -33,30 +57,54 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.set_connections()
         #self.show()
 
-    def update_legend(self, name,
-                      min_value, max_value, data_format,
-                      is_blue_to_red, is_horizontal_scalar_bar, scale):
-        self._default_name = name
-        self._default_min = min_value
-        self._default_max = max_value
-        self._default_format = data_format
-        self._default_is_blue_to_red = is_blue_to_red
-        self._default_is_discrete = True
-        self._default_is_horizontal = is_horizontal_scalar_bar
-        #self._default_is_shown = True
-        self._default_scale = scale
-        if self._default_scale == 0.0:
-            self.scale_edit.setEnabled(False)
-            self.scale_button.setEnabled(False)
-        else:
-            self.scale_edit.setEnabled(True)
-            self.scale_button.setEnabled(True)
+    def update_legend(self, icase, name,
+                      min_value, max_value, data_format, scale,
+                      default_title, default_min_value, default_max_value, default_data_format, default_scale,
+                      is_blue_to_red, is_horizontal_scalar_bar):
+        """
+        We need to update the legend if there's been a result change request
+        """
+        if icase != self._default_icase:
+            self._default_icase = icase
+            self._default_name = default_title
+            self._default_min = default_min_value
+            self._default_max = default_max_value
+            self._default_format = default_data_format
+            self._default_is_blue_to_red = is_blue_to_red
+            self._default_is_discrete = True
+            self._default_is_horizontal = is_horizontal_scalar_bar
+            self._default_scale = default_scale
 
-        self.on_default_name()
-        self.on_default_min()
-        self.on_default_max()
-        self.on_default_format()
-        self.on_default_scale()
+            assert isinstance(scale, float), 'scale=%r' % scale
+            assert isinstance(default_scale, float), 'default_scale=%r' % default_scale
+            if self._default_scale == 0.0:
+                self.scale_edit.setEnabled(False)
+                self.scale_button.setEnabled(False)
+            else:
+                self.scale_edit.setEnabled(True)
+                self.scale_button.setEnabled(True)
+
+            #self.on_default_name()
+            #self.on_default_min()
+            #self.on_default_max()
+            #self.on_default_format()
+            #self.on_default_scale()
+            # reset defaults
+            self.name_edit.setText(name)
+            self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+
+            self.min_edit.setText(str(min_value))
+            self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+
+            self.max_edit.setText(str(max_value))
+            self.max_edit.setStyleSheet("QLineEdit{background: white;}")
+
+            self.format_edit.setText(str(data_format))
+            self.format_edit.setStyleSheet("QLineEdit{background: white;}")
+
+            self.scale_edit.setText(str(scale))
+            self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
 
     def create_widgets(self):
         # Name
@@ -83,7 +131,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.scale = QtGui.QLabel("Scale:")
         self.scale_edit = QtGui.QLineEdit(str(self._scale))
         self.scale_button = QtGui.QPushButton("Default")
-        if self._scale == 0.0:
+        if self._default_scale == 0.0:
             self.scale_edit.setEnabled(False)
             self.scale_button.setEnabled(False)
         #tip = QtGui.QToolTip()
@@ -367,6 +415,7 @@ def main():
     app = QtGui.QApplication(sys.argv)
     #The Main window
     d = {
+        'icase' : 1,
         'name' : 'asdf',
         'min' : 0.,
         'max' : 10,

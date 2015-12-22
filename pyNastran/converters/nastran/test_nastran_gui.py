@@ -5,8 +5,8 @@ from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
 
 class NastranGUI(NastranIO, GUIMethods):
-    def __init__(self):
-        GUIMethods.__init__(self)
+    def __init__(self, inputs=None):
+        GUIMethods.__init__(self, inputs=inputs)
         NastranIO.__init__(self)
 
 pkg_path = pyNastran.__path__[0]
@@ -105,7 +105,7 @@ def test_bottle():
     test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
     test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
 
-    keys = test.resultCases.keys()
+    keys = test.result_cases.keys()
     assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
 
 if __name__ == '__main__':  # pragma: no cover

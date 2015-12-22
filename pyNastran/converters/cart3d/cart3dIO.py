@@ -192,10 +192,10 @@ class Cart3dIO(object):
             #self.gridResult.Modified()
 
             self.result_cases = {}
-            self.nCases = 0
+            self.ncases = 0
             try:
-                del self.caseKeys
-                del self.iCase
+                del self.case_keys
+                del self.icase
                 del self.iSubcaseNameMap
             except:
                 # print("cant delete geo")
@@ -208,16 +208,16 @@ class Cart3dIO(object):
         return skip_reading
 
     def load_cart3d_geometry(self, cart3d_filename, dirname, plot=True):
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
         if skip_reading:
             return
 
         model = Cart3D(log=self.log, debug=False)
-        self.modelType = 'cart3d'
-        #self.modelType = model.modelType
+        self.model_type = 'cart3d'
+        #self.model_type = model.model_type
         model.read_cart3d(cart3d_filename)
         nodes = model.nodes
         elements = model.elements

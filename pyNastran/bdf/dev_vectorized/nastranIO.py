@@ -50,8 +50,8 @@ class NastranIO(NastranIO_xref):
         self.eidMap = {}
         self.nidMap = {}
         #print('bdf_filename=%r' % bdf_filename)
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
+        #key = self.case_keys[self.icase]
+        #case = self.result_cases[key]
 
         #skip_reading = self.removeOldGeometry(bdf_filename)
         #if skip_reading:
@@ -74,9 +74,9 @@ class NastranIO(NastranIO_xref):
             #self.eidMap = {}
             #self.nidMap = {}
 
-            self.resultCases = {}
-            self.nCases = 0
-        for i in ('caseKeys', 'iCase', 'iSubcaseNameMap'):
+            self.result_cases = {}
+            self.ncases = 0
+        for i in ('case_keys', 'icase', 'iSubcaseNameMap'):
             if hasattr(self, i):
                 del i
 
@@ -99,7 +99,7 @@ class NastranIO(NastranIO_xref):
             pass
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
-            self.modelType = model.modelType
+            self.model_type = model.model_type
             model.read_bdf(bdf_filename, include_dir=dirname, punch=punch, xref=True)
 
         nNodes = model.grid.n
@@ -847,23 +847,23 @@ class NastranIO(NastranIO_xref):
         self.finish_nastran_io(cases)
 
     def finish_nastran_io(self, cases):  # same as Cart3d version
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
+        self.result_cases = cases
+        self.case_keys = sorted(cases.keys())
         print("ncases = %s" % len(cases))
-        print("caseKeys = %s" % self.caseKeys)
+        print("case_keys = %s" % self.case_keys)
 
-        if len(self.caseKeys) > 1:
-            self.iCase = -1
-            self.nCases = len(self.resultCases)  # number of keys in dictionary
-        elif len(self.caseKeys) == 1:
-            self.iCase = -1
-            self.nCases = 1
+        if len(self.case_keys) > 1:
+            self.icase = -1
+            self.ncases = len(self.result_cases)  # number of keys in dictionary
+        elif len(self.case_keys) == 1:
+            self.icase = -1
+            self.ncases = 1
         else:
-            self.iCase = -1
-            self.nCases = 0
+            self.icase = -1
+            self.ncases = 0
 
-        self.cycleResults_explicit()  # start at nCase=0
-        if self.nCases:
+        self.cycle_results_explicit()  # start at nCase=0
+        if self.ncases:
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
 
@@ -1537,7 +1537,7 @@ def main():
         test.load_nastran_geometry(bdf_filename, '')
         test.load_nastran_results(op2_filename, '')
 
-        keys = test.resultCases.keys()
+        keys = test.result_cases.keys()
         assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
 
         test2 = NastranIO_xref()

@@ -3,10 +3,126 @@ from six import iteritems
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
-class TestGuiCommon(object):
-    def __init__(self, res_widget):
+class GuiAttributes(object):
+    """All methods in this class must not require VTK"""
+    def __init__(self, inputs, res_widget):
+        """
+        These variables are common between the GUI and
+        the batch mode testing that fakes the GUI
+        """
+        self.case_keys = {}
         self.res_widget = res_widget
-        # print('init')
+
+        self.is_testing = False
+        self._logo = None
+        self._script_path = None
+        self._icon_path = ''
+
+        self.Title = None
+        self.min_value = None
+        self.max_value = None
+        self.blue_to_red = False
+        self._is_axes_shown = True
+        self.nvalues = 9
+        self.is_wireframe = False
+        #-------------
+
+        # window variables
+        self._legend_window_shown = False
+        self._clipping_window_shown = False
+        self._edit_group_properties_window_shown = False
+        #-------------
+        # inputs dict
+        self.is_edges = False
+        self.is_edges_black = self.is_edges
+        # self.is_nodal = inputs['is_nodal']
+        # self.is_centroidal = inputs['is_centroidal']
+        self.magnify = inputs['magnify']
+
+        #self.format = ''
+        debug = inputs['debug']
+        self.debug = debug
+        assert debug in [True, False], 'debug=%s' % debug
+
+        #-------------
+        # file
+        self.menu_bar_format = None
+        self.format = None
+        self.infile_name = None
+        self.out_filename = None
+        self.dirname = ''
+        self.last_dir = '' # last visited directory while opening file
+
+        #-------------
+        # internal params
+        self.show_info = True
+        self.show_debug = True
+        self.show_gui = True
+        self.show_command = True
+        self.coord_id = 0
+
+        self.ncases = 0
+        self.icase = 0
+        self.nNodes = 0
+        self.nElements = 0
+
+        self.supported_formats = []
+        self.model_type = None
+
+        self.tools = []
+        self.checkables = []
+        self.actions = {}
+
+        # actor_slots
+        self.text_actors = {}
+        self.geometry_actors = {}
+        self.alt_grids = {} #additional grids
+
+        #geom = Geom(color, line_thickness, etc.)
+        #self.geometry_properties = {
+        #    'name' : Geom(),
+        #}
+        self.geometry_properties = {}
+
+        self.iText = 0
+
+        self.pick_state = 'node/centroid' # if self.is_centroidal else 'nodal'
+        self.label_actors = {}
+        self.label_ids = {}
+        self.cameras = {}
+        self.label_scale = 1.0 # in percent
+
+        self.is_horizontal_scalar_bar = False
+
+        self.result_cases = {}
+        self.num_user_points = 0
+
+        self._is_displaced = False
+        self._xyz_nominal = None
+
+        self.nvalues = 9
+        self.dim_max = 1.0
+
+    @property
+    def displacement_scale_factor(self):
+        """
+        # dim_max = max_val * scale
+        # scale = dim_max / max_val
+        # 0.25 added just cause
+
+        scale = self.displacement_scale_factor / tnorm_abs_max
+        """
+        #scale = self.dim_max / tnorm_abs_max * 0.25
+        scale = self.dim_max * 0.25
+        return scale
+
+    def set_script_path(self, script_path):
+        """Sets the path to the custom script directory"""
+        self._script_path = script_path
+
+    def set_icon_path(self, icon_path):
+        """Sets the path to the icon directory where custom icons are found"""
+        self._icon_path = icon_path
 
     def form(self):
         formi = self.res_widget.get_form()
@@ -18,10 +134,10 @@ class TestGuiCommon(object):
     def set_form(self, formi):
         self._form = formi
         data = []
-        for key in self.caseKeys:
+        for key in self.case_keys:
             print(key)
             if isinstance(key, int):
-                obj, (i, name) = self.resultCases[key]
+                obj, (i, name) = self.result_cases[key]
                 t = (i, [])
             else:
                 t = (key[1], [])
@@ -29,7 +145,7 @@ class TestGuiCommon(object):
 
         self.res_widget.update_results(formi)
 
-        key = self.caseKeys[0]
+        key = self.case_keys[0]
         location = self.get_case_location(key)
         method = 'centroid' if location else 'nodal'
 
@@ -88,10 +204,18 @@ class ScalarBar(object):
 class MockResWidget(object):
     def __init__(self):
         pass
-class GUIMethods(TestGuiCommon):
-    def __init__(self):
+
+class GUIMethods(GuiAttributes):
+    def __init__(self, inputs=None):
+        if inputs is None:
+            inputs = {
+                'magnify' : 1,
+                'debug' : False,
+                'console' : True,
+            }
+
         res_widget = MockResWidget()
-        TestGuiCommon.__init__(self, res_widget)
+        GuiAttributes.__init__(self, inputs, res_widget)
         self.is_testing = True
         self.debug = False
         self._form = []
@@ -120,7 +244,7 @@ class GUIMethods(TestGuiCommon):
     def removeOldGeometry(self, filename):
         skip_reading = False
         return skip_reading
-    def cycleResults(self):
+    def cycle_results(self):
         pass
     def TurnTextOn(self):
         pass
@@ -159,12 +283,16 @@ class GUIMethods(TestGuiCommon):
         if self.debug:
             print('ERROR:  ', msg)
 
+    def log_warning(self, msg):
+        if self.debug:
+            print('WARNING:  ', msg)
+
     #test.log_error = log_error
     #test.log_info = print
     #test.log_info = log_info
-    #test.cycleResults = cycleResults
+    #test.cycle_results = cycle_results
     #test.TurnTextOn = TurnTextOn
     #test.TurnTextOff = TurnTextOff
     #test.update_axes_length = update_axes_length
-    #test.cycleResults_explicit = passer
+    #test.cycle_results_explicit = passer
 

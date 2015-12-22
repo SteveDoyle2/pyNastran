@@ -18,7 +18,7 @@ from pyNastran.utils.log import get_logger
 
 
 class STL(object):
-    #modelType = 'stl'
+    #model_type = 'stl'
     #isStructured = False
     #isOutwardNormals = True
 

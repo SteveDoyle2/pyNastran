@@ -176,7 +176,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
     NASTRAN BDF Reader/Writer/Editor class.
     """
     #: this is a nastran model
-    modelType = 'nastran'
+    model_type = 'nastran'
 
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes

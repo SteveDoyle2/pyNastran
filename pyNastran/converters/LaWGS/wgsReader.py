@@ -184,7 +184,7 @@ class LaWGS_Panel(object):
 
 
 class LaWGS(object):
-    modelType = 'LaWGS'
+    model_type = 'LaWGS'
 
     def __init__(self, filename='tmx1242.wgs'):
         self.filename = filename
