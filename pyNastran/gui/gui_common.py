@@ -2570,6 +2570,32 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         return camera_data
 
     def set_camera_data(self, camera_data, show_log=True):
+        """
+        position : (float, float, float)
+            where am I is xyz space
+        focal_point : (float, float, float)
+            where am I looking
+        view_angle : float
+            field of view (angle); perspective only?
+        view_up : (float, float, float)
+            up on the screen vector
+        clip_range : (float, float)
+            start/end distance from camera where clipping starts
+        parallel_scale : float
+            ???
+        parallel_projection : bool (0/1)
+            flag?
+        distance : float
+            distance to ???
+
+        i_vector = focal_point - position
+        j'_vector = view_up
+
+        use:
+           i x j' -> k
+           k x i -> j
+           or it's like k'
+        """
         #position, clip_range, focal_point, view_up, distance = camera_data
         position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
 
