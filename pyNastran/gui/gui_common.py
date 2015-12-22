@@ -83,6 +83,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         self._is_axes_shown = True
         self.nvalues = 9
         self.is_wireframe = False
+
+        # in,lb,s
+        self.input_units = ['', '', ''] # '' means not set
+        self.display_units = ['', '', '']
         #-------------
 
         # window variables
@@ -1709,6 +1713,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
                     return
                 self.label_ids[result_name].add(duplicate_key)
 
+                if 0:
+                    result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
+                    result_value = result_value2
+                    xyz2 = xyz
                 #x, y, z = world_position
                 x, y, z = xyz
                 text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
@@ -1743,9 +1751,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
         #self.node_picker.AddObserver("EndPickEvent", on_node_picker)
 
+    def convert_units(self, result_name, result_value, xyz):
+        #self.input_units
+        #self.display_units
+        return result_value, xyz
+
     def _create_annotation(self, text, result_name, x, y, z):
         assert isinstance(result_name, string_types), 'result_name=%r type=%s' % (result_name, type(result_name))
         # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
+
+        #self.convert_units(result_name, result_value, x, y, z)
         if 1:
             source = vtk.vtkVectorText()
             source.SetText(text)
@@ -2612,6 +2627,32 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon, TestGuiCommon):
         return camera_data
 
     def set_camera_data(self, camera_data, show_log=True):
+        """
+        position : (float, float, float)
+            where am I is xyz space
+        focal_point : (float, float, float)
+            where am I looking
+        view_angle : float
+            field of view (angle); perspective only?
+        view_up : (float, float, float)
+            up on the screen vector
+        clip_range : (float, float)
+            start/end distance from camera where clipping starts
+        parallel_scale : float
+            ???
+        parallel_projection : bool (0/1)
+            flag?
+        distance : float
+            distance to ???
+
+        i_vector = focal_point - position
+        j'_vector = view_up
+
+        use:
+           i x j' -> k
+           k x i -> j
+           or it's like k'
+        """
         #position, clip_range, focal_point, view_up, distance = camera_data
         position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
 

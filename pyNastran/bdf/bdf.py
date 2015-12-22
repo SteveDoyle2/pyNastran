@@ -1878,8 +1878,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         comment : str
             an optional the comment for the card
         is_list : bool, optional
-            False : input is a list of card fields -> ['GRID', 1, 2, 3.0, 4.0, 5.0]
-            True :  input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
+            False : input is a list of card fields -> ['GRID', 1, None, 3.0, 4.0, 5.0]
+            True :  input is list of card_lines -> ['GRID, 1,, 3.0, 4.0, 5.0']
 
         Returns
         -------
@@ -1899,6 +1899,27 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
           # here is_list=False because it's been parsed
           >>> card = ['GRID', 1, 2,]
           >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
+
+          # here is_list=False because it's been parsed
+          # Note the None at the end of the 1st line, which is there
+          #      because the CONM2 card has a blank field.
+          #      It must be there.
+          # We also set i32 on the 2nd line, so it will default to 0.0
+          >>> card = [
+                  'CONM2', eid, nid, cid, mass, x1, x2, x3, None,
+                           i11, i21, i22, i31, None, i33,
+              ]
+          >>> model.add_card(card_lines, 'CONM2', comment, is_list=False)
+
+          # here's an alternate approach for the CONM2
+          # we use Nastran's CSV format
+          # There are many blank fields, but it's parsed exactly like a
+          # standard CONM2.
+          >>> card = [
+                  'CONM2,1,2,3,10.0',
+                  ',1.0,,5.0'
+              ]
+          >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
 
         .. note:: this is a very useful method for interfacing with the code
         .. note:: the card_object is not a card-type object...so not a GRID
