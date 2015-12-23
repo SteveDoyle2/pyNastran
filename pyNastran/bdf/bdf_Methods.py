@@ -1537,7 +1537,53 @@ class BDFMethods(BDFAttributes):
         # self.deprecated('unresolveGrids(fem_old)', 'unresolve_grids(fem_old)', '0.7')
         # return self.unresolve_grids(fem_old)
 
-    def get_spcs(self, spc_id, consider_nodes=False, final_flag=True):
+    def get_reduced_mpcs(self, mpc_id):
+        mpcs = self.mpcs[mpc_id]
+        mpcs2 = []
+        for mpc in mpcs:
+            if mpc.type == 'MPCADD':
+                for mpci in mpc.sets:
+                    if isinstance(mpci, list):
+                        for mpcii in mpci:
+                            if isinstance(mpcii, int):
+                                mpciii = mpcii
+                            else:
+                                mpciii = mpcii.conid
+                            mpcs2i = self.get_reduced_mpcs(mpciii)
+                            mpcs2 += mpcs2i
+                    else:
+                        assert isinstance(mpci, int), mpci
+                        mpcs2i = self.get_reduced_mpcs(mpci)
+                        mpcs2 += mpcs2i
+            else:
+                mpcs2.append(mpc)
+        return mpcs2
+
+    def get_reduced_spcs(self, spc_id):
+        spcs = self.spcs[spc_id]
+        spcs2 = []
+        for spc in spcs:
+            if spc.type == 'SPCADD':
+                for spci in spc.sets:
+                    if isinstance(spci, list):
+                        for spcii in spci:
+                            if isinstance(spcii, int):
+                                spciii = spcii
+                            else:
+                                spciii = spcii.conid
+                            spcs2i = self.get_reduced_spcs(spciii)
+                            spcs2 += spcs2i
+                    else:
+                        # print('spci =', spci)
+                        # print(spci.object_attributes())
+                        assert isinstance(spci, int), spci
+                        spcs2i = self.get_reduced_spcs(spci)
+                        spcs2 += spcs2i
+            else:
+                spcs2.append(spc)
+        return spcs2
+
+    def get_spcs(self, spc_id, consider_nodes=False):
         """
         Gets the SPCs in a semi-usable form.
 
@@ -1548,10 +1594,6 @@ class BDFMethods(BDFAttributes):
         consider_nodes : bool; default=False
             True : consider the GRID card PS field
             False: consider the GRID card PS field
-        final_flag : bool; default=True
-            Internal parameter used when consider_nodes=True to avoid
-            calculating the nodes multiple times when you have an SPCADD.
-            Don't modify this.
 
         Returns
         -------
@@ -1568,7 +1610,7 @@ class BDFMethods(BDFAttributes):
         Doesn't consider:
           - non-zero enforced value on SPC
         """
-        spcs = self.spcs[spc_id]
+        spcs = self.get_reduced_spcs(spc_id)
         #self.spcs[key] = [constraint]
         nids = []
         comps = []
@@ -1582,25 +1624,6 @@ class BDFMethods(BDFAttributes):
                 for nid, comp, enforced in zip(spc.gids, spc.constraints, spc.enforced):
                     nids.append(nid)
                     comps.append(comp)
-            elif spc.type == 'SPCADD':
-                for spci in spc.sets:
-                    if isinstance(spci, list):
-                        for spcii in spci:
-                            if isinstance(spcii, int):
-                                spciii = spcii
-                            else:
-                                spciii = spcii.conid
-                            #assert isinstance(spcii, int), 'spcii=\n%s\ndir=%s' % (spcii, dir(spcii))
-                            nidsi, compsi = self.get_spcs(spciii, consider_nodes=False, final_flag=False)
-                            nids += nidsi
-                            comps += compsi
-                    else:
-                        # print('spci =', spci)
-                        # print(spci.object_attributes())
-                        assert isinstance(spci, int), spci
-                        nidsi, compsi = self.get_spcs(spci, consider_nodes=False, final_flag=False)
-                        nids += nidsi
-                        comps += compsi
             else:
                 self.log.warning('not considering:\n%s' % str(spc))
                 #raise NotImplementedError(spc.type)
@@ -1633,7 +1656,7 @@ class BDFMethods(BDFAttributes):
           - MPC
           - MPCADD
         """
-        mpcs = self.mpcs[mpc_id]
+        mpcs = self.get_reduced_mpcs(mpc_id)
         nids = []
         comps = []
         for mpc in mpcs:
@@ -1641,11 +1664,6 @@ class BDFMethods(BDFAttributes):
                 for nid, comp, enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
                     nids.append(nid)
                     comps.append(comp)
-            elif mpc.type == 'MPCADD':
-                for mpci in mpc.sets:
-                    nidsi, compsi = self.get_mpcs(mpci)
-                    nids += nidsi
-                    comps += compsi
             else:
                 self.log.warning('not considering:\n%s' % str(mpc))
                 #raise NotImplementedError(mpc.type)

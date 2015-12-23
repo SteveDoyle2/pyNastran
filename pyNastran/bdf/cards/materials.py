@@ -315,7 +315,10 @@ class MAT1(IsotropicMaterial):
         #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
         #msg += spaces + 'E  =%g,\n'  %(self.e)
         msg += spaces + 'NU=%g,\n' % (self.nu)
-        msg += spaces + 'RHO=%g));\n' % (self.rho)
+        if '.' in '%g' % self.rho:
+            msg += spaces + 'RHO=%g));\n' % (self.rho)
+        else:
+            msg += spaces + 'RHO=%.1f));\n' % (self.rho)
         return msg
 
     def cross_reference(self, model):
