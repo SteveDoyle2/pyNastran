@@ -39,7 +39,7 @@ PyQt4 unique (PySide is broken)
    - data format (%f, %e, %g, %i, %.4f)
    - red to blue; blue to red
    - TODO: continuous to discrete (doesn't work)
-   - TODO: doesn't save results
+   - save results
    - can't move legend
      - horizontal/veterical
      - TODO: can't explicitly place it
