@@ -15,8 +15,8 @@ def get_git_revision_short_hash():
         ghash = ghash.decode('utf-8').rstrip()
     except:
         # git isn't installed
-        ghash = 'no_checksum_error'
-    return 'dev-%s' % ghash
+        ghash = 'no.checksum.error'
+    return 'dev.%s' % ghash
 
 revision = get_git_revision_short_hash()
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek, hurlei, saullocastro'
@@ -27,7 +27,7 @@ __copyright__   = 'Copyright %s; 2011-2016' % __license__
 __pyqt_copyright__ = 'Copyright GPLv3; 2011-2016'
 __releaseDate__ = '2016/4/xx'
 __releaseDate2__ = 'APRIL xx, 2016'
-__version__     = '0.8.0_%s' % revision
+__version__     = '0.8.0+%s' % revision
 __website__     = 'https://github.com/SteveDoyle2/pyNastran'
 
 is_release = True  ## turns on skipping of tables that aren't supported
