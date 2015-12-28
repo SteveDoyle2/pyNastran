@@ -89,7 +89,6 @@ try:
 except ImportError:
     py_packages.append('docopt == 0.6.2')
 
-    #'docopt == 0.6.2',
 
 #py_packages = [
 #    'numpy >= 1.9.0',
