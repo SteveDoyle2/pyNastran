@@ -440,6 +440,40 @@ class TestOP2(Tester):
         op2.write_f06('junk.f06', quiet=True)
         os.remove('junk.f06')
 
+    def test_op2_cbush_01(self):
+        op2_filename = os.path.join('cbush.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'cbush'))
+        op2_filename = os.path.join(folder, op2_filename)
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        read_op2(op2_filename)
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                                 write_f06=write_f06,
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        isubcase = 1
+
+        cbush_stress = op2.cbush_stress[isubcase]
+        assert cbush_stress.nelements == 1, cbush_stress.nelements
+        assert cbush_stress.data.shape == (1, 1, 6), cbush_stress.data.shape
+
+        cbush_strain = op2.cbush_strain[isubcase]
+        assert cbush_strain.nelements == 1, cbush_strain.nelements
+        assert cbush_strain.data.shape == (1, 1, 6), cbush_strain.data.shape
+
+        cbush_force = op2.cbush_force[isubcase]
+        assert cbush_force.nelements == 1, cbush_force.nelements
+        assert cbush_force.data.shape == (1, 1, 6), cbush_force.data.shape
+
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
 
     def _verify_ids(self, bdf, op2, isubcase=1):
         types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
