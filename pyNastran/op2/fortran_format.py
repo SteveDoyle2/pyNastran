@@ -452,12 +452,17 @@ class FortranFormat(object):
                         self.obj.words = self.words
                         self.obj.itime += 1
                     else:
-                        # this happens when self._data_factor hasn't been reset
+                        # This happens when self._data_factor hasn't been reset
+                        # or is set wrong.
                         # can it happen any other time?
-                        self.log.debug('self.obj.name=%r has itime' % self.obj.__class__.__name__)
-                        self.log.debug('ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
+                        msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
+                        self.log.debug(msga)
+                        msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
                             self.obj.ntotal, str(self.obj.data.shape),
-                            self.obj.data.shape[1], self._data_factor))
+                            self.obj.data.shape[1], self._data_factor)
+                        self.log.debug(msgb)
+                        raise RuntimeError(msga + msgb)
+
                 #else:
                     #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
 

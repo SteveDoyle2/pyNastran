@@ -2399,7 +2399,6 @@ class OEF(OP2Common):
                 ntotal = 28 # 7*4
                 nelements = ndata // ntotal
 
-                self._data_factor = 10  # TODO: why is this 10?
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealCBushForceArray)
                 if auto_return:
