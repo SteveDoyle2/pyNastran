@@ -2581,7 +2581,7 @@ class RealCBushForceArray(ScalarObject):
         self.element = zeros(self.nelements, dtype='int32')
 
         #[fx, fy, fz, mx, my, mz]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

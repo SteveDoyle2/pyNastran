@@ -5,6 +5,7 @@ CEND
   SPCFORCE(SORT1,REAL,PUNCH) = ALL
   STRESS(SORT1,REAL,VONMISES,BILIN,PUNCH) = ALL
   STRAIN(SORT1,REAL,VONMISES,BILIN,PUNCH) = ALL
+  FORCE(SORT1,REAL) = ALL
   SPC = 1
   LOAD = 1
 BEGIN BULK
@@ -16,7 +17,7 @@ PARAM,MAXRATIO,1.+8
 PARAM,GRDPNT,0
 FORCE          1       2       0      1.   1000.      0.      0.
 SPC1           1  123456       1
-PBUSH         10       K    1.+9    1.+9    1.+9    500.      1.    500.                
+PBUSH         10       K    1.+9    1.+9    1.+9    500.      1.    500.
 GRID           1       0     10.     15.      7.       0
 GRID           2       0     10.     15.      7.       0
 CBUSH          1      10       1       2                               0
