@@ -64,7 +64,7 @@ BDF:
    $ pyNastran: version=nx
    $ pyNastran: skip_cards=PBEAM,CBEAM
  - self.set_as_msc() / self.set_as_nx()
- - added bdf.get_cards_by_card_types to get list of cards by card type easily
+ - added bdf.get_cards_by_card_types to get list of cards by card type
   - self._type_to_id_map
   - self._type_to_slot_map
   - self._slot_to_type_map
