@@ -87,6 +87,12 @@ class RealBush1DStressArray(OES_Object):
 #dt, eid, fe, ue, ve, ao, ae, ep, fail
     def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed):
         assert isinstance(eid, int)
+        # pyNastran_examples\move_tpl\ar29scb1.op2
+        #print('dt=%s eid=%s force=%s' % (dt, eid, element_force))
+        #print('element.shape=%s' % self.element.shape)
+        #print('data.shape=%s' % str(self.data.shape))
+        #print('times.shape=%s' % self._times.shape)
+        #print('itime=%s ielement=%s itotal=%s' % (self.itime, self.itotal, self.ielement))
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]

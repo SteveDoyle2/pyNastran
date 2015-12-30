@@ -1291,6 +1291,9 @@ class NastranIO(object):
                 nids1 = elem.Gmi_node_ids # dependent
                 for n1 in nids1:
                     lines_rigid.append([n1, n2])
+            elif elem.type == 'RBAR':
+                # TODO: RBAR not done
+                pass
             else:
                 print(str(elem))
         return lines_rigid

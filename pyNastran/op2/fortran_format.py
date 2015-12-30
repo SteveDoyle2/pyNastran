@@ -503,8 +503,11 @@ class FortranFormat(object):
                     self.obj._reset_indices()
                     self.obj.ntimes += 1
                     ntotal = record_len // (self.num_wide * 4) * self._data_factor
+
+                    # this has a problem with XYPLOT data if there is a result request in the same format
+                    #    e.g. OESNLXD/OES1X1 tables if they both have the same element ID
                     #class_name = self.obj.__class__.__name__
-                    #if class_name == 'RealRodForceArray':
+                    #if class_name == 'RealBush1DStressArray':
                         #print('%s.ntotal = %s' % (class_name, ntotal))
                         #print('num_wide=%s factor=%s len=%s ntotal=%s' % (self.num_wide, self._data_factor, record_len, ntotal))
 
