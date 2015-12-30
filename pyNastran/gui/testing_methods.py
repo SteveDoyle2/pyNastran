@@ -2,6 +2,8 @@ from __future__ import print_function
 from six import iteritems
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from collections import OrderedDict
+
 
 class GuiAttributes(object):
     """All methods in this class must not require VTK"""
@@ -75,14 +77,14 @@ class GuiAttributes(object):
 
         # actor_slots
         self.text_actors = {}
-        self.geometry_actors = {}
+        self.geometry_actors = OrderedDict()
         self.alt_grids = {} #additional grids
 
         #geom = Geom(color, line_thickness, etc.)
         #self.geometry_properties = {
         #    'name' : Geom(),
         #}
-        self.geometry_properties = {}
+        self.geometry_properties = OrderedDict()
 
         self.iText = 0
 
@@ -222,20 +224,20 @@ class GUIMethods(GuiAttributes):
         self.result_cases = {}
         self._finish_results_io = self.passer1
         self._finish_results_io2 = self.passer2
-        self.geometry_actors = {
-            'main' : GeometryActor(),
-        }
+        #self.geometry_actors = {
+            #'main' : GeometryActor(),
+        #}
         self.grid = Grid()
         self.scalarBar = ScalarBar()
         self.alt_geometry_actor = ScalarBar()
         self.alt_grids = {
             'main' : self.grid,
         }
-        self.geometry_properties = {
-            #'main' : None,
-            #'caero' : None,
-            #'caero_sub' : None,
-        }
+        #self.geometry_properties = {
+            ##'main' : None,
+            ##'caero' : None,
+            ##'caero_sub' : None,
+        #}
         #self._add_alt_actors = _add_alt_actors
 
         level = 'debug' if self.debug else 'info'

@@ -49,7 +49,6 @@ class SurfIO(object):
         assert nelements > 0, nelements
 
         self.grid.Allocate(self.nElements, 1000)
-        self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -121,10 +120,8 @@ class SurfIO(object):
         self.nElements = nelements
         self.grid.SetPoints(points)
         self.grid.Modified()
-        #self.grid2.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            #self.grid2.Update()
         #print("updated grid")
 
         # loadCart3dResults - regions/loads

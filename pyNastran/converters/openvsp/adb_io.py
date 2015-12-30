@@ -32,9 +32,6 @@ class ADB_IO(object):
         else:
             self.TurnTextOff()
             self.grid.Reset()
-            self.grid2.Reset()
-            #print(dir(self.grid2))
-            #self.grid2.VisibilityOff()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
 
@@ -88,7 +85,6 @@ class ADB_IO(object):
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
