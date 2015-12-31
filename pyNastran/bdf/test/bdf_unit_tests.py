@@ -17,12 +17,13 @@ from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder
 
 class Tester(unittest.TestCase):
 
-    def run_bdf(self, folder, bdf_filename, xref=False, cid=None,
-                meshForm='combined', debug=False, dynamic_vars={}):
+    def run_bdf(self, folder, bdf_filename, xref=False, cid=None, size=8,
+                mesh_form='combined', debug=False, dynamic_vars=None):
         cid = 0
         #xref = False
-        return run_bdf(folder, bdf_filename, xref=xref, cid=cid, isFolder=True,
-                       meshForm=meshForm, dynamic_vars=dynamic_vars, debug=debug)
+        return run_bdf(folder, bdf_filename, xref=xref, cid=cid, size=size,
+                       is_folder=True,
+                       mesh_form=mesh_form, dynamic_vars=dynamic_vars, debug=debug)
 
     def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
         run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
@@ -33,10 +34,10 @@ class TestBDF(Tester):
         bdf_filename = os.path.join('solid_bending', 'solid_bending.bdf')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
         self.run_bdf(folder, bdf_filename)
-        fem1, fem2, diffCards = self.run_bdf(folder, bdf_filename, xref=True)
-        diffCards2 = list(set(diffCards))
-        diffCards2.sort()
-        assert len(diffCards2) == 0, diffCards2
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, xref=True)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
 
         for fem in [fem1, fem2]:
             assert len(fem.params) == 2, 'len(params) = %i' % len(fem.params)
@@ -70,10 +71,10 @@ class TestBDF(Tester):
         bdf_filename = os.path.join('plate_py', 'plate_py.dat')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
         self.run_bdf(folder, bdf_filename)
-        fem1, fem2, diffCards = self.run_bdf(folder, bdf_filename, xref=True)
-        diffCards2 = list(set(diffCards))
-        diffCards2.sort()
-        assert len(diffCards2) == 0, diffCards2
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, xref=True)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
 
         for fem in [fem1, fem2]:
             assert len(fem.coords) == 3, 'len(coords) = %i' % len(fem.coords)
@@ -90,10 +91,10 @@ class TestBDF(Tester):
     def test_bdf_03(self):
         bdf_filename = os.path.join('cbush', 'cbush.dat')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diffCards = self.run_bdf(folder, bdf_filename)
-        diffCards2 = list(set(diffCards))
-        diffCards2.sort()
-        assert len(diffCards2) == 0, diffCards2
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
 
         for fem in [fem1, fem2]:
             assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
@@ -112,10 +113,10 @@ class TestBDF(Tester):
     def test_bdf_04(self):
         bdf_filename = os.path.join('beam_modes', 'beam_modes.dat')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diffCards = self.run_bdf(folder, bdf_filename)
-        diffCards2 = list(set(diffCards))
-        diffCards2.sort()
-        assert len(diffCards2) == 0, diffCards2
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
 
         for fem in [fem1, fem2]:
             assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
@@ -135,10 +136,10 @@ class TestBDF(Tester):
     def test_bdf_05(self):
         bdf_filename = 'testA.bdf'
         folder = os.path.abspath(os.path.join(pkg_path, 'bdf', 'test', 'unit'))
-        (fem1, fem2, diffCards) = self.run_bdf(folder, bdf_filename)
-        diffCards2 = list(set(diffCards))
-        diffCards2.sort()
-        assert len(diffCards2) == 0, diffCards2
+        (fem1, fem2, diff_cards) = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
         #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 
     def test_bdf_06(self):
@@ -155,10 +156,10 @@ class TestBDF(Tester):
             'youngs' : 1e7,
             'rho': 0.01,
         }
-        fem1, fem2, diffCards = self.run_bdf(folder, bdf_filename, dynamic_vars=dynamic_vars)
-        diffCards2 = list(set(diffCards))
-        diffCards2.sort()
-        assert len(diffCards2) == 0, diffCards2
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, dynamic_vars=dynamic_vars)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
 
         for fem in [fem1, fem2]:
             assert len(fem.params) == 4, 'len(params) = %i' % len(fem.params)
@@ -172,6 +173,29 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1)
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
+
+    def test_bdf_aircraft(self):
+        bdf_filename = os.path.join('aircraft', 'aircraft.bdf')
+        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, size=16)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        #for fem in [fem1, fem2]:
+            #assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
+            #assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
+            #assert len(fem.nodes) == 12, 'len(nodes) = %i' % len(fem.nodes)
+            #assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
+            #assert len(fem.elements) == 10, 'len(elements) = %i' % len(fem.elements)
+            #assert len(fem.masses) == 1, 'len(masses) = %i' % len(fem.elements)
+            #assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
+            #assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
+            #assert len(fem.properties_mass) == 0, 'len(properties_mass) = %i' % len(fem.properties_mass)
+        self._compare_mass_cg_I(fem1)
+        #self._compare_mass_cg_I(fem1, reference_point=u'cg')
+
+        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 
 
 class TestBaseCard(Tester):

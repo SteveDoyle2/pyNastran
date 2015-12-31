@@ -102,7 +102,7 @@ def memory_usage_psutil():
     return mem
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
-            cid=None, meshForm='combined', isFolder=False, print_stats=False,
+            cid=None, mesh_form='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, precision='single',
             reject=False, dynamic_vars=None):
     if dynamic_vars is None:
@@ -125,7 +125,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     fem2 = None
     diffCards = []
     try:
-        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid)
+        outModel = run_fem1(fem1, bdfModel, mesh_form, xref, punch, sum_load, size, precision, cid)
         fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
         diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
@@ -153,52 +153,52 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     return (fem1, fem2, diffCards)
 
 
-def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid):
-    assert os.path.exists(bdfModel), print_bad_path(bdfModel)
+def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid):
+    assert os.path.exists(bdf_model), print_bad_path(bdf_model)
     try:
-        if '.pch' in bdfModel:
-            fem1.read_bdf(bdfModel, xref=False, punch=True)
+        if '.pch' in bdf_model:
+            fem1.read_bdf(bdf_model, xref=False, punch=True)
         else:
-            fem1.read_bdf(bdfModel, xref=xref, punch=punch)
+            fem1.read_bdf(bdf_model, xref=xref, punch=punch)
     except:
-        print("failed reading %r" % bdfModel)
+        print("failed reading %r" % bdf_model)
         raise
     #fem1.sumForces()
 
-    outModel = bdfModel + '_out'
+    out_model = bdf_model + '_out'
     if cid is not None and xref:
         fem1.resolveGrids(cid=cid)
-    if meshForm == 'combined':
-        fem1.write_bdf(outModel, interspersed=True, size=size, precision=precision)
-    elif meshForm == 'separate':
-        fem1.write_bdf(outModel, interspersed=False, size=size, precision=precision)
+    if mesh_form == 'combined':
+        fem1.write_bdf(out_model, interspersed=True, size=size, precision=precision)
+    elif mesh_form == 'separate':
+        fem1.write_bdf(out_model, interspersed=False, size=size, precision=precision)
     else:
-        msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
+        msg = "mesh_form=%r; allowedForms=['combined','separate']" % mesh_form
         raise NotImplementedError(msg)
-    #fem1.writeAsCTRIA3(outModel)
-    return outModel
+    #fem1.writeAsCTRIA3(out_model)
+    return out_model
 
 
-def run_fem2(bdfModel, outModel, xref, punch,
+def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, precision,
              reject, debug=False, log=None):
-    assert os.path.exists(bdfModel), bdfModel
-    assert os.path.exists(outModel), outModel
+    assert os.path.exists(bdf_model), bdf_model
+    assert os.path.exists(out_model), out_model
     fem2 = BDF(debug=debug, log=log)
     fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
-        fem2.read_bdf(outModel, xref=xref, punch=punch)
+        fem2.read_bdf(out_model, xref=xref, punch=punch)
     except:
-        print("failed reading %r" % outModel)
+        print("failed reading %r" % out_model)
         raise
 
     #fem2.sumForces()
     #fem2.sumMoments()
-    outModel2 = bdfModel + '_out2'
-    fem2.write_bdf(outModel2, interspersed=True)
-    #fem2.writeAsCTRIA3(outModel2)
-    os.remove(outModel2)
+    out_model_2 = bdf_model + '_out2'
+    fem2.write_bdf(out_model_2, interspersed=True)
+    #fem2.writeAsCTRIA3(out_model_2)
+    os.remove(out_model_2)
     return fem2
 
 

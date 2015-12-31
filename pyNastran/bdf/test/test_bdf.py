@@ -123,7 +123,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             filenames2.append(filename)
 
     failed_files = []
-    n = 1
+    npass = 1
     for filename in filenames2:
         abs_filename = os.path.abspath(os.path.join(folder, filename))
         if folder != '':
@@ -133,7 +133,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             for size, is_double, post in size_doubles_post:
                 fem1, fem2, diff_cards2 = run_bdf(folder, filename, debug=debug,
                                                   xref=xref, check=check, punch=punch,
-                                                  cid=cid, isFolder=True, dynamic_vars={},
+                                                  cid=cid, is_folder=True, dynamic_vars={},
                                                   nastran=nastran, size=size, is_double=is_double,
                                                   post=post, sum_load=sum_load, dev=dev)
                 del fem1
@@ -158,8 +158,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         print('-' * 80)
 
         if is_passed:
-            sys.stderr.write('%i %s' % (n, abs_filename))
-            n += 1
+            sys.stderr.write('%i %s' % (npass, abs_filename))
+            npass += 1
         else:
             sys.stderr.write('*' + abs_filename)
             failed_files.append(abs_filename)
@@ -185,7 +185,7 @@ def memory_usage_psutil():
 
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
-            cid=None, meshForm='combined', isFolder=False, print_stats=False,
+            cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
             reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, dev=False):
@@ -210,10 +210,10 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         this is a PUNCH file (no executive/case control decks)
     cid : int / None, optional
         convert the model grids to an alternate coordinate system (default=None; no conversion)
-    meshForm : str, optional, {'combined', 'separate'}
+    mesh_form : str, optional, {'combined', 'separate'}
         'combined' : interspersed=True
         'separate' : interspersed=False
-    isFolder : bool, optional
+    is_folder : bool, optional
         attach the test path and the folder to the bdf_filename
     print_stats : bool, optional
         get a nicely formatted message of all the cards in the model
@@ -245,15 +245,15 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         dynamic_vars = {}
 
     # TODO: why do we need this?
-    bdfModel = str(bdf_filename)
-    print("bdfModel = %s" % bdfModel)
-    if isFolder:
-        bdfModel = os.path.join(test_path, folder, bdf_filename)
+    bdf_model = str(bdf_filename)
+    print("bdf_model = %s" % bdf_model)
+    if is_folder:
+        bdf_model = os.path.join(test_path, folder, bdf_filename)
 
-    assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
+    assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     if reject:
-        fem1 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
+        fem1 = BDFReplacer(bdf_model + '.rej', debug=debug, log=None)
     else:
         fem1 = BDF(debug=debug, log=None)
     fem1.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
@@ -272,21 +272,21 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #nastran = 'nastran scr=yes bat=no old=no news=no '
         nastran = ''
         #try:
-        outModel, fem1 = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
+        out_model, fem1 = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid)
         if stop:
             print('card_count:')
             print('-----------')
             for card_name, card_count in sorted(iteritems(fem1.card_count)):
                 print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
-        fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
+        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
         #except:
             #return 1, 2, 3
 
-        run_nastran(bdfModel, nastran, post, size, is_double)
+        run_nastran(bdf_model, nastran, post, size, is_double)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
@@ -379,7 +379,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         op2.read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid):
+def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid):
     """
     Reads/writes the BDF
 
@@ -387,9 +387,9 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
     ----------
     fem1 : BDF()
         The BDF object
-    bdfModel : str
+    bdf_model : str
         The root path of the bdf filename
-    meshForm : str {combined, separate}
+    mesh_form : str {combined, separate}
         'combined' : interspersed=True
         'separate' : interspersed=False
     xref : bool
@@ -405,12 +405,12 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
     cid : int / None
         cid flag
     """
-    assert os.path.exists(bdfModel), print_bad_path(bdfModel)
+    assert os.path.exists(bdf_model), print_bad_path(bdf_model)
     try:
-        if '.pch' in bdfModel:
-            fem1.read_bdf(bdfModel, xref=False, punch=True)
+        if '.pch' in bdf_model:
+            fem1.read_bdf(bdf_model, xref=False, punch=True)
         else:
-            fem1.read_bdf(bdfModel, xref=False, punch=punch)
+            fem1.read_bdf(bdf_model, xref=False, punch=punch)
             #fem1.geom_check(geom_check=True, xref=False)
             fem1.write_skin_solid_faces('skin_file.bdf', size=16, is_double=False)
             if xref:
@@ -441,23 +441,23 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
     except:
-        print("failed reading %r" % bdfModel)
+        print("failed reading %r" % bdf_model)
         raise
     #fem1.sumForces()
 
     if fem1._auto_reject:
-        out_model = bdfModel + '.rej'
+        out_model = bdf_model + '.rej'
     else:
-        out_model = bdfModel + '_out'
+        out_model = bdf_model + '_out'
         if cid is not None and xref:
             fem1.resolve_grids(cid=cid)
 
-        if meshForm == 'combined':
+        if mesh_form == 'combined':
             fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
-        elif meshForm == 'separate':
+        elif mesh_form == 'separate':
             fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
         else:
-            msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
+            msg = "mesh_form=%r; allowedForms=['combined','separate']" % mesh_form
             raise NotImplementedError(msg)
         #fem1.writeAsCTRIA3(out_model)
 
@@ -465,7 +465,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, c
     return out_model, fem1
 
 
-def run_fem2(bdfModel, out_model, xref, punch,
+def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double,
              reject, debug=False, log=None):
     """
@@ -473,7 +473,8 @@ def run_fem2(bdfModel, out_model, xref, punch,
 
     Parameters
     ----------
-    bdfModel
+    bdf_model : str
+        the filename to run
     out_model
     xref : bool
        xrefs
@@ -490,11 +491,11 @@ def run_fem2(bdfModel, out_model, xref, punch,
     log : logger / None
         ignored
     """
-    assert os.path.exists(bdfModel), bdfModel
+    assert os.path.exists(bdf_model), bdf_model
     assert os.path.exists(out_model), out_model
 
     if reject:
-        fem2 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
+        fem2 = BDFReplacer(bdf_model + '.rej', debug=debug, log=None)
     else:
         fem2 = BDF(debug=debug, log=None)
     fem2.log.info('starting fem2')
@@ -505,7 +506,7 @@ def run_fem2(bdfModel, out_model, xref, punch,
         print("failed reading %r" % out_model)
         raise
 
-    outModel2 = bdfModel + '_out2'
+    out_model_2 = bdf_model + '_out2'
 
     if xref and sum_load:
         p0 = array([0., 0., 0.])
@@ -539,7 +540,7 @@ def run_fem2(bdfModel, out_model, xref, punch,
                 assert subcase.has_parameter('TIME'), subcase
 
             elif sol == 144:
-                assert subcase.has_parameter('SUPORT') or len(model.suports), subcase
+                assert subcase.has_parameter('SUPORT') or len(fem2.suports), subcase
                 assert subcase.has_parameter('TRIM'), subcase
             elif sol == 145:
                 assert subcase.has_parameter('METHOD'), subcase
@@ -663,9 +664,9 @@ def run_fem2(bdfModel, out_model, xref, punch,
 
                 # print(loads)
 
-    fem2.write_bdf(outModel2, interspersed=False, size=size, is_double=is_double)
-    #fem2.writeAsCTRIA3(outModel2)
-    os.remove(outModel2)
+    fem2.write_bdf(out_model_2, interspersed=False, size=size, is_double=is_double)
+    #fem2.writeAsCTRIA3(out_model_2)
+    os.remove(out_model_2)
     return fem2
 
 

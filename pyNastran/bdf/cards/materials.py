@@ -962,7 +962,10 @@ class MAT8(OrthotropicMaterial):
             self.mid = integer(card, 1, 'mid')
             self.e11 = double(card, 2, 'E11')    #: .. todo:: is this the correct default
             self.e22 = double(card, 3, 'E22')    #: .. todo:: is this the correct default
-            self.nu12 = double_or_blank(card, 4, 'nu12', 0.3)  #: .. todo:: is this the correct default
+
+            # this default was tested with a complicated model (Master_model_TAXI) using NX Nastran
+            # it is not defined in the QRG, but will work
+            self.nu12 = double_or_blank(card, 4, 'nu12', 0.0)
 
             self.g12 = double_or_blank(card, 5, 'g12', 0.0)
             self.g1z = double_or_blank(card, 6, 'g1z', 1e8)

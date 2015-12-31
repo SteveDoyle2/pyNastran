@@ -30,6 +30,85 @@ class RigidElement(Element):
     def cross_reference(self, model):
         pass
 
+class RROD(RigidElement):
+    type = 'RROD'
+
+    def __init__(self, card=None, data=None, comment=''):
+        """
+        +------+-----+----+----+-----+-----+-------+
+        | RROD | EID | GA | GB | CMA | CMB | ALPHA |
+        +------+-----+----+----+-----+-----+-------+
+        | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
+        +------+-----+----+----+-----+-----+-------+
+        """
+        RigidElement.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            self.eid = integer(card, 1, 'eid')
+            self.ga = integer(card, 2, 'ga')
+            self.gb = integer(card, 3, 'gb')
+            self.cma = components_or_blank(card, 4, 'cma')
+            self.cmb = components_or_blank(card, 5, 'cmb')
+            self.alpha = double_or_blank(card, 6, 'alpha', 0.0)
+            assert len(card) <= 6, 'len(RROD card) = %i' % len(card)
+        else:
+            self.eid = data[0]
+            self.ga = data[1]
+            self.gb = data[2]
+            self.cma = data[3]
+            self.cmb = data[4]
+            self.alpha = data[5]
+
+    def Ga(self):
+        if isinstance(self.ga, integer_types):
+            return self.ga
+        return self.ga_ref.nid
+
+    def Gb(self):
+        if isinstance(self.gb, integer_types) or self.gb is None:
+            return self.gb
+        return self.gb_ref.nid
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.ga = model.Node(self.Ga(), msg=msg)
+        self.gb = model.Node(self.Gb(), msg=msg)
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
+
+    def uncross_reference(self):
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        del self.ga_ref, self.gb_ref
+
+    @property
+    def independent_nodes(self):
+        """gets the independent node ids"""
+        return [self.Ga()]
+
+    @property
+    def dependent_nodes(self):
+        """gets the dependent node ids"""
+        return [self.Gb()]
+
+    def raw_fields(self):
+        list_fields = ['RROD', self.eid, self.Ga(), self.Gb(),
+                       self.cma, self.cmb, self.alpha]
+        return list_fields
+
+    def repr_fields(self):
+        alpha = set_blank_if_default(self.alpha, 0.0)
+        list_fields = ['RROD', self.eid, self.Ga(), self.Gb(),
+                       self.cma, self.cmb, alpha]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
 
 class RBAR(RigidElement):
     type = 'RBAR'
@@ -180,6 +259,16 @@ class RBAR1(RigidElement):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb_ref.nid
+
+    @property
+    def independent_nodes(self):
+        """gets the independent node ids"""
+        return [self.Ga()]
+
+    @property
+    def dependent_nodes(self):
+        """gets the dependent node ids"""
+        return [self.Gb()]
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)

@@ -1270,6 +1270,10 @@ class NastranIO(object):
 
 
     def _get_rigid(self, dim_max, model):
+        """
+        dependent = (lines[:, 0])
+        independent = unique(lines[:, 1])
+        """
         lines_rigid = []
         for eid, elem in iteritems(model.rigid_elements):
             if elem.type == 'RBE3':
@@ -1291,9 +1295,10 @@ class NastranIO(object):
                 nids1 = elem.Gmi_node_ids # dependent
                 for n1 in nids1:
                     lines_rigid.append([n1, n2])
-            elif elem.type == 'RBAR':
-                # TODO: RBAR not done
-                pass
+            elif elem.type in ['RBAR', 'RBAR1', 'RROD']:
+                dependent = elem.Ga()
+                independent = elem.Gb()
+                lines_rigid.append([dependent, independent])
             else:
                 print(str(elem))
         return lines_rigid
@@ -2173,9 +2178,10 @@ class NastranIO(object):
 
         iload = 0
         nloads = len(loads2)
+        show_nloads = nloads > 5000
         # loop thru scaled loads and plot the pressure
         for load, scale in zip(loads2, scale_factors2):
-            if iload % 5000 == 0:
+            if show_nloads and iload % 5000 == 0:
                 print('  NastranIOv iload=%s/%s' % (iload, nloads))
             if load.type == 'PLOAD4':
                 elem = load.eid

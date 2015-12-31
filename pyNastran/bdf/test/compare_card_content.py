@@ -5,8 +5,8 @@ from itertools import count
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
-from pyNastran.bdf.field_writer_8 import print_field, print_card_8
-
+from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
+from pyNastran.bdf.field_writer_16 import print_field_16
 
 def assert_fields(card1, card2):
     try:
@@ -24,17 +24,26 @@ def assert_fields(card1, card2):
         raise RuntimeError(msg)
 
     msg_end = ''
+    max_int = 99999999
     for (i, field1, field2) in zip(count(), fields1, fields2):
-        value1a = print_field(field1)
-        value2a = print_field(field2)
+        if isinstance(field1, int) and field1 > max_int:
+            value1a = print_field_16(field1)
+            value2a = print_field_16(field2)
+        else:
+            value1a = print_field_8(field1)
+            value2a = print_field_8(field2)
         msg_end += '%-2s: %-8s %-8s\n' % (i, field1, field2)
         if value1a != value2a:
-            value1 = print_field(interpret_value(value1a))
-            value2 = print_field(interpret_value(value2a))
+            if isinstance(field1, int) and field1 > max_int:
+                value1 = print_field_16(interpret_value(value1a))
+                value2 = print_field_16(interpret_value(value2a))
+            else:
+                value1 = print_field_8(interpret_value(value1a))
+                value2 = print_field_8(interpret_value(value2a))
 
             if value1 != value2:
                 msg = 'value1 != value2\n'
-                msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r '
+                msg += ('card_name=%s ID=%s i=%s field1=%r field2=%r value1=%r '
                         'value2=%r\n%r\n%r\n' % (fields1[0], fields1[1], i,
                                                  field1, field2, value1, value2,
                                                  fields1, fields2))
