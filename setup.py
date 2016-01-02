@@ -158,7 +158,7 @@ setup(
             #'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
             'format_converter = pyNastran.converters.type_converter:main',
-        ]
+        ] + py2_gui_scripts
     },
     test_suite='pyNastran.all_tests',
 )
