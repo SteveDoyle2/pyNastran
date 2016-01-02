@@ -73,22 +73,30 @@ class OGPF(OP2Common):
                     iend = istart + nnodes
                     obj._times[obj.itime] = dt
 
-                    if obj.itime == 0:
+                    itime = obj.itime
+                    if itime == 0 or obj.is_unique:
                         ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
+
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
-                        obj.node_element[istart:iend, 0] = nids
-                        obj.node_element[istart:iend, 1] = eids
                         strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)#[:, 2:3]
-                        obj.element_names[istart:iend] = strings[:, 1]
+                        if obj.is_unique:
+                            obj.node_element[itime, istart:iend, 0] = nids
+                            obj.node_element[itime, istart:iend, 1] = eids
+                            obj.element_names[itime, istart:iend] = strings[:, 1]
+                        else:
+                            obj.node_element[istart:iend, 0] = nids
+                            obj.node_element[istart:iend, 1] = eids
+                            obj.element_names[istart:iend] = strings[:, 1]
+
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 10)
                     #[f1, f2, f3, m1, m2, m3]
-                    obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
+                    obj.data[itime, istart:iend, :] = floats[:, 4:]
                     #obj._times[obj.itime] = dt
                     #obj.itotal = itotal2
                     if self.is_debug_file:
-                        if obj.itime != 0:
+                        if itime != 0:
                             ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
                             strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)
                         for i in range(iend - istart):

@@ -17,6 +17,7 @@ class RealGridPointForcesArray(ScalarObject):
 
         # do the element_names/node_element vectors change with the time step
         self.is_unique = False
+        self.element_names = []
 
         #self.ielement = 0
         #self.nelements = 0  # result specific
@@ -34,7 +35,7 @@ class RealGridPointForcesArray(ScalarObject):
 
     @property
     def element_name(self):
-        headers = [name.strip() for name in unique(self.element_names)]
+        headers = [name.strip() for name in unique(self.element_names) if name.strip()]
         #headers = unique(self.element_names)
         return str(b', '.join(headers))
 
@@ -65,8 +66,8 @@ class RealGridPointForcesArray(ScalarObject):
         #self.nelements = 0
         self.is_built = True
 
-        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_names, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        #print("***name=%s ntimes=%s ntotal=%s" % (
+            #self.element_names, self.ntimes, self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
@@ -74,7 +75,7 @@ class RealGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
-            raise NotImplementedError('not unique')
+            #raise NotImplementedError('not unique')
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
@@ -137,8 +138,17 @@ class RealGridPointForcesArray(ScalarObject):
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
-        self.node_element[self.itotal, :] = [eid, node_id]
-        self.element_names[self.itotal] = ename
+
+        if self.is_unique:
+            raise NotImplementedError('not unique')
+            self.node_element[self.itime, self.itotal, :] = [node_id, eid]
+            self.element_names[self.itime, self.itotal] = ename
+        else:
+            self.node_element[self.itotal, :] = [node_id, eid]
+            self.element_names[self.itotal] = ename
+
+        #self.node_element[self.itotal, :] = [eid, node_id]
+        #self.element_names[self.itotal] = ename
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 

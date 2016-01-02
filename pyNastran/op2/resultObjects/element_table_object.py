@@ -322,8 +322,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         r3 = self.data[0, :, 5]
         for element_id, etypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(element, element_type, t1, t2, t3, r1, r2, r3):
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-            (vals2, is_all_zeros) = write_floats_13e(vals)
-            (dx, dy, dz, rx, ry, rz) = vals2
+            (dx, dy, dz, rx, ry, rz) = write_floats_13e(vals)
             f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (element_id, etypei, dx, dy, dz, rx, ry, rz))
         f.write(page_stamp % page_num)
         return page_num

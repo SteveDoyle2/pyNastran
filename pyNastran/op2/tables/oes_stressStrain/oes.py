@@ -16,7 +16,7 @@ from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import (RealBar10NodesStressArray, RealBar10NodesStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStressArray, RealBeamStrainArray,
                                                                   RealNonlinearBeamStressArray)
@@ -30,23 +30,21 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArr
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (RealSpringStressArray, RealSpringStrainArray,
-                                                                    NonlinearSpringStress) # TODO: vectorize 1
+                                                                    RealNonlinearSpringStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
 
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import (ComplexCBushStressArray, ComplexCBushStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress                   # TODO: vectorize 1
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress    # TODO: vectorize 1
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStress, ComplexShearStrain    # TODO: vectorize 2
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (NonlinearRod, NonlinearQuad, HyperelasticQuad,  # TODO: vectorize 3
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (RealNonlinearRodArray, NonlinearQuad, HyperelasticQuad,  # TODO: vectorize 2
                                                                  RealNonlinearPlateArray)
-#ComplexShearStressArray = None
-#ComplexShearStrainArray = None
 
 
 class OES(OP2Common):
@@ -620,16 +618,10 @@ class OES(OP2Common):
         elif self.element_type == 4: # CSHEAR
             # 4-CSHEAR
             if self.is_stress():
-                #obj_real = RealShearStress
-                obj_complex = ComplexShearStress
-
                 obj_vector_real = RealShearStressArray
                 obj_vector_complex = ComplexShearStressArray
                 result_name = 'cshear_stress'
             else:
-                #obj_real = RealShearStrain
-                obj_complex = ComplexShearStrain
-
                 obj_vector_real = RealShearStrainArray
                 obj_vector_complex = ComplexShearStrainArray
                 result_name = 'cshear_strain'
@@ -684,9 +676,8 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 5:  # imag
                 ntotal = 20  # 4*5
                 nelements = ndata // ntotal
-                auto_return, is_vectorized = self._create_oes_object3(nelements,
-                                                       result_name, slot,
-                                                       obj_complex, obj_vector_complex)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -2302,9 +2293,6 @@ class OES(OP2Common):
             # 87-CTUBENL
             # 89-RODNL
             # 92-CONRODNL
-            if self.read_mode == 1:
-                return ndata
-
             if self.is_stress():
                 if self.element_type == 87:
                     result_name = 'nonlinear_ctube_stress'
@@ -2356,9 +2344,9 @@ class OES(OP2Common):
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, 7)
                         eids = ints[:, 0] // 10
-                        obj.element_layer[istart:iend, 0] = eids
+                        obj.element[istart:iend] = eids
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 7)
-                    #[axial, equiv_stress, total_strain,
+                    #[axial_stress, equiv_stress, total_strain,
                     # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
                 else:
@@ -2367,13 +2355,13 @@ class OES(OP2Common):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
 
-                        (eid, axial, equiv_stress, total_strain,
+                        (eid_device, axial_stress, equiv_stress, total_strain,
                          eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss) = out
                         eid = self._check_id(eid_device, flag, stress_name, out)
                         if self.is_debug_file:
                             self.binary_debug.write('%s - %s\n' % (name, str(out)))
-                        obj.add(self.element_type, dt, eid, axial, equiv_stress, total_strain,
-                                eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss)
+                        obj.add_sort1(dt, eid, axial_stress, equiv_stress, total_strain,
+                                      eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss)
                         n += ntotal
             else:
                 raise RuntimeError(self.code_information())
@@ -2383,8 +2371,6 @@ class OES(OP2Common):
             # 225-CELAS3
             # NonlinearSpringStress
             numwide_real = 3
-            if self.read_mode == 1:
-                return ndata
             if self.is_stress():
                 if self.element_type == 224:
                     result_name = 'nonlinear_celas1_stress'
@@ -2397,15 +2383,18 @@ class OES(OP2Common):
 
             self._results._found_result(result_name)
             if self.num_wide == numwide_real:
-                if self.is_stress():
-                    self.create_transient_object(slot, NonlinearSpringStress)
-                else:
-                    #self.create_transient_object(self.nonlinearSpringStrain, NonlinearSpringStrain)  # undefined
-                    raise NotImplementedError('NonlinearSpringStrain')
-
                 assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
                 ntotal = 12  # 4*3
                 nelements = ndata // ntotal
+
+                if self.is_stress():
+                    auto_return, is_vectorized = self._create_oes_object4(
+                        nelements, result_name, slot, RealNonlinearSpringStressArray)
+                else:
+                    raise NotImplementedError('NonlinearSpringStrainArray') # undefined
+
+                if auto_return:
+                    return nelements * self.num_wide * 4
                 obj = self.obj
 
                 s = Struct(b(self._endian + 'i2f'))
@@ -2416,7 +2405,7 @@ class OES(OP2Common):
                     eid = self._check_id(eid_device, flag, stress_name, out)
                     if self.is_debug_file:
                         self.binary_debug.write('%s-%s - %s\n' % (self.element_name, self.element_type, str(out)))
-                    obj.add_new_eid(self.element_name, dt, eid, force, stress)
+                    obj.add_sort1(dt, eid, force, stress)
                     n += ntotal
             else:
                 raise RuntimeError(self.code_information())

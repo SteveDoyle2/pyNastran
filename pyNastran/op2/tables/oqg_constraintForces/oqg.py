@@ -169,7 +169,7 @@ class OQG(OP2Common):
 
         #assert self.isThermal() == False, self.thermal
 
-        self.node_id = self.add_data_parameter(data, 'node_id', 'i', 5, fixDeviceCode=True)
+        self.node_id = self.add_data_parameter(data, 'node_id', 'i', 5, fix_device_code=True)
         #if self.analysis_code == 1:  # statics / displacement / heat flux
             ## load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)

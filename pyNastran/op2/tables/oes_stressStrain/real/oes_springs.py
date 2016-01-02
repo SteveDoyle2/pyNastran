@@ -2,7 +2,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip
-from numpy import zeros
+from numpy import zeros, array_equal
+from itertools import count
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header
@@ -481,9 +482,224 @@ class RealCelasStrain(StrainObject):
         self.strain[dt][eid] = strain
 
 
+class RealNonlinearSpringStressArray(OES_Object):
+    """
+    ::
+
+      #ELEMENT-ID =     102
+                               #N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+        #TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL
+                                             #STRESS                             PLASTIC/NLELAST          STRAIN              STRESS
+      #2.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
+      #3.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
+    """
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            pass
+        else:
+            raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def _get_msgs(self):
+        raise NotImplementedError()
+
+    def get_headers(self):
+        headers = ['force', 'stress']
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[force, stress]
+        self.data = zeros((self.ntimes, self.nelements, 2), dtype='float32')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, inid, :]
+                        t2 = table.data[itime, inid, :]
+                        (force1, stress1) = t1
+                        (force2, stress2) = t2
+                        if not allclose(t1, t2):
+                        #if not array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                force1, stress1,
+                                force2, stress2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
+    def add_sort1(self, dt, eid, force, stress):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [force, stress]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        ntimes, nelements, _ = self.data.shape
+        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
+        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        if self.is_sort1():
+            if self.element_type == 224:
+                nspring = 1 # CELAS1
+            elif self.element_type == 225:
+                nspring = 3 # CELAS3
+            else:
+                raise NotImplementedError('type=%s name=%s' % (self.element_type, self.element_name))
+
+            msg = [
+                '          N O N L I N E A R   F O R C E S  A N D  S T R E S S E S  I N   S C A L A R   S P R I N G S    ( C E L A S %i )\n'
+                ' \n'
+                 '         ELEMENT-ID          FORCE         STRESS                    ELEMENT-ID          FORCE         STRESS\n' % nspring
+                #'         5.000000E-02     2.000000E+01   1.000000E+01                1.000000E-01     4.000000E+01   2.000000E+01'
+            ]
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg)
+        else:
+            msg = [
+                '          N O N L I N E A R   F O R C E S  A N D  S T R E S S E S  I N   S C A L A R   S P R I N G S    ( C E L A S %i )\n'
+                ' \n'
+                '             STEP            FORCE         STRESS                        STEP            FORCE         STRESS\n' % nspring
+                #'         5.000000E-02     2.000000E+01   1.000000E+01                1.000000E-01     4.000000E+01   2.000000E+01'
+            ]
+            raise NotImplementedError('RealNonlinearSpringStressArray-sort2')
+        return page_num
+
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
+        """
+        ::
+              ELEMENT-ID =      20
+                  N O N L I N E A R   F O R C E S  A N D  S T R E S S E S  I N   S C A L A R   S P R I N G S    ( C E L A S 1 )
+
+                     STEP            FORCE         STRESS                        STEP            FORCE         STRESS
+                 5.000000E-02     2.000000E+01   1.000000E+01                1.000000E-01     4.000000E+01   2.000000E+01
+                 1.500000E-01     6.000000E+01   3.000000E+01                2.000000E-01     8.000000E+01   4.000000E+01
+        """
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        neids = len(eids)
+        is_odd = neids % 2 == 1
+        if is_odd:
+            neids -= 1
+
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+            force = self.data[itime, :, 0]
+            stress = self.data[itime, :, 1]
+            for i, eid, forcei, stressi, in zip(count(step=2), eids[:neids:2], force[:neids:2], stress[:neids:2]):
+                f.write('         %-13i   %-13s  %-13s                %-13s   %-13s  %s\n' % (
+                    eid,
+                    write_float_13e(forcei),
+                    write_float_13e(stressi),
+                    eids[i + 1],
+                    write_float_13e(force[i + 1]),
+                    write_float_13e(stress[i + 1])
+                ))
+            if is_odd:
+                f.write('         %-13i   %-13s  %s\n' % (
+                    eids[neids],
+                    write_float_13e(force[neids]),
+                    write_float_13e(stress[neids])
+                ))
+
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
 class NonlinearSpringStress(StressObject):
-    """
-    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}

@@ -184,7 +184,7 @@ class OUG(OP2Common):
         ## thermal flag; 1 for heat transfer, 0 otherwise
         self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
-        self.node_id = self.add_data_parameter(data, 'node_id', 'i', 5, fixDeviceCode=True)
+        self.node_id = self.add_data_parameter(data, 'node_id', 'i', 5, fix_device_code=True)
         #if self.analysis_code == 1:  # statics / displacement / heat flux
             # load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
