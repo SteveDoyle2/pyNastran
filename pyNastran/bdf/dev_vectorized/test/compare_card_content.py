@@ -26,11 +26,11 @@ def assert_fields(card1, card2, i):
         raise RuntimeError(msg)
 
     for (i, field1, field2) in zip(count(), fields1, fields2):
-        value1a = print_field(field1)
-        value2a = print_field(field2)
+        value1a = print_field_8(field1)
+        value2a = print_field_8(field2)
         if value1a != value2a:
-            value1 = print_field(interpret_value(value1a))
-            value2 = print_field(interpret_value(value2a))
+            value1 = print_field_8(interpret_value(value1a))
+            value2 = print_field_8(interpret_value(value2a))
 
             if value1 != value2:
                 msg = 'value1 != value2\n'
