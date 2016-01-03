@@ -36,14 +36,15 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import (ComplexCBushStressArray, ComplexCBushStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress    # TODO: vectorize 1
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (RealNonlinearRodArray, NonlinearQuad, HyperelasticQuad,  # TODO: vectorize 2
+# TODO: vectorize 2
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (RealNonlinearRodArray, NonlinearQuad, HyperelasticQuad,
                                                                  RealNonlinearPlateArray)
 
 
@@ -2254,14 +2255,16 @@ class OES(OP2Common):
                     obj.add_sort1(dt, eid, fe, ue, ve, ao, ae, ep, fail)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 9:  # imag
-                if self.read_mode == 1:
-                    return ndata
                 if self.is_stress():
-                    self.create_transient_object(self.cbush1d_stress_strain, ComplexBush1DStress)  # undefined
+                    auto_return, is_vectorized = self._create_oes_object4(
+                        nelements, result_name, slot, ComplexBush1DStressArray)
+                    self.create_transient_object(self.cbush1d_stress_strain, ComplexBush1DStressArray)  # undefined
                 else:
                     #self.create_transient_object(self.cbush1d_stress_strain, ComplexBush1DStress)  # undefined
                     raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 
+                if auto_return:
+                    return nelements * self.num_wide * 4
                 ntotal = 36  # 4*9
                 s = Struct(b(self._endian + 'i8f'))
                 nelements = ndata // ntotal

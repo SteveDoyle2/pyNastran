@@ -1,21 +1,261 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import writeImagFloats13E
 
+class ComplexCBush1DArray(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        #self.eType = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        self.nelements = 0  # result specific
+
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def _get_msgs(self):
+        raise NotImplementedError()
+
+    def get_headers(self):
+        raise NotImplementedError()
+
+    def build(self):
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[tx, ty, tz, rx, ry, rz]
+        self.data = zeros((self.ntimes, self.nelements, 6), dtype='complex64')
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
+                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        d = t1 - t2
+                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        #if not array_equal(t1, t2):
+                            msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
+                                eid,
+                                tx1.real, tx1.imag, ty1.real, ty1.imag,
+                                tx2.real, tx2.imag, ty2.real, ty2.imag,
+                                d[0].real, d[0].imag, d[1].real, d[1].imag,)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
+    def add_sort1(self, dt, eid, tx, ty, tz, rx, ry, rz):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [tx, ty, tz, rx, ry, rz]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        ntimes, nelements, _ = self.data.shape
+        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
+        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_element_index(self, eids):
+        itot = searchsorted(eids, self.element)
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        ind = searchsorted(eids, self.element)
+        return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        msg_temp = self.get_f06_header(is_mag_phase)
+
+        if self.is_sort1():
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp, is_mag_phase)
+        else:
+            raise NotImplementedError()
+        return page_num
+
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp, is_mag_phase):
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            tx = self.data[itime, :, 0]
+            ty = self.data[itime, :, 1]
+            tz = self.data[itime, :, 2]
+            rx = self.data[itime, :, 3]
+            ry = self.data[itime, :, 4]
+            rz = self.data[itime, :, 5]
+            for eid, itx, ity, itz, irx, iry, irz in zip(eids, tx, ty, tz, rx, ry, rz):
+                ([txr, tyr, tzr, rxr, ryr, rzr,
+                  txi, tyi, tzi, rxi, ryi, rzi], is_all_zeros) = writeImagFloats13E([itx, ity, itz, irx, iry, irz], is_mag_phase)
+                #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'
+                #'                                    0.0         179.9942        0.0           0.0           0.0           0.0'
+                f.write('                %8i    %-13s %-13s %-13s %-13s %-13s %s\n'
+                        '                %8s    %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                            eid, txr, tyr, tzr, rxr, ryr, rzr,
+                            '', txi, tyi, tzi, rxi, ryi, rzi))
+
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
+class ComplexCBush1DStressArray(ComplexCBush1DArray, StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexCBush1DArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self):
+        headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+        return headers
+
+    def get_f06_header(self, is_mag_phase=True):
+        #'                         C O M P L E X   S T R E S S E S   I N   B U S H   E L E M E N T S   ( C B U S H ) '
+        #' '
+        #'                  FREQUENCY         STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ '
+        #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'
+        #'                                    0.0         179.9942        0.0           0.0           0.0           0.0'
+
+        if self.element_type == 102:
+            element_header = '                         C O M P L E X   S T R E S S E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
+            ''
+            #' '
+            #
+            #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'
+            #'                                    0.0         179.9942        0.0           0.0           0.0           0.0'
+        else:
+            raise NotImplementedError('element_name=%r element_type=%s' % (self.element_name, self.element_type))
+
+        if is_mag_phase:
+            mag_phase = '                                                         (MAGNITUDE/PHASE)\n \n'
+        else:
+            mag_phase = '                                                          (REAL/IMAGINARY)\n \n'  # not tested
+
+        words = [
+            element_header,
+            mag_phase,
+            '                  FREQUENCY         STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
+            '                   ID.                               FORCE\n',]
+        return words
+
+
+#class ComplexCBush1dStrainArray(ComplexCBushArray, StrainObject):
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #ComplexCBush1dArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        #StrainObject.__init__(self, data_code, isubcase)
+
+    #def get_headers(self):
+        #headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz'] # tx, ty, tz, rx, ry, rz
+        #return headers
+
+    #def get_f06_header(self, is_mag_phase=True):
+        ##if self.element_type == 1:
+            ##element_header = '                           C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C R O D )\n'
+        ##elif self.element_type == 3:
+            ##element_header = '                          C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C T U B E )\n'
+        ##elif self.element_type == 10:
+            ##element_header = '                         C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C O N R O D )\n'
+        ##else:
+        #raise NotImplementedError('element_name=%r element_type=%s' % (self.element_name, self.element_type))
+
+        #if is_mag_phase:
+            #mag_phase = '                                                          (MAG/PHASE)\n'  # not tested
+        #else:
+            #mag_phase = '                                                          (REAL/IMAGINARY)\n'
+
+        #words = [
+            #element_header,
+            #mag_phase,
+            #' \n',
+            #'                 ELEMENT                             AXIAL                                         TORQUE\n',
+            #'                   ID.                               FORCE\n',
+           ##'                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',
+        #]
+        #return words
+
+
 class ComplexBush1DStress(StressObject):
-    """
-    # s_code=0
-                           C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )
-                                                         (MAGNITUDE/PHASE)
-
-            ELEMENT                    LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE
-              ID.                          1              2              3              4             AXIAL STRESS
-
-                  1     ENDA          9.331276E+04   9.331276E+04   9.331276E+04   9.331276E+04        0.0
-                                      180.0000         0.0            0.0          180.0000              0.0
-    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
@@ -63,8 +303,8 @@ class ComplexBush1DStress(StressObject):
                 self.axial_strain[eid] = ae
             return
 
-        (dtName, dt) = transient
-        self.data_code['name'] = dtName
+        (dt_name, dt) = transient
+        self.data_code['name'] = dt_name
 
         if dt not in self.element_force:
             self.update_dt(self.data_code, dt)

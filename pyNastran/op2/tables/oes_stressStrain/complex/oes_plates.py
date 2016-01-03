@@ -132,8 +132,8 @@ class ComplexPlateArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
 
-            dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-            header[1] = dtLine
+            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dt_line
             msg = header + msg_temp
             f.write('\n'.join(msg))
 
