@@ -5,6 +5,7 @@ from six.moves import zip, range
 
 from numpy import nan, empty, unique
 
+from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
@@ -41,6 +42,23 @@ class BaseCard(object):
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = [
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []
+
+        my_keys_to_skip = [
+        ]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     #def rawFields(self):
         #self.deprecated('rawFields()', 'raw_fields()', '0.7')

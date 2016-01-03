@@ -41,6 +41,12 @@ class TestBDF(Tester):
                 'creepMaterials', 'convectionProperties']
         object_attributes(model, mode='public', keys_to_skip=keys)
 
+    def test_object_attributes_03(self):
+        model = BDF()
+        model.add_card(['GRID',1], 'GRID')
+        grid = model.nodes[1]
+        grid.object_attributes(mode='public', keys_to_skip=None)
+
     def test_object_methods_01(self):
         model = BDF()
         keys = []
@@ -51,6 +57,12 @@ class TestBDF(Tester):
         keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
                 'creepMaterials', 'convectionProperties']
         object_methods(model, mode="public", keys_to_skip=keys)
+
+    def test_object_methods_03(self):
+        model = BDF()
+        model.add_card(['GRID',1], 'GRID')
+        grid = model.nodes[1]
+        print(grid.object_methods(mode='public', keys_to_skip=None))
 
     def test_bdf_01(self):
         bdf_filename = os.path.join('solid_bending', 'solid_bending.bdf')
