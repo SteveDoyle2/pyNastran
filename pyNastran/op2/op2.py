@@ -4,7 +4,7 @@ Main OP2 class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, string_types
+from six import iteritems, string_types, itervalues
 import os
 
 from numpy import unique, int32
@@ -189,7 +189,7 @@ class OP2(OP2_Scalar):
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None, combine=True):
+    def read_op2(self, op2_filename=None, combine=True, build_dataframe=False):
         """
         Starts the OP2 file reading
 
@@ -201,6 +201,8 @@ class OP2(OP2_Scalar):
             True : objects are isubcase based
             False : objects are (isubcase, subtitle) based;
                     will be used for superelements regardless of the option
+        build_dataframe : bool; default=False
+            builds a pandas DataFrame for op2 objects
         """
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
@@ -220,8 +222,17 @@ class OP2(OP2_Scalar):
         self.log.debug('-------- reading op2 with read_mode=2 --------')
         OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
+        if build_dataframe:
+            self.build_dataframe()
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
+
+    def build_dataframe(self):
+        result_types = self.get_table_types()
+        for result_type in result_types:
+            result = getattr(self, result_type)
+            for obj in itervalues(result):
+                obj.build_dataframe()
 
     def combine_results(self, combine=True):
         """

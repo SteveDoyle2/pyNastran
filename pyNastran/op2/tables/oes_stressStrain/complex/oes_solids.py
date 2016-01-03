@@ -8,6 +8,10 @@ from numpy import zeros, concatenate
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeImagFloats13E
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexSolidArray(OES_Object):
@@ -118,6 +122,14 @@ class ComplexSolidArray(OES_Object):
         else:
             # oxx
             self.data = zeros((self.ntimes, self.ntotal, 1), 'complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names=['ElementID', 'Item']
 
     def add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
         self._times[self.itime] = dt

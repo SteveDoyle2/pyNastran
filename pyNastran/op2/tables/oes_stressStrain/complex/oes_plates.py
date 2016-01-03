@@ -7,6 +7,10 @@ from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, get_key0, write_float_13e
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexPlateArray(OES_Object):
@@ -78,6 +82,14 @@ class ComplexPlateArray(OES_Object):
         self.fiber_curvature = zeros((self.ntotal, 1), 'float32')
         # [oxx, oyy, txy]
         self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names=['ElementID', 'Item']
 
     def add_new_eid_sort1(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
         self.add_eid_sort1(eType, dt, eid, node_id, fdr, oxx, oyy, txy)
@@ -327,6 +339,9 @@ class ComplexPlateStressArray(ComplexPlateArray, StressObject):
     def _get_headers(self):
         return ['oxx', 'oyy', 'txy']
 
+    def get_headers(self):
+        return self._get_headers()
+
 class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -335,3 +350,6 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
 
     def _get_headers(self):
         return ['exx', 'eyy', 'exy']
+
+    def get_headers(self):
+        return self._get_headers()

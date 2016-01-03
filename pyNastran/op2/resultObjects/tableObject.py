@@ -8,6 +8,10 @@ from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, write_float_12E
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 def append_sort1_sort2(data1, data2, to_sort1=True):
@@ -162,6 +166,9 @@ class TableArray(ScalarObject):  # displacement style table
     def _get_headers(self):
         return self.headers
 
+    def get_headers(self):
+        return self._get_headers()
+
     def _reset_indices(self):
         self.itotal = 0
 
@@ -199,6 +206,19 @@ class TableArray(ScalarObject):  # displacement style table
 
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((nx, ny, 6), self.data_type())
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.node_gridtype, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names=['NodeID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.node_gridtype, minor_axis=headers).to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['NodeID', 'Item']
 
     def _write_xlsx(self, sheet, is_mag_phase=False):
         from xlwings import Range, Chart

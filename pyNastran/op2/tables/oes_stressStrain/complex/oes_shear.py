@@ -3,6 +3,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import get_key0
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexShearArray(OES_Object):
@@ -71,6 +75,14 @@ class ComplexShearArray(OES_Object):
 
         # [max_shear, avg_shear]
         self.data = zeros((self.ntimes, self.ntotal, 2), 'complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names=['ElementID', 'Item']
 
     def add_sort1(self, dt, eid, max_shear, avg_shear):
         self._times[self.itime] = dt

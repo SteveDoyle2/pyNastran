@@ -6,6 +6,10 @@ from itertools import count
 from numpy import zeros, searchsorted, ravel
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class RealBar10NodesArray(OES_Object):

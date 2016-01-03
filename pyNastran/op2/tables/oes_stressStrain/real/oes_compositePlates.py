@@ -6,6 +6,10 @@ from numpy import zeros, searchsorted, unique, ravel, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats12E, _eigenvalue_header
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class RealCompositePlateArray(OES_Object):

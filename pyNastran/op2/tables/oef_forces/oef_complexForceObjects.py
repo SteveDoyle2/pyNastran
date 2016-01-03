@@ -4,6 +4,10 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, write_float_12E
 from pyNastran.f06.f06_formatting import _eigenvalue_header
 from numpy import zeros, array_equal, searchsorted, allclose
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 class ComplexRodForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -65,6 +69,13 @@ class ComplexRodForceArray(ScalarObject):
 
         #[axial_force, torque]
         self.data = zeros((self.ntimes, self.ntotal, 2), dtype='complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names=['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -1496,7 +1507,9 @@ class ComplexPlate2ForceArray(ScalarObject):
 
 class ComplexCBarForceArray(ScalarObject):
     def get_headers(self):
-        headers = ['bendingMomentA', 'bendingMomentB', 'shear', 'axial', 'torque', ]
+        headers = ['bending_moment_1a', 'bending_moment_2a',
+                   'bending_moment_1b', 'bending_moment_2b',
+                   'shear1', 'shear2', 'axial', 'torque', ]
         return headers
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1561,8 +1574,15 @@ class ComplexCBarForceArray(ScalarObject):
         #[bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.data = zeros((self.ntimes, self.ntotal, 8), 'complex64')
 
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names=['ElementID', 'Item']
+
     def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
-        #[bendingMomentA, bendingMomentB, shear, axial, torque]
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.element[self.itotal] = eid
@@ -1578,7 +1598,6 @@ class ComplexCBarForceArray(ScalarObject):
 
         nelements = self.nelements
         ntimes = self.ntimes
-        #ntotal = self.ntotal
         msg = []
 
         if self.nonlinear_factor is not None:  # transient

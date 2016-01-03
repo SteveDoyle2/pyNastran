@@ -8,6 +8,11 @@ from numpy import zeros, searchsorted, ravel, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats8p4F, _eigenvalue_header, get_key0
+try:
+    import pandas as pd
+except ImportError:
+    pass
+
 
 class RealPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -94,6 +99,19 @@ class RealPlateArray(OES_Object):
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names=['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

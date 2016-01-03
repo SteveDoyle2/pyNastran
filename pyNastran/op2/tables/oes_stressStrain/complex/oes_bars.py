@@ -4,6 +4,10 @@ from six import iteritems
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E
 from numpy import concatenate, zeros
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexBarArray(OES_Object):
@@ -23,9 +27,6 @@ class ComplexBarArray(OES_Object):
             pass
         else:
             raise NotImplementedError('SORT2')
-
-    def get_headers(self):
-        raise RuntimeError()
 
     def _reset_indices(self):
         self.itotal = 0
@@ -80,6 +81,14 @@ class ComplexBarArray(OES_Object):
 
         #[s1a, s2a, s3a, s4a, axial, s2a, s2b, s2c, s2d]
         self.data = zeros((self.ntimes, self.ntotal, 9), 'complex64')
+
+    #def build_dataframe(self):
+        #headers = self.get_headers()
+        #name = self.name
+        #column_names, column_values = self._build_dataframe_transient_header()
+        #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        #self.data_frame.columns.names = column_names
+        #self.data_frame.index.names=['ElementID', 'Item']
 
     def add_new_eid_sort1(self, eType, dt, eid, e1a, e2a, e3a, e4a, axial,
                           e1b, e2b, e3b, e4b,):
@@ -220,8 +229,10 @@ class ComplexBarStressArray(ComplexBarArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        headers = ['s1a', 's1b', 's1c', 's1d', 's1e', 'axial',
-                   's2a', 's2b', 's2c', 's2d', 's2e', ]
+        headers = ['s1a', 's1b', 's1c', 's1d', 'axial',
+                   's2a', 's2b', 's2c', 's2d', ]
+        #headers = ['s1a', 's1b', 's1c', 's1d', 's1e', 'axial',
+                   #'s2a', 's2b', 's2c', 's2d', 's2e', ]
         return headers
 
 class ComplexBarStrainArray(ComplexBarArray, StrainObject):
@@ -230,6 +241,8 @@ class ComplexBarStrainArray(ComplexBarArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        headers = ['e1a', 'e1b', 'e1c', 'e1d', 'e1e', 'axial',
-                   'e2a', '2b', 'e2c', 'e2d', 'e2e', ]
+        headers = ['e1a', 'e1b', 'e1c', 'e1d', 'axial',
+                   'e2a', 'e2b', 'e2c', 'e2d', ]
+        #headers = ['e1a', 'e1b', 'e1c', 'e1d', 'e1e', 'axial',
+                   #'e2a', 'e2b', 'e2c', 'e2d', 'e2e', ]
         return headers

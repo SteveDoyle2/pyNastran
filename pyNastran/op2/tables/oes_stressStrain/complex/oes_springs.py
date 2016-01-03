@@ -5,6 +5,10 @@ from numpy import zeros, array_equal
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
 from pyNastran.f06.f06_formatting import writeImagFloats13E, _eigenvalue_header
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexSpringDamperArray(OES_Object):
@@ -65,6 +69,14 @@ class ComplexSpringDamperArray(OES_Object):
 
         #[axial_force, torque]
         self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names=['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

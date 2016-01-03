@@ -3,12 +3,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
-from numpy import zeros, searchsorted, array_equal, allclose
+from numpy import zeros, searchsorted, array_equal, allclose, sqrt, pi
 from itertools import cycle
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats12E, _eigenvalue_header, get_key0, write_float_13e
-
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 class RealForceObject(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
@@ -80,6 +83,19 @@ class RealSpringDamperForceArray(RealForceObject):
 
         #[force]
         self.data = zeros((self.ntimes, self.nelements, 1), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names=['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['ElementID', 'Item']
 
     def add(self, dt, eid, force):
         self.add_sort1(dt, eid, force)
@@ -283,6 +299,19 @@ class RealRodForceArray(RealForceObject):
 
         #[axial_force, torque]
         self.data = zeros((self.ntimes, self.nelements, 2), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names=['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['ElementID', 'Item']
 
     def add(self, dt, eid, axial, torque):
         self.add_sort1(dt, eid, axial, torque)
@@ -660,6 +689,19 @@ class RealCShearForceArray(ScalarObject):
         #kick_force1, kick_force2, kick_force3, kick_force4,
         #shear12, shear23, shear34, shear41]
         self.data = zeros((self.ntimes, self.ntotal, 16), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names=['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -1465,11 +1507,6 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         return False
 
     def get_headers(self):
-        #self.bendingMomentA = {}
-        #self.bendingMomentB = {}
-        #self.shear = {}
-        #self.axial = {}
-        #self.torque = {}
         headers = [
             'bending_moment_a1', 'bending_moment_a2',
             'bending_moment_b1', 'bending_moment_b2',
@@ -1503,6 +1540,27 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
 
         #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name #data_code['name']
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            # Create a 3D Panel
+            #column_values = [modes, freq]
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            #self.data_frame = self.data_frame.to_frame()
+
+            # Define names for column labels
+            self.data_frame.columns.names = column_names
+
+            # Define names for the row labels
+            self.data_frame.index.names=['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            #cbar_forces = cbar_forces.to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['ElementID', 'Item']
 
     def add(self, dt, data):
         self.add_sort1(dt, data)
@@ -1622,72 +1680,6 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
                 if i > 0:
                     raise ValueError(msg)
         return True
-
-
-# class RealCBar100Force(ScalarObject):  # 100-CBAR
-    # def __init__(self, data_code, is_sort1, isubcase, dt):
-        # self.element_type = None
-        # self.element_name = None
-        # ScalarObject.__init__(self, data_code, isubcase)
-        # self.bendingMoment = {}
-        # self.shear = {}
-        # self.axial = {}
-        # self.torque = {}
-
-        # self.dt = dt
-        # if is_sort1:
-            # if dt is not None:
-                # self.add = self.add_sort1
-        # else:
-            # assert dt is not None
-            # self.add = self.add_sort2
-
-    # def get_stats(self):
-        # msg = ['  '] + self.get_data_code()
-        # if self.dt is not None:  # transient
-            # ntimes = len(self.torque)
-            # time0 = get_key0(self.torque)
-            # nelements = len(self.torque[time0])
-            # msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       # % (self.__class__.__name__, ntimes, nelements))
-        # else:
-            # nelements = len(self.torque)
-            # msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     # nelements))
-        # msg.append('  bendingMoment, shear, axial, torque\n')
-        # return msg
-
-    # def add_new_transient(self, dt):
-        # self.dt = dt
-        # self.bendingMoment[dt] = {}
-        # self.shear[dt] = {}
-        # self.axial[dt] = {}
-        # self.torque[dt] = {}
-
-    # def add(self, dt, data):
-        # [eid, sd, bm1, bm2, ts1, ts2, af, trq] = data
-        # self.bendingMoment[eid] = [bm1, bm2]
-        # self.shear[eid] = [ts1, ts2]
-        # self.axial[eid] = af
-        # self.torque[eid] = trq
-
-    # def add_sort1(self, dt, data):
-        # [eid, sd, bm1, bm2, ts1, ts2, af, trq] = data
-        # if dt not in self.axial:
-            # self.add_new_transient(dt)
-        # self.bendingMoment[dt][eid] = [bm1, bm2]
-        # self.shear[dt][eid] = [ts1, ts2]
-        # self.axial[dt][eid] = af
-        # self.torque[dt][eid] = trq
-
-    # def add_sort2(self, eid, data):
-        # [dt, sd, bm1, bm2, ts1, ts2, af, trq] = data
-        # if dt not in self.axial:
-            # self.add_new_transient(dt)
-        # self.bendingMoment[dt][eid] = [bm1, bm2]
-        # self.shear[dt][eid] = [ts1, ts2]
-        # self.axial[dt][eid] = af
-        # self.torque[dt][eid] = trq
 
 
 class RealConeAxForceArray(ScalarObject):
@@ -2105,6 +2097,19 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
 
         # [fx, sfy, sfz, u, v, w, sv, sw]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names=['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -2582,6 +2587,19 @@ class RealCBushForceArray(ScalarObject):
 
         #[fx, fy, fz, mx, my, mz]
         self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names=['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names=['Static']
+            self.data_frame.index.names=['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

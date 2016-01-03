@@ -4,7 +4,7 @@ from six import  iteritems
 from six.moves import range
 import copy
 from struct import pack
-from numpy import array
+from numpy import array, sqrt, pi
 
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
@@ -38,6 +38,40 @@ class BaseScalarObject(Op2Codes):
 
     def name(self):
         return self.__class__.__name__
+
+    def get_headers(self):
+        raise RuntimeError()
+
+    def _build_dataframe_transient_header(self):
+        """builds the header for the Pandas DataFrame/table"""
+        name = self.name #data_code['name']
+        times = self._times
+        column_names = []
+        column_values = []
+        skip_names = [] # 'Time'
+        if name == 'mode':
+            column_names.append('Mode')
+            column_names.append('Freq')
+
+            # Convert eigenvalues to frequencies
+            freq  = sqrt(self.eigrs) / (2 * pi)
+            column_values.append(times)
+            column_values.append(freq)
+        elif name == 'freq':
+            column_names.append('Freq')
+            column_values.append(times)
+        elif name == 'loadID':
+            column_names.append('LoadID')
+            column_values.append(times)
+        else:
+            raise NotImplementedError('build_dataframe; name=%r' % name)
+        assert len(column_names) > 0, column_names
+        assert len(column_names) == len(column_values), column_names
+        assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])
+        return column_names, column_values
+
+    def build_dataframe(self):
+        print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
