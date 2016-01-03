@@ -5,6 +5,7 @@
 
 import os
 import pyNastran
+pkg_path = pyNastran.__path__[0]
 print(pyNastran.__file__)
 print(pyNastran.__version__)
 
@@ -23,13 +24,12 @@ bdf = BDF()
 # don't cross-reference
 #bdf.read_bdf(xref=False)
 
-bdf_filename = r'C:\Users\Steve\Dropbox\pyNastran_examples\iSat\ISat_Launch_Sm_Rgd.dat'
+#bdf_filename = r'D:\work\pynastran_0.8.0_py27\models\iSat\ISat_Launch_Sm_Rgd.dat'
+bdf_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Launch_Sm_Rgd.dat')
 bdf.read_bdf(bdf_filename, xref=False)
 
 # <codecell>
 
-#bdf_filename = r'D:\work\pynastran_0.7.0_py27\models\iSat\ISat_Launch_Sm_Rgd.dat'
-bdf_filename = r'C:\Users\Steve\Dropbox\pyNastran_examples\iSat\ISat_Launch_Sm_Rgd.dat'
 
 # read the file as a path
 bdf2 = BDF()
@@ -37,10 +37,10 @@ bdf2.read_bdf(bdf_filename, xref=True)
 
 # <codecell>
 
-print("attributes =", object_attributes(bdf))
+print("attributes =", bdf.object_attributes())
 print("")
-print("methods =", object_methods(bdf)
-print(bdf.card_stats())
+print("methods =", bdf.object_methods())
+print(bdf.get_bdf_stats())
 print(bdf.card_count)
 
 # <codecell>
@@ -70,8 +70,8 @@ n1 = bdf2.nodes[1]
 print(n1)
 
 # the comment
-c1 = bdf2.nodes[1].comment()
-c2 = bdf2.nodes[2].comment()
+c1 = bdf2.nodes[1].comment
+c2 = bdf2.nodes[2].comment
 print("c1=%r" % c1)
 print("c2=%r" % c2)
 
@@ -100,7 +100,7 @@ print(n1)
 
 # <codecell>
 
-print("mass = ", bdf2.Mass())
+print("mass = ", bdf2.mass_properties())
 
 # <codecell>
 
@@ -130,11 +130,11 @@ os.chdir(os.path.join(r'C:\Users', name, 'Desktop'))
 
 # <codecell>
 
-pwd
+#pwd
 
 # <codecell>
 
 # write the bdf
 bdf2.write_bdf('fem.bdf', interspersed=True, size=8)
-!tail "fem.bdf"
+#!tail "fem.bdf"
 

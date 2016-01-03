@@ -6,6 +6,7 @@ from numpy import allclose, array
 from numpy.linalg import norm
 
 import pyNastran
+from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.cards.baseCard import collapse_thru_by
 from pyNastran.bdf.bdf import BDF
 
@@ -30,6 +31,27 @@ class Tester(unittest.TestCase):
 
 
 class TestBDF(Tester):
+    def test_object_attributes_01(self):
+        model = BDF()
+        model.object_attributes(mode='public', keys_to_skip=None)
+
+    def test_object_attributes_02(self):
+        model = BDF()
+        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
+                'creepMaterials', 'convectionProperties']
+        object_attributes(model, mode='public', keys_to_skip=keys)
+
+    def test_object_methods_01(self):
+        model = BDF()
+        keys = []
+        model.object_methods(mode="public", keys_to_skip=keys)
+
+    def test_object_methods_02(self):
+        model = BDF()
+        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
+                'creepMaterials', 'convectionProperties']
+        object_methods(model, mode="public", keys_to_skip=keys)
+
     def test_bdf_01(self):
         bdf_filename = os.path.join('solid_bending', 'solid_bending.bdf')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
@@ -173,6 +195,8 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1)
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
+
+class TestBDFLong(Tester):
 
     def test_bdf_aircraft(self):
         bdf_filename = os.path.join('aircraft', 'aircraft.bdf')

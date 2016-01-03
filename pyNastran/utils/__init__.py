@@ -2,11 +2,34 @@
 from six import string_types
 from types import MethodType
 import os
-from numpy import ndarray, array
+from numpy import ndarray, array, loadtxt
 import io
 
+def loadtxt_nice(filename, delimiter=',', skiprows=0, comment='#', dtype=None):
+    """
+    Reimplmenentation of numpy's loadtxt that doesn't complain about
+    training commas (or other delimiter) that vary from  one line to
+    the other.
 
-def loadtxt_nice(filename, delimiter=',', skiprows=1, dtype=None):
+    Parameters
+    ----------
+    filename : str
+        the filename to load
+    delimiter : str; default=','
+        the field splitter
+    skiprows : int; default=1
+        the number of rows to skip
+    comment : str, default='#'
+        the comment line
+    dtype : numpy.dtype; default=None (float)
+        allows for alternate casting
+        only supports one type?
+
+    Returns
+    -------
+    data : (nrows, ncols) ndarray
+        the data object
+    """
     data = []
     delim = '\n\r \t' + delimiter
     with open(filename, 'r') as file_obj:
@@ -15,9 +38,11 @@ def loadtxt_nice(filename, delimiter=',', skiprows=1, dtype=None):
         else:
             lines = file_obj.readlines()
 
-        for line in lines:
-            line = line.strip(delim).split(delimiter)
-            data.append(line)
+    for line in lines:
+        if line.startswith(comment):
+            continue
+        line = line.strip(delim).split(delimiter)
+        data.append(line)
     if dtype:
         return array(data, dtype=dtype)
     return array(data)
@@ -102,7 +127,7 @@ def _filename(filename):
 
 def __object_attr(obj, mode, keys_to_skip, attr_type):
     """list object attributes of a given type"""
-
+    #print('keys_to_skip=%s' % keys_to_skip)
     keys_to_skip = [] if keys_to_skip is None else keys_to_skip
     test = {
         "public":  lambda k: (not k.startswith('_') and k not in keys_to_skip),
@@ -118,8 +143,8 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
 
     out = []
     for k in dir(obj):
-        # if k in keys_to_skip:
-            # continue
+        if k in keys_to_skip:
+            continue
         if check(k) and attr_type(getattr(obj, k)):
             out.append(k)
     out.sort()
@@ -157,8 +182,8 @@ def object_methods(obj, mode = "public", keys_to_skip=None):
 
 def object_attributes(obj, mode="public", keys_to_skip=None):
     """
-    List the names of attributes of a class as strings. Returns public attributes
-    as default.
+    List the names of attributes of a class as strings. Returns public
+    attributes as default.
 
     Parameters
     ----------
@@ -193,7 +218,7 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
         equals = ':'
 
     if debug:
-        print("attr=%s equals=|%s|" % (name, equals))
+        print("attr=%s equals=%r" % (name, equals))
     # name
     if isinstance(obj, dict):
         if nspaces == 0:

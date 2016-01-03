@@ -49,21 +49,18 @@ class BDFAttributes(object):
             keys_to_skip = []
         my_keys_to_skip = []
 
-        # remove these
         my_keys_to_skip = [
             #'case_control_deck',
-            'log',
-            #'mpcObject', 'spcObject',
+            'log', 'mpcObject', 'spcObject',
+            'node_ids', 'coord_ids', 'element_ids', 'property_ids',
+            'material_ids', 'caero_ids', 'is_long_ids',
+            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nmaterials', 'ncaeros',
 
-            #'node_ids', 'coord_ids', 'element_ids', 'property_ids',
-            #'material_ids', 'caero_ids', 'is_long_ids',
-            #'nnodes', 'ncoords', 'nelements', 'nproperties',
-            #'nmaterials', 'ncaeros',
-
-            #'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
-            #'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
+            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
+            'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
             '_card_parser', '_card_parser_b',
-            #'object_methods', 'object_attributes',
+            'object_methods', 'object_attributes',
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
