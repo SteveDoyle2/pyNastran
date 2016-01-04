@@ -222,17 +222,30 @@ class OP2(OP2_Scalar):
         self.log.debug('-------- reading op2 with read_mode=2 --------')
         OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
+        self.finalize()
         if build_dataframe:
             self.build_dataframe()
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
+
+    def finalize(self):
+        result_types = self.get_table_types()
+        for result_type in result_types:
+            result = getattr(self, result_type)
+            for obj in itervalues(result):
+                if hasattr(obj, 'finalize'):
+                    obj.finalize()
 
     def build_dataframe(self):
         result_types = self.get_table_types()
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
-                obj.build_dataframe()
+                try:
+                    obj.build_dataframe()
+                except:
+                    print('build_dataframe is not implemented in %s' % obj.__class__.__name__)
+
 
     def combine_results(self, combine=True):
         """

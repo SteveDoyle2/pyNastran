@@ -336,6 +336,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                 except:
                     pass
 
+        # we put it down here so we don't blame the dataframe for real errors
+        op2b.build_dataframe()
+
         if write_op2:
             model = os.path.splitext(op2_filename)[0]
             op2a.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)

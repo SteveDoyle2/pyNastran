@@ -3,7 +3,8 @@ from six import iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, abs, angle, float32, searchsorted
+import numpy as np
+from numpy import array, zeros, abs, angle, float32, searchsorted, unique, where
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -123,10 +124,11 @@ class TableArray(ScalarObject):  # displacement style table
 
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
         #ngrids = len(self.gridTypes)
         msg = []
 
@@ -210,15 +212,25 @@ class TableArray(ScalarObject):  # displacement style table
     def build_dataframe(self):
         headers = self.get_headers()
         name = self.name
+        node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.node_gridtype, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_gridtype, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names=['NodeID', 'Item']
+            self.data_frame.index.names = ['NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.node_gridtype, minor_axis=headers).to_frame()
-            self.data_frame.columns.names=['Static']
-            self.data_frame.index.names=['NodeID', 'Item']
+            self.data_frame = pd.Panel(self.data, major_axis=node_gridtype, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['NodeID', 'Item']
+
+    def finalize(self):
+        gridtypes = self.node_gridtype[:, 1]
+        nnodes = len(gridtypes)
+        self.gridtype_str = np.chararray((nnodes))
+        ugridtypes = unique(gridtypes)
+        for ugridtype in ugridtypes:
+            i = where(gridtypes == ugridtype)
+            self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
 
     def _write_xlsx(self, sheet, is_mag_phase=False):
         from xlwings import Range, Chart
@@ -319,7 +331,6 @@ def two_dee_string_add(string_lists):
     for string_list in string_lists:
         for string in string_list:
             pass
-
     return sumned
 
 class RealTableArray(TableArray):  # displacement style table
@@ -601,16 +612,16 @@ class RealTableArray(TableArray):  # displacement style table
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype == 'G':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
                     f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                 elif sgridtype == 'H':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'L':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -1348,7 +1359,7 @@ class ComplexTableObject(ScalarObject):
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
-                    dzi, rxi, ryi, rzi] = vals2
+                 dzi, rxi, ryi, rzi] = vals2
                 #if not is_all_zeros:
                 if grid_type == 'G':
                     msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))

@@ -344,6 +344,21 @@ class OP2_F06_Common(object):
 
         #: OEE - strain energy density
         self.strain_energy = {}  # tCode=18
+        #self.cquad4_strain_energy = {}
+        #self.cquad8_strain_energy = {}
+        #self.ctria3_strain_energy = {}
+        #self.ctria6_strain_energy = {}
+
+        #self.ctetra_strain_energy = {}
+        #self.cpenta_strain_energy = {}
+        #self.chexa_strain_energy = {}
+
+        #self.crod_strain_energy = {}
+        #self.ctube_strain_energy = {}
+        #self.conrod_strain_energy = {}
+
+        #self.cbar_strain_energy = {}
+        #self.cbeam_strain_energy = {}
 
     def _get_result_length(self, res_types, res_key):
         """

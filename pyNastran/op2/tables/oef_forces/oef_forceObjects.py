@@ -426,8 +426,7 @@ class RealRodForceArray(RealForceObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element):
-                    (eid, nid) = e
+                for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     (axial1, torque1) = t1

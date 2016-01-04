@@ -8,6 +8,7 @@ from numpy import array, sqrt, pi
 
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
+
 #from pyNastran.utils import list_print
 #from pyNastran.op2.write_utils import write_table_header
 
@@ -51,22 +52,35 @@ class BaseScalarObject(Op2Codes):
         skip_names = [] # 'Time'
         if name == 'mode':
             column_names.append('Mode')
-            column_names.append('Freq')
-
+            column_values.append(times)
+            if hasattr(self, 'freqs'):
+                freq  = self.freqs
+                column_names.append('Freq')
+                column_values.append(freq)
+            elif hasattr(self, 'eigrs'):
+                freq  = sqrt(self.eigrs) / (2 * pi)
+                column_names.append('Freq')
+                column_values.append(freq)
+            else:
+                pass
             # Convert eigenvalues to frequencies
-            freq  = sqrt(self.eigrs) / (2 * pi)
-            column_values.append(times)
-            column_values.append(freq)
-        elif name == 'freq':
+            # TODO: add damping header
+        elif name in ['freq', 'freq2']:
             column_names.append('Freq')
             column_values.append(times)
-        elif name == 'loadID':
-            column_names.append('LoadID')
+        elif name in ['dt','time']:
+            column_names.append('Time')
+            column_values.append(times)
+        elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor']:
+            column_names.append('LoadStep')
+            column_values.append(times)
+        elif name == 'node_id':
+            column_names.append('NodeID')
             column_values.append(times)
         else:
             raise NotImplementedError('build_dataframe; name=%r' % name)
         assert len(column_names) > 0, column_names
-        assert len(column_names) == len(column_values), column_names
+        assert len(column_names) == len(column_values), 'names=%s values=%s' % (column_names, column_values)
         assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])
         return column_names, column_values
 
