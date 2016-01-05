@@ -80,6 +80,7 @@ class RealPlateArray(OES_Object):
         else:
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
+        #print('nnodes_per_element[%s, %s] = %s' % (self.isubcase, self.element_type, nnodes_per_element))
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
         self.itime = 0
@@ -103,15 +104,17 @@ class RealPlateArray(OES_Object):
     def build_dataframe(self):
         headers = self.get_headers()
         name = self.name
+        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names=['ElementID', 'Item']
+            self.data_frame.index.names=['ElementID', 'NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names=['Static']
-            self.data_frame.index.names=['ElementID', 'Item']
+            self.data_frame.index.names=['ElementID', 'NodeID', 'Item']
+        #print(self.data_frame)
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

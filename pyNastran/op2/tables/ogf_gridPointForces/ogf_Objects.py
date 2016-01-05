@@ -4,7 +4,10 @@ from numpy import array, zeros, unique, array_equal, empty
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, writeImagFloats13E
-
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class RealGridPointForcesArray(ScalarObject):
@@ -84,6 +87,65 @@ class RealGridPointForcesArray(ScalarObject):
 
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def build_dataframe(self):
+        """
+        major-axis - the axis
+
+        mode              1     2   3
+        freq              1.0   2.0 3.0
+        nodeID ElementID Item
+        1      2         T1
+                         T2
+                         ...
+
+        major_axis / top = [
+            [1, 2, 3],
+            [1.0, 2.0, 3.0]
+        ]
+        minor_axis / headers = [T1, T2, T3, R1, R2, R3]
+        name = mode
+        """
+        headers = self.get_headers()
+        name = self.name
+        if self.is_unique:
+            #raise NotImplementedError('RealGridPointForcesArray - build_dataframe - not unique')
+            #node_element = [self.node_element[:, 0], self.node_element[:, 1]]
+
+            ntimes = self.data.shape[0]
+            nnodes = self.data.shape[1]
+            #print(ntimes, nnodes)
+            #print(self.node_element.shape)
+            node_element = self.node_element.reshape((ntimes * nnodes, 2))
+            #print(node_element)
+            if self.nonlinear_factor is not None:
+                column_names, column_values = self._build_dataframe_transient_header()
+                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = column_names
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            else:
+                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+
+        else:
+            node_element = [self.node_element[:, 0], self.node_element[:, 1]]
+            #print(node_element[0])
+            #print(node_element[1], len(node_element[1]))
+            #print(self.data.shape)
+            if self.nonlinear_factor is not None:
+                column_names, column_values = self._build_dataframe_transient_header()
+                #print('column_names =', column_names)
+                #for name, values in zip(column_names, column_values):
+                    #print('  %s = %s' %(name, values))
+                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = column_names
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            else:
+                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            #print(self.data_frame)
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

@@ -4,7 +4,7 @@ from six import  iteritems
 from six.moves import range
 import copy
 from struct import pack
-from numpy import array, sqrt, pi
+import numpy as np
 
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
@@ -47,9 +47,14 @@ class BaseScalarObject(Op2Codes):
         """builds the header for the Pandas DataFrame/table"""
         name = self.name #data_code['name']
         times = self._times
+        utimes = np.unique(times)
+        if not len(times) == len(utimes):
+            print('WARNING : %s - times=%s unique_times=%s...assuming new values...new_times=%s' % (
+            self.__class__.__name__, times, utimes, np.arange(len(times))))
+            times = np.arange(len(times))
         column_names = []
         column_values = []
-        skip_names = [] # 'Time'
+
         if name == 'mode':
             column_names.append('Mode')
             column_values.append(times)
@@ -58,7 +63,7 @@ class BaseScalarObject(Op2Codes):
                 column_names.append('Freq')
                 column_values.append(freq)
             elif hasattr(self, 'eigrs'):
-                freq  = sqrt(self.eigrs) / (2 * pi)
+                freq  = np.sqrt(self.eigrs) / (2 * np.pi)
                 column_names.append('Freq')
                 column_values.append(freq)
             else:
@@ -166,7 +171,7 @@ class ScalarObject(BaseScalarObject):
             else:
                 vals = getattr(self, name)
             #msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
-            msg.append('%s = %s\n' % (name, array(vals)))
+            msg.append('%s = %s\n' % (name, np.array(vals)))
         #print("***dataNames =", self.dataNames)
         return msg
 
