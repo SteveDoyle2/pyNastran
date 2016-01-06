@@ -122,7 +122,8 @@ from pyNastran.op2.op2_f06_common import Op2F06Attributes
 
 
 def read_op2(op2_filename=None, combine=True,
-             log=None, debug=True, debug_file=None, build_dataframe=False, mode='msc'):
+             log=None, debug=True, debug_file=None, build_dataframe=False,
+             skip_undefined_matrices=True, mode='msc'):
     """
     Creates the OP2 object without calling the OP2 class.
     Parameters
@@ -135,6 +136,8 @@ def read_op2(op2_filename=None, combine=True,
                 will be used for superelements regardless of the option
     build_dataframe : bool; default=False
         builds a pandas DataFrame for op2 objects
+    skip_undefined_matrices : bool; default=False
+         True : prevents matrix reading crashes
     debug : bool; default=False
         enables the debug log and sets the debug in the logger
     log : Log()
@@ -155,7 +158,7 @@ def read_op2(op2_filename=None, combine=True,
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
-                   combine=combine)
+                   skip_matrices=skip_matrices, combine=combine)
 
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
@@ -297,7 +300,8 @@ class OP2(OP2_Scalar):
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None, combine=True, build_dataframe=False):
+    def read_op2(self, op2_filename=None, combine=True, build_dataframe=False,
+                 skip_undefined_matrices=False):
         """
         Starts the OP2 file reading
 
@@ -311,7 +315,10 @@ class OP2(OP2_Scalar):
                     will be used for superelements regardless of the option
         build_dataframe : bool; default=False
             builds a pandas DataFrame for op2 objects
+        skip_undefined_matrices : bool; default=False
+             True : prevents matrix reading crashes
         """
+        self.skip_undefined_matrices = skip_undefined_matrices
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
         self.log.debug('combine=%s' % combine)

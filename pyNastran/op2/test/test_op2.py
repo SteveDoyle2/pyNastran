@@ -319,6 +319,14 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         if compare:
             assert op2a == op2b
 
+        if op2a.matrices:
+            print('matrices = %s' % sorted(op2a.matrices.keys()))
+            for key, matrix in sorted(iteritems(op2a.matrices)):
+                m = matrix.data
+                #print(type(m))
+                print('name=%s; shape=%s' % (key, str(m.shape)))
+                print(str(m))
+
         if is_memory and check_memory:
             if is_linux: # linux
                 kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss

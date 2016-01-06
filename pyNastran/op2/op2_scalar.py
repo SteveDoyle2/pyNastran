@@ -1093,6 +1093,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_matrix()
                 elif table_name in RESULT_TABLES:
                     self._read_results_table()
+                elif self.skip_undefined_matrices:
+                    self._read_matrix()
                 elif table_name.strip() in self.additional_matrices:
                     self._read_matrix()
                 else:
@@ -1107,7 +1109,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_matrix(self):
         print('----------------------------------------------------------------')
         table_name = self.read_table_name(rewind=False, stop_on_failure=True)
-        print('table_name = %r' % table_name)
+        #print('table_name = %r' % table_name)
         self.read_markers([-1])
         data = self._read_record()
         matrix_num, form, mrows, ncols, tout, nvalues, g = unpack(self._endian + '7i', data)
@@ -1134,7 +1136,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         # 1 - column matrix
         # 2 - factor matrix
         # 3 - factor matrix
-
         if tout == 1:
             dtype = 'float32'
         elif tout == 2:
@@ -1146,7 +1147,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             #raise RuntimeError('tout = %s' % tout)
             dtype = '????'
-            print('matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
+            print('unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
                 matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         if form == 1:
@@ -1181,7 +1182,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 msg = 'name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
                     table_name, matrix_num, form, mrows, ncols, tout, nvalues, g)
                 raise NotImplementedError(msg)
-        print('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
+        self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
             table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         #self.show_data(data)
@@ -1190,11 +1191,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         if len(data) == 20:
+            # TODO: why does this work?
+            name, a, b = unpack(self._endian + '8s 2i', data)
+            assert a == 170, a
+            assert b == 170, b
+        elif len(data) == 16:
             name, a, b = unpack(self._endian + '8s 2i', data)
             assert a == 170, a
             assert b == 170, b
         else:
-            print('unexpected matrix length=%s' % len(data))
+            self.log.warning('unexpected matrix length=%s' % len(data))
+            self.log.warning(self.show_data(data))
 
         itable = -3
         j = None
@@ -1211,8 +1218,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #print('nvalues4a =', nvalues)
             self.read_markers([itable, 1])
             one, = self.get_nmarkers(1, rewind=False)
-            if one:
+
+            if one:  # if keep going
                 nvalues, = self.get_nmarkers(1, rewind=True)
+                #print('nvalues =', nvalues)
                 while nvalues >= 0:
                     nvalues, = self.get_nmarkers(1, rewind=False)
                     GCj += [jj] * nvalues
@@ -1231,10 +1240,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     GCi += list(range(ii, ii + nvalues))
                     reals += values
                     if 0:
-                        print('II=%s; j=%s i0=%s %s' % (abs(itable+2), jj, ii, values))
+                        self.log.debug('II=%s; j=%s i0=%s %s' % (abs(itable+2), jj, ii, values))
                     if 0:
                         if matrix_num in [101, 102, 103, 104, 105]:
-                            print('II=%s; j=%s i0=%s %s' % (abs(itable+2), jj, ii, values))
+                            self.log.debug('II=%s; j=%s i0=%s %s' % (abs(itable+2), jj, ii, values))
                             #print(i, values)
                             #assert i == 4, i
                             #assert values[0] == 8, values
@@ -1261,16 +1270,32 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     # we subtract 1 to account for Fortran
                     if dtype == '????':
                         matrix = None
+                        self.log.warning('what is the dtype?')
                     else:
                         matrix = coo_matrix((reals, (GCi, GCj)),
                                             shape=(mrows, ncols), dtype=dtype)
                         matrix = matrix.todense()
+                        self.log.info('created %s' % self.table_name)
                 except ValueError:
-                    matrix = array(reals) #.reshape((len(reals), 1))
+                    self.log.warning('cant make a coo/sparse matrix...trying dense')
+
+                    if dtype == '????':
+                        matrix = None
+                        self.log.warning('what is the dtype?')
+                    else:
+                        matrix = array(reals, dtype=dtype)
+                        self.log.debug('shape=%s mrows=%s ncols=%s' % (str(matrix.shape), mrows, ncols))
+                        if len(reals) == mrows * ncols:
+                            self.log.info('created %s' % self.table_name)
+                        else:
+                            self.log.warning('cant reshape because invalid sizes : created %s' % self.table_name)
+
+                        #matrix.reshape(mrows, ncols)
                     #print('m =', matrix)
-                    print('created %s' % self.table_name)
 
                 m.data = matrix
+                if matrix is not None:
+                    self.matrices[table_name.decode('utf-8')] = m
                 #nvalues, = self.get_nmarkers(1, rewind=True)
                 #self.show(100)
                 return
