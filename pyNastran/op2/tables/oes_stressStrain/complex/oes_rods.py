@@ -64,7 +64,7 @@ class ComplexRodArray(OES_Object):
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
-        self.data_frame.index.names=['ElementID', 'Item']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

@@ -63,9 +63,15 @@ class BaseScalarObject(Op2Codes):
                 column_names.append('Freq')
                 column_values.append(freq)
             elif hasattr(self, 'eigrs'):
-                freq  = np.sqrt(self.eigrs) / (2 * np.pi)
+                try:
+                    abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                except FloatingPointError:
+                    msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
+                    abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                    msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
+                    raise FloatingPointError(msg)
                 column_names.append('Freq')
-                column_values.append(freq)
+                column_values.append(abs_freqs)
             else:
                 pass
             # Convert eigenvalues to frequencies

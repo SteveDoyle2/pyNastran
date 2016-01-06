@@ -82,7 +82,7 @@ class ComplexShearArray(OES_Object):
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
-        self.data_frame.index.names=['ElementID', 'Item']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_sort1(self, dt, eid, max_shear, avg_shear):
         self._times[self.itime] = dt

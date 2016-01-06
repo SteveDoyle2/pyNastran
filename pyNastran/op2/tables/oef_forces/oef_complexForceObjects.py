@@ -75,7 +75,7 @@ class ComplexRodForceArray(ScalarObject):
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
-        self.data_frame.index.names=['ElementID', 'Item']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -293,6 +293,13 @@ class ComplexCShearForceArray(ScalarObject):
         #kick_force1, kick_force2, kick_force3, kick_force4,
         #shear12, shear23, shear34, shear41]
         self.data = zeros((self.ntimes, self.ntotal, 16), dtype='complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -525,6 +532,13 @@ class ComplexSpringDamperForceArray(ScalarObject):
 
         #[axial_force, torque]
         self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -954,6 +968,13 @@ class ComplexPlateForceArray(ScalarObject):
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
+
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
         assert self.nonlinear_factor == table.nonlinear_factor
@@ -1129,151 +1150,151 @@ class ComplexPlateForceArray(ScalarObject):
         return page_num - 1
 
 
-class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.term = {}
-        self.ngrids = {}
-        self.mx = {}
-        self.my = {}
-        self.mxy = {}
-        self.bmx = {}
-        self.bmy = {}
-        self.bmxy = {}
-        self.tx = {}
-        self.ty = {}
+#class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #ScalarObject.__init__(self, data_code, isubcase)
+        #self.term = {}
+        #self.ngrids = {}
+        #self.mx = {}
+        #self.my = {}
+        #self.mxy = {}
+        #self.bmx = {}
+        #self.bmy = {}
+        #self.bmxy = {}
+        #self.tx = {}
+        #self.ty = {}
 
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add_new_element = self.addNewElementSort1
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add_new_element = self.addNewElementSort2
-            self.add = self.add_sort2
+        #self.dt = dt
+        #if is_sort1:
+            #if dt is not None:
+                #self.add_new_element = self.addNewElementSort1
+                #self.add = self.add_sort1
+        #else:
+            #assert dt is not None
+            #self.add_new_element = self.addNewElementSort2
+            #self.add = self.add_sort2
 
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.mx)
-            time0 = get_key0(self.mx)
-            nelements = len(self.mx[time0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.mx)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  term, ngrids, mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
-        return msg
+    #def get_stats(self):
+        #msg = ['  '] + self.get_data_code()
+        #if self.dt is not None:  # transient
+            #ntimes = len(self.mx)
+            #time0 = get_key0(self.mx)
+            #nelements = len(self.mx[time0])
+            #msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       #% (self.__class__.__name__, ntimes, nelements))
+        #else:
+            #nelements = len(self.mx)
+            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     #nelements))
+        #msg.append('  term, ngrids, mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
+        #return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.mx[dt] = {}
-        self.my[dt] = {}
-        self.mxy[dt] = {}
-        self.bmx[dt] = {}
-        self.bmy[dt] = {}
-        self.bmxy[dt] = {}
-        self.tx[dt] = {}
-        self.ty[dt] = {}
+    #def add_new_transient(self, dt):
+        #self.dt = dt
+        #self.mx[dt] = {}
+        #self.my[dt] = {}
+        #self.mxy[dt] = {}
+        #self.bmx[dt] = {}
+        #self.bmy[dt] = {}
+        #self.bmxy[dt] = {}
+        #self.tx[dt] = {}
+        #self.ty[dt] = {}
 
-    def add_new_element(self, eid, dt, data):
-        [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        self.term[eid] = term
-        self.ngrids[eid] = nid
-        self.mx[eid] = [mx]
-        self.my[eid] = [my]
-        self.mxy[eid] = [mxy]
-        self.bmx[eid] = [bmx]
-        self.bmy[eid] = [bmy]
-        self.bmxy[eid] = [bmxy]
-        self.tx[eid] = [tx]
-        self.ty[eid] = [ty]
+    #def add_new_element(self, eid, dt, data):
+        #[term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+        #self.term[eid] = term
+        #self.ngrids[eid] = nid
+        #self.mx[eid] = [mx]
+        #self.my[eid] = [my]
+        #self.mxy[eid] = [mxy]
+        #self.bmx[eid] = [bmx]
+        #self.bmy[eid] = [bmy]
+        #self.bmxy[eid] = [bmxy]
+        #self.tx[eid] = [tx]
+        #self.ty[eid] = [ty]
 
-    def add(self, eid, dt, data):
-        [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        self.mx[eid].append(mx)
-        self.my[eid].append(my)
-        self.mxy[eid].append(mxy)
-        self.bmx[eid].append(bmx)
-        self.bmy[eid].append(bmy)
-        self.bmxy[eid].append(bmxy)
-        self.tx[eid].append(tx)
-        self.ty[eid].append(ty)
+    #def add(self, eid, dt, data):
+        #[nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+        #self.mx[eid].append(mx)
+        #self.my[eid].append(my)
+        #self.mxy[eid].append(mxy)
+        #self.bmx[eid].append(bmx)
+        #self.bmy[eid].append(bmy)
+        #self.bmxy[eid].append(bmxy)
+        #self.tx[eid].append(tx)
+        #self.ty[eid].append(ty)
 
-    def addNewElementSort1(self, eid, dt, data):
-        [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        if dt not in self.mx:
-            self.add_new_transient(dt)
-        self.term[eid] = term
-        self.ngrids[eid] = nid
-        self.mx[dt][eid] = [mx]
-        self.my[dt][eid] = [my]
-        self.mxy[dt][eid] = [mxy]
-        self.bmx[dt][eid] = [bmx]
-        self.bmy[dt][eid] = [bmy]
-        self.bmxy[dt][eid] = [bmxy]
-        self.tx[dt][eid] = [tx]
-        self.ty[dt][eid] = [ty]
+    #def addNewElementSort1(self, eid, dt, data):
+        #[term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        #self.term[eid] = term
+        #self.ngrids[eid] = nid
+        #self.mx[dt][eid] = [mx]
+        #self.my[dt][eid] = [my]
+        #self.mxy[dt][eid] = [mxy]
+        #self.bmx[dt][eid] = [bmx]
+        #self.bmy[dt][eid] = [bmy]
+        #self.bmxy[dt][eid] = [bmxy]
+        #self.tx[dt][eid] = [tx]
+        #self.ty[dt][eid] = [ty]
 
-    def add_sort1(self, eid, dt, data):
-        [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        if dt not in self.mx:
-            self.add_new_transient(dt)
-        self.mx[dt][eid].append(mx)
-        self.my[dt][eid].append(my)
-        self.mxy[dt][eid].append(mxy)
-        self.bmx[dt][eid].append(bmx)
-        self.bmy[dt][eid].append(bmy)
-        self.bmxy[dt][eid].append(bmxy)
-        self.tx[dt][eid].append(tx)
-        self.ty[dt][eid].append(ty)
+    #def add_sort1(self, eid, dt, data):
+        #[nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        #self.mx[dt][eid].append(mx)
+        #self.my[dt][eid].append(my)
+        #self.mxy[dt][eid].append(mxy)
+        #self.bmx[dt][eid].append(bmx)
+        #self.bmy[dt][eid].append(bmy)
+        #self.bmxy[dt][eid].append(bmxy)
+        #self.tx[dt][eid].append(tx)
+        #self.ty[dt][eid].append(ty)
 
-    def addNewElementSort2(self, dt, eid, data):
-        [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        if dt not in self.mx:
-            self.add_new_transient(dt)
-        self.term[eid] = term
-        self.ngrids[eid] = nid
+    #def addNewElementSort2(self, dt, eid, data):
+        #[term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        #self.term[eid] = term
+        #self.ngrids[eid] = nid
 
-        self.mx[dt][eid] = [mx]
-        self.my[dt][eid] = [my]
-        self.mxy[dt][eid] = [mxy]
-        self.bmx[dt][eid] = [bmx]
-        self.bmy[dt][eid] = [bmy]
-        self.bmxy[dt][eid] = [bmxy]
-        self.tx[dt][eid] = [tx]
-        self.ty[dt][eid] = [ty]
+        #self.mx[dt][eid] = [mx]
+        #self.my[dt][eid] = [my]
+        #self.mxy[dt][eid] = [mxy]
+        #self.bmx[dt][eid] = [bmx]
+        #self.bmy[dt][eid] = [bmy]
+        #self.bmxy[dt][eid] = [bmxy]
+        #self.tx[dt][eid] = [tx]
+        #self.ty[dt][eid] = [ty]
 
-    def add_sort2(self, dt, eid, data):
-        [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        if dt not in self.mx:
-            self.add_new_transient(dt)
-        self.mx[dt][eid].append(mx)
-        self.my[dt][eid].append(my)
-        self.mxy[dt][eid].append(mxy)
-        self.bmx[dt][eid].append(bmx)
-        self.bmy[dt][eid].append(bmy)
-        self.bmxy[dt][eid].append(bmxy)
-        self.tx[dt][eid].append(tx)
-        self.ty[dt][eid].append(ty)
+    #def add_sort2(self, dt, eid, data):
+        #[nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        #self.mx[dt][eid].append(mx)
+        #self.my[dt][eid].append(my)
+        #self.mxy[dt][eid].append(mxy)
+        #self.bmx[dt][eid].append(bmx)
+        #self.bmy[dt][eid].append(bmy)
+        #self.bmxy[dt][eid].append(bmxy)
+        #self.tx[dt][eid].append(tx)
+        #self.ty[dt][eid].append(ty)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
-        #raise NotImplementedError()
-        #words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
-        #       ' \n',
-        #       '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.getTableMarker()
-        #return self._writeF06Block(words, header, page_stamp, page_num, f)
+    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        #if self.nonlinear_factor is not None:
+            #return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
+        ##raise NotImplementedError()
+        ##words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
+        ##       ' \n',
+        ##       '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        ##words += self.getTableMarker()
+        ##return self._writeF06Block(words, header, page_stamp, page_num, f)
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        f.write('%s _write_f06_transient not implemented...\n' % self.__class__.__name__)
-        return page_num
+    #def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        #f.write('%s _write_f06_transient not implemented...\n' % self.__class__.__name__)
+        #return page_num
 
 
 class ComplexPlate2ForceArray(ScalarObject):
@@ -1322,10 +1343,27 @@ class ComplexPlate2ForceArray(ScalarObject):
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
+
         self.element = zeros(self.nelements, dtype='int32')
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        assert 0 not in self.element
+        name = self.name
+        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
+        assert 0 not in self.element_node[:, 0]
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def __eq__(self, table):
         return True ## TODO: write ==
@@ -1373,6 +1411,7 @@ class ComplexPlate2ForceArray(ScalarObject):
     def add_new_element_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
+        self.element_node[self.itotal, :] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
         self.ielement += 1
@@ -1380,6 +1419,7 @@ class ComplexPlate2ForceArray(ScalarObject):
     def add_sort1(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         self._times[self.itime] = dt
         assert self.element[self.ielement - 1] == eid, eid
+        self.element_node[self.itotal, :] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
 
@@ -1580,7 +1620,7 @@ class ComplexCBarForceArray(ScalarObject):
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
-        self.data_frame.index.names=['ElementID', 'Item']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
         self._times[self.itime] = dt
@@ -1867,6 +1907,13 @@ class ComplexSolidPressureForceArray(ScalarObject):
         #[ax, ay, az, vx, vy, vz, pressure]
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='complex64')
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
+
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
         assert self.nonlinear_factor == table.nonlinear_factor
@@ -2085,6 +2132,13 @@ class ComplexCBushForceArray(ScalarObject):
             raise RuntimeError(msg)
         #[fx, fy, fz, mx, my, mz]
         self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         #[fx, fy, fz, mx, my, mz]

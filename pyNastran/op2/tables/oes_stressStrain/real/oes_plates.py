@@ -109,11 +109,11 @@ class RealPlateArray(OES_Object):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names=['ElementID', 'NodeID', 'Item']
+            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
             self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names=['Static']
-            self.data_frame.index.names=['ElementID', 'NodeID', 'Item']
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         #print(self.data_frame)
 
     def __eq__(self, table):

@@ -127,9 +127,10 @@ class ComplexSolidArray(OES_Object):
         headers = self.get_headers()
         name = self.name
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
+        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
-        self.data_frame.index.names=['ElementID', 'Item']
+        self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
         self._times[self.itime] = dt

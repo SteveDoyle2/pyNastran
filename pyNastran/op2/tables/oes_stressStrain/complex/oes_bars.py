@@ -82,13 +82,13 @@ class ComplexBarArray(OES_Object):
         #[s1a, s2a, s3a, s4a, axial, s2a, s2b, s2c, s2d]
         self.data = zeros((self.ntimes, self.ntotal, 9), 'complex64')
 
-    #def build_dataframe(self):
-        #headers = self.get_headers()
-        #name = self.name
-        #column_names, column_values = self._build_dataframe_transient_header()
-        #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-        #self.data_frame.columns.names = column_names
-        #self.data_frame.index.names=['ElementID', 'Item']
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_new_eid_sort1(self, eType, dt, eid, e1a, e2a, e3a, e4a, axial,
                           e1b, e2b, e3b, e4b,):
