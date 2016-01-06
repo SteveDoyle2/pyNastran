@@ -97,15 +97,16 @@ class RealBeamArray(OES_Object):
     def build_dataframe(self):
         headers = self.get_headers()
         name = self.name
+        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names=['ElementID', 'Item']
+            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names=['Static']
-            self.data_frame.index.names=['ElementID', 'Item']
+            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def add_new_eid(self, dt, eid, out):
         self.add_new_eid_sort1(dt, eid, out)

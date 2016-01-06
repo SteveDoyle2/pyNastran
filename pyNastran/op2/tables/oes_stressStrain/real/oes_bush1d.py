@@ -78,17 +78,22 @@ class RealBush1DStressArray(OES_Object):
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.ntotal, dtype='int32')
 
-        #self.element_force = {}
-        #self.axial_displacement = {}
-        #self.axial_velocity = {}
-        #self.axial_stress = {}
-        #self.axial_strain = {}
-        #self.plastic_strain = {}
-        #self.is_failed = {}
         # [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
-#dt, eid, fe, ue, ve, ao, ae, ep, fail
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Item']
+
     def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed):
         assert isinstance(eid, int)
         # pyNastran_examples\move_tpl\ar29scb1.op2

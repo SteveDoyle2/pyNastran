@@ -81,6 +81,39 @@ class RealCompositePlateArray(OES_Object):
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
 
+    def build_dataframe(self):
+        """
+        major-axis - the axis
+
+        mode   1     2   3
+        freq  1.0   2.0 3.0
+        T1
+        T2
+        T3
+        R1
+        R2
+        R3
+
+        major_axis / top = [
+            [1, 2, 3],
+            [1.0, 2.0, 3.0]
+        ]
+        minor_axis / headers = [T1, T2, T3, R1, R2, R3]
+        name = mode
+        """
+        headers = self.get_headers()
+        name = self.name
+        element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_layer, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=element_layer, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
+
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
         assert self.nonlinear_factor == table.nonlinear_factor

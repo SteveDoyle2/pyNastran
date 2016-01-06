@@ -98,11 +98,11 @@ class RealBarArray(OES_Object):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names=['ElementID', 'Item']
+            self.data_frame.index.names = ['ElementID', 'Item']
         else:
             self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names=['Static']
-            self.data_frame.index.names=['ElementID', 'Item']
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_new_eid(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                     s1b, s2b, s3b, s4b, smaxb, sminb, MSc):

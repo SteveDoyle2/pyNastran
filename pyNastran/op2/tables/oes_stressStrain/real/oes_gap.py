@@ -72,6 +72,19 @@ class NonlinearGapStressArray(OES_Object):
         # [compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Item']
+
     def add_sort1(self, dt, eid, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW, form1, form2):
         assert isinstance(eid, int)
         self._times[self.itime] = dt

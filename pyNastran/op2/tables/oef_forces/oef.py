@@ -9,7 +9,6 @@ from six.moves import range
 from struct import Struct
 from numpy import fromstring, vstack, sin, cos, radians, array
 from numpy import hstack, zeros
-#from numpy import asarray, hstack, concatenate, add as npstradd, asarray
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
@@ -19,13 +18,11 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     HeatFlux_2D_3DArray,
     RealChbdyHeatFluxArray,
 
-    # not vectorized
     # TODO: vectorize 4
     HeatFlux_VU,
     HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV
 )
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
-    # vectorized
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
     RealCBushForceArray,
@@ -37,10 +34,10 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealConeAxForceArray,
     RealSolidPressureForceArray,
 
-    # not vectorized
-    RealCBeamForce,                   # TODO: vectorize 1
-    RealBendForce,                    # TODO: vectorize 1
-    RealForce_VU_2D, RealForce_VU,    # TODO: vectorize 2
+    # TODO: ectorize 4
+    RealCBeamForce,
+    RealBendForce,
+    RealForce_VU_2D, RealForce_VU,
 )
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexRodForceArray,
@@ -51,11 +48,10 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexDamperForceArray,
     ComplexViscForceArray,
     ComplexPlateForceArray,
-    ComplexPlate2ForceArray,
+    ComplexPlate2ForceArray, #  TODO: fix issue with element_node
     ComplexSolidPressureForceArray,
 
-    # not vectorized
-    # TODO: vectorize 4
+    # TODO: vectorize 3
     ComplexBendForce,
     ComplexForce_VU_2D, ComplexForce_VU,
 )
@@ -433,7 +429,7 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 if self.use_vector and is_vectorized:
-                    n = nelements * 4 * self.num_wide
+                    #n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     ielement2 = obj.itotal + nelements
                     itotal2 = ielement2
@@ -1495,21 +1491,26 @@ class OEF(OP2Common):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_real)
                 if auto_return:
+                    #print('self._data_factor', self._data_factor)
                     return nelements * self.num_wide * 4
                 obj = self.obj
-                s = Struct(b(self._endian + 'i8f'))
-                for i in range(nelements):
-                    edata = data[n:n+36]
+                is_vectorized = False
+                if is_vectorized:
+                    raise NotImplementedError()
+                else:
+                    s = Struct(b(self._endian + 'i8f'))
+                    for i in range(nelements):
+                        edata = data[n:n+36]
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
-                    (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                    eid = self._check_id(eid_device, flag, 'FORCE', out)
-                    #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    #eid = obj.add_new_eid(out)
-                    obj.add(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                    n += ntotal
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
+                        (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+                        eid = self._check_id(eid_device, flag, 'FORCE', out)
+                        #print "%s" % (self.get_element_type(self.element_type)), data_in
+                        #eid = obj.add_new_eid(out)
+                        obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                        n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
                 ntotal = 68
                 nelements = ndata // ntotal
@@ -1711,8 +1712,11 @@ class OEF(OP2Common):
 
                         eids = ints[:, 0] // 10
                         nids = ints2[:, 0]
+                        #print(nids, len(nids), itotal2-itotal)
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
+                        obj.element_node[itotal:itotal2, 0] = eids
+                        #obj.element_node[itotal:itotal2, 1] = nids
 
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     floats2 = floats[:, 2:].reshape(nelements * nnodes_all, 17)

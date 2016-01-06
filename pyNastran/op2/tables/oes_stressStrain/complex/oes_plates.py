@@ -89,7 +89,7 @@ class ComplexPlateArray(OES_Object):
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
-        self.data_frame.index.names=['ElementID', 'Item']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_new_eid_sort1(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
         self.add_eid_sort1(eType, dt, eid, node_id, fdr, oxx, oyy, txy)

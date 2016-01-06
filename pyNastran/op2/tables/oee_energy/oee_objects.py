@@ -199,11 +199,10 @@ class RealStrainEnergyArray(ScalarObject):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names=['ElementID', 'Item']
         else:
             self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names=['Static']
-            self.data_frame.index.names=['ElementID', 'Item']
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def finalize(self):
         #self._times = self._times[::self.nelement_types]

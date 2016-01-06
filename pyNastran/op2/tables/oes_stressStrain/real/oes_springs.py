@@ -64,6 +64,19 @@ class RealSpringArray(OES_Object):
         #[stress]
         self.data = zeros((self.ntimes, self.nelements, 1), dtype='float32')
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Item']
+
     def add_new_eid_sort1(self, dt, eid, stress):
         self._times[self.itime] = dt
         #if self.itime == 0:
