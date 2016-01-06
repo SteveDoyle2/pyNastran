@@ -244,7 +244,8 @@ class OP2(OP2_Scalar):
                 try:
                     obj.build_dataframe()
                 except:
-                    print('build_dataframe is not implemented in %s' % obj.__class__.__name__)
+                    print('build_dataframe is broken for %s' % obj.__class__.__name__)
+                    raise
 
 
     def combine_results(self, combine=True):

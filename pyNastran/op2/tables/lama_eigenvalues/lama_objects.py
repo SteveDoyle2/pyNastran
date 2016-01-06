@@ -2,11 +2,15 @@ from __future__ import print_function
 from six import iteritems
 from math import sqrt
 
-from numpy import array, pi
+import numpy as np
 
 from pyNastran.op2.resultObjects.op2_Objects import BaseScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e
 #from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class RealEigenvalues(BaseScalarObject):
@@ -37,18 +41,49 @@ class RealEigenvalues(BaseScalarObject):
     def isComplex(self):
         return False
 
-    def addF06Line(self, data):
-        (modeNum, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = data
+    def add_f06_line(self, data):
+        (mode_num, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = data
         #print('data =', data)
-        self.extraction_order[modeNum] = extract_order
-        self.eigenvalues[modeNum] = eigenvalue
-        self.radians[modeNum] = radian
+        self.extraction_order[mode_num] = extract_order
+        self.eigenvalues[mode_num] = eigenvalue
+        self.radians[mode_num] = radian
         #cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
         #if not allclose(cycle, cyclei):
             #print('cycle=%s cyclei=%s' % (cycle, cyclei))
-        self.cycles[modeNum] = cycle
-        self.generalized_mass[modeNum] = gen_mass
-        self.generalized_stiffness[modeNum] = gen_stiffness
+        self.cycles[mode_num] = cycle
+        self.generalized_mass[mode_num] = gen_mass
+        self.generalized_stiffness[mode_num] = gen_stiffness
+
+    def get_headers(self):
+        headers = ['eigenvalue', 'radians', 'cycle', 'generalized_mass', 'generalized_stiffness']
+        return headers
+
+    #def build_dataframe(self):
+        #return
+        #headers = self.get_headers()
+        #nmodes = len(self.eigenvalues)
+
+        ## TODO: we drop extraction_order because it doesn't slot nicely
+        #modes = np.zeros(nmodes, dtype='float32')
+        #data = np.zeros((nmodes, 5), dtype='float32')
+
+        #imodei = 0
+        #for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
+            ##cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+            #omega = self.radians[imode]
+            #freq = self.cycles[imode]
+            #mass = self.generalized_mass[imode]
+            #stiff = self.generalized_stiffness[imode]
+            #data[imodei, :] = [eigi, omega, freq, mass, stiff]
+            #modes[imodei] = imode
+            #imodei += 1
+
+        #print(data)
+        #self.data_frame = pd.Panel(data, items=[modes], major_axis=modes, minor_axis=headers)
+        #self.data_frame.to_frame()
+        #self.data_frame.columns.names = ['Static']
+        #self.data_frame.index.names = ['Mode', 'Item']
+        #print(self.data_frame)
 
     def add_f06_data(self, data):
         for line in data:
@@ -83,7 +118,7 @@ class RealEigenvalues(BaseScalarObject):
             eigenvalue = self.eigenvalues[mode_num]
             radian = self.radians[mode_num]
 
-            cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+            cycle = sqrt(abs(eigenvalue)) / (2. * np.pi)
             #cycle = self.cycles[mode_num]
             genM = self.generalized_mass[mode_num]
             genK = self.generalized_stiffness[mode_num]
@@ -116,16 +151,16 @@ class ComplexEigenvalues(BaseScalarObject):
     def isComplex(self):
         return True
 
-    def addF06Line(self, data):
+    def add_f06_line(self, data):
         (root_num, extract_order, eigr, eigi, cycle, damping) = data
         self.extraction_order[root_num] = extract_order
-        self.eigenvalues[root_num] = array([eigr, eigi])
+        self.eigenvalues[root_num] = np.array([eigr, eigi])
         self.cycles[root_num] = cycle
         self.damping[root_num] = damping
 
     def add_f06_data(self, data):
         for line in data:
-            self.addF06Line(line)
+            self.add_f06_line(line)
 
     def write_f06(self, f, header, page_stamp, page_num=1):  # not proper msg start
         title = ''
@@ -192,7 +227,7 @@ class BucklingEigenvalues(BaseScalarObject):
     def isBuckling(self):
         return True
 
-    def addF06Line(self, data):
+    def add_f06_line(self, data):
         #print('data =', data)
          #(iMode, order, eigen, omega, freq, mass, stiff)
         (root_num, extract_order, eigr, omega, freq, mass, stiff) = data
@@ -205,7 +240,7 @@ class BucklingEigenvalues(BaseScalarObject):
 
       #def add_f06_data(self, data):
         #for line in data:
-            #self.addF06Line(line)
+            #self.add_f06_line(line)
 
     def write_f06(self, f, header, page_stamp, page_num=1):  # not proper msg start
         title = ''

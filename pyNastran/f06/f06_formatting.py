@@ -66,6 +66,39 @@ def write_floats_13e(vals):
     return vals2
 
 
+def write_imag_floats_13e(vals, is_mag_phase):
+    vals2 = []
+
+    if is_mag_phase:
+        for v in vals:
+            v2 = '%13.6E' % abs(v)
+            if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
+                v2 = ' 0.0'
+            vals2.append(v2)
+
+        # phase
+        for v in vals:
+            v2 = angle(v, deg=True)
+
+            v3 = '%-13.4f' % v2 if v2 >= 0.0 else '%-13.4f' % (v2 + 360.)
+            if v3 == '0.0000       ':
+                v3 = '   0.0'
+            vals2.append(v3)
+    else:
+        for v in vals:
+            v2 = '%13.6E' % v.real
+            if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
+                v2 = ' 0.0'
+            vals2.append(v2)
+
+        for v in vals:
+            v3 = '%13.6E' % v.imag
+            if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
+                v3 = ' 0.0'
+            vals2.append(v3)
+    return vals2
+
+
 def writeImagFloats13E(vals, is_mag_phase):
     vals2 = []
     is_all_zeros = True

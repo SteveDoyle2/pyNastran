@@ -239,6 +239,8 @@ RESULT_TABLES = [
 # RESULT_TABLES = []
 
 MATRIX_TABLES = [
+    b'EFMFSMS', b'EFMASSS', b'RBMASSS', b'EFMFACS', b'MPFACS', b'MEFMASS', b'MEFWTS',
+
     b'TOLD', b'SDT', #b'STDISP',
     b'TOLB2', b'ADSPT', #b'MONITOR',
     b'PMRT', b'PFRT', b'PGRT', # b'AEMONPT',

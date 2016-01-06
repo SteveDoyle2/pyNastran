@@ -851,7 +851,8 @@ class ComplexTableArray(TableArray):  # displacement style table
             page_num += 1
         return page_num
 
-class RealTableObject(ScalarObject):  # displacement style table
+
+class _RealTableObject(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = None
         self.table_name = None
@@ -1159,7 +1160,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         return words
 
 
-class ComplexTableObject(ScalarObject):
+class _ComplexTableObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, apply_data_code=True):
         self.nonlinear_factor = None
         self.table_name = None
@@ -1375,6 +1376,7 @@ class ComplexTableObject(ScalarObject):
             page_num += 1
         return page_num - 1
 
+
 class StaticArrayNode(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1382,12 +1384,14 @@ class StaticArrayNode(RealTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class StaticArrayElement(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
     @property
     def element_ids(self):
         return self.node_gridtype[:, 0]
+
 
 class TimeArrayNodeSort1(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1399,6 +1403,7 @@ class TimeArrayNodeSort1(RealTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class TimeArrayElementSort1(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1408,6 +1413,7 @@ class TimeArrayElementSort1(RealTableArray):
     @property
     def element_ids(self):
         return self.node_gridtype[:, 0]
+
 
 class TimeArrayNodeSort2(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1419,6 +1425,7 @@ class TimeArrayNodeSort2(RealTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class TimeArrayElementSort2(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1428,6 +1435,7 @@ class TimeArrayElementSort2(RealTableArray):
     @property
     def element_ids(self):
         return self.node_gridtype[:, 0]
+
 
 class FrequencyArrayNodeSort2(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1439,6 +1447,7 @@ class FrequencyArrayNodeSort2(ComplexTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class FrequencyArrayElementSort2(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1448,5 +1457,3 @@ class FrequencyArrayElementSort2(ComplexTableArray):
     @property
     def node_ids(self):
         return self.node_gridtype[:, 0]
-
-

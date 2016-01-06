@@ -78,8 +78,9 @@ $*  PARAM CARDS
 PARAM,AUTOSPC,YES 
 PARAM,K6ROT,100.0
 PARAM,GRDPNT,0
-PARAM,POST,-1
+PARAM,POST,-2
 PARAM,RESVEC,YES
+PARAM,RSOPT,1
 $*
 $*
 $*  USET U6 cards for residual vectors (RCS thruster load points)

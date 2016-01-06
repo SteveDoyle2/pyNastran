@@ -13,12 +13,15 @@ from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
     RealSPCForcesArray, ComplexSPCForcesArray,
-    RealSPCForces, ComplexSPCForces)
+    #RealSPCForces, ComplexSPCForces
+)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
     RealMPCForcesArray, ComplexMPCForcesArray,
-    RealMPCForces, ComplexMPCForces)
+    #RealMPCForces, ComplexMPCForces
+)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
-    RealTemperatureGradientAndFlux, RealTemperatureGradientAndFluxArray)
+    #RealTemperatureGradientAndFlux,
+    RealTemperatureGradientAndFluxArray)
 
 
 class OQG(OP2Common):

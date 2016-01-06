@@ -29,7 +29,7 @@ from pyNastran.op2.tables.oug.oug_temperatures import (
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
     RealEigenvectorArray, ComplexEigenvectorArray,
-     Eigenvector, ComplexEigenvector,
+     #Eigenvector, ComplexEigenvector,
 )
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVectorArray # RealThermalVelocityVector
@@ -477,9 +477,9 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table(data, ndata, result_name, storage_obj,
-                                 Eigenvector, ComplexEigenvector,
-                                 RealEigenvectorArray, ComplexEigenvectorArray, 'node')
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            RealEigenvectorArray, ComplexEigenvectorArray,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 1:
             n = self._not_implemented_or_skip(data, ndata, msg='thermal=1')
             #n = self._read_table(data, result_name, storage_obj,
