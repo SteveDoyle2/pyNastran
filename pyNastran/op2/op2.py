@@ -158,7 +158,7 @@ def read_op2(op2_filename=None, combine=True,
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
-                   skip_matrices=skip_matrices, combine=combine)
+                   skip_undefined_matrices=skip_undefined_matrices, combine=combine)
 
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
