@@ -724,9 +724,14 @@ class OP2_F06_Common(object):
             try:
                 for isubcase, subcase in sorted(iteritems(table), key=compare):
                     if hasattr(subcase, 'get_stats'):
-                        msg.append('op2.%s[%s]\n' % (table_type, isubcase))
-                        msg.extend(subcase.get_stats())
-                        msg.append('\n')
+                        try:
+                            stats = subcase.get_stats()
+                        except:
+                            msg.append('errored reading %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+                        else:
+                            msg.append('op2.%s[%s]\n' % (table_type, isubcase))
+                            msg.extend(stats)
+                            msg.append('\n')
                     else:
                         msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
                         raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
