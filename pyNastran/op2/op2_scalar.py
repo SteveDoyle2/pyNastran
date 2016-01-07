@@ -1201,7 +1201,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             assert b == 170, b
         else:
             self.log.warning('unexpected matrix length=%s' % len(data))
-            self.log.warning(self.show_data(data))
+            self.log.warning(self.show_data(data, types='if'))
 
         itable = -3
         j = None

@@ -47,6 +47,22 @@ class FortranFormat(object):
         return strings, ints, floats
 
     def show_data(self, data, types='ifs', endian=None):
+        """
+        Shows a data block as various types
+
+        Parameters
+        ----------
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
+
+        .. warning :: 's' is apparently not Python 3 friendly
+        """
         return self.write_data(sys.stdout, data, types=types, endian=endian)
 
     def write_data(self, f, data, types='ifs', endian=None):
@@ -57,6 +73,14 @@ class FortranFormat(object):
         ----------
         self : OP2
             the OP2 object pointer
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
         """
         n = len(data)
         nints = n // 4
