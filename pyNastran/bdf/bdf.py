@@ -2029,13 +2029,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except KeyError:
                 #: .. warning:: cards with = signs in them
                 #:              are not announced when they are rejected
-                #if '=' not in card[0]:
-                #    self.log.info('rejecting processed equal signed card %s' % card)
-                #self.reject_cards.append(card)
+                if '=' in card[0]:
+                    self.log.info('rejecting processed equal signed card %s' % card)
+                #self.reject_cards.append(card) #  TOD: this is bad...
                 msg = 'card_name=%r not in card_parser_b'  % (card_name)
                 raise KeyError(msg)
                 #print(msg)
-                #return
+                return
 
             try:
                 add_card_function(card, card_obj, comment=comment)
