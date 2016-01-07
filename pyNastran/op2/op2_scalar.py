@@ -99,6 +99,11 @@ GEOM_TABLES = [
 ]
 
 RESULT_TABLES = [
+    # new
+    b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
+    b'RANCONS', b'RAGCONS', b'RADEFFM', b'RAPEATC', b'RAQEATC', b'RADEATC',
+    b'RASEATC', b'RAFEATC', b'RAEEATC', b'RANEATC', b'RAGEATC',
+
     # stress
     b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
     b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
@@ -436,6 +441,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _get_table_mapper(self):
         table_mapper = {
+            b'RAPCONS': [self._table_passer, self._table_passer],
+            b'RAQCONS': [self._table_passer, self._table_passer],
+            b'RADCONS': [self._table_passer, self._table_passer],
+            b'RASCONS': [self._table_passer, self._table_passer],
+            b'RAFCONS': [self._table_passer, self._table_passer],
+            b'RAECONS': [self._table_passer, self._table_passer],
+            b'RANCONS': [self._table_passer, self._table_passer],
+            b'RAGCONS': [self._table_passer, self._table_passer],
+            b'RADEFFM': [self._table_passer, self._table_passer],
+            b'RAPEATC': [self._table_passer, self._table_passer],
+            b'RAQEATC': [self._table_passer, self._table_passer],
+            b'RADEATC': [self._table_passer, self._table_passer],
+            b'RASEATC': [self._table_passer, self._table_passer],
+            b'RAFEATC': [self._table_passer, self._table_passer],
+            b'RAEEATC': [self._table_passer, self._table_passer],
+            b'RANEATC': [self._table_passer, self._table_passer],
+            b'RAGEATC': [self._table_passer, self._table_passer],
+
             #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
             b'HISADD': [self._table_passer, self._table_passer],
             b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
