@@ -213,15 +213,47 @@ class TableArray(ScalarObject):  # displacement style table
         headers = self.get_headers()
         name = self.name
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
+        ugridtype_str = unique(self.gridtype_str)
+
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_gridtype, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+
+            letter_dims = [
+                (b'G', 'G', 6),
+                (b'E', 'E', 1),
+                (b'S', 'S', 1),
+                (b'H', 'H', 6),
+                (b'L', 'L', 6),
+            ]
+            cat_keys = []
+            for (letter, letter_str, dim) in letter_dims:
+                if letter not in ugridtype_str:
+                    continue
+                if dim == 1:
+                    eig = self.data_frame.xs(letter,level=1).iloc[0::6]
+                    eig = eig.reset_index().replace({'Item':{'t1' : letter_str}}).set_index(['NodeID','Item'])
+                elif dim == 6:
+                    # Note that I'm only keeping every 6th row
+                    eig = self.data_frame.xs(letter,level=1)
+                else:
+                    raise RuntimeError(dim)
+                cat_keys.append(eig)
+            self.data_frame = pd.concat(cat_keys)
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=node_gridtype, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+            #self.data_frame = pd.Panel(self.data[0, :, :], major_axis=node_gridtype, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = ['Static']
+            #self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+
+            df1 = pd.DataFrame(self.node_gridtype[:, 0])
+            df1.columns = ['NodeID']
+            df2 = pd.DataFrame(self.gridtype_str)
+            df2.columns = ['Type']
+            df3 = pd.DataFrame(self.data[0])
+            df3.columns = headers
+            self.data_frame = df1.join([df2, df3])
 
     def finalize(self):
         gridtypes = self.node_gridtype[:, 1]
@@ -323,15 +355,15 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
         #self.itime += 1
 
-def two_dee_string_add(string_lists):
-    string0 = string_lists[0]
-    n, m = string0.shape
+#def two_dee_string_add(string_lists):
+    #string0 = string_lists[0]
+    #n, m = string0.shape
 
-    s = []
-    for string_list in string_lists:
-        for string in string_list:
-            pass
-    return sumned
+    #s = []
+    #for string_list in string_lists:
+        #for string in string_list:
+            #pass
+    #return sumned
 
 class RealTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -480,18 +512,18 @@ class RealTableArray(TableArray):  # displacement style table
         f.write(pack(b'%ii' % len(header), *header))
         return itable
 
-    def spike():
-        import xlwings as xw
-        wb = xw.Workbook()  # Creates a connection with a new workbook
-        xw.Range('A1').value = 'Foo 1'
-        xw.Range('A1').value
-        'Foo 1'
-        xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        xw.Range('A1').table.value  # or: Range('A1:C2').value
-        [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        xw.Sheet(1).name
-        'Sheet1'
-        chart = xw.Chart.add(source_data=xw.Range('A1').table)
+    #def spike():
+        #import xlwings as xw
+        #wb = xw.Workbook()  # Creates a connection with a new workbook
+        #xw.Range('A1').value = 'Foo 1'
+        #xw.Range('A1').value
+        #'Foo 1'
+        #xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #xw.Range('A1').table.value  # or: Range('A1:C2').value
+        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #xw.Sheet(1).name
+        #'Sheet1'
+        #chart = xw.Chart.add(source_data=xw.Range('A1').table)
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words,
                          is_mag_phase=False, is_sort1=True):
