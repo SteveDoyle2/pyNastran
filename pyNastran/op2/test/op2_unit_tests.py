@@ -70,6 +70,13 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
+    def test_op2_solid_bending_01(self):
+        op2_filename = os.path.join('solid_bending.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
+        op2_filename = os.path.join(folder, op2_filename)
+
+        op2 = read_op2(op2_filename)
+
     def test_op2_solid_shell_bar_01(self):
         op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
@@ -189,7 +196,7 @@ class TestOP2(Tester):
 
         cbar_force = op2.cbar_force[isubcase]
         cbar_force.build_dataframe()
-        print(cbar_force.data_frame)
+        str(cbar_force.data_frame)
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (3, 1, 8), cbar_force.data.shape
 
@@ -260,7 +267,7 @@ class TestOP2(Tester):
 
         cbar_force = op2.cbar_force[isubcase]
         cbar_force.build_dataframe()
-        print(cbar_force.data_frame)
+        str(cbar_force.data_frame)
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (4, 1, 8), cbar_force.data.shape
 
@@ -616,8 +623,7 @@ class TestOP2(Tester):
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 
-
-    def test_op2_dmi(self):
+    def test_op2_dmi_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
         op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
@@ -636,7 +642,7 @@ class TestOP2(Tester):
         print('model.dmi.A =\n%s' % dmi_a)
         print('model.dmi.A =\n%s' % str(a))
         #return
-        op2 = OP2()
+        op2 = OP2(debug=False)
         op2.set_additional_matrices_to_read(matrices)
         try:
             op2.read_op2(op2_filename)
@@ -683,6 +689,79 @@ class TestOP2(Tester):
                     table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
                     #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
                     print(table_array)
+                #print(stable_array)
+                msg = 'matrix %s was not read properly\n' % table_name
+                msg += 'expected\n%s\n' % expected
+                msg += 'actual\n%s' % actual
+                print(msg)
+                print('==========================')
+                #raise RuntimeError(msg)
+
+    def test_op2_dmi_02(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
+        op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
+        matrices = {
+            'A' : True,
+            'B' : False,
+            'ATB' : False,
+            'BTA' : False,
+            'MYDOF' : True,
+        }
+        model = BDF()
+        model.read_bdf(bdf_filename)
+
+        dmi_a = model.dmis['A']
+        a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
+        #print('model.dmi.A =\n%s' % dmi_a)
+        #print('model.dmi.A =\n%s' % str(a))
+        #return
+        op2 = OP2()
+        try:
+            op2.read_op2(op2_filename, skip_undefined_matrices=True)
+            raise RuntimeError('this is wrong...')
+        except FatalError:
+            # the OP2 doesn't have a trailing zero marker
+            pass
+
+        from numpy import dot, array, array_equal
+        # M rows, Ncols
+        A = array([
+            [1., 0.],
+            [3., 6.],
+            [5., 0.],
+            [0., 8.],
+        ], dtype='float32')
+        B = A
+        mydof = array([
+            -1.0, 1.0, 1.0, -1.0, 1.0,
+            2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
+            1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
+            -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
+            4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
+        ])
+        BTA = dot(B.T, A)
+        ATB = dot(A.T, B)
+        ATB_expected = array([
+            [35., 18.],
+            [18., 100.]
+        ], dtype='float32')
+        BTA_expected = ATB_expected
+
+        expecteds = [A, ATB, B, BTA, mydof]
+        matrix_names = sorted(matrices.keys())
+
+        for table_name, expected in zip(matrix_names, expecteds):
+            assert table_name in op2.matrices, table_name
+
+
+            actual = op2.matrices[table_name].data
+            if not array_equal(expected, actual):
+                if table_name in model.dmis:
+                    dmi = model.dmis[table_name]
+                    table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
+                    #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
+                    #print(table_array)
                 #print(stable_array)
                 msg = 'matrix %s was not read properly\n' % table_name
                 msg += 'expected\n%s\n' % expected
