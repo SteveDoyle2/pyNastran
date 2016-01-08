@@ -1577,14 +1577,12 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
 
             # Define names for column labels
             self.data_frame.columns.names = column_names
-
-            # Define names for the row labels
-            self.data_frame.index.names = ['ElementID', 'Item']
         else:
             self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
             #cbar_forces = cbar_forces.to_frame()
             self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+        # Define names for the row labels
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def add(self, dt, data):
         self.add_sort1(dt, data)
