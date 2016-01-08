@@ -704,10 +704,48 @@ class OP2_F06_Common(object):
     def get_f06_stats(self):
         return self.get_op2_stats()
 
-    def get_op2_stats(self):
+    def get_op2_stats(self, short=True):
         """
         Gets info about the contents of the different attributes of the
         OP2 class.
+
+        Example 1
+        ---------
+        >>> self.get_op2_stats()
+
+        op2.displacements[1]
+          isubcase = 1
+          type=RealDisplacementArray nnodes=72
+          data: [t1, t2, t3, r1, r2, r3] shape=[1, 72, 6] dtype=float32
+          gridTypes
+          sort1
+          lsdvmns = [1]
+
+        op2.spc_forces[1]
+          isubcase = 1
+          type=RealSPCForcesArray nnodes=72
+          data: [t1, t2, t3, r1, r2, r3] shape=[1, 72, 6] dtype=float32
+          gridTypes
+          sort1
+          lsdvmns = [1]
+
+        op2.ctetra_stress[1]
+          type=RealSolidStressArray nelements=186 nnodes=930
+          nodes_per_element=5 (including centroid)
+          eType, cid
+          data: [1, nnodes, 10] where 10=[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, von_mises]
+          data.shape = (1, 930, 10)
+          element name: CTETRA
+          sort1
+          lsdvmns = [1]
+
+        Example 1
+        ---------
+        >>> self.get_op2_stats(short=True)
+        op2.displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
+          gridTypes
+          sort1
+          lsdvmns = [1]
         """
         def compare(key_value):
             key, value = key_value
@@ -719,26 +757,45 @@ class OP2_F06_Common(object):
 
         table_types = self._get_table_types_testing()
         msg = []
-        for table_type in table_types:
-            table = getattr(self, table_type)
-            try:
+        if short:
+            for table_type in table_types:
+                table = getattr(self, table_type)
                 for isubcase, subcase in sorted(iteritems(table), key=compare):
-                    if hasattr(subcase, 'get_stats'):
-                        try:
-                            stats = subcase.get_stats()
-                        except:
-                            msg.append('errored reading %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-                        else:
-                            msg.append('op2.%s[%s]\n' % (table_type, isubcase))
-                            msg.extend(stats)
-                            msg.append('\n')
+                    class_name = subcase.__class__.__name__
+                    if hasattr(subcase, 'data'):
+                        data = subcase.data
+                        shape = [int(i) for i in subcase.data.shape]
+                        headers = subcase.get_headers()
+                        headers_str = str(', '.join(headers))
+                        msg.append('%s[%s]; %s; %s; [%s]\n' % (
+                        table_type, isubcase, class_name, shape, headers_str))
                     else:
-                        msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-                        raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-            except:
-                self.log.warning('type(table)=%s' % type(table))
-                self.log.warning(table)
-                raise
+                        msg.append('skipping %s op2.%s[%s]\n\n' % (class_name, table_type, isubcase))
+                        raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (class_name, table_type, isubcase))
+        else:
+            for table_type in table_types:
+                table = getattr(self, table_type)
+                try:
+                    for isubcase, subcase in sorted(iteritems(table), key=compare):
+                        class_name = subcase.__class__.__name__
+                        if hasattr(subcase, 'get_stats'):
+                            try:
+                                stats = subcase.get_stats() # short=short
+                            except:
+                                msg.append('errored reading %s %s[%s]\n\n' % (class_name, table_type, isubcase))
+                                raise
+                            else:
+                                msg.append('%s[%s]\n' % (table_type, isubcase))
+                                msg.extend(stats)
+                                msg.append('\n')
+                        else:
+                            msg.append('skipping %s %s[%s]\n\n' % (class_name, table_type, isubcase))
+                            raise RuntimeError('skipping %s %s[%s]\n\n' % (class_name, table_type, isubcase))
+                except:
+                    self.log.warning('type(table)=%s' % type(table))
+                    self.log.warning(table)
+                    raise
+
         try:
             return ''.join(msg)
         except TypeError:

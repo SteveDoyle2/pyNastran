@@ -70,7 +70,7 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_solid_bending_01(self):
+    def test_op2_solid_bending_02(self):
         op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
         op2_filename = os.path.join(folder, op2_filename)

@@ -122,7 +122,7 @@ class TableArray(ScalarObject):  # displacement style table
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -130,6 +130,8 @@ class TableArray(ScalarObject):  # displacement style table
                 '  ntotal: %i\n' % self.ntotal,
             ]
         #ngrids = len(self.gridTypes)
+        if short:
+            return self._get_stats_short()
         msg = []
 
         ntimesi, ntotal = self.data.shape[:2]
@@ -254,6 +256,7 @@ class TableArray(ScalarObject):  # displacement style table
             df3 = pd.DataFrame(self.data[0])
             df3.columns = headers
             self.data_frame = df1.join([df2, df3])
+        #print(self.data_frame)
 
     def finalize(self):
         gridtypes = self.node_gridtype[:, 1]

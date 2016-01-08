@@ -43,14 +43,28 @@ class BaseScalarObject(Op2Codes):
     def get_headers(self):
         raise RuntimeError()
 
+    def _get_stats_short(self):
+        msg = []
+        class_name = self.__class__.__name__
+        if hasattr(self, 'data'):
+            data = self.data
+            shape = [int(i) for i in self.data.shape]
+            headers = self.get_headers()
+            headers_str = str(', '.join(headers))
+            msg.append('%s[%s]; %s; [%s]\n' % (
+            class_name, self.isubcase, shape, headers_str))
+        return msg
+
     def _build_dataframe_transient_header(self):
         """builds the header for the Pandas DataFrame/table"""
         name = self.name #data_code['name']
         times = self._times
         utimes = np.unique(times)
         if not len(times) == len(utimes):
-            print('WARNING : %s - times=%s unique_times=%s...assuming new values...new_times=%s' % (
-            self.__class__.__name__, times, utimes, np.arange(len(times))))
+            msg = 'WARNING : %s - times=%s unique_times=%s...assuming new values...new_times=%s' % (
+            self.__class__.__name__, times, utimes, np.arange(len(times)))
+            print(msg)
+            #raise RuntimeError(msg)
             times = np.arange(len(times))
         column_names = []
         column_values = []
