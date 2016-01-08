@@ -241,7 +241,6 @@ class TableArray(ScalarObject):  # displacement style table
                 else:
                     raise RuntimeError(dim)
                 cat_keys.append(eig)
-                print(eig)
             self.data_frame = pd.concat(cat_keys)
         else:
             #self.data_frame = pd.Panel(self.data[0, :, :], major_axis=node_gridtype, minor_axis=headers).to_frame()
